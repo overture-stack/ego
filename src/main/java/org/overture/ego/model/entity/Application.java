@@ -14,7 +14,7 @@ public class Application {
     @NonNull String applicationName;
     @NonNull String clientId;
     @NonNull String clientSecret;
-    String redeirectUri;
+    String redirectUri;
     String description;
     String status;
 
