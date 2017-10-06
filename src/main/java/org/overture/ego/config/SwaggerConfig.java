@@ -18,7 +18,7 @@ public class SwaggerConfig {
     public Docket productApi() {
         return new Docket(DocumentationType.SWAGGER_2)
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("org.kidsfirst.authorizationservice.controller"))
+                .apis(RequestHandlerSelectors.basePackage("org.overture.ego.controller"))
                 .build()
                 .apiInfo(metaInfo());
     }
