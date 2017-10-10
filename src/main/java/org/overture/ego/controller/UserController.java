@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.security.ProjectCodeScoped;
+import org.overture.ego.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,12 @@ import java.util.List;
 @RequestMapping("/users")
 public class UserController {
 
+    /**
+     * Dependencies
+     */
+    @Autowired
+    UserService userService;
+
     @ProjectCodeScoped
     @RequestMapping(method = RequestMethod.GET, value = "")
     @ApiResponses(
@@ -25,10 +33,11 @@ public class UserController {
     )
     public @ResponseBody
     List<User> getUsersList(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-            @RequestParam(value = "offset", required = true) long offset,
-            @RequestParam(value = "count", required = false) short count) {
-        return null;
+//            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+//            @RequestParam(value = "offset", required = false) long offset,
+//            @RequestParam(value = "count", required = false) short count)
+    ){
+        return userService.listUsers();
     }
 
     @ProjectCodeScoped
@@ -59,7 +68,7 @@ public class UserController {
     User getUser(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
             @PathVariable(value = "id", required = true) String userId) {
-        return null;
+        return userService.get(userId + ".com");
     }
 
 
@@ -73,9 +82,8 @@ public class UserController {
     public @ResponseBody
     User updateUser(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-            @PathVariable(value = "id", required = true) String userId,
             @RequestBody(required = true) User updatedUserInfo) {
-        return null;
+        return userService.update(updatedUserInfo);
     }
 
     @ProjectCodeScoped
@@ -84,6 +92,7 @@ public class UserController {
     public void deleteUser(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
             @PathVariable(value = "id", required = true) String userId) {
+        userService.delete(userId);
     }
 
 }

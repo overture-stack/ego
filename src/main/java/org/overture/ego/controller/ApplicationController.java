@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.security.ProjectCodeScoped;
+import org.overture.ego.service.ApplicationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/applications")
 public class ApplicationController {
+
+    @Autowired
+    ApplicationService applicationService;
 
     @ProjectCodeScoped
     @RequestMapping(method = RequestMethod.GET, value = "")
@@ -54,10 +59,10 @@ public class ApplicationController {
             }
     )
     public @ResponseBody
-    Application createApplication(
+    Application create(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
             @RequestBody(required = true) Application applicationInfo) {
-        return null;
+        return applicationService.create(applicationInfo);
     }
 
 
@@ -69,10 +74,10 @@ public class ApplicationController {
             }
     )
     public @ResponseBody
-    Application getApplication(
+    Application get(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
             @PathVariable(value = "id", required = true) String applicationId) {
-        return null;
+        return applicationService.get(applicationId);
     }
 
 
@@ -86,9 +91,8 @@ public class ApplicationController {
     public @ResponseBody
     Application updateApplication(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-            @PathVariable(value = "id", required = true) String applicationId,
             @RequestBody(required = true) Application updatedApplicationInfo) {
-        return null;
+        return applicationService.update(updatedApplicationInfo);
     }
 
     @ProjectCodeScoped
@@ -97,6 +101,8 @@ public class ApplicationController {
     public void deleteApplication(
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
             @PathVariable(value = "id", required = true) String applicationId) {
+         applicationService.delete(applicationId);
+
     }
 
 }
