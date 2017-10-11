@@ -19,8 +19,6 @@ public class User {
     @NonNull String email;
     @NonNull String role; // TODO: not sure
     String status;
-//    @Singular List<String> groups;
-//    @Singular List<String> applications;
     String firstName;
     String lastName;
     String createdAt;

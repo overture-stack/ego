@@ -51,7 +51,7 @@ public class LoginController {
         }
         SimpleDateFormat formatter =
                 new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
-        return User.builder().id(userName)
+        return User.builder()
                 .userName(userName)
                 .email(userName)
                 .firstName("")

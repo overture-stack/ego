@@ -20,12 +20,12 @@ public interface UserRepository {
     @SqlQuery("SELECT * FROM USERS")
     List<User> getAllUsers();
 
-    @SqlUpdate("INSERT INTO USERS (id, userName, email, role, status, firstName, lastName, createdAt,lastLogin,preferredLanguage) " +
-            "VALUES (:id, :userName, :email, :role, :status, :firstName, :lastName, :createdAt, :lastLogin, :preferredLanguage)")
+    @SqlUpdate("INSERT INTO USERS (userName, email, role, status, firstName, lastName, createdAt,lastLogin,preferredLanguage) " +
+            "VALUES (:userName, :email, :role, :status, :firstName, :lastName, :createdAt, :lastLogin, :preferredLanguage)")
     int create(@BindBean User user);
 
-    @SqlQuery("SELECT * FROM USERS WHERE id=:id")
-    List<User> read(@Bind("id") String userId);
+    @SqlQuery("SELECT * FROM USERS WHERE userName=:userName")
+    List<User> read(@Bind("userName") String username);
 
     @SqlUpdate("UPDATE USERS SET role=:role, status=:status," +
             "firstName=:firstName, lastName=:lastName, createdAt=:createdAt , lastLogin=:lastLogin, " +
