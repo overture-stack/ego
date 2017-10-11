@@ -1,0 +1,6 @@
+server:
+  port: 8081
+
+google:
+  client:
+    Ids: 814606937527-v7tr5dfqegjijicq3jeu5arv5tcl4ks0.apps.googleusercontent.com

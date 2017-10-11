@@ -7,6 +7,7 @@ import lombok.val;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.security.ProjectCodeScoped;
 import org.overture.ego.service.UserService;
+import org.overture.ego.token.GoogleTokenValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -23,14 +24,19 @@ public class LoginController {
 
     @Autowired
     UserService userService;
+    @Autowired
+    GoogleTokenValidator tokenValidator;
 
     List<String> admins = Arrays.asList(new String[] {"ra.vrma@gmail.com"}) ;
     @ProjectCodeScoped
     @RequestMapping(method = RequestMethod.GET, value = "/google")
     @ResponseStatus(value = HttpStatus.OK)
     @SneakyThrows
-    public @ResponseBody List<User> loginWithGoogle(@RequestHeader(value = "id_token", required = true) String accessToken) {
-        val tokenDecoded = JwtHelper.decode(accessToken);
+    public @ResponseBody List<User> loginWithGoogle(@RequestHeader(value = "id_token", required = true) String idToken) {
+        // validate token from google
+        if(!tokenValidator.validToken(idToken))
+            throw new Exception("Invalid user token:" + idToken);
+        val tokenDecoded = JwtHelper.decode(idToken);
         val authInfo = new ObjectMapper().readValue(tokenDecoded.getClaims(), Map.class);
         val userName = authInfo.get("email").toString();
         val user = createNewUser(userName);
