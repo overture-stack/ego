@@ -15,7 +15,7 @@ public class ApplicationService {
     @Autowired
     ApplicationRepository applicationRepository;
 
-    private final String APP_PREFIX = "APP-";
+    private final String APP_PREFIX = "";
 
     public Application create(Application applicationInfo) {
         String appId = applicationInfo.getId();
