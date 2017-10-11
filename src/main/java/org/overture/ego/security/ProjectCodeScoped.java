@@ -9,5 +9,6 @@ import java.lang.annotation.RetentionPolicy;
  * Method Security Meta Annotation
  */
 @Retention(RetentionPolicy.RUNTIME)
+//@PreAuthorize("@authorizationManager.authorize(authentication)")
 public @interface ProjectCodeScoped {
 }

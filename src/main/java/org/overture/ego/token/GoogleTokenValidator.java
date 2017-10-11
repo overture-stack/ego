@@ -6,6 +6,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -51,6 +52,7 @@ public class GoogleTokenValidator {
         return (idToken != null);
     }
 
+    @Synchronized
     private void initVerifier() {
         List<String> targetAudience;
         if(clientIDs.contains(","))

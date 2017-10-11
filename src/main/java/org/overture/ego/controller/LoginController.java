@@ -8,6 +8,7 @@ import org.overture.ego.model.entity.User;
 import org.overture.ego.security.ProjectCodeScoped;
 import org.overture.ego.service.UserService;
 import org.overture.ego.token.GoogleTokenValidator;
+import org.overture.ego.token.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,8 +28,8 @@ public class LoginController {
     @Autowired
     GoogleTokenValidator tokenValidator;
 
+
     List<String> admins = Arrays.asList(new String[] {"ra.vrma@gmail.com"}) ;
-    @ProjectCodeScoped
     @RequestMapping(method = RequestMethod.GET, value = "/google")
     @ResponseStatus(value = HttpStatus.OK)
     @SneakyThrows

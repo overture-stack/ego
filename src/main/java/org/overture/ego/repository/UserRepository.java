@@ -29,10 +29,10 @@ public interface UserRepository {
 
     @SqlUpdate("UPDATE USERS SET role=:role, status=:status," +
             "firstName=:firstName, lastName=:lastName, createdAt=:createdAt , lastLogin=:lastLogin, " +
-            "preferredLanguage=:preferredLanguage WHERE id=:id")
+            "preferredLanguage=:preferredLanguage WHERE userName=:userName")
     int update(@BindBean User user);
 
-    @SqlUpdate("DELETE from USERS where id=:id")
-    int delete(@Bind("id") String id);
+    @SqlUpdate("DELETE from USERS where userName=:userName")
+    int delete(@Bind("userName") String id);
 
 }
