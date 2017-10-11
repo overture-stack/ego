@@ -5,6 +5,7 @@ import org.overture.ego.repository.ApplicationRepository;
 import org.overture.ego.repository.GroupsRepository;
 import org.overture.ego.repository.UserRepository;
 import org.skife.jdbi.v2.DBI;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -15,12 +16,20 @@ import javax.sql.DataSource;
 @Configuration
 public class RepositoryConfig {
 
-    DataSource dataSource = JdbcConnectionPool.create("jdbc:h2:/Users/rverma/test",
-            "test",
-            "");
+    @Value("${datasource.url}")
+    String databaseURL;
+    @Value("${datasource.username}")
+    String username;
+    @Value("${datasource.password}")
+    String password;
+    DataSource dataSource;
+
+
 
     @Bean
     public DBI dbi() {
+        if(dataSource == null)
+            dataSource = JdbcConnectionPool.create(databaseURL, username, password);
         return new DBI(dataSource);
     }
 
