@@ -9,6 +9,6 @@ jwt:
   secret: testsecretisalsoasecret
 
 datasource:
-    url: jdbc:h2:/Users/rverma/test
+    url: jdbc:h2:./src/main/datasource/test
     username: test
     password:
