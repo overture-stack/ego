@@ -28,20 +28,20 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 public interface ApplicationRepository {
 
 
-  @SqlUpdate("INSERT INTO APPLICATION (id, applicationName, clientId, clientSecret, redirectUri, description, status) " +
+  @SqlUpdate("INSERT INTO EGOAPPLICATION (id, applicationName, clientId, clientSecret, redirectUri, description, status) " +
       "VALUES (:id, :applicationName, :clientId, :clientSecret, :redirectUri, :description, :status)")
   int create(@BindBean Application application);
 
-  @SqlQuery("SELECT id,applicationName,clientId,clientSecret,redirectUri,description,status FROM APPLICATION WHERE id=:id")
+  @SqlQuery("SELECT id,applicationName,clientId,clientSecret,redirectUri,description,status FROM EGOAPPLICATION WHERE id=:id")
   Application read(@Bind("id") String appId);
 
-  @SqlUpdate("UPDATE APPLICATION " +
+  @SqlUpdate("UPDATE EGOAPPLICATION " +
       "SET applicationName=:applicationName, clientId=:clientId" +
       ", clientSecret=:clientSecret, redirectUri=:redirectUri, description=:description, status=:status" +
       " WHERE id=:id")
   int update(@Bind("id") String id, @BindBean Application application);
 
-  @SqlUpdate("DELETE from APPLICATION where id=:id")
+  @SqlUpdate("DELETE from EGOAPPLICATION where id=:id")
   int delete(@Bind("id") String id);
 
 

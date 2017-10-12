@@ -16,7 +16,9 @@
 
 package org.overture.ego.repository.mapper;
 
+import com.google.common.base.Splitter;
 import lombok.SneakyThrows;
+import lombok.val;
 import org.overture.ego.model.entity.User;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -32,7 +34,7 @@ public class UserMapper implements ResultSetMapper<User> {
   public User map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
     SimpleDateFormat formatter =
         new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
-    return User.builder().id(resultSet.getString("id"))
+    val user =  User.builder().id(Integer.parseInt(resultSet.getString("id")))
         .userName(resultSet.getString("userName"))
         .email(resultSet.getString("email"))
         .firstName(resultSet.getString("firstName"))
@@ -41,6 +43,20 @@ public class UserMapper implements ResultSetMapper<User> {
         .lastLogin(resultSet.getString("lastLogin"))
         .role(resultSet.getString("role"))
         .status(resultSet.getString("status")).build();
+
+    // add groups
+    Splitter.on(",")
+            .trimResults()
+            .splitToList(resultSet.getString("groups"))
+            .stream().forEach(group -> user.getGroups().add(group));
+
+    // add applications
+    Splitter.on(",")
+            .trimResults()
+            .splitToList(resultSet.getString("applications"))
+            .stream().forEach(application -> user.getApplications().add(application));
+
+    return user;
 
   }
 

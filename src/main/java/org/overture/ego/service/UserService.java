@@ -30,8 +30,6 @@ public class UserService {
   UserRepository userRepository;
 
   public User create(User userInfo) {
-    if (userInfo.getId() == null || userInfo.getId().isEmpty())
-      userInfo.setId(userInfo.getUserName());
     if (userInfo.getEmail() == null || userInfo.getEmail().isEmpty())
       userInfo.setEmail(userInfo.getUserName());
     userRepository.create(userInfo);
@@ -50,7 +48,7 @@ public class UserService {
     return updatedUserInfo;
   }
 
-  public void delete(String userId) {
+  public void delete(int userId) {
     userRepository.delete(userId);
   }
 

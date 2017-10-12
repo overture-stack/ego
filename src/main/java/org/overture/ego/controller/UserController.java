@@ -107,7 +107,7 @@ public class UserController {
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String userId) {
+      @PathVariable(value = "id", required = true) int userId) {
     userService.delete(userId);
   }
 

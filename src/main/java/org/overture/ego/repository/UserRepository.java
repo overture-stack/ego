@@ -29,22 +29,32 @@ import java.util.List;
 @RegisterMapper(UserMapper.class)
 public interface UserRepository {
 
-  @SqlQuery("SELECT * FROM USERS")
+  String selectQueryBase = "SELECT EGOUSER.ID, EGOUSER.USERNAME,EGOUSER.EMAIL, EGOUSER.ROLE, EGOUSER.STATUS, " +
+          "EGOUSER.FIRSTNAME, EGOUSER.LASTNAME, EGOUSER.CREATEDAT,EGOUSER.LASTLOGIN, EGOUSER.PREFERREDLANGUAGE " +
+          "GROUP_CONCAT(EGOGROUP.GROUPNAME SEPARATOR ',') AS Groups, " +
+          "GROUP_CONCAT(EGOAPPLICATION.APPLICATIONNAME SEPARATOR ',') AS Applications" +
+          "FROM USERGROUP" +
+          "  INNER JOIN EGOGROUP ON EGOGROUP.ID = USERGROUP.GRPID" +
+          "  INNER JOIN EGOUSER ON EGOUSER.ID = USERGROUP.USERID" +
+          "  INNER JOIN USERAPPLICATION on EGOUSER.ID = USERAPPLICATION.USERID" +
+          "  INNER JOIN EGOAPPLICATION on USERAPPLICATION.APPID = EGOAPPLICATION.ID";
+
+  @SqlQuery(selectQueryBase + " GROUP BY EGOUSER.ID")
   List<User> getAllUsers();
 
-  @SqlUpdate("INSERT INTO USERS (userName, email, role, status, firstName, lastName, createdAt,lastLogin,preferredLanguage) " +
+  @SqlUpdate("INSERT INTO EGOUSER (userName, email, role, status, firstName, lastName, createdAt,lastLogin,preferredLanguage) " +
       "VALUES (:userName, :email, :role, :status, :firstName, :lastName, :createdAt, :lastLogin, :preferredLanguage)")
   int create(@BindBean User user);
 
-  @SqlQuery("SELECT * FROM USERS WHERE userName=:userName")
+  @SqlQuery(selectQueryBase + " WHERE userName=:userName GROUP BY EGOUSER.ID")
   List<User> read(@Bind("userName") String username);
 
-  @SqlUpdate("UPDATE USERS SET role=:role, status=:status," +
+  @SqlUpdate("UPDATE EGOUSER SET role=:role, status=:status," +
       "firstName=:firstName, lastName=:lastName, createdAt=:createdAt , lastLogin=:lastLogin, " +
       "preferredLanguage=:preferredLanguage WHERE userName=:userName")
   int update(@BindBean User user);
 
-  @SqlUpdate("DELETE from USERS where userName=:userName")
-  int delete(@Bind("userName") String id);
+  @SqlUpdate("DELETE from EGOUSER where userName=:userName")
+  int delete(@Bind("userName") int id);
 
 }

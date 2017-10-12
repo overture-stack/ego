@@ -21,6 +21,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
+import lombok.Singular;
+
+import java.util.List;
 
 @Builder
 @Data
@@ -29,7 +32,7 @@ import lombok.NonNull;
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public class User {
 
-  String id;
+  int id;
   @NonNull
   String userName; // TODO: not sure
   @NonNull
@@ -42,4 +45,6 @@ public class User {
   String createdAt;
   String lastLogin;
   String preferredLanguage;
+  @Singular List<String> groups;
+  @Singular List<String> applications;
 }

@@ -62,7 +62,7 @@ public class TokenService {
     try {
       Claims body = getTokenClaims(token);
 
-      return User.builder().id((String) body.get("id"))
+      return User.builder().id((Integer) body.get("id"))
           .userName(body.getSubject())
           .email((String) body.get("email"))
           .firstName((String) body.get("firstName"))
