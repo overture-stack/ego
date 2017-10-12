@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.service.UserService;
 import org.overture.ego.token.GoogleTokenValidator;
-import org.overture.ego.token.TokenUtil;
+import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.jwt.JwtHelper;
@@ -36,7 +36,7 @@ import java.util.Map;
 public class AuthController {
 
   @Autowired
-  TokenUtil tokenUtil;
+  TokenService tokenService;
   @Autowired
   UserService userService;
   @Autowired
@@ -56,7 +56,7 @@ public class AuthController {
     val userName = authInfo.get("email").toString();
     val user = userService.get(userName);
     if (user == null) throw new Exception("User doesn't exist: " + userName);
-    return tokenUtil.generateToken(user);
+    return tokenService.generateToken(user);
 
   }
 
@@ -67,6 +67,6 @@ public class AuthController {
   boolean verifyJWToken(
       @RequestHeader(value = "token", required = true) final String token) {
     if (token == null || token.isEmpty()) return false;
-    return tokenUtil.validateToken(token);
+    return tokenService.validateToken(token);
   }
 }

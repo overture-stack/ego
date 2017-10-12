@@ -23,10 +23,10 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.val;
 import org.overture.ego.model.entity.User;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
-public class TokenUtil {
+@Service
+public class TokenService {
 
   @Value("${jwt.secret}")
   private String jwtSecret;
