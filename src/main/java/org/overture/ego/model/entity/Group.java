@@ -35,8 +35,6 @@ public class Group {
   String description;
   String status;
   @Singular
-  List<String> roles;
-  @Singular
   List<String> applications;
 
 }
