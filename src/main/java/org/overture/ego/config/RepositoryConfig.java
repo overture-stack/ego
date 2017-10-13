@@ -21,6 +21,7 @@ import org.overture.ego.repository.ApplicationRepository;
 import org.overture.ego.repository.GroupsRepository;
 import org.overture.ego.repository.UserRepository;
 import org.skife.jdbi.v2.DBI;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,14 +39,12 @@ public class RepositoryConfig {
   String username;
   @Value("${datasource.password}")
   String password;
+  @Autowired
   DataSource dataSource;
 
 
   @Bean
   public DBI dbi() {
-    if (dataSource == null) {
-      dataSource = JdbcConnectionPool.create(databaseURL, username, password);
-    }
     return new DBI(dataSource);
   }
 

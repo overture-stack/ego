@@ -34,11 +34,11 @@ public class User {
 
   int id;
   @NonNull
-  String userName; // TODO: not sure
+  String userName;
   @NonNull
   String email;
   @NonNull
-  String role; // TODO: not sure
+  String role;
   String status;
   String firstName;
   String lastName;
