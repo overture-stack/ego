@@ -14,28 +14,15 @@
  * limitations under the License.
  */
 
-package org.overture.ego.model.entity;
+package org.overture.ego.repository;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NonNull;
 
-@Data
-@Builder
-@JsonPropertyOrder({"id", "applicationName", "clientId", "clientSecret", "redirectUri", "description", "status"})
-@JsonInclude(JsonInclude.Include.ALWAYS)
-public class Application {
-  int id;
-  @NonNull
-  String applicationName;
-  @NonNull
-  String clientId;
-  @NonNull
-  String clientSecret;
-  String redirectUri;
-  String description;
-  String status;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+
+public interface UserGroupRepository {
+
+  @SqlUpdate("INSERT INTO USERGROUP (userid, grpid) VALUES (:userId, :groupId)")
+  int add(@Bind("userId")int userId, @Bind("groupId") int groupId);
 
 }

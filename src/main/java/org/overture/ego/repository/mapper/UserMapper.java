@@ -18,6 +18,7 @@ package org.overture.ego.repository.mapper;
 
 import com.google.common.base.Splitter;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
 import org.skife.jdbi.v2.StatementContext;
@@ -26,8 +27,9 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 
-
+@Slf4j
 public class UserMapper implements ResultSetMapper<User> {
   @Override
   @SneakyThrows
@@ -42,21 +44,28 @@ public class UserMapper implements ResultSetMapper<User> {
         .createdAt(resultSet.getString("createdAt"))
         .lastLogin(resultSet.getString("lastLogin"))
         .role(resultSet.getString("role"))
-        .status(resultSet.getString("status")).build();
+        .status(resultSet.getString("status"));
 
-    // add groups
-    Splitter.on(",")
-            .trimResults()
-            .splitToList(resultSet.getString("groups"))
-            .stream().forEach(group -> user.getGroups().add(group));
+    if(resultSet.getString("groups") != null) {
+      val groups = new ArrayList<String>();
+      // add groups
+      Splitter.on(",")
+              .trimResults()
+              .splitToList(resultSet.getString("groups"))
+              .stream().forEach(group -> groups.add(group));
+      user.groups(groups);
+    }
 
-    // add applications
-    Splitter.on(",")
-            .trimResults()
-            .splitToList(resultSet.getString("applications"))
-            .stream().forEach(application -> user.getApplications().add(application));
-
-    return user;
+    if(resultSet.getString("applications") != null) {
+      val applications = new ArrayList<String>();
+      // add applications
+      Splitter.on(",")
+              .trimResults()
+              .splitToList(resultSet.getString("applications"))
+              .stream().forEach(application -> applications.add(application));
+      user.applications(applications);
+    }
+    return user.build();
 
   }
 

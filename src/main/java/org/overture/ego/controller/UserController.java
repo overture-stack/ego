@@ -49,10 +49,10 @@ public class UserController {
   )
   public @ResponseBody
   List<User> getUsersList(
-//            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken
-////            @RequestParam(value = "offset", required = false) long offset,
-//            @RequestParam(value = "count", required = false) short count)
-  ) {
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+            @RequestParam(value = "offset", required = false, defaultValue = "0") long offset,
+            @RequestParam(value = "count", required = false, defaultValue = "10") short count)
+  {
     return userService.listUsers();
   }
 
@@ -83,10 +83,25 @@ public class UserController {
   public @ResponseBody
   User getUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String username) {
-    return userService.get(username + ".com");
+      @PathVariable(value = "id", required = true) String id) {
+    return userService.get(id);
   }
 
+  @ProjectCodeScoped
+  @RequestMapping(method = RequestMethod.PATCH, value = "/{id}")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Add groups to user", response = User.class)
+          }
+  )
+  public @ResponseBody
+  String addGroupsToUser(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String userId,
+          @RequestBody(required = true) List<String> groups) {
+     userService.addUsersToGroups(userId,groups);
+     return groups.size() + " groups added successfully.";
+  }
 
   @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
@@ -107,7 +122,7 @@ public class UserController {
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) int userId) {
+      @PathVariable(value = "id", required = true) String userId) {
     userService.delete(userId);
   }
 
