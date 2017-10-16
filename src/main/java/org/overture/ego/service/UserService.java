@@ -17,6 +17,7 @@
 package org.overture.ego.service;
 
 import org.overture.ego.model.entity.User;
+import org.overture.ego.repository.UserGroupRepository;
 import org.overture.ego.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,19 +29,28 @@ public class UserService {
 
   @Autowired
   UserRepository userRepository;
+  @Autowired
+  UserGroupRepository userGroupRepository;
 
   public User create(User userInfo) {
-    if (userInfo.getEmail() == null || userInfo.getEmail().isEmpty())
-      userInfo.setEmail(userInfo.getUserName());
     userRepository.create(userInfo);
-    return userInfo;
+    return userRepository.getByName(userInfo.getUserName());
+  }
+
+  public void addUsersToGroups(String userId, List<String> groupIds){
+    //TODO: remove casting to Int. Updated DB design will have strings for ids
+    int userID = Integer.parseInt(userId);
+    groupIds.forEach(grpId -> {
+      int groupId = Integer.parseInt(grpId);
+      userGroupRepository.add(userID,groupId);});
   }
 
   public User get(String userId) {
-    if (userRepository.read(userId) == null || userRepository.read(userId).size() == 0)
+    int userID = Integer.parseInt(userId);
+    if (userRepository.read(userID) == null)
       return null;
     else
-      return userRepository.read(userId).get(0);
+      return userRepository.read(userID);
   }
 
   public User update(User updatedUserInfo) {
@@ -48,11 +58,15 @@ public class UserService {
     return updatedUserInfo;
   }
 
-  public void delete(int userId) {
-    userRepository.delete(userId);
+  public void delete(String userId) {
+    int userID = Integer.parseInt(userId);
+
+    userRepository.delete(userID);
   }
 
   public List<User> listUsers() {
     return userRepository.getAllUsers();
   }
+
+
 }

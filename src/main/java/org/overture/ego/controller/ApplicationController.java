@@ -47,9 +47,9 @@ public class ApplicationController {
   public @ResponseBody
   List<Application> getApplicationsList(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestParam(value = "offset", required = true) long offset,
-      @RequestParam(value = "count", required = false) short count) {
-    return null;
+      @RequestParam(value = "offset", required = false, defaultValue = "0") long offset,
+      @RequestParam(value = "count", required = false, defaultValue = "10") short count) {
+    return applicationService.listApps();
   }
 
   @ProjectCodeScoped

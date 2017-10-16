@@ -29,15 +29,14 @@ import java.util.List;
 @RegisterMapper(UserMapper.class)
 public interface UserRepository {
 
-  String selectQueryBase = "SELECT EGOUSER.ID, EGOUSER.USERNAME,EGOUSER.EMAIL, EGOUSER.ROLE, EGOUSER.STATUS, " +
-          "EGOUSER.FIRSTNAME, EGOUSER.LASTNAME, EGOUSER.CREATEDAT,EGOUSER.LASTLOGIN, EGOUSER.PREFERREDLANGUAGE " +
-          "GROUP_CONCAT(EGOGROUP.GROUPNAME SEPARATOR ',') AS Groups, " +
-          "GROUP_CONCAT(EGOAPPLICATION.APPLICATIONNAME SEPARATOR ',') AS Applications" +
-          "FROM USERGROUP" +
-          "  INNER JOIN EGOGROUP ON EGOGROUP.ID = USERGROUP.GRPID" +
-          "  INNER JOIN EGOUSER ON EGOUSER.ID = USERGROUP.USERID" +
-          "  INNER JOIN USERAPPLICATION on EGOUSER.ID = USERAPPLICATION.USERID" +
-          "  INNER JOIN EGOAPPLICATION on USERAPPLICATION.APPID = EGOAPPLICATION.ID";
+  String selectQueryBase = "SELECT EGOUSER.ID, EGOUSER.USERNAME,EGOUSER.EMAIL, " +
+          " EGOUSER.ROLE, EGOUSER.STATUS, EGOUSER.FIRSTNAME, EGOUSER.LASTNAME, " +
+          "  EGOUSER.CREATEDAT,EGOUSER.LASTLOGIN, EGOUSER.PREFERREDLANGUAGE, " +
+          "  GROUP_CONCAT(USERGROUP.GRPID SEPARATOR ',') AS Groups, " +
+          "  GROUP_CONCAT(USERAPPLICATION.APPID SEPARATOR ',') AS Applications " +
+          "  FROM EGOUSER " +
+          "  LEFT JOIN  USERGROUP ON EGOUSER.ID = USERGROUP.USERID " +
+          "  LEFT JOIN USERAPPLICATION on EGOUSER.ID = USERAPPLICATION.USERID";
 
   @SqlQuery(selectQueryBase + " GROUP BY EGOUSER.ID")
   List<User> getAllUsers();
@@ -46,15 +45,18 @@ public interface UserRepository {
       "VALUES (:userName, :email, :role, :status, :firstName, :lastName, :createdAt, :lastLogin, :preferredLanguage)")
   int create(@BindBean User user);
 
+  @SqlQuery(selectQueryBase + " WHERE id=:id GROUP BY EGOUSER.ID")
+  User read(@Bind("id") int id);
+
   @SqlQuery(selectQueryBase + " WHERE userName=:userName GROUP BY EGOUSER.ID")
-  List<User> read(@Bind("userName") String username);
+  User getByName(@Bind("userName") String userName);
 
   @SqlUpdate("UPDATE EGOUSER SET role=:role, status=:status," +
       "firstName=:firstName, lastName=:lastName, createdAt=:createdAt , lastLogin=:lastLogin, " +
       "preferredLanguage=:preferredLanguage WHERE userName=:userName")
   int update(@BindBean User user);
 
-  @SqlUpdate("DELETE from EGOUSER where userName=:userName")
-  int delete(@Bind("userName") int id);
+  @SqlUpdate("DELETE from EGOUSER where id=:id")
+  int delete(@Bind("id") int id);
 
 }

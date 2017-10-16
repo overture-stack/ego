@@ -22,6 +22,7 @@ import org.overture.ego.repository.ApplicationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -33,17 +34,14 @@ public class ApplicationService {
   ApplicationRepository applicationRepository;
 
   public Application create(Application applicationInfo) {
-    String appId = applicationInfo.getId();
-    if (appId == null || appId.isEmpty())
-      appId = APP_PREFIX + UUID.randomUUID().toString().substring(0, 4);
-
-    applicationInfo.setId(appId);
-    val output = applicationRepository.create(applicationInfo);
-    return applicationRepository.read(appId);
+    applicationRepository.create(applicationInfo);
+    return applicationRepository.getByName(applicationInfo.getApplicationName());
   }
 
   public Application get(String applicationId) {
-    return applicationRepository.read(applicationId);
+    //TODO: change id to string
+    int appID = Integer.parseInt(applicationId);
+    return applicationRepository.read(appID);
   }
 
   public Application update(Application updatedApplicationInfo) {
@@ -52,6 +50,12 @@ public class ApplicationService {
   }
 
   public void delete(String applicationId) {
-    applicationRepository.delete(applicationId);
+    //TODO: change id to string
+    int appID = Integer.parseInt(applicationId);
+    applicationRepository.delete(appID);
+  }
+
+  public List<Application> listApps() {
+    return applicationRepository.listApps();
   }
 }
