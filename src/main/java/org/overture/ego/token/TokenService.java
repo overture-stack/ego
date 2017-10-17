@@ -32,9 +32,9 @@ public class TokenService {
   private String jwtSecret;
 
   public String generateToken(User u) {
-    Claims claims = Jwts.claims().setSubject(u.getUserName());
+    Claims claims = Jwts.claims().setSubject(u.getName());
     claims.put("userId", u.getId());
-    claims.put("username", u.getUserName());
+    claims.put("username", u.getName());
     claims.put("role", u.getRole());
     claims.put("email", u.getEmail());
     claims.put("firstName", u.getFirstName());
@@ -63,7 +63,7 @@ public class TokenService {
       Claims body = getTokenClaims(token);
 
       return User.builder().id((Integer) body.get("id"))
-          .userName(body.getSubject())
+          .name(body.getSubject())
           .email((String) body.get("email"))
           .firstName((String) body.get("firstName"))
           .lastName((String) body.get("lastName"))

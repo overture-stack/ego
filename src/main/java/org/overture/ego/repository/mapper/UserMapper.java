@@ -23,6 +23,7 @@ import lombok.val;
 import org.overture.ego.model.entity.User;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -31,13 +32,12 @@ import java.util.ArrayList;
 
 @Slf4j
 public class UserMapper implements ResultSetMapper<User> {
+
   @Override
   @SneakyThrows
   public User map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
-    SimpleDateFormat formatter =
-        new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
-    val user =  User.builder().id(Integer.parseInt(resultSet.getString("id")))
-        .userName(resultSet.getString("userName"))
+    val user =  User.builder().id(Integer.parseInt(resultSet.getString("userid")))
+        .name(resultSet.getString("userName"))
         .email(resultSet.getString("email"))
         .firstName(resultSet.getString("firstName"))
         .lastName(resultSet.getString("lastName"))

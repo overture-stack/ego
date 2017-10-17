@@ -35,7 +35,7 @@ public class ApplicationService {
 
   public Application create(Application applicationInfo) {
     applicationRepository.create(applicationInfo);
-    return applicationRepository.getByName(applicationInfo.getApplicationName());
+    return applicationRepository.getByName(applicationInfo.getName());
   }
 
   public Application get(String applicationId) {

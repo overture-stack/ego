@@ -26,8 +26,8 @@ import java.sql.SQLException;
 public class ApplicationMapper implements ResultSetMapper<Application> {
   @Override
   public Application map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
-    return Application.builder().id(Integer.parseInt(resultSet.getString("id")))
-        .applicationName(resultSet.getString("applicationName"))
+    return Application.builder().id(Integer.parseInt(resultSet.getString("appId")))
+        .name(resultSet.getString("appName"))
         .clientId(resultSet.getString("clientId"))
         .clientSecret(resultSet.getString("clientSecret"))
         .description(resultSet.getString("description"))

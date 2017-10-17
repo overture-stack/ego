@@ -34,15 +34,11 @@ public class UserService {
 
   public User create(User userInfo) {
     userRepository.create(userInfo);
-    return userRepository.getByName(userInfo.getUserName());
+    return userRepository.getByName(userInfo.getName());
   }
 
-  public void addUsersToGroups(String userId, List<String> groupIds){
-    //TODO: remove casting to Int. Updated DB design will have strings for ids
-    int userID = Integer.parseInt(userId);
-    groupIds.forEach(grpId -> {
-      int groupId = Integer.parseInt(grpId);
-      userGroupRepository.add(userID,groupId);});
+  public void addUsersToGroups(String userName, List<String> groupNames){
+    groupNames.forEach(grpName -> userGroupRepository.add(userName,grpName));
   }
 
   public User get(String userId) {

@@ -29,10 +29,7 @@ import org.springframework.security.jwt.JwtHelper;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -43,6 +40,9 @@ public class LoginController {
   UserService userService;
   @Autowired
   GoogleTokenValidator tokenValidator;
+  @Autowired
+  SimpleDateFormat formatter;
+
 
 
   List<String> admins = Arrays.asList(new String[]{"ra.vrma@gmail.com"});
@@ -74,10 +74,9 @@ public class LoginController {
       role = "ADMIN";
       status = "Approved";
     }
-    SimpleDateFormat formatter =
-        new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
+
     return User.builder()
-        .userName(userName)
+        .name(userName)
         .email(userName)
         .firstName("")
         .lastName("")

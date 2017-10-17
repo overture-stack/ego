@@ -49,9 +49,7 @@ public class UserController {
   )
   public @ResponseBody
   List<User> getUsersList(
-            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-            @RequestParam(value = "offset", required = false, defaultValue = "0") long offset,
-            @RequestParam(value = "count", required = false, defaultValue = "10") short count)
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken)
   {
     return userService.listUsers();
   }
@@ -88,7 +86,7 @@ public class UserController {
   }
 
   @ProjectCodeScoped
-  @RequestMapping(method = RequestMethod.PATCH, value = "/{id}")
+  @RequestMapping(method = RequestMethod.PATCH, value = "/{name}")
   @ApiResponses(
           value = {
                   @ApiResponse(code = 200, message = "Add groups to user", response = User.class)
@@ -97,9 +95,9 @@ public class UserController {
   public @ResponseBody
   String addGroupsToUser(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-          @PathVariable(value = "id", required = true) String userId,
+          @PathVariable(value = "name", required = true) String userName,
           @RequestBody(required = true) List<String> groups) {
-     userService.addUsersToGroups(userId,groups);
+     userService.addUsersToGroups(userName,groups);
      return groups.size() + " groups added successfully.";
   }
 
