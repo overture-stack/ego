@@ -49,7 +49,9 @@ public class UserController {
   )
   public @ResponseBody
   List<User> getUsersList(
-          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken)
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @RequestParam(value = "offset", required = false, defaultValue = "0") long offset,
+          @RequestParam(value = "count", required = false, defaultValue = "10") short count)
   {
     return userService.listUsers();
   }
@@ -64,8 +66,8 @@ public class UserController {
   public @ResponseBody
   List<User> findUsers(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestParam(value = "query", required = true) String query,
-      @RequestParam(value = "count", required = false) short count) {
+      @RequestParam(value = "query", required = false, defaultValue = "0") String query,
+      @RequestParam(value = "count", required = false, defaultValue = "10") short count) {
 
     return null;
   }
@@ -89,7 +91,7 @@ public class UserController {
   @RequestMapping(method = RequestMethod.PATCH, value = "/{name}")
   @ApiResponses(
           value = {
-                  @ApiResponse(code = 200, message = "Add groups to user", response = User.class)
+                  @ApiResponse(code = 200, message = "Add groups to user", response = String.class)
           }
   )
   public @ResponseBody

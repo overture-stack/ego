@@ -16,9 +16,13 @@
 
 package org.overture.ego.repository;
 
-import org.overture.ego.repository.mapper.GroupsMapper;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
-@RegisterMapper(GroupsMapper.class)
-public interface GroupsRepository {
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+
+public interface GroupAppRepository {
+
+  @SqlUpdate("INSERT INTO GROUPAPPLICATION (appName, grpname) VALUES (:appName, :grpName)")
+  int add(@Bind("grpName") String groupName,@Bind("appName") String appName);
+
 }

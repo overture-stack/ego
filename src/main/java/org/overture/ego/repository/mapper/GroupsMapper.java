@@ -17,16 +17,40 @@
 package org.overture.ego.repository.mapper;
 
 
+import com.google.common.base.Splitter;
+import lombok.NonNull;
+import lombok.Singular;
+import lombok.val;
+import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GroupsMapper implements ResultSetMapper<Group> {
   @Override
   public Group map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
-    return null;
+    val group =  Group.builder().id(Integer.parseInt(resultSet.getString("grpId")))
+            .name(resultSet.getString("grpName"))
+            .description(resultSet.getString("description"))
+            .status(resultSet.getString("status"))
+            .status(resultSet.getString("status"));
+
+    if(resultSet.getString("applications") != null) {
+      val applications = new ArrayList<String>();
+      // add applications
+      Splitter.on(",")
+              .trimResults()
+              .splitToList(resultSet.getString("applications"))
+              .stream().forEach(application -> applications.add(application));
+      group.applications(applications);
+    }
+
+    return group.build();
   }
+
 }

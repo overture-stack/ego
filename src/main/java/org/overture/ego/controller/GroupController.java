@@ -21,6 +21,8 @@ import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.security.ProjectCodeScoped;
+import org.overture.ego.service.GroupService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +34,13 @@ import java.util.List;
 @RequestMapping("/groups")
 public class GroupController {
 
+
+  /**
+   * Dependencies
+   */
+  @Autowired
+  GroupService groupService;
+
   @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiResponses(
@@ -42,9 +51,9 @@ public class GroupController {
   public @ResponseBody
   List<Group> getGroupsList(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestParam(value = "offset", required = true) long offset,
-      @RequestParam(value = "count", required = false) short count) {
-    return null;
+      @RequestParam(value = "offset", required = false, defaultValue = "0") long offset,
+      @RequestParam(value = "count", required = false, defaultValue = "10") short count) {
+    return groupService.listGroups();
   }
 
   @ProjectCodeScoped
@@ -57,8 +66,8 @@ public class GroupController {
   public @ResponseBody
   List<Group> findGroups(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestParam(value = "query", required = true) String query,
-      @RequestParam(value = "count", required = false) short count) {
+      @RequestParam(value = "query", required = false, defaultValue = "0") String query,
+      @RequestParam(value = "count", required = false, defaultValue = "10") short count) {
     return null;
   }
 
@@ -73,7 +82,7 @@ public class GroupController {
   Group createGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @RequestBody(required = true) Group groupInfo) {
-    return null;
+    return groupService.create(groupInfo);
   }
 
 
@@ -88,7 +97,7 @@ public class GroupController {
   Group getGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String groupId) {
-    return null;
+    return groupService.get(groupId);
   }
 
 
@@ -102,9 +111,8 @@ public class GroupController {
   public @ResponseBody
   Group updateGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String groupId,
       @RequestBody(required = true) Group updatedGroupInfo) {
-    return null;
+    return groupService.update(updatedGroupInfo);
   }
 
   @ProjectCodeScoped
@@ -113,6 +121,23 @@ public class GroupController {
   public void deleteGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String groupId) {
+    groupService.delete(groupId);
+  }
+
+  @ProjectCodeScoped
+  @RequestMapping(method = RequestMethod.PATCH, value = "/{name}")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Add Apps to Group", response = String.class)
+          }
+  )
+  public @ResponseBody
+  String addAppsToGroups(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "name", required = true) String groupName,
+          @RequestBody(required = true) List<String> apps) {
+    groupService.addAppsToGroups(groupName,apps);
+    return apps.size() + " apps added successfully.";
   }
 
 }

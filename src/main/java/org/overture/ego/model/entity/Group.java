@@ -16,6 +16,8 @@
 
 package org.overture.ego.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
@@ -25,11 +27,10 @@ import java.util.List;
 
 @Data
 @Builder
-/*
-    Represents an organization that has access to applications within Kids First Portal
- */
+@JsonPropertyOrder({"id", "name", "description", "status","applications"})
+@JsonInclude(JsonInclude.Include.ALWAYS)
 public class Group {
-  String id;
+  int id;
   @NonNull
   String name;
   String description;

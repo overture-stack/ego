@@ -16,14 +16,9 @@
 
 package org.overture.ego.config;
 
-import org.h2.jdbcx.JdbcConnectionPool;
-import org.overture.ego.repository.ApplicationRepository;
-import org.overture.ego.repository.GroupsRepository;
-import org.overture.ego.repository.UserGroupRepository;
-import org.overture.ego.repository.UserRepository;
+import org.overture.ego.repository.*;
 import org.skife.jdbi.v2.DBI;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -54,13 +49,19 @@ public class RepositoryConfig {
   }
 
   @Bean
+  public GroupAppRepository groupAppRepository(DBI dbi) {
+    return dbi.open(GroupAppRepository.class);
+  }
+
+
+  @Bean
   public ApplicationRepository applicationRepository(DBI dbi) {
     return dbi.open(ApplicationRepository.class);
   }
 
   @Bean
-  public GroupsRepository groupRepository(DBI dbi) {
-    return dbi.open(GroupsRepository.class);
+  public GroupRepository groupRepository(DBI dbi) {
+    return dbi.open(GroupRepository.class);
   }
 
 

@@ -16,8 +16,52 @@
 
 package org.overture.ego.service;
 
+import org.overture.ego.model.entity.Group;
+import org.overture.ego.repository.GroupAppRepository;
+import org.overture.ego.repository.GroupRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class GroupService {
+
+  @Autowired
+  GroupRepository groupRepository;
+  @Autowired
+  GroupAppRepository groupAppRepository;
+
+  public Group create(Group groupInfo) {
+    groupRepository.create(groupInfo);
+    return groupRepository.getByName(groupInfo.getName());
+  }
+
+  public void addAppsToGroups(String groupName, List<String> appNames){
+    appNames.forEach(appName -> groupAppRepository.add(groupName,appName));
+  }
+
+  public Group get(String groupId) {
+    int groupID = Integer.parseInt(groupId);
+    if (groupRepository.read(groupID) == null)
+      return null;
+    else
+      return groupRepository.read(groupID);
+  }
+
+  public Group update(Group updatedGroupInfo) {
+    groupRepository.update(updatedGroupInfo);
+    return updatedGroupInfo;
+  }
+
+  public void delete(String groupId) {
+    int groupID = Integer.parseInt(groupId);
+
+    groupRepository.delete(groupID);
+  }
+
+  public List<Group> listGroups() {
+    return groupRepository.getAllGroups();
+  }
+
 }
