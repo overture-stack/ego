@@ -27,36 +27,36 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import java.util.List;
 
 @RegisterMapper(UserMapper.class)
-public interface UserRepository {
+public interface UserRepository  {
 
-  String selectQueryBase = "SELECT EGOUSER.ID, EGOUSER.USERNAME,EGOUSER.EMAIL, " +
+  String selectQueryBase = "SELECT EGOUSER.USERID, EGOUSER.USERNAME,EGOUSER.EMAIL, " +
           " EGOUSER.ROLE, EGOUSER.STATUS, EGOUSER.FIRSTNAME, EGOUSER.LASTNAME, " +
           "  EGOUSER.CREATEDAT,EGOUSER.LASTLOGIN, EGOUSER.PREFERREDLANGUAGE, " +
-          "  GROUP_CONCAT(USERGROUP.GRPID SEPARATOR ',') AS Groups, " +
-          "  GROUP_CONCAT(USERAPPLICATION.APPID SEPARATOR ',') AS Applications " +
+          "  STRING_AGG(USERGROUP.GRPNAME, ',') AS Groups, " +
+          "  STRING_AGG(USERAPPLICATION.APPNAME, ',') AS Applications " +
           "  FROM EGOUSER " +
-          "  LEFT JOIN  USERGROUP ON EGOUSER.ID = USERGROUP.USERID " +
-          "  LEFT JOIN USERAPPLICATION on EGOUSER.ID = USERAPPLICATION.USERID";
+          "  LEFT JOIN  USERGROUP ON EGOUSER.USERNAME = USERGROUP.USERNAME " +
+          "  LEFT JOIN USERAPPLICATION on EGOUSER.USERNAME = USERAPPLICATION.APPNAME";
 
-  @SqlQuery(selectQueryBase + " GROUP BY EGOUSER.ID")
+  @SqlQuery(selectQueryBase + " GROUP BY EGOUSER.USERID")
   List<User> getAllUsers();
 
   @SqlUpdate("INSERT INTO EGOUSER (userName, email, role, status, firstName, lastName, createdAt,lastLogin,preferredLanguage) " +
-      "VALUES (:userName, :email, :role, :status, :firstName, :lastName, :createdAt, :lastLogin, :preferredLanguage)")
+          "VALUES (:name, :email, :role, :status, :firstName, :lastName, :createdAt, :lastLogin, :preferredLanguage)")
   int create(@BindBean User user);
 
-  @SqlQuery(selectQueryBase + " WHERE id=:id GROUP BY EGOUSER.ID")
-  User read(@Bind("id") int id);
+  @SqlQuery(selectQueryBase + " WHERE USERID=:id GROUP BY EGOUSER.USERID")
+  User read(@Bind("id") int userId);
 
-  @SqlQuery(selectQueryBase + " WHERE userName=:userName GROUP BY EGOUSER.ID")
-  User getByName(@Bind("userName") String userName);
+  @SqlQuery(selectQueryBase + " WHERE userName=:name")
+  User getByName(@Bind("name") String userName);
 
   @SqlUpdate("UPDATE EGOUSER SET role=:role, status=:status," +
-      "firstName=:firstName, lastName=:lastName, createdAt=:createdAt , lastLogin=:lastLogin, " +
-      "preferredLanguage=:preferredLanguage WHERE userName=:userName")
+          "firstName=:firstName, lastName=:lastName, createdAt=:createdAt , lastLogin=:lastLogin, " +
+          "preferredLanguage=:preferredLanguage WHERE userName=:userName")
   int update(@BindBean User user);
 
-  @SqlUpdate("DELETE from EGOUSER where id=:id")
-  int delete(@Bind("id") int id);
+  @SqlUpdate("DELETE from EGOUSER where USERID=:id")
+  int delete(@Bind("id") int userId);
 
 }

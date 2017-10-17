@@ -22,7 +22,7 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 public interface UserGroupRepository {
 
-  @SqlUpdate("INSERT INTO USERGROUP (userid, grpid) VALUES (:userId, :groupId)")
-  int add(@Bind("userId")int userId, @Bind("groupId") int groupId);
+  @SqlUpdate("INSERT INTO USERGROUP (username, grpname) VALUES (:userName, :grpName)")
+  int add(@Bind("userName")String userName, @Bind("grpName") String groupName);
 
 }

@@ -24,12 +24,12 @@ import lombok.NonNull;
 
 @Data
 @Builder
-@JsonPropertyOrder({"id", "applicationName", "clientId", "clientSecret", "redirectUri", "description", "status"})
+@JsonPropertyOrder({"id", "name", "clientId", "clientSecret", "redirectUri", "description", "status"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public class Application {
   int id;
   @NonNull
-  String applicationName;
+  String name;
   @NonNull
   String clientId;
   @NonNull

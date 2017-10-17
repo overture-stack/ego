@@ -27,14 +27,14 @@ import java.util.List;
 
 @Builder
 @Data
-@JsonPropertyOrder({"id", "userName", "email", "role", "status", "groups",
+@JsonPropertyOrder({"id", "name", "email", "role", "status", "groups",
     "applications", "firstName", "lastName", "createdAt", "lastLogin", "preferredLanguage"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public class User {
 
   int id;
   @NonNull
-  String userName;
+  String name;
   @NonNull
   String email;
   @NonNull

@@ -31,7 +31,7 @@ import java.util.List;
 public class Group {
   String id;
   @NonNull
-  String groupName;
+  String name;
   String description;
   String status;
   @Singular

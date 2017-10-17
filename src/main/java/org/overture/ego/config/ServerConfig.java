@@ -22,6 +22,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
+
 
 @Configuration
 public class ServerConfig extends WebSecurityConfigurerAdapter {
@@ -30,6 +33,14 @@ public class ServerConfig extends WebSecurityConfigurerAdapter {
   @Bean
   CorsFilter corsFilter() {
     return new CorsFilter();
+  }
+
+  @Bean
+  SimpleDateFormat formatter(){
+    SimpleDateFormat formatter =
+            new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+    return formatter;
   }
 
   //@Bean
