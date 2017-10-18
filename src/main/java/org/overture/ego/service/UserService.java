@@ -43,10 +43,11 @@ public class UserService {
 
   public User get(String userId) {
     int userID = Integer.parseInt(userId);
-    if (userRepository.read(userID) == null)
-      return null;
-    else
-      return userRepository.read(userID);
+    return userRepository.read(userID);
+  }
+
+  public User getByName(String userName) {
+      return userRepository.getByName(userName);
   }
 
   public User update(User updatedUserInfo) {

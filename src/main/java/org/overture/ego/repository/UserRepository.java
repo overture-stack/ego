@@ -48,7 +48,7 @@ public interface UserRepository  {
   @SqlQuery(selectQueryBase + " WHERE USERID=:id GROUP BY EGOUSER.USERID")
   User read(@Bind("id") int userId);
 
-  @SqlQuery(selectQueryBase + " WHERE userName=:name")
+  @SqlQuery(selectQueryBase + " WHERE EGOUSER.USERNAME=:name GROUP BY EGOUSER.USERID")
   User getByName(@Bind("name") String userName);
 
   @SqlUpdate("UPDATE EGOUSER SET role=:role, status=:status," +

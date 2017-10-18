@@ -45,7 +45,7 @@ public interface GroupRepository {
   @SqlQuery(selectQueryBase + " WHERE GRPID=:id GROUP BY EGOGROUP.GRPID")
   Group read(@Bind("id") int grpId);
 
-  @SqlQuery(selectQueryBase + " WHERE grpName=:name")
+  @SqlQuery(selectQueryBase + " WHERE EGOGROUP.GRPNAME=:name GROUP BY EGOGROUP.GRPID")
   Group getByName(@Bind("name") String grpName);
 
   @SqlUpdate("UPDATE EGOGROUP SET grpName=:name, status=:status," +
