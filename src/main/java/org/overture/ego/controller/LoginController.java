@@ -59,11 +59,11 @@ public class LoginController {
     val authInfo = new ObjectMapper().readValue(tokenDecoded.getClaims(), Map.class);
     val userName = authInfo.get("email").toString();
     val user = createNewUser(userName);
-    if (userService.get(userName) == null)
+    if (userService.getByName(userName) == null)
       userService.create(user);
     if (isAdminUser(userName))
       return userService.listUsers();
-    else return Arrays.asList(new User[]{userService.get(userName)});
+    else return Arrays.asList(new User[]{userService.getByName(userName)});
 
   }
 
