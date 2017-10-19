@@ -54,7 +54,7 @@ public class AuthController {
     val tokenDecoded = JwtHelper.decode(idToken);
     val authInfo = new ObjectMapper().readValue(tokenDecoded.getClaims(), Map.class);
     val userName = authInfo.get("email").toString();
-    val user = userService.get(userName);
+    val user = userService.getByName(userName);
     if (user == null) throw new Exception("User doesn't exist: " + userName);
     return tokenService.generateToken(user);
 

@@ -61,9 +61,11 @@ public class LoginController {
     val user = createNewUser(userName);
     if (userService.getByName(userName) == null)
       userService.create(user);
-    if (isAdminUser(userName))
-      return userService.listUsers();
-    else return Arrays.asList(new User[]{userService.getByName(userName)});
+    //TODO: uncomment and return non null values
+    //    if (isAdminUser(userName))
+//      return userService.listUsers();
+//    else return Arrays.asList(new User[]{userService.getByName(userName)});
+    return null;
 
   }
 

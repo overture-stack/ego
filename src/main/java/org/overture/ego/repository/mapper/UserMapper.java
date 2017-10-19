@@ -20,6 +20,7 @@ import com.google.common.base.Splitter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.model.Page;
 import org.overture.ego.model.entity.User;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -33,9 +34,11 @@ import java.util.ArrayList;
 @Slf4j
 public class UserMapper implements ResultSetMapper<User> {
 
+
   @Override
   @SneakyThrows
   public User map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
+
     val user =  User.builder().id(Integer.parseInt(resultSet.getString("userid")))
         .name(resultSet.getString("userName"))
         .email(resultSet.getString("email"))
