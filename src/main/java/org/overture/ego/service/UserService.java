@@ -16,12 +16,17 @@
 
 package org.overture.ego.service;
 
+import lombok.val;
+import org.overture.ego.model.Page;
+import org.overture.ego.model.PageInfo;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.repository.UserGroupRepository;
 import org.overture.ego.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -61,8 +66,27 @@ public class UserService {
     userRepository.delete(userID);
   }
 
-  public List<User> listUsers() {
-    return userRepository.getAllUsers();
+  public Page<User> listUsers(PageInfo pageInfo) {
+
+    val users = userRepository.getAllUsers(pageInfo);
+    return getUserPage(pageInfo, users);
+  }
+
+  private Page<User> getUserPage(PageInfo pageInfo, Iterator<Page<User>> resultsIterator){
+    val output = new Page<User>();
+    output.setCount(pageInfo.getLimit());
+    output.setNumber(pageInfo.getNumber());
+    val results = new ArrayList<User>();
+    int idx = 0;
+    while (resultsIterator.hasNext()){
+        val userPage = resultsIterator.next();
+        if(idx == 0){
+          output.setTotal(userPage.getTotal());
+        }
+        results.add(userPage.getResultSet().get(0));
+    }
+    output.setResultSet(results);
+    return output;
   }
 
 

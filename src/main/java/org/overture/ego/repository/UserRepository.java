@@ -16,47 +16,43 @@
 
 package org.overture.ego.repository;
 
+import org.overture.ego.model.Page;
+import org.overture.ego.model.PageInfo;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.repository.mapper.PagedMapper;
+import org.overture.ego.repository.mapper.PagedUserMapper;
 import org.overture.ego.repository.mapper.UserMapper;
+import org.overture.ego.repository.sql.UserQueries;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
+import java.util.Iterator;
 import java.util.List;
 
 @RegisterMapper(UserMapper.class)
 public interface UserRepository  {
 
-  String selectQueryBase = "SELECT EGOUSER.USERID, EGOUSER.USERNAME,EGOUSER.EMAIL, " +
-          " EGOUSER.ROLE, EGOUSER.STATUS, EGOUSER.FIRSTNAME, EGOUSER.LASTNAME, " +
-          "  EGOUSER.CREATEDAT,EGOUSER.LASTLOGIN, EGOUSER.PREFERREDLANGUAGE, " +
-          "  STRING_AGG(USERGROUP.GRPNAME, ',') AS Groups, " +
-          "  STRING_AGG(USERAPPLICATION.APPNAME, ',') AS Applications " +
-          "  FROM EGOUSER " +
-          "  LEFT JOIN  USERGROUP ON EGOUSER.USERNAME = USERGROUP.USERNAME " +
-          "  LEFT JOIN USERAPPLICATION on EGOUSER.USERNAME = USERAPPLICATION.APPNAME";
+  @SqlQuery(UserQueries.GET_ALL_USERS)
+  @Mapper(PagedUserMapper.class)
+  Iterator<Page<User>> getAllUsers(@BindBean PageInfo pageInfo);
 
-  @SqlQuery(selectQueryBase + " GROUP BY EGOUSER.USERID")
-  List<User> getAllUsers();
-
-  @SqlUpdate("INSERT INTO EGOUSER (userName, email, role, status, firstName, lastName, createdAt,lastLogin,preferredLanguage) " +
-          "VALUES (:name, :email, :role, :status, :firstName, :lastName, :createdAt, :lastLogin, :preferredLanguage)")
+  @SqlUpdate(UserQueries.INSERT_QUERY)
   int create(@BindBean User user);
 
-  @SqlQuery(selectQueryBase + " WHERE USERID=:id GROUP BY EGOUSER.USERID")
+  @SqlQuery(UserQueries.GET_BY_USERID)
   User read(@Bind("id") int userId);
 
-  @SqlQuery(selectQueryBase + " WHERE EGOUSER.USERNAME=:name GROUP BY EGOUSER.USERID")
+  @SqlQuery(UserQueries.GET_BY_USERNAME)
   User getByName(@Bind("name") String userName);
 
-  @SqlUpdate("UPDATE EGOUSER SET role=:role, status=:status," +
-          "firstName=:firstName, lastName=:lastName, createdAt=:createdAt , lastLogin=:lastLogin, " +
-          "preferredLanguage=:preferredLanguage WHERE userName=:userName")
+  @SqlUpdate(UserQueries.UPDATE_QUERY)
   int update(@BindBean User user);
 
-  @SqlUpdate("DELETE from EGOUSER where USERID=:id")
+  @SqlUpdate(UserQueries.DELETE_QUERY)
   int delete(@Bind("id") int userId);
 
 }
