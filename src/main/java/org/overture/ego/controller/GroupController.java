@@ -19,6 +19,8 @@ package org.overture.ego.controller;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import org.overture.ego.model.Page;
+import org.overture.ego.model.PageInfo;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.security.ProjectCodeScoped;
 import org.overture.ego.service.GroupService;
@@ -49,11 +51,10 @@ public class GroupController {
       }
   )
   public @ResponseBody
-  List<Group> getGroupsList(
+  Page<Group> getGroupsList(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestParam(value = "offset", required = false, defaultValue = "0") long offset,
-      @RequestParam(value = "count", required = false, defaultValue = "10") short count) {
-    return groupService.listGroups();
+      PageInfo pageInfo) {
+    return groupService.listGroups(pageInfo);
   }
 
   @ProjectCodeScoped

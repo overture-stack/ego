@@ -30,7 +30,7 @@ import java.util.List;
 @JsonPropertyOrder({"id", "name", "email", "role", "status", "groups",
     "applications", "firstName", "lastName", "createdAt", "lastLogin", "preferredLanguage"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
-public class User {
+public class User extends BaseEntity {
 
   int id;
   @NonNull
@@ -47,4 +47,5 @@ public class User {
   String preferredLanguage;
   @Singular List<String> groups;
   @Singular List<String> applications;
+
 }

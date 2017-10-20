@@ -16,6 +16,7 @@
 
 package org.overture.ego.config;
 
+import lombok.val;
 import org.overture.ego.repository.*;
 import org.skife.jdbi.v2.DBI;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,8 @@ public class RepositoryConfig {
 
   @Bean
   public DBI dbi() {
-    return new DBI(dataSource);
+    val dbi =  new DBI(dataSource);
+    return dbi;
   }
 
   @Bean

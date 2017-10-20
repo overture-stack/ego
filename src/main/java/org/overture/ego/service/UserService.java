@@ -16,6 +16,7 @@
 
 package org.overture.ego.service;
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.Page;
 import org.overture.ego.model.PageInfo;
@@ -29,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+@Slf4j
 @Service
 public class UserService {
 
@@ -69,25 +71,9 @@ public class UserService {
   public Page<User> listUsers(PageInfo pageInfo) {
 
     val users = userRepository.getAllUsers(pageInfo);
-    return getUserPage(pageInfo, users);
+    return Page.getPageFromPageInfo(pageInfo,users);
   }
 
-  private Page<User> getUserPage(PageInfo pageInfo, Iterator<Page<User>> resultsIterator){
-    val output = new Page<User>();
-    output.setCount(pageInfo.getLimit());
-    output.setNumber(pageInfo.getNumber());
-    val results = new ArrayList<User>();
-    int idx = 0;
-    while (resultsIterator.hasNext()){
-        val userPage = resultsIterator.next();
-        if(idx == 0){
-          output.setTotal(userPage.getTotal());
-        }
-        results.add(userPage.getResultSet().get(0));
-    }
-    output.setResultSet(results);
-    return output;
-  }
 
 
 }

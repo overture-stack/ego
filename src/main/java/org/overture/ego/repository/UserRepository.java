@@ -16,37 +16,31 @@
 
 package org.overture.ego.repository;
 
-import org.overture.ego.model.Page;
 import org.overture.ego.model.PageInfo;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.repository.mapper.PagedMapper;
-import org.overture.ego.repository.mapper.PagedUserMapper;
 import org.overture.ego.repository.mapper.UserMapper;
 import org.overture.ego.repository.sql.UserQueries;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
-import java.util.Iterator;
 import java.util.List;
 
 @RegisterMapper(UserMapper.class)
 public interface UserRepository  {
 
-  @SqlQuery(UserQueries.GET_ALL_USERS)
-  @Mapper(PagedUserMapper.class)
-  Iterator<Page<User>> getAllUsers(@BindBean PageInfo pageInfo);
+  @SqlQuery(UserQueries.GET_ALL)
+  List<User> getAllUsers(@BindBean PageInfo pageInfo);
 
   @SqlUpdate(UserQueries.INSERT_QUERY)
   int create(@BindBean User user);
 
-  @SqlQuery(UserQueries.GET_BY_USERID)
+  @SqlQuery(UserQueries.GET_BY_ID)
   User read(@Bind("id") int userId);
 
-  @SqlQuery(UserQueries.GET_BY_USERNAME)
+  @SqlQuery(UserQueries.GET_BY_NAME)
   User getByName(@Bind("name") String userName);
 
   @SqlUpdate(UserQueries.UPDATE_QUERY)

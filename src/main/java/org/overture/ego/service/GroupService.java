@@ -16,6 +16,9 @@
 
 package org.overture.ego.service;
 
+import lombok.val;
+import org.overture.ego.model.Page;
+import org.overture.ego.model.PageInfo;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.repository.GroupAppRepository;
 import org.overture.ego.repository.GroupRepository;
@@ -60,8 +63,11 @@ public class GroupService {
     groupRepository.delete(groupID);
   }
 
-  public List<Group> listGroups() {
-    return groupRepository.getAllGroups();
+  public Page<Group> listGroups(PageInfo pageInfo) {
+    val groups = groupRepository.getAllGroups(pageInfo);
+    return Page.getPageFromPageInfo(pageInfo,groups);
   }
+
+
 
 }

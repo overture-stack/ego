@@ -50,7 +50,9 @@ public class GroupsMapper implements ResultSetMapper<Group> {
       group.applications(applications);
     }
 
-    return group.build();
+    val output = group.build();
+    output.setTotal(resultSet);
+    return output;
   }
 
 }

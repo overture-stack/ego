@@ -17,6 +17,8 @@
 package org.overture.ego.service;
 
 import lombok.val;
+import org.overture.ego.model.Page;
+import org.overture.ego.model.PageInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.repository.ApplicationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +57,8 @@ public class ApplicationService {
     applicationRepository.delete(appID);
   }
 
-  public List<Application> listApps() {
-    return applicationRepository.listApps();
+  public Page<Application> listApps(PageInfo pageInfo) {
+    val apps = applicationRepository.listApps(pageInfo);
+    return Page.getPageFromPageInfo(pageInfo,apps);
   }
 }
