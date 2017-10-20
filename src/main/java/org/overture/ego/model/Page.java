@@ -16,15 +16,30 @@
 
 package org.overture.ego.model;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
+import lombok.val;
+import org.overture.ego.model.entity.User;
+
 
 import java.util.List;
 
 @Data
+@Builder
 public class Page<E> {
-  int total;
+  int limit;
+  int offset;
   int count;
-  int number;
-  @Singular  List<E> resultSet;
+  @Singular("resultSet")  List<E> resultSet;
+
+  public static <E> Page<E> getPageFromPageInfo(PageInfo pageInfo, List<E> results){
+
+    val pageBuilder = (PageBuilder<E>) Page.builder().limit(pageInfo.getLimit())
+            .offset(pageInfo.getOffset())
+            .resultSet(results);
+    return pageBuilder.build();
+
+  }
+
 }

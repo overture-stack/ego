@@ -16,6 +16,7 @@
 
 package org.overture.ego.repository.mapper;
 
+import lombok.val;
 import org.overture.ego.model.entity.Application;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -26,12 +27,14 @@ import java.sql.SQLException;
 public class ApplicationMapper implements ResultSetMapper<Application> {
   @Override
   public Application map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
-    return Application.builder().id(Integer.parseInt(resultSet.getString("appId")))
+    val app = Application.builder().id(Integer.parseInt(resultSet.getString("appId")))
         .name(resultSet.getString("appName"))
         .clientId(resultSet.getString("clientId"))
         .clientSecret(resultSet.getString("clientSecret"))
         .description(resultSet.getString("description"))
         .redirectUri(resultSet.getString("redirectUri"))
         .status(resultSet.getString("status")).build();
+    app.setTotal(resultSet);
+    return app;
   }
 }

@@ -20,6 +20,6 @@ import lombok.Data;
 
 @Data
 public class PageInfo {
-  int limit;
-  int number;
+   int limit;
+   int offset;
 }

@@ -16,8 +16,10 @@
 
 package org.overture.ego.repository;
 
+import org.overture.ego.model.PageInfo;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.repository.mapper.GroupsMapper;
+import org.overture.ego.repository.sql.GroupQueries;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -29,30 +31,22 @@ import java.util.List;
 @RegisterMapper(GroupsMapper.class)
 public interface GroupRepository {
 
-  String selectQueryBase = "SELECT EGOGROUP.GRPID, EGOGROUP.GRPNAME, EGOGROUP.STATUS, " +
-          "  EGOGROUP.DESCRIPTION, " +
-          "  STRING_AGG(GROUPAPPLICATION.APPNAME, ',') AS Applications " +
-          "  FROM EGOGROUP " +
-          "  LEFT JOIN GROUPAPPLICATION on EGOGROUP.GRPNAME = GROUPAPPLICATION.GRPNAME";
+  @SqlQuery(GroupQueries.GET_ALL)
+  List<Group> getAllGroups(@BindBean PageInfo pageInfo);
 
-  @SqlQuery(selectQueryBase + " GROUP BY EGOGROUP.GRPID")
-  List<Group> getAllGroups();
-
-  @SqlUpdate("INSERT INTO EGOGROUP (grpName, status, description) " +
-          "VALUES (:name, :status, :description)")
+  @SqlUpdate(GroupQueries.INSERT_QUERY)
   int create(@BindBean Group group);
 
-  @SqlQuery(selectQueryBase + " WHERE GRPID=:id GROUP BY EGOGROUP.GRPID")
+  @SqlQuery(GroupQueries.GET_BY_ID)
   Group read(@Bind("id") int grpId);
 
-  @SqlQuery(selectQueryBase + " WHERE EGOGROUP.GRPNAME=:name GROUP BY EGOGROUP.GRPID")
+  @SqlQuery(GroupQueries.GET_BY_NAME)
   Group getByName(@Bind("name") String grpName);
 
-  @SqlUpdate("UPDATE EGOGROUP SET grpName=:name, status=:status," +
-          "description=:description WHERE grpName=:grpName")
+  @SqlUpdate(GroupQueries.UPDATE_QUERY)
   int update(@BindBean Group group);
 
-  @SqlUpdate("DELETE from EGOGROUP where GRPID=:id")
+  @SqlUpdate(GroupQueries.DELETE_QUERY)
   int delete(@Bind("id") int grpId);
 
 }

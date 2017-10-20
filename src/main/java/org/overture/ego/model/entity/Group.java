@@ -29,7 +29,7 @@ import java.util.List;
 @Builder
 @JsonPropertyOrder({"id", "name", "description", "status","applications"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
-public class Group {
+public class Group extends BaseEntity {
   int id;
   @NonNull
   String name;

@@ -14,25 +14,28 @@
  * limitations under the License.
  */
 
-package org.overture.ego.repository.mapper;
+package org.overture.ego.model.entity;
 
-import org.overture.ego.model.Page;
-import org.overture.ego.model.entity.User;
-import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Builder;
+import lombok.Data;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
 
-public class PagedUserMapper implements ResultSetMapper<Page<User>> {
+@Data
+public abstract class BaseEntity {
+  @JsonIgnore
+  int total;
 
-  PagedMapper<UserMapper,User> pagedMapper;
-  public PagedUserMapper(){
-    this.pagedMapper = new PagedMapper<UserMapper,User>(new UserMapper());
+  public void setTotal(ResultSet resultSet){
+    // TODO: Bit of a hack - implement using PagedMapper and DBI Factories/ Stored Procedures
+    // Overriding the user object to get total rows in the table as an extra column in the table
+    try{
+      this.total = resultSet.getInt("total");
+    } catch(Exception ex){
+      //ignore this error
+    }
   }
 
-  @Override
-  public Page<User> map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
-    return pagedMapper.map(i, resultSet, statementContext);
-  }
+
 }

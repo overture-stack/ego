@@ -32,19 +32,19 @@ public class UserQueries {
   /*
     Query strings related to user
    */
-  public static final String GET_ALL_USERS =
+  public static final String GET_ALL =
           SELECT_COMMON + " , (SELECT COUNT(*) AS TOTAL "+TABLE_NAME+") " +
           TABLE_NAME + SELECT_SUFFIX +
           " GROUP BY EGOUSER.USERID " +
           " ORDER BY EGOUSER.USERID " +
-          " LIMIT :limit OFFSET :number";
-  public static final String GET_BY_USERID = SELECT_COMMON + TABLE_NAME + SELECT_SUFFIX +
+          " LIMIT :limit OFFSET :offset";
+  public static final String GET_BY_ID = SELECT_COMMON + TABLE_NAME + SELECT_SUFFIX +
           " WHERE USERID=:id GROUP BY EGOUSER.USERID";
-  public static final String GET_BY_USERNAME = SELECT_COMMON + TABLE_NAME + SELECT_SUFFIX +
+  public static final String GET_BY_NAME = SELECT_COMMON + TABLE_NAME + SELECT_SUFFIX +
           " WHERE EGOUSER.USERNAME=:name GROUP BY EGOUSER.USERID";
-  public static final String UPDATE_QUERY = "UPDATE EGOUSER SET role=:role, status=:status," +
+  public static final String UPDATE_QUERY = "UPDATE EGOUSER SET userName=:name, role=:role, status=:status," +
           "firstName=:firstName, lastName=:lastName, createdAt=:createdAt , lastLogin=:lastLogin, " +
-          "preferredLanguage=:preferredLanguage WHERE userName=:userName";
+          "preferredLanguage=:preferredLanguage WHERE userid=:id";
   public static final String INSERT_QUERY = "INSERT INTO EGOUSER (userName, email, role, status, firstName, lastName, " +
           "createdAt,lastLogin,preferredLanguage) " +
           "VALUES (:name, :email, :role, :status, :firstName, :lastName, :createdAt, :lastLogin, :preferredLanguage)";

@@ -32,7 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 @Slf4j
-public class UserMapper implements ResultSetMapper<User> {
+public class UserMapper implements ResultSetMapper<User>  {
 
 
   @Override
@@ -68,7 +68,9 @@ public class UserMapper implements ResultSetMapper<User> {
               .stream().forEach(application -> applications.add(application));
       user.applications(applications);
     }
-    return user.build();
+    val output = user.build();
+    output.setTotal(resultSet);
+    return output;
 
   }
 

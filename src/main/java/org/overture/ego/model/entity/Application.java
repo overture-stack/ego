@@ -26,7 +26,7 @@ import lombok.NonNull;
 @Builder
 @JsonPropertyOrder({"id", "name", "clientId", "clientSecret", "redirectUri", "description", "status"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
-public class Application {
+public class Application extends BaseEntity {
   int id;
   @NonNull
   String name;
