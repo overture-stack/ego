@@ -137,53 +137,6 @@ public class GroupController {
     groupService.delete(groupId);
   }
 
-  // USERS
-  @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
-  @ApiResponses(
-          value = {
-                  @ApiResponse(code = 200, message = "Page of users of group", response = Page.class)
-          }
-  )
-  public @ResponseBody
-  Page<User> getGroupsUsers(
-          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-          @PathVariable(value = "id", required = true) String groupId,
-          PageInfo pageInfo)
-  {
-    return userGroupService.getGroupsUsers(pageInfo,groupId);
-  }
-
-  @ProjectCodeScoped
-  @RequestMapping(method = RequestMethod.POST, value = "/{id}/users")
-  @ApiResponses(
-          value = {
-                  @ApiResponse(code = 200, message = "Add Users to Group", response = String.class)
-          }
-  )
-  public @ResponseBody
-  String addUsersToGroup(
-          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-          @PathVariable(value = "id", required = true) String grpId,
-          @RequestBody(required = true) List<String> userIDs) {
-    groupService.addUsersToGroup(grpId,userIDs);
-    return userIDs.size() + " apps added successfully.";
-  }
-
-  @ProjectCodeScoped
-  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/users/{userIDs}")
-  @ApiResponses(
-          value = {
-                  @ApiResponse(code = 200, message = "Delete Users from Group")
-          }
-  )
-  @ResponseStatus(value = HttpStatus.OK)
-  public void deleteUsersFromGroup(
-          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-          @PathVariable(value = "id", required = true) String grpId,
-          @PathVariable(value = "userIDs", required = true) List<String> userIDs) {
-    groupService.deleteUsersFromGroup(grpId,userIDs);
-  }
-
   // APPLICATIONS
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/applications")
   @ApiResponses(
@@ -232,4 +185,19 @@ public class GroupController {
     groupService.deleteAppsFromGroup(grpId,appIDs);
   }
 
+  // USERS
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Page of users of group", response = Page.class)
+          }
+  )
+  public @ResponseBody
+  Page<User> getGroupsUsers(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String groupId,
+          PageInfo pageInfo)
+  {
+    return userGroupService.getGroupsUsers(pageInfo,groupId);
+  }
 }
