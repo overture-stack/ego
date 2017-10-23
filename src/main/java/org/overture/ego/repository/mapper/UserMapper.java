@@ -52,6 +52,7 @@ public class UserMapper implements ResultSetMapper<User>  {
         .role(resultSet.getString("role"))
         .status(resultSet.getString("status"));
 
+    try {
     if(resultSet.getString("groups") != null) {
       val groups = new ArrayList<String>();
       // add groups
@@ -61,15 +62,22 @@ public class UserMapper implements ResultSetMapper<User>  {
               .stream().forEach(groupName -> groups.add(groupName));
       user.groupNames(groups);
     }
+    } catch(SQLException ex){
+      // ignore exception as some of the group get queries don't need applications
+    }
 
-    if(resultSet.getString("applications") != null) {
-      val applications = new ArrayList<String>();
-      // add applications
-      Splitter.on(",")
-              .trimResults()
-              .splitToList(resultSet.getString("applications"))
-              .stream().forEach(applicationName -> applications.add(applicationName));
-      user.applicationNames(applications);
+    try {
+      if (resultSet.getString("applications") != null) {
+        val applications = new ArrayList<String>();
+        // add applications
+        Splitter.on(",")
+                .trimResults()
+                .splitToList(resultSet.getString("applications"))
+                .stream().forEach(applicationName -> applications.add(applicationName));
+        user.applicationNames(applications);
+      }
+    } catch(SQLException ex){
+      // ignore exception as some of the group get queries don't need applications
     }
     val output = user.build();
     output.setTotal(resultSet);

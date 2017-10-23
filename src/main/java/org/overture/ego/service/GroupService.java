@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 @Service
 public class GroupService {
@@ -86,7 +87,10 @@ public class GroupService {
   }
 
   public Page<Group> listGroups(PageInfo pageInfo) {
-    val groups = groupRepository.getAllGroups(pageInfo);
+    return getGroupsPage(pageInfo, groupRepository.getAllGroups(pageInfo));
+  }
+
+  public Page<Group> getGroupsPage(PageInfo pageInfo, List<Group> groups) {
     return Page.getPageFromPageInfo(pageInfo,groups);
   }
 

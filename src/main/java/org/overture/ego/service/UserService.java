@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 @Slf4j
 @Service
@@ -41,9 +42,10 @@ public class UserService {
   @Autowired
   GroupService groupService;
   @Autowired
-  ApplicationRepository applicationRepository;
+  UserGroupService userGroupService;
   @Autowired
-  UserGroupRepository userGroupRepository;
+  ApplicationService applicationService;
+
 
   public User create(User userInfo) {
     userRepository.create(userInfo);
@@ -55,7 +57,7 @@ public class UserService {
     val user = userRepository.read(Integer.parseInt(userId));
     groupIDs.forEach(grpId -> {
       val group = groupService.get(grpId, false);
-      userGroupRepository.add(user.getName(),group.getName());
+      userGroupService.add(user.getName(),group.getName());
     });
   }
 
@@ -88,8 +90,10 @@ public class UserService {
   }
 
   public Page<User> listUsers(PageInfo pageInfo) {
+    return this.getUsersPage(pageInfo, userRepository.getAllUsers(pageInfo));
+  }
 
-    val users = userRepository.getAllUsers(pageInfo);
+  public Page<User> getUsersPage(PageInfo pageInfo, List<User> users)  {
     return Page.getPageFromPageInfo(pageInfo,users);
   }
 
@@ -99,7 +103,7 @@ public class UserService {
     val user = userRepository.read(Integer.parseInt(userId));
     groupIDs.forEach(grpId -> {
       val group = groupService.get(grpId, false);
-      userGroupRepository.delete(user.getName(),group.getName());
+      userGroupService.delete(user.getName(),group.getName());
     });
   }
 
@@ -116,7 +120,7 @@ public class UserService {
 
   private List<Application> getUserApps(User user){
     val apps = new ArrayList<Application>();
-    user.getApplicationNames().forEach(appName -> apps.add(applicationRepository.getByName(appName)));
+    user.getApplicationNames().forEach(appName -> apps.add(applicationService.getByName(appName)));
     return apps;
   }
 }

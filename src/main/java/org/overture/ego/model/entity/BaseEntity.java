@@ -17,10 +17,16 @@
 package org.overture.ego.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Splitter;
 import lombok.Builder;
 import lombok.Data;
+import lombok.val;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Data
 public abstract class BaseEntity {
@@ -36,6 +42,7 @@ public abstract class BaseEntity {
       //ignore this error
     }
   }
+
 
 
 }

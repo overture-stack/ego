@@ -18,10 +18,7 @@ package org.overture.ego.repository.mapper;
 
 
 import com.google.common.base.Splitter;
-import lombok.NonNull;
-import lombok.Singular;
 import lombok.val;
-import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -29,7 +26,7 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
+
 
 public class GroupsMapper implements ResultSetMapper<Group> {
   @Override
@@ -40,14 +37,19 @@ public class GroupsMapper implements ResultSetMapper<Group> {
             .status(resultSet.getString("status"))
             .status(resultSet.getString("status"));
 
-    if(resultSet.getString("applications") != null) {
-      val applications = new ArrayList<String>();
-      // add applications
-      Splitter.on(",")
-              .trimResults()
-              .splitToList(resultSet.getString("applications"))
-              .stream().forEach(application -> applications.add(application));
-      group.applicationNames(applications);
+    try {
+      if (resultSet.getString("applications") != null) {
+        val applications = new ArrayList<String>();
+        // add applications
+        Splitter.on(",")
+                .trimResults()
+                .splitToList(resultSet.getString("applications"))
+                .stream().forEach(application -> applications.add(application));
+        group.applicationNames(applications);
+      }
+
+    } catch (SQLException ex){
+      // ignore exception as some of the group get queries don't need applications
     }
 
     val output = group.build();

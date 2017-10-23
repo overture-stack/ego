@@ -17,15 +17,55 @@
 package org.overture.ego.repository;
 
 
-import org.overture.ego.repository.sql.GroupQueries;
+import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.entity.Group;
+import org.overture.ego.model.entity.User;
+import org.overture.ego.repository.mapper.GroupsMapper;
+import org.overture.ego.repository.mapper.UserMapper;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+
+import java.util.List;
 
 public interface UserGroupRepository {
+
+  String GET_ALL_USERS = "WITH allUsers AS ( " +
+          "    SELECT COUNT(*) AS TOTAL from usergroup where usergroup.grpname=:grpName" +
+          ") " +
+          "SELECT egouser.*, allusers.total from egouser, allusers " +
+          "where egouser.username " +
+          "      IN " +
+          "      (SELECT username from usergroup where usergroup.grpname=:grpName) " +
+          "GROUP BY userid, allusers.total " +
+          "ORDER BY EGOUSER.USERID " +
+          "LIMIT :limit OFFSET :offset";
+
+  String GET_ALL_GROUPS = "WITH allGroups AS ( " +
+          "    SELECT COUNT(*) AS TOTAL from usergroup where usergroup.username=:userName" +
+          ") " +
+          "SELECT egogroup.*, allGroups.total from egogroup, allGroups " +
+          "where egogroup.grpname " +
+          "      IN " +
+          "      (SELECT grpname from usergroup where usergroup.username=:userName) " +
+          "GROUP BY grpId, allGroups.total " +
+          "ORDER BY egogroup.grpId " +
+          "LIMIT :limit OFFSET :offset";
 
   @SqlUpdate("INSERT INTO USERGROUP (username, grpname) VALUES (:userName, :grpName)")
   int add(@Bind("userName")String userName, @Bind("grpName") String groupName);
 
   @SqlUpdate("DELETE from USERGROUP where grpname=:grpName AND username=:userName")
   void delete(@Bind("userName")String userName, @Bind("grpName") String groupName);
+
+  @SqlQuery(GET_ALL_USERS)
+  @RegisterMapper(UserMapper.class)
+  List<User> getAllUsers(@BindBean PageInfo pageInfo, @Bind("grpName") String groupName);
+
+  @SqlQuery(GET_ALL_GROUPS)
+  @RegisterMapper(GroupsMapper.class)
+  List<Group> getAllGroups(@BindBean PageInfo pageInfo,@Bind("userName")String userName);
+
 }
