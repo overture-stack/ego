@@ -54,8 +54,8 @@ public class AuthController {
     val tokenDecoded = JwtHelper.decode(idToken);
     val authInfo = new ObjectMapper().readValue(tokenDecoded.getClaims(), Map.class);
     val userName = authInfo.get("email").toString();
-    val user = userService.getByName(userName);
-    if (userService.getByName(userName) == null) {
+    val user = userService.getByName(userName, false);
+    if (user == null) {
       userService.create(user);
     }
     return tokenService.generateToken(user);

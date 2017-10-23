@@ -20,20 +20,23 @@ import com.google.common.base.Splitter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.overture.ego.model.Page;
+import org.overture.ego.model.entity.Application;
+import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.repository.ApplicationRepository;
+import org.overture.ego.repository.GroupRepository;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 @Slf4j
+@Component
 public class UserMapper implements ResultSetMapper<User>  {
-
 
   @Override
   @SneakyThrows
@@ -55,8 +58,8 @@ public class UserMapper implements ResultSetMapper<User>  {
       Splitter.on(",")
               .trimResults()
               .splitToList(resultSet.getString("groups"))
-              .stream().forEach(group -> groups.add(group));
-      user.groups(groups);
+              .stream().forEach(groupName -> groups.add(groupName));
+      user.groupNames(groups);
     }
 
     if(resultSet.getString("applications") != null) {
@@ -65,8 +68,8 @@ public class UserMapper implements ResultSetMapper<User>  {
       Splitter.on(",")
               .trimResults()
               .splitToList(resultSet.getString("applications"))
-              .stream().forEach(application -> applications.add(application));
-      user.applications(applications);
+              .stream().forEach(applicationName -> applications.add(applicationName));
+      user.applicationNames(applications);
     }
     val output = user.build();
     output.setTotal(resultSet);

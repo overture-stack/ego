@@ -19,6 +19,7 @@ package org.overture.ego.controller;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.overture.ego.model.Page;
 import org.overture.ego.model.PageInfo;
 import org.overture.ego.model.entity.Group;
@@ -47,14 +48,16 @@ public class GroupController {
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "List of groups", response = Group.class, responseContainer = "List")
+          @ApiResponse(code = 200, message = "Page of groups", response = Page.class)
       }
   )
   public @ResponseBody
   Page<Group> getGroupsList(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       PageInfo pageInfo) {
-    return groupService.listGroups(pageInfo);
+    val groups = groupService.listGroups(pageInfo);
+    groups.getResultSet().forEach(group -> groupService.addAppInfo(group));
+    return groups;
   }
 
   @ProjectCodeScoped
@@ -98,7 +101,7 @@ public class GroupController {
   Group getGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String groupId) {
-    return groupService.get(groupId);
+    return groupService.get(groupId, true);
   }
 
 

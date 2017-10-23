@@ -19,12 +19,16 @@ package org.overture.ego.service;
 import lombok.val;
 import org.overture.ego.model.Page;
 import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
+import org.overture.ego.model.entity.User;
+import org.overture.ego.repository.ApplicationRepository;
 import org.overture.ego.repository.GroupAppRepository;
 import org.overture.ego.repository.GroupRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -32,6 +36,8 @@ public class GroupService {
 
   @Autowired
   GroupRepository groupRepository;
+  @Autowired
+  ApplicationRepository applicationRepository;
   @Autowired
   GroupAppRepository groupAppRepository;
 
@@ -45,12 +51,27 @@ public class GroupService {
     appNames.forEach(appName -> groupAppRepository.add(group.getName(),appName));
   }
 
-  public Group get(String groupId) {
+  public Group get(String groupId, boolean fullInfo) {
     int groupID = Integer.parseInt(groupId);
-    if (groupRepository.read(groupID) == null)
+    if (groupRepository.read(groupID) == null) {
       return null;
-    else
-      return groupRepository.read(groupID);
+    }
+    else {
+      val group = groupRepository.read(groupID);
+      if(fullInfo){
+        addAppInfo(group);
+      }
+      return group;
+    }
+  }
+
+  public Group getByName(String groupName, boolean fullInfo) {
+
+    val group = groupRepository.getByName(groupName);
+    if(fullInfo){
+      addAppInfo(group);
+    }
+    return group;
   }
 
   public Group update(Group updatedGroupInfo) {
@@ -67,6 +88,12 @@ public class GroupService {
   public Page<Group> listGroups(PageInfo pageInfo) {
     val groups = groupRepository.getAllGroups(pageInfo);
     return Page.getPageFromPageInfo(pageInfo,groups);
+  }
+
+  public void addAppInfo(Group group){
+    val apps = new ArrayList<Application>();
+    group.getApplicationNames().forEach(appName -> apps.add(applicationRepository.getByName(appName)));
+    group.setApplications(apps);
   }
 
 

@@ -47,7 +47,7 @@ public class GroupsMapper implements ResultSetMapper<Group> {
               .trimResults()
               .splitToList(resultSet.getString("applications"))
               .stream().forEach(application -> applications.add(application));
-      group.applications(applications);
+      group.applicationNames(applications);
     }
 
     val output = group.build();

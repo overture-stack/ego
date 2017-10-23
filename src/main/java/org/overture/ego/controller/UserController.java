@@ -19,6 +19,7 @@ package org.overture.ego.controller;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.overture.ego.model.Page;
 import org.overture.ego.model.PageInfo;
 import org.overture.ego.model.entity.User;
@@ -46,7 +47,7 @@ public class UserController {
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "List of users", response = User.class, responseContainer = "List")
+          @ApiResponse(code = 200, message = "Page of users", response = Page.class)
       }
   )
   public @ResponseBody
@@ -54,7 +55,9 @@ public class UserController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           PageInfo pageInfo)
   {
-    return userService.listUsers(pageInfo);
+    val users = userService.listUsers(pageInfo);
+    users.getResultSet().forEach(user -> userService.addGroupsAppInfo(user));
+    return users;
   }
 
   @ProjectCodeScoped
@@ -85,7 +88,7 @@ public class UserController {
   User getUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String id) {
-    return userService.get(id);
+    return  userService.get(id, true);
   }
 
   @ProjectCodeScoped

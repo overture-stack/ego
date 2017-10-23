@@ -59,7 +59,7 @@ public class LoginController {
     val authInfo = new ObjectMapper().readValue(tokenDecoded.getClaims(), Map.class);
     val userName = authInfo.get("email").toString();
     val user = createNewUser(userName);
-    if (userService.getByName(userName) == null)
+    if (userService.getByName(userName, false) == null)
       userService.create(user);
     //TODO: uncomment and return non null values
     //    if (isAdminUser(userName))

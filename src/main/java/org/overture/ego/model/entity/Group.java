@@ -16,6 +16,7 @@
 
 package org.overture.ego.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Builder;
@@ -35,7 +36,7 @@ public class Group extends BaseEntity {
   String name;
   String description;
   String status;
-  @Singular
-  List<String> applications;
+  @Singular List<Application> applications;
+  @JsonIgnore @Singular List<String> applicationNames;
 
 }

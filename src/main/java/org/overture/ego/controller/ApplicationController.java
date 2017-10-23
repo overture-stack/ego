@@ -43,7 +43,7 @@ public class ApplicationController {
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "List of applications", response = Application.class, responseContainer = "List")
+          @ApiResponse(code = 200, message = "Page of applications", response = Page.class)
       }
   )
   public @ResponseBody
@@ -57,7 +57,7 @@ public class ApplicationController {
   @RequestMapping(method = RequestMethod.GET, value = "/search")
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "List of applications", response = Application.class, responseContainer = "List")
+          @ApiResponse(code = 200, message = "Page of applications", response = Page.class)
       }
   )
   public @ResponseBody
