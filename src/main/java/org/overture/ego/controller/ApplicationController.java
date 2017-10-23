@@ -22,8 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.Page;
 import org.overture.ego.model.PageInfo;
 import org.overture.ego.model.entity.Application;
+import org.overture.ego.model.entity.Group;
+import org.overture.ego.model.entity.User;
 import org.overture.ego.security.ProjectCodeScoped;
 import org.overture.ego.service.ApplicationService;
+import org.overture.ego.service.GroupApplicationService;
+import org.overture.ego.service.UserApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -38,6 +42,11 @@ public class ApplicationController {
 
   @Autowired
   ApplicationService applicationService;
+  @Autowired
+  GroupApplicationService groupApplicationService;
+  @Autowired
+  UserApplicationService userApplicationService;
+
 
   @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
@@ -120,6 +129,38 @@ public class ApplicationController {
       @PathVariable(value = "id", required = true) String applicationId) {
     applicationService.delete(applicationId);
 
+  }
+
+  // USERS
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Page of users of group", response = Page.class)
+          }
+  )
+  public @ResponseBody
+  Page<User> getApplicationUsers(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String appId,
+          PageInfo pageInfo)
+  {
+    return userApplicationService.getAppsUsers(pageInfo,appId);
+  }
+
+  // GROUPS
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Page of applications of group", response = Page.class)
+          }
+  )
+  public @ResponseBody
+  Page<Group> getApplicationsGroups(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String appId,
+          PageInfo pageInfo)
+  {
+    return groupApplicationService.getApplicationsGroup(pageInfo,appId);
   }
 
 }

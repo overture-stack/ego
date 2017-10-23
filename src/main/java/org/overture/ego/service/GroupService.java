@@ -38,18 +38,23 @@ public class GroupService {
   @Autowired
   GroupRepository groupRepository;
   @Autowired
-  ApplicationRepository applicationRepository;
+  ApplicationService applicationService;
   @Autowired
-  GroupAppRepository groupAppRepository;
+  GroupApplicationService groupApplicationService;
+  @Autowired
+  UserGroupService userGroupService;
 
   public Group create(Group groupInfo) {
     groupRepository.create(groupInfo);
     return groupRepository.getByName(groupInfo.getName());
   }
 
-  public void addAppsToGroups(String grpId, List<String> appNames){
+  public void addAppsToGroups(String grpId, List<String> appIDs){
     val group = groupRepository.read(Integer.parseInt(grpId));
-    appNames.forEach(appName -> groupAppRepository.add(group.getName(),appName));
+    appIDs.forEach(appId -> {
+      val app = applicationService.get(appId);
+      groupApplicationService.add(group.getName(),app.getName());
+    });
   }
 
   public Group get(String groupId, boolean fullInfo) {
@@ -96,10 +101,34 @@ public class GroupService {
 
   public void addAppInfo(Group group){
     val apps = new ArrayList<Application>();
-    group.getApplicationNames().forEach(appName -> apps.add(applicationRepository.getByName(appName)));
+    group.getApplicationNames().forEach(appName -> apps.add(applicationService.getByName(appName)));
     group.setApplications(apps);
   }
 
 
+  public void deleteAppsFromGroup(String grpId, List<String> appIDs) {
+    //TODO: change DB schema to add id - id relationships and avoid multiple calls
+    val group = groupRepository.read(Integer.parseInt(grpId));
+    appIDs.forEach(appId -> {
+      val app = applicationService.get(appId);
+      groupApplicationService.delete(group.getName(),app.getName());
+    });
+  }
 
+  public void deleteUsersFromGroup(String grpId, List<String> userIDs) {
+    //TODO: change DB schema to add id - id relationships and avoid multiple calls
+    val group = groupRepository.read(Integer.parseInt(grpId));
+    userIDs.forEach(userId -> {
+      val user = applicationService.get(userId);
+      userGroupService.delete(user.getName(),group.getName());
+    });
+  }
+
+  public void addUsersToGroup(String grpId, List<String> userIDs) {
+    val group = groupRepository.read(Integer.parseInt(grpId));
+    userIDs.forEach(userId -> {
+      val user = applicationService.get(userId);
+      userGroupService.add(user.getName(),group.getName());
+    });
+  }
 }
