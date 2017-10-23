@@ -20,15 +20,16 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.Page;
 import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.entity.Application;
+import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.repository.GroupRepository;
+import org.overture.ego.repository.ApplicationRepository;
 import org.overture.ego.repository.UserGroupRepository;
 import org.overture.ego.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 @Slf4j
@@ -38,7 +39,9 @@ public class UserService {
   @Autowired
   UserRepository userRepository;
   @Autowired
-  GroupRepository groupRepository;
+  GroupService groupService;
+  @Autowired
+  ApplicationRepository applicationRepository;
   @Autowired
   UserGroupRepository userGroupRepository;
 
@@ -51,18 +54,27 @@ public class UserService {
     //TODO: change DB schema to add id - id relationships and avoid multiple calls
     val user = userRepository.read(Integer.parseInt(userId));
     groupIDs.forEach(grpId -> {
-      val group = groupRepository.read(Integer.parseInt(grpId));
+      val group = groupService.get(grpId, false);
       userGroupRepository.add(user.getName(),group.getName());
     });
   }
 
-  public User get(String userId) {
+  public User get(String userId, boolean fullInfo) {
     int userID = Integer.parseInt(userId);
-    return userRepository.read(userID);
+    val user = userRepository.read(userID);
+    if(fullInfo){
+      addGroupsAppInfo(user);
+    }
+    return user;
   }
 
-  public User getByName(String userName) {
-      return userRepository.getByName(userName);
+  public User getByName(String userName, boolean fullInfo) {
+
+    val user = userRepository.getByName(userName);
+    if(fullInfo){
+      addGroupsAppInfo(user);
+    }
+    return user;
   }
 
   public User update(User updatedUserInfo) {
@@ -72,7 +84,6 @@ public class UserService {
 
   public void delete(String userId) {
     int userID = Integer.parseInt(userId);
-
     userRepository.delete(userID);
   }
 
@@ -87,8 +98,25 @@ public class UserService {
     //TODO: change DB schema to add id - id relationships and avoid multiple calls
     val user = userRepository.read(Integer.parseInt(userId));
     groupIDs.forEach(grpId -> {
-      val group = groupRepository.read(Integer.parseInt(grpId));
+      val group = groupService.get(grpId, false);
       userGroupRepository.delete(user.getName(),group.getName());
     });
+  }
+
+  public void addGroupsAppInfo(User user){
+     user.setGroups(getUserGroups(user));
+     user.setApplications(getUserApps(user));
+  }
+
+  private List<Group> getUserGroups(User user){
+    val groups = new ArrayList<Group>();
+    user.getGroupNames().forEach(groupName -> groups.add(groupService.getByName(groupName,true)));
+    return groups;
+  }
+
+  private List<Application> getUserApps(User user){
+    val apps = new ArrayList<Application>();
+    user.getApplicationNames().forEach(appName -> apps.add(applicationRepository.getByName(appName)));
+    return apps;
   }
 }
