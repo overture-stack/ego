@@ -22,8 +22,11 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.Page;
 import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.entity.Application;
+import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.security.ProjectCodeScoped;
+import org.overture.ego.service.UserGroupService;
 import org.overture.ego.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -42,6 +45,8 @@ public class UserController {
    */
   @Autowired
   UserService userService;
+  @Autowired
+  UserGroupService userGroupService;
 
 
   @RequestMapping(method = RequestMethod.GET, value = "")
@@ -55,9 +60,7 @@ public class UserController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           PageInfo pageInfo)
   {
-    val users = userService.listUsers(pageInfo);
-    users.getResultSet().forEach(user -> userService.addGroupsAppInfo(user));
-    return users;
+    return userService.listUsers(pageInfo);
   }
 
   @ProjectCodeScoped
@@ -88,23 +91,7 @@ public class UserController {
   User getUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String id) {
-    return  userService.get(id, true);
-  }
-
-  @ProjectCodeScoped
-  @RequestMapping(method = RequestMethod.POST, value = "/{id}/groups")
-  @ApiResponses(
-          value = {
-                  @ApiResponse(code = 200, message = "Add groups to user", response = String.class)
-          }
-  )
-  public @ResponseBody
-  String addGroupsToUser(
-          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-          @PathVariable(value = "id", required = true) String userId,
-          @RequestBody(required = true) List<String> groupIDs) {
-     userService.addUsersToGroups(userId,groupIDs);
-     return "User added to : "+groupIDs.size() + " groups successfully.";
+    return  userService.get(id, false);
   }
 
   @ProjectCodeScoped
@@ -130,6 +117,38 @@ public class UserController {
     userService.delete(userId);
   }
 
+  // GROUPS
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Page of groups of users", response = Page.class)
+          }
+  )
+  public @ResponseBody
+  Page<Group> getUsersGroups(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String userId,
+          PageInfo pageInfo)
+  {
+    return userGroupService.getUsersGroup(pageInfo,userId);
+  }
+
+  @ProjectCodeScoped
+  @RequestMapping(method = RequestMethod.POST, value = "/{id}/groups")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Add groups to user", response = String.class)
+          }
+  )
+  public @ResponseBody
+  String addGroupsToUser(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String userId,
+          @RequestBody(required = true) List<String> groupIDs) {
+    userService.addUsersToGroups(userId,groupIDs);
+    return "User added to : "+groupIDs.size() + " groups successfully.";
+  }
+
   @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/groups/{groupIDs}")
   @ResponseStatus(value = HttpStatus.OK)
@@ -140,5 +159,48 @@ public class UserController {
     userService.deleteUserFromGroup(userId,groupIDs);
 
   }
+
+//  //APPLICATIONS
+//  @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
+//  @ApiResponses(
+//          value = {
+//                  @ApiResponse(code = 200, message = "Page of groups of users", response = Page.class)
+//          }
+//  )
+//  public @ResponseBody
+//  Page<Application> getUsersApplications(
+//          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+//          @PathVariable(value = "id", required = true) String userId,
+//          PageInfo pageInfo)
+//  {
+//    return userGroupService.getUsersGroup(pageInfo,userId);
+//  }
+//
+//  @ProjectCodeScoped
+//  @RequestMapping(method = RequestMethod.POST, value = "/{id}/groups")
+//  @ApiResponses(
+//          value = {
+//                  @ApiResponse(code = 200, message = "Add groups to user", response = String.class)
+//          }
+//  )
+//  public @ResponseBody
+//  String addGroupsToUser(
+//          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+//          @PathVariable(value = "id", required = true) String userId,
+//          @RequestBody(required = true) List<String> groupIDs) {
+//    userService.addUsersToGroups(userId,groupIDs);
+//    return "User added to : "+groupIDs.size() + " groups successfully.";
+//  }
+//
+//  @ProjectCodeScoped
+//  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/groups/{groupIDs}")
+//  @ResponseStatus(value = HttpStatus.OK)
+//  public void deleteGroupFromUser(
+//          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+//          @PathVariable(value = "id", required = true) String userId,
+//          @PathVariable(value = "groupIDs", required = true) List<String> groupIDs) {
+//    userService.deleteUserFromGroup(userId,groupIDs);
+//
+//  }
 
 }

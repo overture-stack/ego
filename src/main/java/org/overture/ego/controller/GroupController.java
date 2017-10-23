@@ -23,8 +23,10 @@ import lombok.val;
 import org.overture.ego.model.Page;
 import org.overture.ego.model.PageInfo;
 import org.overture.ego.model.entity.Group;
+import org.overture.ego.model.entity.User;
 import org.overture.ego.security.ProjectCodeScoped;
 import org.overture.ego.service.GroupService;
+import org.overture.ego.service.UserGroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -43,6 +45,8 @@ public class GroupController {
    */
   @Autowired
   GroupService groupService;
+  @Autowired
+  UserGroupService userGroupService;
 
   @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
@@ -56,7 +60,7 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       PageInfo pageInfo) {
     val groups = groupService.listGroups(pageInfo);
-    groups.getResultSet().forEach(group -> groupService.addAppInfo(group));
+    //groups.getResultSet().forEach(group -> groupService.addAppInfo(group));
     return groups;
   }
 
@@ -101,7 +105,7 @@ public class GroupController {
   Group getGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String groupId) {
-    return groupService.get(groupId, true);
+    return groupService.get(groupId, false);
   }
 
 
@@ -142,6 +146,22 @@ public class GroupController {
           @RequestBody(required = true) List<String> apps) {
     groupService.addAppsToGroups(grpId,apps);
     return apps.size() + " apps added successfully.";
+  }
+
+  // USERS
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Page of users of group", response = Page.class)
+          }
+  )
+  public @ResponseBody
+  Page<User> getGroupsUsers(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String groupId,
+          PageInfo pageInfo)
+  {
+    return userGroupService.getGroupsUsers(pageInfo,groupId);
   }
 
 }

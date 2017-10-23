@@ -20,6 +20,7 @@ import lombok.val;
 import org.overture.ego.model.Page;
 import org.overture.ego.model.PageInfo;
 import org.overture.ego.model.entity.Application;
+import org.overture.ego.model.entity.Group;
 import org.overture.ego.repository.ApplicationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -61,4 +62,10 @@ public class ApplicationService {
     val apps = applicationRepository.listApps(pageInfo);
     return Page.getPageFromPageInfo(pageInfo,apps);
   }
+
+  public Application getByName(String appName) {
+
+     return applicationRepository.getByName(appName);
+    }
+
 }
