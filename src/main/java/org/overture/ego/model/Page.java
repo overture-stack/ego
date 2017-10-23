@@ -20,6 +20,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 import lombok.val;
+import org.overture.ego.model.entity.BaseEntity;
 import org.overture.ego.model.entity.User;
 
 
@@ -33,10 +34,11 @@ public class Page<E> {
   int count;
   @Singular("resultSet")  List<E> resultSet;
 
-  public static <E> Page<E> getPageFromPageInfo(PageInfo pageInfo, List<E> results){
+  public static <E> Page<E> getPageFromPageInfo(PageInfo pageInfo, List<? extends BaseEntity> results){
 
     val pageBuilder = (PageBuilder<E>) Page.builder().limit(pageInfo.getLimit())
             .offset(pageInfo.getOffset())
+            .count(results.size() > 0 ? results.get(0).getTotal() : 0)
             .resultSet(results);
     return pageBuilder.build();
 

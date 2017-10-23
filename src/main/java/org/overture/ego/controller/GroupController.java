@@ -126,7 +126,7 @@ public class GroupController {
   }
 
   @ProjectCodeScoped
-  @RequestMapping(method = RequestMethod.PATCH, value = "/{name}")
+  @RequestMapping(method = RequestMethod.PATCH, value = "/{id}")
   @ApiResponses(
           value = {
                   @ApiResponse(code = 200, message = "Add Apps to Group", response = String.class)
@@ -135,9 +135,9 @@ public class GroupController {
   public @ResponseBody
   String addAppsToGroups(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-          @PathVariable(value = "name", required = true) String groupName,
+          @PathVariable(value = "id", required = true) String grpId,
           @RequestBody(required = true) List<String> apps) {
-    groupService.addAppsToGroups(groupName,apps);
+    groupService.addAppsToGroups(grpId,apps);
     return apps.size() + " apps added successfully.";
   }
 

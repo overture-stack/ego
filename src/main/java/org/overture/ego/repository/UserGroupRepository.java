@@ -17,6 +17,7 @@
 package org.overture.ego.repository;
 
 
+import org.overture.ego.repository.sql.GroupQueries;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
@@ -25,4 +26,6 @@ public interface UserGroupRepository {
   @SqlUpdate("INSERT INTO USERGROUP (username, grpname) VALUES (:userName, :grpName)")
   int add(@Bind("userName")String userName, @Bind("grpName") String groupName);
 
+  @SqlUpdate("DELETE from USERGROUP where grpname=:grpName AND username=:userName")
+  void delete(@Bind("userName")String userName, @Bind("grpName") String groupName);
 }

@@ -21,6 +21,7 @@ import lombok.val;
 import org.overture.ego.model.Page;
 import org.overture.ego.model.PageInfo;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.repository.GroupRepository;
 import org.overture.ego.repository.UserGroupRepository;
 import org.overture.ego.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,8 @@ public class UserService {
   @Autowired
   UserRepository userRepository;
   @Autowired
+  GroupRepository groupRepository;
+  @Autowired
   UserGroupRepository userGroupRepository;
 
   public User create(User userInfo) {
@@ -44,8 +47,13 @@ public class UserService {
     return userRepository.getByName(userInfo.getName());
   }
 
-  public void addUsersToGroups(String userName, List<String> groupNames){
-    groupNames.forEach(grpName -> userGroupRepository.add(userName,grpName));
+  public void addUsersToGroups(String userId, List<String> groupIDs){
+    //TODO: change DB schema to add id - id relationships and avoid multiple calls
+    val user = userRepository.read(Integer.parseInt(userId));
+    groupIDs.forEach(grpId -> {
+      val group = groupRepository.read(Integer.parseInt(grpId));
+      userGroupRepository.add(user.getName(),group.getName());
+    });
   }
 
   public User get(String userId) {
@@ -75,5 +83,12 @@ public class UserService {
   }
 
 
-
+  public void deleteUserFromGroup(String userId, List<String> groupIDs) {
+    //TODO: change DB schema to add id - id relationships and avoid multiple calls
+    val user = userRepository.read(Integer.parseInt(userId));
+    groupIDs.forEach(grpId -> {
+      val group = groupRepository.read(Integer.parseInt(grpId));
+      userGroupRepository.delete(user.getName(),group.getName());
+    });
+  }
 }
