@@ -37,7 +37,7 @@ public class GroupQueries {
   public static final String GET_BY_ID = SELECT_COMMON + TABLE_NAME + SELECT_SUFFIX +
           " WHERE GRPID=:id GROUP BY EGOGROUP.GRPID";
   public static final String GET_BY_NAME = SELECT_COMMON + TABLE_NAME + SELECT_SUFFIX +
-          " WHERE EGOUSER.GRPNAME=:name GROUP BY EGOGROUP.USERID";
+          " WHERE EGOGROUP.GRPNAME=:name GROUP BY EGOGROUP.GRPID";
   public static final String UPDATE_QUERY = "UPDATE EGOGROUP SET grpName=:name, status=:status," +
           "description=:description WHERE grpId=:id";
   public static final String INSERT_QUERY = "INSERT INTO EGOGROUP (grpName, status, description) " +
