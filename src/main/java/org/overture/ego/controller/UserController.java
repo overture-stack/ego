@@ -89,7 +89,7 @@ public class UserController {
   }
 
   @ProjectCodeScoped
-  @RequestMapping(method = RequestMethod.PATCH, value = "/{name}")
+  @RequestMapping(method = RequestMethod.POST, value = "/{id}/groups")
   @ApiResponses(
           value = {
                   @ApiResponse(code = 200, message = "Add groups to user", response = String.class)
@@ -98,10 +98,10 @@ public class UserController {
   public @ResponseBody
   String addGroupsToUser(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-          @PathVariable(value = "name", required = true) String userName,
-          @RequestBody(required = true) List<String> groups) {
-     userService.addUsersToGroups(userName,groups);
-     return groups.size() + " groups added successfully.";
+          @PathVariable(value = "id", required = true) String userId,
+          @RequestBody(required = true) List<String> groupIDs) {
+     userService.addUsersToGroups(userId,groupIDs);
+     return "User added to : "+groupIDs.size() + " groups successfully.";
   }
 
   @ProjectCodeScoped
@@ -125,6 +125,17 @@ public class UserController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String userId) {
     userService.delete(userId);
+  }
+
+  @ProjectCodeScoped
+  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/groups/{groupIDs}")
+  @ResponseStatus(value = HttpStatus.OK)
+  public void deleteGroupFromUser(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String userId,
+          @PathVariable(value = "groupIDs", required = true) List<String> groupIDs) {
+    userService.deleteUserFromGroup(userId,groupIDs);
+
   }
 
 }

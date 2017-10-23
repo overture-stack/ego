@@ -40,8 +40,9 @@ public class GroupService {
     return groupRepository.getByName(groupInfo.getName());
   }
 
-  public void addAppsToGroups(String groupName, List<String> appNames){
-    appNames.forEach(appName -> groupAppRepository.add(groupName,appName));
+  public void addAppsToGroups(String grpId, List<String> appNames){
+    val group = groupRepository.read(Integer.parseInt(grpId));
+    appNames.forEach(appName -> groupAppRepository.add(group.getName(),appName));
   }
 
   public Group get(String groupId) {
