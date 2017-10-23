@@ -55,6 +55,10 @@ public class RepositoryConfig {
     return dbi.open(GroupAppRepository.class);
   }
 
+  @Bean
+  public UserAppRepository userAppRepository(DBI dbi) {
+    return dbi.open(UserAppRepository.class);
+  }
 
   @Bean
   public ApplicationRepository applicationRepository(DBI dbi) {

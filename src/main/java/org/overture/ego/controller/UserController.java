@@ -26,6 +26,7 @@ import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.security.ProjectCodeScoped;
+import org.overture.ego.service.UserApplicationService;
 import org.overture.ego.service.UserGroupService;
 import org.overture.ego.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +48,8 @@ public class UserController {
   UserService userService;
   @Autowired
   UserGroupService userGroupService;
-
+  @Autowired
+  UserApplicationService userApplicationService;
 
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiResponses(
@@ -121,7 +123,7 @@ public class UserController {
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
   @ApiResponses(
           value = {
-                  @ApiResponse(code = 200, message = "Page of groups of users", response = Page.class)
+                  @ApiResponse(code = 200, message = "Page of groups of user", response = Page.class)
           }
   )
   public @ResponseBody
@@ -151,6 +153,11 @@ public class UserController {
 
   @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/groups/{groupIDs}")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Delete Groups from User")
+          }
+  )
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteGroupFromUser(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
@@ -160,47 +167,51 @@ public class UserController {
 
   }
 
-//  //APPLICATIONS
-//  @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
-//  @ApiResponses(
-//          value = {
-//                  @ApiResponse(code = 200, message = "Page of groups of users", response = Page.class)
-//          }
-//  )
-//  public @ResponseBody
-//  Page<Application> getUsersApplications(
-//          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-//          @PathVariable(value = "id", required = true) String userId,
-//          PageInfo pageInfo)
-//  {
-//    return userGroupService.getUsersGroup(pageInfo,userId);
-//  }
-//
-//  @ProjectCodeScoped
-//  @RequestMapping(method = RequestMethod.POST, value = "/{id}/groups")
-//  @ApiResponses(
-//          value = {
-//                  @ApiResponse(code = 200, message = "Add groups to user", response = String.class)
-//          }
-//  )
-//  public @ResponseBody
-//  String addGroupsToUser(
-//          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-//          @PathVariable(value = "id", required = true) String userId,
-//          @RequestBody(required = true) List<String> groupIDs) {
-//    userService.addUsersToGroups(userId,groupIDs);
-//    return "User added to : "+groupIDs.size() + " groups successfully.";
-//  }
-//
-//  @ProjectCodeScoped
-//  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/groups/{groupIDs}")
-//  @ResponseStatus(value = HttpStatus.OK)
-//  public void deleteGroupFromUser(
-//          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-//          @PathVariable(value = "id", required = true) String userId,
-//          @PathVariable(value = "groupIDs", required = true) List<String> groupIDs) {
-//    userService.deleteUserFromGroup(userId,groupIDs);
-//
-//  }
+  //APPLICATIONS
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/applications")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Page of apps of user", response = Page.class)
+          }
+  )
+  public @ResponseBody
+  Page<Application> getUsersApplications(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String userId,
+          PageInfo pageInfo)
+  {
+    return userApplicationService.getUsersApps(pageInfo,userId);
+  }
+
+  @ProjectCodeScoped
+  @RequestMapping(method = RequestMethod.POST, value = "/{id}/applications")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Add applications to user", response = String.class)
+          }
+  )
+  public @ResponseBody
+  String addAppsToUser(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String userId,
+          @RequestBody(required = true) List<String> appIDs) {
+    userService.addUsersToApps(userId,appIDs);
+    return "User added to : "+appIDs.size() + " apps successfully.";
+  }
+
+  @ProjectCodeScoped
+  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/applications/{appIDs}")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Delete Applications from User")
+          }
+  )
+  @ResponseStatus(value = HttpStatus.OK)
+  public void deleteAppFromUser(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String userId,
+          @PathVariable(value = "appIDs", required = true) List<String> appIDs) {
+    userService.deleteUserFromApp(userId,appIDs);
+  }
 
 }

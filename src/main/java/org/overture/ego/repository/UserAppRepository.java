@@ -32,42 +32,42 @@ import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
 import java.util.List;
 
-public interface GroupAppRepository {
+public interface UserAppRepository {
+
+  String GET_ALL_USERS = "WITH allUsers AS ( " +
+          "    SELECT COUNT(*) AS TOTAL from userapplication where userapplication.appName=:appName" +
+          ") " +
+          "SELECT egouser.*, allusers.total from egouser, allusers " +
+          "where egouser.username " +
+          "      IN " +
+          "      (SELECT username from userapplication where userapplication.appName=:appName) " +
+          "GROUP BY userid, allusers.total " +
+          "ORDER BY EGOUSER.USERID " +
+          "LIMIT :limit OFFSET :offset";
 
   String GET_ALL_APPS = "WITH allApps AS ( " +
-          "    SELECT COUNT(*) AS TOTAL from groupapplication where groupapplication.grpname=:grpName" +
+          "    SELECT COUNT(*) AS TOTAL from userapplication where userapplication.userName=:userName" +
           ") " +
           "SELECT egoapplication.*, allApps.total from egoapplication, allApps " +
           "where egoapplication.appName " +
           "      IN " +
-          "      (SELECT appName from groupapplication where groupapplication.grpname=:grpName) " +
+          "      (SELECT appName from userapplication where userapplication.userName=:userName) " +
           "GROUP BY egoapplication.appid, allApps.total " +
           "ORDER BY egoapplication.appid " +
           "LIMIT :limit OFFSET :offset";
 
-  String GET_ALL_GROUPS = "WITH allGroups AS ( " +
-          "    SELECT COUNT(*) AS TOTAL from groupapplication where groupapplication.appName=:appName" +
-          ") " +
-          "SELECT egogroup.*, allGroups.total from egogroup, allGroups " +
-          "where egogroup.grpname " +
-          "      IN " +
-          "      (SELECT grpname from groupapplication where groupapplication.appName=:appName) " +
-          "GROUP BY egogroup.grpId, allGroups.total " +
-          "ORDER BY egogroup.grpId " +
-          "LIMIT :limit OFFSET :offset";
-  
-  @SqlUpdate("INSERT INTO GROUPAPPLICATION (appName, grpname) VALUES (:appName, :grpName)")
-  int add(@Bind("appName") String appName,@Bind("grpName") String groupName);
+  @SqlUpdate("INSERT INTO USERAPPLICATION (username, appName) VALUES (:userName, :appName)")
+  int add(@Bind("userName") String userName, @Bind("appName") String appName);
 
-  @SqlUpdate("DELETE from GROUPAPPLICATION where grpname=:grpName AND appName=:appName")
-  void delete(@Bind("appName") String appName, @Bind("grpName") String groupName);
+  @SqlUpdate("DELETE from USERAPPLICATION where userName=:userName AND appName=:appName")
+  void delete(@Bind("userName") String userName, @Bind("appName") String appName);
+
+  @SqlQuery(GET_ALL_USERS)
+  @RegisterMapper(UserMapper.class)
+  List<User> getAllUsers(@BindBean PageInfo pageInfo, @Bind("appName") String appName);
 
   @SqlQuery(GET_ALL_APPS)
   @RegisterMapper(ApplicationMapper.class)
-  List<Application> getAllApps(@BindBean PageInfo pageInfo, @Bind("grpName") String groupName);
-
-  @SqlQuery(GET_ALL_GROUPS)
-  @RegisterMapper(GroupsMapper.class)
-  List<Group> getAllGroups(@BindBean PageInfo pageInfo, @Bind("appName")String appName);
+  List<Application> getAllApps(@BindBean PageInfo pageInfo, @Bind("userName") String userName);
 
 }

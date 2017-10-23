@@ -45,7 +45,8 @@ public class UserService {
   UserGroupService userGroupService;
   @Autowired
   ApplicationService applicationService;
-
+  @Autowired
+  UserApplicationService userApplicationService;
 
   public User create(User userInfo) {
     userRepository.create(userInfo);
@@ -58,6 +59,15 @@ public class UserService {
     groupIDs.forEach(grpId -> {
       val group = groupService.get(grpId, false);
       userGroupService.add(user.getName(),group.getName());
+    });
+  }
+
+  public void addUsersToApps(String userId, List<String> appIDs){
+    //TODO: change DB schema to add id - id relationships and avoid multiple calls
+    val user = userRepository.read(Integer.parseInt(userId));
+    appIDs.forEach(appId -> {
+      val app = applicationService.get(appId);
+      userApplicationService.add(user.getName(),app.getName());
     });
   }
 
@@ -104,6 +114,15 @@ public class UserService {
     groupIDs.forEach(grpId -> {
       val group = groupService.get(grpId, false);
       userGroupService.delete(user.getName(),group.getName());
+    });
+  }
+
+  public void deleteUserFromApp(String userId, List<String> appIDs) {
+    //TODO: change DB schema to add id - id relationships and avoid multiple calls
+    val user = userRepository.read(Integer.parseInt(userId));
+    appIDs.forEach(appId -> {
+      val app = applicationService.get(appId);
+      userApplicationService.delete(user.getName(),app.getName());
     });
   }
 

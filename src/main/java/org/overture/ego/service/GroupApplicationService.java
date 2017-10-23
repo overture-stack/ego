@@ -23,38 +23,38 @@ import org.overture.ego.model.PageInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.repository.UserAppRepository;
+import org.overture.ego.repository.GroupAppRepository;
 import org.overture.ego.repository.UserGroupRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class UserApplicationService {
+public class GroupApplicationService {
   @Autowired
-  UserAppRepository userAppRepository;
+  GroupAppRepository groupAppRepository;
+  @Autowired
+  GroupService groupService;
   @Autowired
   ApplicationService applicationService;
-  @Autowired
-  UserService userService;
 
-  public Page<User> getAppsUsers(PageInfo pageInfo, String appId) {
+  public Page<Application> getGroupsApplications(PageInfo pageInfo, String groupId) {
+    val group = groupService.get(groupId,false);
+    if(group == null) return null;
+    return applicationService.getAppsPage(pageInfo, groupAppRepository.getAllApps(pageInfo, group.getName()));
+  }
+
+  public Page<Group> getApplicationsGroup(PageInfo pageInfo, String appId) {
     val app = applicationService.get(appId);
-    return userService.getUsersPage(pageInfo, userAppRepository.getAllUsers(pageInfo, app.getName()));
+    if(app == null) return null;
+    return groupService.getGroupsPage(pageInfo, groupAppRepository.getAllGroups(pageInfo, app.getName()));
   }
 
-  public Page<Application> getUsersApps(PageInfo pageInfo, String userId) {
-    val user = userService.get(userId,false);
-    return applicationService.getAppsPage(pageInfo, userAppRepository.getAllApps(pageInfo, user.getName()));
+  public void add(String appName, String groupName) {
+    groupAppRepository.add(groupName, appName);
   }
 
-  public void add(String userName, String appName) {
-    userAppRepository.add(userName,appName);
+  public void delete(String appName, String groupName) {
+    groupAppRepository.delete(groupName, appName);
   }
-
-  public void delete(String userName, String appName) {
-    userAppRepository.delete(userName,appName);
-  }
-
-
 }

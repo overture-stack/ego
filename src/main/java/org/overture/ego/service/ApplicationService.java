@@ -59,7 +59,10 @@ public class ApplicationService {
   }
 
   public Page<Application> listApps(PageInfo pageInfo) {
-    val apps = applicationRepository.listApps(pageInfo);
+    return getAppsPage(pageInfo,applicationRepository.listApps(pageInfo));
+  }
+
+  public Page<Application> getAppsPage(PageInfo pageInfo, List<Application> apps){
     return Page.getPageFromPageInfo(pageInfo,apps);
   }
 
