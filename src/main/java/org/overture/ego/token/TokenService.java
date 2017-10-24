@@ -25,6 +25,11 @@ import org.overture.ego.model.entity.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 @Service
 public class TokenService {
 
@@ -33,16 +38,22 @@ public class TokenService {
 
   public String generateToken(User u) {
     Claims claims = Jwts.claims().setSubject(u.getName());
-    claims.put("userId", u.getId());
-    claims.put("username", u.getName());
-    claims.put("role", u.getRole());
-    claims.put("email", u.getEmail());
-    claims.put("firstName", u.getFirstName());
-    claims.put("lastName", u.getLastName());
-    claims.put("createdAt", u.getCreatedAt());
-    claims.put("lastLogin", u.getLastLogin());
-    claims.put("role", u.getRole());
-    claims.put("status", u.getStatus());
+    Map<String, Object> context = new HashMap<String, Object>();
+    Map<String, Object> userInfo = new HashMap<String, Object>();
+    userInfo.put("name", u.getName());
+    userInfo.put("roles", new String[] {u.getRole()});
+    userInfo.put("email", u.getEmail());
+    userInfo.put("first_name", u.getFirstName());
+    userInfo.put("last_name", u.getLastName());
+    userInfo.put("groups", u.getGroupNames());
+    context.put("user", userInfo);
+    claims.put("sub", u.getId());
+    claims.put("iss", "ego");
+    claims.put("iat", (int) (System.currentTimeMillis() / 1000L));
+    claims.put("aud", u.getApplicationNames());
+    claims.put("jti", UUID.randomUUID());
+    claims.put("context", context);
+
 
     return Jwts.builder()
         .setClaims(claims)

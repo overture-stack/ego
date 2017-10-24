@@ -42,7 +42,7 @@ public interface UserAppRepository {
           "      IN " +
           "      (SELECT username from userapplication where userapplication.appName=:appName) " +
           "GROUP BY userid, allusers.total " +
-          "ORDER BY EGOUSER.USERID " +
+          "ORDER BY EGOUSER.USERID DESC " +
           "LIMIT :limit OFFSET :offset";
 
   String GET_ALL_APPS = "WITH allApps AS ( " +
@@ -53,7 +53,7 @@ public interface UserAppRepository {
           "      IN " +
           "      (SELECT appName from userapplication where userapplication.userName=:userName) " +
           "GROUP BY egoapplication.appid, allApps.total " +
-          "ORDER BY egoapplication.appid " +
+          "ORDER BY egoapplication.appid DESC " +
           "LIMIT :limit OFFSET :offset";
 
   @SqlUpdate("INSERT INTO USERAPPLICATION (username, appName) VALUES (:userName, :appName)")
