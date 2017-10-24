@@ -40,7 +40,7 @@ public interface UserGroupRepository {
           "      IN " +
           "      (SELECT username from usergroup where usergroup.grpname=:grpName) " +
           "GROUP BY userid, allusers.total " +
-          "ORDER BY EGOUSER.USERID " +
+          "ORDER BY EGOUSER.USERID DESC " +
           "LIMIT :limit OFFSET :offset";
 
   String GET_ALL_GROUPS = "WITH allGroups AS ( " +
@@ -51,7 +51,7 @@ public interface UserGroupRepository {
           "      IN " +
           "      (SELECT grpname from usergroup where usergroup.username=:userName) " +
           "GROUP BY grpId, allGroups.total " +
-          "ORDER BY egogroup.grpId " +
+          "ORDER BY egogroup.grpId DESC " +
           "LIMIT :limit OFFSET :offset";
 
   @SqlUpdate("INSERT INTO USERGROUP (username, grpname) VALUES (:userName, :grpName)")

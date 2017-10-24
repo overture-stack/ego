@@ -42,7 +42,7 @@ public interface GroupAppRepository {
           "      IN " +
           "      (SELECT appName from groupapplication where groupapplication.grpname=:grpName) " +
           "GROUP BY egoapplication.appid, allApps.total " +
-          "ORDER BY egoapplication.appid " +
+          "ORDER BY egoapplication.appid DESC " +
           "LIMIT :limit OFFSET :offset";
 
   String GET_ALL_GROUPS = "WITH allGroups AS ( " +
@@ -53,7 +53,7 @@ public interface GroupAppRepository {
           "      IN " +
           "      (SELECT grpname from groupapplication where groupapplication.appName=:appName) " +
           "GROUP BY egogroup.grpId, allGroups.total " +
-          "ORDER BY egogroup.grpId " +
+          "ORDER BY egogroup.grpId DESC " +
           "LIMIT :limit OFFSET :offset";
   
   @SqlUpdate("INSERT INTO GROUPAPPLICATION (appName, grpname) VALUES (:appName, :grpName)")

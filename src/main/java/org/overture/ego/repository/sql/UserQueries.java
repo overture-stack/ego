@@ -36,7 +36,7 @@ public class UserQueries {
           SELECT_COMMON + " , (SELECT COUNT(*) AS TOTAL "+TABLE_NAME+") " +
           TABLE_NAME + SELECT_SUFFIX +
           " GROUP BY EGOUSER.USERID " +
-          " ORDER BY EGOUSER.USERID " +
+          " ORDER BY EGOUSER.USERID DESC " +
           " LIMIT :limit OFFSET :offset";
   public static final String GET_BY_ID = SELECT_COMMON + TABLE_NAME + SELECT_SUFFIX +
           " WHERE USERID=:id GROUP BY EGOUSER.USERID";

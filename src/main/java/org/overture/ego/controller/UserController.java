@@ -81,6 +81,23 @@ public class UserController {
     return null;
   }
 
+  @RequestMapping(method = RequestMethod.POST, value = "")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Create new user", response = User.class)
+          }
+  )
+  public @ResponseBody
+  User create(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @RequestBody(required = true) User userInfo) {
+
+    User user = userService.getByName(userInfo.getName(), false);
+    if (user == null) {
+      userService.create(userInfo);
+    }
+    return userService.getByName(userInfo.getName(), false);
+  }
 
   @ProjectCodeScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
