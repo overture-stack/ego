@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.model.entity.User;
 import org.overture.ego.service.UserService;
 import org.overture.ego.token.GoogleTokenValidator;
 import org.overture.ego.token.TokenService;
@@ -28,6 +29,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.jwt.JwtHelper;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 @Slf4j
@@ -41,7 +44,8 @@ public class AuthController {
   UserService userService;
   @Autowired
   GoogleTokenValidator tokenValidator;
-
+  @Autowired
+  SimpleDateFormat formatter;
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
   @ResponseStatus(value = HttpStatus.OK)
@@ -54,7 +58,8 @@ public class AuthController {
     val tokenDecoded = JwtHelper.decode(idToken);
     val authInfo = new ObjectMapper().readValue(tokenDecoded.getClaims(), Map.class);
     val userName = authInfo.get("email").toString();
-    val user = userService.getByName(userName, false);
+    User user = userService.getByName(userName, false);
+    user = createNewUser(userName,authInfo);
     if (user == null) {
       userService.create(user);
     }
@@ -70,5 +75,22 @@ public class AuthController {
       @RequestHeader(value = "token", required = true) final String token) {
     if (token == null || token.isEmpty()) return false;
     return tokenService.validateToken(token);
+  }
+
+  private User createNewUser(String userName, Map authInfo) {
+    String role = "USER";
+    String status = "Pending";
+
+
+    return User.builder()
+            .name(userName)
+            .email(userName)
+            .firstName(authInfo.containsKey("given_name") ? authInfo.get("given_name").toString() : "")
+            .lastName(authInfo.containsKey("family_name") ? authInfo.get("family_name").toString() : "")
+            .status(status)
+            .createdAt(formatter.format(new Date()))
+            .lastLogin(null)
+            .role(role).build();
+
   }
 }
