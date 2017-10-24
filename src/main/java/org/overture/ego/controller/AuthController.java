@@ -59,8 +59,8 @@ public class AuthController {
     val authInfo = new ObjectMapper().readValue(tokenDecoded.getClaims(), Map.class);
     val userName = authInfo.get("email").toString();
     User user = userService.getByName(userName, false);
-    user = createNewUser(userName,authInfo);
     if (user == null) {
+      user = createNewUser(userName,authInfo);
       userService.create(user);
     }
     return tokenService.generateToken(user);
