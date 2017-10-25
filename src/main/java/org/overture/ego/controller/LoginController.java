@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.service.UserService;
-import org.overture.ego.token.GoogleTokenValidator;
+import org.overture.ego.provider.google.GoogleTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.jwt.JwtHelper;
@@ -39,7 +39,7 @@ public class LoginController {
   @Autowired
   UserService userService;
   @Autowired
-  GoogleTokenValidator tokenValidator;
+  GoogleTokenService tokenValidator;
   @Autowired
   SimpleDateFormat formatter;
 

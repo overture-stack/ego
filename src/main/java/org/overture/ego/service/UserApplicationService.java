@@ -19,12 +19,10 @@ package org.overture.ego.service;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.Page;
-import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
-import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.repository.UserAppRepository;
-import org.overture.ego.repository.UserGroupRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,14 +36,14 @@ public class UserApplicationService {
   @Autowired
   UserService userService;
 
-  public Page<User> getAppsUsers(PageInfo pageInfo, String appId) {
+  public Page<User> getAppsUsers(QueryInfo queryInfo, String appId) {
     val app = applicationService.get(appId);
-    return userService.getUsersPage(pageInfo, userAppRepository.getAllUsers(pageInfo, app.getName()));
+    return userService.getUsersPage(queryInfo, userAppRepository.getAllUsers(queryInfo, app.getName()));
   }
 
-  public Page<Application> getUsersApps(PageInfo pageInfo, String userId) {
+  public Page<Application> getUsersApps(QueryInfo queryInfo, String userId) {
     val user = userService.get(userId,false);
-    return applicationService.getAppsPage(pageInfo, userAppRepository.getAllApps(pageInfo, user.getName()));
+    return applicationService.getAppsPage(queryInfo, userAppRepository.getAllApps(queryInfo, user.getName()));
   }
 
   public void add(String userName, String appName) {

@@ -19,7 +19,7 @@ package org.overture.ego.service;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.Page;
-import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.repository.UserGroupRepository;
@@ -36,16 +36,16 @@ public class UserGroupService {
   @Autowired
   UserService userService;
 
-  public Page<User> getGroupsUsers(PageInfo pageInfo, String groupId) {
+  public Page<User> getGroupsUsers(QueryInfo queryInfo, String groupId) {
     val group = groupService.get(groupId,false);
     if(group == null) return null;
-    return userService.getUsersPage(pageInfo, userGroupRepository.getAllUsers(pageInfo, group.getName()));
+    return userService.getUsersPage(queryInfo, userGroupRepository.getAllUsers(queryInfo, group.getName()));
   }
 
-  public Page<Group> getUsersGroup(PageInfo pageInfo, String userId) {
+  public Page<Group> getUsersGroup(QueryInfo queryInfo, String userId) {
     val user = userService.get(userId,false);
     if(user == null) return null;
-    return groupService.getGroupsPage(pageInfo, userGroupRepository.getAllGroups(pageInfo, user.getName()));
+    return groupService.getGroupsPage(queryInfo, userGroupRepository.getAllGroups(queryInfo, user.getName()));
   }
 
   public void add(String userName, String groupName) {

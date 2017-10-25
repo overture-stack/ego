@@ -19,6 +19,7 @@ package org.overture.ego.repository.mapper;
 
 import com.google.common.base.Splitter;
 import lombok.val;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Group;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -55,6 +56,12 @@ public class GroupsMapper implements ResultSetMapper<Group> {
     val output = group.build();
     output.setTotal(resultSet);
     return output;
+  }
+
+  public static void updateSortFieldName(QueryInfo queryInfo){
+    if(queryInfo.getSort().isEmpty()) queryInfo.setSort("grpid");
+    if("id".equals(queryInfo.getSort())) queryInfo.setSort("grpid");
+    if("name".equals(queryInfo.getSort())) queryInfo.setSort("grpname");
   }
 
 }

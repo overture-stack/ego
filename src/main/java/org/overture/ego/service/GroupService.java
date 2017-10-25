@@ -18,19 +18,15 @@ package org.overture.ego.service;
 
 import lombok.val;
 import org.overture.ego.model.Page;
-import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
-import org.overture.ego.model.entity.User;
-import org.overture.ego.repository.ApplicationRepository;
-import org.overture.ego.repository.GroupAppRepository;
 import org.overture.ego.repository.GroupRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 @Service
 public class GroupService {
@@ -91,12 +87,12 @@ public class GroupService {
     groupRepository.delete(groupID);
   }
 
-  public Page<Group> listGroups(PageInfo pageInfo) {
-    return getGroupsPage(pageInfo, groupRepository.getAllGroups(pageInfo));
+  public Page<Group> listGroups(QueryInfo queryInfo) {
+    return getGroupsPage(queryInfo, groupRepository.getAllGroups(queryInfo));
   }
 
-  public Page<Group> getGroupsPage(PageInfo pageInfo, List<Group> groups) {
-    return Page.getPageFromPageInfo(pageInfo,groups);
+  public Page<Group> getGroupsPage(QueryInfo queryInfo, List<Group> groups) {
+    return Page.getPageFromPageInfo(queryInfo,groups);
   }
 
   public void addAppInfo(Group group){

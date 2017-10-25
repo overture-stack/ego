@@ -16,7 +16,7 @@
 
 package org.overture.ego.repository;
 
-import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.repository.mapper.UserMapper;
 import org.overture.ego.repository.sql.UserQueries;
@@ -32,7 +32,7 @@ import java.util.List;
 public interface UserRepository  {
 
   @SqlQuery(UserQueries.GET_ALL)
-  List<User> getAllUsers(@BindBean PageInfo pageInfo);
+  List<User> getAllUsers(@BindBean QueryInfo queryInfo);
 
   @SqlUpdate(UserQueries.INSERT_QUERY)
   int create(@BindBean User user);

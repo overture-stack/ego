@@ -19,9 +19,8 @@ package org.overture.ego.controller;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.overture.ego.model.Page;
-import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
@@ -60,9 +59,9 @@ public class UserController {
   public @ResponseBody
   Page<User> getUsersList(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-          PageInfo pageInfo)
+          QueryInfo queryInfo)
   {
-    return userService.listUsers(pageInfo);
+    return userService.listUsers(queryInfo);
   }
 
   @ProjectCodeScoped
@@ -147,9 +146,9 @@ public class UserController {
   Page<Group> getUsersGroups(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String userId,
-          PageInfo pageInfo)
+          QueryInfo queryInfo)
   {
-    return userGroupService.getUsersGroup(pageInfo,userId);
+    return userGroupService.getUsersGroup(queryInfo,userId);
   }
 
   @ProjectCodeScoped
@@ -195,9 +194,9 @@ public class UserController {
   Page<Application> getUsersApplications(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String userId,
-          PageInfo pageInfo)
+          QueryInfo queryInfo)
   {
-    return userApplicationService.getUsersApps(pageInfo,userId);
+    return userApplicationService.getUsersApps(queryInfo,userId);
   }
 
   @ProjectCodeScoped
