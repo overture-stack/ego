@@ -17,12 +17,10 @@
 package org.overture.ego.repository;
 
 
-import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
-import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.repository.mapper.ApplicationMapper;
-import org.overture.ego.repository.mapper.GroupsMapper;
 import org.overture.ego.repository.mapper.UserMapper;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
@@ -64,10 +62,10 @@ public interface UserAppRepository {
 
   @SqlQuery(GET_ALL_USERS)
   @RegisterMapper(UserMapper.class)
-  List<User> getAllUsers(@BindBean PageInfo pageInfo, @Bind("appName") String appName);
+  List<User> getAllUsers(@BindBean QueryInfo queryInfo, @Bind("appName") String appName);
 
   @SqlQuery(GET_ALL_APPS)
   @RegisterMapper(ApplicationMapper.class)
-  List<Application> getAllApps(@BindBean PageInfo pageInfo, @Bind("userName") String userName);
+  List<Application> getAllApps(@BindBean QueryInfo queryInfo, @Bind("userName") String userName);
 
 }

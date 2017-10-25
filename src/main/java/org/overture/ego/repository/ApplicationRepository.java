@@ -16,7 +16,7 @@
 
 package org.overture.ego.repository;
 
-import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.repository.mapper.ApplicationMapper;
 import org.overture.ego.repository.sql.ApplicationQueries;
@@ -52,5 +52,5 @@ public interface ApplicationRepository {
   int delete(@Bind("id") int id);
 
   @SqlQuery(ApplicationQueries.GET_ALL)
-  List<Application> listApps(@BindBean PageInfo pageInfo);
+  List<Application> listApps(@BindBean QueryInfo queryInfo);
 }

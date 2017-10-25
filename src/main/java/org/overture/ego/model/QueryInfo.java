@@ -19,7 +19,9 @@ package org.overture.ego.model;
 import lombok.Data;
 
 @Data
-public class PageInfo {
+public class QueryInfo {
    int limit = 20; //default limit
    int offset;
+   String sort;
+   String sortOrder = "DESC"; // default is latest on top
 }

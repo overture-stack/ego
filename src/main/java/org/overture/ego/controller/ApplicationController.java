@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.Page;
-import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
@@ -58,8 +58,8 @@ public class ApplicationController {
   public @ResponseBody
   Page<Application> getApplicationsList(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      PageInfo pageInfo) {
-    return applicationService.listApps(pageInfo);
+      QueryInfo queryInfo) {
+    return applicationService.listApps(queryInfo);
   }
 
   @ProjectCodeScoped
@@ -142,9 +142,9 @@ public class ApplicationController {
   Page<User> getApplicationUsers(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String appId,
-          PageInfo pageInfo)
+          QueryInfo queryInfo)
   {
-    return userApplicationService.getAppsUsers(pageInfo,appId);
+    return userApplicationService.getAppsUsers(queryInfo,appId);
   }
 
   // GROUPS
@@ -158,9 +158,9 @@ public class ApplicationController {
   Page<Group> getApplicationsGroups(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String appId,
-          PageInfo pageInfo)
+          QueryInfo queryInfo)
   {
-    return groupApplicationService.getApplicationsGroup(pageInfo,appId);
+    return groupApplicationService.getApplicationsGroup(queryInfo,appId);
   }
 
 }

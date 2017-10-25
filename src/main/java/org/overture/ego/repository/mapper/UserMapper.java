@@ -20,6 +20,7 @@ import com.google.common.base.Splitter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
@@ -83,6 +84,12 @@ public class UserMapper implements ResultSetMapper<User>  {
     output.setTotal(resultSet);
     return output;
 
+  }
+
+  public static void updateSortFieldName(QueryInfo queryInfo){
+    if(queryInfo.getSort().isEmpty()) queryInfo.setSort("userid");
+    if("id".equals(queryInfo.getSort())) queryInfo.setSort("userid");
+    if("name".equals(queryInfo.getSort())) queryInfo.setSort("username");
   }
 
 }

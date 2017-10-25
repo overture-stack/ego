@@ -17,6 +17,7 @@
 package org.overture.ego.repository.mapper;
 
 import lombok.val;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -36,5 +37,12 @@ public class ApplicationMapper implements ResultSetMapper<Application> {
         .status(resultSet.getString("status")).build();
     app.setTotal(resultSet);
     return app;
+  }
+
+  public static void updateSortFieldName(QueryInfo queryInfo){
+    // set default sort
+    if(queryInfo.getSort().isEmpty()) queryInfo.setSort("appid");
+    if("id".equals(queryInfo.getSort())) queryInfo.setSort("appid");
+    if("name".equals(queryInfo.getSort())) queryInfo.setSort("appname");
   }
 }

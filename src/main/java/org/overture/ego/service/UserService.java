@@ -19,18 +19,20 @@ package org.overture.ego.service;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.Page;
-import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.repository.ApplicationRepository;
-import org.overture.ego.repository.UserGroupRepository;
 import org.overture.ego.repository.UserRepository;
+import org.overture.ego.repository.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 @Slf4j
@@ -99,14 +101,20 @@ public class UserService {
     userRepository.delete(userID);
   }
 
-  public Page<User> listUsers(PageInfo pageInfo) {
-    return this.getUsersPage(pageInfo, userRepository.getAllUsers(pageInfo));
+  public Page<User> listUsers(QueryInfo queryInfo) {
+    return this.getUsersPage(queryInfo, userRepository.getAllUsers(queryInfo));
   }
 
-  public Page<User> getUsersPage(PageInfo pageInfo, List<User> users)  {
-    return Page.getPageFromPageInfo(pageInfo,users);
+  public Page<User> getUsersPage(BiFunction<QueryInfo , String, List<User>> userPageFetcher,
+                                 String filter, QueryInfo queryInfo)  {
+    updateQueryInfo(queryInfo);
+    return getUsersPage(queryInfo, userPageFetcher.apply(queryInfo,filter));
   }
 
+  public Page<User> getUsersPage(Function<QueryInfo,List<User>> userPageFetcher, QueryInfo queryInfo)  {
+    updateQueryInfo(queryInfo);
+    return getUsersPage(queryInfo, userPageFetcher.apply(queryInfo));
+  }
 
   public void deleteUserFromGroup(String userId, List<String> groupIDs) {
     //TODO: change DB schema to add id - id relationships and avoid multiple calls
@@ -129,6 +137,14 @@ public class UserService {
   public void addGroupsAppInfo(User user){
      user.setGroups(getUserGroups(user));
      user.setApplications(getUserApps(user));
+  }
+
+  private void updateQueryInfo(QueryInfo queryInfo){
+    UserMapper.updateSortFieldName(queryInfo);
+  }
+
+  public Page<User> getUsersPage(QueryInfo queryInfo, List<User> users)  {
+    return Page.getPageFromPageInfo(queryInfo,users);
   }
 
   private List<Group> getUserGroups(User user){

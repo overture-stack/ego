@@ -21,11 +21,10 @@ import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.Page;
-import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.repository.GroupAppRepository;
 import org.overture.ego.security.ProjectCodeScoped;
 import org.overture.ego.service.GroupApplicationService;
 import org.overture.ego.service.GroupService;
@@ -63,8 +62,8 @@ public class GroupController {
   public @ResponseBody
   Page<Group> getGroupsList(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      PageInfo pageInfo) {
-    val groups = groupService.listGroups(pageInfo);
+      QueryInfo queryInfo) {
+    val groups = groupService.listGroups(queryInfo);
     //groups.getResultSet().forEach(group -> groupService.addAppInfo(group));
     return groups;
   }
@@ -148,9 +147,9 @@ public class GroupController {
   Page<Application> getGroupsApplications(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String groupId,
-          PageInfo pageInfo)
+          QueryInfo queryInfo)
   {
-    return groupApplicationService.getGroupsApplications(pageInfo,groupId);
+    return groupApplicationService.getGroupsApplications(queryInfo,groupId);
   }
 
   @ProjectCodeScoped
@@ -196,8 +195,8 @@ public class GroupController {
   Page<User> getGroupsUsers(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String groupId,
-          PageInfo pageInfo)
+          QueryInfo queryInfo)
   {
-    return userGroupService.getGroupsUsers(pageInfo,groupId);
+    return userGroupService.getGroupsUsers(queryInfo,groupId);
   }
 }

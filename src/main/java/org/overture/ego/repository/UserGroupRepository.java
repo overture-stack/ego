@@ -17,7 +17,7 @@
 package org.overture.ego.repository;
 
 
-import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.repository.mapper.GroupsMapper;
@@ -62,10 +62,10 @@ public interface UserGroupRepository {
 
   @SqlQuery(GET_ALL_USERS)
   @RegisterMapper(UserMapper.class)
-  List<User> getAllUsers(@BindBean PageInfo pageInfo, @Bind("grpName") String groupName);
+  List<User> getAllUsers(@BindBean QueryInfo queryInfo, @Bind("grpName") String groupName);
 
   @SqlQuery(GET_ALL_GROUPS)
   @RegisterMapper(GroupsMapper.class)
-  List<Group> getAllGroups(@BindBean PageInfo pageInfo,@Bind("userName")String userName);
+  List<Group> getAllGroups(@BindBean QueryInfo queryInfo, @Bind("userName")String userName);
 
 }

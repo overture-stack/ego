@@ -16,7 +16,7 @@
 
 package org.overture.ego.repository;
 
-import org.overture.ego.model.PageInfo;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.repository.mapper.GroupsMapper;
 import org.overture.ego.repository.sql.GroupQueries;
@@ -32,7 +32,7 @@ import java.util.List;
 public interface GroupRepository {
 
   @SqlQuery(GroupQueries.GET_ALL)
-  List<Group> getAllGroups(@BindBean PageInfo pageInfo);
+  List<Group> getAllGroups(@BindBean QueryInfo queryInfo);
 
   @SqlUpdate(GroupQueries.INSERT_QUERY)
   int create(@BindBean Group group);
