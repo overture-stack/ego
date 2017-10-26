@@ -24,11 +24,14 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 
 import java.util.List;
 
 @RegisterMapper(ApplicationMapper.class)
+@UseStringTemplate3StatementLocator
 public interface ApplicationRepository {
 
 
@@ -52,5 +55,6 @@ public interface ApplicationRepository {
   int delete(@Bind("id") int id);
 
   @SqlQuery(ApplicationQueries.GET_ALL)
-  List<Application> listApps(@BindBean QueryInfo queryInfo);
+  List<Application> listApps(@BindBean QueryInfo queryInfo,
+                             @Define("sort") String sort, @Define("sortOrder") String sortOrder);
 }

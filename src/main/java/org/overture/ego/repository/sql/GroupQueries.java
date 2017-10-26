@@ -32,7 +32,7 @@ public class GroupQueries {
           SELECT_COMMON + " , (SELECT COUNT(*) AS TOTAL "+TABLE_NAME+") " +
                   TABLE_NAME + SELECT_SUFFIX +
                   " GROUP BY EGOGROUP.GRPID " +
-                  " ORDER BY EGOGROUP.GRPID DESC " +
+                  " ORDER BY lower(EGOGROUP.<sort>) <sortOrder>  " +
                   " LIMIT :limit OFFSET :offset";
   public static final String GET_BY_ID = SELECT_COMMON + TABLE_NAME + SELECT_SUFFIX +
           " WHERE GRPID=:id GROUP BY EGOGROUP.GRPID";

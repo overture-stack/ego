@@ -24,15 +24,19 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 
 import java.util.List;
 
 @RegisterMapper(GroupsMapper.class)
+@UseStringTemplate3StatementLocator
 public interface GroupRepository {
 
   @SqlQuery(GroupQueries.GET_ALL)
-  List<Group> getAllGroups(@BindBean QueryInfo queryInfo);
+  List<Group> getAllGroups(@BindBean QueryInfo queryInfo,
+                           @Define("sort") String sort, @Define("sortOrder") String sortOrder);
 
   @SqlUpdate(GroupQueries.INSERT_QUERY)
   int create(@BindBean Group group);

@@ -26,10 +26,13 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 
 import java.util.List;
 
+@UseStringTemplate3StatementLocator
 public interface UserAppRepository {
 
   String GET_ALL_USERS = "WITH allUsers AS ( " +
@@ -40,7 +43,7 @@ public interface UserAppRepository {
           "      IN " +
           "      (SELECT username from userapplication where userapplication.appName=:appName) " +
           "GROUP BY userid, allusers.total " +
-          "ORDER BY EGOUSER.USERID DESC " +
+          "ORDER BY lower(egouser.<sort>) <sortOrder> " +
           "LIMIT :limit OFFSET :offset";
 
   String GET_ALL_APPS = "WITH allApps AS ( " +
@@ -51,7 +54,7 @@ public interface UserAppRepository {
           "      IN " +
           "      (SELECT appName from userapplication where userapplication.userName=:userName) " +
           "GROUP BY egoapplication.appid, allApps.total " +
-          "ORDER BY egoapplication.appid DESC " +
+          "ORDER BY lower(egoapplication.<sort>) <sortOrder> " +
           "LIMIT :limit OFFSET :offset";
 
   @SqlUpdate("INSERT INTO USERAPPLICATION (username, appName) VALUES (:userName, :appName)")
@@ -62,10 +65,12 @@ public interface UserAppRepository {
 
   @SqlQuery(GET_ALL_USERS)
   @RegisterMapper(UserMapper.class)
-  List<User> getAllUsers(@BindBean QueryInfo queryInfo, @Bind("appName") String appName);
+  List<User> getAllUsers(@BindBean QueryInfo queryInfo, @Bind("appName") String appName,
+                         @Define("sort") String sort, @Define("sortOrder") String sortOrder);
 
   @SqlQuery(GET_ALL_APPS)
   @RegisterMapper(ApplicationMapper.class)
-  List<Application> getAllApps(@BindBean QueryInfo queryInfo, @Bind("userName") String userName);
+  List<Application> getAllApps(@BindBean QueryInfo queryInfo, @Bind("userName") String userName,
+                               @Define("sort") String sort, @Define("sortOrder") String sortOrder);
 
 }

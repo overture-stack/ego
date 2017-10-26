@@ -38,12 +38,16 @@ public class UserApplicationService {
 
   public Page<User> getAppsUsers(QueryInfo queryInfo, String appId) {
     val app = applicationService.get(appId);
-    return userService.getUsersPage(queryInfo, userAppRepository.getAllUsers(queryInfo, app.getName()));
+    return userService.getUsersPage(
+            (sort, sortOrder) -> userAppRepository.getAllUsers(queryInfo,app.getName(), sort, sortOrder),
+            queryInfo);
   }
 
   public Page<Application> getUsersApps(QueryInfo queryInfo, String userId) {
     val user = userService.get(userId,false);
-    return applicationService.getAppsPage(queryInfo, userAppRepository.getAllApps(queryInfo, user.getName()));
+    return applicationService.getAppsPage(
+            (sort, sortOrder) -> userAppRepository.getAllApps(queryInfo, user.getName(), sort, sortOrder),
+            queryInfo);
   }
 
   public void add(String userName, String appName) {

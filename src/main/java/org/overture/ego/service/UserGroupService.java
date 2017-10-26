@@ -39,13 +39,17 @@ public class UserGroupService {
   public Page<User> getGroupsUsers(QueryInfo queryInfo, String groupId) {
     val group = groupService.get(groupId,false);
     if(group == null) return null;
-    return userService.getUsersPage(queryInfo, userGroupRepository.getAllUsers(queryInfo, group.getName()));
+    return userService.getUsersPage(
+            (sort, sortOrder) -> userGroupRepository.getAllUsers(queryInfo,group.getName(),sort, sortOrder),
+            queryInfo);
   }
 
   public Page<Group> getUsersGroup(QueryInfo queryInfo, String userId) {
     val user = userService.get(userId,false);
     if(user == null) return null;
-    return groupService.getGroupsPage(queryInfo, userGroupRepository.getAllGroups(queryInfo, user.getName()));
+    return groupService.getGroupsPage(
+            (sort, sortOrder) -> userGroupRepository.getAllGroups(queryInfo, user.getName(), sort, sortOrder),
+            queryInfo);
   }
 
   public void add(String userName, String groupName) {

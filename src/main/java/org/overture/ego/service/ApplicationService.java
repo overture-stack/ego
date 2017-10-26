@@ -20,10 +20,12 @@ import org.overture.ego.model.Page;
 import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.repository.ApplicationRepository;
+import org.overture.ego.repository.mapper.ApplicationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.function.BiFunction;
 
 
 @Service
@@ -56,16 +58,25 @@ public class ApplicationService {
   }
 
   public Page<Application> listApps(QueryInfo queryInfo) {
-    return getAppsPage(queryInfo,applicationRepository.listApps(queryInfo));
+    return getAppsPage((sort, sortOrder) -> applicationRepository.listApps(queryInfo, sort,sortOrder),queryInfo);
   }
 
-  public Page<Application> getAppsPage(QueryInfo queryInfo, List<Application> apps){
-    return Page.getPageFromPageInfo(queryInfo,apps);
+  public Page<Application> getAppsPage(BiFunction<String, String, List<Application>> appPageFetcher,
+                                 QueryInfo queryInfo)  {
+    // Using string templates with JDBI opens up the room for SQL Injection
+    // Field sanitation is must to avoid it
+    return getAppsPage(queryInfo,
+                    appPageFetcher.apply(queryInfo.getSort(ApplicationMapper::sanitizeSortField),
+                                         queryInfo.getSortOrder()));
   }
 
   public Application getByName(String appName) {
 
      return applicationRepository.getByName(appName);
     }
+
+  private Page<Application> getAppsPage(QueryInfo queryInfo, List<Application> apps){
+    return Page.getPageFromPageInfo(queryInfo,apps);
+  }
 
 }

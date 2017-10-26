@@ -97,6 +97,12 @@
             <version>2.41</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>stringtemplate</artifactId>
+            <version>3.2.1</version>
+        </dependency>
+
         <!-- Google Client APIs-->
         <dependency>
             <groupId>com.google.api-client</groupId>

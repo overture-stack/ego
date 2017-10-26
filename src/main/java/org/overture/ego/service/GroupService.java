@@ -22,11 +22,15 @@ import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.repository.GroupRepository;
+import org.overture.ego.repository.mapper.GroupsMapper;
+import org.overture.ego.repository.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.provisioning.GroupManager;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 
 @Service
 public class GroupService {
@@ -88,11 +92,17 @@ public class GroupService {
   }
 
   public Page<Group> listGroups(QueryInfo queryInfo) {
-    return getGroupsPage(queryInfo, groupRepository.getAllGroups(queryInfo));
+    return getGroupsPage(
+            (sort, sortOrder) -> groupRepository.getAllGroups(queryInfo, sort,sortOrder), queryInfo);
   }
 
-  public Page<Group> getGroupsPage(QueryInfo queryInfo, List<Group> groups) {
-    return Page.getPageFromPageInfo(queryInfo,groups);
+  public Page<Group> getGroupsPage(BiFunction<String, String, List<Group>> groupPageFetcher, QueryInfo queryInfo) {
+
+    // Using string templates with JDBI opens up the room for SQL Injection
+    // Field sanitation is must to avoid it
+    return getGroupsPage(queryInfo,
+            groupPageFetcher.apply(queryInfo.getSort(GroupsMapper::sanitizeSortField),
+                    queryInfo.getSortOrder()));
   }
 
   public void addAppInfo(Group group){
@@ -126,5 +136,9 @@ public class GroupService {
       val user = applicationService.get(userId);
       userGroupService.add(user.getName(),group.getName());
     });
+  }
+
+  private Page<Group> getGroupsPage(QueryInfo queryInfo, List<Group> groups) {
+    return Page.getPageFromPageInfo(queryInfo,groups);
   }
 }
