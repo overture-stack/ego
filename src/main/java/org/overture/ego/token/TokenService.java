@@ -42,6 +42,7 @@ public class TokenService {
     Map<String, Object> userInfo = new HashMap<String, Object>();
     userInfo.put("name", u.getName());
     userInfo.put("roles", new String[] {u.getRole()});
+    userInfo.put("status", u.getStatus());
     userInfo.put("email", u.getEmail());
     userInfo.put("first_name", u.getFirstName());
     userInfo.put("last_name", u.getLastName());
@@ -50,6 +51,7 @@ public class TokenService {
     claims.put("sub", u.getId());
     claims.put("iss", "ego");
     claims.put("iat", (int) (System.currentTimeMillis() / 1000L));
+    claims.put("exp", (int) ((System.currentTimeMillis() + 1000000) / 1000L));
     claims.put("aud", u.getApplicationNames());
     claims.put("jti", UUID.randomUUID());
     claims.put("context", context);
@@ -72,16 +74,17 @@ public class TokenService {
   public User getUserInfo(String token) {
     try {
       Claims body = getTokenClaims(token);
+      val userInfo = (Map)((Map)body.get("context")).get("user");
 
-      return User.builder().id((Integer) body.get("id"))
-          .name(body.getSubject())
-          .email((String) body.get("email"))
-          .firstName((String) body.get("firstName"))
-          .lastName((String) body.get("lastName"))
-          .createdAt((String) body.get("createdAt"))
-          .lastLogin((String) body.get("lastLogin"))
-          .role((String) body.get("role"))
-          .status((String) body.get("status")).build();
+      return User.builder().id((Integer) body.get("sub"))
+          .name(userInfo.get("name").toString())
+          .email(userInfo.get("email").toString())
+          .firstName(userInfo.get("first_name").toString())
+          .lastName(userInfo.get("last_name").toString())
+          .role(((ArrayList<String>)userInfo.get("roles")).get(0))
+          .status(userInfo.get("status").toString())
+          .groupNames((ArrayList<String>) userInfo.get("groups"))
+          .applicationNames((ArrayList<String>) body.get("aud")).build();
 
     } catch (JwtException | ClassCastException e) {
       return null;

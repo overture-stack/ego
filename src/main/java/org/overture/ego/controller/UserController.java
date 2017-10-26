@@ -24,7 +24,7 @@ import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.security.ProjectCodeScoped;
+import org.overture.ego.security.AdminScoped;
 import org.overture.ego.service.UserApplicationService;
 import org.overture.ego.service.UserGroupService;
 import org.overture.ego.service.UserService;
@@ -50,6 +50,7 @@ public class UserController {
   @Autowired
   UserApplicationService userApplicationService;
 
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiResponses(
       value = {
@@ -64,7 +65,7 @@ public class UserController {
     return userService.listUsers(queryInfo);
   }
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/search")
   @ApiResponses(
       value = {
@@ -80,6 +81,7 @@ public class UserController {
     return null;
   }
 
+  @AdminScoped
   @RequestMapping(method = RequestMethod.POST, value = "")
   @ApiResponses(
           value = {
@@ -98,7 +100,7 @@ public class UserController {
     return userService.getByName(userInfo.getName(), false);
   }
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
   @ApiResponses(
       value = {
@@ -112,7 +114,7 @@ public class UserController {
     return  userService.get(id, false);
   }
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
   @ApiResponses(
       value = {
@@ -126,7 +128,7 @@ public class UserController {
     return userService.update(updatedUserInfo);
   }
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteUser(
@@ -136,6 +138,7 @@ public class UserController {
   }
 
   // GROUPS
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
   @ApiResponses(
           value = {
@@ -151,7 +154,7 @@ public class UserController {
     return userGroupService.getUsersGroup(queryInfo,userId);
   }
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/groups")
   @ApiResponses(
           value = {
@@ -167,7 +170,7 @@ public class UserController {
     return "User added to : "+groupIDs.size() + " groups successfully.";
   }
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/groups/{groupIDs}")
   @ApiResponses(
           value = {
@@ -184,6 +187,7 @@ public class UserController {
   }
 
   //APPLICATIONS
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/applications")
   @ApiResponses(
           value = {
@@ -199,7 +203,7 @@ public class UserController {
     return userApplicationService.getUsersApps(queryInfo,userId);
   }
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/applications")
   @ApiResponses(
           value = {
@@ -215,7 +219,7 @@ public class UserController {
     return "User added to : "+appIDs.size() + " apps successfully.";
   }
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/applications/{appIDs}")
   @ApiResponses(
           value = {

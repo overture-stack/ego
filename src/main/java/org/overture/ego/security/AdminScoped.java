@@ -14,29 +14,17 @@
  * limitations under the License.
  */
 
-package org.overture.ego.token;
+package org.overture.ego.security;
 
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.access.prepost.PreAuthorize;
 
-import java.util.Arrays;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-public class JWTAuthenticationToken extends AbstractAuthenticationToken {
-
-  String token = "";
-
-  public JWTAuthenticationToken(String token) {
-    super(Arrays.asList(new SimpleGrantedAuthority("ROLE_USER")));
-    this.token = token;
-  }
-
-  @Override
-  public Object getCredentials() {
-    return token;
-  }
-
-  @Override
-  public Object getPrincipal() {
-    return token;
-  }
+/**
+ * Method Security Meta Annotation
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@PreAuthorize("@authorizationManager.authorizeWithAdminRole(authentication)")
+public @interface AdminScoped {
 }

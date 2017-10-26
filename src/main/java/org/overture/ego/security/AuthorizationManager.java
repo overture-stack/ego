@@ -18,6 +18,7 @@ package org.overture.ego.security;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.overture.ego.model.entity.User;
 import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -31,13 +32,28 @@ public class AuthorizationManager {
 
   public boolean authorize(@NonNull Authentication authentication) {
 
-    //String tokenPayload = request.getHeader(HttpHeaders.AUTHORIZATION);
-    String tokenPayload = authentication.getPrincipal().toString();
-    // remove Bearer from token
-    if (tokenPayload == null || tokenPayload.isEmpty()) return false;
-    if (!tokenPayload.contains("Bearer ")) return false;
-    tokenPayload = tokenPayload.split("Bearer ")[1];
-    return tokenService.validateToken(tokenPayload);
+    User user = (User)authentication.getPrincipal();
+    return "user".equals(user.getRole().toLowerCase()) && isActiveUser(user);
+  }
 
+  public boolean authorizeWithAdminRole(@NonNull Authentication authentication) {
+    User user = (User)authentication.getPrincipal();
+    return "admin".equals(user.getRole().toLowerCase()) && isActiveUser(user);
+  }
+
+  public boolean authorizeWithGroup(@NonNull Authentication authentication, String groupName) {
+
+    User user = (User)authentication.getPrincipal();
+    return authorize(authentication) && user.getGroupNames().contains(groupName);
+  }
+
+  public boolean authorizeWithApplication(@NonNull Authentication authentication, String appName) {
+
+    User user = (User)authentication.getPrincipal();
+    return authorize(authentication) && user.getApplicationNames().contains(appName);
+  }
+
+  public boolean isActiveUser(User user){
+    return "approved".equals(user.getStatus().toLowerCase());
   }
 }

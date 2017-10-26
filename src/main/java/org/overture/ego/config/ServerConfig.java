@@ -16,25 +16,35 @@
 
 package org.overture.ego.config;
 
+import lombok.SneakyThrows;
 import org.overture.ego.security.CorsFilter;
+import org.overture.ego.security.JWTAuthorizationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
 
 @Configuration
+@EnableWebSecurity
 public class ServerConfig extends WebSecurityConfigurerAdapter {
-
 
   @Bean
   CorsFilter corsFilter() {
     return new CorsFilter();
   }
 
+  @Bean
+  @SneakyThrows
+  JWTAuthorizationFilter authorizationFilter() {
+    return new JWTAuthorizationFilter(authenticationManager());
+  }
   @Bean
   SimpleDateFormat formatter(){
     SimpleDateFormat formatter =
@@ -43,19 +53,15 @@ public class ServerConfig extends WebSecurityConfigurerAdapter {
     return formatter;
   }
 
-  //@Bean
-  //StatelessFilter statelessFilter() {return new StatelessFilter("/users**");}
-
-  //TODO: Configure security
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    http.antMatcher("/**")
+    http.csrf().disable()
         .authorizeRequests()
-        .antMatchers("/**", "/swagger**").permitAll()
-        .and().csrf().disable().authorizeRequests();
-//                .and().addFilterAfter(new OAuth2ClientContextFilter(), AbstractPreAuthenticatedProcessingFilter.class)
-//                .addFilterAfter(statelessFilter(), OAuth2ClientContextFilter.class);
-
+        .antMatchers("/", "/oauth/**","/swagger**","/swagger-resources/**","/configuration/ui","/configuration/**","/v2/api**","/webjars/**").permitAll()
+        .anyRequest().authenticated().and().authorizeRequests()
+        .and()
+        .addFilterAfter(authorizationFilter(),BasicAuthenticationFilter.class)
+        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
   }
 
 }

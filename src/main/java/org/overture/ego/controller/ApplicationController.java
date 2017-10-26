@@ -24,7 +24,7 @@ import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.security.ProjectCodeScoped;
+import org.overture.ego.security.AdminScoped;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupApplicationService;
 import org.overture.ego.service.UserApplicationService;
@@ -48,7 +48,7 @@ public class ApplicationController {
   UserApplicationService userApplicationService;
 
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiResponses(
       value = {
@@ -62,7 +62,7 @@ public class ApplicationController {
     return applicationService.listApps(queryInfo);
   }
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/search")
   @ApiResponses(
       value = {
@@ -77,7 +77,7 @@ public class ApplicationController {
     return null;
   }
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.POST, value = "")
   @ApiResponses(
       value = {
@@ -92,7 +92,7 @@ public class ApplicationController {
   }
 
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
   @ApiResponses(
       value = {
@@ -107,7 +107,7 @@ public class ApplicationController {
   }
 
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
   @ApiResponses(
       value = {
@@ -121,7 +121,7 @@ public class ApplicationController {
     return applicationService.update(updatedApplicationInfo);
   }
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteApplication(
@@ -132,6 +132,7 @@ public class ApplicationController {
   }
 
   // USERS
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
   @ApiResponses(
           value = {
@@ -148,6 +149,7 @@ public class ApplicationController {
   }
 
   // GROUPS
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
   @ApiResponses(
           value = {
