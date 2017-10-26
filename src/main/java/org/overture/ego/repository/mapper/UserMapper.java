@@ -86,10 +86,29 @@ public class UserMapper implements ResultSetMapper<User>  {
 
   }
 
-  public static void updateSortFieldName(QueryInfo queryInfo){
-    if(queryInfo.getSort().isEmpty()) queryInfo.setSort("userid");
-    if("id".equals(queryInfo.getSort())) queryInfo.setSort("userid");
-    if("name".equals(queryInfo.getSort())) queryInfo.setSort("username");
+  // TODO: id is being converted to name and default sort is name - switch it to id after converting id to string
+  public static String sanitizeSortField(String sort){
+    if(sort.isEmpty()) return "username";
+    if("id".equals(sort.toLowerCase())) return "username";//TODO: change back to id after id is string
+    if("name".equals(sort.toLowerCase())) return "username";
+    // set default sort if sort order is not one of the field names
+    if(isSortFieldValid(sort) == false){
+      return "username";
+    } else return sort;
+  }
+
+  private static boolean isSortFieldValid(String sortField){
+    sortField = sortField.toLowerCase();
+    return ("userid".equals(sortField)    ||
+            "username".equals(sortField)  ||
+            "email".equals(sortField)     ||
+            "role".equals(sortField)      ||
+            "firstname".equals(sortField) ||
+            "lastname".equals(sortField)  ||
+            "createdat".equals(sortField) ||
+            "lastlogin".equals(sortField) ||
+            "status".equals(sortField)    ||
+            "preferredlanguage".equals(sortField));
   }
 
 }

@@ -39,10 +39,25 @@ public class ApplicationMapper implements ResultSetMapper<Application> {
     return app;
   }
 
-  public static void updateSortFieldName(QueryInfo queryInfo){
-    // set default sort
-    if(queryInfo.getSort().isEmpty()) queryInfo.setSort("appid");
-    if("id".equals(queryInfo.getSort())) queryInfo.setSort("appid");
-    if("name".equals(queryInfo.getSort())) queryInfo.setSort("appname");
+  // TODO: id is being converted to name and default sort is name - switch it to id after converting id to string
+  public static String sanitizeSortField(String sort){
+    if(sort.isEmpty()) return "appname";
+    if("id".equals(sort.toLowerCase())) return "appname";
+    if("name".equals(sort.toLowerCase())) return "appname";//TODO: change back to id after id is string
+    // set default sort if sort order is not one of the field names
+    if(isSortFieldValid(sort) == false){
+      return "appname";
+    } else return sort;
+  }
+
+  private static boolean isSortFieldValid(String sortField){
+    sortField = sortField.toLowerCase();
+    return ("appid".equals(sortField)        ||
+            "appname".equals(sortField)      ||
+            "clientid".equals(sortField)     ||
+            "clientsecret".equals(sortField) ||
+            "redirecturi".equals(sortField)  ||
+            "description".equals(sortField)  ||
+            "status".equals(sortField));
   }
 }

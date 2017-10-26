@@ -29,7 +29,7 @@ public class ApplicationQueries {
           SELECT_COMMON + " , (SELECT COUNT(*) AS TOTAL "+TABLE_NAME+") " +
                   TABLE_NAME + SELECT_SUFFIX +
                   " GROUP BY EGOAPPLICATION.APPID " +
-                  " ORDER BY EGOAPPLICATION.APPID DESC " +
+                  " ORDER BY lower(EGOAPPLICATION.<sort>) <sortOrder> " +
                   " LIMIT :limit OFFSET :offset";
   public static final String GET_BY_ID = "SELECT appid,appName,clientId,clientSecret,redirectUri,description,status " +
           "FROM EGOAPPLICATION WHERE appid=:id";

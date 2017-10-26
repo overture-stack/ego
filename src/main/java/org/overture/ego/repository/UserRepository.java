@@ -24,15 +24,19 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 
 import java.util.List;
 
 @RegisterMapper(UserMapper.class)
+@UseStringTemplate3StatementLocator
 public interface UserRepository  {
 
   @SqlQuery(UserQueries.GET_ALL)
-  List<User> getAllUsers(@BindBean QueryInfo queryInfo);
+  List<User> getAllUsers(@BindBean QueryInfo queryInfo,
+                         @Define("sort") String sort, @Define("sortOrder") String sortOrder);
 
   @SqlUpdate(UserQueries.INSERT_QUERY)
   int create(@BindBean User user);

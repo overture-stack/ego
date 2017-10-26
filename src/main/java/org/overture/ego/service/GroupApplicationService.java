@@ -39,13 +39,17 @@ public class GroupApplicationService {
   public Page<Application> getGroupsApplications(QueryInfo queryInfo, String groupId) {
     val group = groupService.get(groupId,false);
     if(group == null) return null;
-    return applicationService.getAppsPage(queryInfo, groupAppRepository.getAllApps(queryInfo, group.getName()));
+    return applicationService.getAppsPage(
+            (sort, sortOrder) -> groupAppRepository.getAllApps(queryInfo, group.getName(), sort, sortOrder),
+            queryInfo);
   }
 
   public Page<Group> getApplicationsGroup(QueryInfo queryInfo, String appId) {
     val app = applicationService.get(appId);
     if(app == null) return null;
-    return groupService.getGroupsPage(queryInfo, groupAppRepository.getAllGroups(queryInfo, app.getName()));
+    return groupService.getGroupsPage(
+            (sort, sortOrder) -> groupAppRepository.getAllGroups(queryInfo, app.getName(), sort, sortOrder),
+            queryInfo);
   }
 
   public void add(String appName, String groupName) {

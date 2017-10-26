@@ -58,10 +58,24 @@ public class GroupsMapper implements ResultSetMapper<Group> {
     return output;
   }
 
-  public static void updateSortFieldName(QueryInfo queryInfo){
-    if(queryInfo.getSort().isEmpty()) queryInfo.setSort("grpid");
-    if("id".equals(queryInfo.getSort())) queryInfo.setSort("grpid");
-    if("name".equals(queryInfo.getSort())) queryInfo.setSort("grpname");
+  // TODO: id is being converted to name and default sort is name - switch it to id after converting id to string
+  public static String sanitizeSortField(String sort){
+    if(sort.isEmpty()) return "grpname";
+    if("id".equals(sort.toLowerCase())) return "grpname";// TODO: change back to id after id is string
+    if("name".equals(sort.toLowerCase())) return "grpname";
+    // set default sort if sort order is not one of the field names
+    if(isSortFieldValid(sort) == false){
+      return "grpname";
+    } else return sort;
   }
+
+  private static boolean isSortFieldValid(String sortField){
+    sortField = sortField.toLowerCase();
+    return ("grpid".equals(sortField)        ||
+            "grpname".equals(sortField)      ||
+            "description".equals(sortField)  ||
+            "status".equals(sortField));
+  }
+
 
 }

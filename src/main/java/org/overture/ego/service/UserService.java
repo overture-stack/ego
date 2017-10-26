@@ -30,10 +30,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 @Slf4j
 @Service
@@ -102,19 +99,19 @@ public class UserService {
   }
 
   public Page<User> listUsers(QueryInfo queryInfo) {
-    return this.getUsersPage(queryInfo, userRepository.getAllUsers(queryInfo));
+    return this.getUsersPage((sort, sortOrder) -> userRepository.getAllUsers(queryInfo, sort, sortOrder), queryInfo);
   }
 
-  public Page<User> getUsersPage(BiFunction<QueryInfo , String, List<User>> userPageFetcher,
-                                 String filter, QueryInfo queryInfo)  {
-    updateQueryInfo(queryInfo);
-    return getUsersPage(queryInfo, userPageFetcher.apply(queryInfo,filter));
+  public Page<User> getUsersPage(BiFunction<String, String, List<User>> userPageFetcher,
+                                 QueryInfo queryInfo)  {
+
+    // Using string templates with JDBI opens up the room for SQL Injection
+    // Field sanitation is must to avoid it
+    return getUsersPage(queryInfo,
+                        userPageFetcher.apply(queryInfo.getSort(UserMapper::sanitizeSortField),
+                                              queryInfo.getSortOrder()));
   }
 
-  public Page<User> getUsersPage(Function<QueryInfo,List<User>> userPageFetcher, QueryInfo queryInfo)  {
-    updateQueryInfo(queryInfo);
-    return getUsersPage(queryInfo, userPageFetcher.apply(queryInfo));
-  }
 
   public void deleteUserFromGroup(String userId, List<String> groupIDs) {
     //TODO: change DB schema to add id - id relationships and avoid multiple calls
@@ -139,11 +136,7 @@ public class UserService {
      user.setApplications(getUserApps(user));
   }
 
-  private void updateQueryInfo(QueryInfo queryInfo){
-    UserMapper.updateSortFieldName(queryInfo);
-  }
-
-  public Page<User> getUsersPage(QueryInfo queryInfo, List<User> users)  {
+  private Page<User> getUsersPage(QueryInfo queryInfo, List<User> users)  {
     return Page.getPageFromPageInfo(queryInfo,users);
   }
 

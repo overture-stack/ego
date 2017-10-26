@@ -26,10 +26,13 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 
 import java.util.List;
 
+@UseStringTemplate3StatementLocator
 public interface UserGroupRepository {
 
   String GET_ALL_USERS = "WITH allUsers AS ( " +
@@ -40,7 +43,7 @@ public interface UserGroupRepository {
           "      IN " +
           "      (SELECT username from usergroup where usergroup.grpname=:grpName) " +
           "GROUP BY userid, allusers.total " +
-          "ORDER BY EGOUSER.USERID DESC " +
+          "ORDER BY lower(egouser.<sort>) <sortOrder> " +
           "LIMIT :limit OFFSET :offset";
 
   String GET_ALL_GROUPS = "WITH allGroups AS ( " +
@@ -51,7 +54,7 @@ public interface UserGroupRepository {
           "      IN " +
           "      (SELECT grpname from usergroup where usergroup.username=:userName) " +
           "GROUP BY grpId, allGroups.total " +
-          "ORDER BY egogroup.grpId DESC " +
+          "ORDER BY lower(egogroup.<sort>) <sortOrder> " +
           "LIMIT :limit OFFSET :offset";
 
   @SqlUpdate("INSERT INTO USERGROUP (username, grpname) VALUES (:userName, :grpName)")
@@ -62,10 +65,12 @@ public interface UserGroupRepository {
 
   @SqlQuery(GET_ALL_USERS)
   @RegisterMapper(UserMapper.class)
-  List<User> getAllUsers(@BindBean QueryInfo queryInfo, @Bind("grpName") String groupName);
+  List<User> getAllUsers(@BindBean QueryInfo queryInfo, @Bind("grpName") String groupName,
+                         @Define("sort") String sort, @Define("sortOrder") String sortOrder);
 
   @SqlQuery(GET_ALL_GROUPS)
   @RegisterMapper(GroupsMapper.class)
-  List<Group> getAllGroups(@BindBean QueryInfo queryInfo, @Bind("userName")String userName);
+  List<Group> getAllGroups(@BindBean QueryInfo queryInfo, @Bind("userName")String userName,
+                           @Define("sort") String sort, @Define("sortOrder") String sortOrder);
 
 }

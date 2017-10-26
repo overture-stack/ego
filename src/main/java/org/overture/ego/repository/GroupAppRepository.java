@@ -26,10 +26,13 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
 
 import java.util.List;
 
+@UseStringTemplate3StatementLocator
 public interface GroupAppRepository {
 
   String GET_ALL_APPS = "WITH allApps AS ( " +
@@ -40,7 +43,7 @@ public interface GroupAppRepository {
           "      IN " +
           "      (SELECT appName from groupapplication where groupapplication.grpname=:grpName) " +
           "GROUP BY egoapplication.appid, allApps.total " +
-          "ORDER BY egoapplication.appid DESC " +
+          "ORDER BY lower(egoapplication.<sort>) <sortOrder> " +
           "LIMIT :limit OFFSET :offset";
 
   String GET_ALL_GROUPS = "WITH allGroups AS ( " +
@@ -51,7 +54,7 @@ public interface GroupAppRepository {
           "      IN " +
           "      (SELECT grpname from groupapplication where groupapplication.appName=:appName) " +
           "GROUP BY egogroup.grpId, allGroups.total " +
-          "ORDER BY egogroup.grpId DESC " +
+          "ORDER BY lower(egogroup.<sort>) <sortOrder> " +
           "LIMIT :limit OFFSET :offset";
   
   @SqlUpdate("INSERT INTO GROUPAPPLICATION (appName, grpname) VALUES (:appName, :grpName)")
@@ -62,10 +65,12 @@ public interface GroupAppRepository {
 
   @SqlQuery(GET_ALL_APPS)
   @RegisterMapper(ApplicationMapper.class)
-  List<Application> getAllApps(@BindBean QueryInfo queryInfo, @Bind("grpName") String groupName);
+  List<Application> getAllApps(@BindBean QueryInfo queryInfo, @Bind("grpName") String groupName,
+                               @Define("sort") String sort, @Define("sortOrder") String sortOrder);
 
   @SqlQuery(GET_ALL_GROUPS)
   @RegisterMapper(GroupsMapper.class)
-  List<Group> getAllGroups(@BindBean QueryInfo queryInfo, @Bind("appName")String appName);
+  List<Group> getAllGroups(@BindBean QueryInfo queryInfo, @Bind("appName")String appName,
+                           @Define("sort") String sort, @Define("sortOrder") String sortOrder);
 
 }
