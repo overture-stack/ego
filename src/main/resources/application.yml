@@ -4,6 +4,11 @@ server:
 jwt:
   secret: testsecretisalsoasecret
 
+# security
+auth:
+  token:
+    prefix:
+
 # Datasource
 spring.datasource:
   driver-class-name: org.postgresql.Driver
@@ -33,13 +38,15 @@ google:
   client:
     Ids: 814606937527-v7tr5dfqegjijicq3jeu5arv5tcl4ks0.apps.googleusercontent.com,814606937527-kk7ooglk6pj2tvpn7ldip6g3b74f8o72.apps.googleusercontent.com
 
-# security
-security:
-  token:
-    prefix: Bearer
 
+---
 ###############################################################################
 # Profile - "secure"
 ###############################################################################
 spring:
   profiles: secure
+
+# security
+auth:
+  token:
+    prefix: Bearer

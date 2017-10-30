@@ -28,7 +28,6 @@ import org.springframework.stereotype.Component;
 
 
 @Slf4j
-@Component
 @Profile("secure")
 public class SecureAuthorizationManager implements AuthorizationManager {
 

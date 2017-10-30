@@ -16,13 +16,12 @@
 
 package org.overture.ego.token;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -30,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class TokenService {
 
@@ -65,9 +65,14 @@ public class TokenService {
 
   public boolean validateToken(String token) {
 
-    val decodedToken = Jwts.parser()
+    Jws decodedToken = null;
+    try{
+        decodedToken  = Jwts.parser()
         .setSigningKey(jwtSecret)
         .parseClaimsJws(token);
+    } catch (Exception ex){
+      log.error("Error parsing JWT: {}", ex);
+    }
     return (decodedToken != null);
   }
 

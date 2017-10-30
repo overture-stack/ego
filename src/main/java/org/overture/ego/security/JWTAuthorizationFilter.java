@@ -40,7 +40,7 @@ import java.util.ArrayList;
 @Slf4j
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
-  @Value("${security.token.prefix}")
+  @Value("${auth.token.prefix}")
   private String TOKEN_PREFIX;
 
   @Autowired

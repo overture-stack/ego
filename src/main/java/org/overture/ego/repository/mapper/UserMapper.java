@@ -51,7 +51,8 @@ public class UserMapper implements ResultSetMapper<User>  {
         .createdAt(resultSet.getString("createdAt"))
         .lastLogin(resultSet.getString("lastLogin"))
         .role(resultSet.getString("role"))
-        .status(resultSet.getString("status"));
+        .status(resultSet.getString("status"))
+        .preferredLanguage(resultSet.getString("preferredLanguage"));
 
     try {
     if(resultSet.getString("groups") != null) {

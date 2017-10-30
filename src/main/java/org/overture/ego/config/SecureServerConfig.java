@@ -17,7 +17,10 @@
 package org.overture.ego.config;
 
 import lombok.SneakyThrows;
-import org.overture.ego.security.*;
+import org.overture.ego.security.AuthorizationManager;
+import org.overture.ego.security.CorsFilter;
+import org.overture.ego.security.JWTAuthorizationFilter;
+import org.overture.ego.security.SecureAuthorizationManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -32,18 +35,24 @@ import java.util.TimeZone;
 
 @Configuration
 @EnableWebSecurity
-@Profile("default")
-public class ServerConfig extends WebSecurityConfigurerAdapter {
+@Profile("secure")
+public class SecureServerConfig extends WebSecurityConfigurerAdapter {
 
 
   @Bean
-  CorsFilter corsFilter() {
-    return new CorsFilter();
+  @SneakyThrows
+  JWTAuthorizationFilter authorizationFilter() {
+    return new JWTAuthorizationFilter(authenticationManager());
   }
 
   @Bean
   public AuthorizationManager authorizationManager() {
-    return new DefaultAuthorizationManager();
+    return new SecureAuthorizationManager();
+  }
+
+  @Bean
+  CorsFilter corsFilter() {
+    return new CorsFilter();
   }
 
   @Bean
@@ -58,9 +67,10 @@ public class ServerConfig extends WebSecurityConfigurerAdapter {
   protected void configure(HttpSecurity http) throws Exception {
     http.csrf().disable()
         .authorizeRequests()
-        .antMatchers("/**").permitAll()
+        .antMatchers("/", "/oauth/**","/swagger**","/swagger-resources/**","/configuration/ui","/configuration/**","/v2/api**","/webjars/**").permitAll()
         .anyRequest().authenticated().and().authorizeRequests()
         .and()
+        .addFilter(authorizationFilter())
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
   }
 

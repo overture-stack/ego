@@ -18,14 +18,12 @@ package org.overture.ego.security;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Component;
 
 /*
   Default Authorization Manager allows working without actual auth headers.
   Meant to be used for development environment.
  */
 @Slf4j
-@Component
 public class DefaultAuthorizationManager implements AuthorizationManager {
 
   @Override
