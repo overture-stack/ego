@@ -35,6 +35,7 @@ import java.util.TimeZone;
 @EnableWebSecurity
 public class ServerConfig extends WebSecurityConfigurerAdapter {
 
+
   @Bean
   CorsFilter corsFilter() {
     return new CorsFilter();

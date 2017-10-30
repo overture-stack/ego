@@ -42,6 +42,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
   @Value("${security.token.prefix}")
   private String TOKEN_PREFIX;
+
   @Autowired
   TokenService tokenService;
 

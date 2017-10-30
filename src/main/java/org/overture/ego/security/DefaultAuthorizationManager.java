@@ -16,16 +16,35 @@
 
 package org.overture.ego.security;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
 
-public interface AuthorizationManager {
+/*
+  Default Authorization Manager allows working without actual auth headers.
+  Meant to be used for development environment.
+ */
+@Slf4j
+@Component
+public class DefaultAuthorizationManager implements AuthorizationManager {
 
-     boolean authorize(Authentication authentication);
+  @Override
+  public boolean authorize(Authentication authentication) {
+    return true;
+  }
 
-     boolean authorizeWithAdminRole(Authentication authentication);
+  @Override
+  public boolean authorizeWithAdminRole(Authentication authentication) {
+    return true;
+  }
 
-     boolean authorizeWithGroup(Authentication authentication, String groupName);
+  @Override
+  public boolean authorizeWithGroup(Authentication authentication, String groupName) {
+    return true;
+  }
 
-     boolean authorizeWithApplication(Authentication authentication, String appName);
+  @Override
+  public boolean authorizeWithApplication(Authentication authentication, String appName) {
+    return true;
+  }
 }
-

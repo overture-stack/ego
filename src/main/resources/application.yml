@@ -35,5 +35,11 @@ google:
 
 # security
 security:
-    token:
-      prefix: Bearer
+  token:
+    prefix: Bearer
+
+###############################################################################
+# Profile - "secure"
+###############################################################################
+spring:
+  profiles: secure
