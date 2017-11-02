@@ -44,11 +44,29 @@ public class GroupApplicationService {
             queryInfo);
   }
 
+  public Page<Application> findGroupsApplications(QueryInfo queryInfo, String groupId, String query) {
+    val group = groupService.get(groupId,false);
+    if(group == null) return null;
+    return applicationService.getAppsPage(
+            (sort, sortOrder) ->
+                    groupAppRepository.findGroupsApps(queryInfo, group.getName(), sort, sortOrder,"%"+query+"%"),
+            queryInfo);
+  }
+
   public Page<Group> getApplicationsGroup(QueryInfo queryInfo, String appId) {
     val app = applicationService.get(appId);
     if(app == null) return null;
     return groupService.getGroupsPage(
             (sort, sortOrder) -> groupAppRepository.getAllGroups(queryInfo, app.getName(), sort, sortOrder),
+            queryInfo);
+  }
+
+  public Page<Group> findApplicationsGroup(QueryInfo queryInfo, String appId, String query) {
+    val app = applicationService.get(appId);
+    if(app == null) return null;
+    return groupService.getGroupsPage(
+            (sort, sortOrder) ->
+                    groupAppRepository.findGroupsApp(queryInfo, app.getName(), sort, sortOrder, "%"+query+"%"),
             queryInfo);
   }
 

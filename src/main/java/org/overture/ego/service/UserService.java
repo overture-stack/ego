@@ -25,6 +25,7 @@ import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.repository.UserRepository;
 import org.overture.ego.repository.mapper.UserMapper;
+import org.overture.ego.repository.sql.UserQueries;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -100,6 +101,13 @@ public class UserService {
 
   public Page<User> listUsers(QueryInfo queryInfo) {
     return this.getUsersPage((sort, sortOrder) -> userRepository.getAllUsers(queryInfo, sort, sortOrder), queryInfo);
+  }
+
+  public Page<User> findUsers(QueryInfo queryInfo, String query) {
+    log.info(UserQueries.FIND_ALL);
+    log.info("'%"+query+"%'");
+    return this.getUsersPage((sort, sortOrder) ->
+            userRepository.findAllUsers(queryInfo, sort, sortOrder, "%"+query+"%"), queryInfo);
   }
 
   public Page<User> getUsersPage(BiFunction<String, String, List<User>> userPageFetcher,

@@ -22,6 +22,8 @@ import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.repository.mapper.ApplicationMapper;
 import org.overture.ego.repository.mapper.UserMapper;
+import org.overture.ego.repository.sql.ApplicationQueries;
+import org.overture.ego.repository.sql.UserQueries;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -68,9 +70,22 @@ public interface UserAppRepository {
   List<User> getAllUsers(@BindBean QueryInfo queryInfo, @Bind("appName") String appName,
                          @Define("sort") String sort, @Define("sortOrder") String sortOrder);
 
+  @SqlQuery(UserQueries.FIND_ALL_USERS_OF_APP)
+  @RegisterMapper(UserMapper.class)
+  List<User> findAllUsers(@BindBean QueryInfo queryInfo, @Bind("appName") String appName,
+                          @Define("sort") String sort, @Define("sortOrder") String sortOrder,
+                          @Bind("query") String query);
+
   @SqlQuery(GET_ALL_APPS)
   @RegisterMapper(ApplicationMapper.class)
   List<Application> getAllApps(@BindBean QueryInfo queryInfo, @Bind("userName") String userName,
                                @Define("sort") String sort, @Define("sortOrder") String sortOrder);
+
+
+  @SqlQuery(ApplicationQueries.FIND_ALL_APPS_OF_USER)
+  @RegisterMapper(ApplicationMapper.class)
+  List<Application> findUsersApps(@BindBean QueryInfo queryInfo, @Bind("userName") String userName,
+                                  @Define("sort") String sort, @Define("sortOrder") String sortOrder,
+                                  @Bind("query") String query);
 
 }

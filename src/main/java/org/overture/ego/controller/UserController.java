@@ -60,25 +60,14 @@ public class UserController {
   public @ResponseBody
   Page<User> getUsersList(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @RequestParam(value = "query", required = false) String query,
           QueryInfo queryInfo)
   {
-    return userService.listUsers(queryInfo);
-  }
-
-  @AdminScoped
-  @RequestMapping(method = RequestMethod.GET, value = "/search")
-  @ApiResponses(
-      value = {
-          @ApiResponse(code = 200, message = "List of users", response = User.class, responseContainer = "List")
-      }
-  )
-  public @ResponseBody
-  List<User> findUsers(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestParam(value = "query", required = false, defaultValue = "0") String query,
-      @RequestParam(value = "count", required = false, defaultValue = "10") short count) {
-
-    return null;
+    if(query != null  && query.isEmpty() ==  false){
+      return userService.findUsers(queryInfo,query.toLowerCase());
+    } else {
+      return userService.listUsers(queryInfo);
+    }
   }
 
   @AdminScoped
@@ -149,9 +138,14 @@ public class UserController {
   Page<Group> getUsersGroups(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String userId,
+          @RequestParam(value = "query", required = false) String query,
           QueryInfo queryInfo)
   {
-    return userGroupService.getUsersGroup(queryInfo,userId);
+    if(query != null  && query.isEmpty() ==  false){
+      return userGroupService.findUsersGroup(queryInfo,userId, query.toLowerCase());
+    } else {
+      return userGroupService.getUsersGroup(queryInfo,userId);
+    }
   }
 
   @AdminScoped
@@ -198,9 +192,14 @@ public class UserController {
   Page<Application> getUsersApplications(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String userId,
+          @RequestParam(value = "query", required = false) String query,
           QueryInfo queryInfo)
   {
-    return userApplicationService.getUsersApps(queryInfo,userId);
+    if(query != null  && query.isEmpty() ==  false){
+      return userApplicationService.findUsersApps(queryInfo,userId, query.toLowerCase());
+    } else {
+      return userApplicationService.getUsersApps(queryInfo,userId);
+    }
   }
 
   @AdminScoped

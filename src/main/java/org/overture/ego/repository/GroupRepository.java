@@ -38,6 +38,11 @@ public interface GroupRepository {
   List<Group> getAllGroups(@BindBean QueryInfo queryInfo,
                            @Define("sort") String sort, @Define("sortOrder") String sortOrder);
 
+  @SqlQuery(GroupQueries.FIND_ALL)
+  List<Group> findAllGroups(@BindBean QueryInfo queryInfo,
+                           @Define("sort") String sort, @Define("sortOrder") String sortOrder,
+                           @Bind("query") String query);
+
   @SqlUpdate(GroupQueries.INSERT_QUERY)
   int create(@BindBean Group group);
 

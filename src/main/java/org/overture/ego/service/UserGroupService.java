@@ -44,11 +44,29 @@ public class UserGroupService {
             queryInfo);
   }
 
+  public Page<User> findGroupsUsers(QueryInfo queryInfo, String groupId, String query) {
+    val group = groupService.get(groupId,false);
+    if(group == null) return null;
+    return userService.getUsersPage(
+            (sort, sortOrder) ->
+                    userGroupRepository.findGroupsUsers(queryInfo,group.getName(),sort, sortOrder,"%"+query+"%"),
+            queryInfo);
+  }
+
   public Page<Group> getUsersGroup(QueryInfo queryInfo, String userId) {
     val user = userService.get(userId,false);
     if(user == null) return null;
     return groupService.getGroupsPage(
             (sort, sortOrder) -> userGroupRepository.getAllGroups(queryInfo, user.getName(), sort, sortOrder),
+            queryInfo);
+  }
+
+  public Page<Group> findUsersGroup(QueryInfo queryInfo, String userId, String query) {
+    val user = userService.get(userId,false);
+    if(user == null) return null;
+    return groupService.getGroupsPage(
+            (sort, sortOrder) ->
+                    userGroupRepository.findUsersGroups(queryInfo,user.getName(),sort, sortOrder,"%"+query+"%"),
             queryInfo);
   }
 

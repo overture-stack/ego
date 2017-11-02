@@ -20,6 +20,7 @@ import com.google.common.base.Splitter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.common.Utils;
 import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
@@ -54,33 +55,9 @@ public class UserMapper implements ResultSetMapper<User>  {
         .status(resultSet.getString("status"))
         .preferredLanguage(resultSet.getString("preferredLanguage"));
 
-    try {
-    if(resultSet.getString("groups") != null) {
-      val groups = new ArrayList<String>();
-      // add groups
-      Splitter.on(",")
-              .trimResults()
-              .splitToList(resultSet.getString("groups"))
-              .stream().forEach(groupName -> groups.add(groupName));
-      user.groupNames(groups);
-    }
-    } catch(SQLException ex){
-      // ignore exception as some of the group get queries don't need applications
-    }
+    user.groupNames(Utils.csvToList(resultSet,"groups"));
+    user.applicationNames(Utils.csvToList(resultSet,"applications"));
 
-    try {
-      if (resultSet.getString("applications") != null) {
-        val applications = new ArrayList<String>();
-        // add applications
-        Splitter.on(",")
-                .trimResults()
-                .splitToList(resultSet.getString("applications"))
-                .stream().forEach(applicationName -> applications.add(applicationName));
-        user.applicationNames(applications);
-      }
-    } catch(SQLException ex){
-      // ignore exception as some of the group get queries don't need applications
-    }
     val output = user.build();
     output.setTotal(resultSet);
     return output;

@@ -14,33 +14,30 @@
  * limitations under the License.
  */
 
-package org.overture.ego.model.entity;
+package org.overture.ego.common;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Splitter;
-import lombok.Builder;
-import lombok.Data;
 import lombok.val;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-@Data
-public abstract class BaseEntity {
-  @JsonIgnore
-  int total;
+public class Utils {
 
-  public void setTotal(ResultSet resultSet){
-    // TODO: Bit of a hack - implement using PagedMapper and DBI Factories/ Stored Procedures
-    // Overriding the user object to get total rows in the table as an extra column in the table
-    try{
-      this.total = resultSet.getInt("total");
+  public static List<String> csvToList(ResultSet resultSet, String fieldName){
+    val output = new ArrayList<String>();
+    try {
+      if (resultSet.getString(fieldName) != null) {
+        // add applications
+        Splitter.on(",")
+                .trimResults()
+                .splitToList(resultSet.getString(fieldName))
+                .stream().forEach(item -> output.add(item));
+      }
     } catch(Exception ex){
-      //ignore this error
+      // ignore exception
     }
+    return output;
   }
-
 }

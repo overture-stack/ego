@@ -61,6 +61,11 @@ public class ApplicationService {
     return getAppsPage((sort, sortOrder) -> applicationRepository.listApps(queryInfo, sort,sortOrder),queryInfo);
   }
 
+  public Page<Application> findApps(QueryInfo queryInfo, String query) {
+    return getAppsPage((sort, sortOrder) ->
+            applicationRepository.findApps(queryInfo, sort,sortOrder, "%"+query+"%"),queryInfo);
+  }
+
   public Page<Application> getAppsPage(BiFunction<String, String, List<Application>> appPageFetcher,
                                  QueryInfo queryInfo)  {
     // Using string templates with JDBI opens up the room for SQL Injection

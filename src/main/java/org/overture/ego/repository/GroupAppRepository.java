@@ -22,6 +22,8 @@ import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.repository.mapper.ApplicationMapper;
 import org.overture.ego.repository.mapper.GroupsMapper;
+import org.overture.ego.repository.sql.ApplicationQueries;
+import org.overture.ego.repository.sql.GroupQueries;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -68,9 +70,21 @@ public interface GroupAppRepository {
   List<Application> getAllApps(@BindBean QueryInfo queryInfo, @Bind("grpName") String groupName,
                                @Define("sort") String sort, @Define("sortOrder") String sortOrder);
 
+  @SqlQuery(ApplicationQueries.FIND_ALL_APPS_OF_GROUP)
+  @RegisterMapper(ApplicationMapper.class)
+  List<Application> findGroupsApps(@BindBean QueryInfo queryInfo, @Bind("grpName") String groupName,
+                                   @Define("sort") String sort, @Define("sortOrder") String sortOrder,
+                                   @Bind("query")String query);
+
   @SqlQuery(GET_ALL_GROUPS)
   @RegisterMapper(GroupsMapper.class)
   List<Group> getAllGroups(@BindBean QueryInfo queryInfo, @Bind("appName")String appName,
                            @Define("sort") String sort, @Define("sortOrder") String sortOrder);
+
+  @SqlQuery(GroupQueries.FIND_ALL_GROUPS_OF_APP)
+  @RegisterMapper(GroupsMapper.class)
+  List<Group> findGroupsApp(@BindBean QueryInfo queryInfo, @Bind("appName")String appName,
+                            @Define("sort") String sort, @Define("sortOrder") String sortOrder,
+                            @Bind("query")String query);
 
 }

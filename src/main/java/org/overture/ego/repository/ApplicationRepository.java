@@ -57,4 +57,9 @@ public interface ApplicationRepository {
   @SqlQuery(ApplicationQueries.GET_ALL)
   List<Application> listApps(@BindBean QueryInfo queryInfo,
                              @Define("sort") String sort, @Define("sortOrder") String sortOrder);
+
+  @SqlQuery(ApplicationQueries.FIND_ALL)
+  List<Application> findApps(@BindBean QueryInfo queryInfo,
+                             @Define("sort") String sort, @Define("sortOrder") String sortOrder,
+                             @Bind("query") String query);
 }

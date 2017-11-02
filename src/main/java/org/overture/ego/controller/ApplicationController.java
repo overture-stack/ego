@@ -58,23 +58,13 @@ public class ApplicationController {
   public @ResponseBody
   Page<Application> getApplicationsList(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestParam(value = "query", required = false) String query,
       QueryInfo queryInfo) {
-    return applicationService.listApps(queryInfo);
-  }
-
-  @AdminScoped
-  @RequestMapping(method = RequestMethod.GET, value = "/search")
-  @ApiResponses(
-      value = {
-          @ApiResponse(code = 200, message = "Page of applications", response = Page.class)
-      }
-  )
-  public @ResponseBody
-  List<Application> findApplications(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestParam(value = "query", required = true) String query,
-      @RequestParam(value = "count", required = false) short count) {
-    return null;
+    if(query != null  && query.isEmpty() ==  false){
+      return applicationService.findApps(queryInfo,query.toLowerCase());
+    } else {
+      return applicationService.listApps(queryInfo);
+    }
   }
 
   @AdminScoped
@@ -143,9 +133,14 @@ public class ApplicationController {
   Page<User> getApplicationUsers(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String appId,
+          @RequestParam(value = "query", required = false) String query,
           QueryInfo queryInfo)
   {
-    return userApplicationService.getAppsUsers(queryInfo,appId);
+    if(query != null  && query.isEmpty() ==  false){
+      return userApplicationService.findAppsUsers(queryInfo,appId, query.toLowerCase());
+    } else {
+      return userApplicationService.getAppsUsers(queryInfo,appId);
+    }
   }
 
   // GROUPS
@@ -160,9 +155,14 @@ public class ApplicationController {
   Page<Group> getApplicationsGroups(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String appId,
+          @RequestParam(value = "query", required = false) String query,
           QueryInfo queryInfo)
   {
-    return groupApplicationService.getApplicationsGroup(queryInfo,appId);
+    if(query != null  && query.isEmpty() ==  false){
+      return groupApplicationService.findApplicationsGroup(queryInfo,appId, query.toLowerCase());
+    } else {
+      return groupApplicationService.getApplicationsGroup(queryInfo,appId);
+    }
   }
 
 }

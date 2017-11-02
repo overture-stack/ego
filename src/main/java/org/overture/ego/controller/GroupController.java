@@ -62,25 +62,13 @@ public class GroupController {
   public @ResponseBody
   Page<Group> getGroupsList(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestParam(value = "query", required = false) String query,
       QueryInfo queryInfo) {
-    val groups = groupService.listGroups(queryInfo);
-    //groups.getResultSet().forEach(group -> groupService.addAppInfo(group));
-    return groups;
-  }
-
-  @AdminScoped
-  @RequestMapping(method = RequestMethod.GET, value = "/search")
-  @ApiResponses(
-      value = {
-          @ApiResponse(code = 200, message = "List of groups", response = Group.class, responseContainer = "List")
-      }
-  )
-  public @ResponseBody
-  List<Group> findGroups(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestParam(value = "query", required = false, defaultValue = "0") String query,
-      @RequestParam(value = "count", required = false, defaultValue = "10") short count) {
-    return null;
+    if(query != null  && query.isEmpty() ==  false){
+      return groupService.findGroups(queryInfo, query.toLowerCase());
+    } else {
+      return groupService.listGroups(queryInfo);
+    }
   }
 
   @AdminScoped
@@ -148,9 +136,14 @@ public class GroupController {
   Page<Application> getGroupsApplications(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String groupId,
+          @RequestParam(value = "query", required = false) String query,
           QueryInfo queryInfo)
   {
-    return groupApplicationService.getGroupsApplications(queryInfo,groupId);
+    if(query != null  && query.isEmpty() ==  false){
+      return groupApplicationService.findGroupsApplications(queryInfo,groupId, query.toLowerCase());
+    } else {
+      return groupApplicationService.getGroupsApplications(queryInfo,groupId);
+    }
   }
 
   @AdminScoped
@@ -197,8 +190,13 @@ public class GroupController {
   Page<User> getGroupsUsers(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String groupId,
+          @RequestParam(value = "query", required = false) String query,
           QueryInfo queryInfo)
   {
-    return userGroupService.getGroupsUsers(queryInfo,groupId);
+    if(query != null  && query.isEmpty() ==  false){
+      return userGroupService.findGroupsUsers(queryInfo,groupId, query.toLowerCase());
+    } else {
+      return userGroupService.getGroupsUsers(queryInfo,groupId);
+    }
   }
 }

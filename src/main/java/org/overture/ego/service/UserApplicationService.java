@@ -43,10 +43,26 @@ public class UserApplicationService {
             queryInfo);
   }
 
+  public Page<User> findAppsUsers(QueryInfo queryInfo, String appId, String query) {
+    val app = applicationService.get(appId);
+    return userService.getUsersPage(
+            (sort, sortOrder) ->
+                    userAppRepository.findAllUsers(queryInfo,app.getName(), sort, sortOrder,"%"+query+"%"),
+            queryInfo);
+  }
+
   public Page<Application> getUsersApps(QueryInfo queryInfo, String userId) {
     val user = userService.get(userId,false);
     return applicationService.getAppsPage(
             (sort, sortOrder) -> userAppRepository.getAllApps(queryInfo, user.getName(), sort, sortOrder),
+            queryInfo);
+  }
+
+  public Page<Application> findUsersApps(QueryInfo queryInfo, String userId, String query) {
+    val user = userService.get(userId,false);
+    return applicationService.getAppsPage(
+            (sort, sortOrder) ->
+                    userAppRepository.findUsersApps(queryInfo, user.getName(), sort, sortOrder,"%"+query+"%"),
             queryInfo);
   }
 

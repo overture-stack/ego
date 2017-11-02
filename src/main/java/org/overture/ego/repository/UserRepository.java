@@ -30,6 +30,7 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLoc
 
 import java.util.List;
 
+
 @RegisterMapper(UserMapper.class)
 @UseStringTemplate3StatementLocator
 public interface UserRepository  {
@@ -37,6 +38,12 @@ public interface UserRepository  {
   @SqlQuery(UserQueries.GET_ALL)
   List<User> getAllUsers(@BindBean QueryInfo queryInfo,
                          @Define("sort") String sort, @Define("sortOrder") String sortOrder);
+
+  @SqlQuery(UserQueries.FIND_ALL)
+  List<User> findAllUsers(@BindBean QueryInfo queryInfo,
+                         @Define("sort") String sort, @Define("sortOrder") String sortOrder,
+                         @Bind("query") String query);
+
 
   @SqlUpdate(UserQueries.INSERT_QUERY)
   int create(@BindBean User user);

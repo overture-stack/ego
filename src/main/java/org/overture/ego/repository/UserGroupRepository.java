@@ -22,6 +22,8 @@ import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.repository.mapper.GroupsMapper;
 import org.overture.ego.repository.mapper.UserMapper;
+import org.overture.ego.repository.sql.GroupQueries;
+import org.overture.ego.repository.sql.UserQueries;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -68,9 +70,21 @@ public interface UserGroupRepository {
   List<User> getAllUsers(@BindBean QueryInfo queryInfo, @Bind("grpName") String groupName,
                          @Define("sort") String sort, @Define("sortOrder") String sortOrder);
 
+  @SqlQuery(UserQueries.FIND_ALL_USERS_IN_GROUP)
+  @RegisterMapper(UserMapper.class)
+  List<User> findGroupsUsers(@BindBean QueryInfo queryInfo, @Bind("grpName") String groupName,
+                         @Define("sort") String sort, @Define("sortOrder") String sortOrder,
+                             @Bind("query") String query);
+
   @SqlQuery(GET_ALL_GROUPS)
   @RegisterMapper(GroupsMapper.class)
   List<Group> getAllGroups(@BindBean QueryInfo queryInfo, @Bind("userName")String userName,
                            @Define("sort") String sort, @Define("sortOrder") String sortOrder);
+
+  @SqlQuery(GroupQueries.FIND_ALL_GROUPS_OF_USER)
+  @RegisterMapper(GroupsMapper.class)
+  List<Group> findUsersGroups(@BindBean QueryInfo queryInfo, @Bind("userName")String userName,
+                           @Define("sort") String sort, @Define("sortOrder") String sortOrder,
+                         @Bind("query") String query);
 
 }

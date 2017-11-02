@@ -96,6 +96,11 @@ public class GroupService {
             (sort, sortOrder) -> groupRepository.getAllGroups(queryInfo, sort,sortOrder), queryInfo);
   }
 
+  public Page<Group> findGroups(QueryInfo queryInfo, String query) {
+    return getGroupsPage(
+            (sort, sortOrder) -> groupRepository.findAllGroups(queryInfo, sort,sortOrder,"%"+query+"%"), queryInfo);
+  }
+
   public Page<Group> getGroupsPage(BiFunction<String, String, List<Group>> groupPageFetcher, QueryInfo queryInfo) {
 
     // Using string templates with JDBI opens up the room for SQL Injection

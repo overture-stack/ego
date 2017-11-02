@@ -19,6 +19,7 @@ package org.overture.ego.repository.mapper;
 
 import com.google.common.base.Splitter;
 import lombok.val;
+import org.overture.ego.common.Utils;
 import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Group;
 import org.skife.jdbi.v2.StatementContext;
@@ -38,21 +39,7 @@ public class GroupsMapper implements ResultSetMapper<Group> {
             .status(resultSet.getString("status"))
             .status(resultSet.getString("status"));
 
-    try {
-      if (resultSet.getString("applications") != null) {
-        val applications = new ArrayList<String>();
-        // add applications
-        Splitter.on(",")
-                .trimResults()
-                .splitToList(resultSet.getString("applications"))
-                .stream().forEach(application -> applications.add(application));
-        group.applicationNames(applications);
-      }
-
-    } catch (SQLException ex){
-      // ignore exception as some of the group get queries don't need applications
-    }
-
+    group.applicationNames(Utils.csvToList(resultSet,"applications"));
     val output = group.build();
     output.setTotal(resultSet);
     return output;
