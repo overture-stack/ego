@@ -51,7 +51,8 @@ logging:
 # Profile - "secure"
 ###############################################################################
 spring:
-  profiles: secure
+  profiles: auth
+  profiles.include: secure
 
 # security
 auth:

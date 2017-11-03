@@ -35,7 +35,7 @@ import java.util.TimeZone;
 
 @Configuration
 @EnableWebSecurity
-@Profile("secure")
+@Profile("auth")
 public class SecureServerConfig extends WebSecurityConfigurerAdapter {
 
 
