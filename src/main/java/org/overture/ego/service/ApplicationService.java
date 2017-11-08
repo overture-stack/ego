@@ -16,20 +16,30 @@
 
 package org.overture.ego.service;
 
+import lombok.val;
 import org.overture.ego.model.Page;
 import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.repository.ApplicationRepository;
 import org.overture.ego.repository.mapper.ApplicationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.provider.ClientDetails;
+import org.springframework.security.oauth2.provider.ClientDetailsService;
+import org.springframework.security.oauth2.provider.ClientRegistrationException;
+import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.BiFunction;
 
 
 @Service
-public class ApplicationService {
+public class ApplicationService implements ClientDetailsService {
 
   private final String APP_PREFIX = "";
   @Autowired
@@ -83,5 +93,26 @@ public class ApplicationService {
   private Page<Application> getAppsPage(QueryInfo queryInfo, List<Application> apps){
     return Page.getPageFromPageInfo(queryInfo,apps);
   }
+
+  @Override
+  public ClientDetails loadClientByClientId(String clientId) throws ClientRegistrationException {
+    // find client using clientid
+    val application = applicationRepository.getByClientId(clientId);
+    //TODO: currently ignoring status field
+    // transform application to client details
+    val approvedScopes = Arrays.asList("read","write");
+    val clientDetails = new BaseClientDetails();
+    clientDetails.setClientId(clientId);
+    clientDetails.setClientSecret(application.getClientSecret());
+    clientDetails.setAuthorizedGrantTypes(Arrays.asList("authorization_code","client_credentials") );
+    clientDetails.setScope(approvedScopes);// TODO: test by omitting this
+    clientDetails.setRegisteredRedirectUri(application.getURISet());
+    clientDetails.setAutoApproveScopes(approvedScopes);
+    val authorities = new HashSet<GrantedAuthority>();
+    authorities.add(new SimpleGrantedAuthority("ROLE_CLIENT"));
+    clientDetails.setAuthorities(authorities);
+    return clientDetails;
+  }
+
 
 }

@@ -44,6 +44,9 @@ public interface ApplicationRepository {
   @SqlQuery(ApplicationQueries.GET_BY_NAME)
   Application getByName(@Bind("name") String applicationName);
 
+  @SqlQuery(ApplicationQueries.GET_BY_CLIENTID)
+  Application getByClientId(@Bind("clientId") String clientId);
+
   @SqlQuery(ApplicationQueries.GET_BY_ID)
   Application read(@Bind("id") int id);
 

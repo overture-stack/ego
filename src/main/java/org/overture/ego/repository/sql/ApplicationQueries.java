@@ -46,6 +46,9 @@ public class ApplicationQueries {
   public static final String GET_BY_NAME =
           "SELECT appid,appName,clientId,clientSecret,redirectUri,description,status " +
                   "FROM EGOAPPLICATION WHERE appName=:name";
+  public static final String GET_BY_CLIENTID =
+          "SELECT appid,appName,clientId,clientSecret,redirectUri,description,status " +
+                  "FROM EGOAPPLICATION WHERE clientId=:clientId";
   public static final String UPDATE_QUERY = "UPDATE EGOAPPLICATION " +
           "SET appName=:name, clientId=:clientId" +
           ", clientSecret=:clientSecret, redirectUri=:redirectUri, description=:description, status=:status" +

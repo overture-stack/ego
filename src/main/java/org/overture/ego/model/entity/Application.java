@@ -16,11 +16,15 @@
 
 package org.overture.ego.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
+import lombok.val;
+
+import java.util.HashSet;
 
 @Data
 @Builder
@@ -38,4 +42,10 @@ public class Application extends BaseEntity {
   String description;
   String status;
 
+  @JsonIgnore
+  public HashSet<String> getURISet(){
+    val output = new HashSet<String>();
+    output.add(this.redirectUri);
+    return output;
+  }
 }

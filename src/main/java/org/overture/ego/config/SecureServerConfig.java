@@ -50,19 +50,6 @@ public class SecureServerConfig extends WebSecurityConfigurerAdapter {
     return new SecureAuthorizationManager();
   }
 
-  @Bean
-  CorsFilter corsFilter() {
-    return new CorsFilter();
-  }
-
-  @Bean
-  SimpleDateFormat formatter(){
-    SimpleDateFormat formatter =
-            new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-    formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-    return formatter;
-  }
-
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http.csrf().disable()

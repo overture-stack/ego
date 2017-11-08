@@ -25,7 +25,6 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
 
 @SpringBootApplication
-@EnableAuthorizationServer
 public class AuthorizationServiceMain {
 
   public static void main(String[] args) {
