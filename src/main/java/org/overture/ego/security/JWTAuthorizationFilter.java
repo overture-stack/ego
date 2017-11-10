@@ -19,6 +19,7 @@ package org.overture.ego.security;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.service.UserService;
 import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +47,9 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
   @Autowired
   TokenService tokenService;
 
+  @Autowired
+  UserService userService;
+
   public JWTAuthorizationFilter(AuthenticationManager authManager) {
     super(authManager);
   }
@@ -55,7 +59,13 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
   public void doFilterInternal(HttpServletRequest request,
                                HttpServletResponse response,
                                FilterChain chain) {
-    String tokenPayload = request.getHeader(HttpHeaders.AUTHORIZATION);
+    String tokenPayload = "";
+    if("/oauth/token".equals(request.getServletPath())){
+      chain.doFilter(request,response);
+      return;
+    } else{
+      tokenPayload = request.getHeader(HttpHeaders.AUTHORIZATION);
+    }
     if (isValidToken(tokenPayload) == false) {
       SecurityContextHolder.clearContext();
       chain.doFilter(request,response);

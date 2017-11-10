@@ -104,7 +104,7 @@ public class ApplicationService implements ClientDetailsService {
     val clientDetails = new BaseClientDetails();
     clientDetails.setClientId(clientId);
     clientDetails.setClientSecret(application.getClientSecret());
-    clientDetails.setAuthorizedGrantTypes(Arrays.asList("authorization_code","client_credentials") );
+    clientDetails.setAuthorizedGrantTypes(Arrays.asList("authorization_code","client_credentials", "password", "refresh_token") );
     clientDetails.setScope(approvedScopes);// TODO: test by omitting this
     clientDetails.setRegisteredRedirectUri(application.getURISet());
     clientDetails.setAutoApproveScopes(approvedScopes);

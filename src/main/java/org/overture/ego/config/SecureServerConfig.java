@@ -17,17 +17,18 @@
 package org.overture.ego.config;
 
 import lombok.SneakyThrows;
-import org.overture.ego.security.AuthorizationManager;
-import org.overture.ego.security.CorsFilter;
-import org.overture.ego.security.JWTAuthorizationFilter;
-import org.overture.ego.security.SecureAuthorizationManager;
+import org.overture.ego.security.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
@@ -38,11 +39,13 @@ import java.util.TimeZone;
 @Profile("auth")
 public class SecureServerConfig extends WebSecurityConfigurerAdapter {
 
+  @Autowired
+  AuthenticationManager authenticationManager;
 
   @Bean
   @SneakyThrows
   JWTAuthorizationFilter authorizationFilter() {
-    return new JWTAuthorizationFilter(authenticationManager());
+    return new JWTAuthorizationFilter(authenticationManager);
   }
 
   @Bean
@@ -57,7 +60,7 @@ public class SecureServerConfig extends WebSecurityConfigurerAdapter {
         .antMatchers("/", "/oauth/**","/swagger**","/swagger-resources/**","/configuration/ui","/configuration/**","/v2/api**","/webjars/**").permitAll()
         .anyRequest().authenticated().and().authorizeRequests()
         .and()
-        .addFilter(authorizationFilter())
+        .addFilterAfter(authorizationFilter(), BasicAuthenticationFilter.class)
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
   }
 

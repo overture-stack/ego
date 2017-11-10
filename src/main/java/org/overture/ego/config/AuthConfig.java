@@ -18,21 +18,28 @@ package org.overture.ego.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.security.CorsFilter;
+import org.overture.ego.security.CustomTokenEnhancer;
 import org.overture.ego.service.ApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
+import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
+import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
+import org.springframework.security.oauth2.provider.token.TokenEnhancer;
+import org.springframework.security.oauth2.provider.token.TokenEnhancerChain;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.TimeZone;
 
 @Slf4j
@@ -45,6 +52,9 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
 
   @Autowired
   ApplicationService clientDetailsService;
+
+  @Autowired
+  AuthenticationManager authenticationManager;
 
   @Bean
   @Primary
@@ -85,8 +95,29 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   @Override
   public void configure(ClientDetailsServiceConfigurer clients)
           throws Exception {
-
     clients.withClientDetails(clientDetailsService);
 
+  }
+
+  @Bean
+  public TokenEnhancer tokenEnhancer() {
+    return new CustomTokenEnhancer();
+  }
+
+  @Override
+  public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
+    TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
+    tokenEnhancerChain.setTokenEnhancers(
+            Arrays.asList(tokenEnhancer()));
+    endpoints.tokenStore(tokenStore())
+            .tokenEnhancer(tokenEnhancerChain)
+            .accessTokenConverter(accessTokenConverter());
+    endpoints.authenticationManager(this.authenticationManager);
+
+  }
+
+  @Override
+  public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
+    security.allowFormAuthenticationForClients();
   }
 }

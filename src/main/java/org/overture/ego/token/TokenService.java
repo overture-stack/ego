@@ -20,6 +20,7 @@ import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.security.JWTAccessToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -55,7 +56,6 @@ public class TokenService {
     claims.put("aud", u.getApplicationNames());
     claims.put("jti", UUID.randomUUID());
     claims.put("context", context);
-
 
     return Jwts.builder()
         .setClaims(claims)
@@ -103,6 +103,10 @@ public class TokenService {
         .parseClaimsJws(token)
         .getBody();
 
+  }
+
+  public JWTAccessToken getJWTAccessToken(String token){
+    return new JWTAccessToken(token, this);
   }
 
 }
