@@ -36,7 +36,7 @@ facebook:
 # Google Connection Details
 google:
   client:
-    Ids: 814606937527-v7tr5dfqegjijicq3jeu5arv5tcl4ks0.apps.googleusercontent.com,814606937527-kk7ooglk6pj2tvpn7ldip6g3b74f8o72.apps.googleusercontent.com
+    Ids: 814606937527-v7tr5dfqegjijicq3jeu5arv5tcl4ks0.apps.googleusercontent.com,814606937527-kk7ooglk6pj2tvpn7ldip6g3b74f8o72.apps.googleusercontent.com,144611473365-k1aarg8qs6rlh67r3t7dssi1e34b6061.apps.googleusercontent.com
 
 # Logging settings.
 logging:
@@ -66,3 +66,17 @@ logging:
     threshold: ALL
   loggers:
     "org.skife.jdbi.v2": TRACE
+
+---
+###############################################################################
+# Profile - "demo"
+###############################################################################
+spring:
+  profiles: demo
+
+demo:
+  user:
+    #Save to DB on register?
+    save: false
+    #default role -- update this when permissions/roles are updated
+    role: ADMIN

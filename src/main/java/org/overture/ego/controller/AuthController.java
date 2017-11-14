@@ -23,6 +23,7 @@ import org.overture.ego.provider.google.GoogleTokenService;
 import org.overture.ego.provider.facebook.FacebookTokenService;
 import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.util.StringUtils;
@@ -39,6 +40,12 @@ public class AuthController {
   private GoogleTokenService googleTokenService;
   @Autowired
   private FacebookTokenService facebookTokenService;
+
+  // -- DEMO PROFILE CONFIGURATIONS --
+  @Value("${demo.user.save:true}")
+  private boolean saveUsersAllowed;
+  @Value("${demo.user.role:USER}")
+  private String newUserRole;
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
   @ResponseStatus(value = HttpStatus.OK)
