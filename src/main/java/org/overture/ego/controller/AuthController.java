@@ -20,6 +20,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.model.enums.UserRoles;
 import org.overture.ego.service.UserService;
 import org.overture.ego.provider.google.GoogleTokenService;
 import org.overture.ego.provider.facebook.FacebookTokenService;
@@ -50,10 +51,8 @@ public class AuthController {
   FacebookTokenService facebookTokenService;
 
   // -- DEMO PROFILE CONFIGURATIONS --
-  @Value("${demo.user.save:true}")
-  private boolean saveUsersAllowed;
-  @Value("${demo.user.role:USER}")
-  private String newUserRole;
+  @Value("${demo:false}")
+  private boolean demo;
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
   @ResponseStatus(value = HttpStatus.OK)
@@ -100,7 +99,7 @@ public class AuthController {
 
     if (user == null) {
       user = createNewUser(userName,authInfo);
-      if (saveUsersAllowed) {
+      if (!demo) {
         // Saving user controlled through config - provides mechanism to run demos without saving
         userService.create(user);
       }
@@ -109,7 +108,7 @@ public class AuthController {
   }
 
   private User createNewUser(String userName, Map authInfo) {
-    String role = newUserRole;
+    String role = demo ? UserRoles.ADMIN.toString() : UserRoles.USER.toString();
     String status = "Pending";
 
 
