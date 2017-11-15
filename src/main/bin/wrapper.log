@@ -1,0 +1,221 @@
+FATAL  | wrapper  | 2017/11/15 11:19:39 | Unable to open configuration file: /Users/jeubank/workspace/overture-stack/ego/src/main/bin/../conf/wrapper.conf (No such file or directory)
+FATAL  | wrapper  | 2017/11/15 11:19:39 |   Current working directory: /Users/jeubank/workspace/overture-stack/ego/src/main/bin
+WARN   | wrapper  | 2017/11/15 11:20:22 | Unable to write to the configured log directory: ../logs (No such file or directory)
+WARN   | wrapper  | 2017/11/15 11:20:22 |   The directory does not exist.
+WARN   | wrapper  | 2017/11/15 11:20:22 | Unable to write to the configured log file: ../logs/wrapper.20171115.log (No such file or directory)
+WARN   | wrapper  | 2017/11/15 11:20:22 |   Falling back to the default file in the current working directory: wrapper.log
+WARN   | wrapper  | 2017/11/15 11:20:22 | The version of the script (3.5.19) doesn't match the version of this Wrapper (3.5.21). This might cause some problems
+STATUS | wrapper  | 2017/11/15 11:20:22 | --> Wrapper Started as Daemon
+STATUS | wrapper  | 2017/11/15 11:20:22 | Java Service Wrapper Community Edition 64-bit 3.5.21
+STATUS | wrapper  | 2017/11/15 11:20:22 |   Copyright (C) 1999-2013 Tanuki Software, Ltd. All Rights Reserved.
+STATUS | wrapper  | 2017/11/15 11:20:22 |     http://wrapper.tanukisoftware.com
+STATUS | wrapper  | 2017/11/15 11:20:22 | 
+STATUS | wrapper  | 2017/11/15 11:20:22 | Launching a JVM...
+INFO   | jvm 1    | 2017/11/15 11:20:23 | WrapperManager: Initializing...
+INFO   | jvm 1    | 2017/11/15 11:20:23 | WrapperSimpleApp Error: Unable to locate the class org.springframework.boot.loader.JarLauncher : java.lang.ClassNotFoundException: org.springframework.boot.loader.JarLauncher
+INFO   | jvm 1    | 2017/11/15 11:20:23 | 
+INFO   | jvm 1    | 2017/11/15 11:20:23 | WrapperSimpleApp Usage:
+INFO   | jvm 1    | 2017/11/15 11:20:23 |   java org.tanukisoftware.wrapper.WrapperSimpleApp {app_class{/app_method}} [app_arguments]
+INFO   | jvm 1    | 2017/11/15 11:20:23 | 
+INFO   | jvm 1    | 2017/11/15 11:20:23 | Where:
+INFO   | jvm 1    | 2017/11/15 11:20:23 |   app_class:      The fully qualified class name of the application to run.
+INFO   | jvm 1    | 2017/11/15 11:20:23 |   app_arguments:  The arguments that would normally be passed to the
+INFO   | jvm 1    | 2017/11/15 11:20:23 |                   application.
+ERROR  | wrapper  | 2017/11/15 11:20:25 | JVM exited while loading the application.
+STATUS | wrapper  | 2017/11/15 11:20:29 | Launching a JVM...
+INFO   | jvm 2    | 2017/11/15 11:20:30 | WrapperManager: Initializing...
+INFO   | jvm 2    | 2017/11/15 11:20:30 | WrapperSimpleApp Error: Unable to locate the class org.springframework.boot.loader.JarLauncher : java.lang.ClassNotFoundException: org.springframework.boot.loader.JarLauncher
+INFO   | jvm 2    | 2017/11/15 11:20:30 | 
+INFO   | jvm 2    | 2017/11/15 11:20:30 | WrapperSimpleApp Usage:
+INFO   | jvm 2    | 2017/11/15 11:20:30 |   java org.tanukisoftware.wrapper.WrapperSimpleApp {app_class{/app_method}} [app_arguments]
+INFO   | jvm 2    | 2017/11/15 11:20:30 | 
+INFO   | jvm 2    | 2017/11/15 11:20:30 | Where:
+INFO   | jvm 2    | 2017/11/15 11:20:30 |   app_class:      The fully qualified class name of the application to run.
+INFO   | jvm 2    | 2017/11/15 11:20:30 |   app_arguments:  The arguments that would normally be passed to the
+INFO   | jvm 2    | 2017/11/15 11:20:30 |                   application.
+ERROR  | wrapper  | 2017/11/15 11:20:32 | JVM exited while loading the application.
+STATUS | wrapper  | 2017/11/15 11:20:36 | Launching a JVM...
+INFO   | jvm 3    | 2017/11/15 11:20:37 | WrapperManager: Initializing...
+INFO   | jvm 3    | 2017/11/15 11:20:37 | WrapperSimpleApp Error: Unable to locate the class org.springframework.boot.loader.JarLauncher : java.lang.ClassNotFoundException: org.springframework.boot.loader.JarLauncher
+INFO   | jvm 3    | 2017/11/15 11:20:37 | 
+INFO   | jvm 3    | 2017/11/15 11:20:37 | WrapperSimpleApp Usage:
+INFO   | jvm 3    | 2017/11/15 11:20:37 |   java org.tanukisoftware.wrapper.WrapperSimpleApp {app_class{/app_method}} [app_arguments]
+INFO   | jvm 3    | 2017/11/15 11:20:37 | 
+INFO   | jvm 3    | 2017/11/15 11:20:37 | Where:
+INFO   | jvm 3    | 2017/11/15 11:20:37 |   app_class:      The fully qualified class name of the application to run.
+INFO   | jvm 3    | 2017/11/15 11:20:37 |   app_arguments:  The arguments that would normally be passed to the
+INFO   | jvm 3    | 2017/11/15 11:20:37 |                   application.
+ERROR  | wrapper  | 2017/11/15 11:20:39 | JVM exited while loading the application.
+STATUS | wrapper  | 2017/11/15 11:20:44 | Launching a JVM...
+INFO   | jvm 4    | 2017/11/15 11:20:44 | WrapperManager: Initializing...
+INFO   | jvm 4    | 2017/11/15 11:20:44 | WrapperSimpleApp Error: Unable to locate the class org.springframework.boot.loader.JarLauncher : java.lang.ClassNotFoundException: org.springframework.boot.loader.JarLauncher
+INFO   | jvm 4    | 2017/11/15 11:20:44 | 
+INFO   | jvm 4    | 2017/11/15 11:20:44 | WrapperSimpleApp Usage:
+INFO   | jvm 4    | 2017/11/15 11:20:44 |   java org.tanukisoftware.wrapper.WrapperSimpleApp {app_class{/app_method}} [app_arguments]
+INFO   | jvm 4    | 2017/11/15 11:20:44 | 
+INFO   | jvm 4    | 2017/11/15 11:20:44 | Where:
+INFO   | jvm 4    | 2017/11/15 11:20:44 |   app_class:      The fully qualified class name of the application to run.
+INFO   | jvm 4    | 2017/11/15 11:20:44 |   app_arguments:  The arguments that would normally be passed to the
+INFO   | jvm 4    | 2017/11/15 11:20:44 |                   application.
+ERROR  | wrapper  | 2017/11/15 11:20:46 | JVM exited while loading the application.
+STATUS | wrapper  | 2017/11/15 11:20:51 | Launching a JVM...
+INFO   | jvm 5    | 2017/11/15 11:20:51 | WrapperManager: Initializing...
+INFO   | jvm 5    | 2017/11/15 11:20:51 | WrapperSimpleApp Error: Unable to locate the class org.springframework.boot.loader.JarLauncher : java.lang.ClassNotFoundException: org.springframework.boot.loader.JarLauncher
+INFO   | jvm 5    | 2017/11/15 11:20:51 | 
+INFO   | jvm 5    | 2017/11/15 11:20:51 | WrapperSimpleApp Usage:
+INFO   | jvm 5    | 2017/11/15 11:20:51 |   java org.tanukisoftware.wrapper.WrapperSimpleApp {app_class{/app_method}} [app_arguments]
+INFO   | jvm 5    | 2017/11/15 11:20:51 | 
+INFO   | jvm 5    | 2017/11/15 11:20:51 | Where:
+INFO   | jvm 5    | 2017/11/15 11:20:51 |   app_class:      The fully qualified class name of the application to run.
+INFO   | jvm 5    | 2017/11/15 11:20:51 |   app_arguments:  The arguments that would normally be passed to the
+INFO   | jvm 5    | 2017/11/15 11:20:51 |                   application.
+ERROR  | wrapper  | 2017/11/15 11:20:53 | JVM exited while loading the application.
+FATAL  | wrapper  | 2017/11/15 11:20:53 | There were 5 failed launches in a row, each lasting less than 300 seconds.  Giving up.
+FATAL  | wrapper  | 2017/11/15 11:20:53 |   There may be a configuration problem: please check the logs.
+STATUS | wrapper  | 2017/11/15 11:20:53 | <-- Wrapper Stopped
+WARN   | wrapper  | 2017/11/15 11:21:01 | Unable to write to the configured log directory: ../logs (No such file or directory)
+WARN   | wrapper  | 2017/11/15 11:21:01 |   The directory does not exist.
+WARN   | wrapper  | 2017/11/15 11:21:01 | Unable to write to the configured log file: ../logs/wrapper.20171115.log (No such file or directory)
+WARN   | wrapper  | 2017/11/15 11:21:01 |   Falling back to the default file in the current working directory: wrapper.log
+WARN   | wrapper  | 2017/11/15 11:21:01 | The version of the script (3.5.19) doesn't match the version of this Wrapper (3.5.21). This might cause some problems
+STATUS | wrapper  | 2017/11/15 11:21:01 | --> Wrapper Started as Daemon
+STATUS | wrapper  | 2017/11/15 11:21:01 | Java Service Wrapper Community Edition 64-bit 3.5.21
+STATUS | wrapper  | 2017/11/15 11:21:01 |   Copyright (C) 1999-2013 Tanuki Software, Ltd. All Rights Reserved.
+STATUS | wrapper  | 2017/11/15 11:21:01 |     http://wrapper.tanukisoftware.com
+STATUS | wrapper  | 2017/11/15 11:21:01 | 
+STATUS | wrapper  | 2017/11/15 11:21:01 | Launching a JVM...
+INFO   | jvm 1    | 2017/11/15 11:21:02 | WrapperManager: Initializing...
+INFO   | jvm 1    | 2017/11/15 11:21:02 | WrapperSimpleApp Error: Unable to locate the class org.springframework.boot.loader.JarLauncher : java.lang.ClassNotFoundException: org.springframework.boot.loader.JarLauncher
+INFO   | jvm 1    | 2017/11/15 11:21:02 | 
+INFO   | jvm 1    | 2017/11/15 11:21:02 | WrapperSimpleApp Usage:
+INFO   | jvm 1    | 2017/11/15 11:21:02 |   java org.tanukisoftware.wrapper.WrapperSimpleApp {app_class{/app_method}} [app_arguments]
+INFO   | jvm 1    | 2017/11/15 11:21:02 | 
+INFO   | jvm 1    | 2017/11/15 11:21:02 | Where:
+INFO   | jvm 1    | 2017/11/15 11:21:02 |   app_class:      The fully qualified class name of the application to run.
+INFO   | jvm 1    | 2017/11/15 11:21:02 |   app_arguments:  The arguments that would normally be passed to the
+INFO   | jvm 1    | 2017/11/15 11:21:02 |                   application.
+ERROR  | wrapper  | 2017/11/15 11:21:04 | JVM exited while loading the application.
+STATUS | wrapper  | 2017/11/15 11:21:08 | Launching a JVM...
+INFO   | jvm 2    | 2017/11/15 11:21:09 | WrapperManager: Initializing...
+INFO   | jvm 2    | 2017/11/15 11:21:09 | WrapperSimpleApp Error: Unable to locate the class org.springframework.boot.loader.JarLauncher : java.lang.ClassNotFoundException: org.springframework.boot.loader.JarLauncher
+INFO   | jvm 2    | 2017/11/15 11:21:09 | 
+INFO   | jvm 2    | 2017/11/15 11:21:09 | WrapperSimpleApp Usage:
+INFO   | jvm 2    | 2017/11/15 11:21:09 |   java org.tanukisoftware.wrapper.WrapperSimpleApp {app_class{/app_method}} [app_arguments]
+INFO   | jvm 2    | 2017/11/15 11:21:09 | 
+INFO   | jvm 2    | 2017/11/15 11:21:09 | Where:
+INFO   | jvm 2    | 2017/11/15 11:21:09 |   app_class:      The fully qualified class name of the application to run.
+INFO   | jvm 2    | 2017/11/15 11:21:09 |   app_arguments:  The arguments that would normally be passed to the
+INFO   | jvm 2    | 2017/11/15 11:21:09 |                   application.
+ERROR  | wrapper  | 2017/11/15 11:21:11 | JVM exited while loading the application.
+STATUS | wrapper  | 2017/11/15 11:21:15 | Launching a JVM...
+INFO   | jvm 3    | 2017/11/15 11:21:16 | WrapperManager: Initializing...
+INFO   | jvm 3    | 2017/11/15 11:21:16 | WrapperSimpleApp Error: Unable to locate the class org.springframework.boot.loader.JarLauncher : java.lang.ClassNotFoundException: org.springframework.boot.loader.JarLauncher
+INFO   | jvm 3    | 2017/11/15 11:21:16 | 
+INFO   | jvm 3    | 2017/11/15 11:21:16 | WrapperSimpleApp Usage:
+INFO   | jvm 3    | 2017/11/15 11:21:16 |   java org.tanukisoftware.wrapper.WrapperSimpleApp {app_class{/app_method}} [app_arguments]
+INFO   | jvm 3    | 2017/11/15 11:21:16 | 
+INFO   | jvm 3    | 2017/11/15 11:21:16 | Where:
+INFO   | jvm 3    | 2017/11/15 11:21:16 |   app_class:      The fully qualified class name of the application to run.
+INFO   | jvm 3    | 2017/11/15 11:21:16 |   app_arguments:  The arguments that would normally be passed to the
+INFO   | jvm 3    | 2017/11/15 11:21:16 |                   application.
+ERROR  | wrapper  | 2017/11/15 11:21:18 | JVM exited while loading the application.
+STATUS | wrapper  | 2017/11/15 11:21:22 | Launching a JVM...
+INFO   | jvm 4    | 2017/11/15 11:21:23 | WrapperManager: Initializing...
+INFO   | jvm 4    | 2017/11/15 11:21:23 | WrapperSimpleApp Error: Unable to locate the class org.springframework.boot.loader.JarLauncher : java.lang.ClassNotFoundException: org.springframework.boot.loader.JarLauncher
+INFO   | jvm 4    | 2017/11/15 11:21:23 | 
+INFO   | jvm 4    | 2017/11/15 11:21:23 | WrapperSimpleApp Usage:
+INFO   | jvm 4    | 2017/11/15 11:21:23 |   java org.tanukisoftware.wrapper.WrapperSimpleApp {app_class{/app_method}} [app_arguments]
+INFO   | jvm 4    | 2017/11/15 11:21:23 | 
+INFO   | jvm 4    | 2017/11/15 11:21:23 | Where:
+INFO   | jvm 4    | 2017/11/15 11:21:23 |   app_class:      The fully qualified class name of the application to run.
+INFO   | jvm 4    | 2017/11/15 11:21:23 |   app_arguments:  The arguments that would normally be passed to the
+INFO   | jvm 4    | 2017/11/15 11:21:23 |                   application.
+ERROR  | wrapper  | 2017/11/15 11:21:25 | JVM exited while loading the application.
+STATUS | wrapper  | 2017/11/15 11:21:30 | Launching a JVM...
+INFO   | jvm 5    | 2017/11/15 11:21:30 | WrapperManager: Initializing...
+INFO   | jvm 5    | 2017/11/15 11:21:30 | WrapperSimpleApp Error: Unable to locate the class org.springframework.boot.loader.JarLauncher : java.lang.ClassNotFoundException: org.springframework.boot.loader.JarLauncher
+INFO   | jvm 5    | 2017/11/15 11:21:30 | 
+INFO   | jvm 5    | 2017/11/15 11:21:30 | WrapperSimpleApp Usage:
+INFO   | jvm 5    | 2017/11/15 11:21:30 |   java org.tanukisoftware.wrapper.WrapperSimpleApp {app_class{/app_method}} [app_arguments]
+INFO   | jvm 5    | 2017/11/15 11:21:30 | 
+INFO   | jvm 5    | 2017/11/15 11:21:30 | Where:
+INFO   | jvm 5    | 2017/11/15 11:21:30 |   app_class:      The fully qualified class name of the application to run.
+INFO   | jvm 5    | 2017/11/15 11:21:30 |   app_arguments:  The arguments that would normally be passed to the
+INFO   | jvm 5    | 2017/11/15 11:21:30 |                   application.
+ERROR  | wrapper  | 2017/11/15 11:21:32 | JVM exited while loading the application.
+FATAL  | wrapper  | 2017/11/15 11:21:32 | There were 5 failed launches in a row, each lasting less than 300 seconds.  Giving up.
+FATAL  | wrapper  | 2017/11/15 11:21:32 |   There may be a configuration problem: please check the logs.
+STATUS | wrapper  | 2017/11/15 11:21:32 | <-- Wrapper Stopped
+WARN   | wrapper  | 2017/11/15 11:21:42 | Unable to write to the configured log directory: ../logs (No such file or directory)
+WARN   | wrapper  | 2017/11/15 11:21:42 |   The directory does not exist.
+WARN   | wrapper  | 2017/11/15 11:21:42 | Unable to write to the configured log file: ../logs/wrapper.20171115.log (No such file or directory)
+WARN   | wrapper  | 2017/11/15 11:21:42 |   Falling back to the default file in the current working directory: wrapper.log
+WARN   | wrapper  | 2017/11/15 11:21:42 | The version of the script (3.5.19) doesn't match the version of this Wrapper (3.5.21). This might cause some problems
+STATUS | wrapper  | 2017/11/15 11:21:42 | --> Wrapper Started as Daemon
+STATUS | wrapper  | 2017/11/15 11:21:42 | Java Service Wrapper Community Edition 64-bit 3.5.21
+STATUS | wrapper  | 2017/11/15 11:21:42 |   Copyright (C) 1999-2013 Tanuki Software, Ltd. All Rights Reserved.
+STATUS | wrapper  | 2017/11/15 11:21:42 |     http://wrapper.tanukisoftware.com
+STATUS | wrapper  | 2017/11/15 11:21:42 | 
+STATUS | wrapper  | 2017/11/15 11:21:42 | Launching a JVM...
+INFO   | jvm 1    | 2017/11/15 11:21:42 | WrapperManager: Initializing...
+INFO   | jvm 1    | 2017/11/15 11:21:42 | WrapperSimpleApp Error: Unable to locate the class org.springframework.boot.loader.JarLauncher : java.lang.ClassNotFoundException: org.springframework.boot.loader.JarLauncher
+INFO   | jvm 1    | 2017/11/15 11:21:42 | 
+INFO   | jvm 1    | 2017/11/15 11:21:42 | WrapperSimpleApp Usage:
+INFO   | jvm 1    | 2017/11/15 11:21:42 |   java org.tanukisoftware.wrapper.WrapperSimpleApp {app_class{/app_method}} [app_arguments]
+INFO   | jvm 1    | 2017/11/15 11:21:42 | 
+INFO   | jvm 1    | 2017/11/15 11:21:42 | Where:
+INFO   | jvm 1    | 2017/11/15 11:21:42 |   app_class:      The fully qualified class name of the application to run.
+INFO   | jvm 1    | 2017/11/15 11:21:42 |   app_arguments:  The arguments that would normally be passed to the
+INFO   | jvm 1    | 2017/11/15 11:21:42 |                   application.
+ERROR  | wrapper  | 2017/11/15 11:21:44 | JVM exited while loading the application.
+STATUS | wrapper  | 2017/11/15 11:21:49 | Launching a JVM...
+INFO   | jvm 2    | 2017/11/15 11:21:49 | WrapperManager: Initializing...
+INFO   | jvm 2    | 2017/11/15 11:21:49 | WrapperSimpleApp Error: Unable to locate the class org.springframework.boot.loader.JarLauncher : java.lang.ClassNotFoundException: org.springframework.boot.loader.JarLauncher
+INFO   | jvm 2    | 2017/11/15 11:21:49 | 
+INFO   | jvm 2    | 2017/11/15 11:21:49 | WrapperSimpleApp Usage:
+INFO   | jvm 2    | 2017/11/15 11:21:49 |   java org.tanukisoftware.wrapper.WrapperSimpleApp {app_class{/app_method}} [app_arguments]
+INFO   | jvm 2    | 2017/11/15 11:21:49 | 
+INFO   | jvm 2    | 2017/11/15 11:21:49 | Where:
+INFO   | jvm 2    | 2017/11/15 11:21:49 |   app_class:      The fully qualified class name of the application to run.
+INFO   | jvm 2    | 2017/11/15 11:21:49 |   app_arguments:  The arguments that would normally be passed to the
+INFO   | jvm 2    | 2017/11/15 11:21:49 |                   application.
+ERROR  | wrapper  | 2017/11/15 11:21:52 | JVM exited while loading the application.
+STATUS | wrapper  | 2017/11/15 11:21:56 | Launching a JVM...
+INFO   | jvm 3    | 2017/11/15 11:21:56 | WrapperManager: Initializing...
+INFO   | jvm 3    | 2017/11/15 11:21:56 | WrapperSimpleApp Error: Unable to locate the class org.springframework.boot.loader.JarLauncher : java.lang.ClassNotFoundException: org.springframework.boot.loader.JarLauncher
+INFO   | jvm 3    | 2017/11/15 11:21:56 | 
+INFO   | jvm 3    | 2017/11/15 11:21:56 | WrapperSimpleApp Usage:
+INFO   | jvm 3    | 2017/11/15 11:21:56 |   java org.tanukisoftware.wrapper.WrapperSimpleApp {app_class{/app_method}} [app_arguments]
+INFO   | jvm 3    | 2017/11/15 11:21:56 | 
+INFO   | jvm 3    | 2017/11/15 11:21:56 | Where:
+INFO   | jvm 3    | 2017/11/15 11:21:56 |   app_class:      The fully qualified class name of the application to run.
+INFO   | jvm 3    | 2017/11/15 11:21:56 |   app_arguments:  The arguments that would normally be passed to the
+INFO   | jvm 3    | 2017/11/15 11:21:56 |                   application.
+ERROR  | wrapper  | 2017/11/15 11:21:59 | JVM exited while loading the application.
+STATUS | wrapper  | 2017/11/15 11:22:03 | Launching a JVM...
+INFO   | jvm 4    | 2017/11/15 11:22:03 | WrapperManager: Initializing...
+INFO   | jvm 4    | 2017/11/15 11:22:04 | WrapperSimpleApp Error: Unable to locate the class org.springframework.boot.loader.JarLauncher : java.lang.ClassNotFoundException: org.springframework.boot.loader.JarLauncher
+INFO   | jvm 4    | 2017/11/15 11:22:04 | 
+INFO   | jvm 4    | 2017/11/15 11:22:04 | WrapperSimpleApp Usage:
+INFO   | jvm 4    | 2017/11/15 11:22:04 |   java org.tanukisoftware.wrapper.WrapperSimpleApp {app_class{/app_method}} [app_arguments]
+INFO   | jvm 4    | 2017/11/15 11:22:04 | 
+INFO   | jvm 4    | 2017/11/15 11:22:04 | Where:
+INFO   | jvm 4    | 2017/11/15 11:22:04 |   app_class:      The fully qualified class name of the application to run.
+INFO   | jvm 4    | 2017/11/15 11:22:04 |   app_arguments:  The arguments that would normally be passed to the
+INFO   | jvm 4    | 2017/11/15 11:22:04 |                   application.
+ERROR  | wrapper  | 2017/11/15 11:22:06 | JVM exited while loading the application.
+STATUS | wrapper  | 2017/11/15 11:22:10 | Launching a JVM...
+INFO   | jvm 5    | 2017/11/15 11:22:11 | WrapperManager: Initializing...
+INFO   | jvm 5    | 2017/11/15 11:22:11 | WrapperSimpleApp Error: Unable to locate the class org.springframework.boot.loader.JarLauncher : java.lang.ClassNotFoundException: org.springframework.boot.loader.JarLauncher
+INFO   | jvm 5    | 2017/11/15 11:22:11 | 
+INFO   | jvm 5    | 2017/11/15 11:22:11 | WrapperSimpleApp Usage:
+INFO   | jvm 5    | 2017/11/15 11:22:11 |   java org.tanukisoftware.wrapper.WrapperSimpleApp {app_class{/app_method}} [app_arguments]
+INFO   | jvm 5    | 2017/11/15 11:22:11 | 
+INFO   | jvm 5    | 2017/11/15 11:22:11 | Where:
+INFO   | jvm 5    | 2017/11/15 11:22:11 |   app_class:      The fully qualified class name of the application to run.
+INFO   | jvm 5    | 2017/11/15 11:22:11 |   app_arguments:  The arguments that would normally be passed to the
+INFO   | jvm 5    | 2017/11/15 11:22:11 |                   application.
+ERROR  | wrapper  | 2017/11/15 11:22:13 | JVM exited while loading the application.
+FATAL  | wrapper  | 2017/11/15 11:22:13 | There were 5 failed launches in a row, each lasting less than 300 seconds.  Giving up.
+FATAL  | wrapper  | 2017/11/15 11:22:13 |   There may be a configuration problem: please check the logs.
+STATUS | wrapper  | 2017/11/15 11:22:13 | <-- Wrapper Stopped
