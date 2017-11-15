@@ -74,9 +74,4 @@ logging:
 spring:
   profiles: demo
 
-demo:
-  user:
-    #Save to DB on register?
-    save: false
-    #default role -- update this when permissions/roles are updated
-    role: ADMIN
+demo: true

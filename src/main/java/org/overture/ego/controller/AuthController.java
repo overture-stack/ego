@@ -42,10 +42,8 @@ public class AuthController {
   private FacebookTokenService facebookTokenService;
 
   // -- DEMO PROFILE CONFIGURATIONS --
-  @Value("${demo.user.save:true}")
-  private boolean saveUsersAllowed;
-  @Value("${demo.user.role:USER}")
-  private String newUserRole;
+  @Value("${demo:false}")
+  private boolean demo;
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
   @ResponseStatus(value = HttpStatus.OK)
