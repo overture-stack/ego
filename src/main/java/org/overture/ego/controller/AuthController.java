@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.model.enums.UserRoles;
+import org.overture.ego.model.enums.UserStatus;
 import org.overture.ego.service.UserService;
 import org.overture.ego.provider.google.GoogleTokenService;
 import org.overture.ego.provider.facebook.FacebookTokenService;
@@ -109,8 +110,7 @@ public class AuthController {
 
   private User createNewUser(String userName, Map authInfo) {
     String role = demo ? UserRoles.ADMIN.toString() : UserRoles.USER.toString();
-    String status = "Pending";
-
+    String status = demo ? UserStatus.APPROVED.toString() : UserStatus.PENDING.toString();
 
     return User.builder()
             .name(userName)

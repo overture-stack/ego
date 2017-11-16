@@ -19,12 +19,12 @@ package org.overture.ego.security;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.model.enums.UserRoles;
+import org.overture.ego.model.enums.UserStatus;
 import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Component;
 
 
 @Slf4j
@@ -36,12 +36,12 @@ public class SecureAuthorizationManager implements AuthorizationManager {
 
   public boolean authorize(@NonNull Authentication authentication) {
     User user = (User)authentication.getPrincipal();
-    return "user".equals(user.getRole().toLowerCase()) && isActiveUser(user);
+    return UserRoles.USER.toString().equals(user.getRole()) && isActiveUser(user);
   }
 
   public boolean authorizeWithAdminRole(@NonNull Authentication authentication) {
     User user = (User)authentication.getPrincipal();
-    return "admin".equals(user.getRole().toLowerCase()) && isActiveUser(user);
+    return UserRoles.ADMIN.toString().equals(user.getRole()) && isActiveUser(user);
   }
 
   public boolean authorizeWithGroup(@NonNull Authentication authentication, String groupName) {
@@ -55,6 +55,6 @@ public class SecureAuthorizationManager implements AuthorizationManager {
   }
 
   public boolean isActiveUser(User user){
-    return "approved".equals(user.getStatus().toLowerCase());
+    return UserStatus.APPROVED.toString().equals(user.getStatus());
   }
 }
