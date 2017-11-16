@@ -16,46 +16,16 @@
 
 package org.overture.ego.repository;
 
-import org.overture.ego.model.QueryInfo;
+
 import org.overture.ego.model.entity.Group;
-import org.overture.ego.repository.mapper.GroupsMapper;
-import org.overture.ego.repository.sql.GroupQueries;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.Define;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
-import java.util.List;
 
-@RegisterMapper(GroupsMapper.class)
-@UseStringTemplate3StatementLocator
-public interface GroupRepository {
+public interface GroupRepository extends
+        PagingAndSortingRepository<Group, Integer>, JpaSpecificationExecutor {
 
-  @SqlQuery(GroupQueries.GET_ALL)
-  List<Group> getAllGroups(@BindBean QueryInfo queryInfo,
-                           @Define("sort") String sort, @Define("sortOrder") String sortOrder);
-
-  @SqlQuery(GroupQueries.FIND_ALL)
-  List<Group> findAllGroups(@BindBean QueryInfo queryInfo,
-                           @Define("sort") String sort, @Define("sortOrder") String sortOrder,
-                           @Bind("query") String query);
-
-  @SqlUpdate(GroupQueries.INSERT_QUERY)
-  int create(@BindBean Group group);
-
-  @SqlQuery(GroupQueries.GET_BY_ID)
-  Group read(@Bind("id") int grpId);
-
-  @SqlQuery(GroupQueries.GET_BY_NAME)
-  Group getByName(@Bind("name") String grpName);
-
-  @SqlUpdate(GroupQueries.UPDATE_QUERY)
-  int update(@BindBean Group group);
-
-  @SqlUpdate(GroupQueries.DELETE_QUERY)
-  int delete(@Bind("id") int grpId);
+  Group findOneByNameIgnoreCase(String name);
+  Group findAllByStatusIgnoreCase(String status);
 
 }

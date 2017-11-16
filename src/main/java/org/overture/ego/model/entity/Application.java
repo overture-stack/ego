@@ -19,28 +19,55 @@ package org.overture.ego.model.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NonNull;
-import lombok.val;
+import lombok.*;
 
+import javax.persistence.*;
 import java.util.HashSet;
+import java.util.List;
 
+@Entity
+@Table(name = "egoapplication")
 @Data
-@Builder
 @JsonPropertyOrder({"id", "name", "clientId", "clientSecret", "redirectUri", "description", "status"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
-public class Application extends BaseEntity {
+@EqualsAndHashCode(of={"id"})
+@NoArgsConstructor
+@RequiredArgsConstructor
+public class Application {
+
+  @Id
+  @Column(nullable = false, name = "id", updatable = false)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   int id;
+
   @NonNull
+  @Column(nullable = false, name = "name")
   String name;
+
   @NonNull
+  @Column(nullable = false, name = "clientid")
   String clientId;
+
   @NonNull
+  @Column(nullable = false, name = "clientsecret")
   String clientSecret;
+
+  @Column(name = "redirecturi")
   String redirectUri;
+
+  @Column(name = "description")
   String description;
+
+  @Column(name = "status")
   String status;
+
+  @ManyToMany(mappedBy = "applications", cascade = CascadeType.ALL)
+  @JsonIgnore
+  List<Group> groups;
+
+  @ManyToMany(mappedBy = "applications", cascade = CascadeType.ALL)
+  @JsonIgnore
+  List<User> users;
 
   @JsonIgnore
   public HashSet<String> getURISet(){

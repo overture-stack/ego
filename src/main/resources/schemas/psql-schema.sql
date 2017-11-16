@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS EGOAPPLICATION CASCADE;
 CREATE TABLE EGOAPPLICATION (
-  appId           BIGSERIAL PRIMARY KEY,
-  appName         VARCHAR(255) UNIQUE,
+  id           BIGSERIAL PRIMARY KEY,
+  name         VARCHAR(255) UNIQUE,
   clientId        VARCHAR(255),
   clientSecret    VARCHAR(255),
   redirectUri     TEXT,
@@ -11,8 +11,8 @@ CREATE TABLE EGOAPPLICATION (
 
 DROP TABLE IF EXISTS EGOUSER CASCADE;
 CREATE TABLE EGOUSER (
-  userid            BIGSERIAL PRIMARY KEY,
-  userName          VARCHAR(255) UNIQUE,
+  id            BIGSERIAL PRIMARY KEY,
+  name          VARCHAR(255) UNIQUE,
   email             VARCHAR(255) UNIQUE,
   role              VARCHAR(64),
   firstName         TEXT,
@@ -25,37 +25,37 @@ CREATE TABLE EGOUSER (
 
 DROP TABLE IF EXISTS EGOGROUP CASCADE;
 CREATE TABLE EGOGROUP (
-  grpId              BIGSERIAL PRIMARY KEY,
-  grpName            VARCHAR(255) UNIQUE,
+  id              BIGSERIAL PRIMARY KEY,
+  name            VARCHAR(255) UNIQUE,
   description        VARCHAR(255),
   status             VARCHAR(64) CHECK (status IN ('Pending', 'Approved', 'Rejected', 'Disabled'))
 );
 
 DROP TABLE IF EXISTS GROUPAPPLICATION CASCADE;
 CREATE TABLE GROUPAPPLICATION (
-  grpName                VARCHAR(255),
-  appName                VARCHAR(255),
-  PRIMARY KEY (grpName,appName),
-  FOREIGN KEY (grpName) REFERENCES EGOGROUP(grpName),
-  FOREIGN KEY (appName) REFERENCES EGOAPPLICATION(appName)
+  grpId                BIGSERIAL,
+  appId                BIGSERIAL,
+  PRIMARY KEY (grpId,appId),
+  FOREIGN KEY (grpId) REFERENCES EGOGROUP(id),
+  FOREIGN KEY (appId) REFERENCES EGOAPPLICATION(id)
 );
 
 DROP TABLE IF EXISTS USERGROUP CASCADE;
 CREATE TABLE USERGROUP (
-  userName                VARCHAR(255),
-  grpName                 VARCHAR(255),
-  PRIMARY KEY (grpName,userName),
-  FOREIGN KEY (grpName) REFERENCES EGOGROUP(grpName),
-  FOREIGN KEY (userName) REFERENCES EGOUSER(userName)
+  userId                BIGSERIAL,
+  grpId                 BIGSERIAL,
+  PRIMARY KEY (grpId,userId),
+  FOREIGN KEY (grpId) REFERENCES EGOGROUP(id),
+  FOREIGN KEY (userId) REFERENCES EGOUSER(id)
 );
 
 DROP TABLE IF EXISTS USERAPPLICATION CASCADE;
 CREATE TABLE USERAPPLICATION (
-  userName                VARCHAR(255),
-  appName                 VARCHAR(255),
-  PRIMARY KEY (userName,appName),
-  FOREIGN KEY (appName) REFERENCES EGOAPPLICATION(appName),
-  FOREIGN KEY (userName) REFERENCES EGOUSER(userName)
+  userId                BIGSERIAL,
+  appId                 BIGSERIAL,
+  PRIMARY KEY (userId,appId),
+  FOREIGN KEY (appId) REFERENCES EGOAPPLICATION(id),
+  FOREIGN KEY (userId) REFERENCES EGOUSER(id)
 );
 
 

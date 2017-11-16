@@ -81,16 +81,17 @@ public class TokenService {
       Claims body = getTokenClaims(token);
       val userInfo = (Map)((Map)body.get("context")).get("user");
 
-      return User.builder().id((Integer) body.get("sub"))
-          .name(userInfo.get("name").toString())
-          .email(userInfo.get("email").toString())
-          .firstName(userInfo.get("first_name").toString())
-          .lastName(userInfo.get("last_name").toString())
-          .role(((ArrayList<String>)userInfo.get("roles")).get(0))
-          .status(userInfo.get("status").toString())
-          .groupNames((ArrayList<String>) userInfo.get("groups"))
-          .applicationNames((ArrayList<String>) body.get("aud")).build();
-
+      User u = new User();
+      u.setId((Integer) body.get("sub"));
+      u.setName(userInfo.get("name").toString());
+      u.setEmail(userInfo.get("email").toString());
+      u.setFirstName(userInfo.get("first_name").toString());
+      u.setLastName(userInfo.get("last_name").toString());
+      u.setRole(((ArrayList<String>)userInfo.get("roles")).get(0));
+      u.setStatus(userInfo.get("status").toString());
+      u.setApplicationNames((ArrayList<String>) body.get("aud"));
+      u.setGroupNames((ArrayList<String>) userInfo.get("groups"));
+      return u;
     } catch (JwtException | ClassCastException e) {
       return null;
     }

@@ -18,20 +18,21 @@ package org.overture.ego.service;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.overture.ego.model.Page;
-import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.repository.UserRepository;
-import org.overture.ego.repository.mapper.UserMapper;
-import org.overture.ego.repository.sql.UserQueries;
+import org.overture.ego.repository.queryspecification.ApplicationSpecification;
+import org.overture.ego.repository.queryspecification.GroupSpecification;
+import org.overture.ego.repository.queryspecification.UserSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
+
+import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Slf4j
 @Service
@@ -42,121 +43,102 @@ public class UserService {
   @Autowired
   GroupService groupService;
   @Autowired
-  UserGroupService userGroupService;
-  @Autowired
   ApplicationService applicationService;
-  @Autowired
-  UserApplicationService userApplicationService;
 
   public User create(User userInfo) {
-    userRepository.create(userInfo);
-    return userRepository.getByName(userInfo.getName());
+    return userRepository.save(userInfo);
   }
 
   public void addUsersToGroups(String userId, List<String> groupIDs){
-    //TODO: change DB schema to add id - id relationships and avoid multiple calls
-    val user = userRepository.read(Integer.parseInt(userId));
+    //TODO: change id to string
+    val user = userRepository.findOne(Integer.parseInt(userId));
     groupIDs.forEach(grpId -> {
-      val group = groupService.get(grpId, false);
-      userGroupService.add(user.getName(),group.getName());
+      val group = groupService.get(grpId);
+      user.addGroup(group);
     });
+    userRepository.save(user);
   }
 
   public void addUsersToApps(String userId, List<String> appIDs){
-    //TODO: change DB schema to add id - id relationships and avoid multiple calls
-    val user = userRepository.read(Integer.parseInt(userId));
+    //TODO: change id to string
+    val user = userRepository.findOne(Integer.parseInt(userId));
     appIDs.forEach(appId -> {
       val app = applicationService.get(appId);
-      userApplicationService.add(user.getName(),app.getName());
+      user.addApplication(app);
     });
+    userRepository.save(user);
   }
 
-  public User get(String userId, boolean fullInfo) {
-    int userID = Integer.parseInt(userId);
-    val user = userRepository.read(userID);
-    if(fullInfo){
-      addGroupsAppInfo(user);
-    }
-    return user;
+  public User get(String userId) {
+    //TODO: change id to string
+    return userRepository.findOne(Integer.parseInt(userId));
   }
 
-  public User getByName(String userName, boolean fullInfo) {
-
-    val user = userRepository.getByName(userName);
-    if(fullInfo){
-      addGroupsAppInfo(user);
-    }
-    return user;
+  public User getByName(String userName) {
+    return userRepository.findOneByNameIgnoreCase(userName);
   }
 
   public User update(User updatedUserInfo) {
-    userRepository.update(updatedUserInfo);
-    return updatedUserInfo;
+    return userRepository.save(updatedUserInfo);
   }
 
   public void delete(String userId) {
-    int userID = Integer.parseInt(userId);
-    userRepository.delete(userID);
+    userRepository.delete(Integer.parseInt(userId));
   }
 
-  public Page<User> listUsers(QueryInfo queryInfo) {
-    return this.getUsersPage((sort, sortOrder) -> userRepository.getAllUsers(queryInfo, sort, sortOrder), queryInfo);
+  public Page<User> listUsers(Pageable pageable) {
+    return userRepository.findAll(pageable);
   }
 
-  public Page<User> findUsers(QueryInfo queryInfo, String query) {
-    log.info(UserQueries.FIND_ALL);
-    log.info("'%"+query+"%'");
-    return this.getUsersPage((sort, sortOrder) ->
-            userRepository.findAllUsers(queryInfo, sort, sortOrder, "%"+query+"%"), queryInfo);
+  public Page<User> findUsers(String query, Pageable pageable) {
+    return userRepository.findAll(UserSpecification.containsText(query), pageable);
   }
-
-  public Page<User> getUsersPage(BiFunction<String, String, List<User>> userPageFetcher,
-                                 QueryInfo queryInfo)  {
-
-    // Using string templates with JDBI opens up the room for SQL Injection
-    // Field sanitation is must to avoid it
-    return getUsersPage(queryInfo,
-                        userPageFetcher.apply(queryInfo.getSort(UserMapper::sanitizeSortField),
-                                              queryInfo.getSortOrder()));
-  }
-
 
   public void deleteUserFromGroup(String userId, List<String> groupIDs) {
-    //TODO: change DB schema to add id - id relationships and avoid multiple calls
-    val user = userRepository.read(Integer.parseInt(userId));
+    //TODO: change id to string
+    val user = userRepository.findOne(Integer.parseInt(userId));
     groupIDs.forEach(grpId -> {
-      val group = groupService.get(grpId, false);
-      userGroupService.delete(user.getName(),group.getName());
+      user.removeGroup(Integer.parseInt(grpId));
     });
+    userRepository.save(user);
   }
 
   public void deleteUserFromApp(String userId, List<String> appIDs) {
-    //TODO: change DB schema to add id - id relationships and avoid multiple calls
-    val user = userRepository.read(Integer.parseInt(userId));
+    //TODO: change id to string
+    val user = userRepository.findOne(Integer.parseInt(userId));
     appIDs.forEach(appId -> {
-      val app = applicationService.get(appId);
-      userApplicationService.delete(user.getName(),app.getName());
+      user.removeApplication(Integer.parseInt(appId));
     });
+    userRepository.save(user);
   }
 
-  public void addGroupsAppInfo(User user){
-     user.setGroups(getUserGroups(user));
-     user.setApplications(getUserApps(user));
+  public Page<User> findGroupsUsers(String groupId, Pageable pageable){
+    return userRepository.findAll(
+            UserSpecification.inGroup(Integer.parseInt(groupId)),
+            pageable);
   }
 
-  private Page<User> getUsersPage(QueryInfo queryInfo, List<User> users)  {
-    return Page.getPageFromPageInfo(queryInfo,users);
+  public Page<User> findGroupsUsers(String groupId, String query, Pageable pageable){
+    return userRepository.findAll(
+            where(UserSpecification.inGroup(Integer.parseInt(groupId)))
+                    .and(UserSpecification.containsText(query)),
+            pageable);
   }
 
-  private List<Group> getUserGroups(User user){
-    val groups = new ArrayList<Group>();
-    user.getGroupNames().forEach(groupName -> groups.add(groupService.getByName(groupName,true)));
-    return groups;
+  public Page<User> findAppsUsers(String appId, Pageable pageable){
+    return userRepository.findAll(
+            UserSpecification.ofApplication(Integer.parseInt(appId)),
+            pageable);
   }
 
-  private List<Application> getUserApps(User user){
-    val apps = new ArrayList<Application>();
-    user.getApplicationNames().forEach(appName -> apps.add(applicationService.getByName(appName)));
-    return apps;
+  public Page<User> findAppsUsers(String appId, String query, Pageable pageable){
+    return userRepository.findAll(
+            where(UserSpecification.ofApplication(Integer.parseInt(appId)))
+                    .and(UserSpecification.containsText(query)),
+            pageable);
   }
+
+
+
+
 }

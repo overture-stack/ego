@@ -35,7 +35,7 @@ public class CustomTokenEnhancer implements TokenEnhancer {
   @Override
   public OAuth2AccessToken enhance(OAuth2AccessToken oAuth2AccessToken, OAuth2Authentication oAuth2Authentication) {
 
-    val user = userService.getByName(oAuth2Authentication.getPrincipal().toString(), false);
+    val user = userService.getByName(oAuth2Authentication.getPrincipal().toString());
     String token = tokenService.generateToken(user);
     return tokenService.getJWTAccessToken(token);
   }

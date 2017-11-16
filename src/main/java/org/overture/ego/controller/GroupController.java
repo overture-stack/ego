@@ -19,17 +19,16 @@ package org.overture.ego.controller;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.overture.ego.model.Page;
-import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.security.AdminScoped;
-import org.overture.ego.service.GroupApplicationService;
+import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
-import org.overture.ego.service.UserGroupService;
+import org.overture.ego.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -48,9 +47,9 @@ public class GroupController {
   @Autowired
   GroupService groupService;
   @Autowired
-  UserGroupService userGroupService;
+  ApplicationService applicationService;
   @Autowired
-  GroupApplicationService groupApplicationService;
+  UserService userService;
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
@@ -61,13 +60,13 @@ public class GroupController {
   )
   public @ResponseBody
   Page<Group> getGroupsList(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestParam(value = "query", required = false) String query,
-      QueryInfo queryInfo) {
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @RequestParam(value = "query", required = false) String query,
+          Pageable pageable) {
     if(query != null  && query.isEmpty() ==  false){
-      return groupService.findGroups(queryInfo, query.toLowerCase());
+      return groupService.findGroups(query, pageable);
     } else {
-      return groupService.listGroups(queryInfo);
+      return groupService.listGroups(pageable);
     }
   }
 
@@ -97,7 +96,7 @@ public class GroupController {
   Group getGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String groupId) {
-    return groupService.get(groupId, false);
+    return groupService.get(groupId);
   }
 
 
@@ -124,7 +123,9 @@ public class GroupController {
     groupService.delete(groupId);
   }
 
-  // APPLICATIONS
+  /*
+   Application related endpoints
+    */
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/applications")
   @ApiResponses(
@@ -137,12 +138,12 @@ public class GroupController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String groupId,
           @RequestParam(value = "query", required = false) String query,
-          QueryInfo queryInfo)
+          Pageable pageable)
   {
     if(query != null  && query.isEmpty() ==  false){
-      return groupApplicationService.findGroupsApplications(queryInfo,groupId, query.toLowerCase());
+      return applicationService.findGroupsApplications(groupId, query,pageable);
     } else {
-      return groupApplicationService.getGroupsApplications(queryInfo,groupId);
+      return applicationService.findGroupsApplications(groupId, pageable);
     }
   }
 
@@ -178,7 +179,9 @@ public class GroupController {
     groupService.deleteAppsFromGroup(grpId,appIDs);
   }
 
-  // USERS
+  /*
+   User related endpoints
+    */
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
   @ApiResponses(
@@ -191,12 +194,12 @@ public class GroupController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String groupId,
           @RequestParam(value = "query", required = false) String query,
-          QueryInfo queryInfo)
+          Pageable pageable)
   {
     if(query != null  && query.isEmpty() ==  false){
-      return userGroupService.findGroupsUsers(queryInfo,groupId, query.toLowerCase());
+      return userService.findGroupsUsers(groupId, query, pageable);
     } else {
-      return userGroupService.getGroupsUsers(queryInfo,groupId);
+      return userService.findGroupsUsers(groupId, pageable);
     }
   }
 }

@@ -17,20 +17,18 @@
 package org.overture.ego.service;
 
 import lombok.val;
-import org.overture.ego.model.Page;
-import org.overture.ego.model.QueryInfo;
-import org.overture.ego.model.entity.Application;
+import org.omg.CORBA.INTERNAL;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.repository.GroupRepository;
-import org.overture.ego.repository.mapper.GroupsMapper;
-import org.overture.ego.repository.mapper.UserMapper;
+import org.overture.ego.repository.queryspecification.GroupSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.provisioning.GroupManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
+
+import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
 public class GroupService {
@@ -40,110 +38,100 @@ public class GroupService {
   @Autowired
   ApplicationService applicationService;
   @Autowired
-  GroupApplicationService groupApplicationService;
-  @Autowired
-  UserGroupService userGroupService;
+  UserService userService;
 
   public Group create(Group groupInfo) {
-    groupRepository.create(groupInfo);
-    return groupRepository.getByName(groupInfo.getName());
+    return groupRepository.save(groupInfo);
   }
 
   public void addAppsToGroups(String grpId, List<String> appIDs){
-    val group = groupRepository.read(Integer.parseInt(grpId));
+    //TODO: change id to string
+    val group = groupRepository.findOne(Integer.parseInt(grpId));
     appIDs.forEach(appId -> {
       val app = applicationService.get(appId);
-      groupApplicationService.add(group.getName(),app.getName());
+      group.addApplication(app);
     });
+    groupRepository.save(group);
   }
 
-  public Group get(String groupId, boolean fullInfo) {
-    int groupID = Integer.parseInt(groupId);
-    if (groupRepository.read(groupID) == null) {
-      return null;
-    }
-    else {
-      val group = groupRepository.read(groupID);
-      if(fullInfo){
-        addAppInfo(group);
-      }
-      return group;
-    }
+  public Group get(String groupId) {
+    //TODO: change id to string
+    return groupRepository.findOne(Integer.parseInt(groupId));
   }
 
-  public Group getByName(String groupName, boolean fullInfo) {
-
-    val group = groupRepository.getByName(groupName);
-    if(fullInfo){
-      addAppInfo(group);
-    }
-    return group;
+  public Group getByName(String groupName) {
+    return groupRepository.findOneByNameIgnoreCase(groupName);
   }
 
   public Group update(Group updatedGroupInfo) {
-    groupRepository.update(updatedGroupInfo);
-    return updatedGroupInfo;
+    return groupRepository.save(updatedGroupInfo);
   }
 
   public void delete(String groupId) {
-    int groupID = Integer.parseInt(groupId);
-
-    groupRepository.delete(groupID);
+    //TODO: change id to string
+     groupRepository.delete(Integer.parseInt(groupId));
   }
 
-  public Page<Group> listGroups(QueryInfo queryInfo) {
-    return getGroupsPage(
-            (sort, sortOrder) -> groupRepository.getAllGroups(queryInfo, sort,sortOrder), queryInfo);
+  public Page<Group> listGroups(Pageable pageable) {
+    return groupRepository.findAll(pageable);
   }
 
-  public Page<Group> findGroups(QueryInfo queryInfo, String query) {
-    return getGroupsPage(
-            (sort, sortOrder) -> groupRepository.findAllGroups(queryInfo, sort,sortOrder,"%"+query+"%"), queryInfo);
+  public Page<Group> findGroups(String query, Pageable pageable) {
+    return groupRepository.findAll(GroupSpecification.containsText(query), pageable);
   }
 
-  public Page<Group> getGroupsPage(BiFunction<String, String, List<Group>> groupPageFetcher, QueryInfo queryInfo) {
-
-    // Using string templates with JDBI opens up the room for SQL Injection
-    // Field sanitation is must to avoid it
-    return getGroupsPage(queryInfo,
-            groupPageFetcher.apply(queryInfo.getSort(GroupsMapper::sanitizeSortField),
-                    queryInfo.getSortOrder()));
+  public Page<Group> findUsersGroup(String userId, Pageable pageable){
+    return groupRepository.findAll(
+            GroupSpecification.containsUser(Integer.parseInt(userId)),
+            pageable);
   }
 
-  public void addAppInfo(Group group){
-    val apps = new ArrayList<Application>();
-    group.getApplicationNames().forEach(appName -> apps.add(applicationService.getByName(appName)));
-    group.setApplications(apps);
+  public Page<Group> findUsersGroup(String userId, String query, Pageable pageable){
+    return groupRepository.findAll(
+            where(GroupSpecification.containsUser(Integer.parseInt(userId)))
+                    .and(GroupSpecification.containsText(query)),
+            pageable);
   }
 
+  public Page<Group> findApplicationsGroup(String appId, Pageable pageable){
+    return groupRepository.findAll(
+            GroupSpecification.containsApplication(Integer.parseInt(appId)),
+            pageable);
+  }
+
+  public Page<Group> findApplicationsGroup(String appId, String query, Pageable pageable){
+    return groupRepository.findAll(
+            where(GroupSpecification.containsApplication(Integer.parseInt(appId)))
+                    .and(GroupSpecification.containsText(query)),
+            pageable);
+  }
 
   public void deleteAppsFromGroup(String grpId, List<String> appIDs) {
-    //TODO: change DB schema to add id - id relationships and avoid multiple calls
-    val group = groupRepository.read(Integer.parseInt(grpId));
+    //TODO: change id to string
+    val group = groupRepository.findOne(Integer.parseInt(grpId));
     appIDs.forEach(appId -> {
-      val app = applicationService.get(appId);
-      groupApplicationService.delete(group.getName(),app.getName());
+      group.removeApplication(Integer.parseInt(appId));
     });
+    groupRepository.save(group);
   }
 
   public void deleteUsersFromGroup(String grpId, List<String> userIDs) {
-    //TODO: change DB schema to add id - id relationships and avoid multiple calls
-    val group = groupRepository.read(Integer.parseInt(grpId));
+    //TODO: change id to string
+    val group = groupRepository.findOne(Integer.parseInt(grpId));
     userIDs.forEach(userId -> {
-      val user = applicationService.get(userId);
-      userGroupService.delete(user.getName(),group.getName());
+      group.removeUser(Integer.parseInt(userId));
     });
+    groupRepository.save(group);
   }
 
   public void addUsersToGroup(String grpId, List<String> userIDs) {
-    val group = groupRepository.read(Integer.parseInt(grpId));
+    //TODO: change id to string
+    val group = groupRepository.findOne(Integer.parseInt(grpId));
     userIDs.forEach(userId -> {
-      val user = applicationService.get(userId);
-      userGroupService.add(user.getName(),group.getName());
+      val user = userService.get(userId);
+      group.addUser(user);
     });
+    groupRepository.save(group);
   }
 
-  private Page<Group> getGroupsPage(QueryInfo queryInfo, List<Group> groups) {
-    return Page.getPageFromPageInfo(queryInfo,groups);
-  }
 }

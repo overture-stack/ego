@@ -19,16 +19,16 @@ package org.overture.ego.controller;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
-import org.overture.ego.model.Page;
-import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.security.AdminScoped;
-import org.overture.ego.service.UserApplicationService;
-import org.overture.ego.service.UserGroupService;
+import org.overture.ego.service.ApplicationService;
+import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -46,9 +46,9 @@ public class UserController {
   @Autowired
   UserService userService;
   @Autowired
-  UserGroupService userGroupService;
+  GroupService groupService;
   @Autowired
-  UserApplicationService userApplicationService;
+  ApplicationService applicationService;
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
@@ -61,12 +61,12 @@ public class UserController {
   Page<User> getUsersList(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @RequestParam(value = "query", required = false) String query,
-          QueryInfo queryInfo)
+          Pageable pageable)
   {
     if(query != null  && query.isEmpty() ==  false){
-      return userService.findUsers(queryInfo,query.toLowerCase());
+      return userService.findUsers(query, pageable);
     } else {
-      return userService.listUsers(queryInfo);
+      return userService.listUsers(pageable);
     }
   }
 
@@ -82,11 +82,7 @@ public class UserController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @RequestBody(required = true) User userInfo) {
 
-    User user = userService.getByName(userInfo.getName(), false);
-    if (user == null) {
-      userService.create(userInfo);
-    }
-    return userService.getByName(userInfo.getName(), false);
+    return userService.create(userInfo);
   }
 
   @AdminScoped
@@ -100,7 +96,7 @@ public class UserController {
   User getUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String id) {
-    return  userService.get(id, false);
+    return  userService.get(id);
   }
 
   @AdminScoped
@@ -126,7 +122,9 @@ public class UserController {
     userService.delete(userId);
   }
 
-  // GROUPS
+  /*
+   Groups related endpoints
+    */
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
   @ApiResponses(
@@ -139,12 +137,12 @@ public class UserController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String userId,
           @RequestParam(value = "query", required = false) String query,
-          QueryInfo queryInfo)
+          Pageable pageable)
   {
     if(query != null  && query.isEmpty() ==  false){
-      return userGroupService.findUsersGroup(queryInfo,userId, query.toLowerCase());
+      return groupService.findUsersGroup(userId,query, pageable);
     } else {
-      return userGroupService.getUsersGroup(queryInfo,userId);
+      return groupService.findUsersGroup(userId,pageable);
     }
   }
 
@@ -180,7 +178,9 @@ public class UserController {
 
   }
 
-  //APPLICATIONS
+  /*
+  Applications related endpoints
+   */
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/applications")
   @ApiResponses(
@@ -193,12 +193,12 @@ public class UserController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String userId,
           @RequestParam(value = "query", required = false) String query,
-          QueryInfo queryInfo)
+          Pageable pageable)
   {
     if(query != null  && query.isEmpty() ==  false){
-      return userApplicationService.findUsersApps(queryInfo,userId, query.toLowerCase());
+      return applicationService.findUsersApps(userId, query, pageable);
     } else {
-      return userApplicationService.getUsersApps(queryInfo,userId);
+      return applicationService.findUsersApps(userId, pageable);
     }
   }
 

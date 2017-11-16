@@ -16,7 +16,6 @@
 
 package org.overture.ego.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -27,7 +26,6 @@ import org.overture.ego.provider.facebook.FacebookTokenService;
 import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.jwt.JwtHelper;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.SimpleDateFormat;
@@ -91,7 +89,7 @@ public class AuthController {
 
   private String generateUserToken(Map authInfo){
     val userName = authInfo.get("email").toString();
-    User user = userService.getByName(userName, false);
+    User user = userService.getByName(userName);
     if (user == null) {
       user = createNewUser(userName,authInfo);
       userService.create(user);
@@ -104,15 +102,15 @@ public class AuthController {
     String status = "Pending";
 
 
-    return User.builder()
-            .name(userName)
-            .email(userName)
-            .firstName(authInfo.containsKey("given_name") ? authInfo.get("given_name").toString() : "")
-            .lastName(authInfo.containsKey("family_name") ? authInfo.get("family_name").toString() : "")
-            .status(status)
-            .createdAt(formatter.format(new Date()))
-            .lastLogin(null)
-            .role(role).build();
-
+    User u = new User();
+            u.setName(userName);
+            u.setEmail(userName);
+            u.setFirstName(authInfo.containsKey("given_name") ? authInfo.get("given_name").toString() : "");
+            u.setLastName(authInfo.containsKey("family_name") ? authInfo.get("family_name").toString() : "");
+            u.setStatus(status);
+            u.setCreatedAt(formatter.format(new Date()));
+            u.setLastLogin(null);
+            u.setRole(role);
+    return u;
   }
 }

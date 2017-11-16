@@ -40,4 +40,13 @@ public class Utils {
     }
     return output;
   }
+
+  public static String prepareForQuery(String text){
+    if(text == null || text.isEmpty()){
+      return  "";
+    } else if (text.contains("%") == false) {
+      text = "%" + text + "%";
+    }
+    return text.toLowerCase();
+  }
 }

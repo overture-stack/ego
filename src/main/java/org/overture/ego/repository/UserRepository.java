@@ -16,48 +16,15 @@
 
 package org.overture.ego.repository;
 
-import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.repository.mapper.UserMapper;
-import org.overture.ego.repository.sql.UserQueries;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.Define;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
-import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
-
-import java.util.List;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
 
-@RegisterMapper(UserMapper.class)
-@UseStringTemplate3StatementLocator
-public interface UserRepository  {
+public interface UserRepository  extends
+        PagingAndSortingRepository<User, Integer>, JpaSpecificationExecutor {
 
-  @SqlQuery(UserQueries.GET_ALL)
-  List<User> getAllUsers(@BindBean QueryInfo queryInfo,
-                         @Define("sort") String sort, @Define("sortOrder") String sortOrder);
-
-  @SqlQuery(UserQueries.FIND_ALL)
-  List<User> findAllUsers(@BindBean QueryInfo queryInfo,
-                         @Define("sort") String sort, @Define("sortOrder") String sortOrder,
-                         @Bind("query") String query);
-
-
-  @SqlUpdate(UserQueries.INSERT_QUERY)
-  int create(@BindBean User user);
-
-  @SqlQuery(UserQueries.GET_BY_ID)
-  User read(@Bind("id") int userId);
-
-  @SqlQuery(UserQueries.GET_BY_NAME)
-  User getByName(@Bind("name") String userName);
-
-  @SqlUpdate(UserQueries.UPDATE_QUERY)
-  int update(@BindBean User user);
-
-  @SqlUpdate(UserQueries.DELETE_QUERY)
-  int delete(@Bind("id") int userId);
+  User findAllByStatusIgnoreCase(String status);
+  User findOneByNameIgnoreCase(String name);
 
 }

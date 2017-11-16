@@ -17,12 +17,14 @@
 package org.overture.ego.service;
 
 import lombok.val;
-import org.overture.ego.model.Page;
-import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
+import org.overture.ego.model.entity.Group;
 import org.overture.ego.repository.ApplicationRepository;
-import org.overture.ego.repository.mapper.ApplicationMapper;
+import org.overture.ego.repository.queryspecification.ApplicationSpecification;
+import org.overture.ego.repository.queryspecification.GroupSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.provider.ClientDetails;
@@ -32,72 +34,78 @@ import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
-import java.util.function.BiFunction;
+
+import static org.springframework.data.jpa.domain.Specifications.where;
 
 
 @Service
 public class ApplicationService implements ClientDetailsService {
 
-  private final String APP_PREFIX = "";
   @Autowired
   ApplicationRepository applicationRepository;
 
   public Application create(Application applicationInfo) {
-    applicationRepository.create(applicationInfo);
-    return applicationRepository.getByName(applicationInfo.getName());
+    return applicationRepository.save(applicationInfo);
   }
 
   public Application get(String applicationId) {
     //TODO: change id to string
-    int appID = Integer.parseInt(applicationId);
-    return applicationRepository.read(appID);
+    return applicationRepository.findOne(Integer.parseInt(applicationId));
   }
 
   public Application update(Application updatedApplicationInfo) {
-    applicationRepository.update(updatedApplicationInfo.getId(), updatedApplicationInfo);
+    applicationRepository.save(updatedApplicationInfo);
     return updatedApplicationInfo;
   }
 
   public void delete(String applicationId) {
     //TODO: change id to string
-    int appID = Integer.parseInt(applicationId);
-    applicationRepository.delete(appID);
+    applicationRepository.delete(Integer.parseInt(applicationId));
   }
 
-  public Page<Application> listApps(QueryInfo queryInfo) {
-    return getAppsPage((sort, sortOrder) -> applicationRepository.listApps(queryInfo, sort,sortOrder),queryInfo);
+  public Page<Application> listApps(Pageable pageable) {
+   return applicationRepository.findAll(pageable);
   }
 
-  public Page<Application> findApps(QueryInfo queryInfo, String query) {
-    return getAppsPage((sort, sortOrder) ->
-            applicationRepository.findApps(queryInfo, sort,sortOrder, "%"+query+"%"),queryInfo);
+  public Page<Application> findApps(String query, Pageable pageable) {
+    return applicationRepository.findAll(ApplicationSpecification.containsText(query), pageable);
   }
 
-  public Page<Application> getAppsPage(BiFunction<String, String, List<Application>> appPageFetcher,
-                                 QueryInfo queryInfo)  {
-    // Using string templates with JDBI opens up the room for SQL Injection
-    // Field sanitation is must to avoid it
-    return getAppsPage(queryInfo,
-                    appPageFetcher.apply(queryInfo.getSort(ApplicationMapper::sanitizeSortField),
-                                         queryInfo.getSortOrder()));
+  public Page<Application> findUsersApps(String userId, Pageable pageable){
+    return applicationRepository.findAll(
+            ApplicationSpecification.usedBy(Integer.parseInt(userId)),
+            pageable);
+  }
+
+  public Page<Application> findUsersApps(String userId, String query, Pageable pageable){
+    return applicationRepository.findAll(
+            where(ApplicationSpecification.usedBy(Integer.parseInt(userId)))
+                    .and(ApplicationSpecification.containsText(query)),
+            pageable);
+  }
+
+  public Page<Application> findGroupsApplications(String groupId, Pageable pageable){
+    return applicationRepository.findAll(
+            ApplicationSpecification.inGroup(Integer.parseInt(groupId)),
+            pageable);
+  }
+
+  public Page<Application> findGroupsApplications(String groupId, String query, Pageable pageable){
+    return applicationRepository.findAll(
+            where(ApplicationSpecification.inGroup(Integer.parseInt(groupId)))
+                    .and(ApplicationSpecification.containsText(query)),
+            pageable);
   }
 
   public Application getByName(String appName) {
-
-     return applicationRepository.getByName(appName);
-    }
-
-  private Page<Application> getAppsPage(QueryInfo queryInfo, List<Application> apps){
-    return Page.getPageFromPageInfo(queryInfo,apps);
+   return applicationRepository.findOneByNameIgnoreCase(appName);
   }
 
   @Override
   public ClientDetails loadClientByClientId(String clientId) throws ClientRegistrationException {
     // find client using clientid
-    val application = applicationRepository.getByClientId(clientId);
+    val application = applicationRepository.findOneByClientIdIgnoreCase(clientId);
     //TODO: currently ignoring status field
     // transform application to client details
     val approvedScopes = Arrays.asList("read","write");
