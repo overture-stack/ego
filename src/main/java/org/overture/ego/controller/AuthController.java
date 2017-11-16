@@ -16,18 +16,18 @@
 
 package org.overture.ego.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.model.enums.UserRoles;
 import org.overture.ego.service.UserService;
 import org.overture.ego.provider.google.GoogleTokenService;
 import org.overture.ego.provider.facebook.FacebookTokenService;
 import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.jwt.JwtHelper;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.SimpleDateFormat;
@@ -49,6 +49,10 @@ public class AuthController {
   SimpleDateFormat formatter;
   @Autowired
   FacebookTokenService facebookTokenService;
+
+  // -- DEMO PROFILE CONFIGURATIONS --
+  @Value("${demo:false}")
+  private boolean demo;
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
   @ResponseStatus(value = HttpStatus.OK)
@@ -92,15 +96,19 @@ public class AuthController {
   private String generateUserToken(Map authInfo){
     val userName = authInfo.get("email").toString();
     User user = userService.getByName(userName, false);
+
     if (user == null) {
       user = createNewUser(userName,authInfo);
-      userService.create(user);
+      if (!demo) {
+        // Saving user controlled through config - provides mechanism to run demos without saving
+        userService.create(user);
+      }
     }
     return tokenService.generateToken(user);
   }
 
   private User createNewUser(String userName, Map authInfo) {
-    String role = "USER";
+    String role = demo ? UserRoles.ADMIN.toString() : UserRoles.USER.toString();
     String status = "Pending";
 
 
