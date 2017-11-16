@@ -55,7 +55,7 @@ public class AuthController {
   @SneakyThrows
   public @ResponseBody
   String exchangeGoogleTokenForAuth(
-      @RequestHeader(value = "id_token", required = true) final String idToken) {
+      @RequestHeader(value = "token", required = true) final String idToken) {
     if (!googleTokenService.validToken(idToken))
       throw new Exception("Invalid user token:" + idToken);
     val authInfo = googleTokenService.decode(idToken);
@@ -67,7 +67,7 @@ public class AuthController {
   @SneakyThrows
   public @ResponseBody
   String exchangeFacebookTokenForAuth(
-          @RequestHeader(value = "id_token", required = true) final String idToken) {
+      @RequestHeader(value = "token", required = true) final String idToken) {
     if (!facebookTokenService.validToken(idToken))
       throw new Exception("Invalid user token:" + idToken);
     val authInfo = facebookTokenService.getAuthInfo(idToken);
