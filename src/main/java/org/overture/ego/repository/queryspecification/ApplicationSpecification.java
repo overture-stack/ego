@@ -32,7 +32,8 @@ public class ApplicationSpecification {
             builder.like(builder.lower(root.get("name")), finalText),
             builder.like(builder.lower(root.get("clientId")), finalText),
             builder.like(builder.lower(root.get("clientSecret")), finalText),
-            builder.like(builder.lower(root.get("description")), finalText)
+            builder.like(builder.lower(root.get("description")), finalText),
+            builder.like(builder.lower(root.get("status")), finalText)
 
     );
   }

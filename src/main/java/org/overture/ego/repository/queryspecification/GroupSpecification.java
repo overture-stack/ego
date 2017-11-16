@@ -30,7 +30,8 @@ public class GroupSpecification {
     val finalText = Utils.prepareForQuery(text);
     return (root, query, builder) -> builder.or(
             builder.like(builder.lower(root.get("name")), finalText),
-            builder.like(builder.lower(root.get("description")), finalText)
+            builder.like(builder.lower(root.get("description")), finalText),
+            builder.like(builder.lower(root.get("status")), finalText)
 
     );
   }
