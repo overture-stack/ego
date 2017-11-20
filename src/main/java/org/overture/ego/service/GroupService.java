@@ -17,7 +17,6 @@
 package org.overture.ego.service;
 
 import lombok.val;
-import org.omg.CORBA.INTERNAL;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.repository.GroupRepository;
 import org.overture.ego.repository.queryspecification.GroupSpecification;

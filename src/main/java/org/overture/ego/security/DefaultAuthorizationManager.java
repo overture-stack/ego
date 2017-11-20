@@ -36,13 +36,4 @@ public class DefaultAuthorizationManager implements AuthorizationManager {
     return true;
   }
 
-  @Override
-  public boolean authorizeWithGroup(Authentication authentication, String groupName) {
-    return true;
-  }
-
-  @Override
-  public boolean authorizeWithApplication(Authentication authentication, String appName) {
-    return true;
-  }
 }

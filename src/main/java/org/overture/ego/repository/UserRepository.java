@@ -16,7 +16,6 @@
 
 package org.overture.ego.repository;
 
-import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.User;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;

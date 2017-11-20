@@ -17,9 +17,6 @@
 package org.overture.ego.repository;
 
 
-import com.google.common.base.Splitter;
-import lombok.val;
-import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Group;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;

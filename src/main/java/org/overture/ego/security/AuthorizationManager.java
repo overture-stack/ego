@@ -24,8 +24,5 @@ public interface AuthorizationManager {
 
      boolean authorizeWithAdminRole(Authentication authentication);
 
-     boolean authorizeWithGroup(Authentication authentication, String groupName);
-
-     boolean authorizeWithApplication(Authentication authentication, String appName);
 }
 

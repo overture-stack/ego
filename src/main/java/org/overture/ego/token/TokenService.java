@@ -22,7 +22,6 @@ import lombok.val;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.security.JWTAccessToken;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
