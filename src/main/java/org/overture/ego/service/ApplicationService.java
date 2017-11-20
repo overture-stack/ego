@@ -18,10 +18,8 @@ package org.overture.ego.service;
 
 import lombok.val;
 import org.overture.ego.model.entity.Application;
-import org.overture.ego.model.entity.Group;
 import org.overture.ego.repository.ApplicationRepository;
 import org.overture.ego.repository.queryspecification.ApplicationSpecification;
-import org.overture.ego.repository.queryspecification.GroupSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
