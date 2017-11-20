@@ -14,21 +14,35 @@
  * limitations under the License.
  */
 
-package org.overture.ego.repository;
+package org.overture.ego.model.entity;
 
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Splitter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.val;
-import org.overture.ego.model.QueryInfo;
-import org.overture.ego.model.entity.Group;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.PagingAndSortingRepository;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+@Data
+public abstract class BaseEntity {
+  @JsonIgnore
+  int total;
+
+  public void setTotal(ResultSet resultSet){
+    // TODO: Bit of a hack - implement using PagedMapper and DBI Factories/ Stored Procedures
+    // Overriding the user object to get total rows in the table as an extra column in the table
+    try{
+      this.total = resultSet.getInt("total");
+    } catch(Exception ex){
+      //ignore this error
+    }
+  }
 
 
-public interface GroupRepository extends
-        PagingAndSortingRepository<Group, Integer>, JpaSpecificationExecutor {
-
-  Group findOneByNameIgnoreCase(String name);
-  Group findAllByStatusIgnoreCase(String status);
 
 }

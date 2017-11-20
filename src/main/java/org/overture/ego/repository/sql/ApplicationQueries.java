@@ -1,3 +1,4 @@
+ * Unless required by applicable law or agreed to in writing, software
 /*
  * Copyright (c) 2017. The Ontario Institute for Cancer Research. All rights reserved.
  *

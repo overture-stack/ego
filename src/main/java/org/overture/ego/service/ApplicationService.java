@@ -16,7 +16,8 @@
 
 package org.overture.ego.service;
 
-import lombok.val;
+import org.overture.ego.model.Page;
+import org.overture.ego.model.QueryInfo;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.repository.ApplicationRepository;
