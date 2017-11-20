@@ -40,8 +40,8 @@ public class SwaggerConfig {
   private ApiInfo metaInfo() {
 
     return new ApiInfo(
-        "eGO Service API",
-        "Kids First Authorization API Docs",
+        "ego Service API",
+        "ego API Documentation",
         "0.01",
         "",
         "",

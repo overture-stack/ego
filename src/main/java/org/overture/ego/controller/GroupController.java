@@ -84,7 +84,6 @@ public class GroupController {
     return groupService.create(groupInfo);
   }
 
-
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
   @ApiResponses(

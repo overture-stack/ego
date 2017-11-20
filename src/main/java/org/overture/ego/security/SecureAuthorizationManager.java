@@ -57,4 +57,5 @@ public class SecureAuthorizationManager implements AuthorizationManager {
   public boolean isActiveUser(User user){
     return "approved".equals(user.getStatus().toLowerCase());
   }
+
 }

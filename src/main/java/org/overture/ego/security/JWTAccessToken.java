@@ -82,4 +82,5 @@ public class JWTAccessToken implements OAuth2AccessToken {
   private Map getUser(){
     return (Map)((Map)tokenClaims.get("context")).get("user");
   }
+
 }

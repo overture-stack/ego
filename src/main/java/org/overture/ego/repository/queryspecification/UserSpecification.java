@@ -35,8 +35,6 @@ public class UserSpecification {
             builder.like(builder.lower(root.get("firstName")), finalText),
             builder.like(builder.lower(root.get("lastName")), finalText),
             builder.like(builder.lower(root.get("status")), finalText)
-
-
     );
   }
 

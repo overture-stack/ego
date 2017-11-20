@@ -42,7 +42,6 @@ import java.util.Map;
 @Component
 public class GoogleTokenService {
 
-
   HttpTransport transport;
   JsonFactory jsonFactory;
   GoogleIdTokenVerifier verifier;
@@ -53,7 +52,6 @@ public class GoogleTokenService {
     transport = new NetHttpTransport();
     jsonFactory = new JacksonFactory();
   }
-
 
   public boolean validToken(String token) {
     if (verifier == null)

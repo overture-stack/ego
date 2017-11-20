@@ -30,7 +30,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 @Profile("default")
 public class ServerConfig extends WebSecurityConfigurerAdapter {
 
-
   @Bean
   public AuthorizationManager authorizationManager() {
     return new DefaultAuthorizationManager();
@@ -45,7 +44,5 @@ public class ServerConfig extends WebSecurityConfigurerAdapter {
         .and()
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
   }
-
-
 
 }

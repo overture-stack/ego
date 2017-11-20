@@ -120,5 +120,4 @@ public class ApplicationService implements ClientDetailsService {
     return clientDetails;
   }
 
-
 }

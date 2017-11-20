@@ -78,7 +78,6 @@ public class ApplicationController {
     return applicationService.create(applicationInfo);
   }
 
-
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
   @ApiResponses(
@@ -92,7 +91,6 @@ public class ApplicationController {
       @PathVariable(value = "id", required = true) String applicationId) {
     return applicationService.get(applicationId);
   }
-
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.PUT, value = "/{id}")

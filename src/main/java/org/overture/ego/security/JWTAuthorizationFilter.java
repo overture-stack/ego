@@ -86,4 +86,5 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
   private String removeTokenPrefix(String token){
     return token.replace(TOKEN_PREFIX,"").trim();
   }
+
 }

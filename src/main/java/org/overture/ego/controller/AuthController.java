@@ -101,7 +101,6 @@ public class AuthController {
     String role = "USER";
     String status = "Pending";
 
-
     User u = new User();
             u.setName(userName);
             u.setEmail(userName);

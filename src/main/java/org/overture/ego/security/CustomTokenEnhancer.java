@@ -39,4 +39,5 @@ public class CustomTokenEnhancer implements TokenEnhancer {
     String token = tokenService.generateToken(user);
     return tokenService.getJWTAccessToken(token);
   }
+
 }

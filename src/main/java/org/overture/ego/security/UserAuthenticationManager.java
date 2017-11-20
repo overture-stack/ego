@@ -75,7 +75,6 @@ public class UserAuthenticationManager implements AuthenticationManager {
 
   }
 
-
   @SneakyThrows
   private String exchangeFacebookTokenForAuth(final String idToken) {
     if (!facebookTokenService.validToken(idToken))
@@ -86,6 +85,6 @@ public class UserAuthenticationManager implements AuthenticationManager {
     } else {
       throw new Exception("Unable to generate auth token for this user");
     }
-
   }
+
 }

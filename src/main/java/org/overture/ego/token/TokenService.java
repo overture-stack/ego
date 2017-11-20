@@ -56,7 +56,6 @@ public class TokenService {
     claims.put("jti", UUID.randomUUID());
     claims.put("context", context);
 
-
     return Jwts.builder()
         .setClaims(claims)
         .signWith(SignatureAlgorithm.HS512, jwtSecret)
@@ -103,7 +102,6 @@ public class TokenService {
         .setSigningKey(jwtSecret)
         .parseClaimsJws(token)
         .getBody();
-
   }
 
   public JWTAccessToken getJWTAccessToken(String token){

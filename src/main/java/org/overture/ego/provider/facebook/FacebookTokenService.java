@@ -43,7 +43,6 @@ import java.util.Optional;
 @NoArgsConstructor
 public class FacebookTokenService {
 
-
   /*
    Variables
   */
@@ -70,7 +69,6 @@ public class FacebookTokenService {
   private void init(){
     fbConnector = new RestTemplate(httpRequestFactory());
   }
-
 
   public boolean validToken(String fbToken){
     log.debug("Validating Facebook token: {}", fbToken);

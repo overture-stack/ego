@@ -45,5 +45,4 @@ public class AuthorizationStrategyConfig extends GlobalMethodSecurityConfigurati
     return handler;
   }
 
-
 }
