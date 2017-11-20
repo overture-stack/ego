@@ -175,7 +175,6 @@ public class UserController {
           @PathVariable(value = "id", required = true) String userId,
           @PathVariable(value = "groupIDs", required = true) List<String> groupIDs) {
     userService.deleteUserFromGroup(userId,groupIDs);
-
   }
 
   /*
