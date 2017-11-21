@@ -21,6 +21,7 @@ jobs:
 
     steps:
       - checkout
+
       - run:
           name: Install Postgres Client
           command: sudo apt install postgresql-client-9.5
@@ -36,6 +37,7 @@ jobs:
             psql \
             -d $TEST_DATABASE_URL \
             -c "\d"
+            
       - run:
           name: Maven Test
           command: |
