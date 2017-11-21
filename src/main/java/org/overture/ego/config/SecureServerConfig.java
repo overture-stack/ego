@@ -37,11 +37,11 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 public class SecureServerConfig extends WebSecurityConfigurerAdapter {
 
   @Autowired
-  AuthenticationManager authenticationManager;
+  private AuthenticationManager authenticationManager;
 
   @Bean
   @SneakyThrows
-  JWTAuthorizationFilter authorizationFilter() {
+  public JWTAuthorizationFilter authorizationFilter() {
     return new JWTAuthorizationFilter(authenticationManager);
   }
 

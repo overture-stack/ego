@@ -26,6 +26,8 @@ import org.overture.ego.provider.facebook.FacebookTokenService;
 import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.SimpleDateFormat;
@@ -38,15 +40,15 @@ import java.util.Map;
 public class AuthController {
 
   @Autowired
-  TokenService tokenService;
+  private TokenService tokenService;
   @Autowired
-  UserService userService;
+  private UserService userService;
   @Autowired
-  GoogleTokenService googleTokenService;
+  private GoogleTokenService googleTokenService;
   @Autowired
-  SimpleDateFormat formatter;
+  private SimpleDateFormat formatter;
   @Autowired
-  FacebookTokenService facebookTokenService;
+  private FacebookTokenService facebookTokenService;
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
   @ResponseStatus(value = HttpStatus.OK)
@@ -54,8 +56,8 @@ public class AuthController {
   public @ResponseBody
   String exchangeGoogleTokenForAuth(
       @RequestHeader(value = "id_token", required = true) final String idToken) {
-    if (!googleTokenService.validToken(idToken))
-      throw new Exception("Invalid user token:" + idToken);
+    if (googleTokenService.isInvalidToken(idToken))
+      throw new InvalidTokenException("Invalid user token:" + idToken);
     val authInfo = googleTokenService.decode(idToken);
     return generateUserToken(authInfo);
   }
@@ -66,8 +68,8 @@ public class AuthController {
   public @ResponseBody
   String exchangeFacebookTokenForAuth(
           @RequestHeader(value = "id_token", required = true) final String idToken) {
-    if (!facebookTokenService.validToken(idToken))
-      throw new Exception("Invalid user token:" + idToken);
+    if (facebookTokenService.isInvalidToken(idToken))
+      throw new InvalidTokenException("Invalid user token:" + idToken);
     val authInfo = facebookTokenService.getAuthInfo(idToken);
     if(authInfo.isPresent()) {
       return generateUserToken(authInfo.get());
@@ -83,7 +85,7 @@ public class AuthController {
   public @ResponseBody
   boolean verifyJWToken(
       @RequestHeader(value = "token", required = true) final String token) {
-    if (token == null || token.isEmpty()) return false;
+    if (StringUtils.isEmpty(token)) return false;
     return tokenService.validateToken(token);
   }
 
@@ -102,14 +104,14 @@ public class AuthController {
     String status = "Pending";
 
     User u = new User();
-            u.setName(userName);
-            u.setEmail(userName);
-            u.setFirstName(authInfo.containsKey("given_name") ? authInfo.get("given_name").toString() : "");
-            u.setLastName(authInfo.containsKey("family_name") ? authInfo.get("family_name").toString() : "");
-            u.setStatus(status);
-            u.setCreatedAt(formatter.format(new Date()));
-            u.setLastLogin(null);
-            u.setRole(role);
+    u.setName(userName);
+    u.setEmail(userName);
+    u.setFirstName(authInfo.containsKey("given_name") ? authInfo.get("given_name").toString() : "");
+    u.setLastName(authInfo.containsKey("family_name") ? authInfo.get("family_name").toString() : "");
+    u.setStatus(status);
+    u.setCreatedAt(formatter.format(new Date()));
+    u.setLastLogin(null);
+    u.setRole(role);
     return u;
   }
 }

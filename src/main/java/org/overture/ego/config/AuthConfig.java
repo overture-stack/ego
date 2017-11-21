@@ -51,19 +51,19 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   private String jwtSecret;
 
   @Autowired
-  ApplicationService clientDetailsService;
+  private ApplicationService clientDetailsService;
 
   @Autowired
-  AuthenticationManager authenticationManager;
+  private AuthenticationManager authenticationManager;
 
   @Bean
   @Primary
-  CorsFilter corsFilter() {
+  public CorsFilter corsFilter() {
     return new CorsFilter();
   }
 
   @Bean
-  SimpleDateFormat formatter(){
+  public SimpleDateFormat formatter(){
     SimpleDateFormat formatter =
             new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
     formatter.setTimeZone(TimeZone.getTimeZone("UTC"));

@@ -21,6 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.security.JWTAccessToken;
+import org.overture.ego.service.ApplicationService;
+import org.overture.ego.service.GroupService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +38,10 @@ public class TokenService {
 
   @Value("${jwt.secret}")
   private String jwtSecret;
+  @Autowired
+  private ApplicationService applicationService;
+  @Autowired
+  private GroupService groupService;
 
   public String generateToken(User u) {
     Claims claims = Jwts.claims().setSubject(u.getName());
@@ -88,8 +95,8 @@ public class TokenService {
       u.setLastName(userInfo.get("last_name").toString());
       u.setRole(((ArrayList<String>)userInfo.get("roles")).get(0));
       u.setStatus(userInfo.get("status").toString());
-      u.setApplicationNames((ArrayList<String>) body.get("aud"));
-      u.setGroupNames((ArrayList<String>) userInfo.get("groups"));
+      u.addApplicationsByName((ArrayList<String>) body.get("aud"), applicationService);
+      u.addGroupsByName((ArrayList<String>) userInfo.get("groups"), groupService);
       return u;
     } catch (JwtException | ClassCastException e) {
       return null;

@@ -25,16 +25,12 @@ import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.Join;
 
-public class UserSpecification {
+public class UserSpecification extends SpecificationBase<User> {
 
   public static Specification<User> containsText(String text) {
     val finalText = Utils.prepareForQuery(text);
-    return (root, query, builder) -> builder.or(
-            builder.like(builder.lower(root.get("name")), finalText),
-            builder.like(builder.lower(root.get("email")), finalText),
-            builder.like(builder.lower(root.get("firstName")), finalText),
-            builder.like(builder.lower(root.get("lastName")), finalText),
-            builder.like(builder.lower(root.get("status")), finalText)
+    return (root, query, builder) -> builder.or(getQueryPredicates(builder,root,finalText,
+            "name","email","firstName","lastName","status")
     );
   }
 

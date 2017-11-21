@@ -25,13 +25,11 @@ import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.Join;
 
-public class GroupSpecification {
+public class GroupSpecification extends SpecificationBase<Group>  {
   public static Specification<Group> containsText(String text) {
     val finalText = Utils.prepareForQuery(text);
-    return (root, query, builder) -> builder.or(
-            builder.like(builder.lower(root.get("name")), finalText),
-            builder.like(builder.lower(root.get("description")), finalText),
-            builder.like(builder.lower(root.get("status")), finalText)
+    return (root, query, builder) -> builder.or(getQueryPredicates(builder,root,finalText,
+            "name","description","status")
     );
   }
 

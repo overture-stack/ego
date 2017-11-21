@@ -30,8 +30,8 @@ import java.util.*;
 @Data
 public class JWTAccessToken implements OAuth2AccessToken {
 
-  Claims tokenClaims = null;
-  String token= null;
+  private Claims tokenClaims = null;
+  private String token= null;
   public JWTAccessToken(String token, TokenService tokenService){
     this.token = token;
     this.tokenClaims = tokenService.getTokenClaims(token);

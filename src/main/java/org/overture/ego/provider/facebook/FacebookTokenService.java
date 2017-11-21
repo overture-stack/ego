@@ -65,6 +65,17 @@ public class FacebookTokenService {
    */
   protected RestTemplate fbConnector;
 
+  /*
+  Constants
+   */
+  private final static String USER_EMAIL = "email";
+  private final static String USER_NAME = "name";
+  private final static String USER_GIVEN_NAME = "given_name";
+  private final static String USER_LAST_NAME = "family_name";
+  private final static String IS_VALID = "is_valid";
+  private final static String DATA = "data";
+
+
   @PostConstruct
   private void init(){
     fbConnector = new RestTemplate(httpRequestFactory());
@@ -78,9 +89,9 @@ public class FacebookTokenService {
               response -> {
                 val jsonObj = getJsonResponseAsMap(response.getBody());
                 if(jsonObj.isPresent()) {
-                  val output = ((HashMap<String, Object>) jsonObj.get().get("data"));
-                  if (output.containsKey("is_valid")) {
-                    return  (Boolean)output.get("is_valid");
+                  val output = ((HashMap<String, Object>) jsonObj.get().get(DATA));
+                  if (output.containsKey(IS_VALID)) {
+                    return  (Boolean)output.get(IS_VALID);
                   } else {
                     log.error("Error while validating Facebook token: {}", output);
                     return false;
@@ -102,10 +113,10 @@ public class FacebookTokenService {
                 val jsonObj = getJsonResponseAsMap(response.getBody());
                 if(jsonObj.isPresent()) {
                   val output = new HashMap<String, String>();
-                  output.put("email", jsonObj.get().get("email").toString());
-                  val name = jsonObj.get().get("name").toString().split(" ");
-                  output.put("given_name", name[0]);
-                  output.put("family_name", name[1]);
+                  output.put(USER_EMAIL, jsonObj.get().get(USER_EMAIL).toString());
+                  val name = jsonObj.get().get(USER_NAME).toString().split(" ");
+                  output.put(USER_GIVEN_NAME, name[0]);
+                  output.put(USER_LAST_NAME, name[1]);
                   return Optional.of(output);
                 } else return Optional.empty();
               });
@@ -150,4 +161,9 @@ public class FacebookTokenService {
     return factory;
   }
 
+  public boolean isInvalidToken(String idToken) {
+    if(validToken(idToken)){
+      return false;
+    } else return true;
+  }
 }

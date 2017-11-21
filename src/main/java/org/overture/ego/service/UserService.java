@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -35,11 +36,11 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 public class UserService {
 
   @Autowired
-  UserRepository userRepository;
+  private UserRepository userRepository;
   @Autowired
-  GroupService groupService;
+  private GroupService groupService;
   @Autowired
-  ApplicationService applicationService;
+  private ApplicationService applicationService;
 
   public User create(User userInfo) {
     return userRepository.save(userInfo);
@@ -50,7 +51,7 @@ public class UserService {
     val user = userRepository.findOne(Integer.parseInt(userId));
     groupIDs.forEach(grpId -> {
       val group = groupService.get(grpId);
-      user.addGroup(group);
+      user.addNewGroup(group);
     });
     userRepository.save(user);
   }
@@ -60,7 +61,7 @@ public class UserService {
     val user = userRepository.findOne(Integer.parseInt(userId));
     appIDs.forEach(appId -> {
       val app = applicationService.get(appId);
-      user.addApplication(app);
+      user.addNewApplication(app);
     });
     userRepository.save(user);
   }
@@ -87,6 +88,9 @@ public class UserService {
   }
 
   public Page<User> findUsers(String query, Pageable pageable) {
+    if(StringUtils.isEmpty(query)){
+      return this.listUsers(pageable);
+    }
     return userRepository.findAll(UserSpecification.containsText(query), pageable);
   }
 
@@ -115,6 +119,9 @@ public class UserService {
   }
 
   public Page<User> findGroupsUsers(String groupId, String query, Pageable pageable){
+    if(StringUtils.isEmpty(query)){
+      return this.findGroupsUsers(groupId, pageable);
+    }
     return userRepository.findAll(
             where(UserSpecification.inGroup(Integer.parseInt(groupId)))
                     .and(UserSpecification.containsText(query)),
@@ -128,6 +135,9 @@ public class UserService {
   }
 
   public Page<User> findAppsUsers(String appId, String query, Pageable pageable){
+    if(StringUtils.isEmpty(query)){
+      return this.findAppsUsers(appId,pageable);
+    }
     return userRepository.findAll(
             where(UserSpecification.ofApplication(Integer.parseInt(appId)))
                     .and(UserSpecification.containsText(query)),

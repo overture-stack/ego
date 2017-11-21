@@ -45,11 +45,11 @@ public class GroupController {
    * Dependencies
    */
   @Autowired
-  GroupService groupService;
+  private GroupService groupService;
   @Autowired
-  ApplicationService applicationService;
+  private ApplicationService applicationService;
   @Autowired
-  UserService userService;
+  private UserService userService;
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
@@ -63,11 +63,7 @@ public class GroupController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable) {
-    if(query != null  && query.isEmpty() ==  false){
-      return groupService.findGroups(query, pageable);
-    } else {
-      return groupService.listGroups(pageable);
-    }
+    return groupService.findGroups(query, pageable);
   }
 
   @AdminScoped
@@ -139,11 +135,7 @@ public class GroupController {
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable)
   {
-    if(query != null  && query.isEmpty() ==  false){
-      return applicationService.findGroupsApplications(groupId, query,pageable);
-    } else {
-      return applicationService.findGroupsApplications(groupId, pageable);
-    }
+    return applicationService.findGroupsApplications(groupId, query,pageable);
   }
 
   @AdminScoped
@@ -195,10 +187,6 @@ public class GroupController {
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable)
   {
-    if(query != null  && query.isEmpty() ==  false){
-      return userService.findGroupsUsers(groupId, query, pageable);
-    } else {
-      return userService.findGroupsUsers(groupId, pageable);
-    }
+    return userService.findGroupsUsers(groupId, query, pageable);
   }
 }

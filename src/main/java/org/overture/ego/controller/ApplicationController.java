@@ -39,11 +39,11 @@ import org.springframework.web.bind.annotation.*;
 public class ApplicationController {
 
   @Autowired
-  ApplicationService applicationService;
+  private ApplicationService applicationService;
   @Autowired
-  GroupService groupService;
+  private GroupService groupService;
   @Autowired
-  UserService userService;
+  private UserService userService;
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
@@ -57,11 +57,7 @@ public class ApplicationController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable) {
-    if(query != null  && query.isEmpty() ==  false){
-      return applicationService.findApps(query, pageable);
-    } else {
-      return applicationService.listApps(pageable);
-    }
+    return applicationService.findApps(query, pageable);
   }
 
   @AdminScoped
@@ -113,7 +109,6 @@ public class ApplicationController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String applicationId) {
     applicationService.delete(applicationId);
-
   }
 
   /*
@@ -133,11 +128,7 @@ public class ApplicationController {
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable)
   {
-    if(query != null  && query.isEmpty() ==  false){
-      return userService.findAppsUsers(appId, query, pageable);
-    } else {
-      return userService.findAppsUsers(appId, pageable);
-    }
+    return userService.findAppsUsers(appId, query, pageable);
   }
 
   /*
@@ -157,11 +148,7 @@ public class ApplicationController {
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable)
   {
-    if(query != null  && query.isEmpty() ==  false){
-      return groupService.findApplicationsGroup(appId, query, pageable);
-    } else {
-      return groupService.findApplicationsGroup(appId, pageable);
-    }
+    return groupService.findApplicationsGroup(appId, query, pageable);
   }
 
 }

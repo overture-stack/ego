@@ -70,6 +70,12 @@ public class GoogleTokenService {
     return (idToken != null);
   }
 
+  public boolean isInvalidToken(String token){
+    if(validToken(token)){
+      return false;
+    } else return true;
+  }
+
   @Synchronized
   private void initVerifier() {
     List<String> targetAudience;

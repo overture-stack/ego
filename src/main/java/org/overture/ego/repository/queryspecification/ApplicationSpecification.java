@@ -22,18 +22,14 @@ import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
 import org.springframework.data.jpa.domain.Specification;
-
 import javax.persistence.criteria.Join;
 
-public class ApplicationSpecification {
+public class ApplicationSpecification extends SpecificationBase<Application> {
   public static Specification<Application> containsText(String text) {
     val finalText = Utils.prepareForQuery(text);
-    return (root, query, builder) -> builder.or(
-            builder.like(builder.lower(root.get("name")), finalText),
-            builder.like(builder.lower(root.get("clientId")), finalText),
-            builder.like(builder.lower(root.get("clientSecret")), finalText),
-            builder.like(builder.lower(root.get("description")), finalText),
-            builder.like(builder.lower(root.get("status")), finalText)
+    return (root, query, builder) ->
+            builder.or(getQueryPredicates(builder,root,finalText,
+                    "name","clientId","clientSecret","description","status")
     );
   }
 
@@ -55,4 +51,5 @@ public class ApplicationSpecification {
       return builder.equal(applicationUserJoin.<Integer> get("id"), finalUserId);
     };
   }
+
 }

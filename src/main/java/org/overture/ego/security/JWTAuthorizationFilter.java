@@ -42,10 +42,10 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
   private String TOKEN_PREFIX;
 
   @Autowired
-  TokenService tokenService;
+  private TokenService tokenService;
 
   @Autowired
-  UserService userService;
+  private UserService userService;
 
   public JWTAuthorizationFilter(AuthenticationManager authManager) {
     super(authManager);

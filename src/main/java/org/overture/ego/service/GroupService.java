@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -33,11 +34,11 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 public class GroupService {
 
   @Autowired
-  GroupRepository groupRepository;
+  private GroupRepository groupRepository;
   @Autowired
-  ApplicationService applicationService;
+  private ApplicationService applicationService;
   @Autowired
-  UserService userService;
+  private UserService userService;
 
   public Group create(Group groupInfo) {
     return groupRepository.save(groupInfo);
@@ -76,6 +77,9 @@ public class GroupService {
   }
 
   public Page<Group> findGroups(String query, Pageable pageable) {
+    if(StringUtils.isEmpty(query)){
+      return this.listGroups(pageable);
+    }
     return groupRepository.findAll(GroupSpecification.containsText(query), pageable);
   }
 
@@ -86,6 +90,9 @@ public class GroupService {
   }
 
   public Page<Group> findUsersGroup(String userId, String query, Pageable pageable){
+    if(StringUtils.isEmpty(query)){
+      return this.findUsersGroup(userId, pageable);
+    }
     return groupRepository.findAll(
             where(GroupSpecification.containsUser(Integer.parseInt(userId)))
                     .and(GroupSpecification.containsText(query)),
@@ -99,6 +106,9 @@ public class GroupService {
   }
 
   public Page<Group> findApplicationsGroup(String appId, String query, Pageable pageable){
+    if(StringUtils.isEmpty(query)){
+      this.findApplicationsGroup(appId, pageable);
+    }
     return groupRepository.findAll(
             where(GroupSpecification.containsApplication(Integer.parseInt(appId)))
                     .and(GroupSpecification.containsText(query)),

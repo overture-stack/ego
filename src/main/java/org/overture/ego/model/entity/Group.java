@@ -59,28 +59,40 @@ public class Group {
   @JsonIgnore
   List<User> users;
 
+  @NonNull
+  public void addApplication(Application app){
+    initApplications();
+    this.applications.add(app);
+  }
+
+  @NonNull
+  public void addUser(User u){
+    initUsers();
+    this.users.add(u);
+  }
+
+  @NonNull
   public void removeApplication(Integer appId){
-    if(this.applications == null) return;
     this.applications.removeIf(a -> a.id == appId);
   }
 
+  @NonNull
   public void removeUser(Integer userId){
     if(this.users == null) return;
     this.users.removeIf(u -> u.id == userId);
   }
 
-  public void addApplication(Application app){
-    if(this.applications == null) {
+  private void initApplications(){
+    if(this.applications == null){
       this.applications = new ArrayList<Application>();
     }
-    this.applications.add(app);
   }
 
-  public void addUser(User u){
+  private void initUsers(){
     if(this.users == null) {
-     this.users = new ArrayList<User>();
+      this.users = new ArrayList<User>();
     }
-    this.users.add(u);
   }
+
 }
 

@@ -14,26 +14,18 @@
  * limitations under the License.
  */
 
-package org.overture.ego.common;
-
-import com.google.common.base.Strings;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.StringUtils;
+package org.overture.ego.repository.queryspecification;
 
 
-@Slf4j
-public class Utils {
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import java.util.Arrays;
 
-  public static String prepareForQuery(String text){
-    String output = text;
-    if(StringUtils.isEmpty(output)){
-      return  "";
-    }
-    boolean isQueryReady = (output.contains("%") == true);
-    if (isQueryReady) {
-      output = "%" + output + "%";
-    }
-    return output.toLowerCase();
+public class SpecificationBase<T> {
+  protected static <T> Predicate[] getQueryPredicates(CriteriaBuilder builder, Root<T> root, String queryText,
+                                                      String... params){
+    return Arrays.stream(params).map(p ->
+            builder.like(builder.lower(root.get(p)), queryText)).toArray(Predicate[]::new);
   }
-
 }

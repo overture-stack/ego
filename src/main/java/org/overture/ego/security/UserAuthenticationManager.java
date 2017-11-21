@@ -42,11 +42,11 @@ import java.util.ArrayList;
 public class UserAuthenticationManager implements AuthenticationManager {
 
   @Autowired
-  GoogleTokenService googleTokenService;
+  private GoogleTokenService googleTokenService;
   @Autowired
-  SimpleDateFormat formatter;
+  private SimpleDateFormat formatter;
   @Autowired
-  FacebookTokenService facebookTokenService;
+  private FacebookTokenService facebookTokenService;
 
   @Override
   public Authentication authenticate(Authentication authentication) throws AuthenticationException {

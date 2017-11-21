@@ -21,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
+import org.overture.ego.service.ApplicationService;
+import org.overture.ego.service.GroupService;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -33,8 +35,8 @@ import java.util.stream.Collectors;
 @JsonPropertyOrder({"id", "name", "email", "role", "status", "groups",
     "applications", "first_name", "last_name", "created_at", "last_login", "preferred_language"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@NoArgsConstructor
 @EqualsAndHashCode(of={"id"})
+@NoArgsConstructor
 public class User {
 
   @Id
@@ -88,60 +90,68 @@ public class User {
           inverseJoinColumns = { @JoinColumn(name = "appid") })
   @JsonIgnore List<Application> applications;
 
-  public void removeApplication(Integer appId){
-    if(this.applications == null) return;
-    this.applications.removeIf(a -> a.id == appId);
-  }
-
-  public void removeGroup(Integer grpId){
-    if(this.groups == null) return;
-    this.groups.removeIf(g -> g.id == grpId);
-  }
-
-  public void addApplication(Application app){
-    if(this.applications == null) {
-      this.applications = new ArrayList<Application>();
-    }
-    this.applications.add(app);
-  }
-
-  public void addGroup(Group g){
-    if(this.groups == null) {
-      this.groups = new ArrayList<Group>();
-    }
-    this.groups.add(g);
-  }
-
   @JsonIgnore
   public List<String> getGroupNames(){
     if(this.groups == null) {
-      return null;
+      return new ArrayList<String>();
     }
-    return this.groups.parallelStream().map(g -> g.getName()).collect(Collectors.toList());
+    return this.groups.stream().map(g -> g.getName()).collect(Collectors.toList());
   }
 
   @JsonIgnore
   public List<String> getApplicationNames(){
     if(this.applications == null){
-      return null;
+      return new ArrayList<String>();
     }
-    return this.applications.parallelStream().map(a -> a.getName()).collect(Collectors.toList());
+    return this.applications.stream().map(a -> a.getName()).collect(Collectors.toList());
   }
 
-  public void setGroupNames(List<String> groupNames){
-    if(groupNames == null) return;
-    if(this.groups == null) {
-      this.groups = new ArrayList<Group>();
-    }
-    groupNames.forEach(gName -> this.groups.add(new Group(gName)));
+  @NonNull
+  public void addNewApplication(Application app){
+    initApplications();
+    this.applications.add(app);
   }
 
-  public void setApplicationNames(List<String> applicationNames){
-    if(applicationNames == null) return;
+  @NonNull
+  public void addNewGroup(Group g){
+    initGroups();
+    this.groups.add(g);
+  }
+
+  @NonNull
+  public void addGroupsByName(List<String> groupNames, GroupService groupService){
+    initGroups();
+    groupNames.forEach(gName -> this.groups.add(groupService.getByName(gName)));
+  }
+
+  @NonNull
+  public void addApplicationsByName(List<String> applicationNames, ApplicationService applicationService){
+    initApplications();
+    applicationNames.forEach(appName -> this.applications.add(applicationService.getByName(appName)));
+  }
+
+  @NonNull
+  public void removeApplication(Integer appId){
+    if(this.applications == null) return;
+    this.applications.removeIf(a -> a.id == appId);
+  }
+
+  @NonNull
+  public void removeGroup(Integer grpId){
+    if(this.groups == null) return;
+    this.groups.removeIf(g -> g.id == grpId);
+  }
+
+  private void initApplications(){
     if(this.applications == null){
       this.applications = new ArrayList<Application>();
     }
-    applicationNames.forEach(appName -> this.applications.add(new Application(appName,"","")));
+  }
+
+  private void initGroups(){
+    if(this.groups == null) {
+      this.groups = new ArrayList<Group>();
+    }
   }
 
 }

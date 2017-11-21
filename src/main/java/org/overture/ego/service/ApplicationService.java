@@ -30,6 +30,7 @@ import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -41,7 +42,7 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 public class ApplicationService implements ClientDetailsService {
 
   @Autowired
-  ApplicationRepository applicationRepository;
+  private ApplicationRepository applicationRepository;
 
   public Application create(Application applicationInfo) {
     return applicationRepository.save(applicationInfo);
@@ -67,6 +68,9 @@ public class ApplicationService implements ClientDetailsService {
   }
 
   public Page<Application> findApps(String query, Pageable pageable) {
+    if(StringUtils.isEmpty(query)){
+      return this.listApps(pageable);
+    }
     return applicationRepository.findAll(ApplicationSpecification.containsText(query), pageable);
   }
 
@@ -77,6 +81,9 @@ public class ApplicationService implements ClientDetailsService {
   }
 
   public Page<Application> findUsersApps(String userId, String query, Pageable pageable){
+    if(StringUtils.isEmpty(query)){
+      return this.findUsersApps(userId, pageable);
+    }
     return applicationRepository.findAll(
             where(ApplicationSpecification.usedBy(Integer.parseInt(userId)))
                     .and(ApplicationSpecification.containsText(query)),
@@ -90,6 +97,9 @@ public class ApplicationService implements ClientDetailsService {
   }
 
   public Page<Application> findGroupsApplications(String groupId, String query, Pageable pageable){
+    if(StringUtils.isEmpty(query)){
+      return this.findGroupsApplications(groupId,pageable);
+    }
     return applicationRepository.findAll(
             where(ApplicationSpecification.inGroup(Integer.parseInt(groupId)))
                     .and(ApplicationSpecification.containsText(query)),

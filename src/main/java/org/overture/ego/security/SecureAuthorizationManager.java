@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
 public class SecureAuthorizationManager implements AuthorizationManager {
 
   @Autowired
-  TokenService tokenService;
+  private TokenService tokenService;
 
   public boolean authorize(@NonNull Authentication authentication) {
     User user = (User)authentication.getPrincipal();
