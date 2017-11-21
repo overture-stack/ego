@@ -1,7 +1,9 @@
 #!/bin/bash
+set -o nounset
+set -o errexit
 
 # usage: ./reset-dummy-data.sh --path='/srv/ego/dummy-data' --user='dbuser' --log='/path/to/logfile.log'
-# Note: This script assumes the user specified is the current user OR that there is a PGPASSFILE with the required password for that user.
+# Note: This script assumes that there is a PGPASSFILE with the required password for that user.
 
 while [ $# -gt 0 ]; do
   case "$1" in
