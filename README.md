@@ -4,6 +4,25 @@ An OAuth 2.0 Authorization service that supports multiple OpenID Connect Identit
 
 [![Build Status](https://travis-ci.org/overture-stack/ego.svg?branch=master)](https://travis-ci.org/overture-stack/ego)
 
+## Build and Run
+
+Maven can be used to prepare a runnable jar file, as well as the uber-jar for deployment:
+```bash
+$ mvn clean package
+```
+
+To run from command line with maven:
+```bash
+$ mvn spring-boot:run
+```
+
+## API
+
+Interactive documentation of the API is provided using Swagger UI.
+
+When run locally this can be found at:  [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
+
+
 ## Using
 
 * [Spring Security](https://projects.spring.io/spring-security/)
