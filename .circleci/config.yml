@@ -22,6 +22,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install Postgres Client
+          command: sudo apt install postgresql-client-9.5
+      - run:
           name: Initialize DB Schema
           command: |
             psql \
