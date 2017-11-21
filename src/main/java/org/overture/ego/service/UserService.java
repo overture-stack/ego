@@ -16,6 +16,7 @@
 
 package org.overture.ego.service;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
@@ -42,11 +43,11 @@ public class UserService {
   @Autowired
   private ApplicationService applicationService;
 
-  public User create(User userInfo) {
+  public User create(@NonNull User userInfo) {
     return userRepository.save(userInfo);
   }
 
-  public void addUsersToGroups(String userId, List<String> groupIDs){
+  public void addUsersToGroups(@NonNull String userId, @NonNull List<String> groupIDs){
     //TODO: change id to string
     val user = userRepository.findOne(Integer.parseInt(userId));
     groupIDs.forEach(grpId -> {
@@ -56,7 +57,7 @@ public class UserService {
     userRepository.save(user);
   }
 
-  public void addUsersToApps(String userId, List<String> appIDs){
+  public void addUsersToApps(@NonNull String userId, @NonNull List<String> appIDs){
     //TODO: change id to string
     val user = userRepository.findOne(Integer.parseInt(userId));
     appIDs.forEach(appId -> {
@@ -66,35 +67,35 @@ public class UserService {
     userRepository.save(user);
   }
 
-  public User get(String userId) {
+  public User get(@NonNull String userId) {
     //TODO: change id to string
     return userRepository.findOne(Integer.parseInt(userId));
   }
 
-  public User getByName(String userName) {
+  public User getByName(@NonNull String userName) {
     return userRepository.findOneByNameIgnoreCase(userName);
   }
 
-  public User update(User updatedUserInfo) {
+  public User update(@NonNull User updatedUserInfo) {
     return userRepository.save(updatedUserInfo);
   }
 
-  public void delete(String userId) {
+  public void delete(@NonNull String userId) {
     userRepository.delete(Integer.parseInt(userId));
   }
 
-  public Page<User> listUsers(Pageable pageable) {
+  public Page<User> listUsers(@NonNull Pageable pageable) {
     return userRepository.findAll(pageable);
   }
 
-  public Page<User> findUsers(String query, Pageable pageable) {
+  public Page<User> findUsers(@NonNull String query, @NonNull Pageable pageable) {
     if(StringUtils.isEmpty(query)){
       return this.listUsers(pageable);
     }
     return userRepository.findAll(UserSpecification.containsText(query), pageable);
   }
 
-  public void deleteUserFromGroup(String userId, List<String> groupIDs) {
+  public void deleteUserFromGroup(@NonNull String userId, @NonNull List<String> groupIDs) {
     //TODO: change id to string
     val user = userRepository.findOne(Integer.parseInt(userId));
     groupIDs.forEach(grpId -> {
@@ -103,7 +104,7 @@ public class UserService {
     userRepository.save(user);
   }
 
-  public void deleteUserFromApp(String userId, List<String> appIDs) {
+  public void deleteUserFromApp(@NonNull String userId, @NonNull List<String> appIDs) {
     //TODO: change id to string
     val user = userRepository.findOne(Integer.parseInt(userId));
     appIDs.forEach(appId -> {
@@ -112,13 +113,13 @@ public class UserService {
     userRepository.save(user);
   }
 
-  public Page<User> findGroupsUsers(String groupId, Pageable pageable){
+  public Page<User> findGroupsUsers(@NonNull String groupId, @NonNull Pageable pageable){
     return userRepository.findAll(
             UserSpecification.inGroup(Integer.parseInt(groupId)),
             pageable);
   }
 
-  public Page<User> findGroupsUsers(String groupId, String query, Pageable pageable){
+  public Page<User> findGroupsUsers(@NonNull String groupId, @NonNull String query, @NonNull Pageable pageable){
     if(StringUtils.isEmpty(query)){
       return this.findGroupsUsers(groupId, pageable);
     }
@@ -128,13 +129,13 @@ public class UserService {
             pageable);
   }
 
-  public Page<User> findAppsUsers(String appId, Pageable pageable){
+  public Page<User> findAppsUsers(@NonNull String appId, @NonNull Pageable pageable){
     return userRepository.findAll(
             UserSpecification.ofApplication(Integer.parseInt(appId)),
             pageable);
   }
 
-  public Page<User> findAppsUsers(String appId, String query, Pageable pageable){
+  public Page<User> findAppsUsers(@NonNull String appId, @NonNull String query, @NonNull Pageable pageable){
     if(StringUtils.isEmpty(query)){
       return this.findAppsUsers(appId,pageable);
     }

@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package org.overture.ego.common;
+package org.overture.ego.utils;
 
-import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 
 
 @Slf4j
-public class Utils {
+public class Queries {
 
   public static String prepareForQuery(String text){
     String output = text;

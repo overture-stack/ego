@@ -16,6 +16,7 @@
 
 package org.overture.ego.service;
 
+import lombok.NonNull;
 import lombok.val;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.repository.ApplicationRepository;
@@ -44,43 +45,43 @@ public class ApplicationService implements ClientDetailsService {
   @Autowired
   private ApplicationRepository applicationRepository;
 
-  public Application create(Application applicationInfo) {
+  public Application create(@NonNull Application applicationInfo) {
     return applicationRepository.save(applicationInfo);
   }
 
-  public Application get(String applicationId) {
+  public Application get(@NonNull String applicationId) {
     //TODO: change id to string
     return applicationRepository.findOne(Integer.parseInt(applicationId));
   }
 
-  public Application update(Application updatedApplicationInfo) {
+  public Application update(@NonNull Application updatedApplicationInfo) {
     applicationRepository.save(updatedApplicationInfo);
     return updatedApplicationInfo;
   }
 
-  public void delete(String applicationId) {
+  public void delete(@NonNull String applicationId) {
     //TODO: change id to string
     applicationRepository.delete(Integer.parseInt(applicationId));
   }
 
-  public Page<Application> listApps(Pageable pageable) {
+  public Page<Application> listApps(@NonNull Pageable pageable) {
    return applicationRepository.findAll(pageable);
   }
 
-  public Page<Application> findApps(String query, Pageable pageable) {
+  public Page<Application> findApps(@NonNull String query, @NonNull Pageable pageable) {
     if(StringUtils.isEmpty(query)){
       return this.listApps(pageable);
     }
     return applicationRepository.findAll(ApplicationSpecification.containsText(query), pageable);
   }
 
-  public Page<Application> findUsersApps(String userId, Pageable pageable){
+  public Page<Application> findUsersApps(@NonNull String userId, @NonNull Pageable pageable){
     return applicationRepository.findAll(
             ApplicationSpecification.usedBy(Integer.parseInt(userId)),
             pageable);
   }
 
-  public Page<Application> findUsersApps(String userId, String query, Pageable pageable){
+  public Page<Application> findUsersApps(@NonNull String userId, @NonNull String query, @NonNull Pageable pageable){
     if(StringUtils.isEmpty(query)){
       return this.findUsersApps(userId, pageable);
     }
@@ -90,13 +91,14 @@ public class ApplicationService implements ClientDetailsService {
             pageable);
   }
 
-  public Page<Application> findGroupsApplications(String groupId, Pageable pageable){
+  public Page<Application> findGroupsApplications(@NonNull String groupId, @NonNull Pageable pageable){
     return applicationRepository.findAll(
             ApplicationSpecification.inGroup(Integer.parseInt(groupId)),
             pageable);
   }
 
-  public Page<Application> findGroupsApplications(String groupId, String query, Pageable pageable){
+  public Page<Application> findGroupsApplications(@NonNull String groupId, @NonNull String query,
+                                                  @NonNull Pageable pageable){
     if(StringUtils.isEmpty(query)){
       return this.findGroupsApplications(groupId,pageable);
     }
@@ -106,12 +108,12 @@ public class ApplicationService implements ClientDetailsService {
             pageable);
   }
 
-  public Application getByName(String appName) {
+  public Application getByName(@NonNull String appName) {
    return applicationRepository.findOneByNameIgnoreCase(appName);
   }
 
   @Override
-  public ClientDetails loadClientByClientId(String clientId) throws ClientRegistrationException {
+  public ClientDetails loadClientByClientId(@NonNull String clientId) throws ClientRegistrationException {
     // find client using clientid
     val application = applicationRepository.findOneByClientIdIgnoreCase(clientId);
     //TODO: currently ignoring status field

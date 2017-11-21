@@ -16,6 +16,7 @@
 
 package org.overture.ego.service;
 
+import lombok.NonNull;
 import lombok.val;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.repository.GroupRepository;
@@ -40,11 +41,11 @@ public class GroupService {
   @Autowired
   private UserService userService;
 
-  public Group create(Group groupInfo) {
+  public Group create(@NonNull Group groupInfo) {
     return groupRepository.save(groupInfo);
   }
 
-  public void addAppsToGroups(String grpId, List<String> appIDs){
+  public void addAppsToGroups(@NonNull String grpId, @NonNull List<String> appIDs){
     //TODO: change id to string
     val group = groupRepository.findOne(Integer.parseInt(grpId));
     appIDs.forEach(appId -> {
@@ -54,42 +55,42 @@ public class GroupService {
     groupRepository.save(group);
   }
 
-  public Group get(String groupId) {
+  public Group get(@NonNull String groupId) {
     //TODO: change id to string
     return groupRepository.findOne(Integer.parseInt(groupId));
   }
 
-  public Group getByName(String groupName) {
+  public Group getByName(@NonNull String groupName) {
     return groupRepository.findOneByNameIgnoreCase(groupName);
   }
 
-  public Group update(Group updatedGroupInfo) {
+  public Group update(@NonNull Group updatedGroupInfo) {
     return groupRepository.save(updatedGroupInfo);
   }
 
-  public void delete(String groupId) {
+  public void delete(@NonNull String groupId) {
     //TODO: change id to string
      groupRepository.delete(Integer.parseInt(groupId));
   }
 
-  public Page<Group> listGroups(Pageable pageable) {
+  public Page<Group> listGroups(@NonNull Pageable pageable) {
     return groupRepository.findAll(pageable);
   }
 
-  public Page<Group> findGroups(String query, Pageable pageable) {
+  public Page<Group> findGroups(@NonNull String query, @NonNull Pageable pageable) {
     if(StringUtils.isEmpty(query)){
       return this.listGroups(pageable);
     }
     return groupRepository.findAll(GroupSpecification.containsText(query), pageable);
   }
 
-  public Page<Group> findUsersGroup(String userId, Pageable pageable){
+  public Page<Group> findUsersGroup(@NonNull String userId, @NonNull Pageable pageable){
     return groupRepository.findAll(
             GroupSpecification.containsUser(Integer.parseInt(userId)),
             pageable);
   }
 
-  public Page<Group> findUsersGroup(String userId, String query, Pageable pageable){
+  public Page<Group> findUsersGroup(@NonNull String userId, @NonNull String query, @NonNull Pageable pageable){
     if(StringUtils.isEmpty(query)){
       return this.findUsersGroup(userId, pageable);
     }
@@ -99,13 +100,13 @@ public class GroupService {
             pageable);
   }
 
-  public Page<Group> findApplicationsGroup(String appId, Pageable pageable){
+  public Page<Group> findApplicationsGroup(@NonNull String appId, @NonNull Pageable pageable){
     return groupRepository.findAll(
             GroupSpecification.containsApplication(Integer.parseInt(appId)),
             pageable);
   }
 
-  public Page<Group> findApplicationsGroup(String appId, String query, Pageable pageable){
+  public Page<Group> findApplicationsGroup(@NonNull String appId, @NonNull String query, @NonNull Pageable pageable){
     if(StringUtils.isEmpty(query)){
       this.findApplicationsGroup(appId, pageable);
     }
@@ -115,7 +116,7 @@ public class GroupService {
             pageable);
   }
 
-  public void deleteAppsFromGroup(String grpId, List<String> appIDs) {
+  public void deleteAppsFromGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
     //TODO: change id to string
     val group = groupRepository.findOne(Integer.parseInt(grpId));
     appIDs.forEach(appId -> {
@@ -124,7 +125,7 @@ public class GroupService {
     groupRepository.save(group);
   }
 
-  public void deleteUsersFromGroup(String grpId, List<String> userIDs) {
+  public void deleteUsersFromGroup(@NonNull String grpId, @NonNull List<String> userIDs) {
     //TODO: change id to string
     val group = groupRepository.findOne(Integer.parseInt(grpId));
     userIDs.forEach(userId -> {
@@ -133,7 +134,7 @@ public class GroupService {
     groupRepository.save(group);
   }
 
-  public void addUsersToGroup(String grpId, List<String> userIDs) {
+  public void addUsersToGroup(@NonNull String grpId, @NonNull List<String> userIDs) {
     //TODO: change id to string
     val group = groupRepository.findOne(Integer.parseInt(grpId));
     userIDs.forEach(userId -> {

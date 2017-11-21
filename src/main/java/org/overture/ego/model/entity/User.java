@@ -106,38 +106,33 @@ public class User {
     return this.applications.stream().map(a -> a.getName()).collect(Collectors.toList());
   }
 
-  @NonNull
-  public void addNewApplication(Application app){
+  public void addNewApplication(@NonNull Application app){
     initApplications();
     this.applications.add(app);
   }
 
-  @NonNull
-  public void addNewGroup(Group g){
+  public void addNewGroup(@NonNull Group g){
     initGroups();
     this.groups.add(g);
   }
 
-  @NonNull
-  public void addGroupsByName(List<String> groupNames, GroupService groupService){
+  public void addGroupsByName(@NonNull List<String> groupNames, @NonNull GroupService groupService){
     initGroups();
     groupNames.forEach(gName -> this.groups.add(groupService.getByName(gName)));
   }
 
-  @NonNull
-  public void addApplicationsByName(List<String> applicationNames, ApplicationService applicationService){
+  public void addApplicationsByName(@NonNull List<String> applicationNames,
+                                    @NonNull ApplicationService applicationService){
     initApplications();
     applicationNames.forEach(appName -> this.applications.add(applicationService.getByName(appName)));
   }
 
-  @NonNull
-  public void removeApplication(Integer appId){
+  public void removeApplication(@NonNull Integer appId){
     if(this.applications == null) return;
     this.applications.removeIf(a -> a.id == appId);
   }
 
-  @NonNull
-  public void removeGroup(Integer grpId){
+  public void removeGroup(@NonNull Integer grpId){
     if(this.groups == null) return;
     this.groups.removeIf(g -> g.id == grpId);
   }

@@ -59,25 +59,21 @@ public class Group {
   @JsonIgnore
   List<User> users;
 
-  @NonNull
-  public void addApplication(Application app){
+  public void addApplication(@NonNull Application app){
     initApplications();
     this.applications.add(app);
   }
 
-  @NonNull
-  public void addUser(User u){
+  public void addUser(@NonNull User u){
     initUsers();
     this.users.add(u);
   }
 
-  @NonNull
-  public void removeApplication(Integer appId){
+  public void removeApplication(@NonNull Integer appId){
     this.applications.removeIf(a -> a.id == appId);
   }
 
-  @NonNull
-  public void removeUser(Integer userId){
+  public void removeUser(@NonNull Integer userId){
     if(this.users == null) return;
     this.users.removeIf(u -> u.id == userId);
   }
