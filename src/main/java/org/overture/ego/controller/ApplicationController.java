@@ -19,6 +19,7 @@ package org.overture.ego.controller;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import org.overture.ego.model.dto.PageDTO;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
@@ -27,7 +28,6 @@ import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -50,18 +50,18 @@ public class ApplicationController {
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "Page of applications", response = Page.class)
+          @ApiResponse(code = 200, message = "Page of applications", response = PageDTO.class)
       }
   )
   public @ResponseBody
-  Page<Application> getApplicationsList(
+  PageDTO<Application> getApplicationsList(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable) {
     if(StringUtils.isEmpty(query)){
-      return applicationService.listApps(pageable);
+      return new PageDTO(applicationService.listApps(pageable));
     } else {
-      return applicationService.findApps(query, pageable);
+      return new PageDTO(applicationService.findApps(query, pageable));
     }
   }
 
@@ -123,20 +123,20 @@ public class ApplicationController {
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
   @ApiResponses(
           value = {
-                  @ApiResponse(code = 200, message = "Page of users of group", response = Page.class)
+                  @ApiResponse(code = 200, message = "Page of users of group", response = PageDTO.class)
           }
   )
   public @ResponseBody
-  Page<User> getApplicationUsers(
+  PageDTO<User> getApplicationUsers(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String appId,
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable)
   {
     if(StringUtils.isEmpty(query)){
-      return userService.findAppsUsers(appId, pageable);
+      return new PageDTO(userService.findAppsUsers(appId, pageable));
     } else {
-      return userService.findAppsUsers(appId, query, pageable);
+      return new PageDTO(userService.findAppsUsers(appId, query, pageable));
     }
   }
 
@@ -147,20 +147,20 @@ public class ApplicationController {
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
   @ApiResponses(
           value = {
-                  @ApiResponse(code = 200, message = "Page of applications of group", response = Page.class)
+                  @ApiResponse(code = 200, message = "Page of applications of group", response = PageDTO.class)
           }
   )
   public @ResponseBody
-  Page<Group> getApplicationsGroups(
+  PageDTO<Group> getApplicationsGroups(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String appId,
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable)
   {
     if(StringUtils.isEmpty(query)) {
-      return groupService.findApplicationsGroup(appId,pageable);
+      return new PageDTO(groupService.findApplicationsGroup(appId,pageable));
     } else {
-      return groupService.findApplicationsGroup(appId, query, pageable);
+      return new PageDTO(groupService.findApplicationsGroup(appId, query, pageable));
     }
   }
 
