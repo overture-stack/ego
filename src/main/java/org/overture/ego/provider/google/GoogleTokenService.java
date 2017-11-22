@@ -44,11 +44,11 @@ import java.util.Map;
 @Component
 public class GoogleTokenService {
 
-  HttpTransport transport;
-  JsonFactory jsonFactory;
-  GoogleIdTokenVerifier verifier;
   @Value("${google.client.Ids}")
   private String clientIDs;
+  private HttpTransport transport;
+  private JsonFactory jsonFactory;
+  private GoogleIdTokenVerifier verifier;
 
   public GoogleTokenService() {
     transport = new NetHttpTransport();
