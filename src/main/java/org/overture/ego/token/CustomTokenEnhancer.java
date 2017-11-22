@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package org.overture.ego.security;
+package org.overture.ego.token;
 
 import lombok.val;
 import org.overture.ego.service.UserService;
-import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
@@ -36,7 +35,7 @@ public class CustomTokenEnhancer implements TokenEnhancer {
   public OAuth2AccessToken enhance(OAuth2AccessToken oAuth2AccessToken, OAuth2Authentication oAuth2Authentication) {
 
     val user = userService.getByName(oAuth2Authentication.getPrincipal().toString());
-    String token = tokenService.generateToken(user);
+    String token = tokenService.generateUserToken(new TokenUserInfo(user));
     return tokenService.getJWTAccessToken(token);
   }
 

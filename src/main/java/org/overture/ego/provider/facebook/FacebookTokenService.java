@@ -22,6 +22,8 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.token.IDToken;
+import org.overture.ego.utils.Types;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -104,7 +106,7 @@ public class FacebookTokenService {
     }
   }
 
-  public Optional<Map<String, String>> getAuthInfo(String fbToken){
+  public Optional<IDToken> getAuthInfo(String fbToken){
     log.debug("Getting details for Facebook token: {}", fbToken);
     val userDetailsUri = getUserDetailsUri(fbToken);
     try {
@@ -117,7 +119,7 @@ public class FacebookTokenService {
                   val name = jsonObj.get().get(USER_NAME).toString().split(" ");
                   output.put(USER_GIVEN_NAME, name[0]);
                   output.put(USER_LAST_NAME, name[1]);
-                  return Optional.of(output);
+                  return Optional.of(Types.convertToAnotherType(output, IDToken.class));
                 } else return Optional.empty();
               });
     } catch (URISyntaxException uex){
@@ -161,9 +163,4 @@ public class FacebookTokenService {
     return factory;
   }
 
-  public boolean isInvalidToken(String idToken) {
-    if(validToken(idToken)){
-      return false;
-    } else return true;
-  }
 }

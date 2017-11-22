@@ -16,22 +16,12 @@
 
 package org.overture.ego.utils;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.StringUtils;
+import lombok.val;
+import org.codehaus.jackson.map.ObjectMapper;
 
-
-@Slf4j
-public class Queries {
-
-  public static String prepareForQuery(String text){
-    String output = text;
-    if(StringUtils.isEmpty(output)){
-      return  "";
-    }
-    if (!output.contains("%")) {
-      output = "%" + output + "%";
-    }
-    return output.toLowerCase();
+public class Types {
+  public static  <T> T convertToAnotherType(Object fromObject, Class<T> tClass){
+    val mapper = new ObjectMapper();
+    return mapper.convertValue(fromObject, tClass);
   }
-
 }

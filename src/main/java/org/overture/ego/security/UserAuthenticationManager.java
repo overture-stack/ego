@@ -21,9 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.provider.facebook.FacebookTokenService;
 import org.overture.ego.provider.google.GoogleTokenService;
+import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -44,9 +44,9 @@ public class UserAuthenticationManager implements AuthenticationManager {
   @Autowired
   private GoogleTokenService googleTokenService;
   @Autowired
-  private SimpleDateFormat formatter;
-  @Autowired
   private FacebookTokenService facebookTokenService;
+  @Autowired
+  private TokenService tokenService;
 
   @Override
   public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -71,7 +71,7 @@ public class UserAuthenticationManager implements AuthenticationManager {
     if (!googleTokenService.validToken(idToken))
       throw new Exception("Invalid user token:" + idToken);
     val authInfo = googleTokenService.decode(idToken);
-    return  authInfo.get("email").toString();
+    return tokenService.generateUserToken(authInfo);
 
   }
 
@@ -81,7 +81,7 @@ public class UserAuthenticationManager implements AuthenticationManager {
       throw new Exception("Invalid user token:" + idToken);
     val authInfo = facebookTokenService.getAuthInfo(idToken);
     if(authInfo.isPresent()) {
-      return  authInfo.get().get("email").toString();
+      return tokenService.generateUserToken(authInfo.get());
     } else {
       throw new Exception("Unable to generate auth token for this user");
     }

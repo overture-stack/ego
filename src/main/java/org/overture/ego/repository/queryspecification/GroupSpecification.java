@@ -23,18 +23,18 @@ import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
 import org.springframework.data.jpa.domain.Specification;
 
+import javax.annotation.Nonnull;
 import javax.persistence.criteria.Join;
 
 public class GroupSpecification extends SpecificationBase<Group>  {
-  public static Specification<Group> containsText(String text) {
+  public static Specification<Group> containsText(@Nonnull String text) {
     val finalText = Queries.prepareForQuery(text);
     return (root, query, builder) -> builder.or(getQueryPredicates(builder,root,finalText,
             "name","description","status")
     );
   }
 
-  public static Specification<Group> containsApplication(Integer appId) {
-    val finalAppId = appId;
+  public static Specification<Group> containsApplication(@Nonnull Integer appId) {
     return (root, query, builder) ->
     {
       Join<Application, Group> groupJoin = root.join("applications");
@@ -42,12 +42,11 @@ public class GroupSpecification extends SpecificationBase<Group>  {
     };
   }
 
-  public static Specification<Group> containsUser(Integer userId) {
-    val finalUserId = userId;
+  public static Specification<Group> containsUser(@Nonnull Integer userId) {
     return (root, query, builder) ->
     {
       Join<User, Group> groupJoin = root.join("users");
-      return builder.equal(groupJoin.<Integer> get("id"), finalUserId);
+      return builder.equal(groupJoin.<Integer> get("id"), userId);
     };
   }
 

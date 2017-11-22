@@ -27,6 +27,8 @@ import lombok.SneakyThrows;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.token.IDToken;
+import org.overture.ego.utils.Types;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.jwt.JwtHelper;
 import org.springframework.stereotype.Component;
@@ -70,12 +72,6 @@ public class GoogleTokenService {
     return (idToken != null);
   }
 
-  public boolean isInvalidToken(String token){
-    if(validToken(token)){
-      return false;
-    } else return true;
-  }
-
   @Synchronized
   private void initVerifier() {
     List<String> targetAudience;
@@ -92,9 +88,9 @@ public class GoogleTokenService {
   }
 
   @SneakyThrows
-  public Map decode(String token){
+  public IDToken decode(String token){
     val tokenDecoded = JwtHelper.decode(token);
     val authInfo = new ObjectMapper().readValue(tokenDecoded.getClaims(), Map.class);
-    return authInfo;
+    return Types.convertToAnotherType(authInfo, IDToken.class);
   }
 }

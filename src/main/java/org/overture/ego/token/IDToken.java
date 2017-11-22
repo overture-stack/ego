@@ -14,24 +14,17 @@
  * limitations under the License.
  */
 
-package org.overture.ego.utils;
+package org.overture.ego.token;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.StringUtils;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-
-@Slf4j
-public class Queries {
-
-  public static String prepareForQuery(String text){
-    String output = text;
-    if(StringUtils.isEmpty(output)){
-      return  "";
-    }
-    if (!output.contains("%")) {
-      output = "%" + output + "%";
-    }
-    return output.toLowerCase();
-  }
-
+@Data
+@NoArgsConstructor
+public class IDToken {
+  @NonNull
+  private String email;
+  private String given_name;
+  private String family_name;
 }

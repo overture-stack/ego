@@ -31,6 +31,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -63,7 +64,11 @@ public class GroupController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable) {
-    return groupService.findGroups(query, pageable);
+    if(StringUtils.isEmpty(query)) {
+      return groupService.listGroups(pageable);
+    } else {
+      return groupService.findGroups(query, pageable);
+    }
   }
 
   @AdminScoped
@@ -135,7 +140,11 @@ public class GroupController {
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable)
   {
-    return applicationService.findGroupsApplications(groupId, query,pageable);
+    if(StringUtils.isEmpty(query)) {
+      return applicationService.findGroupsApplications(groupId,pageable);
+    } else {
+      return applicationService.findGroupsApplications(groupId, query, pageable);
+    }
   }
 
   @AdminScoped
@@ -187,6 +196,10 @@ public class GroupController {
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable)
   {
-    return userService.findGroupsUsers(groupId, query, pageable);
+    if(StringUtils.isEmpty(query)) {
+      return userService.findGroupsUsers(groupId, pageable);
+    } else {
+      return userService.findGroupsUsers(groupId, query, pageable);
+    }
   }
 }

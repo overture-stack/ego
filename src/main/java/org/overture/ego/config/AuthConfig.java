@@ -18,7 +18,7 @@ package org.overture.ego.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.security.CorsFilter;
-import org.overture.ego.security.CustomTokenEnhancer;
+import org.overture.ego.token.CustomTokenEnhancer;
 import org.overture.ego.service.ApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

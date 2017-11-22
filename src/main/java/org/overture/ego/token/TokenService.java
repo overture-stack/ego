@@ -20,17 +20,13 @@ import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.security.JWTAccessToken;
-import org.overture.ego.service.ApplicationService;
-import org.overture.ego.service.GroupService;
+import org.overture.ego.service.UserService;
+import org.overture.ego.utils.Types;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -39,34 +35,29 @@ public class TokenService {
   @Value("${jwt.secret}")
   private String jwtSecret;
   @Autowired
-  private ApplicationService applicationService;
-  @Autowired
-  private GroupService groupService;
+  UserService userService;
 
-  public String generateToken(User u) {
-    Claims claims = Jwts.claims().setSubject(u.getName());
-    Map<String, Object> context = new HashMap<String, Object>();
-    Map<String, Object> userInfo = new HashMap<String, Object>();
-    userInfo.put("name", u.getName());
-    userInfo.put("roles", new String[] {u.getRole()});
-    userInfo.put("status", u.getStatus());
-    userInfo.put("email", u.getEmail());
-    userInfo.put("first_name", u.getFirstName());
-    userInfo.put("last_name", u.getLastName());
-    userInfo.put("groups", u.getGroupNames());
-    context.put("user", userInfo);
-    claims.put("sub", u.getId());
-    claims.put("iss", "ego");
-    claims.put("iat", (int) (System.currentTimeMillis() / 1000L));
-    claims.put("exp", (int) ((System.currentTimeMillis() + 1000000) / 1000L));
-    claims.put("aud", u.getApplicationNames());
-    claims.put("jti", UUID.randomUUID());
-    claims.put("context", context);
+  public String generateUserToken(IDToken idToken){
+    val userName = idToken.getEmail();
+    User user = userService.getByName(userName);
+    if (user == null) {
+      userService.createFromIDToken(idToken);
+    }
+    return generateUserToken(new TokenUserInfo(user));
+  }
+
+  public String generateUserToken(TokenUserInfo u) {
+    val tokenUserInfo = new TokenUserInfo(u);
+    val tokenContext = new TokenContext(tokenUserInfo);
+    val tokenClaims = new TokenClaims();
+    tokenClaims.setIss("ego");
+    tokenClaims.setValidDuration(1000000);
+    tokenClaims.setContext(tokenContext);
 
     return Jwts.builder()
-        .setClaims(claims)
-        .signWith(SignatureAlgorithm.HS512, jwtSecret)
-        .compact();
+            .setClaims(Types.convertToAnotherType(tokenClaims, Map.class))
+            .signWith(SignatureAlgorithm.HS512, jwtSecret)
+            .compact();
   }
 
   public boolean validateToken(String token) {
@@ -82,22 +73,11 @@ public class TokenService {
     return (decodedToken != null);
   }
 
-  public User getUserInfo(String token) {
+  public TokenUserInfo getTokenUserInfo(String token) {
     try {
       Claims body = getTokenClaims(token);
-      val userInfo = (Map)((Map)body.get("context")).get("user");
-
-      User u = new User();
-      u.setId((Integer) body.get("sub"));
-      u.setName(userInfo.get("name").toString());
-      u.setEmail(userInfo.get("email").toString());
-      u.setFirstName(userInfo.get("first_name").toString());
-      u.setLastName(userInfo.get("last_name").toString());
-      u.setRole(((ArrayList<String>)userInfo.get("roles")).get(0));
-      u.setStatus(userInfo.get("status").toString());
-      u.addApplicationsByName((ArrayList<String>) body.get("aud"), applicationService);
-      u.addGroupsByName((ArrayList<String>) userInfo.get("groups"), groupService);
-      return u;
+      val tokenClaims = Types.convertToAnotherType(body, TokenClaims.class);
+      return tokenClaims.getContext().getUserInfo();
     } catch (JwtException | ClassCastException e) {
       return null;
     }

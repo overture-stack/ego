@@ -31,6 +31,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -63,7 +64,11 @@ public class UserController {
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable)
   {
-    return userService.findUsers(query, pageable);
+    if(StringUtils.isEmpty(query)) {
+      return userService.listUsers(pageable);
+    } else {
+      return userService.findUsers(query, pageable);
+    }
   }
 
   @AdminScoped
@@ -134,7 +139,11 @@ public class UserController {
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable)
   {
-    return groupService.findUsersGroup(userId,query, pageable);
+    if(StringUtils.isEmpty(query)) {
+      return groupService.findUsersGroup(userId,pageable);
+    } else {
+      return groupService.findUsersGroup(userId, query, pageable);
+    }
   }
 
   @AdminScoped
@@ -185,7 +194,11 @@ public class UserController {
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable)
   {
-    return applicationService.findUsersApps(userId, query, pageable);
+    if(StringUtils.isEmpty(query)) {
+      return applicationService.findUsersApps(userId,pageable);
+    } else {
+      return applicationService.findUsersApps(userId, query, pageable);
+    }
   }
 
   @AdminScoped

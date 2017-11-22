@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package org.overture.ego.security;
+package org.overture.ego.token;
 
 import io.jsonwebtoken.Claims;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.overture.ego.token.TokenService;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
 

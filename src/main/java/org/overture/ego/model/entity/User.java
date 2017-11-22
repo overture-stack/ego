@@ -82,13 +82,13 @@ public class User {
   @ManyToMany(targetEntity = Group.class, cascade = {CascadeType.ALL})
   @JoinTable(name = "usergroup", joinColumns = { @JoinColumn(name = "userid") },
           inverseJoinColumns = { @JoinColumn(name = "grpid") })
-  @JsonIgnore List<Group> groups;
+  @JsonIgnore protected List<Group> groups;
 
 
   @ManyToMany(targetEntity = Application.class, cascade = {CascadeType.ALL})
   @JoinTable(name = "userapplication", joinColumns = { @JoinColumn(name = "userid") },
           inverseJoinColumns = { @JoinColumn(name = "appid") })
-  @JsonIgnore List<Application> applications;
+  @JsonIgnore protected List<Application> applications;
 
   @JsonIgnore
   public List<String> getGroupNames(){
@@ -116,17 +116,6 @@ public class User {
     this.groups.add(g);
   }
 
-  public void addGroupsByName(@NonNull List<String> groupNames, @NonNull GroupService groupService){
-    initGroups();
-    groupNames.forEach(gName -> this.groups.add(groupService.getByName(gName)));
-  }
-
-  public void addApplicationsByName(@NonNull List<String> applicationNames,
-                                    @NonNull ApplicationService applicationService){
-    initApplications();
-    applicationNames.forEach(appName -> this.applications.add(applicationService.getByName(appName)));
-  }
-
   public void removeApplication(@NonNull Integer appId){
     if(this.applications == null) return;
     this.applications.removeIf(a -> a.id == appId);
@@ -137,13 +126,13 @@ public class User {
     this.groups.removeIf(g -> g.id == grpId);
   }
 
-  private void initApplications(){
+  protected void initApplications(){
     if(this.applications == null){
       this.applications = new ArrayList<Application>();
     }
   }
 
-  private void initGroups(){
+  protected void initGroups(){
     if(this.groups == null) {
       this.groups = new ArrayList<Group>();
     }

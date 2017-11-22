@@ -19,20 +19,14 @@ package org.overture.ego.security;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.token.TokenService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Component;
 
 
 @Slf4j
 @Profile("auth")
 public class SecureAuthorizationManager implements AuthorizationManager {
 
-  @Autowired
-  private TokenService tokenService;
 
   public boolean authorize(@NonNull Authentication authentication) {
     User user = (User)authentication.getPrincipal();

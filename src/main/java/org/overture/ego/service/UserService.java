@@ -16,18 +16,22 @@
 
 package org.overture.ego.service;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.repository.UserRepository;
 import org.overture.ego.repository.queryspecification.UserSpecification;
+import org.overture.ego.token.IDToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import static org.springframework.data.jpa.domain.Specifications.where;
@@ -36,15 +40,40 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 @Service
 public class UserService {
 
+  /*
+    Constants
+   */
+  private final static String DEFAULT_USER_ROLE = "USER";
+  private final static String DEFAULT_USER_STATUS = "Pending";
+
+  /*
+    Dependencies
+   */
   @Autowired
   private UserRepository userRepository;
   @Autowired
   private GroupService groupService;
   @Autowired
   private ApplicationService applicationService;
+  @Autowired
+  SimpleDateFormat formatter;
 
   public User create(@NonNull User userInfo) {
     return userRepository.save(userInfo);
+  }
+
+  public User createFromIDToken(IDToken idToken) {
+    // Create a new user
+    val userInfo = new User();
+    userInfo.setName(idToken.getEmail());
+    userInfo.setEmail(idToken.getEmail());
+    userInfo.setFirstName(StringUtils.isEmpty(idToken.getGiven_name()) ? "" : idToken.getGiven_name());
+    userInfo.setLastName(StringUtils.isEmpty(idToken.getFamily_name()) ? "" : idToken.getFamily_name());
+    userInfo.setStatus(DEFAULT_USER_STATUS);
+    userInfo.setCreatedAt(formatter.format(new Date()));
+    userInfo.setLastLogin(null);
+    userInfo.setRole(DEFAULT_USER_ROLE);
+    return this.create(userInfo);
   }
 
   public void addUsersToGroups(@NonNull String userId, @NonNull List<String> groupIDs){

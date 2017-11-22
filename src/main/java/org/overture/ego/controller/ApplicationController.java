@@ -31,6 +31,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -57,7 +58,11 @@ public class ApplicationController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable) {
-    return applicationService.findApps(query, pageable);
+    if(StringUtils.isEmpty(query)){
+      return applicationService.listApps(pageable);
+    } else {
+      return applicationService.findApps(query, pageable);
+    }
   }
 
   @AdminScoped
@@ -128,7 +133,11 @@ public class ApplicationController {
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable)
   {
-    return userService.findAppsUsers(appId, query, pageable);
+    if(StringUtils.isEmpty(query)){
+      return userService.findAppsUsers(appId, pageable);
+    } else {
+      return userService.findAppsUsers(appId, query, pageable);
+    }
   }
 
   /*
@@ -148,7 +157,11 @@ public class ApplicationController {
           @RequestParam(value = "query", required = false) String query,
           Pageable pageable)
   {
-    return groupService.findApplicationsGroup(appId, query, pageable);
+    if(StringUtils.isEmpty(query)) {
+      return groupService.findApplicationsGroup(appId,pageable);
+    } else {
+      return groupService.findApplicationsGroup(appId, query, pageable);
+    }
   }
 
 }

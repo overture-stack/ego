@@ -28,6 +28,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.util.StringUtils;
 
 
 import javax.servlet.FilterChain;
@@ -43,9 +44,6 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
   @Autowired
   private TokenService tokenService;
-
-  @Autowired
-  private UserService userService;
 
   public JWTAuthorizationFilter(AuthenticationManager authManager) {
     super(authManager);
@@ -63,22 +61,21 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     } else{
       tokenPayload = request.getHeader(HttpHeaders.AUTHORIZATION);
     }
-    if (isValidToken(tokenPayload) == false) {
+    if (!isValidToken(tokenPayload)) {
       SecurityContextHolder.clearContext();
       chain.doFilter(request,response);
       return;
     }
    val authentication =
            new UsernamePasswordAuthenticationToken(
-                   tokenService.getUserInfo(removeTokenPrefix(tokenPayload)),
+                   tokenService.getTokenUserInfo(removeTokenPrefix(tokenPayload)),
                    null, new ArrayList<>());
    SecurityContextHolder.getContext().setAuthentication(authentication);
    chain.doFilter(request,response);
   }
 
   private boolean isValidToken(String token){
-    return  token != null                &&
-            token.isEmpty() == false     &&
+    return  !StringUtils.isEmpty(token)  &&
             token.contains(TOKEN_PREFIX) &&
             tokenService.validateToken(removeTokenPrefix(token));
     }
