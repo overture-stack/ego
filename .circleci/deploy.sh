@@ -13,6 +13,7 @@
 #  - EGO_DEPLOY_USER                                      #
 #  - EGO_DEPLOY_SERVER                                    #
 #  - EGO_INSTALL_PATH                                     #
+#  - EGO_ENV_FILE_PATH                                    #
 #                                                         #
 # Also before running, on the deploy server:              #
 #   - configure all env variables listed in               #
@@ -33,7 +34,7 @@ done
 echo "filepath: $filepath"
 
 file=$(basename $filepath)
-echo "filename: $filename"
+echo "file: $file"
 
 # === Upload New Uber-Jar
 scp $filepath "$EGO_DEPLOY_USER@$EGO_DEPLOY_SERVER:$EGO_INSTALL_PATH/builds/"
@@ -42,11 +43,11 @@ scp $filepath "$EGO_DEPLOY_USER@$EGO_DEPLOY_SERVER:$EGO_INSTALL_PATH/builds/"
 ssh "$EGO_DEPLOY_USER@$EGO_DEPLOY_SERVER" "tar zxvf $EGO_INSTALL_PATH/builds/$file -C $EGO_INSTALL_PATH/builds"
 
 # === Stop Existing Service
-ssh "$EGO_DEPLOY_USER@$EGO_DEPLOY_SERVER" "$EGO_INSTALL_PATH/resources/scripts/stop-server.sh"
+ssh "$EGO_DEPLOY_USER@$EGO_DEPLOY_SERVER" "source $EGO_ENV_FILE_PATH; $EGO_INSTALL_PATH/resources/scripts/stop-server.sh"
 
 # === Update Symlink
 extract_folder="${file%-dist.tar.gz}"
 ssh "$EGO_DEPLOY_USER@$EGO_DEPLOY_SERVER" "ln -sf $EGO_INSTALL_PATH/builds/$extract_folder $EGO_INSTALL_PATH/install"
 
 # === Start Existing Service
-ssh "$EGO_DEPLOY_USER@$EGO_DEPLOY_SERVER" "$EGO_INSTALL_PATH/resources/scripts/start-server.sh"
+ssh "$EGO_DEPLOY_USER@$EGO_DEPLOY_SERVER" "source $EGO_ENV_FILE_PATH; $EGO_INSTALL_PATH/resources/scripts/start-server.sh"
