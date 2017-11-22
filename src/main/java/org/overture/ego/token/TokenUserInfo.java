@@ -16,6 +16,7 @@
 
 package org.overture.ego.token;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper=true)
+@JsonIgnoreProperties({ "id", "groupNames", "applicationNames", "role", "groups","applications" })
 public class TokenUserInfo extends User {
 
   /*

@@ -69,6 +69,7 @@ public class UserController {
     } else {
       return userService.findUsers(query, pageable);
     }
+
   }
 
   @AdminScoped
@@ -231,5 +232,4 @@ public class UserController {
           @PathVariable(value = "appIDs", required = true) List<String> appIDs) {
     userService.deleteUserFromApp(userId,appIDs);
   }
-
 }

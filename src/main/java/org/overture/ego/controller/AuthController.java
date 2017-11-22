@@ -19,22 +19,14 @@ package org.overture.ego.controller;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.overture.ego.model.entity.User;
-import org.overture.ego.service.UserService;
 import org.overture.ego.provider.google.GoogleTokenService;
 import org.overture.ego.provider.facebook.FacebookTokenService;
-import org.overture.ego.token.IDToken;
 import org.overture.ego.token.TokenService;
-import org.overture.ego.token.TokenUserInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
 
 @Slf4j
 @RestController

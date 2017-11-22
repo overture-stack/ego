@@ -16,7 +16,6 @@
 
 package org.overture.ego.service;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;

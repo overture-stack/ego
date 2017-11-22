@@ -47,8 +47,7 @@ public class TokenService {
   }
 
   public String generateUserToken(TokenUserInfo u) {
-    val tokenUserInfo = new TokenUserInfo(u);
-    val tokenContext = new TokenContext(tokenUserInfo);
+    val tokenContext = new TokenContext(u);
     val tokenClaims = new TokenClaims();
     tokenClaims.setIss("ego");
     tokenClaims.setValidDuration(1000000);
@@ -73,11 +72,11 @@ public class TokenService {
     return (decodedToken != null);
   }
 
-  public TokenUserInfo getTokenUserInfo(String token) {
+  public User getTokenUserInfo(String token) {
     try {
       Claims body = getTokenClaims(token);
       val tokenClaims = Types.convertToAnotherType(body, TokenClaims.class);
-      return tokenClaims.getContext().getUserInfo();
+      return userService.get(tokenClaims.getSub());
     } catch (JwtException | ClassCastException e) {
       return null;
     }

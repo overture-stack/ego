@@ -19,6 +19,7 @@ package org.overture.ego.token;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +34,7 @@ public class TokenClaims {
   @NonNull
   private Integer exp;
   @NonNull
+  @JsonIgnore
   private Integer validDuration;
   @Getter
   private String sub;
@@ -53,7 +55,11 @@ public class TokenClaims {
   private long initTime = System.currentTimeMillis();
 
   public String getSub(){
-    return String.valueOf(this.context.getUserInfo().getId());
+    if(StringUtils.isEmpty(sub)) {
+      return String.valueOf(this.context.getUserInfo().getId());
+    } else {
+      return sub;
+    }
   }
 
   public List<String> getAud(){
@@ -61,7 +67,7 @@ public class TokenClaims {
   }
 
   public int getExp(){
-    return (int) (this.initTime + validDuration/ 1000L);
+    return ((int) ((this.initTime + validDuration)/ 1000L));
   }
 
   public int getIat(){

@@ -16,12 +16,15 @@
 
 package org.overture.ego.utils;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.val;
-import org.codehaus.jackson.map.ObjectMapper;
+
 
 public class Types {
   public static  <T> T convertToAnotherType(Object fromObject, Class<T> tClass){
     val mapper = new ObjectMapper();
+    mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
     return mapper.convertValue(fromObject, tClass);
   }
 }

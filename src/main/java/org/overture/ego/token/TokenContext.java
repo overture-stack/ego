@@ -16,13 +16,17 @@
 
 package org.overture.ego.token;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Data
 @NoArgsConstructor
 @RequiredArgsConstructor
+@JsonInclude(JsonInclude.Include.ALWAYS)
 public class TokenContext {
 
   @NonNull
+  @JsonProperty("user")
   private TokenUserInfo userInfo;
 }

@@ -19,7 +19,6 @@ package org.overture.ego.security;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.overture.ego.service.UserService;
 import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
