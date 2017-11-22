@@ -35,7 +35,7 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
       - run:
-          name: Fetch Dependencies
+          name: Fetch Maven Dependencies
           command: mvn dependency:go-offline
       - save_cache:
           paths:
@@ -58,26 +58,35 @@ jobs:
 
     steps:
       - checkout
-      - add_ssh_keys
 
+      # Download and cache dependencies
       - restore_cache:
           keys:
           - v1-dependencies-{{ checksum "pom.xml" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
-
       - run:
-          name: Package Uber-Jar
-          command: mvn package
-
-      - run:
-          name: Deploy Script
-          command: ./.circleci/deploy.sh
-
+          name: Fetch Maven Dependencies
+          command: mvn dependency:go-offline
       - save_cache:
           paths:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
+
+      # Build!
+      - run:
+          name: Package Uber-Jar
+          command: mvn package
+
+      # install rsync, needed for Deploy Script
+      - add_ssh_keys
+      - run:
+          name: Install rsync
+          command: sudo apt install rsync
+      - run:
+          name: Deploy Script
+          command: ./.circleci/deploy.sh
+
 
 workflows:
   version: 2

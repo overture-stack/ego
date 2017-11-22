@@ -1,11 +1,52 @@
 #!/bin/bash
 
-# Sync Resource Files
+### =================================================== ###
+#                                                         #
+# CircleCI Deploy Script                                  #
+#                                                         #
+#                                                         #
+# Ensure that a valid ssh key has been added to Circle CI #
+#                                                         #
+# Set the following environment variables in CircleCI to  #
+#   configure this deploy script:                         #
+#                                                         #
+#  - EGO_DEPLOY_USER                                      #
+#  - EGO_DEPLOY_SERVER                                    #
+#  - EGO_INSTALL_PATH                                     #
+#                                                         #
+# Also before running, on the deploy server:              #
+#   - configure all env variables listed in               #
+#      /env_template.sh so that the start & stop scripts  #
+#      will run.                                          #
+#   - create an install path owned by the EGO_DEPLOY_USER #
+#   - create a `builds` directory inside the install path #
+#                                                         #
+### =================================================== ###
 
-# Upload New Uber-Jar
+# === Sync Resource Files
+rsync -azP src/main/resources "$EGO_DEPLOY_USER@$EGO_DEPLOY_SERVER:$EGO_INSTALL_PATH"
 
-# Unpack Jar
+# === Find generated filename
+for i in target/ego-*.tar.gz; do
+    filepath=$i;
+done
+echo "filepath: $filepath"
 
-# Stop Existing Service
+file=$(basename $filepath)
+echo "filename: $filename"
 
-# Start Existing Service
+# === Upload New Uber-Jar
+scp $filepath "$EGO_DEPLOY_USER@$EGO_DEPLOY_SERVER:$EGO_INSTALL_PATH/builds/"
+
+# === Unpack Jar
+ssh "$EGO_DEPLOY_USER@$EGO_DEPLOY_SERVER" "tar zxvf $EGO_INSTALL_PATH/builds/$file -C $EGO_INSTALL_PATH/builds"
+
+# === Stop Existing Service
+ssh "$EGO_DEPLOY_USER@$EGO_DEPLOY_SERVER" "$EGO_INSTALL_PATH/resources/scripts/stop-server.sh"
+
+# === Update Symlink
+extract_folder="${file%-dist.tar.gz}"
+ssh "$EGO_DEPLOY_USER@$EGO_DEPLOY_SERVER" "ln -sf $EGO_INSTALL_PATH/builds/$extract_folder $EGO_INSTALL_PATH/install"
+
+# === Start Existing Service
+ssh "$EGO_DEPLOY_USER@$EGO_DEPLOY_SERVER" "$EGO_INSTALL_PATH/resources/scripts/start-server.sh"
