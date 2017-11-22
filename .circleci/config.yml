@@ -81,6 +81,9 @@ jobs:
       # install rsync, needed for Deploy Script
       - add_ssh_keys
       - run:
+          name: Add Deploy Server to Known Hosts
+          command: ssh-keyscan -H $EGO_DEPLOY_SERVER >> ~/.ssh/known_hosts
+      - run:
           name: Install rsync
           command: sudo apt install rsync
       - run:
