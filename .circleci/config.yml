@@ -103,5 +103,5 @@ workflows:
             branches:
               only:
                 - develop
-                - *circleci-test
+                - circleci-test
 
