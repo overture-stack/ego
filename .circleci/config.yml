@@ -74,9 +74,13 @@ jobs:
           key: v1-dependencies-{{ checksum "pom.xml" }}
 
       # Build!
+      # Skip tests - those are done in the test step and require specific DB configurations
       - run:
           name: Package Uber-Jar
-          command: mvn package
+          command: |
+            mvn package \
+            -Dmaven.test.skip=true
+
 
       # install rsync, needed for Deploy Script
       - add_ssh_keys
