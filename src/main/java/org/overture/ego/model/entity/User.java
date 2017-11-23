@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @Table(name = "egouser")
 @Data
 @JsonPropertyOrder({"id", "name", "email", "role", "status", "groups",
-    "applications", "first_name", "last_name", "created_at", "last_login", "preferred_language"})
+    "applications", "firstName", "lastName", "createdAt", "lastLogin", "preferredLanguage"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @EqualsAndHashCode(of={"id"})
 @NoArgsConstructor
@@ -60,23 +60,18 @@ public class User {
   String status;
 
   @Column(name = "firstname")
-  @JsonProperty("first_name")
   String firstName;
 
   @Column(name = "lastname")
-  @JsonProperty("last_name")
   String lastName;
 
   @Column(name = "createdat")
-  @JsonProperty("created_at")
   String createdAt;
 
   @Column(name = "lastlogin")
-  @JsonProperty("last_login")
   String lastLogin;
 
   @Column(name = "preferredlanguage")
-  @JsonProperty("preferred_language")
   String preferredLanguage;
 
   @ManyToMany(targetEntity = Group.class, cascade = {CascadeType.ALL})
