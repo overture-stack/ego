@@ -68,6 +68,10 @@ public class ApplicationService implements ClientDetailsService {
    return applicationRepository.findAll(pageable);
   }
 
+  public Page<Application> filterAppsByStatus(@NonNull String status, @NonNull Pageable pageable) {
+    return applicationRepository.findAllByStatusIgnoreCase(status, pageable);
+  }
+
   public Page<Application> findApps(@NonNull String query, @NonNull Pageable pageable) {
     if(StringUtils.isEmpty(query)){
       return this.listApps(pageable);

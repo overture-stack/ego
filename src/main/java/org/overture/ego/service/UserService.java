@@ -116,6 +116,10 @@ public class UserService {
     return userRepository.findAll(pageable);
   }
 
+  public Page<User> filterUsersByStatus(@NonNull String status, @NonNull Pageable pageable) {
+    return userRepository.findAllByStatusIgnoreCase(status, pageable);
+  }
+
   public Page<User> findUsers(@NonNull String query, @NonNull Pageable pageable) {
     if(StringUtils.isEmpty(query)){
       return this.listUsers(pageable);
