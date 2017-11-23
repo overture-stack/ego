@@ -14,29 +14,28 @@
  * limitations under the License.
  */
 
-package org.overture.ego.token;
+package org.overture.ego.model.dto;
 
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import java.util.Arrays;
+import lombok.Getter;
+import lombok.NonNull;
+import org.springframework.data.domain.Page;
 
-public class JWTAuthenticationToken extends AbstractAuthenticationToken {
+import java.util.List;
 
-  String token = "";
+@Getter
+public class PageDTO<T> {
 
-  public JWTAuthenticationToken(String token) {
-    super(Arrays.asList(new SimpleGrantedAuthority("ROLE_USER")));
-    this.token = token;
+  private final int limit;
+  private final int offset;
+  private final int count;
+  private final List<T> resultSet;
+
+  public PageDTO(@NonNull final Page<T> page) {
+    this.limit      = page.getSize();
+    this.offset     = page.getNumber();
+    this.count      = page.getNumberOfElements();
+    this.resultSet  = page.getContent();
   }
 
-  @Override
-  public Object getCredentials() {
-    return token;
-  }
-
-  @Override
-  public Object getPrincipal() {
-    return token;
-  }
 }

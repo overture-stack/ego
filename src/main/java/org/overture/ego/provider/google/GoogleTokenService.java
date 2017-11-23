@@ -14,17 +14,23 @@
  * limitations under the License.
  */
 
-package org.overture.ego.token;
+package org.overture.ego.provider.google;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import lombok.SneakyThrows;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.overture.ego.token.IDToken;
+import org.overture.ego.utils.Types;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.jwt.JwtHelper;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -32,23 +38,22 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
-public class GoogleTokenValidator {
+public class GoogleTokenService {
 
-
-  HttpTransport transport;
-  JsonFactory jsonFactory;
-  GoogleIdTokenVerifier verifier;
   @Value("${google.client.Ids}")
   private String clientIDs;
+  private HttpTransport transport;
+  private JsonFactory jsonFactory;
+  private GoogleIdTokenVerifier verifier;
 
-  public GoogleTokenValidator() {
+  public GoogleTokenService() {
     transport = new NetHttpTransport();
     jsonFactory = new JacksonFactory();
   }
-
 
   public boolean validToken(String token) {
     if (verifier == null)
@@ -80,5 +85,12 @@ public class GoogleTokenValidator {
         new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
             .setAudience(targetAudience)
             .build();
+  }
+
+  @SneakyThrows
+  public IDToken decode(String token){
+    val tokenDecoded = JwtHelper.decode(token);
+    val authInfo = new ObjectMapper().readValue(tokenDecoded.getClaims(), Map.class);
+    return Types.convertToAnotherType(authInfo, IDToken.class);
   }
 }

@@ -1,20 +1,13 @@
 server:
   port: 8081
 
-google:
-  client:
-    Ids: 814606937527-v7tr5dfqegjijicq3jeu5arv5tcl4ks0.apps.googleusercontent.com,814606937527-kk7ooglk6pj2tvpn7ldip6g3b74f8o72.apps.googleusercontent.com
-
 jwt:
   secret: testsecretisalsoasecret
 
-datasource:
-    url: jdbc:h2:./src/main/datasource/test
-    username: test
-    password:
-
----
-spring.profiles: psql
+# security
+auth:
+  token:
+    prefix:
 
 # Datasource
 spring.datasource:
@@ -26,3 +19,50 @@ spring.datasource:
   max-active: 10
   max-idle: 1
   min-idle: 1
+
+# Facebook Connection Details
+facebook:
+  client:
+    id: 140524976574963
+    secret: 2439abe7ae008bda7ab5cfdf706b4d66
+    accessTokenUri: https://graph.facebook.com/oauth/access_token
+    tokenValidateUri: https://graph.facebook.com/debug_token
+    timeout:
+      connect: 5000
+      read: 5000
+  resource:
+    userInfoUri: https://graph.facebook.com/me
+
+# Google Connection Details
+google:
+  client:
+    Ids: 814606937527-v7tr5dfqegjijicq3jeu5arv5tcl4ks0.apps.googleusercontent.com,814606937527-kk7ooglk6pj2tvpn7ldip6g3b74f8o72.apps.googleusercontent.com
+
+# Logging settings.
+logging:
+  console:
+    enabled: true
+    threshold: ALL
+  loggers:
+    "org.skife.jdbi.v2": TRACE
+
+---
+###############################################################################
+# Profile - "secure"
+###############################################################################
+spring:
+  profiles: auth
+  profiles.include: secure
+
+# security
+auth:
+  token:
+    prefix: Bearer
+
+# Logging settings.
+logging:
+  console:
+    enabled: true
+    threshold: ALL
+  loggers:
+    "org.skife.jdbi.v2": TRACE

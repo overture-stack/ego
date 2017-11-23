@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 
-package org.overture.ego.repository;
+package org.overture.ego.token;
 
-import org.overture.ego.repository.mapper.GroupsMapper;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-@RegisterMapper(GroupsMapper.class)
-public interface GroupsRepository {
+@Data
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class IDToken {
+  @NonNull
+  private String email;
+  private String given_name;
+  private String family_name;
 }

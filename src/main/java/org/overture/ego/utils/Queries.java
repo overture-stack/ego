@@ -14,18 +14,24 @@
  * limitations under the License.
  */
 
-package org.overture.ego.repository;
+package org.overture.ego.utils;
 
-import org.overture.ego.model.entity.Application;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.PagingAndSortingRepository;
 
-public interface ApplicationRepository
-        extends PagingAndSortingRepository<Application, Integer>, JpaSpecificationExecutor {
+@Slf4j
+public class Queries {
 
-  Application findOneByClientIdIgnoreCase(String clientId);
-  Application findOneByNameIgnoreCase(String name);
-  Application findAllByStatusIgnoreCase(String status);
+  public static String prepareForQuery(String text){
+    String output = text;
+    if(StringUtils.isEmpty(output)){
+      return  "";
+    }
+    if (!output.contains("%")) {
+      output = "%" + output + "%";
+    }
+    return output.toLowerCase();
+  }
 
 }

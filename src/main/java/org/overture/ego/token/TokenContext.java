@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-package org.overture.ego.security;
+package org.overture.ego.token;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
 
-/**
- * Method Security Meta Annotation
- */
-@Retention(RetentionPolicy.RUNTIME)
-//@PreAuthorize("@authorizationManager.authorize(authentication)")
-public @interface ProjectCodeScoped {
+@Data
+@NoArgsConstructor
+@RequiredArgsConstructor
+@JsonInclude(JsonInclude.Include.ALWAYS)
+public class TokenContext {
+
+  @NonNull
+  @JsonProperty("user")
+  private TokenUserInfo userInfo;
 }

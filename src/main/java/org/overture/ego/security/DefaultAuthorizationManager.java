@@ -14,18 +14,26 @@
  * limitations under the License.
  */
 
-package org.overture.ego.repository;
+package org.overture.ego.security;
 
-import org.overture.ego.model.entity.Application;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
 
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.PagingAndSortingRepository;
+/*
+  Default Authorization Manager allows working without actual auth headers.
+  Meant to be used for development environment.
+ */
+@Slf4j
+public class DefaultAuthorizationManager implements AuthorizationManager {
 
-public interface ApplicationRepository
-        extends PagingAndSortingRepository<Application, Integer>, JpaSpecificationExecutor {
+  @Override
+  public boolean authorize(Authentication authentication) {
+    return true;
+  }
 
-  Application findOneByClientIdIgnoreCase(String clientId);
-  Application findOneByNameIgnoreCase(String name);
-  Application findAllByStatusIgnoreCase(String status);
+  @Override
+  public boolean authorizeWithAdminRole(Authentication authentication) {
+    return true;
+  }
 
 }

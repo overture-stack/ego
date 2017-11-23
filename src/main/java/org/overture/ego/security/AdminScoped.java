@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package org.overture.ego.repository;
+package org.overture.ego.security;
 
-import org.overture.ego.model.entity.Application;
+import org.springframework.security.access.prepost.PreAuthorize;
 
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-public interface ApplicationRepository
-        extends PagingAndSortingRepository<Application, Integer>, JpaSpecificationExecutor {
-
-  Application findOneByClientIdIgnoreCase(String clientId);
-  Application findOneByNameIgnoreCase(String name);
-  Application findAllByStatusIgnoreCase(String status);
-
+/**
+ * Method Security Meta Annotation
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@PreAuthorize("@authorizationManager.authorizeWithAdminRole(authentication)")
+public @interface AdminScoped {
 }

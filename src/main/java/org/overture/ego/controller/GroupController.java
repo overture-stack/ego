@@ -19,10 +19,19 @@ package org.overture.ego.controller;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import org.overture.ego.model.dto.PageDTO;
+import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
-import org.overture.ego.security.ProjectCodeScoped;
+import org.overture.ego.model.entity.User;
+import org.overture.ego.security.AdminScoped;
+import org.overture.ego.service.ApplicationService;
+import org.overture.ego.service.GroupService;
+import org.overture.ego.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,37 +41,37 @@ import java.util.List;
 @RequestMapping("/groups")
 public class GroupController {
 
-  @ProjectCodeScoped
+
+  /**
+   * Dependencies
+   */
+  @Autowired
+  private GroupService groupService;
+  @Autowired
+  private ApplicationService applicationService;
+  @Autowired
+  private UserService userService;
+
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "List of groups", response = Group.class, responseContainer = "List")
+          @ApiResponse(code = 200, message = "Page of groups", response = PageDTO.class)
       }
   )
   public @ResponseBody
-  List<Group> getGroupsList(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestParam(value = "offset", required = true) long offset,
-      @RequestParam(value = "count", required = false) short count) {
-    return null;
+  PageDTO<Group> getGroupsList(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @RequestParam(value = "query", required = false) String query,
+          Pageable pageable) {
+    if(StringUtils.isEmpty(query)) {
+      return new PageDTO(groupService.listGroups(pageable));
+    } else {
+      return new PageDTO(groupService.findGroups(query, pageable));
+    }
   }
 
-  @ProjectCodeScoped
-  @RequestMapping(method = RequestMethod.GET, value = "/search")
-  @ApiResponses(
-      value = {
-          @ApiResponse(code = 200, message = "List of groups", response = Group.class, responseContainer = "List")
-      }
-  )
-  public @ResponseBody
-  List<Group> findGroups(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestParam(value = "query", required = true) String query,
-      @RequestParam(value = "count", required = false) short count) {
-    return null;
-  }
-
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.POST, value = "")
   @ApiResponses(
       value = {
@@ -73,11 +82,10 @@ public class GroupController {
   Group createGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @RequestBody(required = true) Group groupInfo) {
-    return null;
+    return groupService.create(groupInfo);
   }
 
-
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
   @ApiResponses(
       value = {
@@ -88,11 +96,11 @@ public class GroupController {
   Group getGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String groupId) {
-    return null;
+    return groupService.get(groupId);
   }
 
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
   @ApiResponses(
       value = {
@@ -102,17 +110,96 @@ public class GroupController {
   public @ResponseBody
   Group updateGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String groupId,
       @RequestBody(required = true) Group updatedGroupInfo) {
-    return null;
+    return groupService.update(updatedGroupInfo);
   }
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String groupId) {
+    groupService.delete(groupId);
   }
 
+  /*
+   Application related endpoints
+    */
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/applications")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Page of applications of group", response = PageDTO.class)
+          }
+  )
+  public @ResponseBody
+  PageDTO<Application> getGroupsApplications(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String groupId,
+          @RequestParam(value = "query", required = false) String query,
+          Pageable pageable)
+  {
+    if(StringUtils.isEmpty(query)) {
+      return new PageDTO(applicationService.findGroupsApplications(groupId,pageable));
+    } else {
+      return new PageDTO(applicationService.findGroupsApplications(groupId, query, pageable));
+    }
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.POST, value = "/{id}/applications")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Add Apps to Group", response = String.class)
+          }
+  )
+  public @ResponseBody
+  String addAppsToGroups(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String grpId,
+          @RequestBody(required = true) List<String> apps) {
+    groupService.addAppsToGroups(grpId,apps);
+    return apps.size() + " apps added successfully.";
+  }
+
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/applications/{appIDs}")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Delete Apps from Group")
+          }
+  )
+  @ResponseStatus(value = HttpStatus.OK)
+  public void deleteAppsFromGroup(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String grpId,
+          @PathVariable(value = "appIDs", required = true) List<String> appIDs) {
+    groupService.deleteAppsFromGroup(grpId,appIDs);
+  }
+
+  /*
+   User related endpoints
+    */
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Page of users of group", response = PageDTO.class)
+          }
+  )
+  public @ResponseBody
+  PageDTO<User> getGroupsUsers(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String groupId,
+          @RequestParam(value = "query", required = false) String query,
+          Pageable pageable)
+  {
+    if(StringUtils.isEmpty(query)) {
+      return new PageDTO(userService.findGroupsUsers(groupId, pageable));
+    } else {
+      return new PageDTO(userService.findGroupsUsers(groupId, query, pageable));
+    }
+  }
 }

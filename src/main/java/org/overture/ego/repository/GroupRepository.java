@@ -16,16 +16,16 @@
 
 package org.overture.ego.repository;
 
-import org.overture.ego.model.entity.Application;
 
+import org.overture.ego.model.entity.Group;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
-public interface ApplicationRepository
-        extends PagingAndSortingRepository<Application, Integer>, JpaSpecificationExecutor {
 
-  Application findOneByClientIdIgnoreCase(String clientId);
-  Application findOneByNameIgnoreCase(String name);
-  Application findAllByStatusIgnoreCase(String status);
+public interface GroupRepository extends
+        PagingAndSortingRepository<Group, Integer>, JpaSpecificationExecutor {
+
+  Group findOneByNameIgnoreCase(String name);
+  Group findAllByStatusIgnoreCase(String status);
 
 }

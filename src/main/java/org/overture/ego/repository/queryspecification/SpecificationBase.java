@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package org.overture.ego.repository;
+package org.overture.ego.repository.queryspecification;
 
-import org.overture.ego.model.entity.Application;
 
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import java.util.Arrays;
 
-public interface ApplicationRepository
-        extends PagingAndSortingRepository<Application, Integer>, JpaSpecificationExecutor {
-
-  Application findOneByClientIdIgnoreCase(String clientId);
-  Application findOneByNameIgnoreCase(String name);
-  Application findAllByStatusIgnoreCase(String status);
-
+public class SpecificationBase<T> {
+  protected static <T> Predicate[] getQueryPredicates(CriteriaBuilder builder, Root<T> root, String queryText,
+                                                      String... params){
+    return Arrays.stream(params).map(p ->
+            builder.like(builder.lower(root.get(p)), queryText)).toArray(Predicate[]::new);
+  }
 }
