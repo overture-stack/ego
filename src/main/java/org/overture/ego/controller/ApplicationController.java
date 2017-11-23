@@ -16,6 +16,8 @@
 
 package org.overture.ego.controller;
 
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +50,17 @@ public class ApplicationController {
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
+  @ApiImplicitParams({
+          @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
+                  value = "Results page you want to retrieve (0..N)"),
+          @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
+                  value = "Target Page number"),
+          @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
+                  value = "Field to sort on"),
+          @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
+                  value = "Sorting order: ASC|DESC. Default order: DESC"),
+
+  })
   @ApiResponses(
       value = {
           @ApiResponse(code = 200, message = "Page of applications", response = PageDTO.class)
@@ -57,11 +70,15 @@ public class ApplicationController {
   PageDTO<Application> getApplicationsList(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @RequestParam(value = "query", required = false) String query,
+          @RequestParam(value = "status", required = false) String status,
           Pageable pageable) {
+    if(! StringUtils.isEmpty(status)){
+      return new PageDTO<>(applicationService.filterAppsByStatus(status, pageable));
+    }
     if(StringUtils.isEmpty(query)){
-      return new PageDTO(applicationService.listApps(pageable));
+      return new PageDTO<>(applicationService.listApps(pageable));
     } else {
-      return new PageDTO(applicationService.findApps(query, pageable));
+      return new PageDTO<>(applicationService.findApps(query, pageable));
     }
   }
 
@@ -121,6 +138,17 @@ public class ApplicationController {
     */
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
+  @ApiImplicitParams({
+          @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
+                  value = "Results page you want to retrieve (0..N)"),
+          @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
+                  value = "Target Page number"),
+          @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
+                  value = "Field to sort on"),
+          @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
+                  value = "Sorting order: ASC|DESC. Default order: DESC"),
+
+  })
   @ApiResponses(
           value = {
                   @ApiResponse(code = 200, message = "Page of users of group", response = PageDTO.class)
@@ -134,9 +162,9 @@ public class ApplicationController {
           Pageable pageable)
   {
     if(StringUtils.isEmpty(query)){
-      return new PageDTO(userService.findAppsUsers(appId, pageable));
+      return new PageDTO<>(userService.findAppsUsers(appId, pageable));
     } else {
-      return new PageDTO(userService.findAppsUsers(appId, query, pageable));
+      return new PageDTO<>(userService.findAppsUsers(appId, query, pageable));
     }
   }
 
@@ -145,6 +173,17 @@ public class ApplicationController {
     */
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
+  @ApiImplicitParams({
+          @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
+                  value = "Results page you want to retrieve (0..N)"),
+          @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
+                  value = "Target Page number"),
+          @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
+                  value = "Field to sort on"),
+          @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
+                  value = "Sorting order: ASC|DESC. Default order: DESC"),
+
+  })
   @ApiResponses(
           value = {
                   @ApiResponse(code = 200, message = "Page of applications of group", response = PageDTO.class)
@@ -158,9 +197,9 @@ public class ApplicationController {
           Pageable pageable)
   {
     if(StringUtils.isEmpty(query)) {
-      return new PageDTO(groupService.findApplicationsGroup(appId,pageable));
+      return new PageDTO<>(groupService.findApplicationsGroup(appId,pageable));
     } else {
-      return new PageDTO(groupService.findApplicationsGroup(appId, query, pageable));
+      return new PageDTO<>(groupService.findApplicationsGroup(appId, query, pageable));
     }
   }
 

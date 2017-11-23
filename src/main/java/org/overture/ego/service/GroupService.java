@@ -77,6 +77,10 @@ public class GroupService {
     return groupRepository.findAll(pageable);
   }
 
+  public Page<Group> filterGroupsByStatus(@NonNull String status, @NonNull Pageable pageable) {
+    return groupRepository.findAllByStatusIgnoreCase(status, pageable);
+  }
+
   public Page<Group> findGroups(@NonNull String query, @NonNull Pageable pageable) {
     if(StringUtils.isEmpty(query)){
       return this.listGroups(pageable);

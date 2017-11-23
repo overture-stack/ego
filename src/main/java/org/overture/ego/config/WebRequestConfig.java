@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-package org.overture.ego.repository;
+package org.overture.ego.config;
 
+import org.overture.ego.controller.resolver.PageableResolver;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
-import org.overture.ego.model.entity.Group;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import java.util.List;
 
+@Configuration
+public class WebRequestConfig extends WebMvcConfigurerAdapter {
 
-
-public interface GroupRepository extends
-        PagingAndSortingRepository<Group, Integer>, JpaSpecificationExecutor {
-
-  Group findOneByNameIgnoreCase(String name);
-  Page<Group> findAllByStatusIgnoreCase(String status, Pageable pageable);
-
+  @Override
+  public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
+    argumentResolvers.add(new PageableResolver());
+  }
 }

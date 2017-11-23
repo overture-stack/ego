@@ -18,14 +18,17 @@ package org.overture.ego.repository;
 
 import org.overture.ego.model.entity.Application;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
+
 
 public interface ApplicationRepository
         extends PagingAndSortingRepository<Application, Integer>, JpaSpecificationExecutor {
 
   Application findOneByClientIdIgnoreCase(String clientId);
   Application findOneByNameIgnoreCase(String name);
-  Application findAllByStatusIgnoreCase(String status);
+  Page<Application> findAllByStatusIgnoreCase(String status, Pageable pageable);
 
 }

@@ -17,6 +17,10 @@
 package org.overture.ego.repository.queryspecification;
 
 
+import lombok.val;
+import org.overture.ego.utils.Queries;
+import org.springframework.data.jpa.domain.Specification;
+
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -27,5 +31,12 @@ public class SpecificationBase<T> {
                                                       String... params){
     return Arrays.stream(params).map(p ->
             builder.like(builder.lower(root.get(p)), queryText)).toArray(Predicate[]::new);
+  }
+
+  public static <T> Specification<T> filterByField(String fieldName,String fieldValue) {
+
+    val finalText = Queries.prepareForQuery(fieldValue);
+    return (root, query, builder) ->
+            getQueryPredicates(builder, root, finalText,fieldName)[0];
   }
 }
