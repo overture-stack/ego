@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -62,10 +64,12 @@ public class Application {
   String status;
 
   @ManyToMany(mappedBy = "applications", cascade = CascadeType.ALL)
+  @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
   List<Group> groups;
 
   @ManyToMany(mappedBy = "applications", cascade = CascadeType.ALL)
+  @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
   List<User> users;
 

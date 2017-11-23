@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -51,11 +53,13 @@ public class Group {
   String status;
 
   @ManyToMany(targetEntity = Application.class, cascade = {CascadeType.ALL})
+  @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "groupapplication", joinColumns = { @JoinColumn(name = "grpid") },
           inverseJoinColumns = { @JoinColumn(name = "appid") })
   @JsonIgnore List<Application> applications;
 
   @ManyToMany(mappedBy = "groups", cascade = CascadeType.ALL)
+  @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
   List<User> users;
 

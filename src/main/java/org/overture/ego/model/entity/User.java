@@ -21,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -78,12 +80,13 @@ public class User {
   String preferredLanguage;
 
   @ManyToMany(targetEntity = Group.class, cascade = {CascadeType.ALL})
+  @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "usergroup", joinColumns = { @JoinColumn(name = "userid") },
           inverseJoinColumns = { @JoinColumn(name = "grpid") })
   @JsonIgnore protected List<Group> groups;
 
-
   @ManyToMany(targetEntity = Application.class, cascade = {CascadeType.ALL})
+  @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "userapplication", joinColumns = { @JoinColumn(name = "userid") },
           inverseJoinColumns = { @JoinColumn(name = "appid") })
   @JsonIgnore protected List<Application> applications;
