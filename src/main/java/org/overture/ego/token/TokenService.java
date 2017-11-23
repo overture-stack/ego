@@ -32,16 +32,26 @@ import java.util.Map;
 @Service
 public class TokenService {
 
+  @Value("${demo:false}")
+  private boolean demo;
+
   @Value("${jwt.secret}")
   private String jwtSecret;
   @Autowired
   UserService userService;
 
   public String generateUserToken(IDToken idToken){
-    val userName = idToken.getEmail();
-    User user = userService.getByName(userName);
-    if (user == null) {
-      userService.createFromIDToken(idToken);
+    // If the demo flag is set, all tokens will be generated as the Demo User,
+    // rather than the user associated with their idToken
+    User user;
+    if (demo) {
+      user = userService.getOrCreateDemoUser();
+    } else {
+      val userName = idToken.getEmail();
+      user = userService.getByName(userName);
+      if (user == null) {
+        userService.createFromIDToken(idToken);
+      }
     }
     return generateUserToken(new TokenUserInfo(user));
   }

@@ -66,3 +66,13 @@ logging:
     threshold: ALL
   loggers:
     "org.skife.jdbi.v2": TRACE
+
+---
+###############################################################################
+# Profile - "secure"
+###############################################################################
+spring:
+  profiles: demo
+
+# demo flag
+demo: true
