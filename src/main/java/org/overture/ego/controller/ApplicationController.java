@@ -16,18 +16,25 @@
 
 package org.overture.ego.controller;
 
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import org.overture.ego.model.dto.PageDTO;
 import org.overture.ego.model.entity.Application;
-import org.overture.ego.security.ProjectCodeScoped;
+import org.overture.ego.model.entity.Group;
+import org.overture.ego.model.entity.User;
+import org.overture.ego.security.AdminScoped;
 import org.overture.ego.service.ApplicationService;
+import org.overture.ego.service.GroupService;
+import org.overture.ego.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -35,39 +42,47 @@ import java.util.List;
 public class ApplicationController {
 
   @Autowired
-  ApplicationService applicationService;
+  private ApplicationService applicationService;
+  @Autowired
+  private GroupService groupService;
+  @Autowired
+  private UserService userService;
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
+  @ApiImplicitParams({
+          @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
+                  value = "Results page you want to retrieve (0..N)"),
+          @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
+                  value = "Target Page number"),
+          @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
+                  value = "Field to sort on"),
+          @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
+                  value = "Sorting order: ASC|DESC. Default order: DESC"),
+
+  })
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "List of applications", response = Application.class, responseContainer = "List")
+          @ApiResponse(code = 200, message = "Page of applications", response = PageDTO.class)
       }
   )
   public @ResponseBody
-  List<Application> getApplicationsList(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestParam(value = "offset", required = true) long offset,
-      @RequestParam(value = "count", required = false) short count) {
-    return null;
+  PageDTO<Application> getApplicationsList(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @RequestParam(value = "query", required = false) String query,
+          @RequestParam(value = "status", required = false) String status,
+          Pageable pageable) {
+    if(! StringUtils.isEmpty(status)){
+      return new PageDTO<>(applicationService.filterAppsByStatus(status, pageable));
+    }
+    if(StringUtils.isEmpty(query)){
+      return new PageDTO<>(applicationService.listApps(pageable));
+    } else {
+      return new PageDTO<>(applicationService.findApps(query, pageable));
+    }
   }
 
-  @ProjectCodeScoped
-  @RequestMapping(method = RequestMethod.GET, value = "/search")
-  @ApiResponses(
-      value = {
-          @ApiResponse(code = 200, message = "List of applications", response = Application.class, responseContainer = "List")
-      }
-  )
-  public @ResponseBody
-  List<Application> findApplications(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestParam(value = "query", required = true) String query,
-      @RequestParam(value = "count", required = false) short count) {
-    return null;
-  }
-
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.POST, value = "")
   @ApiResponses(
       value = {
@@ -81,8 +96,7 @@ public class ApplicationController {
     return applicationService.create(applicationInfo);
   }
 
-
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
   @ApiResponses(
       value = {
@@ -96,8 +110,7 @@ public class ApplicationController {
     return applicationService.get(applicationId);
   }
 
-
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
   @ApiResponses(
       value = {
@@ -111,14 +124,83 @@ public class ApplicationController {
     return applicationService.update(updatedApplicationInfo);
   }
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteApplication(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String applicationId) {
     applicationService.delete(applicationId);
+  }
 
+  /*
+   Users related endpoints
+    */
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
+  @ApiImplicitParams({
+          @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
+                  value = "Results page you want to retrieve (0..N)"),
+          @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
+                  value = "Target Page number"),
+          @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
+                  value = "Field to sort on"),
+          @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
+                  value = "Sorting order: ASC|DESC. Default order: DESC"),
+
+  })
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Page of users of group", response = PageDTO.class)
+          }
+  )
+  public @ResponseBody
+  PageDTO<User> getApplicationUsers(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String appId,
+          @RequestParam(value = "query", required = false) String query,
+          Pageable pageable)
+  {
+    if(StringUtils.isEmpty(query)){
+      return new PageDTO<>(userService.findAppsUsers(appId, pageable));
+    } else {
+      return new PageDTO<>(userService.findAppsUsers(appId, query, pageable));
+    }
+  }
+
+  /*
+   Groups related endpoints
+    */
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
+  @ApiImplicitParams({
+          @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
+                  value = "Results page you want to retrieve (0..N)"),
+          @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
+                  value = "Target Page number"),
+          @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
+                  value = "Field to sort on"),
+          @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
+                  value = "Sorting order: ASC|DESC. Default order: DESC"),
+
+  })
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Page of applications of group", response = PageDTO.class)
+          }
+  )
+  public @ResponseBody
+  PageDTO<Group> getApplicationsGroups(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String appId,
+          @RequestParam(value = "query", required = false) String query,
+          Pageable pageable)
+  {
+    if(StringUtils.isEmpty(query)) {
+      return new PageDTO<>(groupService.findApplicationsGroup(appId,pageable));
+    } else {
+      return new PageDTO<>(groupService.findApplicationsGroup(appId, query, pageable));
+    }
   }
 
 }

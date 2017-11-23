@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package org.overture.ego.repository.mapper;
+package org.overture.ego.utils;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.val;
 
 
-import org.overture.ego.model.entity.Group;
-import org.skife.jdbi.v2.StatementContext;
-import org.skife.jdbi.v2.tweak.ResultSetMapper;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-public class GroupsMapper implements ResultSetMapper<Group> {
-  @Override
-  public Group map(int i, ResultSet resultSet, StatementContext statementContext) throws SQLException {
-    return null;
+public class Types {
+  public static  <T> T convertToAnotherType(Object fromObject, Class<T> tClass){
+    val mapper = new ObjectMapper();
+    mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
+    return mapper.convertValue(fromObject, tClass);
   }
 }

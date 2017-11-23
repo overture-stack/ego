@@ -16,9 +16,19 @@
 
 package org.overture.ego.repository;
 
-import org.overture.ego.repository.mapper.GroupsMapper;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 
-@RegisterMapper(GroupsMapper.class)
-public interface GroupsRepository {
+import org.overture.ego.model.entity.Group;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.repository.PagingAndSortingRepository;
+
+
+
+public interface GroupRepository extends
+        PagingAndSortingRepository<Group, Integer>, JpaSpecificationExecutor {
+
+  Group findOneByNameIgnoreCase(String name);
+  Page<Group> findAllByStatusIgnoreCase(String status, Pageable pageable);
+
 }

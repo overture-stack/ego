@@ -16,15 +16,24 @@
 
 package org.overture.ego.controller;
 
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import org.overture.ego.model.dto.PageDTO;
+import org.overture.ego.model.entity.Application;
+import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.security.ProjectCodeScoped;
+import org.overture.ego.security.AdminScoped;
+import org.overture.ego.service.ApplicationService;
+import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,42 +47,63 @@ public class UserController {
    * Dependencies
    */
   @Autowired
-  UserService userService;
+  private UserService userService;
+  @Autowired
+  private GroupService groupService;
+  @Autowired
+  private ApplicationService applicationService;
 
-
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
+  @ApiImplicitParams({
+          @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
+                  value = "Results page you want to retrieve (0..N)"),
+          @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
+                  value = "Target Page number"),
+          @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
+                  value = "Field to sort on"),
+          @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
+                  value = "Sorting order: ASC|DESC. Default order: DESC"),
+
+  })
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "List of users", response = User.class, responseContainer = "List")
+          @ApiResponse(code = 200, message = "Page of users", response = PageDTO.class)
       }
   )
   public @ResponseBody
-  List<User> getUsersList(
-//            @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken
-////            @RequestParam(value = "offset", required = false) long offset,
-//            @RequestParam(value = "count", required = false) short count)
-  ) {
-    return userService.listUsers();
+  PageDTO<User> getUsersList(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @RequestParam(value = "query", required = false) String query,
+          @RequestParam(value = "status", required = false) String status,
+          Pageable pageable)
+  {
+    if(! StringUtils.isEmpty(status)){
+      return new PageDTO<>(userService.filterUsersByStatus(status, pageable));
+    }
+    if(StringUtils.isEmpty(query)) {
+      return new PageDTO<>(userService.listUsers(pageable));
+    } else {
+      return new PageDTO<>(userService.findUsers(query, pageable));
+    }
+
   }
 
-  @ProjectCodeScoped
-  @RequestMapping(method = RequestMethod.GET, value = "/search")
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.POST, value = "")
   @ApiResponses(
-      value = {
-          @ApiResponse(code = 200, message = "List of users", response = User.class, responseContainer = "List")
-      }
+          value = {
+                  @ApiResponse(code = 200, message = "Create new user", response = User.class)
+          }
   )
   public @ResponseBody
-  List<User> findUsers(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestParam(value = "query", required = true) String query,
-      @RequestParam(value = "count", required = false) short count) {
-
-    return null;
+  User create(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @RequestBody(required = true) User userInfo) {
+    return userService.create(userInfo);
   }
 
-
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
   @ApiResponses(
       value = {
@@ -83,12 +113,11 @@ public class UserController {
   public @ResponseBody
   User getUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String username) {
-    return userService.get(username + ".com");
+      @PathVariable(value = "id", required = true) String id) {
+    return  userService.get(id);
   }
 
-
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
   @ApiResponses(
       value = {
@@ -102,7 +131,7 @@ public class UserController {
     return userService.update(updatedUserInfo);
   }
 
-  @ProjectCodeScoped
+  @AdminScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteUser(
@@ -111,4 +140,135 @@ public class UserController {
     userService.delete(userId);
   }
 
+  /*
+   Groups related endpoints
+    */
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
+  @ApiImplicitParams({
+          @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
+                  value = "Results page you want to retrieve (0..N)"),
+          @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
+                  value = "Target Page number"),
+          @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
+                  value = "Field to sort on"),
+          @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
+                  value = "Sorting order: ASC|DESC. Default order: DESC"),
+
+  })
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Page of groups of user", response = PageDTO.class)
+          }
+  )
+  public @ResponseBody
+  PageDTO<Group> getUsersGroups(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String userId,
+          @RequestParam(value = "query", required = false) String query,
+          Pageable pageable)
+  {
+    if(StringUtils.isEmpty(query)) {
+      return new PageDTO<>(groupService.findUsersGroup(userId,pageable));
+    } else {
+      return new PageDTO<>(groupService.findUsersGroup(userId, query, pageable));
+    }
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.POST, value = "/{id}/groups")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Add groups to user", response = String.class)
+          }
+  )
+  public @ResponseBody
+  String addGroupsToUser(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String userId,
+          @RequestBody(required = true) List<String> groupIDs) {
+    userService.addUsersToGroups(userId,groupIDs);
+    return "User added to : "+groupIDs.size() + " groups successfully.";
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/groups/{groupIDs}")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Delete Groups from User")
+          }
+  )
+  @ResponseStatus(value = HttpStatus.OK)
+  public void deleteGroupFromUser(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String userId,
+          @PathVariable(value = "groupIDs", required = true) List<String> groupIDs) {
+    userService.deleteUserFromGroup(userId,groupIDs);
+  }
+
+  /*
+  Applications related endpoints
+   */
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/applications")
+  @ApiImplicitParams({
+          @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
+                  value = "Results page you want to retrieve (0..N)"),
+          @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
+                  value = "Target Page number"),
+          @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
+                  value = "Field to sort on"),
+          @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
+                  value = "Sorting order: ASC|DESC. Default order: DESC"),
+
+  })
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Page of apps of user", response = PageDTO.class)
+          }
+  )
+  public @ResponseBody
+  PageDTO<Application> getUsersApplications(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String userId,
+          @RequestParam(value = "query", required = false) String query,
+          Pageable pageable)
+  {
+    if(StringUtils.isEmpty(query)) {
+      return new PageDTO<>(applicationService.findUsersApps(userId,pageable));
+    } else {
+      return new PageDTO<>(applicationService.findUsersApps(userId, query, pageable));
+    }
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.POST, value = "/{id}/applications")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Add applications to user", response = String.class)
+          }
+  )
+  public @ResponseBody
+  String addAppsToUser(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String userId,
+          @RequestBody(required = true) List<String> appIDs) {
+    userService.addUsersToApps(userId,appIDs);
+    return "User added to : "+appIDs.size() + " apps successfully.";
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/applications/{appIDs}")
+  @ApiResponses(
+          value = {
+                  @ApiResponse(code = 200, message = "Delete Applications from User")
+          }
+  )
+  @ResponseStatus(value = HttpStatus.OK)
+  public void deleteAppFromUser(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String userId,
+          @PathVariable(value = "appIDs", required = true) List<String> appIDs) {
+    userService.deleteUserFromApp(userId,appIDs);
+  }
 }

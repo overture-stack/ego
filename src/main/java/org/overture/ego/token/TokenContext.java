@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package org.overture.ego.security;
+package org.overture.ego.token;
 
-import org.springframework.security.core.Authentication;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
 
-public interface AuthorizationManager {
+@Data
+@NoArgsConstructor
+@RequiredArgsConstructor
+@JsonInclude(JsonInclude.Include.ALWAYS)
+public class TokenContext {
 
-     boolean authorize(Authentication authentication);
-     boolean authorizeWithAdminRole(Authentication authentication);
-
+  @NonNull
+  @JsonProperty("user")
+  private TokenUserInfo userInfo;
 }
-

@@ -16,62 +16,67 @@
 
 package org.overture.ego.token;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.service.UserService;
+import org.overture.ego.utils.Types;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
+@Slf4j
 @Service
 public class TokenService {
 
   @Value("${jwt.secret}")
   private String jwtSecret;
+  @Autowired
+  UserService userService;
 
-  public String generateToken(User u) {
-    Claims claims = Jwts.claims().setSubject(u.getUserName());
-    claims.put("userId", u.getId());
-    claims.put("username", u.getUserName());
-    claims.put("role", u.getRole());
-    claims.put("email", u.getEmail());
-    claims.put("firstName", u.getFirstName());
-    claims.put("lastName", u.getLastName());
-    claims.put("createdAt", u.getCreatedAt());
-    claims.put("lastLogin", u.getLastLogin());
-    claims.put("role", u.getRole());
-    claims.put("status", u.getStatus());
+  public String generateUserToken(IDToken idToken){
+    val userName = idToken.getEmail();
+    User user = userService.getByName(userName);
+    if (user == null) {
+      userService.createFromIDToken(idToken);
+    }
+    return generateUserToken(new TokenUserInfo(user));
+  }
+
+  public String generateUserToken(TokenUserInfo u) {
+    val tokenContext = new TokenContext(u);
+    val tokenClaims = new TokenClaims();
+    tokenClaims.setIss("ego");
+    tokenClaims.setValidDuration(1000000);
+    tokenClaims.setContext(tokenContext);
 
     return Jwts.builder()
-        .setClaims(claims)
-        .signWith(SignatureAlgorithm.HS512, jwtSecret)
-        .compact();
+            .setClaims(Types.convertToAnotherType(tokenClaims, Map.class))
+            .signWith(SignatureAlgorithm.HS512, jwtSecret)
+            .compact();
   }
 
   public boolean validateToken(String token) {
 
-    val decodedToken = Jwts.parser()
+    Jws decodedToken = null;
+    try{
+        decodedToken  = Jwts.parser()
         .setSigningKey(jwtSecret)
         .parseClaimsJws(token);
+    } catch (Exception ex){
+      log.error("Error parsing JWT: {}", ex);
+    }
     return (decodedToken != null);
   }
 
-  public User getUserInfo(String token) {
+  public User getTokenUserInfo(String token) {
     try {
       Claims body = getTokenClaims(token);
-
-      return User.builder().id((String) body.get("id"))
-          .userName(body.getSubject())
-          .email((String) body.get("email"))
-          .firstName((String) body.get("firstName"))
-          .lastName((String) body.get("lastName"))
-          .createdAt((String) body.get("createdAt"))
-          .lastLogin((String) body.get("lastLogin"))
-          .role((String) body.get("role"))
-          .status((String) body.get("status")).build();
-
+      val tokenClaims = Types.convertToAnotherType(body, TokenClaims.class);
+      return userService.get(tokenClaims.getSub());
     } catch (JwtException | ClassCastException e) {
       return null;
     }
@@ -83,7 +88,10 @@ public class TokenService {
         .setSigningKey(jwtSecret)
         .parseClaimsJws(token)
         .getBody();
+  }
 
+  public JWTAccessToken getJWTAccessToken(String token){
+    return new JWTAccessToken(token, this);
   }
 
 }

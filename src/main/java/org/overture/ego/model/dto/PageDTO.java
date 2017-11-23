@@ -14,15 +14,28 @@
  * limitations under the License.
  */
 
-package org.overture.ego.security;
+package org.overture.ego.model.dto;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 
-/**
- * Method Security Meta Annotation
- */
-@Retention(RetentionPolicy.RUNTIME)
-//@PreAuthorize("@authorizationManager.authorize(authentication)")
-public @interface ProjectCodeScoped {
+import lombok.Getter;
+import lombok.NonNull;
+import org.springframework.data.domain.Page;
+
+import java.util.List;
+
+@Getter
+public class PageDTO<T> {
+
+  private final int limit;
+  private final int offset;
+  private final int count;
+  private final List<T> resultSet;
+
+  public PageDTO(@NonNull final Page<T> page) {
+    this.limit      = page.getSize();
+    this.offset     = page.getNumber();
+    this.count      = page.getNumberOfElements();
+    this.resultSet  = page.getContent();
+  }
+
 }

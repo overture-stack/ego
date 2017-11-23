@@ -16,27 +16,79 @@
 
 package org.overture.ego.model.entity;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.NonNull;
-import lombok.Singular;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.*;
 
+import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
-@Builder
-/*
-    Represents an organization that has access to applications within Kids First Portal
- */
+@Table(name = "egogroup")
+@Entity
+@JsonPropertyOrder({"id", "name", "description", "status","applications"})
+@JsonInclude(JsonInclude.Include.ALWAYS)
+@EqualsAndHashCode(of={"id"})
+@NoArgsConstructor
+@RequiredArgsConstructor
 public class Group {
-  String id;
+
+  @Id
+  @Column(nullable = false, name = "id", updatable = false)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  int id;
+
+  @Column(nullable = false, name = "name", updatable = false)
   @NonNull
-  String groupName;
+  String name;
+
+  @Column(nullable = false, name = "description", updatable = false)
   String description;
+
+  @Column(nullable = false, name = "status", updatable = false)
   String status;
-  @Singular
-  List<String> roles;
-  @Singular
-  List<String> applications;
+
+  @ManyToMany(targetEntity = Application.class, cascade = {CascadeType.ALL})
+  @JoinTable(name = "groupapplication", joinColumns = { @JoinColumn(name = "grpid") },
+          inverseJoinColumns = { @JoinColumn(name = "appid") })
+  @JsonIgnore List<Application> applications;
+
+  @ManyToMany(mappedBy = "groups", cascade = CascadeType.ALL)
+  @JsonIgnore
+  List<User> users;
+
+  public void addApplication(@NonNull Application app){
+    initApplications();
+    this.applications.add(app);
+  }
+
+  public void addUser(@NonNull User u){
+    initUsers();
+    this.users.add(u);
+  }
+
+  public void removeApplication(@NonNull Integer appId){
+    this.applications.removeIf(a -> a.id == appId);
+  }
+
+  public void removeUser(@NonNull Integer userId){
+    if(this.users == null) return;
+    this.users.removeIf(u -> u.id == userId);
+  }
+
+  private void initApplications(){
+    if(this.applications == null){
+      this.applications = new ArrayList<Application>();
+    }
+  }
+
+  private void initUsers(){
+    if(this.users == null) {
+      this.users = new ArrayList<User>();
+    }
+  }
 
 }
+

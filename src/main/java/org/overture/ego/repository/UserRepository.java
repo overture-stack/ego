@@ -17,34 +17,17 @@
 package org.overture.ego.repository;
 
 import org.overture.ego.model.entity.User;
-import org.overture.ego.repository.mapper.UserMapper;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
-import java.util.List;
 
-@RegisterMapper(UserMapper.class)
-public interface UserRepository {
 
-  @SqlQuery("SELECT * FROM USERS")
-  List<User> getAllUsers();
+public interface UserRepository  extends
+        PagingAndSortingRepository<User, Integer>, JpaSpecificationExecutor {
 
-  @SqlUpdate("INSERT INTO USERS (userName, email, role, status, firstName, lastName, createdAt,lastLogin,preferredLanguage) " +
-      "VALUES (:userName, :email, :role, :status, :firstName, :lastName, :createdAt, :lastLogin, :preferredLanguage)")
-  int create(@BindBean User user);
-
-  @SqlQuery("SELECT * FROM USERS WHERE userName=:userName")
-  List<User> read(@Bind("userName") String username);
-
-  @SqlUpdate("UPDATE USERS SET role=:role, status=:status," +
-      "firstName=:firstName, lastName=:lastName, createdAt=:createdAt , lastLogin=:lastLogin, " +
-      "preferredLanguage=:preferredLanguage WHERE userName=:userName")
-  int update(@BindBean User user);
-
-  @SqlUpdate("DELETE from USERS where userName=:userName")
-  int delete(@Bind("userName") String id);
+  Page<User> findAllByStatusIgnoreCase(String status, Pageable pageable);
+  User findOneByNameIgnoreCase(String name);
 
 }

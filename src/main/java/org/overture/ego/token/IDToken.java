@@ -16,27 +16,17 @@
 
 package org.overture.ego.token;
 
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-import java.util.Arrays;
-
-public class JWTAuthenticationToken extends AbstractAuthenticationToken {
-
-  String token = "";
-
-  public JWTAuthenticationToken(String token) {
-    super(Arrays.asList(new SimpleGrantedAuthority("ROLE_USER")));
-    this.token = token;
-  }
-
-  @Override
-  public Object getCredentials() {
-    return token;
-  }
-
-  @Override
-  public Object getPrincipal() {
-    return token;
-  }
+@Data
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class IDToken {
+  @NonNull
+  private String email;
+  private String given_name;
+  private String family_name;
 }
