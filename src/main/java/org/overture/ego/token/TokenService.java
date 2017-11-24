@@ -20,12 +20,17 @@ import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.reactor.events.UserEvents;
 import org.overture.ego.service.UserService;
 import org.overture.ego.utils.Types;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import reactor.bus.Event;
+import reactor.bus.EventBus;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 @Slf4j
@@ -39,10 +44,15 @@ public class TokenService {
   private String jwtSecret;
   @Autowired
   UserService userService;
+  @Autowired
+  SimpleDateFormat dateFormatter;
+
+  @Autowired
+  EventBus eventBus;
 
   public String generateUserToken(IDToken idToken){
     // If the demo flag is set, all tokens will be generated as the Demo User,
-    // rather than the user associated with their idToken
+    // otherwise, get the user associated with their idToken
     User user;
     if (demo) {
       user = userService.getOrCreateDemoUser();
@@ -53,6 +63,15 @@ public class TokenService {
         userService.createFromIDToken(idToken);
       }
     }
+
+    // Update user.lastLogin in the DB
+    // Do this via eventBus (Non-blocking)
+    user.setLastLogin(dateFormatter.format(new Date()));
+    eventBus.notify(
+      UserEvents.UPDATE.toString(),
+      Event.wrap(user)
+    );
+
     return generateUserToken(new TokenUserInfo(user));
   }
 
