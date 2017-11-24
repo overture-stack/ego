@@ -19,7 +19,7 @@ public class UserReceiver {
   @Autowired
   private EventBus eventBus;
   @Autowired
-  UserService userService;
+  private UserService userService;
 
   @PostConstruct
   public void onStartUp() {

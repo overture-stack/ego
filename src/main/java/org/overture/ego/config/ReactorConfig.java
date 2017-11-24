@@ -10,13 +10,13 @@ import reactor.bus.EventBus;
 public class ReactorConfig {
 
   @Bean
-  Environment env() {
+  public Environment env() {
     return Environment.initializeIfEmpty()
       .assignErrorJournal();
   }
 
   @Bean
-  EventBus createEventBus(Environment env) {
+  public EventBus createEventBus(Environment env) {
     return EventBus.create(env, Environment.THREAD_POOL);
   }
 
