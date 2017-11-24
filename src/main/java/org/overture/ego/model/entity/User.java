@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name = "egouser")
 @Data
+@ToString(exclude={"groups","applications"})
 @JsonPropertyOrder({"id", "name", "email", "role", "status", "groups",
     "applications", "firstName", "lastName", "createdAt", "lastLogin", "preferredLanguage"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
