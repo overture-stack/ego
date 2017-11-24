@@ -30,6 +30,7 @@ import java.util.List;
 @Entity
 @Table(name = "egoapplication")
 @Data
+@ToString(exclude={"groups","users"})
 @JsonPropertyOrder({"id", "name", "clientId", "clientSecret", "redirectUri", "description", "status"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @EqualsAndHashCode(of={"id"})

@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@ToString(exclude={"users","applications"})
 @Table(name = "egogroup")
 @Entity
 @JsonPropertyOrder({"id", "name", "description", "status","applications"})
