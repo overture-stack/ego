@@ -35,7 +35,6 @@ import org.springframework.util.StringUtils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import static org.springframework.data.jpa.domain.Specifications.where;
 
