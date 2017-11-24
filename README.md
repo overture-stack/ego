@@ -61,8 +61,8 @@ An example ego JWT is mentioned below:
             "status": "Approved",
             "firstName": "Demo",
             "lastName": "User",
-            "createdAt": null,
-            "lastLogin": null,
+            "createdAt": "2017-11-23 10:24:41",
+            "lastLogin": "2017-11-23 11:23:58",
             "preferredLanguage": null,
             "roles": ["ADMIN"]
         }
