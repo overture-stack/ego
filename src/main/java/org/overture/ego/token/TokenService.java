@@ -26,6 +26,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 @Slf4j
@@ -39,6 +41,8 @@ public class TokenService {
   private String jwtSecret;
   @Autowired
   UserService userService;
+  @Autowired
+  SimpleDateFormat dateFormatter;
 
   public String generateUserToken(IDToken idToken){
     // If the demo flag is set, all tokens will be generated as the Demo User,
@@ -53,6 +57,11 @@ public class TokenService {
         userService.createFromIDToken(idToken);
       }
     }
+
+    // Record current Date as last login time for the user:
+    user.setLastLogin(dateFormatter.format(new Date()));
+    userService.update(user);
+
     return generateUserToken(new TokenUserInfo(user));
   }
 
