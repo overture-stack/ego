@@ -56,12 +56,15 @@ An example ego JWT is mentioned below:
     ],
     "context": {
         "user": {
-            "name": "jdoe",
-            "first_name": "Jane",
-            "last_name": "Doe",
-            "roles": ["admin"],
-            "groups" : ["researcher", "parent", "CollabUser", "CollabDownloader"],
-            "email": "user@gmail.com"
+            "name": "Demo.User@example.com",
+            "email": "Demo.User@example.com",
+            "status": "Approved",
+            "firstName": "Demo",
+            "lastName": "User",
+            "createdAt": null,
+            "lastLogin": null,
+            "preferredLanguage": null,
+            "roles": ["ADMIN"]
         }
     }
 }
