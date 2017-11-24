@@ -20,6 +20,8 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.model.enums.UserRole;
+import org.overture.ego.model.enums.UserStatus;
 import org.overture.ego.repository.UserRepository;
 import org.overture.ego.repository.queryspecification.UserSpecification;
 import org.overture.ego.token.IDToken;
@@ -27,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.text.SimpleDateFormat;
@@ -37,13 +40,21 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Slf4j
 @Service
+@Transactional
 public class UserService {
 
   /*
     Constants
    */
-  private final static String DEFAULT_USER_ROLE = "USER";
-  private final static String DEFAULT_USER_STATUS = "Pending";
+  // DEFAULTS
+  private final static String DEFAULT_USER_ROLE = UserRole.USER.toString();
+  private final static String DEFAULT_USER_STATUS = UserStatus.PENDING.toString();
+
+  // DEMO USER
+  private final static String DEMO_USER_NAME = "Demo.User@example.com";
+  private final static String DEMO_USER_EMAIL = "Demo.User@example.com";
+  private final static String DEMO_FIRST_NAME = "Demo";
+  private final static String DEMO_LAST_NAME = "User";
 
   /*
     Dependencies
@@ -62,7 +73,6 @@ public class UserService {
   }
 
   public User createFromIDToken(IDToken idToken) {
-    // Create a new user
     val userInfo = new User();
     userInfo.setName(idToken.getEmail());
     userInfo.setEmail(idToken.getEmail());
@@ -73,6 +83,30 @@ public class UserService {
     userInfo.setLastLogin(null);
     userInfo.setRole(DEFAULT_USER_ROLE);
     return this.create(userInfo);
+  }
+
+  public User getOrCreateDemoUser() {
+    User output = getByName(DEMO_USER_NAME);
+
+    if (output != null) {
+      // Force the demo user to be ADMIN and APPROVED to allow demo access,
+      // even if these values have previously been modified for the demo user.
+      output.setStatus(UserStatus.APPROVED.toString());
+      output.setRole(UserRole.ADMIN.toString());
+    } else {
+      val userInfo = new User();
+      userInfo.setName(DEMO_USER_NAME);
+      userInfo.setEmail(DEMO_USER_EMAIL);
+      userInfo.setFirstName(DEMO_FIRST_NAME);
+      userInfo.setLastName(DEMO_LAST_NAME);
+      userInfo.setStatus(UserStatus.APPROVED.toString());
+      userInfo.setCreatedAt(formatter.format(new Date()));
+      userInfo.setLastLogin(null);
+      userInfo.setRole(UserRole.ADMIN.toString());
+      output = this.create(userInfo);
+    }
+
+    return output;
   }
 
   public void addUsersToGroups(@NonNull String userId, @NonNull List<String> groupIDs){
