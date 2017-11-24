@@ -49,6 +49,9 @@ public class TokenUserInfo extends User {
     this.setLastName(u.getLastName());
     this.setGroups(u.getGroups());
     this.setApplications(u.getApplications());
+    this.setCreatedAt(u.getCreatedAt());
+    this.setLastLogin(u.getLastLogin());
+    this.setPreferredLanguage(u.getPreferredLanguage());
   }
 
   public void addNewRole(String role){
