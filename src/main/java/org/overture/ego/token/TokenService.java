@@ -41,11 +41,11 @@ public class TokenService {
   @Value("${jwt.secret}")
   private String jwtSecret;
   @Autowired
-  UserService userService;
+  private UserService userService;
   @Autowired
-  UserEvents userEvents;
+  private UserEvents userEvents;
   @Autowired
-  SimpleDateFormat dateFormatter;
+  private SimpleDateFormat dateFormatter;
 
   public String generateUserToken(IDToken idToken){
     // If the demo flag is set, all tokens will be generated as the Demo User,
