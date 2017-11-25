@@ -17,7 +17,7 @@ public class UserEvents {
 
   public void update(User user) {
     eventBus.notify(
-      UserEvents.UPDATE.toString(),
+      UserEvents.UPDATE,
       Event.wrap(user)
     );
   }
