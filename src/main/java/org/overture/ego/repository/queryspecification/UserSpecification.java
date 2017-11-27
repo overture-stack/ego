@@ -17,7 +17,8 @@
 package org.overture.ego.repository.queryspecification;
 
 import lombok.val;
-import org.overture.ego.utils.Queries;
+import org.overture.ego.model.search.SearchFilter;
+import org.overture.ego.utils.QueryUtils;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
@@ -25,11 +26,13 @@ import org.springframework.data.jpa.domain.Specification;
 
 import javax.annotation.Nonnull;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Predicate;
+import java.util.List;
 
 public class UserSpecification extends SpecificationBase<User> {
 
   public static Specification<User> containsText(@Nonnull String text) {
-    val finalText = Queries.prepareForQuery(text);
+    val finalText = QueryUtils.prepareForQuery(text);
     return (root, query, builder) -> builder.or(getQueryPredicates(builder,root,finalText,
             "name","email","firstName","lastName","status")
     );

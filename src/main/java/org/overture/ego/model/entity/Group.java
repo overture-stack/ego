@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.overture.ego.model.enums.Fields;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -39,24 +40,24 @@ import java.util.List;
 public class Group {
 
   @Id
-  @Column(nullable = false, name = "id", updatable = false)
+  @Column(nullable = false, name = Fields.ID, updatable = false)
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   int id;
 
-  @Column(nullable = false, name = "name", updatable = false)
+  @Column(nullable = false, name = Fields.NAME, updatable = false)
   @NonNull
   String name;
 
-  @Column(nullable = false, name = "description", updatable = false)
+  @Column(nullable = false, name = Fields.DESCRIPTION, updatable = false)
   String description;
 
-  @Column(nullable = false, name = "status", updatable = false)
+  @Column(nullable = false, name = Fields.STATUS, updatable = false)
   String status;
 
   @ManyToMany(targetEntity = Application.class, cascade = {CascadeType.ALL})
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(name = "groupapplication", joinColumns = { @JoinColumn(name = "grpid") },
-          inverseJoinColumns = { @JoinColumn(name = "appid") })
+  @JoinTable(name = "groupapplication", joinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) },
+          inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
   @JsonIgnore List<Application> applications;
 
   @ManyToMany(mappedBy = "groups", cascade = CascadeType.ALL)

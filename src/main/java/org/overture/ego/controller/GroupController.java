@@ -25,6 +25,8 @@ import org.overture.ego.model.dto.PageDTO;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.model.search.Filters;
+import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.security.AdminScoped;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
@@ -35,6 +37,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.List;
 
@@ -65,6 +68,10 @@ public class GroupController {
                   value = "Field to sort on"),
           @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
                   value = "Sorting order: ASC|DESC. Default order: DESC"),
+          @ApiImplicitParam(name = "status", dataType = "string", paramType = "query",
+                  value = "Filter by status. " +
+                          "You could also specify filters on any field of the entity being queried as " +
+                          "query parameters in this format: name=something")
 
   })
   @ApiResponses(
@@ -76,15 +83,12 @@ public class GroupController {
   PageDTO<Group> getGroupsList(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @RequestParam(value = "query", required = false) String query,
-          @RequestParam(value = "status", required = false) String status,
+          @ApiIgnore @Filters List<SearchFilter> filters,
           Pageable pageable) {
-    if(! StringUtils.isEmpty(status)){
-      return new PageDTO<>(groupService.filterGroupsByStatus(status, pageable));
-    }
     if(StringUtils.isEmpty(query)) {
-      return new PageDTO<>(groupService.listGroups(pageable));
+      return new PageDTO<>(groupService.listGroups(filters, pageable));
     } else {
-      return new PageDTO<>(groupService.findGroups(query, pageable));
+      return new PageDTO<>(groupService.findGroups(query, filters, pageable));
     }
   }
 
@@ -154,6 +158,10 @@ public class GroupController {
                   value = "Field to sort on"),
           @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
                   value = "Sorting order: ASC|DESC. Default order: DESC"),
+          @ApiImplicitParam(name = "status", dataType = "string", paramType = "query",
+                  value = "Filter by status. " +
+                          "You could also specify filters on any field of the entity being queried as " +
+                          "query parameters in this format: name=something")
 
   })
   @ApiResponses(
@@ -166,12 +174,13 @@ public class GroupController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String groupId,
           @RequestParam(value = "query", required = false) String query,
+          @ApiIgnore @Filters List<SearchFilter> filters,
           Pageable pageable)
   {
     if(StringUtils.isEmpty(query)) {
-      return new PageDTO<>(applicationService.findGroupsApplications(groupId,pageable));
+      return new PageDTO<>(applicationService.findGroupsApplications(groupId, filters, pageable));
     } else {
-      return new PageDTO<>(applicationService.findGroupsApplications(groupId, query, pageable));
+      return new PageDTO<>(applicationService.findGroupsApplications(groupId, query, filters, pageable));
     }
   }
 
@@ -221,6 +230,10 @@ public class GroupController {
                   value = "Field to sort on"),
           @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
                   value = "Sorting order: ASC|DESC. Default order: DESC"),
+          @ApiImplicitParam(name = "status", dataType = "string", paramType = "query",
+                  value = "Filter by status. " +
+                          "You could also specify filters on any field of the entity being queried as " +
+                          "query parameters in this format: name=something")
 
   })
   @ApiResponses(
@@ -233,12 +246,13 @@ public class GroupController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String groupId,
           @RequestParam(value = "query", required = false) String query,
+          @ApiIgnore @Filters List<SearchFilter> filters,
           Pageable pageable)
   {
     if(StringUtils.isEmpty(query)) {
-      return new PageDTO<>(userService.findGroupsUsers(groupId, pageable));
+      return new PageDTO<>(userService.findGroupsUsers(groupId, filters, pageable));
     } else {
-      return new PageDTO<>(userService.findGroupsUsers(groupId, query, pageable));
+      return new PageDTO<>(userService.findGroupsUsers(groupId, query, filters, pageable));
     }
   }
 }

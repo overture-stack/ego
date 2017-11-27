@@ -17,7 +17,7 @@
 package org.overture.ego.repository.queryspecification;
 
 import lombok.val;
-import org.overture.ego.utils.Queries;
+import org.overture.ego.utils.QueryUtils;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
@@ -28,7 +28,7 @@ import javax.persistence.criteria.Join;
 
 public class ApplicationSpecification extends SpecificationBase<Application> {
   public static Specification<Application> containsText(@Nonnull String text) {
-    val finalText = Queries.prepareForQuery(text);
+    val finalText = QueryUtils.prepareForQuery(text);
     return (root, query, builder) ->
             builder.or(getQueryPredicates(builder,root,finalText,
                     "name","clientId","clientSecret","description","status")
