@@ -36,7 +36,7 @@ import java.util.List;
 public class FilterResolver implements HandlerMethodArgumentResolver {
 
   @NonNull
-  List<String> fieldValues;
+  private List<String> fieldValues;
 
   public FilterResolver(@NonNull List<String> fieldValues){
     this.fieldValues = fieldValues;
