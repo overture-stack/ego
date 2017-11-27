@@ -9,6 +9,8 @@ export EGO_INSTALL_PATH=
 
 # === DB Config
 export EGO_DB=
+export EGO_DB_HOST=
+export EGO_DB_PORT=
 export EGO_DB_USER=
 export EGO_DB_PASS=
 
