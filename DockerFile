@@ -1,0 +1,17 @@
+FROM openjdk
+
+RUN apt-get update -y && apt-get upgrade -y && apt-get install -y maven && mkdir -p /usr/src/app
+
+WORKDIR /usr/src/app
+
+# copy just the pom.xml and install dependencies for caching
+ADD pom.xml .
+RUN mvn verify clean --fail-never
+
+ADD . .
+
+EXPOSE 8081
+
+RUN mvn install -DskipTests
+
+CMD java -jar target/ego-0.0.1-SNAPSHOT-exec.jar --spring.datasource.url="$DB_URL" --spring.datasource.username="$DB_USER" --spring.datasource.password="$DB_PASSWORD"

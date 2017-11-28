@@ -1,0 +1,10 @@
+version: "3.2"
+services:
+  api:
+    build: .
+    ports:
+      - "$API_HOST_PORT:8081"
+    environment:
+      - DB_URL
+      - DB_USER
+      - DB_PASSWORD
