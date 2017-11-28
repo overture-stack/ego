@@ -26,8 +26,6 @@ import org.overture.ego.utils.Types;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import reactor.bus.Event;
-import reactor.bus.EventBus;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -43,12 +41,11 @@ public class TokenService {
   @Value("${jwt.secret}")
   private String jwtSecret;
   @Autowired
-  UserService userService;
+  private UserService userService;
   @Autowired
-  SimpleDateFormat dateFormatter;
-
+  private UserEvents userEvents;
   @Autowired
-  EventBus eventBus;
+  private SimpleDateFormat dateFormatter;
 
   public String generateUserToken(IDToken idToken){
     // If the demo flag is set, all tokens will be generated as the Demo User,
@@ -65,12 +62,10 @@ public class TokenService {
     }
 
     // Update user.lastLogin in the DB
-    // Do this via eventBus (Non-blocking)
+    // Use events as these are async:
+    //    the DB call won't block returning the Token
     user.setLastLogin(dateFormatter.format(new Date()));
-    eventBus.notify(
-      UserEvents.UPDATE.toString(),
-      Event.wrap(user)
-    );
+    userEvents.update(user);
 
     return generateUserToken(new TokenUserInfo(user));
   }
