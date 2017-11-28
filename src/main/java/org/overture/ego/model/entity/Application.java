@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.overture.ego.model.enums.Fields;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -39,29 +40,29 @@ import java.util.List;
 public class Application {
 
   @Id
-  @Column(nullable = false, name = "id", updatable = false)
+  @Column(nullable = false, name = Fields.ID, updatable = false)
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   int id;
 
   @NonNull
-  @Column(nullable = false, name = "name")
+  @Column(nullable = false, name = Fields.NAME)
   String name;
 
   @NonNull
-  @Column(nullable = false, name = "clientid")
+  @Column(nullable = false, name = Fields.CLIENTID)
   String clientId;
 
   @NonNull
-  @Column(nullable = false, name = "clientsecret")
+  @Column(nullable = false, name = Fields.CLIENTSECRET)
   String clientSecret;
 
-  @Column(name = "redirecturi")
+  @Column(name = Fields.REDIRECTURI)
   String redirectUri;
 
-  @Column(name = "description")
+  @Column(name = Fields.DESCRIPTION)
   String description;
 
-  @Column(name = "status")
+  @Column(name = Fields.STATUS)
   String status;
 
   @ManyToMany(mappedBy = "applications", cascade = CascadeType.ALL)

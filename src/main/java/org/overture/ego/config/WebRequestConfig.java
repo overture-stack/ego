@@ -16,18 +16,29 @@
 
 package org.overture.ego.config;
 
+import org.overture.ego.controller.resolver.FilterResolver;
 import org.overture.ego.controller.resolver.PageableResolver;
+import org.overture.ego.model.enums.Fields;
+import org.overture.ego.utils.FieldUtils;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+
 
 import java.util.List;
 
 @Configuration
 public class WebRequestConfig extends WebMvcConfigurerAdapter {
 
+  @Bean
+  public List<String> fieldValues(){
+    return FieldUtils.getStaticFieldValueList(Fields.class);
+  }
+
   @Override
   public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
     argumentResolvers.add(new PageableResolver());
+    argumentResolvers.add(new FilterResolver(fieldValues()));
   }
 }

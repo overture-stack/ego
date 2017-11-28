@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-package org.overture.ego.utils;
+package org.overture.ego.model.search;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.StringUtils;
+import lombok.Data;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
+@Data
+@RequiredArgsConstructor
+public class SearchFilter {
 
-@Slf4j
-public class Queries {
-
-  public static String prepareForQuery(String text){
-    String output = text;
-    if(StringUtils.isEmpty(output)){
-      return  "";
-    }
-    if (!output.contains("%")) {
-      output = "%" + output + "%";
-    }
-    return output.toLowerCase();
-  }
+  @NonNull
+  private String filterField;
+  @NonNull
+  private String filterValue;
 
 }

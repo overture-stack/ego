@@ -19,13 +19,13 @@ package org.overture.ego.service;
 import lombok.NonNull;
 import lombok.val;
 import org.overture.ego.model.entity.Group;
+import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.repository.GroupRepository;
 import org.overture.ego.repository.queryspecification.GroupSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -73,50 +73,45 @@ public class GroupService {
      groupRepository.delete(Integer.parseInt(groupId));
   }
 
-  public Page<Group> listGroups(@NonNull Pageable pageable) {
-    return groupRepository.findAll(pageable);
+  public Page<Group> listGroups(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+    return groupRepository.findAll(GroupSpecification.filterBy(filters), pageable);
   }
 
-  public Page<Group> filterGroupsByStatus(@NonNull String status, @NonNull Pageable pageable) {
-    return groupRepository.findAllByStatusIgnoreCase(status, pageable);
+  public Page<Group> findGroups(@NonNull String query, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+    return groupRepository.findAll(where(GroupSpecification.containsText(query))
+            .and(GroupSpecification.filterBy(filters)), pageable);
   }
 
-  public Page<Group> findGroups(@NonNull String query, @NonNull Pageable pageable) {
-    if(StringUtils.isEmpty(query)){
-      return this.listGroups(pageable);
-    }
-    return groupRepository.findAll(GroupSpecification.containsText(query), pageable);
-  }
-
-  public Page<Group> findUsersGroup(@NonNull String userId, @NonNull Pageable pageable){
-    return groupRepository.findAll(
-            GroupSpecification.containsUser(Integer.parseInt(userId)),
-            pageable);
-  }
-
-  public Page<Group> findUsersGroup(@NonNull String userId, @NonNull String query, @NonNull Pageable pageable){
-    if(StringUtils.isEmpty(query)){
-      return this.findUsersGroup(userId, pageable);
-    }
+  public Page<Group> findUsersGroup(@NonNull String userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
     return groupRepository.findAll(
             where(GroupSpecification.containsUser(Integer.parseInt(userId)))
-                    .and(GroupSpecification.containsText(query)),
+            .and(GroupSpecification.filterBy(filters)),
             pageable);
   }
 
-  public Page<Group> findApplicationsGroup(@NonNull String appId, @NonNull Pageable pageable){
+  public Page<Group> findUsersGroup(@NonNull String userId, @NonNull String query, @NonNull List<SearchFilter> filters,
+                                    @NonNull Pageable pageable){
     return groupRepository.findAll(
-            GroupSpecification.containsApplication(Integer.parseInt(appId)),
+            where(GroupSpecification.containsUser(Integer.parseInt(userId)))
+                    .and(GroupSpecification.containsText(query))
+                    .and(GroupSpecification.filterBy(filters)),
             pageable);
   }
 
-  public Page<Group> findApplicationsGroup(@NonNull String appId, @NonNull String query, @NonNull Pageable pageable){
-    if(StringUtils.isEmpty(query)){
-      this.findApplicationsGroup(appId, pageable);
-    }
+  public Page<Group> findApplicationsGroup(@NonNull String appId, @NonNull List<SearchFilter> filters,
+                                           @NonNull Pageable pageable){
     return groupRepository.findAll(
             where(GroupSpecification.containsApplication(Integer.parseInt(appId)))
-                    .and(GroupSpecification.containsText(query)),
+            .and(GroupSpecification.filterBy(filters)),
+            pageable);
+  }
+
+  public Page<Group> findApplicationsGroup(@NonNull String appId, @NonNull String query,
+                                           @NonNull List<SearchFilter> filters,@NonNull Pageable pageable){
+    return groupRepository.findAll(
+            where(GroupSpecification.containsApplication(Integer.parseInt(appId)))
+                    .and(GroupSpecification.containsText(query))
+            .and(GroupSpecification.filterBy(filters)),
             pageable);
   }
 

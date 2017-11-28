@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.overture.ego.model.enums.Fields;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -41,50 +42,50 @@ import java.util.stream.Collectors;
 public class User {
 
   @Id
-  @Column(nullable = false, name = "id", updatable = false)
+  @Column(nullable = false, name = Fields.ID, updatable = false)
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   int id;
 
   @NonNull
-  @Column(nullable = false, name = "name")
+  @Column(nullable = false, name = Fields.NAME)
   String name;
 
   @NonNull
-  @Column(nullable = false, name = "email")
+  @Column(nullable = false, name = Fields.EMAIL)
   String email;
 
   @NonNull
-  @Column(nullable = false, name = "role")
+  @Column(nullable = false, name = Fields.ROLE)
   String role;
 
-  @Column(name = "status")
+  @Column(name = Fields.STATUS)
   String status;
 
-  @Column(name = "firstname")
+  @Column(name = Fields.FIRSTNAME)
   String firstName;
 
-  @Column(name = "lastname")
+  @Column(name = Fields.LASTNAME)
   String lastName;
 
-  @Column(name = "createdat")
+  @Column(name = Fields.CREATEDAT)
   String createdAt;
 
-  @Column(name = "lastlogin")
+  @Column(name = Fields.LASTLOGIN)
   String lastLogin;
 
-  @Column(name = "preferredlanguage")
+  @Column(name = Fields.PREFERREDLANGUAGE)
   String preferredLanguage;
 
   @ManyToMany(targetEntity = Group.class, cascade = {CascadeType.ALL})
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(name = "usergroup", joinColumns = { @JoinColumn(name = "userid") },
-          inverseJoinColumns = { @JoinColumn(name = "grpid") })
+  @JoinTable(name = "usergroup", joinColumns = { @JoinColumn(name = Fields.USERID_JOIN) },
+          inverseJoinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) })
   @JsonIgnore protected List<Group> groups;
 
   @ManyToMany(targetEntity = Application.class, cascade = {CascadeType.ALL})
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(name = "userapplication", joinColumns = { @JoinColumn(name = "userid") },
-          inverseJoinColumns = { @JoinColumn(name = "appid") })
+  @JoinTable(name = "userapplication", joinColumns = { @JoinColumn(name = Fields.USERID_JOIN) },
+          inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
   @JsonIgnore protected List<Application> applications;
 
   @JsonIgnore
