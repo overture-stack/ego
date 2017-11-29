@@ -1,12 +1,11 @@
 FROM openjdk:8u121-jdk-alpine
 
-RUN apk add --no-cache curl tar bash
-
 ARG MAVEN_VERSION=3.5.2
 ARG SHA=707b1f6e390a65bde4af4cdaf2a24d45fc19a6ded00fff02e91626e3e42ceaff
 ARG BASE_URL=https://apache.osuosl.org/maven/maven-3/${MAVEN_VERSION}/binaries
 
-RUN mkdir -p /usr/share/maven /usr/share/maven/ref \
+RUN apk add --no-cache curl tar bash \
+  && mkdir -p /usr/share/maven /usr/share/maven/ref \
   && curl -fsSL -o /tmp/apache-maven.tar.gz ${BASE_URL}/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
   && echo "${SHA}  /tmp/apache-maven.tar.gz" | sha256sum -c - \
   && tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 \
@@ -23,7 +22,7 @@ ADD . .
 
 EXPOSE 8081
 
-RUN mvn install -DskipTests
+RUN mvn install -DskipTests && rm -f target/*.tar.gz
 
 CMD java -jar target/ego-*-SNAPSHOT-exec.jar \
     --spring.datasource.url="jdbc:postgresql://$EGO_DB_HOST:$EGO_DB_PORT/$EGO_DB?stringtype=unspecified" \
