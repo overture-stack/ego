@@ -21,4 +21,5 @@ CMD java -jar target/ego-*-SNAPSHOT-exec.jar \
     --spring.datasource.url="jdbc:postgresql://$EGO_DB_HOST:$EGO_DB_PORT/$EGO_DB?stringtype=unspecified" \
     --spring.datasource.username="$EGO_DB_USER" \
     --spring.datasource.password="$EGO_DB_PASS" \
-    --google.client.ids="$EGO_SERVER_GOOGLE_CLIENT_IDS"
+    --google.client.ids="$EGO_SERVER_GOOGLE_CLIENT_IDS" \
+    --server.port=8081
