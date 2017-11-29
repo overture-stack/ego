@@ -46,9 +46,14 @@ logging:
   loggers:
     "org.skife.jdbi.v2": TRACE
 
+token:
+  key-store: src/main/resources/ego-jwt.jks
+  key-alias: ego-jwt
+  keystore-password: eG0tistic@lly
+
 ---
 ###############################################################################
-# Profile - "secure"
+# Profile - "auth"
 ###############################################################################
 spring:
   profiles: auth

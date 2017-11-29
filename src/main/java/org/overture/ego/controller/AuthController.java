@@ -22,6 +22,7 @@ import lombok.val;
 import org.overture.ego.provider.google.GoogleTokenService;
 import org.overture.ego.provider.facebook.FacebookTokenService;
 import org.overture.ego.token.TokenService;
+import org.overture.ego.token.TokenSigner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
@@ -39,6 +40,8 @@ public class AuthController {
   private GoogleTokenService googleTokenService;
   @Autowired
   private FacebookTokenService facebookTokenService;
+  @Autowired
+  private TokenSigner tokenSigner;
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
   @ResponseStatus(value = HttpStatus.OK)
@@ -76,6 +79,18 @@ public class AuthController {
       @RequestHeader(value = "token", required = true) final String token) {
     if (StringUtils.isEmpty(token)) return false;
     return tokenService.validateToken(token);
+  }
+
+  @RequestMapping(method = RequestMethod.GET, value = "/token/public_key")
+  @ResponseStatus(value = HttpStatus.OK)
+  public @ResponseBody
+  String getPublicKey() {
+    val pubKey = tokenSigner.getEncodedPublicKey();
+    if(pubKey.isPresent()){
+      return pubKey.get();
+    } else {
+      return "";
+    }
   }
 
 }

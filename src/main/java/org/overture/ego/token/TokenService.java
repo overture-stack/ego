@@ -17,18 +17,20 @@
 package org.overture.ego.token;
 
 import io.jsonwebtoken.*;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.reactor.events.UserEvents;
 import org.overture.ego.service.UserService;
-import org.overture.ego.utils.Types;
+import org.overture.ego.utils.TypeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.bus.Event;
 import reactor.bus.EventBus;
 
+import java.security.InvalidKeyException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
@@ -40,15 +42,20 @@ public class TokenService {
   @Value("${demo:false}")
   private boolean demo;
 
-  @Value("${jwt.secret}")
-  private String jwtSecret;
   @Autowired
   UserService userService;
   @Autowired
   SimpleDateFormat dateFormatter;
+  @Autowired
+  TokenSigner tokenSigner;
 
   @Autowired
   EventBus eventBus;
+  /*
+    Constant
+   */
+  private static final String ISSUER_NAME="ego";
+  private static final int DURATION=1000000;
 
   public String generateUserToken(IDToken idToken){
     // If the demo flag is set, all tokens will be generated as the Demo User,
@@ -75,17 +82,21 @@ public class TokenService {
     return generateUserToken(new TokenUserInfo(user));
   }
 
+  @SneakyThrows
   public String generateUserToken(TokenUserInfo u) {
     val tokenContext = new TokenContext(u);
     val tokenClaims = new TokenClaims();
-    tokenClaims.setIss("ego");
-    tokenClaims.setValidDuration(1000000);
+    tokenClaims.setIss(ISSUER_NAME);
+    tokenClaims.setValidDuration(DURATION);
     tokenClaims.setContext(tokenContext);
-
-    return Jwts.builder()
-            .setClaims(Types.convertToAnotherType(tokenClaims, Map.class))
-            .signWith(SignatureAlgorithm.HS512, jwtSecret)
-            .compact();
+    if(tokenSigner.getKey().isPresent()) {
+      return Jwts.builder()
+              .setClaims(TypeUtils.convertToAnotherType(tokenClaims, Map.class))
+              .signWith(SignatureAlgorithm.RS256, tokenSigner.getKey().get())
+              .compact();
+    } else {
+      throw new InvalidKeyException("Invalid signing key for the token.");
+    }
   }
 
   public boolean validateToken(String token) {
@@ -93,7 +104,7 @@ public class TokenService {
     Jws decodedToken = null;
     try{
         decodedToken  = Jwts.parser()
-        .setSigningKey(jwtSecret)
+        .setSigningKey(tokenSigner.getKey().get())
         .parseClaimsJws(token);
     } catch (Exception ex){
       log.error("Error parsing JWT: {}", ex);
@@ -104,19 +115,24 @@ public class TokenService {
   public User getTokenUserInfo(String token) {
     try {
       Claims body = getTokenClaims(token);
-      val tokenClaims = Types.convertToAnotherType(body, TokenClaims.class);
+      val tokenClaims = TypeUtils.convertToAnotherType(body, TokenClaims.class);
       return userService.get(tokenClaims.getSub());
     } catch (JwtException | ClassCastException e) {
       return null;
     }
   }
 
+  @SneakyThrows
   public Claims getTokenClaims(String token) {
 
+    if(tokenSigner.getKey().isPresent()) {
     return Jwts.parser()
-        .setSigningKey(jwtSecret)
+        .setSigningKey(tokenSigner.getKey().get())
         .parseClaimsJws(token)
         .getBody();
+  } else {
+      throw new InvalidKeyException("Invalid signing key for the token.");
+    }
   }
 
   public JWTAccessToken getJWTAccessToken(String token){

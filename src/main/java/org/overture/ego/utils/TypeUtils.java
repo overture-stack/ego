@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.val;
 
 
-public class Types {
+public class TypeUtils {
   public static  <T> T convertToAnotherType(Object fromObject, Class<T> tClass){
     val mapper = new ObjectMapper();
     mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);

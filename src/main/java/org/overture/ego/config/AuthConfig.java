@@ -20,8 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.security.CorsFilter;
 import org.overture.ego.token.CustomTokenEnhancer;
 import org.overture.ego.service.ApplicationService;
+import org.overture.ego.token.TokenSigner;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -47,14 +47,14 @@ import java.util.TimeZone;
 @EnableAuthorizationServer
 public class AuthConfig extends AuthorizationServerConfigurerAdapter {
 
-  @Value("${jwt.secret}")
-  private String jwtSecret;
-
   @Autowired
   private ApplicationService clientDetailsService;
 
   @Autowired
   private AuthenticationManager authenticationManager;
+
+  @Autowired
+  TokenSigner tokenSigner;
 
   @Bean
   @Primary
@@ -78,7 +78,9 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   @Bean
   public JwtAccessTokenConverter accessTokenConverter() {
     JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
-    converter.setSigningKey(jwtSecret);
+    if(tokenSigner.getKeyPair().isPresent()) {
+      converter.setKeyPair(tokenSigner.getKeyPair().get());
+    }
     return converter;
   }
 
