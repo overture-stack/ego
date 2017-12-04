@@ -48,6 +48,11 @@ public class TokenService {
   TokenSigner tokenSigner;
   @Autowired
   private SimpleDateFormat dateFormatter;
+  /*
+    Constant
+  */
+  private static final String ISSUER_NAME="ego";
+  private static final int DURATION=1000000;
 
   public String generateUserToken(IDToken idToken){
     // If the demo flag is set, all tokens will be generated as the Demo User,
