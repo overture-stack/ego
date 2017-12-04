@@ -67,7 +67,7 @@ public class UserService {
   @Autowired
   private ApplicationService applicationService;
   @Autowired
-  SimpleDateFormat formatter;
+  private SimpleDateFormat formatter;
 
   public User create(@NonNull User userInfo) {
     return userRepository.save(userInfo);

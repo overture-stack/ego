@@ -28,13 +28,13 @@ public class PageDTO<T> {
 
   private final int limit;
   private final int offset;
-  private final int count;
+  private final long count;
   private final List<T> resultSet;
 
   public PageDTO(@NonNull final Page<T> page) {
     this.limit      = page.getSize();
     this.offset     = page.getNumber();
-    this.count      = page.getNumberOfElements();
+    this.count      = page.getTotalElements();
     this.resultSet  = page.getContent();
   }
 
