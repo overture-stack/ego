@@ -6,6 +6,7 @@
 
 # === Install Path
 export EGO_INSTALL_PATH=
+export EGO_KEYSTORE_PATH=
 
 # === DB Config
 export EGO_DB=
