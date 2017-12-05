@@ -28,7 +28,7 @@ import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.token.IDToken;
-import org.overture.ego.utils.Types;
+import org.overture.ego.utils.TypeUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.jwt.JwtHelper;
 import org.springframework.stereotype.Component;
@@ -91,6 +91,6 @@ public class GoogleTokenService {
   public IDToken decode(String token){
     val tokenDecoded = JwtHelper.decode(token);
     val authInfo = new ObjectMapper().readValue(tokenDecoded.getClaims(), Map.class);
-    return Types.convertToAnotherType(authInfo, IDToken.class);
+    return TypeUtils.convertToAnotherType(authInfo, IDToken.class);
   }
 }
