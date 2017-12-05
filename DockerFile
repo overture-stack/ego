@@ -20,11 +20,15 @@ RUN mvn verify clean --fail-never
 
 ADD . .
 
-EXPOSE 8081
-
 RUN mvn install -DskipTests && rm -f target/*.tar.gz
 
-CMD java -jar target/ego-*-SNAPSHOT-exec.jar \
+FROM openjdk:8u121-jdk-alpine
+
+COPY --from=0 /usr/src/app/target/ego-*-SNAPSHOT-exec.jar .
+
+EXPOSE 8081
+
+CMD java -jar ego-*-SNAPSHOT-exec.jar \
     --spring.datasource.url="jdbc:postgresql://$EGO_DB_HOST:$EGO_DB_PORT/$EGO_DB?stringtype=unspecified" \
     --spring.datasource.username="$EGO_DB_USER" \
     --spring.datasource.password="$EGO_DB_PASS" \
