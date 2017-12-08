@@ -1,6 +1,10 @@
 <h1 align="center"> EGO </h1> <br>
 
 <p align="center">
+    <img alt="arch" title="EGO Architecture" src="/docs/ego-arch.png" width="480">
+</p>
+
+<p align="center">
   A scalable stateless Authorization Service for Federated Identities including Google and Facebook
 </p>
 
