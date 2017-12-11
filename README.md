@@ -29,6 +29,12 @@ Interactive documentation of the API is provided using Swagger UI.
 
 When run locally this can be found at:  [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
 
+<p align="center">
+    <img alt="arch" title="EGO Architecture" src="/docs/ego-arch.png" width="480">
+</p>
+<p align="center">
+  EGO Architecture
+</p>
 
 ## Features
 Here are some of the features of EGO:
