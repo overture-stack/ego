@@ -78,7 +78,7 @@ public class UserController {
   public @ResponseBody
   PageDTO<User> getUsersList(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-          @RequestParam(value = "query", required = false) String query,
+          @ApiParam(value="Query string compares to users Name, Email, First Name, and Last Name fields.", required=false ) @RequestParam(value = "query", required = false) String query,
           @ApiIgnore @Filters List<SearchFilter> filters,
           Pageable pageable)
   {
