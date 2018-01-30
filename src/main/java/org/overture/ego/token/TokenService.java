@@ -64,7 +64,7 @@ public class TokenService {
       val userName = idToken.getEmail();
       user = userService.getByName(userName);
       if (user == null) {
-        userService.createFromIDToken(idToken);
+        user = userService.createFromIDToken(idToken);
       }
     }
 
