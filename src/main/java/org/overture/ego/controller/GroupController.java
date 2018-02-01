@@ -61,9 +61,9 @@ public class GroupController {
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiImplicitParams({
           @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
-                  value = "Results page you want to retrieve (0..N)"),
+            value = "Number of results to retrieve"),
           @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
-                  value = "Target Page number"),
+            value = "Index of first result to retrieve"),
           @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
                   value = "Field to sort on"),
           @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
@@ -151,9 +151,9 @@ public class GroupController {
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/applications")
   @ApiImplicitParams({
           @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
-                  value = "Results page you want to retrieve (0..N)"),
+            value = "Number of results to retrieve"),
           @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
-                  value = "Target Page number"),
+            value = "Index of first result to retrieve"),
           @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
                   value = "Field to sort on"),
           @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
@@ -223,9 +223,9 @@ public class GroupController {
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
   @ApiImplicitParams({
           @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
-                  value = "Results page you want to retrieve (0..N)"),
+            value = "Number of results to retrieve"),
           @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
-                  value = "Target Page number"),
+            value = "Index of first result to retrieve"),
           @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
                   value = "Field to sort on"),
           @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
