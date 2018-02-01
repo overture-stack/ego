@@ -38,7 +38,7 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
                                 WebDataBinderFactory webDataBinderFactory) throws Exception {
     // get paging parameters
     String limit = nativeWebRequest.getParameter("limit");
-    String pageNumber = nativeWebRequest.getParameter("offset");
+    String offset = nativeWebRequest.getParameter("offset");
     String sort = nativeWebRequest.getParameter("sort");
     String sortOrder = nativeWebRequest.getParameter("sortOrder");
 
@@ -48,11 +48,7 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
 
       @Override
       public int getPageNumber() {
-        if(StringUtils.isEmpty(pageNumber)){
-          return  DEFAULT_PAGE_NUM;
-        } else {
-          return Integer.parseInt(pageNumber);
-        }
+        return 0;
       }
 
       @Override
@@ -66,7 +62,11 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
 
       @Override
       public int getOffset() {
-        return 0;
+        if(StringUtils.isEmpty(offset)){
+          return  DEFAULT_PAGE_NUM;
+        } else {
+          return Integer.parseInt(offset);
+        }
       }
 
       @Override
