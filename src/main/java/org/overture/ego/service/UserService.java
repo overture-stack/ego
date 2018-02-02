@@ -56,6 +56,8 @@ public class UserService {
   private final static String DEMO_USER_EMAIL = "Demo.User@example.com";
   private final static String DEMO_FIRST_NAME = "Demo";
   private final static String DEMO_LAST_NAME = "User";
+  private final static String DEMO_USER_ROLE = UserRole.ADMIN.toString();
+  private final static String DEMO_USER_STATUS = UserStatus.APPROVED.toString();
 
   /*
     Dependencies
@@ -92,8 +94,8 @@ public class UserService {
     if (output != null) {
       // Force the demo user to be ADMIN and APPROVED to allow demo access,
       // even if these values have previously been modified for the demo user.
-      output.setStatus(UserStatus.APPROVED.toString());
-      output.setRole(UserRole.ADMIN.toString());
+      output.setStatus(DEMO_USER_STATUS);
+      output.setRole(DEMO_USER_ROLE);
     } else {
       val userInfo = new User();
       userInfo.setName(DEMO_USER_NAME);

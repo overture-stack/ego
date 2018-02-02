@@ -18,7 +18,6 @@ package org.overture.ego.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
 import org.hibernate.annotations.LazyCollection;
@@ -27,7 +26,9 @@ import org.overture.ego.model.enums.Fields;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Entity
@@ -80,13 +81,13 @@ public class User {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "usergroup", joinColumns = { @JoinColumn(name = Fields.USERID_JOIN) },
           inverseJoinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) })
-  @JsonIgnore protected List<Group> groups;
+  @JsonIgnore protected Set<Group> groups;
 
   @ManyToMany(targetEntity = Application.class, cascade = {CascadeType.ALL})
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "userapplication", joinColumns = { @JoinColumn(name = Fields.USERID_JOIN) },
           inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
-  @JsonIgnore protected List<Application> applications;
+  @JsonIgnore protected Set<Application> applications;
 
   @JsonIgnore
   public List<String> getGroupNames(){
@@ -126,13 +127,13 @@ public class User {
 
   protected void initApplications(){
     if(this.applications == null){
-      this.applications = new ArrayList<Application>();
+      this.applications = new HashSet<Application>();
     }
   }
 
   protected void initGroups(){
     if(this.groups == null) {
-      this.groups = new ArrayList<Group>();
+      this.groups = new HashSet<Group>();
     }
   }
 
