@@ -72,6 +72,13 @@ public class UserService {
   private SimpleDateFormat formatter;
 
   public User create(@NonNull User userInfo) {
+
+    // Set Created At date to Now
+    userInfo.setCreatedAt(formatter.format(new Date()));
+
+    // Set UserName to equal the email.
+    userInfo.setName(userInfo.getEmail());
+
     return userRepository.save(userInfo);
   }
 
