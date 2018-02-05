@@ -142,7 +142,9 @@ public class UserService {
   }
 
   public User update(@NonNull User updatedUserInfo) {
-    return userRepository.save(updatedUserInfo);
+    User user = userRepository.findOne(updatedUserInfo.getId());
+    user.update(updatedUserInfo);
+    return userRepository.save(user);
   }
 
   public void delete(@NonNull String userId) {
