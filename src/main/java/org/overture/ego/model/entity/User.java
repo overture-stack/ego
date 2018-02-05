@@ -137,7 +137,7 @@ public class User {
     }
   }
 
-  public void merge(User other) {
+  public void update(User other) {
     this.name = other.name;
     this.firstName = other.firstName;
     this.lastName = other.lastName;

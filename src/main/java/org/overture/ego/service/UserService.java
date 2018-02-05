@@ -143,7 +143,7 @@ public class UserService {
 
   public User update(@NonNull User updatedUserInfo) {
     User user = userRepository.findOne(updatedUserInfo.getId());
-    user.merge(updatedUserInfo);
+    user.update(updatedUserInfo);
     return userRepository.save(user);
   }
 
