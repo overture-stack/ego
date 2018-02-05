@@ -137,4 +137,27 @@ public class User {
     }
   }
 
+  public void merge(User other) {
+    this.name = other.name;
+    this.firstName = other.firstName;
+    this.lastName = other.lastName;
+    this.role = other.role;
+    this.status = other.status;
+    this.preferredLanguage = other.preferredLanguage;
+
+    // Don't merge the ID, CreatedAt, or LastLogin date - those are procedural.
+
+    // Don't merge groups or applications if not present in other
+    //  This is because the PUT action for update usually does not include these fields
+    //  as a consequence of the GET option to retrieve a user not including these fields
+    // To clear applications and groups, use the dedicated services for deleting associations or pass in an empty Set.
+    if (other.applications != null) {
+      this.applications = other.applications;
+    }
+
+    if (other.groups != null) {
+      this.groups = other.groups;
+    }
+  }
+
 }
