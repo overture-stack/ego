@@ -65,7 +65,9 @@ public class GroupService {
   }
 
   public Group update(@NonNull Group updatedGroupInfo) {
-    return groupRepository.save(updatedGroupInfo);
+    Group group = groupRepository.findOne(updatedGroupInfo.getId());
+    group.update(updatedGroupInfo);
+    return groupRepository.save(group);
   }
 
   public void delete(@NonNull String groupId) {

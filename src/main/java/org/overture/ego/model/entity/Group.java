@@ -26,7 +26,9 @@ import org.overture.ego.model.enums.Fields;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @ToString(exclude={"users","applications"})
@@ -58,12 +60,12 @@ public class Group {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "groupapplication", joinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) },
           inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
-  @JsonIgnore List<Application> applications;
+  @JsonIgnore Set<Application> applications;
 
   @ManyToMany(mappedBy = "groups", cascade = CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
-  List<User> users;
+  Set<User> users;
 
   public void addApplication(@NonNull Application app){
     initApplications();
@@ -84,17 +86,35 @@ public class Group {
     this.users.removeIf(u -> u.id == userId);
   }
 
+  public void update(Group other) {
+    this.name = other.name;
+    this.description = other.description;
+    this.status = other.status;
+
+    // Do not update ID, that is programmatic.
+
+    // Update Users and Applications only if provided (not null)
+    if (other.applications != null) {
+      this.applications = other.applications;
+    }
+
+    if (other.users != null) {
+      this.users = other.users;
+    }
+  }
+
   private void initApplications(){
     if(this.applications == null){
-      this.applications = new ArrayList<Application>();
+      this.applications = new HashSet<>();
     }
   }
 
   private void initUsers(){
     if(this.users == null) {
-      this.users = new ArrayList<User>();
+      this.users = new HashSet<>();
     }
   }
+
 
 }
 

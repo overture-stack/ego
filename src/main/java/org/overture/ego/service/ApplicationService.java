@@ -56,7 +56,9 @@ public class ApplicationService implements ClientDetailsService {
   }
 
   public Application update(@NonNull Application updatedApplicationInfo) {
-    applicationRepository.save(updatedApplicationInfo);
+    Application app = applicationRepository.findOne(updatedApplicationInfo.getId());
+    app.update(updatedApplicationInfo);
+    applicationRepository.save(app);
     return updatedApplicationInfo;
   }
 

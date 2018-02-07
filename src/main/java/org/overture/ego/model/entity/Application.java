@@ -27,6 +27,7 @@ import org.overture.ego.model.enums.Fields;
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "egoapplication")
@@ -68,12 +69,12 @@ public class Application {
   @ManyToMany(mappedBy = "applications", cascade = CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
-  List<Group> groups;
+  Set<Group> groups;
 
   @ManyToMany(mappedBy = "applications", cascade = CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
-  List<User> users;
+  Set<User> users;
 
   @JsonIgnore
   public HashSet<String> getURISet(){
@@ -81,4 +82,26 @@ public class Application {
     output.add(this.redirectUri);
     return output;
   }
+
+  public void update(Application other) {
+    this.name = other.name;
+    this.clientId = other.clientId;
+    this.clientSecret = other.clientSecret;
+    this.redirectUri = other.redirectUri;
+    this.description = other.description;
+    this.status = other.status;
+
+    // Do not update ID;
+
+    // Update Users and Groups only if provided (not null)
+    if (other.users != null) {
+      this.users = other.users;
+    }
+
+    if (other.groups != null) {
+      this.groups = other.groups;
+    }
+  }
+
+
 }
