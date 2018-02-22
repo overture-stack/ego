@@ -1,3 +1,4 @@
+#Use Alpine version of OpenJDK to save space
 FROM openjdk:8u121-jdk-alpine
 
 ARG MAVEN_VERSION=3.5.2
