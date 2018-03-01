@@ -28,13 +28,8 @@ FROM openjdk:8u121-jdk-alpine
 COPY --from=0 /usr/src/app/target/ego-*-SNAPSHOT-exec.jar .
 
 CMD java -jar ego-*-SNAPSHOT-exec.jar \
-    --spring.datasource.url="jdbc:postgresql://$EGO_DB_HOST:$EGO_DB_PORT/$EGO_DB?stringtype=unspecified" \
-    --spring.datasource.username="$EGO_DB_USER" \
-    --spring.datasource.password="$EGO_DB_PASS" \
-    --google.client.ids="$EGO_SERVER_GOOGLE_CLIENT_IDS" \
-    --server.port=8081
-
-FROM nginx:alpine
-COPY nginx.conf /etc/nginx/nginx.conf
-
-EXPOSE 80
+  --spring.datasource.url="jdbc:postgresql://$EGO_DB_HOST:$EGO_DB_PORT/$EGO_DB?stringtype=unspecified" \
+  --spring.datasource.username="$EGO_DB_USER" \
+  --spring.datasource.password="$EGO_DB_PASS" \
+  --google.client.ids="$EGO_SERVER_GOOGLE_CLIENT_IDS" \
+  --server.port=8081

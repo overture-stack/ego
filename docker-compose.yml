@@ -1,13 +1,27 @@
 version: "3.2"
 services:
+
   api:
     build: .
     ports:
-      - "$API_HOST_PORT:8081"
+      - "8081:8081"
     environment:
-      - EGO_DB_HOST
-      - EGO_DB_PORT
-      - EGO_DB
-      - EGO_DB_USER
-      - EGO_DB_PASS
-      - EGO_SERVER_GOOGLE_CLIENT_IDS
+      EGO_DB_HOST: postgres 
+      EGO_DB_PORT: 5432
+      EGO_DB: ego
+      EGO_DB_USER: postgres
+      EGO_DB_PASS: password
+      EGO_SERVER_GOOGLE_CLIENT_IDS: 123456
+    depends_on:
+      - postgres
+
+  postgres:
+    restart: always
+    image: postgres:10.1
+    environment:
+      POSTGRES_DB: ego
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./src/main/resources/schemas/psql-schema.sql:/docker-entrypoint-initdb.d/init.sql
+    expose:
+      - "5432"
