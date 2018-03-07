@@ -3,6 +3,7 @@ server:
 
 jwt:
   secret: testsecretisalsoasecret
+  duration: 86400000 #in milliseconds 86400000 = 1day, max = 2147483647
 
 # security
 auth:
@@ -36,7 +37,7 @@ facebook:
 # Google Connection Details
 google:
   client:
-    Ids: 814606937527-v7tr5dfqegjijicq3jeu5arv5tcl4ks0.apps.googleusercontent.com,814606937527-kk7ooglk6pj2tvpn7ldip6g3b74f8o72.apps.googleusercontent.com
+    Ids: 808545688838-99s198l9lhl2hsvkpo5u91f3sflegemp.apps.googleusercontent.com,911372380614-7m296bg4eadc7m43e2mm6fs1a0ggkke1.apps.googleusercontent.com,814606937527-v7tr5dfqegjijicq3jeu5arv5tcl4ks0.apps.googleusercontent.com,814606937527-kk7ooglk6pj2tvpn7ldip6g3b74f8o72.apps.googleusercontent.com
 
 # Logging settings.
 logging:
