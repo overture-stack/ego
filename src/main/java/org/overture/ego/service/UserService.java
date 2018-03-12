@@ -150,6 +150,10 @@ public class UserService {
 
   public User update(@NonNull User updatedUserInfo) {
     User user = userRepository.findOne(updatedUserInfo.getId());
+    if(UserRole.USER.toString().equals(updatedUserInfo.getRole().toUpperCase()))
+      updatedUserInfo.setRole(UserRole.USER.toString());
+    else if(UserRole.ADMIN.toString().equals(updatedUserInfo.getRole().toUpperCase()))
+      updatedUserInfo.setRole(UserRole.ADMIN.toString());
     user.update(updatedUserInfo);
     return userRepository.save(user);
   }
