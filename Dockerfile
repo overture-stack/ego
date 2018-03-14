@@ -33,8 +33,3 @@ CMD java -jar ego-*-SNAPSHOT-exec.jar \
     --spring.datasource.password="$EGO_DB_PASS" \
     --google.client.ids="$EGO_SERVER_GOOGLE_CLIENT_IDS" \
     --server.port=8081
-
-FROM nginx:alpine
-COPY nginx.conf /etc/nginx/nginx.conf
-
-EXPOSE 80
