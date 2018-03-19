@@ -32,3 +32,8 @@ nbdist/
 .vscode
 
 .env
+
+### Docs ###
+_build/
+_source/
+_templates/
