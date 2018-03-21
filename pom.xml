@@ -137,10 +137,12 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-vault-starter-config</artifactId>
+            <version>RELEASE</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-core</artifactId>
+            <version>RELEASE</version>
             <exclusions>
                 <exclusion>
                     <groupId>software.amazon.ion</groupId>
