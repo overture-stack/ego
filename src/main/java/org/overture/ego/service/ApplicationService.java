@@ -37,11 +37,12 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 
 @Service
-public class ApplicationService implements ClientDetailsService {
+public class ApplicationService extends BaseService<Application> implements ClientDetailsService  {
 
   @Autowired
   private ApplicationRepository applicationRepository;
@@ -51,20 +52,18 @@ public class ApplicationService implements ClientDetailsService {
   }
 
   public Application get(@NonNull String applicationId) {
-    //TODO: change id to string
-    return applicationRepository.findOne(Integer.parseInt(applicationId));
+    return getById(applicationRepository,Integer.parseInt(applicationId));
   }
 
   public Application update(@NonNull Application updatedApplicationInfo) {
-    Application app = applicationRepository.findOne(updatedApplicationInfo.getId());
+    Application app = getById(applicationRepository,updatedApplicationInfo.getId());
     app.update(updatedApplicationInfo);
     applicationRepository.save(app);
     return updatedApplicationInfo;
   }
 
   public void delete(@NonNull String applicationId) {
-    //TODO: change id to string
-    applicationRepository.delete(Integer.parseInt(applicationId));
+    applicationRepository.deleteById(Integer.parseInt(applicationId));
   }
 
   public Page<Application> listApps(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {

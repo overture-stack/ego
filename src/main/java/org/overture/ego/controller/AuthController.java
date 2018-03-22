@@ -24,10 +24,14 @@ import org.overture.ego.provider.facebook.FacebookTokenService;
 import org.overture.ego.token.TokenService;
 import org.overture.ego.token.TokenSigner;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
 
 @Slf4j
 @RestController
@@ -91,6 +95,13 @@ public class AuthController {
     } else {
       return "";
     }
+  }
+
+  @ExceptionHandler({ InvalidTokenException.class })
+  public ResponseEntity<Object> handleInvalidTokenException(HttpServletRequest req, InvalidTokenException ex) {
+    log.error("ID Token not found.");
+    return new ResponseEntity<Object>("Invalid ID Token provided.", new HttpHeaders(),
+        HttpStatus.BAD_REQUEST);
   }
 
 }

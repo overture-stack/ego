@@ -13,6 +13,8 @@ export OUTPUT=$(./vault operator init)
 # set token
 export VAULT_TOKEN=$(echo $(echo $OUTPUT | awk -F'Token: ' '{print$2}' | awk -F' Vault' '{print $1}'))
 
+echo 'User this token in bootstrap-token.properties:' $VAULT_TOKEN
+
 # grab all unseal keys
 export VAULT_UNSEAL_KEY1=$(echo $(echo $OUTPUT | awk -F'Unseal Key 1:' '{print$2}' | awk -F' Unseal' '{print $1}'))
 export VAULT_UNSEAL_KEY2=$(echo $(echo $OUTPUT | awk -F'Unseal Key 2:' '{print$2}' | awk -F' Unseal' '{print $1}'))

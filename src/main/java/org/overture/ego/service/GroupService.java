@@ -32,7 +32,7 @@ import java.util.List;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
-public class GroupService {
+public class GroupService extends BaseService<Group> {
 
   @Autowired
   private GroupRepository groupRepository;
@@ -46,8 +46,7 @@ public class GroupService {
   }
 
   public void addAppsToGroups(@NonNull String grpId, @NonNull List<String> appIDs){
-    //TODO: change id to string
-    val group = groupRepository.findOne(Integer.parseInt(grpId));
+    val group = getById(groupRepository, Integer.parseInt(grpId));
     appIDs.forEach(appId -> {
       val app = applicationService.get(appId);
       group.addApplication(app);
@@ -56,8 +55,7 @@ public class GroupService {
   }
 
   public Group get(@NonNull String groupId) {
-    //TODO: change id to string
-    return groupRepository.findOne(Integer.parseInt(groupId));
+    return getById(groupRepository, Integer.parseInt(groupId));
   }
 
   public Group getByName(@NonNull String groupName) {
@@ -65,14 +63,13 @@ public class GroupService {
   }
 
   public Group update(@NonNull Group updatedGroupInfo) {
-    Group group = groupRepository.findOne(updatedGroupInfo.getId());
+    Group group = getById(groupRepository,updatedGroupInfo.getId());
     group.update(updatedGroupInfo);
     return groupRepository.save(group);
   }
 
   public void delete(@NonNull String groupId) {
-    //TODO: change id to string
-     groupRepository.delete(Integer.parseInt(groupId));
+     groupRepository.deleteById(Integer.parseInt(groupId));
   }
 
   public Page<Group> listGroups(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
@@ -118,8 +115,7 @@ public class GroupService {
   }
 
   public void deleteAppsFromGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
-    //TODO: change id to string
-    val group = groupRepository.findOne(Integer.parseInt(grpId));
+    val group = getById(groupRepository,Integer.parseInt(grpId));
     appIDs.forEach(appId -> {
       group.removeApplication(Integer.parseInt(appId));
     });
@@ -127,8 +123,7 @@ public class GroupService {
   }
 
   public void deleteUsersFromGroup(@NonNull String grpId, @NonNull List<String> userIDs) {
-    //TODO: change id to string
-    val group = groupRepository.findOne(Integer.parseInt(grpId));
+    val group = getById(groupRepository,Integer.parseInt(grpId));
     userIDs.forEach(userId -> {
       group.removeUser(Integer.parseInt(userId));
     });
@@ -136,8 +131,7 @@ public class GroupService {
   }
 
   public void addUsersToGroup(@NonNull String grpId, @NonNull List<String> userIDs) {
-    //TODO: change id to string
-    val group = groupRepository.findOne(Integer.parseInt(grpId));
+    val group = getById(groupRepository,Integer.parseInt(grpId));
     userIDs.forEach(userId -> {
       val user = userService.get(userId);
       group.addUser(user);
