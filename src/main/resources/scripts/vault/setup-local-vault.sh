@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 echo 'To test vault locally: download vault from: https://www.vaultproject.io/downloads.html and unzip in this folder'
 echo 'start vault server using : ./vault server -config ./vault.conf'

@@ -1,6 +1,5 @@
 package org.overture.ego.service;
 
-import org.overture.ego.model.entity.User;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 import javax.persistence.EntityNotFoundException;

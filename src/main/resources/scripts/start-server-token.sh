@@ -1,3 +1,4 @@
+#!/bin/bash
 # === Add token profile
 export EGO_IAM_PROFILE=$EGO_ACTIVE_PROFILES,token
 
