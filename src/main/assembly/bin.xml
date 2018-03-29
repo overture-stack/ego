@@ -26,6 +26,9 @@
             <outputDirectory>conf</outputDirectory>
             <includes>
                 <include>application.yml</include>
+                <include>bootstrap.properties</include>
+                <include>bootstrap-iam.properties</include>
+                <include>bootstrap-token.properties</include>
             </includes>
         </fileSet>
         <fileSet>
