@@ -24,7 +24,6 @@ else
     then
         echo "Running with IAM role" $EGO_IAM_ROLE
         java -jar $EGO_INSTALL_PATH/install/ego.jar \
-            --token.key-store=$EGO_KEYSTORE_PATH \
             --spring.datasource.url=jdbc:postgresql://$EGO_DB_HOST:$EGO_DB_PORT/$EGO_DB \
             --server.port=$EGO_SERVER_PORT \
             --spring.application.name=$VAULT_APPLICATION_NAME \
