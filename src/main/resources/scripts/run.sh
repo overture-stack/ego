@@ -12,7 +12,6 @@ if [ -z "$EGO_VAULT_URI" ]
 then
     java -jar $EGO_INSTALL_PATH/install/ego.jar \
         --spring.profiles.active=$EGO_ACTIVE_PROFILES \
-        --token.key-store=$EGO_KEYSTORE_PATH \
         --spring.datasource.url="jdbc:postgresql://$EGO_DB_HOST:$EGO_DB_PORT/$EGO_DB?stringtype=unspecified" \
         --spring.datasource.username="$EGO_DB_USER" \
         --spring.datasource.password="$EGO_DB_PASS" \
@@ -25,7 +24,6 @@ else
     then
         echo "Running with IAM role" $EGO_IAM_ROLE
         java -jar $EGO_INSTALL_PATH/install/ego.jar \
-            --spring.profiles.active=$EGO_IAM_PROFILE \
             --token.key-store=$EGO_KEYSTORE_PATH \
             --spring.datasource.url=jdbc:postgresql://$EGO_DB_HOST:$EGO_DB_PORT/$EGO_DB \
             --server.port=$EGO_SERVER_PORT \
@@ -39,7 +37,6 @@ else
         echo "Running with Vault token"
         java -jar $EGO_INSTALL_PATH/install/ego.jar \
             --spring.profiles.active=$EGO_TOKEN_PROFILE \
-            --token.key-store=$EGO_KEYSTORE_PATH \
             --spring.datasource.url=jdbc:postgresql://$EGO_DB_HOST:$EGO_DB_PORT/$EGO_DB \
             --server.port=$EGO_SERVER_PORT \
             --spring.application.name=$VAULT_APPLICATION_NAME \
