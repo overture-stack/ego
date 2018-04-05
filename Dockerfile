@@ -19,16 +19,15 @@ RUN mvn verify clean --fail-never
 
 ADD . .
 
-RUN mkdir -p /srv/ego
-RUN mvn package -Dmaven.test.skip=true
-WORKDIR /usr/src/app/target
-RUN tar xvzf ego-*-dist.tar.gz --directory /srv/ego
-RUN mv /srv/ego/ego* /srv/ego/install
+RUN mkdir -p /srv/ego/install \
+    && mkdir -p /srv/ego/exec \
+    && mvn package -Dmaven.test.skip=true \
+    && mv /usr/src/app/target/ego-*-SNAPSHOT-exec.jar /srv/ego/install/ego.jar \
+    && mv /usr/src/app/src/main/resources/scripts/run.sh /srv/ego/exec/run.sh
 
 # setup required environment variables
 ENV EGO_INSTALL_PATH /srv/ego
-ENV EGO_KEYSTORE_PATH $EGO_INSTALL_PATH/cert/ego-jwt.jks
 
 # start ego server
 WORKDIR $EGO_INSTALL_PATH
-CMD $EGO_INSTALL_PATH/install/exec/run.sh
+CMD $EGO_INSTALL_PATH/exec/run.sh
