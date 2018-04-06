@@ -31,3 +31,11 @@ variable "pg_db_name" {
 variable "vault_role" {}
 variable "ego_active_profiles" {}
 variable "ego_db" {}
+variable "ego_db_host" {}
+variable "ego_db_port" {}
+variable "ego_server_host" {}
+variable "ego_iam_role" {}
+variable "ego_vault_port" {}
+variable "ego_vault_host" {}
+variable "ego_vault_scheme" {}
+variable "vault_application_name" {}
