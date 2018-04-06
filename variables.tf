@@ -30,4 +30,3 @@ variable "pg_db_name" {
 }
 variable "vault_role" {}
 variable "ego_active_profiles" {}
-variable "indexd_url" {}

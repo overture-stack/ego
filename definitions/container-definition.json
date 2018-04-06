@@ -11,7 +11,6 @@
       { "name" : "PG_HOST", "value" : "${pg_host}" },
       { "name" : "DB_SECRET", "value" : "${db_secret_path}" },
       { "name" : "PG_NAME", "value" : "${pg_db_name}" },
-      { "name" : "INDEXD_URL", "value" : "${indexd_url}" },
       { "name" : "INDEXD_SECRET", "value" : "${indexd_secret_path}" },
       { "name": "VAULT_ROLE", "value": "${vault_role}"},
       { "name": "EGO_DB", "value": "${ego_db}"},
