@@ -21,7 +21,6 @@ variable "image" {
 variable "task_role_arn" {
 }
 variable "vault_url" {}
-variable "pg_host" {}
 variable "db_secret_path" {
   default=""
 }
@@ -33,7 +32,7 @@ variable "ego_active_profiles" {}
 variable "ego_db" {}
 variable "ego_db_host" {}
 variable "ego_db_port" {}
-variable "ego_server_host" {}
+variable "ego_server_port" {}
 variable "ego_iam_role" {}
 variable "ego_vault_port" {}
 variable "ego_vault_host" {}
