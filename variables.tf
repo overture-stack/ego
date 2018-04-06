@@ -29,3 +29,4 @@ variable "pg_db_name" {
   default = ""
 }
 variable "vault_role" {}
+variable "ego_active_profiles" {}
