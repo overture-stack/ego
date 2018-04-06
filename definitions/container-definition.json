@@ -8,7 +8,6 @@
     "environment" : [
       { "name" : "VAULT_URL", "value" : "${vault_url}" },
       { "name" : "IAM_ROLE", "value" : "${task_role_arn}" },
-      { "name" : "PG_HOST", "value" : "${pg_host}" },
       { "name" : "EGO_DB_HOST", "value" : "${ego_db_host}" },
       { "name" : "EGO_DB_PORT", "value" : "${ego_db_port}" },
       { "name" : "EGO_SERVER_PORT", "value" : "${ego_server_port}" },

@@ -9,7 +9,6 @@ data "template_file" "task_definition" {
     task_role_arn = "${var.task_role_arn}"
     vault_role = "${var.vault_role}"
     vault_url     = "${var.vault_url}"
-    pg_host      = "${var.pg_host}"
     db_secret_path = "${var.db_secret_path}"
     pg_db_name     = "${var.pg_db_name}"
     ego_db 	= "${var.ego_db}"
