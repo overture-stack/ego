@@ -12,6 +12,7 @@ data "template_file" "task_definition" {
     pg_host      = "${var.pg_host}"
     db_secret_path = "${var.db_secret_path}"
     pg_db_name     = "${var.pg_db_name}"
+    ego_active_profiles = "auth"
   }
 }
 
