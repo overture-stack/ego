@@ -12,6 +12,7 @@ data "template_file" "task_definition" {
     db_secret_path = "${var.db_secret_path}"
     ego_db_host     = "${var.ego_db_host}"
     ego_db_port 	= "${var.ego_db_port}"
+    ego_server_port 	= "${var.ego_server_port}"
     ego_db 	= "${var.ego_db}"
     ego_active_profiles = "${var.ego_active_profiles}"
   }
