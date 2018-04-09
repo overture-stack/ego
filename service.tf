@@ -86,6 +86,13 @@ resource "aws_security_group" "lb_sg" {
         protocol = "TCP"
         cidr_blocks = ["${var.chop_cidr}"]
     }
+    
+    ingress {
+        from_port = 80
+        to_port = 80
+        protocol = "TCP"
+        cidr_blocks = ["${var.oicr_cidr}"]
+    }
 
     # TODO: this probably only needs egress to the ECS security group.
     egress {

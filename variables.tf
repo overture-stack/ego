@@ -13,6 +13,7 @@ variable "region" {
   default="us-east-1"
 }
 variable "chop_cidr" {}
+variable "oicr_cidr" {}
 variable "bucket" {}
 variable "owner" {}
 variable "organzation" {}
