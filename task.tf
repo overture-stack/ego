@@ -16,6 +16,7 @@ data "template_file" "task_definition" {
     ego_db 	= "${var.ego_db}"
     ego_iam_role 	= "${var.ego_iam_role}"
     ego_vault_port 	= "${var.ego_vault_port}"
+    ego_vault_host 	= "${var.ego_vault_host}"
     ego_active_profiles = "${var.ego_active_profiles}"
   }
 }
