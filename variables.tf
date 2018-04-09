@@ -24,9 +24,6 @@ variable "vault_url" {}
 variable "db_secret_path" {
   default=""
 }
-variable "pg_db_name" {
-  default = ""
-}
 variable "vault_role" {}
 variable "ego_active_profiles" {}
 variable "ego_db" {}
