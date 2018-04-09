@@ -11,7 +11,6 @@
       { "name" : "EGO_DB_HOST", "value" : "${ego_db_host}" },
       { "name" : "EGO_DB_PORT", "value" : "${ego_db_port}" },
       { "name" : "EGO_SERVER_PORT", "value" : "${ego_server_port}" },
-      { "name" : "PG_NAME", "value" : "${pg_db_name}" },
       { "name": "VAULT_ROLE", "value": "${vault_role}"},
       { "name": "EGO_DB", "value": "${ego_db}"},
       { "name": "EGO_ACTIVE_PROFILES", "value": "${ego_active_profiles}"},
