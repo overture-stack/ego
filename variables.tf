@@ -33,5 +33,6 @@ variable "ego_server_port" {}
 variable "ego_iam_role" {}
 variable "ego_vault_port" {}
 variable "ego_vault_host" {}
+variable "ego_vault_uri" {}
 variable "ego_vault_scheme" {}
 variable "vault_application_name" {}
