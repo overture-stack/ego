@@ -36,5 +36,5 @@ resource "aws_ecs_task_definition" "kf-application-task" {
   network_mode = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu = "1vCPU"
-  memory = "4096"
+  memory = "8192"
 }
