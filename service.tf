@@ -109,8 +109,8 @@ resource aws_security_group "kf-service-security-group" {
     vpc_id = "${data.aws_vpc.apps-vpc.id}"
 
     ingress {
-        from_port = 80
-        to_port = 80
+        from_port = 8081
+        to_port = 8081
         protocol = "TCP"
         security_groups = ["${aws_security_group.lb_sg.id}"]
     }

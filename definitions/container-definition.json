@@ -3,7 +3,8 @@
     "name": "${service_name}-${environment}-container",
     "image": "${image}",
     "cpu": 2048,
-    "memory": 4096,
+    "memory": 8192,
+    "memoryReservation": 8192,
     "essential": true,
     "environment" : [
       { "name" : "VAULT_URL", "value" : "${vault_url}" },
