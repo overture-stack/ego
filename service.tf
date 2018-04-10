@@ -152,7 +152,7 @@ resource "aws_ecs_service" "kf-application-service" {
   task_definition = "${aws_ecs_task_definition.kf-application-task.arn}"
   desired_count   = 1
   launch_type     = "FARGATE"
-  health_check_grace_period_seconds = 300
+  #health_check_grace_period_seconds = 300
   #iam_role        = "${aws_iam_role.ecs_service.arn}"
   depends_on = [
     "aws_iam_role_policy.ecs_service",
