@@ -49,6 +49,13 @@ logging:
     threshold: ALL
   loggers:
     "org.skife.jdbi.v2": TRACE
+---
+###############################################################################
+# Profile - "jks"
+###############################################################################
+spring:
+  profiles: jks
+  profiles.include: default
 
 token:
   key-store: src/main/resources/ego-jwt.jks
@@ -78,10 +85,10 @@ logging:
 
 ---
 ###############################################################################
-# Profile - "secure"
+# Profile - "demo"
 ###############################################################################
 spring:
   profiles: demo
 
 # demo flag
-demo: true
+demo: false
