@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.overture.ego.token;
+package org.overture.ego.token.signer;
 
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package org.overture.ego.token;
+package org.overture.ego.token.signer;
 
 import java.security.Key;
 import java.security.KeyPair;

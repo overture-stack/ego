@@ -22,7 +22,7 @@ import lombok.val;
 import org.overture.ego.provider.google.GoogleTokenService;
 import org.overture.ego.provider.facebook.FacebookTokenService;
 import org.overture.ego.token.TokenService;
-import org.overture.ego.token.TokenSigner;
+import org.overture.ego.token.signer.TokenSigner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

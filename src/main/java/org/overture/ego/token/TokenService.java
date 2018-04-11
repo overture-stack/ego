@@ -23,6 +23,7 @@ import lombok.val;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.reactor.events.UserEvents;
 import org.overture.ego.service.UserService;
+import org.overture.ego.token.signer.TokenSigner;
 import org.overture.ego.utils.TypeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

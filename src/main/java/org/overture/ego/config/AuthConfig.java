@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.security.CorsFilter;
 import org.overture.ego.token.CustomTokenEnhancer;
 import org.overture.ego.service.ApplicationService;
-import org.overture.ego.token.TokenSigner;
+import org.overture.ego.token.signer.TokenSigner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
