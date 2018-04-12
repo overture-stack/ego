@@ -1,6 +1,6 @@
 #!/bin/bash
 # === Add token profile
-export EGO_TOKEN_PROFILE=$EGO_ACTIVE_PROFILES,,db,app,token
+export EGO_TOKEN_PROFILE=$EGO_ACTIVE_PROFILES,db,app,token
 
 # === Start Server
 $EGO_INSTALL_PATH/install/bin/ego start \
