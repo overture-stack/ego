@@ -5,9 +5,16 @@ services:
     ports:
       - "$API_HOST_PORT:8081"
     environment:
-      - EGO_DB_HOST
-      - EGO_DB_PORT
-      - EGO_DB
-      - EGO_DB_USER
-      - EGO_DB_PASS
-      - EGO_SERVER_GOOGLE_CLIENT_IDS
+      - EGO_DB_HOST=pg
+      - EGO_DB_PORT=5432
+      - EGO_DB=ego
+      - EGO_DB_USER=postgres
+      - EGO_DB_PASS=postgres
+      - EGO_SERVER_GOOGLE_CLIENT_IDS=""
+    depends_on:
+      - pg
+  pg:
+    image: postgres:9.5
+    environment:
+      - POSTGRES_DB=ego
+      - POSTGRES_PASSWORD=postgres

@@ -12,9 +12,10 @@
 - [Introduction](#introduction)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
-- [Quick Start](#quickstart)
+- [Quick Start](#quick-start)
+- [Development Install](#development-install)
   - [Step 1 - Setup Database](#step-1---setup-database)
-  - [Step 1 - Run](#step-2---run)
+  - [Step 2 - Run](#step-2---run)
 - [Tech Specifications](#tech-specification)
 
 ## Introduction
@@ -56,6 +57,16 @@ The application is written in JAVA using Spring Boot and Spring Security Framewo
 ## Quick Start
 
 The goal of this quick start is to get a working application quickly up and running.
+
+Set the `API_HOST_PORT` where ego is to be run, then run docker compose:
+```
+API_HOST_PORT=8080 docker-compose up -d
+```
+
+Ego should now be deployed locally with the swagger ui at 
+`http://localhost:8080/swagger-ui.html`
+
+## Development Install
 
 ### Step 1 - Setup Database
 1. Install Postgres 
