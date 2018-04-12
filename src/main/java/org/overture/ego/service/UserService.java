@@ -42,7 +42,7 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 @Slf4j
 @Service
 @Transactional
-public class UserService {
+public class UserService extends BaseService<User> {
 
   /*
     Constants
@@ -120,8 +120,7 @@ public class UserService {
   }
 
   public void addUsersToGroups(@NonNull String userId, @NonNull List<String> groupIDs){
-    //TODO: change id to string
-    val user = userRepository.findOne(Integer.parseInt(userId));
+    val user = getById(userRepository, Integer.parseInt(userId));
     groupIDs.forEach(grpId -> {
       val group = groupService.get(grpId);
       user.addNewGroup(group);
@@ -130,8 +129,7 @@ public class UserService {
   }
 
   public void addUsersToApps(@NonNull String userId, @NonNull List<String> appIDs){
-    //TODO: change id to string
-    val user = userRepository.findOne(Integer.parseInt(userId));
+    val user = getById(userRepository, Integer.parseInt(userId));
     appIDs.forEach(appId -> {
       val app = applicationService.get(appId);
       user.addNewApplication(app);
@@ -140,8 +138,7 @@ public class UserService {
   }
 
   public User get(@NonNull String userId) {
-    //TODO: change id to string
-    return userRepository.findOne(Integer.parseInt(userId));
+    return getById(userRepository, Integer.parseInt(userId));
   }
 
   public User getByName(@NonNull String userName) {
@@ -149,13 +146,17 @@ public class UserService {
   }
 
   public User update(@NonNull User updatedUserInfo) {
-    User user = userRepository.findOne(updatedUserInfo.getId());
+    val user = getById(userRepository, updatedUserInfo.getId());
+    if(UserRole.USER.toString().equals(updatedUserInfo.getRole().toUpperCase()))
+      updatedUserInfo.setRole(UserRole.USER.toString());
+    else if(UserRole.ADMIN.toString().equals(updatedUserInfo.getRole().toUpperCase()))
+      updatedUserInfo.setRole(UserRole.ADMIN.toString());
     user.update(updatedUserInfo);
     return userRepository.save(user);
   }
 
   public void delete(@NonNull String userId) {
-    userRepository.delete(Integer.parseInt(userId));
+    userRepository.deleteById(Integer.parseInt(userId));
   }
 
   public Page<User> listUsers(@NonNull List<SearchFilter> filters,@NonNull Pageable pageable) {
@@ -169,8 +170,7 @@ public class UserService {
   }
 
   public void deleteUserFromGroup(@NonNull String userId, @NonNull List<String> groupIDs) {
-    //TODO: change id to string
-    val user = userRepository.findOne(Integer.parseInt(userId));
+    val user = getById(userRepository,Integer.parseInt(userId));
     groupIDs.forEach(grpId -> {
       user.removeGroup(Integer.parseInt(grpId));
     });
@@ -178,8 +178,7 @@ public class UserService {
   }
 
   public void deleteUserFromApp(@NonNull String userId, @NonNull List<String> appIDs) {
-    //TODO: change id to string
-    val user = userRepository.findOne(Integer.parseInt(userId));
+    val user = getById(userRepository, Integer.parseInt(userId));
     appIDs.forEach(appId -> {
       user.removeApplication(Integer.parseInt(appId));
     });

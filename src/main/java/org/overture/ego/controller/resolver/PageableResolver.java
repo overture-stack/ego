@@ -61,7 +61,7 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
       }
 
       @Override
-      public int getOffset() {
+      public long getOffset() {
         if(StringUtils.isEmpty(offset)){
           return  DEFAULT_PAGE_NUM;
         } else {

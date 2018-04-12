@@ -30,7 +30,7 @@ import org.springframework.security.oauth2.provider.expression.OAuth2MethodSecur
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
+@Order(SecurityProperties.IGNORED_ORDER)
 @Profile("auth")
 public class AuthorizationStrategyConfig extends GlobalMethodSecurityConfiguration {
 

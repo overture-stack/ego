@@ -4,7 +4,7 @@ services:
   api:
     build: .
     ports:
-      - "8081:8081"
+      - "$API_HOST_PORT:8081"
     environment:
       EGO_DB_HOST: postgres 
       EGO_DB_PORT: 5432

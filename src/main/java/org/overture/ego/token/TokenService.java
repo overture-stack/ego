@@ -23,6 +23,7 @@ import lombok.val;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.reactor.events.UserEvents;
 import org.overture.ego.service.UserService;
+import org.overture.ego.token.signer.TokenSigner;
 import org.overture.ego.utils.TypeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +41,8 @@ public class TokenService {
   @Value("${demo:false}")
   private boolean demo;
 
+  @Value("${jwt.duration:86400000}")
+  private int DURATION;
   @Autowired
   private UserService userService;
   @Autowired
@@ -52,7 +55,7 @@ public class TokenService {
     Constant
   */
   private static final String ISSUER_NAME="ego";
-  private static final int DURATION=1000000;
+
 
   public String generateUserToken(IDToken idToken){
     // If the demo flag is set, all tokens will be generated as the Demo User,

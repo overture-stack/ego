@@ -35,10 +35,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
+import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @Slf4j
@@ -254,5 +257,12 @@ public class GroupController {
     } else {
       return new PageDTO<>(userService.findGroupsUsers(groupId, query, filters, pageable));
     }
+  }
+
+  @ExceptionHandler({ EntityNotFoundException.class })
+  public ResponseEntity<Object> handleEntityNotFoundException(HttpServletRequest req, EntityNotFoundException ex) {
+    log.error("Group ID not found.");
+    return new ResponseEntity<Object>("Invalid Group ID provided.", new HttpHeaders(),
+        HttpStatus.BAD_REQUEST);
   }
 }
