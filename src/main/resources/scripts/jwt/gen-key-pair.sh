@@ -9,4 +9,3 @@ awk '{ printf "%s", $0 }' private_key_pkcs8.pem | awk '{ gsub("-----BEGIN PRIVAT
 
 # cleanup
 rm private_key.pem private_key_pkcs8.pem public_key.pem
-
