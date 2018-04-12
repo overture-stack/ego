@@ -26,6 +26,27 @@
             <outputDirectory>conf</outputDirectory>
             <includes>
                 <include>application.yml</include>
+                <include>bootstrap.properties</include>
+                <include>bootstrap-iam.properties</include>
+                <include>bootstrap-token.properties</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>src/main/resources</directory>
+            <outputDirectory>cert</outputDirectory>
+            <includes>
+                <include>ego-jwt.jks</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>src/main/resources/scripts</directory>
+            <outputDirectory>exec</outputDirectory>
+            <includes>
+                <include>run.sh</include>
+                <include>start-server.sh</include>
+                <include>stop-server.sh</include>
+                <include>start-server-iam.sh</include>
+                <include>start-server-token.sh</include>
             </includes>
         </fileSet>
         <fileSet>

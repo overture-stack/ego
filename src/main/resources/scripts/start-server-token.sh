@@ -1,10 +1,10 @@
 #!/bin/bash
 # === Add token profile
-export EGO_IAM_PROFILE=$EGO_ACTIVE_PROFILES,token
+export EGO_TOKEN_PROFILE=$EGO_ACTIVE_PROFILES,app,db,token
 
 # === Start Server
 $EGO_INSTALL_PATH/install/bin/ego start \
-    wrapper.app.parameter.4=--spring.profiles.active=$EGO_IAM_PROFILE \
+    wrapper.app.parameter.4=--spring.profiles.active=EGO_TOKEN_PROFILE \
     wrapper.app.parameter.5=--token.key-store=$EGO_KEYSTORE_PATH \
     set.SPRING_DATASOURCE_URL=jdbc:postgresql://$EGO_DB_HOST:$EGO_DB_PORT/$EGO_DB \
     set.SERVER_PORT=$EGO_SERVER_PORT \

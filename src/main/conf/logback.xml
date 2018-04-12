@@ -48,27 +48,24 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     </appender>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <!-- encoders are assigned the type
-             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
         <encoder>
             <pattern>${pattern}</pattern>
         </encoder>
     </appender>
 
     <logger name="com.networknt.schema" level="ERROR" additivity="false">
-        <appender-ref ref="FILE"/>
+        <appender-ref ref="STDOUT" />
     </logger>
 
     <logger name="org.springframework.boot" level="INFO">
-        <appender-ref ref="FILE" />
+        <appender-ref ref="STDOUT" />
     </logger>
 
     <logger name="org.springframework.security" level="ERROR">
-        <appender-ref ref="FILE" />
+        <appender-ref ref="STDOUT" />
     </logger>
 
-    <root level="INFO">
-        <appender-ref ref="FILE" />
+    <root level="info">
+        <appender-ref ref="STDOUT" />
     </root>
-
 </configuration>

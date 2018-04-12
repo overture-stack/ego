@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package org.overture.ego.token;
+package org.overture.ego.token.signer;
 
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import sun.misc.BASE64Encoder;
 
@@ -30,7 +31,8 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class TokenSigner {
+@Profile("jks")
+public class JKSTokenSigner implements TokenSigner {
 
   /*
     Constants
@@ -63,7 +65,6 @@ public class TokenSigner {
       log.error("Error loading keystore:{}", ioex);
     }
   }
-
   public Optional<Key> getKey(){
     try{
        return Optional.of(keyStore.getKey(keyalias,keyStorePwd.toCharArray()));

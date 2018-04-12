@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # === Add IAM profile
-export EGO_IAM_PROFILE=$EGO_ACTIVE_PROFILES,iam
+export EGO_IAM_PROFILE=$EGO_ACTIVE_PROFILES,app,db,iam
 
 # === Start Server
 $EGO_INSTALL_PATH/install/bin/ego start \
