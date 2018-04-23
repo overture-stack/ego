@@ -19,10 +19,12 @@ package org.overture.ego.model.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.overture.ego.model.enums.Fields;
+import org.overture.ego.view.Views;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -39,6 +41,7 @@ import java.util.Set;
 @EqualsAndHashCode(of={"id"})
 @NoArgsConstructor
 @RequiredArgsConstructor
+@JsonView(Views.REST.class)
 public class Group {
 
   @Id

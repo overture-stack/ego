@@ -19,16 +19,15 @@ package org.overture.ego.model.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.overture.ego.model.enums.Fields;
+import org.overture.ego.view.Views;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
@@ -40,6 +39,7 @@ import java.util.stream.Collectors;
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @EqualsAndHashCode(of={"id"})
 @NoArgsConstructor
+@JsonView(Views.REST.class)
 public class User {
 
   @Id
@@ -47,10 +47,12 @@ public class User {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   int id;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @NonNull
   @Column(nullable = false, name = Fields.NAME)
   String name;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @NonNull
   @Column(nullable = false, name = Fields.EMAIL)
   String email;
@@ -59,21 +61,27 @@ public class User {
   @Column(nullable = false, name = Fields.ROLE)
   String role;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @Column(name = Fields.STATUS)
   String status;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @Column(name = Fields.FIRSTNAME)
   String firstName;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @Column(name = Fields.LASTNAME)
   String lastName;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @Column(name = Fields.CREATEDAT)
   String createdAt;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @Column(name = Fields.LASTLOGIN)
   String lastLogin;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @Column(name = Fields.PREFERREDLANGUAGE)
   String preferredLanguage;
 
@@ -89,7 +97,7 @@ public class User {
           inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
   @JsonIgnore protected Set<Application> applications;
 
-  @JsonIgnore
+  @JsonView(Views.JWTAccessToken.class)
   public List<String> getGroupNames(){
     if(this.groups == null) {
       return new ArrayList<String>();
@@ -97,12 +105,17 @@ public class User {
     return this.groups.stream().map(g -> g.getName()).collect(Collectors.toList());
   }
 
-  @JsonIgnore
+  @JsonView(Views.JWTAccessToken.class)
   public List<String> getApplicationNames(){
     if(this.applications == null){
       return new ArrayList<String>();
     }
     return this.applications.stream().map(a -> a.getName()).collect(Collectors.toList());
+  }
+
+  @JsonView(Views.JWTAccessToken.class)
+  public List<String> getRoles(){
+    return Arrays.asList(this.getRole());
   }
 
   public void addNewApplication(@NonNull Application app){

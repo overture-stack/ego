@@ -16,6 +16,7 @@
 
 package org.overture.ego.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.dto.PageDTO;
@@ -28,6 +29,7 @@ import org.overture.ego.security.AdminScoped;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
+import org.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -78,6 +80,7 @@ public class UserController {
           @ApiResponse(code = 200, message = "Page of users", response = PageDTO.class)
       }
   )
+  @JsonView(Views.REST.class)
   public @ResponseBody
   PageDTO<User> getUsersList(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
@@ -113,6 +116,7 @@ public class UserController {
           @ApiResponse(code = 200, message = "User Details", response = User.class)
       }
   )
+  @JsonView(Views.REST.class)
   public @ResponseBody
   User getUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
@@ -168,6 +172,7 @@ public class UserController {
                   @ApiResponse(code = 200, message = "Page of groups of user", response = PageDTO.class)
           }
   )
+  @JsonView(Views.REST.class)
   public @ResponseBody
   PageDTO<Group> getUsersGroups(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
@@ -239,6 +244,7 @@ public class UserController {
                   @ApiResponse(code = 200, message = "Page of apps of user", response = PageDTO.class)
           }
   )
+  @JsonView(Views.REST.class)
   public @ResponseBody
   PageDTO<Application> getUsersApplications(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,

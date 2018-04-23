@@ -19,25 +19,30 @@ package org.overture.ego.model.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.overture.ego.model.enums.Fields;
+import org.overture.ego.view.Views;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "egoapplication")
 @Data
 @ToString(exclude={"groups","users"})
 @JsonPropertyOrder({"id", "name", "clientId", "clientSecret", "redirectUri", "description", "status"})
-@JsonInclude(JsonInclude.Include.ALWAYS)
+@JsonInclude(JsonInclude.Include.CUSTOM)
 @EqualsAndHashCode(of={"id"})
 @NoArgsConstructor
 @RequiredArgsConstructor
+@JsonView(Views.REST.class)
 public class Application {
 
   @Id
@@ -45,10 +50,12 @@ public class Application {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   int id;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @NonNull
   @Column(nullable = false, name = Fields.NAME)
   String name;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @NonNull
   @Column(nullable = false, name = Fields.CLIENTID)
   String clientId;
@@ -57,12 +64,15 @@ public class Application {
   @Column(nullable = false, name = Fields.CLIENTSECRET)
   String clientSecret;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @Column(name = Fields.REDIRECTURI)
   String redirectUri;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @Column(name = Fields.DESCRIPTION)
   String description;
 
+  @JsonView(Views.JWTAccessToken.class)
   @Column(name = Fields.STATUS)
   String status;
 
@@ -81,6 +91,14 @@ public class Application {
     val output = new HashSet<String>();
     output.add(this.redirectUri);
     return output;
+  }
+
+  @JsonView(Views.JWTAccessToken.class)
+  public List<String> getGroupNames(){
+    if(this.groups == null) {
+      return new ArrayList<String>();
+    }
+    return this.groups.stream().map(g -> g.getName()).collect(Collectors.toList());
   }
 
   public void update(Application other) {

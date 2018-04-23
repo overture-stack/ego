@@ -29,6 +29,7 @@ public interface ApplicationRepository
 
   Application findOneByClientIdIgnoreCase(String clientId);
   Application findOneByNameIgnoreCase(String name);
+  Application findOneByName(String name);
   Page<Application> findAllByStatusIgnoreCase(String status, Pageable pageable);
 
 }

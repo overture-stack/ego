@@ -26,6 +26,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
@@ -76,6 +78,11 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   }
 
   @Bean
+  public PasswordEncoder passwordEncoder() {
+    return NoOpPasswordEncoder.getInstance();
+  }
+
+  @Bean
   public JwtAccessTokenConverter accessTokenConverter() {
     JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
     if(tokenSigner.getKeyPair().isPresent()) {
@@ -93,12 +100,10 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
     return defaultTokenServices;
   }
 
-
   @Override
   public void configure(ClientDetailsServiceConfigurer clients)
           throws Exception {
     clients.withClientDetails(clientDetailsService);
-
   }
 
   @Bean
@@ -114,7 +119,6 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
     endpoints.tokenStore(tokenStore())
             .tokenEnhancer(tokenEnhancerChain)
             .accessTokenConverter(accessTokenConverter());
-    endpoints.authenticationManager(this.authenticationManager);
 
   }
 

@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-package org.overture.ego.token;
+package org.overture.ego.token.user;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
+import org.overture.ego.model.entity.User;
 
 @Data
 @NoArgsConstructor
 @RequiredArgsConstructor
 @JsonInclude(JsonInclude.Include.ALWAYS)
-public class TokenContext {
+public class UserTokenContext {
 
   @NonNull
   @JsonProperty("user")
-  private TokenUserInfo userInfo;
+  private User userInfo;
 }

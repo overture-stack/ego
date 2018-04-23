@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.overture.ego.token;
+package org.overture.ego.token.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
@@ -32,14 +32,14 @@ import java.util.List;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper=true)
 @JsonIgnoreProperties({ "id", "groupNames", "applicationNames", "role", "groups","applications" })
-public class TokenUserInfo extends User {
+public class UserTokenInfo extends User {
 
   /*
     Variables
    */
   private List<String> roles;
 
-  public TokenUserInfo(User u){
+  public UserTokenInfo(User u){
     this.setId(u.getId());
     this.setName(u.getName());
     this.addNewRole(u.getRole());

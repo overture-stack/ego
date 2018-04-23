@@ -14,31 +14,33 @@
  * limitations under the License.
  */
 
-package org.overture.ego.model.dto;
+package org.overture.ego.token.user;
 
 
-import com.fasterxml.jackson.annotation.JsonView;
-import lombok.Getter;
-import lombok.NonNull;
-import org.overture.ego.view.Views;
-import org.springframework.data.domain.Page;
+import lombok.*;
+import org.overture.ego.token.TokenClaims;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
-@Getter
-@JsonView(Views.REST.class)
-public class PageDTO<T> {
 
-  private final int limit;
-  private final int offset;
-  private final long count;
-  private final List<T> resultSet;
+@Data
+@NoArgsConstructor
+public class UserTokenClaims extends TokenClaims {
 
-  public PageDTO(@NonNull final Page<T> page) {
-    this.limit      = page.getSize();
-    this.offset     = page.getNumber();
-    this.count      = page.getTotalElements();
-    this.resultSet  = page.getContent();
+  @NonNull
+  private UserTokenContext context;
+
+  public String getSub(){
+    if(StringUtils.isEmpty(sub)) {
+      return String.valueOf(this.context.getUserInfo().getId());
+    } else {
+      return sub;
+    }
+  }
+
+  public List<String> getAud(){
+    return this.context.getUserInfo().getApplicationNames();
   }
 
 }

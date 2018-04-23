@@ -16,6 +16,7 @@
 
 package org.overture.ego.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
@@ -31,6 +32,7 @@ import org.overture.ego.security.AdminScoped;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
+import org.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -82,6 +84,7 @@ public class GroupController {
           @ApiResponse(code = 200, message = "Page of groups", response = PageDTO.class)
       }
   )
+  @JsonView(Views.REST.class)
   public @ResponseBody
   PageDTO<Group> getGroupsList(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
@@ -116,6 +119,7 @@ public class GroupController {
           @ApiResponse(code = 200, message = "Group Details", response = Group.class)
       }
   )
+  @JsonView(Views.REST.class)
   public @ResponseBody
   Group getGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
@@ -172,6 +176,7 @@ public class GroupController {
                   @ApiResponse(code = 200, message = "Page of applications of group", response = PageDTO.class)
           }
   )
+  @JsonView(Views.REST.class)
   public @ResponseBody
   PageDTO<Application> getGroupsApplications(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
@@ -244,6 +249,7 @@ public class GroupController {
                   @ApiResponse(code = 200, message = "Page of users of group", response = PageDTO.class)
           }
   )
+  @JsonView(Views.REST.class)
   public @ResponseBody
   PageDTO<User> getGroupsUsers(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
