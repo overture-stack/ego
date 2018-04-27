@@ -14,55 +14,44 @@
  * limitations under the License.
  */
 
-package org.overture.ego.token;
+package org.overture.ego.token.app;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
-import lombok.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import org.overture.ego.token.TokenClaims;
 import org.overture.ego.view.Views;
-
+import org.springframework.util.StringUtils;
+import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @JsonView(Views.JWTAccessToken.class)
-public abstract class TokenClaims {
-  @NonNull
-  protected Integer iat;
-
-  @NonNull
-  protected Integer exp;
-
-  @NonNull
-  @JsonIgnore
-  protected Integer validDuration;
-
-  @Getter
-  protected String sub;
-
-  @NonNull
-  protected String iss;
-
-  @Getter
-  protected List<String> aud;
+public class AppTokenClaims extends TokenClaims {
 
   /*
-    Defaults
-   */
-  private String jti = UUID.randomUUID().toString();
+  Constants
+ */
+  public static final String[] AUTHORIZED_GRANTS=
+      {"authorization_code","client_credentials", "password", "refresh_token"};
+  public static final String[] SCOPES = {"read","write", "delete"};
+  public static final String ROLE = "ROLE_CLIENT";
 
-  @Getter(AccessLevel.NONE)
-  @Setter(AccessLevel.NONE)
-  @JsonIgnore
-  private long initTime = System.currentTimeMillis();
+  @NonNull
+  private AppTokenContext context;
 
-  public int getExp(){
-    return ((int) ((this.initTime + validDuration)/ 1000L));
+  public String getSub(){
+    if(StringUtils.isEmpty(sub)) {
+      return String.valueOf(this.context.getAppInfo().getId());
+    } else {
+      return sub;
+    }
   }
 
-  public int getIat(){
-    return (int) (this.initTime / 1000L);
+  public List<String> getAud(){
+    return Arrays.asList(this.context.getAppInfo().getName());
   }
 
 }

@@ -19,25 +19,30 @@ package org.overture.ego.model.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.overture.ego.model.enums.Fields;
+import org.overture.ego.view.Views;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "egoapplication")
 @Data
-@ToString(exclude={"groups","users"})
+@ToString(exclude={"wholeGroups","wholeUsers"})
 @JsonPropertyOrder({"id", "name", "clientId", "clientSecret", "redirectUri", "description", "status"})
-@JsonInclude(JsonInclude.Include.ALWAYS)
+@JsonInclude(JsonInclude.Include.CUSTOM)
 @EqualsAndHashCode(of={"id"})
 @NoArgsConstructor
 @RequiredArgsConstructor
+@JsonView(Views.REST.class)
 public class Application {
 
   @Id
@@ -45,10 +50,12 @@ public class Application {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   int id;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @NonNull
   @Column(nullable = false, name = Fields.NAME)
   String name;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @NonNull
   @Column(nullable = false, name = Fields.CLIENTID)
   String clientId;
@@ -57,30 +64,41 @@ public class Application {
   @Column(nullable = false, name = Fields.CLIENTSECRET)
   String clientSecret;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @Column(name = Fields.REDIRECTURI)
   String redirectUri;
 
+  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @Column(name = Fields.DESCRIPTION)
   String description;
 
+  @JsonView(Views.JWTAccessToken.class)
   @Column(name = Fields.STATUS)
   String status;
 
-  @ManyToMany(mappedBy = "applications", cascade = CascadeType.ALL)
+  @ManyToMany(mappedBy = "wholeApplications", cascade = CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
-  Set<Group> groups;
+  Set<Group> wholeGroups;
 
-  @ManyToMany(mappedBy = "applications", cascade = CascadeType.ALL)
+  @ManyToMany(mappedBy = "wholeApplications", cascade = CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
-  Set<User> users;
+  Set<User> wholeUsers;
 
   @JsonIgnore
   public HashSet<String> getURISet(){
     val output = new HashSet<String>();
     output.add(this.redirectUri);
     return output;
+  }
+
+  @JsonView(Views.JWTAccessToken.class)
+  public List<String> getGroups(){
+    if(this.wholeGroups == null) {
+      return new ArrayList<String>();
+    }
+    return this.wholeGroups.stream().map(g -> g.getName()).collect(Collectors.toList());
   }
 
   public void update(Application other) {
@@ -94,12 +112,12 @@ public class Application {
     // Do not update ID;
 
     // Update Users and Groups only if provided (not null)
-    if (other.users != null) {
-      this.users = other.users;
+    if (other.wholeUsers != null) {
+      this.wholeUsers = other.wholeUsers;
     }
 
-    if (other.groups != null) {
-      this.groups = other.groups;
+    if (other.wholeGroups != null) {
+      this.wholeGroups = other.wholeGroups;
     }
   }
 

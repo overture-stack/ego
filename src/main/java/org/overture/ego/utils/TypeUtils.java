@@ -17,11 +17,23 @@
 package org.overture.ego.utils;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
 import lombok.val;
 
 
+
 public class TypeUtils {
+  @SneakyThrows
+  public static  <T> T convertToAnotherType(Object fromObject, Class<T> tClass, Class<?> serializationView){
+    val mapper = new ObjectMapper();
+    mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
+    mapper.configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false);
+    val serializedValue = mapper.writerWithView(serializationView).writeValueAsBytes(fromObject);
+    return mapper.readValue(serializedValue, tClass);
+  }
+
   public static  <T> T convertToAnotherType(Object fromObject, Class<T> tClass){
     val mapper = new ObjectMapper();
     mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);

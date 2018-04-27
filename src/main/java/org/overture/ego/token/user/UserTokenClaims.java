@@ -14,55 +14,36 @@
  * limitations under the License.
  */
 
-package org.overture.ego.token;
+package org.overture.ego.token.user;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
+import org.overture.ego.token.TokenClaims;
 import org.overture.ego.view.Views;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.UUID;
+
 
 @Data
 @NoArgsConstructor
 @JsonView(Views.JWTAccessToken.class)
-public abstract class TokenClaims {
-  @NonNull
-  protected Integer iat;
+public class UserTokenClaims extends TokenClaims {
 
   @NonNull
-  protected Integer exp;
+  private UserTokenContext context;
 
-  @NonNull
-  @JsonIgnore
-  protected Integer validDuration;
-
-  @Getter
-  protected String sub;
-
-  @NonNull
-  protected String iss;
-
-  @Getter
-  protected List<String> aud;
-
-  /*
-    Defaults
-   */
-  private String jti = UUID.randomUUID().toString();
-
-  @Getter(AccessLevel.NONE)
-  @Setter(AccessLevel.NONE)
-  @JsonIgnore
-  private long initTime = System.currentTimeMillis();
-
-  public int getExp(){
-    return ((int) ((this.initTime + validDuration)/ 1000L));
+  public String getSub(){
+    if(StringUtils.isEmpty(sub)) {
+      return String.valueOf(this.context.getUserInfo().getId());
+    } else {
+      return sub;
+    }
   }
 
-  public int getIat(){
-    return (int) (this.initTime / 1000L);
+  public List<String> getAud(){
+    return this.context.getUserInfo().getApplications();
   }
 
 }

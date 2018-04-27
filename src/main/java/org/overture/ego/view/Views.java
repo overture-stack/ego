@@ -14,31 +14,9 @@
  * limitations under the License.
  */
 
-package org.overture.ego.model.dto;
+package org.overture.ego.view;
 
-
-import com.fasterxml.jackson.annotation.JsonView;
-import lombok.Getter;
-import lombok.NonNull;
-import org.overture.ego.view.Views;
-import org.springframework.data.domain.Page;
-
-import java.util.List;
-
-@Getter
-@JsonView(Views.REST.class)
-public class PageDTO<T> {
-
-  private final int limit;
-  private final int offset;
-  private final long count;
-  private final List<T> resultSet;
-
-  public PageDTO(@NonNull final Page<T> page) {
-    this.limit      = page.getSize();
-    this.offset     = page.getNumber();
-    this.count      = page.getTotalElements();
-    this.resultSet  = page.getContent();
-  }
-
+public interface Views {
+  interface JWTAccessToken{};
+  interface REST{};
 }

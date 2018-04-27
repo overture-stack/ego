@@ -19,26 +19,27 @@ package org.overture.ego.model.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.overture.ego.model.enums.Fields;
+import org.overture.ego.view.Views;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Data
-@ToString(exclude={"users","applications"})
+@ToString(exclude={"wholeUsers","wholeApplications"})
 @Table(name = "egogroup")
 @Entity
-@JsonPropertyOrder({"id", "name", "description", "status","applications"})
+@JsonPropertyOrder({"id", "name", "description", "status","wholeApplications"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @EqualsAndHashCode(of={"id"})
 @NoArgsConstructor
 @RequiredArgsConstructor
+@JsonView(Views.REST.class)
 public class Group {
 
   @Id
@@ -60,30 +61,30 @@ public class Group {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "groupapplication", joinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) },
           inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
-  @JsonIgnore Set<Application> applications;
+  @JsonIgnore Set<Application> wholeApplications;
 
-  @ManyToMany(mappedBy = "groups", cascade = CascadeType.ALL)
+  @ManyToMany(mappedBy = "wholeGroups", cascade = CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
-  Set<User> users;
+  Set<User> wholeUsers;
 
   public void addApplication(@NonNull Application app){
     initApplications();
-    this.applications.add(app);
+    this.wholeApplications.add(app);
   }
 
   public void addUser(@NonNull User u){
     initUsers();
-    this.users.add(u);
+    this.wholeUsers.add(u);
   }
 
   public void removeApplication(@NonNull Integer appId){
-    this.applications.removeIf(a -> a.id == appId);
+    this.wholeApplications.removeIf(a -> a.id == appId);
   }
 
   public void removeUser(@NonNull Integer userId){
-    if(this.users == null) return;
-    this.users.removeIf(u -> u.id == userId);
+    if(this.wholeUsers == null) return;
+    this.wholeUsers.removeIf(u -> u.id == userId);
   }
 
   public void update(Group other) {
@@ -94,24 +95,24 @@ public class Group {
     // Do not update ID, that is programmatic.
 
     // Update Users and Applications only if provided (not null)
-    if (other.applications != null) {
-      this.applications = other.applications;
+    if (other.wholeApplications != null) {
+      this.wholeApplications = other.wholeApplications;
     }
 
-    if (other.users != null) {
-      this.users = other.users;
+    if (other.wholeUsers != null) {
+      this.wholeUsers = other.wholeUsers;
     }
   }
 
   private void initApplications(){
-    if(this.applications == null){
-      this.applications = new HashSet<>();
+    if(this.wholeApplications == null){
+      this.wholeApplications = new HashSet<>();
     }
   }
 
   private void initUsers(){
-    if(this.users == null) {
-      this.users = new HashSet<>();
+    if(this.wholeUsers == null) {
+      this.wholeUsers = new HashSet<>();
     }
   }
 

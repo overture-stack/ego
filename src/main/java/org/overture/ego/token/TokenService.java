@@ -20,11 +20,19 @@ import io.jsonwebtoken.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.reactor.events.UserEvents;
 import org.overture.ego.service.UserService;
+import org.overture.ego.token.app.AppJWTAccessToken;
+import org.overture.ego.token.app.AppTokenClaims;
+import org.overture.ego.token.app.AppTokenContext;
 import org.overture.ego.token.signer.TokenSigner;
+import org.overture.ego.token.user.UserTokenClaims;
+import org.overture.ego.token.user.UserTokenContext;
+import org.overture.ego.token.user.UserJWTAccessToken;
 import org.overture.ego.utils.TypeUtils;
+import org.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -77,24 +85,27 @@ public class TokenService {
     user.setLastLogin(dateFormatter.format(new Date()));
     userEvents.update(user);
 
-    return generateUserToken(new TokenUserInfo(user));
+    return generateUserToken(user);
   }
 
   @SneakyThrows
-  public String generateUserToken(TokenUserInfo u) {
-    val tokenContext = new TokenContext(u);
-    val tokenClaims = new TokenClaims();
+  public String generateUserToken(User u) {
+    val tokenContext = new UserTokenContext(u);
+    val tokenClaims = new UserTokenClaims();
     tokenClaims.setIss(ISSUER_NAME);
     tokenClaims.setValidDuration(DURATION);
     tokenClaims.setContext(tokenContext);
-    if(tokenSigner.getKey().isPresent()) {
-      return Jwts.builder()
-              .setClaims(TypeUtils.convertToAnotherType(tokenClaims, Map.class))
-              .signWith(SignatureAlgorithm.RS256, tokenSigner.getKey().get())
-              .compact();
-    } else {
-      throw new InvalidKeyException("Invalid signing key for the token.");
-    }
+    return getSignedToken(tokenClaims);
+  }
+
+  @SneakyThrows
+  public String generateAppToken(Application application) {
+    val tokenContext = new AppTokenContext(application);
+    val tokenClaims = new AppTokenClaims();
+    tokenClaims.setIss(ISSUER_NAME);
+    tokenClaims.setValidDuration(DURATION);
+    tokenClaims.setContext(tokenContext);
+    return getSignedToken(tokenClaims);
   }
 
   public boolean validateToken(String token) {
@@ -113,7 +124,7 @@ public class TokenService {
   public User getTokenUserInfo(String token) {
     try {
       Claims body = getTokenClaims(token);
-      val tokenClaims = TypeUtils.convertToAnotherType(body, TokenClaims.class);
+      val tokenClaims = TypeUtils.convertToAnotherType(body, UserTokenClaims.class);
       return userService.get(tokenClaims.getSub());
     } catch (JwtException | ClassCastException e) {
       return null;
@@ -133,8 +144,23 @@ public class TokenService {
     }
   }
 
-  public JWTAccessToken getJWTAccessToken(String token){
-    return new JWTAccessToken(token, this);
+  public UserJWTAccessToken getUserAccessToken(String token){
+    return new UserJWTAccessToken(token, this);
   }
 
+  public AppJWTAccessToken getAppAccessToken(String token){
+    return new AppJWTAccessToken(token, this);
+  }
+
+  @SneakyThrows
+  private String getSignedToken(TokenClaims claims){
+    if(tokenSigner.getKey().isPresent()) {
+      return Jwts.builder()
+          .setClaims(TypeUtils.convertToAnotherType(claims, Map.class, Views.JWTAccessToken.class))
+          .signWith(SignatureAlgorithm.RS256, tokenSigner.getKey().get())
+          .compact();
+    } else {
+      throw new InvalidKeyException("Invalid signing key for the token.");
+    }
+  }
 }
