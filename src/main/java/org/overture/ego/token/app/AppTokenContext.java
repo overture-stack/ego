@@ -14,10 +14,10 @@ import org.overture.ego.view.Views;
 @NoArgsConstructor
 @RequiredArgsConstructor
 @JsonInclude(JsonInclude.Include.ALWAYS)
+@JsonView(Views.JWTAccessToken.class)
 public class AppTokenContext {
 
   @NonNull
   @JsonProperty("application")
-  @JsonView(Views.JWTAccessToken.class)
   private Application appInfo;
 }

@@ -29,6 +29,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.ClientRegistrationException;
@@ -50,6 +51,9 @@ public class ApplicationService extends BaseService<Application> implements Clie
    */
   @Autowired
   private ApplicationRepository applicationRepository;
+
+  @Autowired
+  private PasswordEncoder passwordEncoder;
 
   public Application create(@NonNull Application applicationInfo) {
     return applicationRepository.save(applicationInfo);
@@ -136,7 +140,7 @@ public class ApplicationService extends BaseService<Application> implements Clie
     val approvedScopes = Arrays.asList(AppTokenClaims.SCOPES);
     val clientDetails = new BaseClientDetails();
     clientDetails.setClientId(clientId);
-    clientDetails.setClientSecret(application.getClientSecret());
+    clientDetails.setClientSecret(passwordEncoder.encode(application.getClientSecret()));
     clientDetails.setAuthorizedGrantTypes(Arrays.asList(AppTokenClaims.AUTHORIZED_GRANTS));
     clientDetails.setScope(approvedScopes);
     clientDetails.setRegisteredRedirectUri(application.getURISet());

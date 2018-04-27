@@ -37,7 +37,7 @@ public class GroupSpecification extends SpecificationBase<Group>  {
   public static Specification<Group> containsApplication(@Nonnull Integer appId) {
     return (root, query, builder) ->
     {
-      Join<Application, Group> groupJoin = root.join("applications");
+      Join<Application, Group> groupJoin = root.join("wholeApplications");
       return builder.equal(groupJoin.<Integer> get("id"), appId);
     };
   }
@@ -45,7 +45,7 @@ public class GroupSpecification extends SpecificationBase<Group>  {
   public static Specification<Group> containsUser(@Nonnull Integer userId) {
     return (root, query, builder) ->
     {
-      Join<User, Group> groupJoin = root.join("users");
+      Join<User, Group> groupJoin = root.join("wholeUsers");
       return builder.equal(groupJoin.<Integer> get("id"), userId);
     };
   }

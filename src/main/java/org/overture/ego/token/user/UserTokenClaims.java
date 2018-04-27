@@ -17,8 +17,10 @@
 package org.overture.ego.token.user;
 
 
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
 import org.overture.ego.token.TokenClaims;
+import org.overture.ego.view.Views;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -26,6 +28,7 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
+@JsonView(Views.JWTAccessToken.class)
 public class UserTokenClaims extends TokenClaims {
 
   @NonNull
@@ -40,7 +43,7 @@ public class UserTokenClaims extends TokenClaims {
   }
 
   public List<String> getAud(){
-    return this.context.getUserInfo().getApplicationNames();
+    return this.context.getUserInfo().getApplications();
   }
 
 }

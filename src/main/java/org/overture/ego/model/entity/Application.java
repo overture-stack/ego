@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name = "egoapplication")
 @Data
-@ToString(exclude={"groups","users"})
+@ToString(exclude={"wholeGroups","wholeUsers"})
 @JsonPropertyOrder({"id", "name", "clientId", "clientSecret", "redirectUri", "description", "status"})
 @JsonInclude(JsonInclude.Include.CUSTOM)
 @EqualsAndHashCode(of={"id"})
@@ -76,15 +76,15 @@ public class Application {
   @Column(name = Fields.STATUS)
   String status;
 
-  @ManyToMany(mappedBy = "applications", cascade = CascadeType.ALL)
+  @ManyToMany(mappedBy = "wholeApplications", cascade = CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
-  Set<Group> groups;
+  Set<Group> wholeGroups;
 
-  @ManyToMany(mappedBy = "applications", cascade = CascadeType.ALL)
+  @ManyToMany(mappedBy = "wholeApplications", cascade = CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
-  Set<User> users;
+  Set<User> wholeUsers;
 
   @JsonIgnore
   public HashSet<String> getURISet(){
@@ -94,11 +94,11 @@ public class Application {
   }
 
   @JsonView(Views.JWTAccessToken.class)
-  public List<String> getGroupNames(){
-    if(this.groups == null) {
+  public List<String> getGroups(){
+    if(this.wholeGroups == null) {
       return new ArrayList<String>();
     }
-    return this.groups.stream().map(g -> g.getName()).collect(Collectors.toList());
+    return this.wholeGroups.stream().map(g -> g.getName()).collect(Collectors.toList());
   }
 
   public void update(Application other) {
@@ -112,12 +112,12 @@ public class Application {
     // Do not update ID;
 
     // Update Users and Groups only if provided (not null)
-    if (other.users != null) {
-      this.users = other.users;
+    if (other.wholeUsers != null) {
+      this.wholeUsers = other.wholeUsers;
     }
 
-    if (other.groups != null) {
-      this.groups = other.groups;
+    if (other.wholeGroups != null) {
+      this.wholeGroups = other.wholeGroups;
     }
   }
 

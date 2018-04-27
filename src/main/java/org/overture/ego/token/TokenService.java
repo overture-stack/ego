@@ -30,7 +30,6 @@ import org.overture.ego.token.app.AppTokenContext;
 import org.overture.ego.token.signer.TokenSigner;
 import org.overture.ego.token.user.UserTokenClaims;
 import org.overture.ego.token.user.UserTokenContext;
-import org.overture.ego.token.user.UserTokenInfo;
 import org.overture.ego.token.user.UserJWTAccessToken;
 import org.overture.ego.utils.TypeUtils;
 import org.overture.ego.view.Views;
@@ -86,7 +85,7 @@ public class TokenService {
     user.setLastLogin(dateFormatter.format(new Date()));
     userEvents.update(user);
 
-    return generateUserToken(new UserTokenInfo(user));
+    return generateUserToken(user);
   }
 
   @SneakyThrows

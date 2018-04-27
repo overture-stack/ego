@@ -77,7 +77,7 @@ public class ApplicationController {
   })
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "Page of applications", response = PageDTO.class)
+          @ApiResponse(code = 200, message = "Page of Applications", response = PageDTO.class)
       }
   )
   @JsonView(Views.REST.class)
@@ -168,7 +168,7 @@ public class ApplicationController {
   })
   @ApiResponses(
           value = {
-                  @ApiResponse(code = 200, message = "Page of users of group", response = PageDTO.class)
+                  @ApiResponse(code = 200, message = "Page of Users of group", response = PageDTO.class)
           }
   )
   @JsonView(Views.REST.class)
@@ -209,7 +209,7 @@ public class ApplicationController {
   })
   @ApiResponses(
           value = {
-                  @ApiResponse(code = 200, message = "Page of applications of group", response = PageDTO.class)
+                  @ApiResponse(code = 200, message = "Page of Applications of group", response = PageDTO.class)
           }
   )
   @JsonView(Views.REST.class)

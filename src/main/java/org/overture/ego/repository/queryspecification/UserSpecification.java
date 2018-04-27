@@ -39,7 +39,7 @@ public class UserSpecification extends SpecificationBase<User> {
   public static Specification<User> inGroup(@Nonnull Integer groupId) {
     return (root, query, builder) ->
     {
-      Join<User, Group> groupJoin = root.join("groups");
+      Join<User, Group> groupJoin = root.join("wholeGroups");
       return builder.equal(groupJoin.<Integer> get("id"), groupId);
     };
 
@@ -48,7 +48,7 @@ public class UserSpecification extends SpecificationBase<User> {
   public static Specification<User> ofApplication(@Nonnull Integer appId) {
     return (root, query, builder) ->
     {
-      Join<User, Application> applicationJoin = root.join("applications");
+      Join<User, Application> applicationJoin = root.join("wholeApplications");
       return builder.equal(applicationJoin.<Integer> get("id"), appId);
     };
 

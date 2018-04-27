@@ -40,12 +40,12 @@ public class SecureAuthorizationManager implements AuthorizationManager {
 
   public boolean authorizeWithGroup(@NonNull Authentication authentication, String groupName) {
     User user = (User)authentication.getPrincipal();
-    return authorize(authentication) && user.getGroupNames().contains(groupName);
+    return authorize(authentication) && user.getGroups().contains(groupName);
   }
 
   public boolean authorizeWithApplication(@NonNull Authentication authentication, String appName) {
     User user = (User)authentication.getPrincipal();
-    return authorize(authentication) && user.getApplicationNames().contains(appName);
+    return authorize(authentication) && user.getApplications().contains(appName);
   }
 
   public boolean isActiveUser(User user){

@@ -18,13 +18,16 @@ package org.overture.ego.token.user;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.view.Views;
 
 @Data
 @NoArgsConstructor
 @RequiredArgsConstructor
 @JsonInclude(JsonInclude.Include.ALWAYS)
+@JsonView(Views.JWTAccessToken.class)
 public class UserTokenContext {
 
   @NonNull

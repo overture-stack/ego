@@ -13,6 +13,7 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
+@JsonView(Views.JWTAccessToken.class)
 public class AppTokenClaims extends TokenClaims {
 
   /*
@@ -24,10 +25,8 @@ public class AppTokenClaims extends TokenClaims {
   public static final String ROLE = "ROLE_CLIENT";
 
   @NonNull
-  @JsonView(Views.JWTAccessToken.class)
   private AppTokenContext context;
 
-  @JsonView(Views.JWTAccessToken.class)
   public String getSub(){
     if(StringUtils.isEmpty(sub)) {
       return String.valueOf(this.context.getAppInfo().getId());
@@ -36,7 +35,6 @@ public class AppTokenClaims extends TokenClaims {
     }
   }
 
-  @JsonView(Views.JWTAccessToken.class)
   public List<String> getAud(){
     return Arrays.asList(this.context.getAppInfo().getName());
   }

@@ -10,12 +10,11 @@ import java.util.UUID;
 
 @Data
 @NoArgsConstructor
+@JsonView(Views.JWTAccessToken.class)
 public abstract class TokenClaims {
-  @JsonView(Views.JWTAccessToken.class)
   @NonNull
   protected Integer iat;
 
-  @JsonView(Views.JWTAccessToken.class)
   @NonNull
   protected Integer exp;
 
@@ -23,22 +22,18 @@ public abstract class TokenClaims {
   @JsonIgnore
   protected Integer validDuration;
 
-  @JsonView(Views.JWTAccessToken.class)
   @Getter
   protected String sub;
 
-  @JsonView(Views.JWTAccessToken.class)
   @NonNull
   protected String iss;
 
-  @JsonView(Views.JWTAccessToken.class)
   @Getter
   protected List<String> aud;
 
   /*
     Defaults
    */
-  @JsonView(Views.JWTAccessToken.class)
   private String jti = UUID.randomUUID().toString();
 
   @Getter(AccessLevel.NONE)
@@ -46,12 +41,10 @@ public abstract class TokenClaims {
   @JsonIgnore
   private long initTime = System.currentTimeMillis();
 
-  @JsonView(Views.JWTAccessToken.class)
   public int getExp(){
     return ((int) ((this.initTime + validDuration)/ 1000L));
   }
 
-  @JsonView(Views.JWTAccessToken.class)
   public int getIat(){
     return (int) (this.initTime / 1000L);
   }

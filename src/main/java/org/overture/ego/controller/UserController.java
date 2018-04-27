@@ -77,14 +77,14 @@ public class UserController {
   })
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "Page of users", response = PageDTO.class)
+          @ApiResponse(code = 200, message = "Page of Users", response = PageDTO.class)
       }
   )
   @JsonView(Views.REST.class)
   public @ResponseBody
   PageDTO<User> getUsersList(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-          @ApiParam(value="Query string compares to users Name, Email, First Name, and Last Name fields.", required=false ) @RequestParam(value = "query", required = false) String query,
+          @ApiParam(value="Query string compares to Users Name, Email, First Name, and Last Name fields.", required=false ) @RequestParam(value = "query", required = false) String query,
           @ApiIgnore @Filters List<SearchFilter> filters,
           Pageable pageable)
   {
@@ -169,7 +169,7 @@ public class UserController {
   })
   @ApiResponses(
           value = {
-                  @ApiResponse(code = 200, message = "Page of groups of user", response = PageDTO.class)
+                  @ApiResponse(code = 200, message = "Page of Groups of user", response = PageDTO.class)
           }
   )
   @JsonView(Views.REST.class)
@@ -192,7 +192,7 @@ public class UserController {
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/groups")
   @ApiResponses(
           value = {
-                  @ApiResponse(code = 200, message = "Add groups to user", response = String.class)
+                  @ApiResponse(code = 200, message = "Add Groups to user", response = String.class)
           }
   )
   public @ResponseBody
@@ -201,7 +201,7 @@ public class UserController {
           @PathVariable(value = "id", required = true) String userId,
           @RequestBody(required = true) List<String> groupIDs) {
     userService.addUsersToGroups(userId,groupIDs);
-    return "User added to : "+groupIDs.size() + " groups successfully.";
+    return "User added to : "+groupIDs.size() + " Group(s) successfully.";
   }
 
   @AdminScoped
@@ -264,7 +264,7 @@ public class UserController {
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/applications")
   @ApiResponses(
           value = {
-                  @ApiResponse(code = 200, message = "Add applications to user", response = String.class)
+                  @ApiResponse(code = 200, message = "Add Applications to user", response = String.class)
           }
   )
   public @ResponseBody
