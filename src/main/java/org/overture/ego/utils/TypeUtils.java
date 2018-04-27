@@ -30,10 +30,7 @@ public class TypeUtils {
     val mapper = new ObjectMapper();
     mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
     mapper.configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false);
-
     val serializedValue = mapper.writerWithView(serializationView).writeValueAsBytes(fromObject);
-    val serializedStringValue = mapper.writerWithView(serializationView).writeValueAsString(fromObject);
-    //val serializedValue = mapper.writeValueAsBytes(fromObject);
     return mapper.readValue(serializedValue, tClass);
   }
 
