@@ -118,6 +118,17 @@ public class User {
     return Arrays.asList(this.getRole());
   }
 
+  /*
+    Roles is an array only in JWT but a String in Database.
+    This is done for future compatibility - at the moment ego only needs one Role but this may change
+     as project progresses.
+     Currently, using the only role by extracting first role in the array
+   */
+  public void setRoles(@NonNull List<String> roles){
+    if(roles.size() > 0)
+      this.role = roles.get(0);
+  }
+
   public void addNewApplication(@NonNull Application app){
     initApplications();
     this.wholeApplications.add(app);

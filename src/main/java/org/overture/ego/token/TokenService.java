@@ -124,7 +124,7 @@ public class TokenService {
   public User getTokenUserInfo(String token) {
     try {
       Claims body = getTokenClaims(token);
-      val tokenClaims = TypeUtils.convertToAnotherType(body, UserTokenClaims.class);
+      val tokenClaims = TypeUtils.convertToAnotherType(body, UserTokenClaims.class, Views.JWTAccessToken.class);
       return userService.get(tokenClaims.getSub());
     } catch (JwtException | ClassCastException e) {
       return null;
