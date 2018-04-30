@@ -120,7 +120,7 @@ public class User {
 
   /*
     Roles is an array only in JWT but a String in Database.
-    This is donefor future compatibility - at the moment ego only needs one Role but this may change
+    This is done for future compatibility - at the moment ego only needs one Role but this may change
      as project progresses.
      Currently, using the only role by extracting first role in the array
    */
