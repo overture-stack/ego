@@ -34,9 +34,12 @@ import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 @Slf4j
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
+
+  private String[] publicEndpoints = null;
 
   @Value("${auth.token.prefix}")
   private String TOKEN_PREFIX;
@@ -44,8 +47,10 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
   @Autowired
   private TokenService tokenService;
 
-  public JWTAuthorizationFilter(AuthenticationManager authManager) {
+
+  public JWTAuthorizationFilter(AuthenticationManager authManager, String[] publicEndpoints) {
     super(authManager);
+    this.publicEndpoints = publicEndpoints;
   }
 
   @Override
@@ -54,7 +59,9 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
                                HttpServletResponse response,
                                FilterChain chain) {
     String tokenPayload = "";
-    if("/oauth/token".equals(request.getServletPath())){
+
+    // No need to validate a token even if one is passed for public endpoints
+    if(isPublicEndpoint(request.getServletPath())){
       chain.doFilter(request,response);
       return;
     } else{
@@ -81,6 +88,12 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
   private String removeTokenPrefix(String token){
     return token.replace(TOKEN_PREFIX,"").trim();
+  }
+
+  private boolean isPublicEndpoint(String endpointPath){
+    if(this.publicEndpoints != null){
+      return Arrays.stream(this.publicEndpoints).anyMatch(item -> item.equals(endpointPath));
+    } else return false;
   }
 
 }
