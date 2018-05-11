@@ -6,12 +6,16 @@ services:
     ports:
       - "$API_HOST_PORT:8081"
     environment:
-      EGO_DB_HOST=postgres 
-      EGO_DB_PORT=5432
-      EGO_DB=ego
-      EGO_DB_USER=postgres
-      EGO_DB_PASS=password
-      EGO_SERVER_GOOGLE_CLIENT_IDS=123456
+      - EGO_SERVER_PORT=8081
+      - EGO_DB_HOST=postgres
+      - EGO_DB_PORT=5432
+      - EGO_DB=ego
+      - EGO_DB_USER=postgres
+      - EGO_DB_PASS=password
+      - EGO_SERVER_GOOGLE_CLIENT_IDS=123456
+      - EGO_SERVER_FACEBOOK_APP_ID=123456
+      - EGO_SERVER_FACEBOOK_SECRET=123456
+      - EGO_ACTIVE_PROFILES=demo
     depends_on:
       - postgres
 
@@ -19,8 +23,8 @@ services:
     restart: always
     image: postgres:9.5
     environment:
-      POSTGRES_DB=ego
-      POSTGRES_PASSWORD=password
+      - POSTGRES_DB=ego
+      - POSTGRES_PASSWORD=password
     volumes:
       - ./src/main/resources/schemas/psql-schema.sql:/docker-entrypoint-initdb.d/init.sql
     expose:
