@@ -1,22 +1,24 @@
 package org.overture.ego.service;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.overture.ego.model.entity.Application;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
 public class ApplicationServiceTest {
 
+  @Mock
+  private Application application;
+
   @Before
-  void setup() {
-    
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
   }
 
   @Test
-  void testCreate() {
-
+  public void testCreate() {
+    Assert.assertEquals(1, 1);
   }
 }
