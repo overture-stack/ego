@@ -42,6 +42,15 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
     String sort = nativeWebRequest.getParameter("sort");
     String sortOrder = nativeWebRequest.getParameter("sortOrder");
 
+    return getPageable(limit, offset, sort, sortOrder);
+
+  }
+
+  public Pageable getPageable() {
+    return getPageable(null, null, null, null);
+  }
+
+  private Pageable getPageable(String limit, String offset, String sort, String sortOrder) {
     return new Pageable() {
       private final int DEFAULT_LIMIT = 20;
       private final int DEFAULT_PAGE_NUM = 0;
@@ -102,6 +111,5 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
         return false;
       }
     };
-
   }
 }
