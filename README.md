@@ -71,7 +71,7 @@ Ego should now be deployed locally with the swagger ui at
 ### Step 1 - Setup Database
 1. Install Postgres 
 2. Create a Database: ego with user postgres and empty password
-3. Execute [SQL Script](/src/main/resources/schemas/psql-schema.sql) to setup tables.
+3. Execute [SQL Script](/psql-schema.sql) to setup tables.
 
 ### Step 2 - Run
 

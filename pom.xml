@@ -95,6 +95,23 @@
             <version>42.1.4</version>
         </dependency>
 
+        <!-- TestContainers (for testing) -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>1.7.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>jdbc</artifactId>
+            <version>1.7.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>1.7.2</version>
+        </dependency>
+
         <!-- Google Client APIs-->
         <dependency>
             <groupId>com.google.api-client</groupId>
@@ -193,6 +210,7 @@
             </plugin>
         </plugins>
     </build>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
