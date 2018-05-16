@@ -44,12 +44,11 @@ public class ApplicationServiceTest {
   @Before
   public void setup() {
     testApplication = new Application("Test Name", "123456", "654321");
-
   }
 
   @Test
   public void testCreate() {
-    val x = applicationService.create(testApplication);
+    val application = applicationService.create(testApplication);
     assertThat(1).isEqualTo(1);
   }
 
