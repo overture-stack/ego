@@ -132,9 +132,15 @@ public class ApplicationService extends BaseService<Application> implements Clie
     // find client using clientid
 
     val application = getByClientId(clientId);
-    if(application == null) throw new ClientRegistrationException("Client ID not found.");
-    if(!application.getStatus().equals(ApplicationStatus.APPROVED.toString())) throw new ClientRegistrationException
+
+    if(application == null) {
+      throw new ClientRegistrationException("Client ID not found.");
+    }
+
+    if(!application.getStatus().equals(ApplicationStatus.APPROVED.toString())) {
+      throw new ClientRegistrationException
           ("Client Access is not approved.");
+    }
 
     // transform application to client details
     val approvedScopes = Arrays.asList(AppTokenClaims.SCOPES);
