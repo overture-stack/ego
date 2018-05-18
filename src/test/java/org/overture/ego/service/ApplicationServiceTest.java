@@ -5,6 +5,7 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
+import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.utils.EntityGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +52,8 @@ public class ApplicationServiceTest {
   public void testCreateUniqueClientId() {
     applicationService.create(entityGenerator.createOneApplication("111111"));
     applicationService.create(entityGenerator.createOneApplication("222222"));
-    assertThatExceptionOfType(DataIntegrityViolationException.class).isThrownBy(() -> applicationService.create(entityGenerator.createOneApplication("111111")));
+    assertThatExceptionOfType(DataIntegrityViolationException.class)
+        .isThrownBy(() -> applicationService.create(entityGenerator.createOneApplication("111111")));
   }
 
   @Test
@@ -74,10 +76,29 @@ public class ApplicationServiceTest {
   }
 
   @Test
+  public void testGetByNameAllCaps() {
+    applicationService.create(entityGenerator.createOneApplication("123456"));
+    val savedApplication = applicationService.getByName("APPLICATION 123456");
+    assertThat(savedApplication.getClientId()).isEqualTo("123456");
+  }
+
+  @Test
+  public void testGetByNameNotFound() {
+    // TODO Currently returning null, should throw exception (EntityNotFoundException?)
+    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> applicationService.getByName("Application 123456"));
+  }
+
+  @Test
   public void testGetByClientId() {
     applicationService.create(entityGenerator.createOneApplication("123456"));
     val savedApplication = applicationService.getByClientId("123456");
     assertThat(savedApplication.getClientId()).isEqualTo("123456");
+  }
+
+  @Test
+  public void testGetByClientIdNotFound() {
+    // TODO Currently returning null, should throw exception (EntityNotFoundException?)
+    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> applicationService.getByClientId("123456"));
   }
 
   @Test
@@ -96,11 +117,44 @@ public class ApplicationServiceTest {
   }
 
   @Test
+  public void testUpdateIdNotAllowed() {
+    val application = applicationService.create(entityGenerator.createOneApplication("123456"));
+    application.setId(777);
+    // New id means new non-existent entity or one that exists and is being overwritten
+    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> applicationService.update(application));
+  }
+
+  @Test
+  public void testUpdateClientIdNotAllowed() {
+    entityGenerator.setupSimpleApplications();
+    val application = applicationService.getByClientId("111111");
+    application.setClientId("222222");
+    val newApplication = new Application();
+    newApplication.setStatus(application.getStatus());
+    newApplication.setClientId(application.getClientId());
+    val updated = applicationService.update(application);
+    assertThat(updated.getClientId()).isEqualTo("222222");
+    // TODO Check for uniqueness in application, not just SQL
+  }
+
+  @Test
+  public void testUpdateStatusNotInEnumNotAllowed() {
+    entityGenerator.setupSimpleApplications();
+    val application = applicationService.getByClientId("111111");
+    application.setStatus("Junk");
+    val updated = applicationService.update(application);
+    assertThat(updated.getName()).isEqualTo("Application 111111");
+    // TODO Check for uniqueness in application, not just SQL
+  }
+
+  @Test
   public void testListAppsNoFilters() {
     entityGenerator.setupSimpleApplications();
     val applications = applicationService.listApps(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(applications.getTotalElements()).isEqualTo(5L);
   }
+
+  // Not Found
 
   @Test
   public void testListAppsFiltered() {
@@ -110,6 +164,8 @@ public class ApplicationServiceTest {
     assertThat(applications.getTotalElements()).isEqualTo(1L);
     assertThat(applications.getContent().get(0).getClientId()).isEqualTo("333333");
   }
+
+  // Not Found
 
   @Test
   public void testFindAppsNoFilters() {
@@ -124,6 +180,7 @@ public class ApplicationServiceTest {
     entityGenerator.setupSimpleApplications();
     val clientIdFilter = new SearchFilter("clientId", "333333");
     val applications = applicationService.findApps("222222", Arrays.asList(clientIdFilter), new PageableResolver().getPageable());
+    // Expect empty list
     assertThat(applications.getTotalElements()).isEqualTo(0L);
   }
 
@@ -203,6 +260,10 @@ public class ApplicationServiceTest {
     assertThat(applications.getContent().get(0).getClientId()).isEqualTo("222222");
   }
 
+  // FindUsersApps Non-existent UserId (expected 0L list because its a find not a get)
+
+  // Empty string query (groups too)
+
   @Test
   public void testFindGroupsAppsNoQueryNoFilters() {
     entityGenerator.setupSimpleApplications();
@@ -279,6 +340,8 @@ public class ApplicationServiceTest {
     assertThat(applications.getContent().get(0).getClientId()).isEqualTo("555555");
   }
 
+  // findGroups Non-existent GroupId (expected 0L list because its a find not a get)
+
   @Test
   public void testDelete() {
     entityGenerator.setupSimpleApplications();
@@ -291,6 +354,8 @@ public class ApplicationServiceTest {
     assertThat(applications.getContent()).doesNotContain(application);
   }
 
+  // Id does not exist, null, empty string
+
   @Test
   public void testLoadClientByClientId() {
     val application = applicationService.create(entityGenerator.createOneApplication("123456"));
@@ -298,11 +363,16 @@ public class ApplicationServiceTest {
     applicationService.update(application);
     val client = applicationService.loadClientByClientId("123456");
     assertThat(client.getClientId()).isEqualToIgnoringCase("123456");
+
+    // Ensure return object matches current spec
   }
+
+  // Empty string
 
   @Test
   public void testLoadClientByClientIdNotFound() {
-    assertThatExceptionOfType(ClientRegistrationException.class).isThrownBy(() -> applicationService.loadClientByClientId("123456")).withMessage("Client ID not found.");
+    assertThatExceptionOfType(ClientRegistrationException.class).isThrownBy(
+        () -> applicationService.loadClientByClientId("123456")).withMessage("Client ID not found.");
   }
 
   @Test
