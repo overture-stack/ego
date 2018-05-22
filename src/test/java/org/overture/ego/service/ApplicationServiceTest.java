@@ -113,7 +113,7 @@ public class ApplicationServiceTest {
   }
 
   @Test
-  public void testNonexistentEntityUpdate() {
+  public void testUpdateNonexistentEntity() {
     applicationService.create(entityGenerator.createOneApplication("123456"));
     val nonExistentEntity = entityGenerator.createOneApplication("654321");
     assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> applicationService.update(nonExistentEntity));
@@ -141,7 +141,7 @@ public class ApplicationServiceTest {
   }
 
   @Test
-  public void testUpdateStatusNotInEnumNotAllowed() {
+  public void testUpdateClientIdNotAllowed() {
     entityGenerator.setupSimpleApplications();
     val application = applicationService.getByClientId("111111");
     application.setStatus("Junk");
