@@ -97,7 +97,7 @@ public class UserServiceTest {
   }
 
   @Test
-  public void testListAppsNoFiltersEmptyResult() {
+  public void testListUsersNoFiltersEmptyResult() {
 
   }
 
@@ -201,11 +201,6 @@ public class UserServiceTest {
   }
 
   @Test
-  public void testUpdateClientIdNotAllowed() {
-
-  }
-
-  @Test
   public void testUpdateStatusNotInAllowedEnum() {
 
   }
@@ -227,7 +222,7 @@ public class UserServiceTest {
   }
 
   @Test
-  public void addUserToGroupsEmptyGroupString() {
+  public void addUserToGroupsEmptyGroupsList() {
 
   }
 
