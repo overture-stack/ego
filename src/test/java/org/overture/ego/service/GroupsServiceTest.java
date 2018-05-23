@@ -10,6 +10,7 @@ import org.overture.ego.utils.EntityGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -428,42 +429,126 @@ public class GroupsServiceTest {
   // Delete
   @Test
   public void testDelete() {
+    entityGenerator.setupSimpleGroups();
 
+    val group = groupService.getByName("Group One");
+
+    groupService.delete(Integer.toString(group.getId()));
+
+    val groups = groupService.listGroups(Collections.emptyList(), new PageableResolver().getPageable());
+    assertThat(groups.getTotalElements()).isEqualTo(2L);
+    assertThat(groups.getContent()).doesNotContain(group);
   }
 
   @Test
   public void testDeleteNonExisting() {
-
+    entityGenerator.setupSimpleGroups();
+    assertThatExceptionOfType(EmptyResultDataAccessException.class)
+        .isThrownBy(() -> groupService.delete("777777"));
   }
 
   @Test
   public void testDeleteEmptyIdString() {
-
+    entityGenerator.setupSimpleGroups();
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> groupService.delete(""));
   }
 
   // Delete Apps from Group
   @Test
   public void testDeleteAppFromGroup() {
+    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupSimpleApplications();
 
+    val groupId = Integer.toString(groupService.getByName("Group One").getId());
+    val application = applicationService.getByClientId("111111");
+    val applicationId = Integer.toString(application.getId());
+
+    groupService.addAppsToGroups(groupId, Arrays.asList(applicationId));
+
+    val group = groupService.get(groupId);
+    assertThat(group.getWholeApplications().size()).isEqualTo(1);
+
+    groupService.deleteAppsFromGroup(groupId, Arrays.asList(applicationId));
+
+    val groupWithDeleteApp = groupService.get(groupId);
+    assertThat(groupWithDeleteApp.getWholeApplications().size()).isEqualTo(0);
   }
 
   @Test
   public void testDeleteAppsFromGroupNoGroup() {
+    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupSimpleApplications();
 
+    val groupId = Integer.toString(groupService.getByName("Group One").getId());
+    val application = applicationService.getByClientId("111111");
+    val applicationId = Integer.toString(application.getId());
+
+    groupService.addAppsToGroups(groupId, Arrays.asList(applicationId));
+
+    val group = groupService.get(groupId);
+    assertThat(group.getWholeApplications().size()).isEqualTo(1);
+
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> groupService.deleteAppsFromGroup("777777", Arrays.asList(applicationId)));
   }
 
   @Test
   public void testDeleteAppsFromGroupEmptyGroupString() {
+    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupSimpleApplications();
 
+    val groupId = Integer.toString(groupService.getByName("Group One").getId());
+    val application = applicationService.getByClientId("111111");
+    val applicationId = Integer.toString(application.getId());
+
+    groupService.addAppsToGroups(groupId, Arrays.asList(applicationId));
+
+    val group = groupService.get(groupId);
+    assertThat(group.getWholeApplications().size()).isEqualTo(1);
+
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> groupService.deleteAppsFromGroup("", Arrays.asList(applicationId)));
   }
 
   @Test
   public void testDeleteAppsFromGroupNoApps() {
+    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupSimpleApplications();
 
+    val groupId = Integer.toString(groupService.getByName("Group One").getId());
+    val application = applicationService.getByClientId("111111");
+    val applicationTwo = applicationService.getByClientId("222222");
+    val applicationId = Integer.toString(application.getId());
+    val applicationTwoId = Integer.toString(applicationTwo.getId());
+
+    groupService.addAppsToGroups(groupId, Arrays.asList(applicationId));
+
+    val group = groupService.get(groupId);
+    assertThat(group.getWholeApplications().size()).isEqualTo(1);
+
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> groupService.deleteAppsFromGroup(groupId, Arrays.asList(applicationTwoId)));
+
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> groupService.deleteAppsFromGroup(groupId, Arrays.asList("777777")));
   }
 
   @Test
   public void testDeleteAppsFromGroupEmptyAppsList() {
+    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupSimpleApplications();
 
+    val groupId = Integer.toString(groupService.getByName("Group One").getId());
+    val application = applicationService.getByClientId("111111");
+    val applicationId = Integer.toString(application.getId());
+
+    groupService.addAppsToGroups(groupId, Arrays.asList(applicationId));
+
+    val group = groupService.get(groupId);
+    assertThat(group.getWholeApplications().size()).isEqualTo(1);
+
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> groupService.deleteAppsFromGroup(groupId, Arrays.asList("")));
   }
 }

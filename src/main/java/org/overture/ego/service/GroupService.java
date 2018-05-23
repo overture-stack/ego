@@ -120,6 +120,7 @@ public class GroupService extends BaseService<Group> {
   public void deleteAppsFromGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
     val group = getById(groupRepository,Integer.parseInt(grpId));
     appIDs.forEach(appId -> {
+      // TODO if app id not valid (does not exist) we need to throw EntityNotFoundException
       group.removeApplication(Integer.parseInt(appId));
     });
     groupRepository.save(group);
