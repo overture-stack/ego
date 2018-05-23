@@ -141,7 +141,7 @@ public class ApplicationServiceTest {
   }
 
   @Test
-  public void testUpdateStatusNotInEnumNotAllowed() {
+  public void testUpdateStatusNotInAllowedEnum() {
     entityGenerator.setupSimpleApplications();
     val application = applicationService.getByClientId("111111");
     application.setStatus("Junk");
