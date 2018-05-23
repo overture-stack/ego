@@ -45,6 +45,7 @@ public class ApplicationServiceTest {
   @Autowired
   private EntityGenerator entityGenerator;
 
+  // Create
   @Test
   public void testCreate() {
     val application = applicationService.create(entityGenerator.createOneApplication("123456"));
@@ -59,6 +60,7 @@ public class ApplicationServiceTest {
         .isThrownBy(() -> applicationService.create(entityGenerator.createOneApplication("111111")));
   }
 
+  // Get
   @Test
   public void testGet() {
     val application = applicationService.create(entityGenerator.createOneApplication("123456"));
@@ -104,52 +106,7 @@ public class ApplicationServiceTest {
     assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> applicationService.getByClientId("123456"));
   }
 
-  @Test
-  public void testUpdate() {
-    val application = applicationService.create(entityGenerator.createOneApplication("123456"));
-    application.setName("New Name");
-    val updated = applicationService.update(application);
-    assertThat(updated.getName()).isEqualTo("New Name");
-  }
-
-  @Test
-  public void testUpdateNonexistentEntity() {
-    applicationService.create(entityGenerator.createOneApplication("123456"));
-    val nonExistentEntity = entityGenerator.createOneApplication("654321");
-    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> applicationService.update(nonExistentEntity));
-  }
-
-  @Test
-  public void testUpdateIdNotAllowed() {
-    val application = applicationService.create(entityGenerator.createOneApplication("123456"));
-    application.setId(777);
-    // New id means new non-existent entity or one that exists and is being overwritten
-    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> applicationService.update(application));
-  }
-
-  @Test
-  public void testUpdateClientIdNotAllowed() {
-    entityGenerator.setupSimpleApplications();
-    val application = applicationService.getByClientId("111111");
-    application.setClientId("222222");
-    val newApplication = new Application();
-    newApplication.setStatus(application.getStatus());
-    newApplication.setClientId(application.getClientId());
-    val updated = applicationService.update(application);
-    assertThat(updated.getClientId()).isEqualTo("222222");
-    // TODO Check for uniqueness in application, currently only SQL
-  }
-
-  @Test
-  public void testUpdateStatusNotInAllowedEnum() {
-    entityGenerator.setupSimpleApplications();
-    val application = applicationService.getByClientId("111111");
-    application.setStatus("Junk");
-    val updated = applicationService.update(application);
-    assertThat(updated.getName()).isEqualTo("Application 111111");
-    // TODO Check for uniqueness in application, currently only SQL
-  }
-
+  // List
   @Test
   public void testListAppsNoFilters() {
     entityGenerator.setupSimpleApplications();
@@ -180,6 +137,7 @@ public class ApplicationServiceTest {
     assertThat(applications.getTotalElements()).isEqualTo(0L);
   }
 
+  // Find
   @Test
   public void testFindAppsNoFilters() {
     entityGenerator.setupSimpleApplications();
@@ -385,6 +343,51 @@ public class ApplicationServiceTest {
     assertThat(applications.getContent().get(0).getClientId()).isEqualTo("555555");
   }
 
+  // Update
+  @Test
+  public void testUpdate() {
+    val application = applicationService.create(entityGenerator.createOneApplication("123456"));
+    application.setName("New Name");
+    val updated = applicationService.update(application);
+    assertThat(updated.getName()).isEqualTo("New Name");
+  }
+
+  @Test
+  public void testUpdateNonexistentEntity() {
+    applicationService.create(entityGenerator.createOneApplication("123456"));
+    val nonExistentEntity = entityGenerator.createOneApplication("654321");
+    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> applicationService.update(nonExistentEntity));
+  }
+
+  @Test
+  public void testUpdateIdNotAllowed() {
+    val application = applicationService.create(entityGenerator.createOneApplication("123456"));
+    application.setId(777);
+    // New id means new non-existent entity or one that exists and is being overwritten
+    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> applicationService.update(application));
+  }
+
+  @Test
+  public void testUpdateClientIdNotAllowed() {
+    entityGenerator.setupSimpleApplications();
+    val application = applicationService.getByClientId("111111");
+    application.setClientId("222222");
+    val updated = applicationService.update(application);
+    assertThat(1).isEqualTo(2);
+    // TODO Check for uniqueness in application, currently only SQL
+  }
+
+  @Test
+  public void testUpdateStatusNotInAllowedEnum() {
+    entityGenerator.setupSimpleApplications();
+    val application = applicationService.getByClientId("111111");
+    application.setStatus("Junk");
+    val updated = applicationService.update(application);
+    assertThat(1).isEqualTo(2);
+    // TODO Check for uniqueness in application, currently only SQL
+  }
+
+  // Delete
   @Test
   public void testDelete() {
     entityGenerator.setupSimpleApplications();
@@ -409,6 +412,7 @@ public class ApplicationServiceTest {
     assertThatExceptionOfType(NumberFormatException.class).isThrownBy(() -> applicationService.delete(""));
   }
 
+  // Special (LoadClient)
   @Test
   public void testLoadClientByClientId() {
     val application = applicationService.create(entityGenerator.createOneApplication("123456"));

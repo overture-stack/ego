@@ -82,7 +82,7 @@ public class GroupService extends BaseService<Group> {
             .and(GroupSpecification.filterBy(filters)), pageable);
   }
 
-  // TODO rename to findUsersGroups (user's groups - multiple return)
+  // TODO rename to findUsersGroups (user's groups = multiple return)
   public Page<Group> findUsersGroup(@NonNull String userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
     return groupRepository.findAll(
             where(GroupSpecification.containsUser(Integer.parseInt(userId)))
