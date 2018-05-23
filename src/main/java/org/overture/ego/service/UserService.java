@@ -119,6 +119,7 @@ public class UserService extends BaseService<User> {
     return output;
   }
 
+  // TODO rename to addUserToGroups (one user to many groups)
   public void addUsersToGroups(@NonNull String userId, @NonNull List<String> groupIDs){
     val user = getById(userRepository, Integer.parseInt(userId));
     groupIDs.forEach(grpId -> {
@@ -128,6 +129,7 @@ public class UserService extends BaseService<User> {
     userRepository.save(user);
   }
 
+  // TODO rename to addUserToApps (one user to many apps)
   public void addUsersToApps(@NonNull String userId, @NonNull List<String> appIDs){
     val user = getById(userRepository, Integer.parseInt(userId));
     appIDs.forEach(appId -> {
@@ -185,6 +187,7 @@ public class UserService extends BaseService<User> {
     userRepository.save(user);
   }
 
+  // TODO rename to findGroupUsers (one group many users)
   public Page<User> findGroupsUsers(@NonNull String groupId, @NonNull List<SearchFilter> filters,
                                     @NonNull Pageable pageable){
     return userRepository.findAll(
@@ -202,6 +205,7 @@ public class UserService extends BaseService<User> {
             pageable);
   }
 
+  // TODO rename to findAppUsers (one app many users)
   public Page<User> findAppsUsers(@NonNull String appId, @NonNull List<SearchFilter> filters,
                                   @NonNull Pageable pageable){
     return userRepository.findAll(
