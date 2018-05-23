@@ -373,27 +373,56 @@ public class GroupsServiceTest {
   // Add Apps to Group
   @Test
   public void addAppsToGroup() {
+    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupSimpleApplications();
 
+    val groupId = Integer.toString(groupService.getByName("Group One").getId());
+    val application = applicationService.getByClientId("111111");
+    val applicationId = Integer.toString(application.getId());
+
+    groupService.addAppsToGroups(groupId, Arrays.asList(applicationId));
+
+    val group = groupService.get(groupId);
+
+    assertThat(group.getWholeApplications()).contains(applicationService.getByClientId("111111"));
   }
 
   @Test
   public void addAppsToGroupNoGroup() {
-
+    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupSimpleApplications();
+    val applicationId = Integer.toString(applicationService.getByClientId("111111").getId());
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> groupService.addAppsToGroups("777", Arrays.asList(applicationId)));
   }
 
   @Test
   public void addAppsToGroupEmptyGroupString() {
-
+    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupSimpleApplications();
+    val applicationId = Integer.toString(applicationService.getByClientId("111111").getId());
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> groupService.addAppsToGroups("", Arrays.asList(applicationId)));
   }
 
   @Test
   public void addAppsToGroupNoApp() {
+    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupSimpleApplications();
 
+    val groupId = Integer.toString(groupService.getByName("Group One").getId());
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> groupService.addAppsToGroups(groupId, Arrays.asList("777")));
   }
 
   @Test
   public void addAppsToGroupEmptyAppList() {
+    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupSimpleApplications();
 
+    val groupId = Integer.toString(groupService.getByName("Group One").getId());
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> groupService.addAppsToGroups(groupId, Arrays.asList("")));
   }
 
   // Delete
