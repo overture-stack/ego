@@ -28,6 +28,7 @@ public class UserServiceTest {
   @Autowired
   private EntityGenerator entityGenerator;
 
+  // Create
   @Test
   public void testCreate() {
 
@@ -58,6 +59,7 @@ public class UserServiceTest {
 
   }
 
+  // Get
   @Test
   public void testGet() {
 
@@ -88,6 +90,91 @@ public class UserServiceTest {
 
   }
 
+  // List Users
+  @Test
+  public void testListUsersNoFilters() {
+
+  }
+
+  @Test
+  public void testListAppsNoFiltersEmptyResult() {
+
+  }
+
+  @Test
+  public void testListUsersFiltered() {
+
+  }
+
+  @Test
+  public void testListUsersFilteredEmptyResult() {
+
+  }
+
+  // Find Users
+  @Test
+  public void testFindUsersNoFilters() {
+
+  }
+
+  @Test
+  public void testFindUsersFiltered() {
+
+  }
+
+  // Find Group Users
+  @Test
+  public void testFindGroupUsersNoQueryNoFiltersNoUser() {
+
+  }
+
+  @Test
+  public void testFindGroupUsersNoQueryNoFiltersEmptyUserString() {
+
+  }
+
+  @Test
+  public void testFindGroupUsersNoQueryFilters() {
+
+  }
+
+  @Test
+  public void testFindGroupUsersQueryAndFilters() {
+
+  }
+
+  @Test
+  public void testFindGroupUsersQueryNoFilters() {
+
+  }
+
+  // Find App Users
+  @Test
+  public void testFindAppUsersNoQueryNoFiltersNoUser() {
+
+  }
+
+  @Test
+  public void testFindAppUsersNoQueryNoFiltersEmptyUserString() {
+
+  }
+
+  @Test
+  public void testFindAppUsersNoQueryFilters() {
+
+  }
+
+  @Test
+  public void testFindAppUsersQueryAndFilters() {
+
+  }
+
+  @Test
+  public void testFindAppUsersQueryNoFilters() {
+
+  }
+
+  // Update
   @Test
   public void testUpdate() {
 
@@ -119,27 +206,132 @@ public class UserServiceTest {
   }
 
   @Test
-  public void testGet() {
+  public void testUpdateStatusNotInAllowedEnum() {
 
   }
 
   @Test
-  public void testGet() {
+  public void testUpdateLanguageNotInAllowedEnum() {
+
+  }
+
+  // Add User to Groups
+  @Test
+  public void addUserToGroups() {
 
   }
 
   @Test
-  public void testGet() {
+  public void addUserToGroupsNoGroup() {
 
   }
 
   @Test
-  public void testGet() {
+  public void addUserToGroupsEmptyGroupString() {
 
   }
 
   @Test
-  public void testGet() {
+  public void addUserToGroupsNoUser() {
+
+  }
+
+  @Test
+  public void addUserToGroupsEmptyUserString() {
+
+  }
+
+  // Add User to Apps
+  @Test
+  public void addUserToApps() {
+
+  }
+
+  @Test
+  public void addUserToAppsNoApp() {
+
+  }
+
+  @Test
+  public void addUserToAppsEmptyAppString() {
+
+  }
+
+  @Test
+  public void addUserToAppsNoUser() {
+
+  }
+
+  @Test
+  public void addUserToAppsEmptyUserString() {
+
+  }
+
+  // Delete
+  @Test
+  public void testDelete() {
+
+  }
+
+  @Test
+  public void testDeleteNonExisting() {
+
+  }
+
+  @Test
+  public void testDeleteEmptyIdString() {
+
+  }
+
+  // Delete User from Group
+  @Test
+  public void testDeleteUserFromGroup() {
+
+  }
+
+  @Test
+  public void testDeleteUserFromGroupNoGroup() {
+
+  }
+
+  @Test
+  public void testDeleteUserFromGroupEmptyGroupString() {
+
+  }
+
+  @Test
+  public void testDeleteUserFromGroupNoUser() {
+
+  }
+
+  @Test
+  public void testDeleteUserFromGroupEmptyUserString() {
+
+  }
+
+  // Delete User from App
+  @Test
+  public void testDeleteUserFromApp() {
+
+  }
+
+  @Test
+  public void testDeleteUserFromAppNoApp() {
+
+  }
+
+  @Test
+  public void testDeleteUserFromAppEmptyAppString() {
+
+  }
+
+  @Test
+  public void testDeleteUserFromAppNoUser() {
+
+  }
+
+  @Test
+  public void testDeleteUserFromAppEmptyUserString() {
 
   }
 }
