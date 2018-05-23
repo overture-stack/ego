@@ -403,13 +403,15 @@ public class ApplicationServiceTest {
   @Test
   public void testDeleteNonExisting() {
     entityGenerator.setupSimpleApplications();
-    assertThatExceptionOfType(EmptyResultDataAccessException.class).isThrownBy(() -> applicationService.delete("666666"));
+    assertThatExceptionOfType(EmptyResultDataAccessException.class)
+        .isThrownBy(() -> applicationService.delete("666666"));
   }
 
   @Test
   public void testDeleteEmptyIdString() {
     entityGenerator.setupSimpleApplications();
-    assertThatExceptionOfType(NumberFormatException.class).isThrownBy(() -> applicationService.delete(""));
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> applicationService.delete(""));
   }
 
   // Special (LoadClient)
