@@ -201,7 +201,8 @@ public class UserServiceTest {
     userService.addUsersToGroups(Integer.toString(user.getId()), Arrays.asList(groupId));
     userService.addUsersToGroups(Integer.toString(userTwo.getId()), Arrays.asList(groupId));
 
-    val users = userService.findGroupsUsers(groupId,
+    val users = userService.findGroupsUsers(
+        groupId,
         Collections.emptyList(),
         new PageableResolver().getPageable()
     );
@@ -217,7 +218,8 @@ public class UserServiceTest {
 
     val groupId = Integer.toString(groupService.getByName("Group One").getId());
 
-    val users = userService.findGroupsUsers(groupId,
+    val users = userService.findGroupsUsers(
+        groupId,
         Collections.emptyList(),
         new PageableResolver().getPageable()
     );
@@ -250,7 +252,8 @@ public class UserServiceTest {
 
     val userFilters = new SearchFilter("name", "First");
 
-    val users = userService.findGroupsUsers(groupId,
+    val users = userService.findGroupsUsers(
+        groupId,
         Arrays.asList(userFilters),
         new PageableResolver().getPageable()
     );
@@ -273,7 +276,8 @@ public class UserServiceTest {
 
     val userFilters = new SearchFilter("name", "First");
 
-    val users = userService.findGroupsUsers(groupId,
+    val users = userService.findGroupsUsers(
+        groupId,
         "Second",
         Arrays.asList(userFilters),
         new PageableResolver().getPageable()
@@ -295,7 +299,8 @@ public class UserServiceTest {
     userService.addUsersToGroups(Integer.toString(userTwo.getId()), Arrays.asList(groupId));
 
 
-    val users = userService.findGroupsUsers(groupId,
+    val users = userService.findGroupsUsers(
+        groupId,
         "Second",
         Collections.emptyList(),
         new PageableResolver().getPageable()
@@ -306,29 +311,128 @@ public class UserServiceTest {
   }
 
   // Find App Users
+
+  @Test
+  public void testFindAppUsersNoQueryNoFilters() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleApplications();
+
+    val user = userService.getByName("FirstUser@domain.com");
+    val userTwo = (userService.getByName("SecondUser@domain.com"));
+    val appId = Integer.toString(applicationService.getByClientId("111111").getId());
+
+    userService.addUsersToApps(Integer.toString(user.getId()), Arrays.asList(appId));
+    userService.addUsersToApps(Integer.toString(userTwo.getId()), Arrays.asList(appId));
+
+    val users = userService.findAppsUsers(
+        appId,
+        Collections.emptyList(),
+        new PageableResolver().getPageable()
+    );
+
+    assertThat(users.getTotalElements()).isEqualTo(2L);
+    assertThat(users.getContent()).contains(user, userTwo);
+  }
+
   @Test
   public void testFindAppUsersNoQueryNoFiltersNoUser() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleApplications();
 
+    val appId = Integer.toString(applicationService.getByClientId("111111").getId());
+
+    val users = userService.findAppsUsers(
+        appId,
+        Collections.emptyList(),
+        new PageableResolver().getPageable()
+    );
+
+    assertThat(users.getTotalElements()).isEqualTo(0L);
   }
 
   @Test
   public void testFindAppUsersNoQueryNoFiltersEmptyUserString() {
-
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleApplications();
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> userService
+            .findAppsUsers(
+                "",
+                Collections.emptyList(),
+                new PageableResolver().getPageable()
+            )
+        );
   }
 
   @Test
   public void testFindAppUsersNoQueryFilters() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleApplications();
 
+    val user = userService.getByName("FirstUser@domain.com");
+    val userTwo = (userService.getByName("SecondUser@domain.com"));
+    val appId = Integer.toString(applicationService.getByClientId("111111").getId());
+
+    userService.addUsersToApps(Integer.toString(user.getId()), Arrays.asList(appId));
+    userService.addUsersToApps(Integer.toString(userTwo.getId()), Arrays.asList(appId));
+
+    val userFilters = new SearchFilter("name", "First");
+
+    val users = userService.findAppsUsers(
+        appId,
+        Arrays.asList(userFilters),
+        new PageableResolver().getPageable()
+    );
+
+    assertThat(users.getTotalElements()).isEqualTo(1L);
+    assertThat(users.getContent()).contains(user);
   }
 
   @Test
   public void testFindAppUsersQueryAndFilters() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleApplications();
 
+    val user = userService.getByName("FirstUser@domain.com");
+    val userTwo = (userService.getByName("SecondUser@domain.com"));
+    val appId = Integer.toString(applicationService.getByClientId("111111").getId());
+
+    userService.addUsersToApps(Integer.toString(user.getId()), Arrays.asList(appId));
+    userService.addUsersToApps(Integer.toString(userTwo.getId()), Arrays.asList(appId));
+
+    val userFilters = new SearchFilter("name", "First");
+
+    val users = userService.findAppsUsers(
+        appId,
+        "Second",
+        Arrays.asList(userFilters),
+        new PageableResolver().getPageable()
+    );
+
+    assertThat(users.getTotalElements()).isEqualTo(0L);
   }
 
   @Test
   public void testFindAppUsersQueryNoFilters() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleApplications();
 
+    val user = userService.getByName("FirstUser@domain.com");
+    val userTwo = (userService.getByName("SecondUser@domain.com"));
+    val appId = Integer.toString(applicationService.getByClientId("111111").getId());
+
+    userService.addUsersToApps(Integer.toString(user.getId()), Arrays.asList(appId));
+    userService.addUsersToApps(Integer.toString(userTwo.getId()), Arrays.asList(appId));
+
+    val users = userService.findAppsUsers(
+        appId,
+        "First",
+        Collections.emptyList(),
+        new PageableResolver().getPageable()
+    );
+
+    assertThat(users.getTotalElements()).isEqualTo(1L);
+    assertThat(users.getContent()).contains(user);
   }
 
   // Update
