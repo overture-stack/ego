@@ -14,6 +14,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -85,32 +87,46 @@ public class UserServiceTest {
   // Get
   @Test
   public void testGet() {
-
+    val user = userService.create(entityGenerator.createOneUser(Pair.of("User", "One")));
+    val savedUser = userService.get(Integer.toString(user.getId()));
+    assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
 
   @Test
   public void testGetEntityNotFoundException() {
-
+    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> userService.get("1"));
   }
 
   @Test
   public void testGetByName() {
-
+    userService.create(entityGenerator.createOneUser(Pair.of("User", "One")));
+    val savedUser = userService.getByName("UserOne@domain.com");
+    assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
 
   @Test
   public void testGetByNameAllCaps() {
-
+    userService.create(entityGenerator.createOneUser(Pair.of("User", "One")));
+    val savedUser = userService.getByName("USERONE@DOMAIN.COM");
+    assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
 
   @Test
   public void testGetByNameNotFound() {
-
+    // TODO Currently returning null, should throw exception (EntityNotFoundException?)
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
   }
 
   @Test
   public void testGetOrCreateDemoUser() {
-
+    val demoUser = userService.getOrCreateDemoUser();
+    assertThat(demoUser.getName()).isEqualTo("Demo.User@example.com");
+    assertThat(demoUser.getEmail()).isEqualTo("Demo.User@example.com");
+    assertThat(demoUser.getFirstName()).isEqualTo("Demo");
+    assertThat(demoUser.getLastName()).isEqualTo("User");
+    assertThat(demoUser.getStatus()).isEqualTo("Approved");
+    assertThat(demoUser.getRole()).isEqualTo("ADMIN");
   }
 
   // List Users
