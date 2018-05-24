@@ -524,50 +524,113 @@ public class UserServiceTest {
   }
 
   @Test
-  public void addUserToGroupsNoGroup() {
+  public void addUserToGroupsNoUser() {
     entityGenerator.setupSimpleUsers();
     entityGenerator.setupSimpleGroups();
-  }
 
-  @Test
-  public void addUserToGroupsEmptyGroupsList() {
+    val group = groupService.getByName("Group One");
+    val groupId = Integer.toString(group.getId());
 
-  }
-
-  @Test
-  public void addUserToGroupsNoUser() {
-
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> userService.addUsersToGroups("777", Arrays.asList(groupId)));
   }
 
   @Test
   public void addUserToGroupsEmptyUserString() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleGroups();
 
+    val group = groupService.getByName("Group One");
+    val groupId = Integer.toString(group.getId());
+
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> userService.addUsersToGroups("", Arrays.asList(groupId)));
+  }
+
+  @Test
+  public void addUserToGroupsWithGroupsListOneEmptyString() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleGroups();
+
+    val user = userService.getByName("FirstUser@domain.com");
+    val userId = Integer.toString(user.getId());
+
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> userService.addUsersToGroups(userId, Arrays.asList("")));
+  }
+
+  @Test
+  public void addUserToGroupsEmptyGroupsList() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleGroups();
+
+    val user = userService.getByName("FirstUser@domain.com");
+    val userId = Integer.toString(user.getId());
+
+    // TODO Make it throw some exception, currently undefined
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> userService.addUsersToGroups(userId, Collections.emptyList()));
   }
 
   // Add User to Apps
   @Test
   public void addUserToApps() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleApplications();
 
-  }
+    val app = applicationService.getByClientId("111111");
+    val appId = Integer.toString(app.getId());
+    val appTwo = applicationService.getByClientId("222222");
+    val appTwoId = Integer.toString(appTwo.getId());
+    val user = userService.getByName("FirstUser@domain.com");
+    val userId = Integer.toString(user.getId());
 
-  @Test
-  public void addUserToAppsNoApp() {
+    userService.addUsersToApps(userId, Arrays.asList(appId, appTwoId));
 
-  }
+    val apps = applicationService.findUsersApps(
+        userId,
+        Collections.emptyList(),
+        new PageableResolver().getPageable()
+    );
 
-  @Test
-  public void addUserToAppsEmptyAppString() {
-
+    assertThat(apps.getContent()).contains(app, appTwo);
   }
 
   @Test
   public void addUserToAppsNoUser() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleApplications();
 
+    val app = applicationService.getByClientId("111111");
+    val appId = Integer.toString(app.getId());
+
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> userService.addUsersToApps("777", Arrays.asList(appId)));
   }
 
   @Test
-  public void addUserToAppsEmptyUserString() {
+  public void addUserToAppsWithAppsListOneEmptyString() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleApplications();
 
+    val user = userService.getByName("FirstUser@domain.com");
+    val userId = Integer.toString(user.getId());
+
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> userService.addUsersToApps(userId, Arrays.asList("")));
+  }
+
+  @Test
+  public void addUserToAppsEmptyAppsList() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleApplications();
+
+    val user = userService.getByName("FirstUser@domain.com");
+    val userId = Integer.toString(user.getId());
+
+    // TODO Make it throw some exception, currently undefined
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> userService.addUsersToApps(userId, Collections.emptyList()));
   }
 
   // Delete
