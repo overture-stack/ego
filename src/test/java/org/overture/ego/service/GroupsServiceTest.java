@@ -455,13 +455,25 @@ public class GroupsServiceTest {
   }
 
   @Test
-  public void addAppsToGroupEmptyAppList() {
+  public void addAppsToGroupWithAppListOneEmptyString() {
     entityGenerator.setupSimpleGroups();
     entityGenerator.setupSimpleApplications();
 
     val groupId = Integer.toString(groupService.getByName("Group One").getId());
     assertThatExceptionOfType(NumberFormatException.class)
         .isThrownBy(() -> groupService.addAppsToGroups(groupId, Arrays.asList("")));
+  }
+
+  @Test
+  public void addAppsToGroupEmptyAppList() {
+    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupSimpleApplications();
+
+    val groupId = Integer.toString(groupService.getByName("Group One").getId());
+
+    // TODO Make it throw some exception, currently undefined
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> groupService.addAppsToGroups(groupId, Collections.emptyList()));
   }
 
   // Delete
