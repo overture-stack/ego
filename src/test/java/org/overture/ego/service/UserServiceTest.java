@@ -11,6 +11,7 @@ import org.overture.ego.utils.EntityGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -567,9 +568,10 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = Integer.toString(user.getId());
 
-    // TODO Make it throw some exception, currently undefined
-    assertThatExceptionOfType(NumberFormatException.class)
-        .isThrownBy(() -> userService.addUsersToGroups(userId, Collections.emptyList()));
+    userService.addUsersToGroups(userId, Collections.emptyList());
+
+    val nonUpdated = userService.getByName("FirstUser@domain.com");
+    assertThat(nonUpdated).isEqualTo(user);
   }
 
   // Add User to Apps
@@ -628,25 +630,38 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = Integer.toString(user.getId());
 
-    // TODO Make it throw some exception, currently undefined
-    assertThatExceptionOfType(NumberFormatException.class)
-        .isThrownBy(() -> userService.addUsersToApps(userId, Collections.emptyList()));
+    userService.addUsersToApps(userId, Collections.emptyList());
+
+    val nonUpdated = userService.getByName("FirstUser@domain.com");
+    assertThat(nonUpdated).isEqualTo(user);
   }
 
   // Delete
   @Test
   public void testDelete() {
+    entityGenerator.setupSimpleUsers();
 
+    val user = userService.getByName("FirstUser@domain.com");
+
+    userService.delete(Integer.toString(user.getId()));
+
+    val users = userService.listUsers(Collections.emptyList(), new PageableResolver().getPageable());
+    assertThat(users.getTotalElements()).isEqualTo(2L);
+    assertThat(users.getContent()).doesNotContain(user);
   }
 
   @Test
   public void testDeleteNonExisting() {
-
+    entityGenerator.setupSimpleUsers();
+    assertThatExceptionOfType(EmptyResultDataAccessException.class)
+        .isThrownBy(() -> userService.delete("777777"));
   }
 
   @Test
   public void testDeleteEmptyIdString() {
-
+    entityGenerator.setupSimpleGroups();
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> userService.delete(""));
   }
 
   // Delete User from Group
