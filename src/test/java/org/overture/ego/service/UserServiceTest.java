@@ -1,14 +1,21 @@
 package org.overture.ego.service;
 
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.overture.ego.token.IDToken;
 import org.overture.ego.utils.EntityGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.util.Pair;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -31,32 +38,48 @@ public class UserServiceTest {
   // Create
   @Test
   public void testCreate() {
-
+    val user = userService.create(entityGenerator.createOneUser(Pair.of("Demo", "User")));
+    // UserName == UserEmail
+    assertThat(user.getName()).isEqualTo("DemoUser@domain.com");
   }
 
   @Test
-  public void testCreateUniqueName() {
-
-  }
-
-  @Test
-  public void testCreateUniqueEmail() {
-
+  public void testCreateUniqueNameAndEmail() {
+    userService.create(entityGenerator.createOneUser(Pair.of("User", "One")));
+    userService.create(entityGenerator.createOneUser(Pair.of("User", "Two")));
+    assertThatExceptionOfType(DataIntegrityViolationException.class)
+        .isThrownBy(() -> userService.create(entityGenerator.createOneUser(Pair.of("User", "Two"))));
   }
 
   @Test
   public void testCreateFromIDToken() {
+    val idToken = IDToken.builder()
+        .email("UserOne@domain.com")
+        .given_name("User")
+        .family_name("User")
+        .build();
 
+    val idTokenUser = userService.createFromIDToken(idToken);
+
+    assertThat(idTokenUser.getName()).isEqualTo("UserOne@domain.com");
+    assertThat(idTokenUser.getEmail()).isEqualTo("UserOne@domain.com");
+    assertThat(idTokenUser.getFirstName()).isEqualTo("User");
+    assertThat(idTokenUser.getLastName()).isEqualTo("User");
+    assertThat(idTokenUser.getStatus()).isEqualTo("Pending");
+    assertThat(idTokenUser.getRole()).isEqualTo("USER");
   }
 
   @Test
-  public void testCreateFromIDTokenUniqueName() {
+  public void testCreateFromIDTokenUniqueNameAndEmail() {
+    userService.create(entityGenerator.createOneUser(Pair.of("User", "One")));
+    val idToken = IDToken.builder()
+        .email("UserOne@domain.com")
+        .given_name("User")
+        .family_name("User")
+        .build();
 
-  }
-
-  @Test
-  public void testCreateFromIDTokenUniqueEmail() {
-
+    assertThatExceptionOfType(DataIntegrityViolationException.class)
+        .isThrownBy(() -> userService.createFromIDToken(idToken));
   }
 
   // Get
