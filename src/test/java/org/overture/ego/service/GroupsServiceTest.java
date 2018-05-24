@@ -385,7 +385,8 @@ public class GroupsServiceTest {
     val group = groupService.create(entityGenerator.createOneGroup("Group One"));
     group.setId(777);
     // New id means new non-existent entity or one that exists and is being overwritten
-    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> groupService.update(group));
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> groupService.update(group));
   }
 
   @Test

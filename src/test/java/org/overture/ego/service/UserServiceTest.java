@@ -438,48 +438,95 @@ public class UserServiceTest {
   // Update
   @Test
   public void testUpdate() {
-
+    val user = userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
+    user.setFirstName("NotFirst");
+    val updated = userService.update(user);
+    assertThat(updated.getFirstName()).isEqualTo("NotFirst");
   }
 
   @Test
   public void testUpdateNonexistentEntity() {
-
+    userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
+    val nonExistentEntity = entityGenerator.createOneUser(Pair.of("First", "User"));
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> userService.update(nonExistentEntity));
   }
 
   @Test
   public void testUpdateIdNotAllowed() {
-
+    val user = userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
+    user.setId(777);
+    // New id means new non-existent entity or one that exists and is being overwritten
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> userService.update(user));
   }
 
   @Test
   public void testUpdateNameNotAllowed() {
-
+    val user = userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
+    user.setName("NewName");
+    val updated = userService.update(user);
+    assertThat(1).isEqualTo(2);
+    // TODO Check for uniqueness in application, currently only SQL
   }
 
   @Test
   public void testUpdateEmailNotAllowed() {
-
+    val user = userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
+    user.setEmail("NewName@domain.com");
+    val updated = userService.update(user);
+    assertThat(1).isEqualTo(2);
+    // TODO Check for uniqueness in application, currently only SQL
   }
 
   @Test
   public void testUpdateStatusNotInAllowedEnum() {
-
+    entityGenerator.setupSimpleUsers();
+    val user = userService.getByName("FirstUser@domain.com");
+    user.setStatus("Junk");
+    val updated = userService.update(user);
+    assertThat(1).isEqualTo(2);
+    // TODO Check for uniqueness in application, currently only SQL
   }
 
   @Test
   public void testUpdateLanguageNotInAllowedEnum() {
-
+    entityGenerator.setupSimpleUsers();
+    val user = userService.getByName("FirstUser@domain.com");
+    user.setPreferredLanguage("Klingon");
+    val updated = userService.update(user);
+    assertThat(1).isEqualTo(2);
+    // TODO Check for uniqueness in application, currently only SQL
   }
 
   // Add User to Groups
   @Test
   public void addUserToGroups() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleGroups();
 
+    val group = groupService.getByName("Group One");
+    val groupId = Integer.toString(group.getId());
+    val groupTwo = groupService.getByName("Group Two");
+    val groupTwoId = Integer.toString(groupTwo.getId());
+    val user = userService.getByName("FirstUser@domain.com");
+    val userId = Integer.toString(user.getId());
+
+    userService.addUsersToGroups(userId, Arrays.asList(groupId, groupTwoId));
+
+    val groups = groupService.findUsersGroup(
+        userId,
+        Collections.emptyList(),
+        new PageableResolver().getPageable()
+    );
+
+    assertThat(groups.getContent()).contains(group, groupTwo);
   }
 
   @Test
   public void addUserToGroupsNoGroup() {
-
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleGroups();
   }
 
   @Test
