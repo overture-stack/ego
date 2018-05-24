@@ -137,9 +137,9 @@ public class UserServiceTest {
   // List Users
   @Test
   public void testListUsersNoFilters() {
-  entityGenerator.setupSimpleUsers();
-  val users = userService
-      .listUsers(Collections.emptyList(), new PageableResolver().getPageable());
+    entityGenerator.setupSimpleUsers();
+    val users = userService
+        .listUsers(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(users.getTotalElements()).isEqualTo(3L);
   }
 
@@ -171,12 +171,21 @@ public class UserServiceTest {
   // Find Users
   @Test
   public void testFindUsersNoFilters() {
-
+    entityGenerator.setupSimpleUsers();
+    val users = userService
+        .findUsers("First", Collections.emptyList(), new PageableResolver().getPageable());
+    assertThat(users.getTotalElements()).isEqualTo(1L);
+    assertThat(users.getContent().get(0).getName()).isEqualTo("FirstUser@domain.com");
   }
 
   @Test
   public void testFindUsersFiltered() {
-
+    entityGenerator.setupSimpleUsers();
+    val userFilter = new SearchFilter("email", "FirstUser@domain.com");
+    val users = userService
+        .findUsers("Second", Arrays.asList(userFilter), new PageableResolver().getPageable());
+    // Expect empty list
+    assertThat(users.getTotalElements()).isEqualTo(0L);
   }
 
   // Find Group Users

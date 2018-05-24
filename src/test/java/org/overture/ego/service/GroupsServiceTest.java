@@ -135,7 +135,8 @@ public class GroupsServiceTest {
   public void testFindGroupsFiltered() {
     entityGenerator.setupSimpleGroups();
     val groupNameFilter = new SearchFilter("name", "Group One");
-    val groups = groupService.findGroups("Two", Arrays.asList(groupNameFilter), new PageableResolver().getPageable());
+    val groups = groupService
+        .findGroups("Two", Arrays.asList(groupNameFilter), new PageableResolver().getPageable());
     // Expect empty list
     assertThat(groups.getTotalElements()).isEqualTo(0L);
   }
