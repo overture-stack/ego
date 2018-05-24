@@ -469,11 +469,13 @@ public class GroupsServiceTest {
     entityGenerator.setupSimpleGroups();
     entityGenerator.setupSimpleApplications();
 
-    val groupId = Integer.toString(groupService.getByName("Group One").getId());
+    val group = groupService.getByName("Group One");
+    val groupId = Integer.toString(group.getId());
 
-    // TODO Make it throw some exception, currently undefined
-    assertThatExceptionOfType(NumberFormatException.class)
-        .isThrownBy(() -> groupService.addAppsToGroups(groupId, Collections.emptyList()));
+    groupService.addAppsToGroups(groupId, Collections.emptyList());
+
+    val nonUpdated = groupService.getByName("Group One");
+    assertThat(nonUpdated).isEqualTo(group);
   }
 
   // Delete
