@@ -93,13 +93,15 @@ public class GroupsServiceTest {
   @Test
   public void testListGroupsNoFilters() {
     entityGenerator.setupSimpleGroups();
-    val groups = groupService.listGroups(Collections.emptyList(), new PageableResolver().getPageable());
+    val groups = groupService
+        .listGroups(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(groups.getTotalElements()).isEqualTo(3L);
   }
 
   @Test
   public void testListGroupsNoFiltersEmptyResult() {
-    val groups = groupService.listGroups(Collections.emptyList(), new PageableResolver().getPageable());
+    val groups = groupService
+        .listGroups(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(groups.getTotalElements()).isEqualTo(0L);
   }
 
