@@ -5,7 +5,6 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
-import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.token.app.AppTokenClaims;
 import org.overture.ego.utils.EntityGenerator;
