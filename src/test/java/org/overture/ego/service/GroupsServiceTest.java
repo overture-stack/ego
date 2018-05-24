@@ -85,7 +85,8 @@ public class GroupsServiceTest {
   @Test
   public void testGetByNameNotFound() {
     // TODO Currently returning null, should throw exception (EntityNotFoundException?)
-    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> groupService.getByName("Group One"));
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> groupService.getByName("Group One"));
   }
 
   // List Groups
