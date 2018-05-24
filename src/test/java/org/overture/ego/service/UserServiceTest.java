@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.overture.ego.controller.resolver.PageableResolver;
+import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.token.IDToken;
 import org.overture.ego.utils.EntityGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -132,22 +137,35 @@ public class UserServiceTest {
   // List Users
   @Test
   public void testListUsersNoFilters() {
-
+  entityGenerator.setupSimpleUsers();
+  val users = userService
+      .listUsers(Collections.emptyList(), new PageableResolver().getPageable());
+    assertThat(users.getTotalElements()).isEqualTo(3L);
   }
 
   @Test
   public void testListUsersNoFiltersEmptyResult() {
-
+    val users = userService
+        .listUsers(Collections.emptyList(), new PageableResolver().getPageable());
+    assertThat(users.getTotalElements()).isEqualTo(0L);
   }
 
   @Test
   public void testListUsersFiltered() {
-
+    entityGenerator.setupSimpleUsers();
+    val userFilter = new SearchFilter("email", "FirstUser@domain.com");
+    val users = userService
+        .listUsers(Arrays.asList(userFilter), new PageableResolver().getPageable());
+    assertThat(users.getTotalElements()).isEqualTo(1L);
   }
 
   @Test
   public void testListUsersFilteredEmptyResult() {
-
+    entityGenerator.setupSimpleUsers();
+    val userFilter = new SearchFilter("email", "FourthUser@domain.com");
+    val users = userService
+        .listUsers(Arrays.asList(userFilter), new PageableResolver().getPageable());
+    assertThat(users.getTotalElements()).isEqualTo(0L);
   }
 
   // Find Users
