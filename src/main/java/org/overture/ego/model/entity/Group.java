@@ -59,7 +59,7 @@ public class Group {
 
   @ManyToMany(targetEntity = Application.class, cascade = {CascadeType.ALL})
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(name = "groupApplication", joinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) },
+  @JoinTable(name = "groupapplication", joinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) },
           inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
   @JsonIgnore Set<Application> wholeApplications;
 
