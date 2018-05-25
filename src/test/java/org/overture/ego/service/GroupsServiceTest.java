@@ -542,7 +542,8 @@ public class GroupsServiceTest {
     assertThat(group.getWholeApplications().size()).isEqualTo(1);
 
     assertThatExceptionOfType(EntityNotFoundException.class)
-        .isThrownBy(() -> groupService.deleteAppsFromGroup("777777", Arrays.asList(applicationId)));
+        .isThrownBy(() -> groupService
+            .deleteAppsFromGroup("777777", Arrays.asList(applicationId)));
   }
 
   @Test
@@ -561,29 +562,6 @@ public class GroupsServiceTest {
 
     assertThatExceptionOfType(NumberFormatException.class)
         .isThrownBy(() -> groupService.deleteAppsFromGroup("", Arrays.asList(applicationId)));
-  }
-
-  @Test
-  public void testDeleteAppsFromGroupNoApps() {
-    entityGenerator.setupSimpleGroups();
-    entityGenerator.setupSimpleApplications();
-
-    val groupId = Integer.toString(groupService.getByName("Group One").getId());
-    val application = applicationService.getByClientId("111111");
-    val applicationTwo = applicationService.getByClientId("222222");
-    val applicationId = Integer.toString(application.getId());
-    val applicationTwoId = Integer.toString(applicationTwo.getId());
-
-    groupService.addAppsToGroups(groupId, Arrays.asList(applicationId));
-
-    val group = groupService.get(groupId);
-    assertThat(group.getWholeApplications().size()).isEqualTo(1);
-
-    assertThatExceptionOfType(EntityNotFoundException.class)
-        .isThrownBy(() -> groupService.deleteAppsFromGroup(groupId, Arrays.asList(applicationTwoId)));
-
-    assertThatExceptionOfType(EntityNotFoundException.class)
-        .isThrownBy(() -> groupService.deleteAppsFromGroup(groupId, Arrays.asList("777777")));
   }
 
   @Test
