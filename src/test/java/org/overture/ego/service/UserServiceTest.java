@@ -667,52 +667,165 @@ public class UserServiceTest {
   // Delete User from Group
   @Test
   public void testDeleteUserFromGroup() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleGroups();
 
-  }
+    val group = groupService.getByName("Group One");
+    val groupId = Integer.toString(group.getId());
+    val groupTwo = groupService.getByName("Group Two");
+    val groupTwoId = Integer.toString(groupTwo.getId());
+    val user = userService.getByName("FirstUser@domain.com");
+    val userId = Integer.toString(user.getId());
 
-  @Test
-  public void testDeleteUserFromGroupNoGroup() {
+    userService.addUsersToGroups(userId, Arrays.asList(groupId, groupTwoId));
 
-  }
+    userService.deleteUserFromGroup(userId, Arrays.asList(groupId));
 
-  @Test
-  public void testDeleteUserFromGroupEmptyGroupString() {
+    val groupWithoutUser = groupService.findUsersGroup(
+        userId,
+        Collections.emptyList(),
+        new PageableResolver().getPageable()
+    );
 
+    assertThat(groupWithoutUser.getContent()).containsOnly(groupTwo);
   }
 
   @Test
   public void testDeleteUserFromGroupNoUser() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleGroups();
 
+    val group = groupService.getByName("Group One");
+    val groupId = Integer.toString(group.getId());
+    val groupTwo = groupService.getByName("Group Two");
+    val groupTwoId = Integer.toString(groupTwo.getId());
+    val user = userService.getByName("FirstUser@domain.com");
+    val userId = Integer.toString(user.getId());
+
+    userService.addUsersToGroups(userId, Arrays.asList(groupId, groupTwoId));
+
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> userService
+            .deleteUserFromGroup("777777", Arrays.asList(groupId)));
   }
 
   @Test
   public void testDeleteUserFromGroupEmptyUserString() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleGroups();
 
+    val group = groupService.getByName("Group One");
+    val groupId = Integer.toString(group.getId());
+    val groupTwo = groupService.getByName("Group Two");
+    val groupTwoId = Integer.toString(groupTwo.getId());
+    val user = userService.getByName("FirstUser@domain.com");
+    val userId = Integer.toString(user.getId());
+
+    userService.addUsersToGroups(userId, Arrays.asList(groupId, groupTwoId));
+
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> userService
+            .deleteUserFromGroup("", Arrays.asList(groupId)));
+  }
+
+  @Test
+  public void testDeleteUserFromGroupEmptyGroupsList() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleGroups();
+
+    val user = userService.getByName("FirstUser@domain.com");
+    val userId = Integer.toString(user.getId());
+    val group = groupService.getByName("Group One");
+    val groupId = Integer.toString(group.getId());
+
+    userService.addUsersToGroups(userId, Arrays.asList(groupId));
+    assertThat(user.getWholeGroups().size()).isEqualTo(1);
+
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> userService
+            .deleteUserFromGroup(userId, Arrays.asList("")));
   }
 
   // Delete User from App
   @Test
   public void testDeleteUserFromApp() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleApplications();
 
-  }
+    val app = applicationService.getByClientId("111111");
+    val appId = Integer.toString(app.getId());
+    val appTwo = applicationService.getByClientId("222222");
+    val appTwoId = Integer.toString(appTwo.getId());
+    val user = userService.getByName("FirstUser@domain.com");
+    val userId = Integer.toString(user.getId());
 
-  @Test
-  public void testDeleteUserFromAppNoApp() {
+    userService.addUsersToApps(userId, Arrays.asList(appId, appTwoId));
 
-  }
+    userService.deleteUserFromApp(userId, Arrays.asList(appId));
 
-  @Test
-  public void testDeleteUserFromAppEmptyAppString() {
+    val groupWithoutUser = applicationService.findUsersApps(
+        userId,
+        Collections.emptyList(),
+        new PageableResolver().getPageable()
+    );
 
+    assertThat(groupWithoutUser.getContent()).containsOnly(appTwo);
   }
 
   @Test
   public void testDeleteUserFromAppNoUser() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleApplications();
 
+    val app = applicationService.getByClientId("111111");
+    val appId = Integer.toString(app.getId());
+    val appTwo = applicationService.getByClientId("222222");
+    val appTwoId = Integer.toString(appTwo.getId());
+    val user = userService.getByName("FirstUser@domain.com");
+    val userId = Integer.toString(user.getId());
+
+    userService.addUsersToApps(userId, Arrays.asList(appId, appTwoId));
+
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> userService
+            .deleteUserFromApp("777777", Arrays.asList(appId)));
   }
 
   @Test
   public void testDeleteUserFromAppEmptyUserString() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleApplications();
 
+    val app = applicationService.getByClientId("111111");
+    val appId = Integer.toString(app.getId());
+    val appTwo = applicationService.getByClientId("222222");
+    val appTwoId = Integer.toString(appTwo.getId());
+    val user = userService.getByName("FirstUser@domain.com");
+    val userId = Integer.toString(user.getId());
+
+    userService.addUsersToApps(userId, Arrays.asList(appId, appTwoId));
+
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> userService
+            .deleteUserFromApp("", Arrays.asList(appId)));
+  }
+
+  @Test
+  public void testDeleteUserFromAppEmptyAppsList() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleApplications();
+
+    val app = applicationService.getByClientId("111111");
+    val appId = Integer.toString(app.getId());
+    val appTwo = applicationService.getByClientId("222222");
+    val appTwoId = Integer.toString(appTwo.getId());
+    val user = userService.getByName("FirstUser@domain.com");
+    val userId = Integer.toString(user.getId());
+
+    userService.addUsersToApps(userId, Arrays.asList(appId, appTwoId));
+
+    assertThatExceptionOfType(NumberFormatException.class)
+        .isThrownBy(() -> userService
+            .deleteUserFromApp(userId, Arrays.asList("")));
   }
 }

@@ -171,6 +171,7 @@ public class UserService extends BaseService<User> {
             .and(UserSpecification.filterBy(filters)), pageable);
   }
 
+  //  TODO rename to deleteUserFromGroups (one user, many groups)
   public void deleteUserFromGroup(@NonNull String userId, @NonNull List<String> groupIDs) {
     val user = getById(userRepository,Integer.parseInt(userId));
     groupIDs.forEach(grpId -> {
@@ -179,6 +180,7 @@ public class UserService extends BaseService<User> {
     userRepository.save(user);
   }
 
+  //  TODO rename to deleteUserFromApps (one user, many apps)
   public void deleteUserFromApp(@NonNull String userId, @NonNull List<String> appIDs) {
     val user = getById(userRepository, Integer.parseInt(userId));
     appIDs.forEach(appId -> {
