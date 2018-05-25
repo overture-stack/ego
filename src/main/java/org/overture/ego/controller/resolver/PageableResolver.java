@@ -43,7 +43,6 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
     String sortOrder = nativeWebRequest.getParameter("sortOrder");
 
     return getPageable(limit, offset, sort, sortOrder);
-
   }
 
   public Pageable getPageable() {
