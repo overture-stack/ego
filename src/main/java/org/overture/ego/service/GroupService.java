@@ -45,8 +45,7 @@ public class GroupService extends BaseService<Group> {
     return groupRepository.save(groupInfo);
   }
 
-  // TODO rename to addAppsToGroup (many apps to one group)
-  public void addAppsToGroups(@NonNull String grpId, @NonNull List<String> appIDs){
+  public void addAppsToGroup(@NonNull String grpId, @NonNull List<String> appIDs){
     val group = getById(groupRepository, Integer.parseInt(grpId));
     appIDs.forEach(appId -> {
       val app = applicationService.get(appId);
@@ -82,15 +81,14 @@ public class GroupService extends BaseService<Group> {
             .and(GroupSpecification.filterBy(filters)), pageable);
   }
 
-  // TODO rename to findUsersGroups (user's groups = multiple return)
-  public Page<Group> findUsersGroup(@NonNull String userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
+  public Page<Group> findUserGroups(@NonNull String userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
     return groupRepository.findAll(
             where(GroupSpecification.containsUser(Integer.parseInt(userId)))
             .and(GroupSpecification.filterBy(filters)),
             pageable);
   }
 
-  public Page<Group> findUsersGroup(@NonNull String userId, @NonNull String query, @NonNull List<SearchFilter> filters,
+  public Page<Group> findUserGroups(@NonNull String userId, @NonNull String query, @NonNull List<SearchFilter> filters,
                                     @NonNull Pageable pageable){
     return groupRepository.findAll(
             where(GroupSpecification.containsUser(Integer.parseInt(userId)))
@@ -99,8 +97,7 @@ public class GroupService extends BaseService<Group> {
             pageable);
   }
 
-  // TODO rename to findApplicationsGroups (applications's groups - multiple return)
-  public Page<Group> findApplicationsGroup(@NonNull String appId, @NonNull List<SearchFilter> filters,
+  public Page<Group> findApplicationGroups(@NonNull String appId, @NonNull List<SearchFilter> filters,
                                            @NonNull Pageable pageable){
     return groupRepository.findAll(
             where(GroupSpecification.containsApplication(Integer.parseInt(appId)))
@@ -108,8 +105,8 @@ public class GroupService extends BaseService<Group> {
             pageable);
   }
 
-  public Page<Group> findApplicationsGroup(@NonNull String appId, @NonNull String query,
-                                           @NonNull List<SearchFilter> filters,@NonNull Pageable pageable){
+  public Page<Group> findApplicationGroups(@NonNull String appId, @NonNull String query,
+                                           @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
     return groupRepository.findAll(
             where(GroupSpecification.containsApplication(Integer.parseInt(appId)))
                     .and(GroupSpecification.containsText(query))

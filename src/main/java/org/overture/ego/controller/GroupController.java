@@ -186,9 +186,9 @@ public class GroupController {
           Pageable pageable)
   {
     if(StringUtils.isEmpty(query)) {
-      return new PageDTO<>(applicationService.findGroupsApplications(groupId, filters, pageable));
+      return new PageDTO<>(applicationService.findGroupApplications(groupId, filters, pageable));
     } else {
-      return new PageDTO<>(applicationService.findGroupsApplications(groupId, query, filters, pageable));
+      return new PageDTO<>(applicationService.findGroupApplications(groupId, query, filters, pageable));
     }
   }
 
@@ -204,7 +204,7 @@ public class GroupController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String grpId,
           @RequestBody(required = true) List<String> apps) {
-    groupService.addAppsToGroups(grpId,apps);
+    groupService.addAppsToGroup(grpId,apps);
     return apps.size() + " apps added successfully.";
   }
 
@@ -259,9 +259,9 @@ public class GroupController {
           Pageable pageable)
   {
     if(StringUtils.isEmpty(query)) {
-      return new PageDTO<>(userService.findGroupsUsers(groupId, filters, pageable));
+      return new PageDTO<>(userService.findGroupUsers(groupId, filters, pageable));
     } else {
-      return new PageDTO<>(userService.findGroupsUsers(groupId, query, filters, pageable));
+      return new PageDTO<>(userService.findGroupUsers(groupId, query, filters, pageable));
     }
   }
 

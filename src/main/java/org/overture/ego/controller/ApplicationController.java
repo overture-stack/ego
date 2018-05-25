@@ -181,9 +181,9 @@ public class ApplicationController {
           Pageable pageable)
   {
     if(StringUtils.isEmpty(query)){
-      return new PageDTO<>(userService.findAppsUsers(appId, filters, pageable));
+      return new PageDTO<>(userService.findAppUsers(appId, filters, pageable));
     } else {
-      return new PageDTO<>(userService.findAppsUsers(appId, query, filters, pageable));
+      return new PageDTO<>(userService.findAppUsers(appId, query, filters, pageable));
     }
   }
 
@@ -222,9 +222,9 @@ public class ApplicationController {
           Pageable pageable)
   {
     if(StringUtils.isEmpty(query)) {
-      return new PageDTO<>(groupService.findApplicationsGroup(appId, filters, pageable));
+      return new PageDTO<>(groupService.findApplicationGroups(appId, filters, pageable));
     } else {
-      return new PageDTO<>(groupService.findApplicationsGroup(appId, query, filters, pageable));
+      return new PageDTO<>(groupService.findApplicationGroups(appId, query, filters, pageable));
     }
   }
 

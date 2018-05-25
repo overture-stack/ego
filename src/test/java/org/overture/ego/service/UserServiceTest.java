@@ -122,7 +122,7 @@ public class UserServiceTest {
   public void testGetByNameNotFound() {
     // TODO Currently returning null, should throw exception (EntityNotFoundException?)
     assertThatExceptionOfType(EntityNotFoundException.class)
-        .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
+      .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
   }
 
   @Test
@@ -222,10 +222,10 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val groupId = Integer.toString(groupService.getByName("Group One").getId());
 
-    userService.addUsersToGroups(Integer.toString(user.getId()), Arrays.asList(groupId));
-    userService.addUsersToGroups(Integer.toString(userTwo.getId()), Arrays.asList(groupId));
+    userService.addUserToGroups(Integer.toString(user.getId()), Arrays.asList(groupId));
+    userService.addUserToGroups(Integer.toString(userTwo.getId()), Arrays.asList(groupId));
 
-    val users = userService.findGroupsUsers(
+    val users = userService.findGroupUsers(
         groupId,
         Collections.emptyList(),
         new PageableResolver().getPageable()
@@ -242,7 +242,7 @@ public class UserServiceTest {
 
     val groupId = Integer.toString(groupService.getByName("Group One").getId());
 
-    val users = userService.findGroupsUsers(
+    val users = userService.findGroupUsers(
         groupId,
         Collections.emptyList(),
         new PageableResolver().getPageable()
@@ -256,7 +256,7 @@ public class UserServiceTest {
     entityGenerator.setupSimpleGroups();
     entityGenerator.setupSimpleUsers();
     assertThatExceptionOfType(NumberFormatException.class)
-        .isThrownBy(() -> userService.findGroupsUsers("",
+        .isThrownBy(() -> userService.findGroupUsers("",
             Collections.emptyList(),
             new PageableResolver().getPageable())
         );
@@ -271,12 +271,12 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val groupId = Integer.toString(groupService.getByName("Group One").getId());
 
-    userService.addUsersToGroups(Integer.toString(user.getId()), Arrays.asList(groupId));
-    userService.addUsersToGroups(Integer.toString(userTwo.getId()), Arrays.asList(groupId));
+    userService.addUserToGroups(Integer.toString(user.getId()), Arrays.asList(groupId));
+    userService.addUserToGroups(Integer.toString(userTwo.getId()), Arrays.asList(groupId));
 
     val userFilters = new SearchFilter("name", "First");
 
-    val users = userService.findGroupsUsers(
+    val users = userService.findGroupUsers(
         groupId,
         Arrays.asList(userFilters),
         new PageableResolver().getPageable()
@@ -295,12 +295,12 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val groupId = Integer.toString(groupService.getByName("Group One").getId());
 
-    userService.addUsersToGroups(Integer.toString(user.getId()), Arrays.asList(groupId));
-    userService.addUsersToGroups(Integer.toString(userTwo.getId()), Arrays.asList(groupId));
+    userService.addUserToGroups(Integer.toString(user.getId()), Arrays.asList(groupId));
+    userService.addUserToGroups(Integer.toString(userTwo.getId()), Arrays.asList(groupId));
 
     val userFilters = new SearchFilter("name", "First");
 
-    val users = userService.findGroupsUsers(
+    val users = userService.findGroupUsers(
         groupId,
         "Second",
         Arrays.asList(userFilters),
@@ -319,11 +319,11 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val groupId = Integer.toString(groupService.getByName("Group One").getId());
 
-    userService.addUsersToGroups(Integer.toString(user.getId()), Arrays.asList(groupId));
-    userService.addUsersToGroups(Integer.toString(userTwo.getId()), Arrays.asList(groupId));
+    userService.addUserToGroups(Integer.toString(user.getId()), Arrays.asList(groupId));
+    userService.addUserToGroups(Integer.toString(userTwo.getId()), Arrays.asList(groupId));
 
 
-    val users = userService.findGroupsUsers(
+    val users = userService.findGroupUsers(
         groupId,
         "Second",
         Collections.emptyList(),
@@ -345,10 +345,10 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val appId = Integer.toString(applicationService.getByClientId("111111").getId());
 
-    userService.addUsersToApps(Integer.toString(user.getId()), Arrays.asList(appId));
-    userService.addUsersToApps(Integer.toString(userTwo.getId()), Arrays.asList(appId));
+    userService.addUserToApps(Integer.toString(user.getId()), Arrays.asList(appId));
+    userService.addUserToApps(Integer.toString(userTwo.getId()), Arrays.asList(appId));
 
-    val users = userService.findAppsUsers(
+    val users = userService.findAppUsers(
         appId,
         Collections.emptyList(),
         new PageableResolver().getPageable()
@@ -365,7 +365,7 @@ public class UserServiceTest {
 
     val appId = Integer.toString(applicationService.getByClientId("111111").getId());
 
-    val users = userService.findAppsUsers(
+    val users = userService.findAppUsers(
         appId,
         Collections.emptyList(),
         new PageableResolver().getPageable()
@@ -380,7 +380,7 @@ public class UserServiceTest {
     entityGenerator.setupSimpleApplications();
     assertThatExceptionOfType(NumberFormatException.class)
         .isThrownBy(() -> userService
-            .findAppsUsers(
+            .findAppUsers(
                 "",
                 Collections.emptyList(),
                 new PageableResolver().getPageable()
@@ -397,12 +397,12 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val appId = Integer.toString(applicationService.getByClientId("111111").getId());
 
-    userService.addUsersToApps(Integer.toString(user.getId()), Arrays.asList(appId));
-    userService.addUsersToApps(Integer.toString(userTwo.getId()), Arrays.asList(appId));
+    userService.addUserToApps(Integer.toString(user.getId()), Arrays.asList(appId));
+    userService.addUserToApps(Integer.toString(userTwo.getId()), Arrays.asList(appId));
 
     val userFilters = new SearchFilter("name", "First");
 
-    val users = userService.findAppsUsers(
+    val users = userService.findAppUsers(
         appId,
         Arrays.asList(userFilters),
         new PageableResolver().getPageable()
@@ -421,12 +421,12 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val appId = Integer.toString(applicationService.getByClientId("111111").getId());
 
-    userService.addUsersToApps(Integer.toString(user.getId()), Arrays.asList(appId));
-    userService.addUsersToApps(Integer.toString(userTwo.getId()), Arrays.asList(appId));
+    userService.addUserToApps(Integer.toString(user.getId()), Arrays.asList(appId));
+    userService.addUserToApps(Integer.toString(userTwo.getId()), Arrays.asList(appId));
 
     val userFilters = new SearchFilter("name", "First");
 
-    val users = userService.findAppsUsers(
+    val users = userService.findAppUsers(
         appId,
         "Second",
         Arrays.asList(userFilters),
@@ -445,10 +445,10 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val appId = Integer.toString(applicationService.getByClientId("111111").getId());
 
-    userService.addUsersToApps(Integer.toString(user.getId()), Arrays.asList(appId));
-    userService.addUsersToApps(Integer.toString(userTwo.getId()), Arrays.asList(appId));
+    userService.addUserToApps(Integer.toString(user.getId()), Arrays.asList(appId));
+    userService.addUserToApps(Integer.toString(userTwo.getId()), Arrays.asList(appId));
 
-    val users = userService.findAppsUsers(
+    val users = userService.findAppUsers(
         appId,
         "First",
         Collections.emptyList(),
@@ -552,9 +552,9 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = Integer.toString(user.getId());
 
-    userService.addUsersToGroups(userId, Arrays.asList(groupId, groupTwoId));
+    userService.addUserToGroups(userId, Arrays.asList(groupId, groupTwoId));
 
-    val groups = groupService.findUsersGroup(
+    val groups = groupService.findUserGroups(
         userId,
         Collections.emptyList(),
         new PageableResolver().getPageable()
@@ -572,7 +572,7 @@ public class UserServiceTest {
     val groupId = Integer.toString(group.getId());
 
     assertThatExceptionOfType(EntityNotFoundException.class)
-        .isThrownBy(() -> userService.addUsersToGroups("777", Arrays.asList(groupId)));
+        .isThrownBy(() -> userService.addUserToGroups("777", Arrays.asList(groupId)));
   }
 
   @Test
@@ -584,7 +584,7 @@ public class UserServiceTest {
     val groupId = Integer.toString(group.getId());
 
     assertThatExceptionOfType(NumberFormatException.class)
-        .isThrownBy(() -> userService.addUsersToGroups("", Arrays.asList(groupId)));
+        .isThrownBy(() -> userService.addUserToGroups("", Arrays.asList(groupId)));
   }
 
   @Test
@@ -596,7 +596,7 @@ public class UserServiceTest {
     val userId = Integer.toString(user.getId());
 
     assertThatExceptionOfType(NumberFormatException.class)
-        .isThrownBy(() -> userService.addUsersToGroups(userId, Arrays.asList("")));
+        .isThrownBy(() -> userService.addUserToGroups(userId, Arrays.asList("")));
   }
 
   @Test
@@ -607,7 +607,7 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = Integer.toString(user.getId());
 
-    userService.addUsersToGroups(userId, Collections.emptyList());
+    userService.addUserToGroups(userId, Collections.emptyList());
 
     val nonUpdated = userService.getByName("FirstUser@domain.com");
     assertThat(nonUpdated).isEqualTo(user);
@@ -626,9 +626,9 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = Integer.toString(user.getId());
 
-    userService.addUsersToApps(userId, Arrays.asList(appId, appTwoId));
+    userService.addUserToApps(userId, Arrays.asList(appId, appTwoId));
 
-    val apps = applicationService.findUsersApps(
+    val apps = applicationService.findUserApps(
         userId,
         Collections.emptyList(),
         new PageableResolver().getPageable()
@@ -646,7 +646,7 @@ public class UserServiceTest {
     val appId = Integer.toString(app.getId());
 
     assertThatExceptionOfType(EntityNotFoundException.class)
-        .isThrownBy(() -> userService.addUsersToApps("777", Arrays.asList(appId)));
+        .isThrownBy(() -> userService.addUserToApps("777", Arrays.asList(appId)));
   }
 
   @Test
@@ -658,7 +658,7 @@ public class UserServiceTest {
     val userId = Integer.toString(user.getId());
 
     assertThatExceptionOfType(NumberFormatException.class)
-        .isThrownBy(() -> userService.addUsersToApps(userId, Arrays.asList("")));
+        .isThrownBy(() -> userService.addUserToApps(userId, Arrays.asList("")));
   }
 
   @Test
@@ -669,7 +669,7 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = Integer.toString(user.getId());
 
-    userService.addUsersToApps(userId, Collections.emptyList());
+    userService.addUserToApps(userId, Collections.emptyList());
 
     val nonUpdated = userService.getByName("FirstUser@domain.com");
     assertThat(nonUpdated).isEqualTo(user);
@@ -716,11 +716,11 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = Integer.toString(user.getId());
 
-    userService.addUsersToGroups(userId, Arrays.asList(groupId, groupTwoId));
+    userService.addUserToGroups(userId, Arrays.asList(groupId, groupTwoId));
 
-    userService.deleteUserFromGroup(userId, Arrays.asList(groupId));
+    userService.deleteUserFromGroups(userId, Arrays.asList(groupId));
 
-    val groupWithoutUser = groupService.findUsersGroup(
+    val groupWithoutUser = groupService.findUserGroups(
         userId,
         Collections.emptyList(),
         new PageableResolver().getPageable()
@@ -741,11 +741,11 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = Integer.toString(user.getId());
 
-    userService.addUsersToGroups(userId, Arrays.asList(groupId, groupTwoId));
+    userService.addUserToGroups(userId, Arrays.asList(groupId, groupTwoId));
 
     assertThatExceptionOfType(EntityNotFoundException.class)
         .isThrownBy(() -> userService
-            .deleteUserFromGroup("777777", Arrays.asList(groupId)));
+            .deleteUserFromGroups("777777", Arrays.asList(groupId)));
   }
 
   @Test
@@ -760,11 +760,11 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = Integer.toString(user.getId());
 
-    userService.addUsersToGroups(userId, Arrays.asList(groupId, groupTwoId));
+    userService.addUserToGroups(userId, Arrays.asList(groupId, groupTwoId));
 
     assertThatExceptionOfType(NumberFormatException.class)
         .isThrownBy(() -> userService
-            .deleteUserFromGroup("", Arrays.asList(groupId)));
+            .deleteUserFromGroups("", Arrays.asList(groupId)));
   }
 
   @Test
@@ -777,12 +777,12 @@ public class UserServiceTest {
     val group = groupService.getByName("Group One");
     val groupId = Integer.toString(group.getId());
 
-    userService.addUsersToGroups(userId, Arrays.asList(groupId));
+    userService.addUserToGroups(userId, Arrays.asList(groupId));
     assertThat(user.getWholeGroups().size()).isEqualTo(1);
 
     assertThatExceptionOfType(NumberFormatException.class)
         .isThrownBy(() -> userService
-            .deleteUserFromGroup(userId, Arrays.asList("")));
+            .deleteUserFromGroups(userId, Arrays.asList("")));
   }
 
   // Delete User from App
@@ -798,11 +798,11 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = Integer.toString(user.getId());
 
-    userService.addUsersToApps(userId, Arrays.asList(appId, appTwoId));
+    userService.addUserToApps(userId, Arrays.asList(appId, appTwoId));
 
-    userService.deleteUserFromApp(userId, Arrays.asList(appId));
+    userService.deleteUserFromApps(userId, Arrays.asList(appId));
 
-    val groupWithoutUser = applicationService.findUsersApps(
+    val groupWithoutUser = applicationService.findUserApps(
         userId,
         Collections.emptyList(),
         new PageableResolver().getPageable()
@@ -823,11 +823,11 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = Integer.toString(user.getId());
 
-    userService.addUsersToApps(userId, Arrays.asList(appId, appTwoId));
+    userService.addUserToApps(userId, Arrays.asList(appId, appTwoId));
 
     assertThatExceptionOfType(EntityNotFoundException.class)
         .isThrownBy(() -> userService
-            .deleteUserFromApp("777777", Arrays.asList(appId)));
+            .deleteUserFromApps("777777", Arrays.asList(appId)));
   }
 
   @Test
@@ -842,11 +842,11 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = Integer.toString(user.getId());
 
-    userService.addUsersToApps(userId, Arrays.asList(appId, appTwoId));
+    userService.addUserToApps(userId, Arrays.asList(appId, appTwoId));
 
     assertThatExceptionOfType(NumberFormatException.class)
         .isThrownBy(() -> userService
-            .deleteUserFromApp("", Arrays.asList(appId)));
+            .deleteUserFromApps("", Arrays.asList(appId)));
   }
 
   @Test
@@ -861,10 +861,10 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = Integer.toString(user.getId());
 
-    userService.addUsersToApps(userId, Arrays.asList(appId, appTwoId));
+    userService.addUserToApps(userId, Arrays.asList(appId, appTwoId));
 
     assertThatExceptionOfType(NumberFormatException.class)
         .isThrownBy(() -> userService
-            .deleteUserFromApp(userId, Arrays.asList("")));
+            .deleteUserFromApps(userId, Arrays.asList("")));
   }
 }

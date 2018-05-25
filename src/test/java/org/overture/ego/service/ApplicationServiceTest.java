@@ -102,7 +102,8 @@ public class ApplicationServiceTest {
   @Test
   public void testGetByClientIdNotFound() {
     // TODO Currently returning null, should throw exception (EntityNotFoundException?)
-    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> applicationService.getByClientId("123456"));
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> applicationService.getByClientId("123456"));
   }
 
   // List
@@ -167,7 +168,7 @@ public class ApplicationServiceTest {
     user.addNewApplication(application);
     userTwo.addNewApplication(application);
 
-    val applications = applicationService.findUsersApps(Integer.toString(user.getId()), Collections.emptyList(), new PageableResolver().getPageable());
+    val applications = applicationService.findUserApps(Integer.toString(user.getId()), Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
     assertThat(applications.getContent().get(0).getClientId()).isEqualTo("444444");
@@ -179,7 +180,7 @@ public class ApplicationServiceTest {
     entityGenerator.setupSimpleUsers();
 
     val user = userService.getByName("FirstUser@domain.com");
-    val applications = applicationService.findUsersApps(Integer.toString(user.getId()), Collections.emptyList(), new PageableResolver().getPageable());
+    val applications = applicationService.findUserApps(Integer.toString(user.getId()), Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(0L);
   }
@@ -188,7 +189,7 @@ public class ApplicationServiceTest {
   public void testFindUsersAppsNoQueryNoFiltersEmptyUserString() {
     entityGenerator.setupSimpleApplications();
     entityGenerator.setupSimpleUsers();
-    assertThatExceptionOfType(NumberFormatException.class).isThrownBy(() -> applicationService.findUsersApps("", Collections.emptyList(), new PageableResolver().getPageable()));
+    assertThatExceptionOfType(NumberFormatException.class).isThrownBy(() -> applicationService.findUserApps("", Collections.emptyList(), new PageableResolver().getPageable()));
   }
 
   @Test
@@ -205,7 +206,7 @@ public class ApplicationServiceTest {
 
     val clientIdFilter = new SearchFilter("clientId", "111111");
 
-    val applications = applicationService.findUsersApps(Integer.toString(user.getId()), Arrays.asList(clientIdFilter), new PageableResolver().getPageable());
+    val applications = applicationService.findUserApps(Integer.toString(user.getId()), Arrays.asList(clientIdFilter), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
     assertThat(applications.getContent().get(0).getClientId()).isEqualTo("111111");
@@ -225,7 +226,7 @@ public class ApplicationServiceTest {
 
     val clientIdFilter = new SearchFilter("clientId", "333333");
 
-    val applications = applicationService.findUsersApps(Integer.toString(user.getId()), "444444", Arrays.asList(clientIdFilter), new PageableResolver().getPageable());
+    val applications = applicationService.findUserApps(Integer.toString(user.getId()), "444444", Arrays.asList(clientIdFilter), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(0L);
   }
@@ -242,7 +243,7 @@ public class ApplicationServiceTest {
     user.addNewApplication(applicationOne);
     user.addNewApplication(applicationTwo);
 
-    val applications = applicationService.findUsersApps(Integer.toString(user.getId()), "222222", Collections.emptyList(), new PageableResolver().getPageable());
+    val applications = applicationService.findUserApps(Integer.toString(user.getId()), "222222", Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
     assertThat(applications.getContent().get(0).getClientId()).isEqualTo("222222");
@@ -261,7 +262,7 @@ public class ApplicationServiceTest {
     group.addApplication(application);
     groupTwo.addApplication(application);
 
-    val applications = applicationService.findGroupsApplications(Integer.toString(group.getId()), Collections.emptyList(), new PageableResolver().getPageable());
+    val applications = applicationService.findGroupApplications(Integer.toString(group.getId()), Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
     assertThat(applications.getContent().get(0).getClientId()).isEqualTo("111111");
@@ -273,7 +274,7 @@ public class ApplicationServiceTest {
     entityGenerator.setupSimpleGroups();
 
     val group = groupService.getByName("Group One");
-    val applications = applicationService.findGroupsApplications(Integer.toString(group.getId()), Collections.emptyList(), new PageableResolver().getPageable());
+    val applications = applicationService.findGroupApplications(Integer.toString(group.getId()), Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(0L);
   }
@@ -282,7 +283,7 @@ public class ApplicationServiceTest {
   public void testFindGroupsAppsNoQueryNoFiltersEmptyGroupString() {
     entityGenerator.setupSimpleApplications();
     entityGenerator.setupSimpleGroups();
-    assertThatExceptionOfType(NumberFormatException.class).isThrownBy(() -> applicationService.findGroupsApplications("", Collections.emptyList(), new PageableResolver().getPageable()));
+    assertThatExceptionOfType(NumberFormatException.class).isThrownBy(() -> applicationService.findGroupApplications("", Collections.emptyList(), new PageableResolver().getPageable()));
   }
 
   @Test
@@ -299,7 +300,7 @@ public class ApplicationServiceTest {
 
     val clientIdFilter = new SearchFilter("clientId", "333333");
 
-    val applications = applicationService.findGroupsApplications(Integer.toString(group.getId()), Arrays.asList(clientIdFilter), new PageableResolver().getPageable());
+    val applications = applicationService.findGroupApplications(Integer.toString(group.getId()), Arrays.asList(clientIdFilter), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
     assertThat(applications.getContent().get(0).getClientId()).isEqualTo("333333");
@@ -319,7 +320,7 @@ public class ApplicationServiceTest {
 
     val clientIdFilter = new SearchFilter("clientId", "333333");
 
-    val applications = applicationService.findGroupsApplications(Integer.toString(group.getId()), "444444", Arrays.asList(clientIdFilter), new PageableResolver().getPageable());
+    val applications = applicationService.findGroupApplications(Integer.toString(group.getId()), "444444", Arrays.asList(clientIdFilter), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(0L);
   }
@@ -336,7 +337,7 @@ public class ApplicationServiceTest {
     group.addApplication(applicationOne);
     group.addApplication(applicationTwo);
 
-    val applications = applicationService.findGroupsApplications(Integer.toString(group.getId()), "555555", Collections.emptyList(), new PageableResolver().getPageable());
+    val applications = applicationService.findGroupApplications(Integer.toString(group.getId()), "555555", Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
     assertThat(applications.getContent().get(0).getClientId()).isEqualTo("555555");
