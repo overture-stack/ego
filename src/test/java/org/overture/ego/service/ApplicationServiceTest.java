@@ -373,10 +373,10 @@ public class ApplicationServiceTest {
   @Test
   @Ignore
   public void testUpdateClientIdNotAllowed() {
-    entityGenerator.setupSimpleApplications();
-    val application = applicationService.getByClientId("111111");
-    application.setClientId("222222");
-    val updated = applicationService.update(application);
+//    entityGenerator.setupSimpleApplications();
+//    val application = applicationService.getByClientId("111111");
+//    application.setClientId("222222");
+//    val updated = applicationService.update(application);
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
@@ -384,10 +384,10 @@ public class ApplicationServiceTest {
   @Test
   @Ignore
   public void testUpdateStatusNotInAllowedEnum() {
-    entityGenerator.setupSimpleApplications();
-    val application = applicationService.getByClientId("111111");
-    application.setStatus("Junk");
-    val updated = applicationService.update(application);
+//    entityGenerator.setupSimpleApplications();
+//    val application = applicationService.getByClientId("111111");
+//    application.setStatus("Junk");
+//    val updated = applicationService.update(application);
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }

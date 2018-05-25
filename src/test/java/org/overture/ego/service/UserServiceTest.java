@@ -505,9 +505,9 @@ public class UserServiceTest {
   @Test
   @Ignore
   public void testUpdateNameNotAllowed() {
-    val user = userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
-    user.setName("NewName");
-    val updated = userService.update(user);
+//    val user = userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
+//    user.setName("NewName");
+//    val updated = userService.update(user);
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
@@ -515,9 +515,9 @@ public class UserServiceTest {
   @Test
   @Ignore
   public void testUpdateEmailNotAllowed() {
-    val user = userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
-    user.setEmail("NewName@domain.com");
-    val updated = userService.update(user);
+//    val user = userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
+//    user.setEmail("NewName@domain.com");
+//    val updated = userService.update(user);
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
@@ -525,10 +525,10 @@ public class UserServiceTest {
   @Test
   @Ignore
   public void testUpdateStatusNotInAllowedEnum() {
-    entityGenerator.setupSimpleUsers();
-    val user = userService.getByName("FirstUser@domain.com");
-    user.setStatus("Junk");
-    val updated = userService.update(user);
+//    entityGenerator.setupSimpleUsers();
+//    val user = userService.getByName("FirstUser@domain.com");
+//    user.setStatus("Junk");
+//    val updated = userService.update(user);
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
@@ -536,10 +536,10 @@ public class UserServiceTest {
   @Test
   @Ignore
   public void testUpdateLanguageNotInAllowedEnum() {
-    entityGenerator.setupSimpleUsers();
-    val user = userService.getByName("FirstUser@domain.com");
-    user.setPreferredLanguage("Klingon");
-    val updated = userService.update(user);
+//    entityGenerator.setupSimpleUsers();
+//    val user = userService.getByName("FirstUser@domain.com");
+//    user.setPreferredLanguage("Klingon");
+//    val updated = userService.update(user);
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }

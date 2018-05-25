@@ -36,10 +36,9 @@ public class GroupService extends BaseService<Group> {
 
   @Autowired
   private GroupRepository groupRepository;
+
   @Autowired
   private ApplicationService applicationService;
-  @Autowired
-  private UserService userService;
 
   public Group create(@NonNull Group groupInfo) {
     return groupRepository.save(groupInfo);

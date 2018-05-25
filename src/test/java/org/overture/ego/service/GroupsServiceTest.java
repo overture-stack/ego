@@ -394,10 +394,10 @@ public class GroupsServiceTest {
   @Test
   @Ignore
   public void testUpdateNameNotAllowed() {
-    entityGenerator.setupSimpleGroups();
-    val group = groupService.getByName("Group One");
-    group.setName("New Name");
-    val updated = groupService.update(group);
+//    entityGenerator.setupSimpleGroups();
+//    val group = groupService.getByName("Group One");
+//    group.setName("New Name");
+//    val updated = groupService.update(group);
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
@@ -405,10 +405,10 @@ public class GroupsServiceTest {
   @Test
   @Ignore
   public void testUpdateStatusNotInAllowedEnum() {
-    entityGenerator.setupSimpleGroups();
-    val group = groupService.getByName("Group One");
-    group.setStatus("Junk");
-    val updated = groupService.update(group);
+//    entityGenerator.setupSimpleGroups();
+//    val group = groupService.getByName("Group One");
+//    group.setStatus("Junk");
+//    val updated = groupService.update(group);
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
