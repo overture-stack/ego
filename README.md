@@ -131,4 +131,4 @@ An example ego JWT is mentioned below:
 
 #### Notes
 * "aud" field can contain one or more client IDs. This field indicates the client services that are authorized to use this JWT.
-* "groups" will differ based on the domain of client services - each domain of service should get list of groups from that domain's ego service
+* "groups" will differ based on the domain of client services - each domain of service should get list of groups from that domain's ego service.
