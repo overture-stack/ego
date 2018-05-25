@@ -22,9 +22,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-Authorization Service built to provide Single Sign On for various microservices in an application. EGO works with 
-Identity Providers such as Google, Facebook to provide social logins in the application. EGO provides stateless
-authorization using [JWT (JSON Web Tokens)](https://jwt.io/) and can scale very well to a large number of users.
+Authorization Service built to provide Single Sign On for various microservices in an application. EGO works with Identity Providers such as Google, Facebook to provide social logins in the application. EGO provides stateless authorization using [JWT (JSON Web Tokens)](https://jwt.io/) and can scale very well to a large number of users.
 
 Interactive documentation of the API is provided using Swagger UI.
 
