@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS EGOAPPLICATION CASCADE;
+
 CREATE TABLE EGOAPPLICATION (
   id              BIGSERIAL PRIMARY KEY,
   name            VARCHAR(255) UNIQUE,
@@ -9,7 +9,7 @@ CREATE TABLE EGOAPPLICATION (
   status          VARCHAR(36) CHECK (status IN ('Pending', 'Approved', 'Rejected', 'Disabled'))
 );
 
-DROP TABLE IF EXISTS EGOUSER CASCADE;
+
 CREATE TABLE EGOUSER (
   id                BIGSERIAL PRIMARY KEY,
   name              VARCHAR(255) UNIQUE,
@@ -23,7 +23,7 @@ CREATE TABLE EGOUSER (
   preferredLanguage VARCHAR(36) CHECK (preferredLanguage IN ('English', 'French', 'Spanish'))
 );
 
-DROP TABLE IF EXISTS EGOGROUP CASCADE;
+
 CREATE TABLE EGOGROUP (
   id                  BIGSERIAL PRIMARY KEY,
   name                VARCHAR(255) UNIQUE,
@@ -31,7 +31,7 @@ CREATE TABLE EGOGROUP (
   status              VARCHAR(64) CHECK (status IN ('Pending', 'Approved', 'Rejected', 'Disabled'))
 );
 
-DROP TABLE IF EXISTS GROUPAPPLICATION CASCADE;
+
 CREATE TABLE GROUPAPPLICATION (
   grpId                BIGSERIAL,
   appId                BIGSERIAL,
@@ -40,7 +40,7 @@ CREATE TABLE GROUPAPPLICATION (
   FOREIGN KEY (appId) REFERENCES EGOAPPLICATION(id)
 );
 
-DROP TABLE IF EXISTS USERGROUP CASCADE;
+
 CREATE TABLE USERGROUP (
   userId                BIGSERIAL,
   grpId                 BIGSERIAL,
@@ -49,7 +49,7 @@ CREATE TABLE USERGROUP (
   FOREIGN KEY (userId)  REFERENCES EGOUSER(id)
 );
 
-DROP TABLE IF EXISTS USERAPPLICATION CASCADE;
+
 CREATE TABLE USERAPPLICATION (
   userId                BIGSERIAL,
   appId                 BIGSERIAL,

@@ -27,7 +27,7 @@ else
             --spring.profiles.active=$EGO_IAM_PROFILE \
             --spring.datasource.url="jdbc:postgresql://$EGO_DB_HOST:$EGO_DB_PORT/$EGO_DB?stringtype=unspecified" \
             --server.port=$EGO_SERVER_PORT \
-            --spring.application.name=$VAULT_APPLICATION_NAME \
+            --spring.application.name=$EGO_VAULT_APPLICATION_NAME \
             --spring.cloud.vault.uri=$EGO_VAULT_URI \
             --spring.cloud.vault.scheme=$EGO_VAULT_SCHEME \
             --spring.cloud.vault.host=$EGO_VAULT_HOST \
@@ -39,7 +39,7 @@ else
             --spring.profiles.active=$EGO_TOKEN_PROFILE \
             --spring.datasource.url="jdbc:postgresql://$EGO_DB_HOST:$EGO_DB_PORT/$EGO_DB?stringtype=unspecified" \
             --server.port=$EGO_SERVER_PORT \
-            --spring.application.name=$VAULT_APPLICATION_NAME \
+            --spring.application.name=$EGO_VAULT_APPLICATION_NAME \
             --spring.cloud.vault.uri=$EGO_VAULT_URI \
             --spring.cloud.vault.scheme=$EGO_VAULT_SCHEME \
             --spring.cloud.vault.host=$EGO_VAULT_HOST \

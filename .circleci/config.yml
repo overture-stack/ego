@@ -26,7 +26,7 @@ jobs:
           command: |
             psql \
             -d $TEST_DATABASE_URL \
-            -f ~/repo/src/main/resources/schemas/psql-schema.sql
+            -f ~/repo/src/main/resources/schemas/01-psql-schema.sql
 
       # Download and cache dependencies
       - restore_cache:
