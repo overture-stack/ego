@@ -182,9 +182,9 @@ public class UserController {
           Pageable pageable)
   {
     if(StringUtils.isEmpty(query)) {
-      return new PageDTO<>(groupService.findUsersGroup(userId, filters, pageable));
+      return new PageDTO<>(groupService.findUserGroups(userId, filters, pageable));
     } else {
-      return new PageDTO<>(groupService.findUsersGroup(userId, query, filters, pageable));
+      return new PageDTO<>(groupService.findUserGroups(userId, query, filters, pageable));
     }
   }
 
@@ -200,7 +200,7 @@ public class UserController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String userId,
           @RequestBody(required = true) List<String> groupIDs) {
-    userService.addUsersToGroups(userId,groupIDs);
+    userService.addUserToGroups(userId,groupIDs);
     return "User added to : "+groupIDs.size() + " Group(s) successfully.";
   }
 
@@ -216,7 +216,7 @@ public class UserController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String userId,
           @PathVariable(value = "groupIDs", required = true) List<String> groupIDs) {
-    userService.deleteUserFromGroup(userId,groupIDs);
+    userService.deleteUserFromGroups(userId,groupIDs);
   }
 
   /*
@@ -254,9 +254,9 @@ public class UserController {
           Pageable pageable)
   {
     if(StringUtils.isEmpty(query)) {
-      return new PageDTO<>(applicationService.findUsersApps(userId, filters, pageable));
+      return new PageDTO<>(applicationService.findUserApps(userId, filters, pageable));
     } else {
-      return new PageDTO<>(applicationService.findUsersApps(userId, query, filters, pageable));
+      return new PageDTO<>(applicationService.findUserApps(userId, query, filters, pageable));
     }
   }
 
@@ -272,7 +272,7 @@ public class UserController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String userId,
           @RequestBody(required = true) List<String> appIDs) {
-    userService.addUsersToApps(userId,appIDs);
+    userService.addUserToApps(userId,appIDs);
     return "User added to : "+appIDs.size() + " apps successfully.";
   }
 
@@ -288,7 +288,7 @@ public class UserController {
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String userId,
           @PathVariable(value = "appIDs", required = true) List<String> appIDs) {
-    userService.deleteUserFromApp(userId,appIDs);
+    userService.deleteUserFromApps(userId,appIDs);
   }
 
   @ExceptionHandler({ EntityNotFoundException.class })

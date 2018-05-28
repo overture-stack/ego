@@ -119,7 +119,7 @@ public class UserService extends BaseService<User> {
     return output;
   }
 
-  public void addUsersToGroups(@NonNull String userId, @NonNull List<String> groupIDs){
+  public void addUserToGroups(@NonNull String userId, @NonNull List<String> groupIDs){
     val user = getById(userRepository, Integer.parseInt(userId));
     groupIDs.forEach(grpId -> {
       val group = groupService.get(grpId);
@@ -128,7 +128,7 @@ public class UserService extends BaseService<User> {
     userRepository.save(user);
   }
 
-  public void addUsersToApps(@NonNull String userId, @NonNull List<String> appIDs){
+  public void addUserToApps(@NonNull String userId, @NonNull List<String> appIDs){
     val user = getById(userRepository, Integer.parseInt(userId));
     appIDs.forEach(appId -> {
       val app = applicationService.get(appId);
@@ -169,7 +169,7 @@ public class UserService extends BaseService<User> {
             .and(UserSpecification.filterBy(filters)), pageable);
   }
 
-  public void deleteUserFromGroup(@NonNull String userId, @NonNull List<String> groupIDs) {
+  public void deleteUserFromGroups(@NonNull String userId, @NonNull List<String> groupIDs) {
     val user = getById(userRepository,Integer.parseInt(userId));
     groupIDs.forEach(grpId -> {
       user.removeGroup(Integer.parseInt(grpId));
@@ -177,7 +177,7 @@ public class UserService extends BaseService<User> {
     userRepository.save(user);
   }
 
-  public void deleteUserFromApp(@NonNull String userId, @NonNull List<String> appIDs) {
+  public void deleteUserFromApps(@NonNull String userId, @NonNull List<String> appIDs) {
     val user = getById(userRepository, Integer.parseInt(userId));
     appIDs.forEach(appId -> {
       user.removeApplication(Integer.parseInt(appId));
@@ -185,16 +185,16 @@ public class UserService extends BaseService<User> {
     userRepository.save(user);
   }
 
-  public Page<User> findGroupsUsers(@NonNull String groupId, @NonNull List<SearchFilter> filters,
-                                    @NonNull Pageable pageable){
+  public Page<User> findGroupUsers(@NonNull String groupId, @NonNull List<SearchFilter> filters,
+                                   @NonNull Pageable pageable){
     return userRepository.findAll(
             where(UserSpecification.inGroup(Integer.parseInt(groupId)))
             .and(UserSpecification.filterBy(filters)),
             pageable);
   }
 
-  public Page<User> findGroupsUsers(@NonNull String groupId, @NonNull String query,
-                                    @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
+  public Page<User> findGroupUsers(@NonNull String groupId, @NonNull String query,
+                                   @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
     return userRepository.findAll(
             where(UserSpecification.inGroup(Integer.parseInt(groupId)))
                     .and(UserSpecification.containsText(query))
@@ -202,17 +202,17 @@ public class UserService extends BaseService<User> {
             pageable);
   }
 
-  public Page<User> findAppsUsers(@NonNull String appId, @NonNull List<SearchFilter> filters,
-                                  @NonNull Pageable pageable){
+  public Page<User> findAppUsers(@NonNull String appId, @NonNull List<SearchFilter> filters,
+                                 @NonNull Pageable pageable){
     return userRepository.findAll(
             where(UserSpecification.ofApplication(Integer.parseInt(appId)))
             .and(UserSpecification.filterBy(filters)),
             pageable);
   }
 
-  public Page<User> findAppsUsers(@NonNull String appId, @NonNull String query,
-                                  @NonNull List<SearchFilter> filters,
-                                  @NonNull Pageable pageable){
+  public Page<User> findAppUsers(@NonNull String appId, @NonNull String query,
+                                 @NonNull List<SearchFilter> filters,
+                                 @NonNull Pageable pageable){
     return userRepository.findAll(
             where(UserSpecification.ofApplication(Integer.parseInt(appId)))
                     .and(UserSpecification.containsText(query))

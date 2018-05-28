@@ -38,6 +38,8 @@ import java.util.stream.Collectors;
     "wholeApplications", "firstName", "lastName", "createdAt", "lastLogin", "preferredLanguage"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @EqualsAndHashCode(of={"id"})
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
 public class User {

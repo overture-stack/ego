@@ -84,16 +84,16 @@ public class ApplicationService extends BaseService<Application> implements Clie
             .and(ApplicationSpecification.filterBy(filters)), pageable);
   }
 
-  public Page<Application> findUsersApps(@NonNull String userId,  @NonNull List<SearchFilter> filters,
-                                         @NonNull Pageable pageable){
+  public Page<Application> findUserApps(@NonNull String userId, @NonNull List<SearchFilter> filters,
+                                        @NonNull Pageable pageable){
     return applicationRepository.findAll(
             where(ApplicationSpecification.usedBy(Integer.parseInt(userId)))
             .and(ApplicationSpecification.filterBy(filters)),
             pageable);
   }
 
-  public Page<Application> findUsersApps(@NonNull String userId, @NonNull String query,
-                                         @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
+  public Page<Application> findUserApps(@NonNull String userId, @NonNull String query,
+                                        @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
     return applicationRepository.findAll(
             where(ApplicationSpecification.usedBy(Integer.parseInt(userId)))
                     .and(ApplicationSpecification.containsText(query))
@@ -101,17 +101,17 @@ public class ApplicationService extends BaseService<Application> implements Clie
             pageable);
   }
 
-  public Page<Application> findGroupsApplications(@NonNull String groupId, @NonNull List<SearchFilter> filters,
-                                                  @NonNull Pageable pageable){
+  public Page<Application> findGroupApplications(@NonNull String groupId, @NonNull List<SearchFilter> filters,
+                                                 @NonNull Pageable pageable){
     return applicationRepository.findAll(
             where(ApplicationSpecification.inGroup(Integer.parseInt(groupId)))
             .and(ApplicationSpecification.filterBy(filters)),
             pageable);
   }
 
-  public Page<Application> findGroupsApplications(@NonNull String groupId, @NonNull String query,
-                                                  @NonNull List<SearchFilter> filters,
-                                                  @NonNull Pageable pageable){
+  public Page<Application> findGroupApplications(@NonNull String groupId, @NonNull String query,
+                                                 @NonNull List<SearchFilter> filters,
+                                                 @NonNull Pageable pageable){
     return applicationRepository.findAll(
             where(ApplicationSpecification.inGroup(Integer.parseInt(groupId)))
                     .and(ApplicationSpecification.containsText(query))
@@ -132,9 +132,15 @@ public class ApplicationService extends BaseService<Application> implements Clie
     // find client using clientid
 
     val application = getByClientId(clientId);
-    if(application == null) throw new ClientRegistrationException("Client ID not found.");
-    if(!application.getStatus().equals(ApplicationStatus.APPROVED.toString())) throw new ClientRegistrationException
+
+    if(application == null) {
+      throw new ClientRegistrationException("Client ID not found.");
+    }
+
+    if(!application.getStatus().equals(ApplicationStatus.APPROVED.toString())) {
+      throw new ClientRegistrationException
           ("Client Access is not approved.");
+    }
 
     // transform application to client details
     val approvedScopes = Arrays.asList(AppTokenClaims.SCOPES);

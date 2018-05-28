@@ -17,12 +17,12 @@
 package org.overture.ego.token;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class IDToken {
   @NonNull
