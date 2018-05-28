@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
-import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.overture.ego.model.enums.Fields;
@@ -62,11 +61,6 @@ public class Application {
   String clientId;
 
   @NonNull
-  @ColumnTransformer(
-      forColumn="clientsecret",
-      read = "pgp_sym_decrypt(clientsecret::bytea, 'mySecretKey')",
-      write = "pgp_sym_encrypt(?, 'mySecretKey', 'compress-algo=1, cipher-algo=aes256')"
-  )
   @Column(nullable = false, name = Fields.CLIENTSECRET)
   String clientSecret;
 
