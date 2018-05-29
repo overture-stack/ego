@@ -49,7 +49,9 @@ public class ApplicationServiceTest {
   @Test
   public void testCreate() {
     val application = applicationService.create(entityGenerator.createOneApplication("123456"));
+    assertThat(application.getName()).isEqualTo("Application 123456");
     assertThat(application.getClientId()).isEqualTo("123456");
+    assertThat(application.getClientSecret()).isEqualTo("654321");
   }
 
   @Test
