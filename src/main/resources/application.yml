@@ -109,7 +109,7 @@ spring:
 
 spring.datasource:
   driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-  url: jdbc:tc:postgresql:9.5.13://localhost:5432/ego?TC_INITSCRIPT=psql-schema.sql
+  url: jdbc:tc:postgresql:9.5.13://localhost:5432/ego?TC_INITSCRIPT=01-psql-schema.sql
 
   username: postgres
   password:
