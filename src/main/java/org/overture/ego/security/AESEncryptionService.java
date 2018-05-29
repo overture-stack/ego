@@ -42,8 +42,8 @@ public class AESEncryptionService {
       outputStream.write(encrypted);
 
       return Base64.encodeBase64String(outputStream.toByteArray());
-    } catch (Exception ex) {
-      ex.printStackTrace();
+    } catch (Exception e) {
+      e.printStackTrace();
     }
     return null;
   }
@@ -62,8 +62,8 @@ public class AESEncryptionService {
       byte[] original = cipher.doFinal(encryptedText);
 
       return new String(original);
-    } catch (Exception ex) {
-      ex.printStackTrace();
+    } catch (Exception e) {
+      e.printStackTrace();
     }
 
     return null;
