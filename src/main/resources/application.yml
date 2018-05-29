@@ -21,6 +21,10 @@ spring.datasource:
   max-idle: 1
   min-idle: 1
 
+# CryptoConverter Key
+cryptoConverter:
+  key: aesEncryptionKey
+
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
 spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
 
