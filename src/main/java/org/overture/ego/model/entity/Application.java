@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.overture.ego.converter.CryptoConverter;
 import org.overture.ego.model.enums.Fields;
 import org.overture.ego.view.Views;
 
@@ -62,6 +63,7 @@ public class Application {
 
   @NonNull
   @Column(nullable = false, name = Fields.CLIENTSECRET)
+  @Convert(converter = CryptoConverter.class)
   String clientSecret;
 
   @JsonView({Views.JWTAccessToken.class,Views.REST.class})
