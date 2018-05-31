@@ -19,7 +19,6 @@ package org.overture.ego.service;
 import lombok.NonNull;
 import lombok.val;
 import org.overture.ego.model.entity.Application;
-import org.overture.ego.model.enums.ApplicationStatus;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.repository.ApplicationRepository;
 import org.overture.ego.repository.queryspecification.ApplicationSpecification;
@@ -40,6 +39,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import static org.overture.ego.model.enums.ApplicationStatus.APPROVED;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 
@@ -137,7 +137,7 @@ public class ApplicationService extends BaseService<Application> implements Clie
       throw new ClientRegistrationException("Client ID not found.");
     }
 
-    if(!application.getStatus().equals(ApplicationStatus.APPROVED.toString())) {
+    if(!application.getStatus().equals(APPROVED.toString())) {
       throw new ClientRegistrationException
           ("Client Access is not approved.");
     }
