@@ -1,6 +1,7 @@
 package org.overture.ego.security;
 
 import com.google.api.client.repackaged.org.apache.commons.codec.binary.Base64;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -13,27 +14,31 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
 
+import static javax.crypto.Cipher.*;
+
+@Slf4j
 @Service
 public class AESEncryptionService {
 
-  private final String key;
-  private final int ivLength = 16;
+  private final String KEY;
+  private final int IV_LENGTH = 16;
+  private final String TRANSFORM = "AES/CBC/PKCS5PADDING";
   private Random random = new Random();
 
   public AESEncryptionService(@Value("${cryptoConverter.key}") String key) {
-    this.key = key;
+    this.KEY = key;
   }
 
   public String encrypt(String text) {
     try {
-      // Generate random ivLength digit initVector
-      byte[] randomInitVector = ByteBuffer.allocate(ivLength).putInt(random.nextInt(10 ^ ivLength)).array();
+      // Generate random IV_LENGTH digit initVector
+      byte[] randomInitVector = ByteBuffer.allocate(IV_LENGTH).putInt(random.nextInt(10 ^ IV_LENGTH)).array();
 
       IvParameterSpec iv = new IvParameterSpec(randomInitVector);
-      SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
+      SecretKeySpec skeySpec = new SecretKeySpec(KEY.getBytes("UTF-8"), "AES");
 
-      Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-      cipher.init(Cipher.ENCRYPT_MODE, skeySpec,iv);
+      Cipher cipher = getInstance(TRANSFORM);
+      cipher.init(ENCRYPT_MODE, skeySpec,iv);
 
       byte[] encrypted = cipher.doFinal(text.getBytes());
 
@@ -43,7 +48,7 @@ public class AESEncryptionService {
 
       return Base64.encodeBase64String(outputStream.toByteArray());
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("Error encrypting text: {}", e);
     }
     return null;
   }
@@ -51,19 +56,19 @@ public class AESEncryptionService {
   public String decrypt(String encodedText) {
     try {
       byte[] decodedText = Base64.decodeBase64(encodedText);
-      byte[] randomInitVector = Arrays.copyOfRange(decodedText, 0, ivLength);
-      byte[] encryptedText = Arrays.copyOfRange(decodedText, ivLength, decodedText.length);
+      byte[] randomInitVector = Arrays.copyOfRange(decodedText, 0, IV_LENGTH);
+      byte[] encryptedText = Arrays.copyOfRange(decodedText, IV_LENGTH, decodedText.length);
 
       IvParameterSpec iv = new IvParameterSpec(randomInitVector);
-      SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
+      SecretKeySpec skeySpec = new SecretKeySpec(KEY.getBytes("UTF-8"), "AES");
 
-      Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-      cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
+      Cipher cipher = getInstance(TRANSFORM);
+      cipher.init(DECRYPT_MODE, skeySpec, iv);
       byte[] original = cipher.doFinal(encryptedText);
 
       return new String(original);
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("Error decrypting text: {}", e);
     }
 
     return null;
