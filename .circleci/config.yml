@@ -1,12 +1,9 @@
 version: 2
+executorType: machine
 jobs:
   test:
     docker:
       - image: circleci/openjdk:8-jdk
-        environment:
-          TEST_DATABASE_URL: postgres://root@localhost/circle_test
-
-      - image: circleci/postgres:9.5
 
     working_directory: ~/repo
 
@@ -16,17 +13,6 @@ jobs:
 
     steps:
       - checkout
-
-      # Initialize DB with Schema
-      - run:
-          name: Install Postgres Client
-          command: sudo apt install postgresql-client
-      - run:
-          name: Initialize DB from Schema
-          command: |
-            psql \
-            -d $TEST_DATABASE_URL \
-            -f ~/repo/src/main/resources/schemas/01-psql-schema.sql
 
       # Download and cache dependencies
       - restore_cache:
@@ -47,9 +33,7 @@ jobs:
           name: Maven Test
           command: |
             mvn test \
-            -D spring.profiles.active=psql \
-            -D spring.datasource.username=root \
-            -D spring.datasource.url=jdbc:postgresql://localhost:5432/circle_test
+            -D spring.profiles.active=test
 
   deploy:
     docker:

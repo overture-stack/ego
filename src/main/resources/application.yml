@@ -95,3 +95,20 @@ spring:
 
 # demo flag
 demo: false
+
+---
+###############################################################################
+# Profile - "test"
+###############################################################################
+spring:
+  profiles: test
+
+spring.datasource:
+  driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  url: jdbc:tc:postgresql:9.5.13://localhost:5432/ego?TC_INITSCRIPT=01-psql-schema.sql
+
+  username: postgres
+  password:
+  max-active: 10
+  max-idle: 1
+  min-idle: 1

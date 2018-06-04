@@ -1,8 +1,8 @@
 
 CREATE TABLE EGOAPPLICATION (
   id              BIGSERIAL PRIMARY KEY,
-  name            VARCHAR(255) UNIQUE,
-  clientId        VARCHAR(255),
+  name            VARCHAR(255),
+  clientId        VARCHAR(255) UNIQUE,
   clientSecret    VARCHAR(255),
   redirectUri     TEXT,
   description     TEXT,

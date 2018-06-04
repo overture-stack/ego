@@ -36,16 +36,15 @@ public class GroupService extends BaseService<Group> {
 
   @Autowired
   private GroupRepository groupRepository;
+
   @Autowired
   private ApplicationService applicationService;
-  @Autowired
-  private UserService userService;
 
   public Group create(@NonNull Group groupInfo) {
     return groupRepository.save(groupInfo);
   }
 
-  public void addAppsToGroups(@NonNull String grpId, @NonNull List<String> appIDs){
+  public void addAppsToGroup(@NonNull String grpId, @NonNull List<String> appIDs){
     val group = getById(groupRepository, Integer.parseInt(grpId));
     appIDs.forEach(appId -> {
       val app = applicationService.get(appId);
@@ -81,14 +80,14 @@ public class GroupService extends BaseService<Group> {
             .and(GroupSpecification.filterBy(filters)), pageable);
   }
 
-  public Page<Group> findUsersGroup(@NonNull String userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
+  public Page<Group> findUserGroups(@NonNull String userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
     return groupRepository.findAll(
             where(GroupSpecification.containsUser(Integer.parseInt(userId)))
             .and(GroupSpecification.filterBy(filters)),
             pageable);
   }
 
-  public Page<Group> findUsersGroup(@NonNull String userId, @NonNull String query, @NonNull List<SearchFilter> filters,
+  public Page<Group> findUserGroups(@NonNull String userId, @NonNull String query, @NonNull List<SearchFilter> filters,
                                     @NonNull Pageable pageable){
     return groupRepository.findAll(
             where(GroupSpecification.containsUser(Integer.parseInt(userId)))
@@ -97,7 +96,7 @@ public class GroupService extends BaseService<Group> {
             pageable);
   }
 
-  public Page<Group> findApplicationsGroup(@NonNull String appId, @NonNull List<SearchFilter> filters,
+  public Page<Group> findApplicationGroups(@NonNull String appId, @NonNull List<SearchFilter> filters,
                                            @NonNull Pageable pageable){
     return groupRepository.findAll(
             where(GroupSpecification.containsApplication(Integer.parseInt(appId)))
@@ -105,8 +104,8 @@ public class GroupService extends BaseService<Group> {
             pageable);
   }
 
-  public Page<Group> findApplicationsGroup(@NonNull String appId, @NonNull String query,
-                                           @NonNull List<SearchFilter> filters,@NonNull Pageable pageable){
+  public Page<Group> findApplicationGroups(@NonNull String appId, @NonNull String query,
+                                           @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
     return groupRepository.findAll(
             where(GroupSpecification.containsApplication(Integer.parseInt(appId)))
                     .and(GroupSpecification.containsText(query))
@@ -117,26 +116,9 @@ public class GroupService extends BaseService<Group> {
   public void deleteAppsFromGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
     val group = getById(groupRepository,Integer.parseInt(grpId));
     appIDs.forEach(appId -> {
+      // TODO if app id not valid (does not exist) we need to throw EntityNotFoundException
       group.removeApplication(Integer.parseInt(appId));
     });
     groupRepository.save(group);
   }
-
-  public void deleteUsersFromGroup(@NonNull String grpId, @NonNull List<String> userIDs) {
-    val group = getById(groupRepository,Integer.parseInt(grpId));
-    userIDs.forEach(userId -> {
-      group.removeUser(Integer.parseInt(userId));
-    });
-    groupRepository.save(group);
-  }
-
-  public void addUsersToGroup(@NonNull String grpId, @NonNull List<String> userIDs) {
-    val group = getById(groupRepository,Integer.parseInt(grpId));
-    userIDs.forEach(userId -> {
-      val user = userService.get(userId);
-      group.addUser(user);
-    });
-    groupRepository.save(group);
-  }
-
 }
