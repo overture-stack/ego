@@ -1,2 +1,2 @@
-@Library("oicr") _
+@Library("oicr", changelog=false) _
 ego_api{}
