@@ -1,4 +1,3 @@
-
 CREATE TABLE EGOAPPLICATION (
   id              BIGSERIAL PRIMARY KEY,
   name            VARCHAR(255),
@@ -59,3 +58,29 @@ CREATE TABLE USERAPPLICATION (
 );
 
 
+CREATE TABLE ACLUSER (
+  id                    BIGSERIAL PRIMARY KEY,
+  egoId                 BIGSERIAL,
+  principal             boolean
+);
+
+
+CREATE TABLE ACLENTITY (
+  id                    BIGSERIAL PRIMARY KEY,
+  owner                 BIGSERIAL,
+  name                  varchar(255),
+  FOREIGN KEY (owner)   REFERENCES ACLUSER(id)
+);
+
+
+CREATE TYPE ACLMASK AS ENUM ('read', 'write', 'deny');
+
+
+CREATE TABLE ACLENTRY (
+  id                      BIGSERIAL PRIMARY KEY,
+  entity                  BIGSERIAL,
+  aclUser                 BIGSERIAL,
+  mask                    ACLMASK,
+  FOREIGN KEY (entity)    REFERENCES ACLENTITY(id),
+  FOREIGN KEY (aclUser)   REFERENCES ACLUSER(id)
+);
