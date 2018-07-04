@@ -17,23 +17,29 @@
 package org.overture.ego.model.enums;
 
 public class Fields {
-  
+
   public static final String ID = "id";
-  public static final String NAME = "name" ;
-  public static final String EMAIL = "email" ;
-  public static final String ROLE = "role" ;
-  public static final String STATUS = "status" ;
-  public static final String FIRSTNAME = "firstname" ;
-  public static final String LASTNAME = "lastname" ;
-  public static final String CREATEDAT = "createdat" ;
-  public static final String LASTLOGIN = "lastlogin" ;
-  public static final String PREFERREDLANGUAGE = "preferredlanguage" ;
+  public static final String NAME = "name";
+  public static final String EMAIL = "email";
+  public static final String ROLE = "role";
+  public static final String STATUS = "status";
+  public static final String FIRSTNAME = "firstname";
+  public static final String LASTNAME = "lastname";
+  public static final String CREATEDAT = "createdat";
+  public static final String LASTLOGIN = "lastlogin";
+  public static final String PREFERREDLANGUAGE = "preferredlanguage";
   public static final String DESCRIPTION = "description";
-  public static final String CLIENTID = "clientid" ;
-  public static final String CLIENTSECRET = "clientsecret" ;
-  public static final String REDIRECTURI = "redirecturi" ;
-  public static final String USERID_JOIN = "userid" ;
-  public static final String GROUPID_JOIN = "grpid" ;
-  public static final String APPID_JOIN = "appid" ;
+  public static final String CLIENTID = "clientid";
+  public static final String CLIENTSECRET = "clientsecret";
+  public static final String REDIRECTURI = "redirecturi";
+  public static final String USERID_JOIN = "userid";
+  public static final String GROUPID_JOIN = "grpid";
+  public static final String APPID_JOIN = "appid";
+  public static final String EGO_ID = "egoId";
+  public static final String PRINCIPAL = "principal";
+  public static final String OWNER = "owner";
+  public static final String ENTITY = "entity";
+  public static final String ACLUSER = "aclUser";
+  public static final String MASK = "mask";
 
 }
