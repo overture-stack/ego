@@ -21,15 +21,18 @@ import javax.persistence.*;
 @NoArgsConstructor
 @JsonView(Views.REST.class)
 public class AclEntry {
+
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   int id;
 
+  // Many to One
   @NonNull
   @Column(nullable = false, name = Fields.ENTITY)
   int entity;
 
+  // Many to One
   @NonNull
   @Column(nullable = false, name = Fields.ACLUSER)
   int aclUser;

@@ -26,6 +26,7 @@ public class AclEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   int id;
 
+  // One to One
   @NonNull
   @Column(nullable = false, name = Fields.OWNER)
   int owner;
@@ -33,5 +34,7 @@ public class AclEntity {
   @NonNull
   @Column(nullable = false, name = Fields.NAME)
   String name;
+
+  // One to Many Entries
 
 }

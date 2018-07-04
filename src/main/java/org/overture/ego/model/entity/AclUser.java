@@ -26,6 +26,7 @@ public class AclUser {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   int id;
 
+  // One to One with either EGOUSER or EGOGROUP
   @NonNull
   @Column(nullable = false, name = Fields.EGO_ID)
   int egoId;
