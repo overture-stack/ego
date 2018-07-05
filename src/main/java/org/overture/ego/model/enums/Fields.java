@@ -35,8 +35,6 @@ public class Fields {
   public static final String USERID_JOIN = "userid";
   public static final String GROUPID_JOIN = "grpid";
   public static final String APPID_JOIN = "appid";
-  public static final String EGO_ID = "egoId";
-  public static final String PRINCIPAL = "principal";
   public static final String OWNER = "owner";
   public static final String ENTITY = "entity";
   public static final String SID = "sid";
