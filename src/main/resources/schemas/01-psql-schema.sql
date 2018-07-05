@@ -64,7 +64,7 @@ CREATE TYPE ACLMASK AS ENUM ('read', 'write', 'deny');
 CREATE TABLE ACLENTITY (
   id                    BIGSERIAL PRIMARY KEY,
   owner                 BIGSERIAL,
-  name                  varchar(255),
+  name                  varchar(255) UNIQUE,
   FOREIGN KEY (owner)   REFERENCES EGOGROUP(id)
 );
 
