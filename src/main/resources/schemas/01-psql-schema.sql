@@ -58,29 +58,31 @@ CREATE TABLE USERAPPLICATION (
 );
 
 
-CREATE TABLE ACLUSER (
-  id                    BIGSERIAL PRIMARY KEY,
-  egoId                 BIGSERIAL,
-  principal             boolean
-);
+CREATE TYPE ACLMASK AS ENUM ('read', 'write', 'deny');
 
 
 CREATE TABLE ACLENTITY (
   id                    BIGSERIAL PRIMARY KEY,
   owner                 BIGSERIAL,
   name                  varchar(255),
-  FOREIGN KEY (owner)   REFERENCES ACLUSER(id)
+  FOREIGN KEY (owner)   REFERENCES EGOGROUP(id)
 );
 
 
-CREATE TYPE ACLMASK AS ENUM ('read', 'write', 'deny');
-
-
-CREATE TABLE ACLENTRY (
+CREATE TABLE ACLUSERPERMISSION (
   id                      BIGSERIAL PRIMARY KEY,
   entity                  BIGSERIAL,
-  aclUser                 BIGSERIAL,
+  sid                     BIGSERIAL,
   mask                    ACLMASK,
   FOREIGN KEY (entity)    REFERENCES ACLENTITY(id),
-  FOREIGN KEY (aclUser)   REFERENCES ACLUSER(id)
+  FOREIGN KEY (sid)       REFERENCES EGOUSER(id)
+);
+
+CREATE TABLE ACLGROUPPERMISSION (
+  id                      BIGSERIAL PRIMARY KEY,
+  entity                  BIGSERIAL,
+  sid                     BIGSERIAL,
+  mask                    ACLMASK,
+  FOREIGN KEY (entity)    REFERENCES ACLENTITY(id),
+  FOREIGN KEY (sid)       REFERENCES EGOGROUP(id)
 );

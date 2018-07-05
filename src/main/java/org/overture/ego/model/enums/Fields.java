@@ -39,7 +39,7 @@ public class Fields {
   public static final String PRINCIPAL = "principal";
   public static final String OWNER = "owner";
   public static final String ENTITY = "entity";
-  public static final String ACLUSER = "aclUser";
+  public static final String SID = "sid";
   public static final String MASK = "mask";
 
 }

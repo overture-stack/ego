@@ -20,7 +20,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
-public class AclEntry {
+public class AclGroupPermission {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
@@ -32,10 +32,10 @@ public class AclEntry {
   @Column(nullable = false, name = Fields.ENTITY)
   int entity;
 
-  // Many to One
+  // Many to Many
   @NonNull
-  @Column(nullable = false, name = Fields.ACLUSER)
-  int aclUser;
+  @Column(nullable = false, name = Fields.SID)
+  int sid;
 
   @NonNull
   @Column(nullable = false, name = Fields.MASK)
