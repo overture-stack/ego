@@ -1,11 +1,11 @@
 <h1 align="center"> EGO </h1> <br>
 
 <p align="center">
-  A scalable stateless Authorization Service for Federated Identities including Google and Facebook
+  <img alt="General Availability" title="General Availability" src="http://www.overture.bio/img/progress-horizontal-GA.svg" width="320" />
 </p>
 
 <p align="center">
-  <img alt="General Availability" title="General Availability" src="http://www.overture.bio/img/progress-horizontal-GA.svg" width="320" />
+  A scalable stateless Authorization Service for Federated Identities including Google and Facebook
 </p>
 
 [![Build Status](https://travis-ci.org/overture-stack/ego.svg?branch=master)](https://travis-ci.org/overture-stack/ego)
