@@ -11,9 +11,9 @@ import org.overture.ego.view.Views;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "aclentry")
+@Table(name = "aclgrouppermission")
 @Data
-@JsonPropertyOrder({"id","entity","aclUser", "mask"})
+@JsonPropertyOrder({"id","entity","sid", "mask"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @EqualsAndHashCode(of={"id"})
 @Builder
@@ -32,7 +32,7 @@ public class AclGroupPermission {
   @Column(nullable = false, name = Fields.ENTITY)
   int entity;
 
-  // Many to Many
+  // Many to One Group
   @NonNull
   @Column(nullable = false, name = Fields.SID)
   int sid;
@@ -40,4 +40,5 @@ public class AclGroupPermission {
   @NonNull
   @Column(nullable = false, name = Fields.MASK)
   AclMask mask;
+
 }

@@ -64,7 +64,7 @@ CREATE TYPE ACLMASK AS ENUM ('read', 'write', 'deny');
 CREATE TABLE ACLENTITY (
   id                    BIGSERIAL PRIMARY KEY,
   owner                 BIGSERIAL,
-  name                  varchar(255) UNIQUE,
+  name                  varchar(255) UNIQUE NOT NULL,
   FOREIGN KEY (owner)   REFERENCES EGOGROUP(id)
 );
 
@@ -73,16 +73,17 @@ CREATE TABLE ACLUSERPERMISSION (
   id                      BIGSERIAL PRIMARY KEY,
   entity                  BIGSERIAL,
   sid                     BIGSERIAL,
-  mask                    ACLMASK,
+  mask                    ACLMASK NOT NULL,
   FOREIGN KEY (entity)    REFERENCES ACLENTITY(id),
   FOREIGN KEY (sid)       REFERENCES EGOUSER(id)
 );
+
 
 CREATE TABLE ACLGROUPPERMISSION (
   id                      BIGSERIAL PRIMARY KEY,
   entity                  BIGSERIAL,
   sid                     BIGSERIAL,
-  mask                    ACLMASK,
+  mask                    ACLMASK NOT NULL,
   FOREIGN KEY (entity)    REFERENCES ACLENTITY(id),
   FOREIGN KEY (sid)       REFERENCES EGOGROUP(id)
 );

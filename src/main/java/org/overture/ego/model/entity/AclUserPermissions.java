@@ -11,9 +11,9 @@ import org.overture.ego.view.Views;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "aclentry")
+@Table(name = "acluserpermission")
 @Data
-@JsonPropertyOrder({"id","entity","aclUser", "mask"})
+@JsonPropertyOrder({"id","entity","sid","mask"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @EqualsAndHashCode(of={"id"})
 @Builder
@@ -40,4 +40,5 @@ public class AclUserPermissions {
   @NonNull
   @Column(nullable = false, name = Fields.MASK)
   AclMask mask;
+
 }
