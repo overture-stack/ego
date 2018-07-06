@@ -4,7 +4,9 @@
   A scalable stateless Authorization Service for Federated Identities including Google and Facebook
 </p>
 
-<img alt="General Availability" title="General Availability" src="http://www.overture.bio/img/progress-horizontal-GA.svg" width="320" align="center">
+<p align="center">
+  <img alt="General Availability" title="General Availability" src="http://www.overture.bio/img/progress-horizontal-GA.svg" width="320" />
+</p>
 
 [![Build Status](https://travis-ci.org/overture-stack/ego.svg?branch=master)](https://travis-ci.org/overture-stack/ego)
 [![CircleCI](https://circleci.com/gh/overture-stack/ego/tree/develop.svg?style=svg)](https://circleci.com/gh/overture-stack/ego/tree/develop)
