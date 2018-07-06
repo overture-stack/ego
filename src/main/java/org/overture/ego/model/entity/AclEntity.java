@@ -1,13 +1,17 @@
 package org.overture.ego.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.overture.ego.model.enums.Fields;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
+import java.util.Set;
 
 @Entity
 @Table(name = "aclentity")
@@ -26,7 +30,6 @@ public class AclEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   int id;
 
-  // One to One
   @NonNull
   @Column(nullable = false, name = Fields.OWNER)
   int owner;
@@ -35,6 +38,16 @@ public class AclEntity {
   @Column(nullable = false, name = Fields.NAME)
   String name;
 
-  // One to Many Entries
+  @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+  @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinColumn(name=Fields.ENTITY)
+  @JsonIgnore
+  protected Set<AclGroupPermission> groupPermissions;
+
+  @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+  @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinColumn(name=Fields.ENTITY)
+  @JsonIgnore
+  protected Set<AclUserPermissions> userPermissions;
 
 }

@@ -91,13 +91,21 @@ public class User {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "usergroup", joinColumns = { @JoinColumn(name = Fields.USERID_JOIN) },
           inverseJoinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) })
-  @JsonIgnore protected Set<Group> wholeGroups;
+  @JsonIgnore
+  protected Set<Group> wholeGroups;
 
   @ManyToMany(targetEntity = Application.class, cascade = {CascadeType.ALL})
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "userapplication", joinColumns = { @JoinColumn(name = Fields.USERID_JOIN) },
           inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
-  @JsonIgnore protected Set<Application> wholeApplications;
+  @JsonIgnore
+  protected Set<Application> wholeApplications;
+
+  @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+  @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinColumn(name=Fields.SID)
+  @JsonIgnore
+  protected Set<AclUserPermissions> userPermissions;
 
   @JsonView(Views.JWTAccessToken.class)
   public List<String> getGroups(){

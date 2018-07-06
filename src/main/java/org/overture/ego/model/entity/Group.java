@@ -61,12 +61,25 @@ public class Group {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "groupapplication", joinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) },
           inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
-  @JsonIgnore Set<Application> wholeApplications;
+  @JsonIgnore
+  Set<Application> wholeApplications;
 
   @ManyToMany(mappedBy = "wholeGroups", cascade = CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
   Set<User> wholeUsers;
+
+  @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+  @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinColumn(name=Fields.OWNER)
+  @JsonIgnore
+  protected Set<AclEntity> groupOwnedAclEntities;
+
+  @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+  @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinColumn(name=Fields.SID)
+  @JsonIgnore
+  protected Set<AclGroupPermission> groupPermissions;
 
   public void addApplication(@NonNull Application app){
     initApplications();
