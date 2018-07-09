@@ -27,6 +27,11 @@ public class AclEntityService extends BaseService<AclEntity> {
     return getById(aclEntityRepository, Integer.parseInt(aclEntityId));
   }
 
+  public AclEntity getByName(@NonNull String aclEntityName) {
+    return aclEntityRepository.findOneByNameIgnoreCase(aclEntityName);
+  }
+
+
   // Update
   public AclEntity update(@NonNull AclEntity updatedAclEntity) {
     AclEntity aclEntity = getById(aclEntityRepository, updatedAclEntity.getId());
@@ -34,5 +39,11 @@ public class AclEntityService extends BaseService<AclEntity> {
     aclEntityRepository.save(aclEntity);
     return updatedAclEntity;
   }
+
+  // Delete
+  public void delete(@NonNull String aclEntityId) {
+    aclEntityRepository.deleteById(Integer.parseInt(aclEntityId));
+  }
+
 
 }

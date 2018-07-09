@@ -6,4 +6,6 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 public interface AclEntityRepository
     extends PagingAndSortingRepository<AclEntity, Integer>, JpaSpecificationExecutor {
+
+  AclEntity findOneByNameIgnoreCase(String name);
 }
