@@ -48,6 +48,6 @@ public class AclEntity {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name=Fields.ENTITY)
   @JsonIgnore
-  protected Set<AclUserPermissions> userPermissions;
+  protected Set<AclUserPermission> userPermissions;
 
 }

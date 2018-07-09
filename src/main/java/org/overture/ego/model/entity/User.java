@@ -105,7 +105,7 @@ public class User {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name=Fields.SID)
   @JsonIgnore
-  protected Set<AclUserPermissions> userPermissions;
+  protected Set<AclUserPermission> userPermissions;
 
   @JsonView(Views.JWTAccessToken.class)
   public List<String> getGroups(){

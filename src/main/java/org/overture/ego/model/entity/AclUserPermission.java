@@ -20,7 +20,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
-public class AclUserPermissions {
+public class AclUserPermission {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
