@@ -11,6 +11,7 @@ import org.overture.ego.model.enums.Fields;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
+import java.security.acl.Acl;
 import java.util.Set;
 
 @Entity
@@ -49,5 +50,25 @@ public class AclEntity {
   @JoinColumn(name=Fields.ENTITY)
   @JsonIgnore
   protected Set<AclUserPermission> userPermissions;
+
+  public void update(AclEntity other) {
+    this.owner = other.owner;
+    this.name = other.name;
+
+    // Don't merge the ID - that is procedural.
+
+    // Don't merge groupPermissions or userPermissions if not present in other.
+    // This is because the PUT action for update usually does not include these fields
+    // as a consequence of the GET option to retrieve a aclEntity not including these fields
+    // To clear groupPermissions and userPermissions, use the dedicated services for deleting
+    // associations or pass in an empty Set.
+    if (other.groupPermissions != null) {
+      this.groupPermissions = other.groupPermissions;
+    }
+
+    if (other.userPermissions != null) {
+      this.userPermissions = other.userPermissions;
+    }
+  }
 
 }

@@ -23,4 +23,16 @@ public class AclEntityService extends BaseService<AclEntity> {
     return aclEntityRepository.save(aclEntity);
   }
 
+  public AclEntity get(@NonNull String aclEntityId) {
+    return getById(aclEntityRepository, Integer.parseInt(aclEntityId));
+  }
+
+  // Update
+  public AclEntity update(@NonNull AclEntity updatedAclEntity) {
+    AclEntity aclEntity = getById(aclEntityRepository, updatedAclEntity.getId());
+    aclEntity.update(updatedAclEntity);
+    aclEntityRepository.save(aclEntity);
+    return updatedAclEntity;
+  }
+
 }

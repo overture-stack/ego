@@ -49,6 +49,7 @@ public class AclEntityServiceTest {
         .getContent();
   }
 
+  // Create
   @Test
   public void testCreate() {
     val aclEntity = aclEntityService
@@ -62,6 +63,23 @@ public class AclEntityServiceTest {
     aclEntityService.create(entityGenerator.createOneAclEntity(Pair.of("Study002", groups.get(0).getId())));
     assertThatExceptionOfType(DataIntegrityViolationException.class)
         .isThrownBy(() -> aclEntityService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId()))));
+  }
+
+  // Get
+  @Test
+  public void testGet() {
+    val aclEntity = aclEntityService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
+    val savedEntity = aclEntityService.get(Integer.toString(aclEntity.getId()));
+    assertThat(savedEntity.getName()).isEqualTo("Study001");
+  }
+
+  // Update
+  @Test
+  public void testUpdate() {
+    val aclEntity = aclEntityService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
+    aclEntity.setName("StudyOne");
+    val updated = aclEntityService.update(aclEntity);
+    assertThat(updated.getName()).isEqualTo("StudyOne");
   }
 
 }
