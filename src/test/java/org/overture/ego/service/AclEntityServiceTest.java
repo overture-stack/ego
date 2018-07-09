@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
 import org.overture.ego.model.entity.Group;
+import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.utils.EntityGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +19,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -67,7 +69,7 @@ public class AclEntityServiceTest {
         .isThrownBy(() -> aclEntityService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId()))));
   }
 
-  // Get
+  // Read
   @Test
   public void testGet() {
     val aclEntity = aclEntityService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
@@ -101,6 +103,40 @@ public class AclEntityServiceTest {
     assertThatExceptionOfType(EntityNotFoundException.class)
         .isThrownBy(() -> aclEntityService.getByName("Study000"));
   }
+
+  @Test
+  public void testListUsersNoFilters() {
+    entityGenerator.setupSimpleAclEntities(groups);
+    val aclEntities = aclEntityService
+        .listAclEntities(Collections.emptyList(), new PageableResolver().getPageable());
+    assertThat(aclEntities.getTotalElements()).isEqualTo(3L);
+  }
+
+  @Test
+  public void testListUsersNoFiltersEmptyResult() {
+    val aclEntities = aclEntityService
+        .listAclEntities(Collections.emptyList(), new PageableResolver().getPageable());
+    assertThat(aclEntities.getTotalElements()).isEqualTo(0L);
+  }
+
+  @Test
+  public void testListUsersFiltered() {
+    entityGenerator.setupSimpleAclEntities(groups);
+    val userFilter = new SearchFilter("name", "Study001");
+    val aclEntities = aclEntityService
+        .listAclEntities(Arrays.asList(userFilter), new PageableResolver().getPageable());
+    assertThat(aclEntities.getTotalElements()).isEqualTo(1L);
+  }
+
+  @Test
+  public void testListUsersFilteredEmptyResult() {
+    entityGenerator.setupSimpleAclEntities(groups);
+    val userFilter = new SearchFilter("name", "Study004");
+    val aclEntities = aclEntityService
+        .listAclEntities(Arrays.asList(userFilter), new PageableResolver().getPageable());
+    assertThat(aclEntities.getTotalElements()).isEqualTo(0L);
+  }
+
 
   // Update
   @Test
