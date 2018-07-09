@@ -58,5 +58,4 @@ public class AclEntityService extends BaseService<AclEntity> {
     aclEntityRepository.deleteById(Integer.parseInt(aclEntityId));
   }
 
-
 }
