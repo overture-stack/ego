@@ -29,6 +29,7 @@ import org.overture.ego.view.Views;
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Data
 @ToString(exclude={"wholeUsers","wholeApplications"})
@@ -82,7 +83,7 @@ public class Group {
     this.wholeApplications.removeIf(a -> a.id == appId);
   }
 
-  public void removeUser(@NonNull Integer userId){
+  public void removeUser(@NonNull UUID userId){
     if(this.wholeUsers == null) return;
     this.wholeUsers.removeIf(u -> u.id == userId);
   }

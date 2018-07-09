@@ -11,7 +11,7 @@ CREATE TABLE EGOAPPLICATION (
 
 
 CREATE TABLE EGOUSER (
-  id                BIGSERIAL PRIMARY KEY,
+  id                UUID PRIMARY KEY,
   name              VARCHAR(255) UNIQUE,
   email             VARCHAR(255) UNIQUE,
   role              VARCHAR(64),
@@ -42,7 +42,7 @@ CREATE TABLE GROUPAPPLICATION (
 
 
 CREATE TABLE USERGROUP (
-  userId                BIGSERIAL,
+  userId                UUID,
   grpId                 BIGSERIAL,
   PRIMARY KEY (grpId,userId),
   FOREIGN KEY (grpId)   REFERENCES EGOGROUP(id),
@@ -51,7 +51,7 @@ CREATE TABLE USERGROUP (
 
 
 CREATE TABLE USERAPPLICATION (
-  userId                BIGSERIAL,
+  userId                UUID,
   appId                 BIGSERIAL,
   PRIMARY KEY (userId,appId),
   FOREIGN KEY (appId)   REFERENCES EGOAPPLICATION(id),

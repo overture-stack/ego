@@ -27,6 +27,7 @@ import org.overture.ego.token.app.AppTokenClaims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,12 +40,13 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 
 @Service
-public class ApplicationService extends BaseService<Application> implements ClientDetailsService  {
+public class ApplicationService extends BaseService<Application, Integer> implements ClientDetailsService  {
 
   /*
     Dependencies
@@ -87,7 +89,7 @@ public class ApplicationService extends BaseService<Application> implements Clie
   public Page<Application> findUserApps(@NonNull String userId, @NonNull List<SearchFilter> filters,
                                         @NonNull Pageable pageable){
     return applicationRepository.findAll(
-            where(ApplicationSpecification.usedBy(Integer.parseInt(userId)))
+            where(ApplicationSpecification.usedBy(UUID.fromString(userId)))
             .and(ApplicationSpecification.filterBy(filters)),
             pageable);
   }
@@ -95,7 +97,7 @@ public class ApplicationService extends BaseService<Application> implements Clie
   public Page<Application> findUserApps(@NonNull String userId, @NonNull String query,
                                         @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
     return applicationRepository.findAll(
-            where(ApplicationSpecification.usedBy(Integer.parseInt(userId)))
+            where(ApplicationSpecification.usedBy(UUID.fromString(userId)))
                     .and(ApplicationSpecification.containsText(query))
                     .and(ApplicationSpecification.filterBy(filters)),
             pageable);

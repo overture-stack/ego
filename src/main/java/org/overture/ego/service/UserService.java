@@ -36,13 +36,14 @@ import org.springframework.util.StringUtils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Slf4j
 @Service
 @Transactional
-public class UserService extends BaseService<User> {
+public class UserService extends BaseService<User, UUID> {
 
   /*
     Constants
@@ -120,7 +121,7 @@ public class UserService extends BaseService<User> {
   }
 
   public void addUserToGroups(@NonNull String userId, @NonNull List<String> groupIDs){
-    val user = getById(userRepository, Integer.parseInt(userId));
+    val user = getById(userRepository, UUID.fromString(userId));
     groupIDs.forEach(grpId -> {
       val group = groupService.get(grpId);
       user.addNewGroup(group);
@@ -129,7 +130,7 @@ public class UserService extends BaseService<User> {
   }
 
   public void addUserToApps(@NonNull String userId, @NonNull List<String> appIDs){
-    val user = getById(userRepository, Integer.parseInt(userId));
+    val user = getById(userRepository, UUID.fromString(userId));
     appIDs.forEach(appId -> {
       val app = applicationService.get(appId);
       user.addNewApplication(app);
@@ -138,7 +139,7 @@ public class UserService extends BaseService<User> {
   }
 
   public User get(@NonNull String userId) {
-    return getById(userRepository, Integer.parseInt(userId));
+    return getById(userRepository, UUID.fromString(userId));
   }
 
   public User getByName(@NonNull String userName) {
@@ -156,7 +157,7 @@ public class UserService extends BaseService<User> {
   }
 
   public void delete(@NonNull String userId) {
-    userRepository.deleteById(Integer.parseInt(userId));
+    userRepository.deleteById(UUID.fromString(userId));
   }
 
   public Page<User> listUsers(@NonNull List<SearchFilter> filters,@NonNull Pageable pageable) {
@@ -170,7 +171,7 @@ public class UserService extends BaseService<User> {
   }
 
   public void deleteUserFromGroups(@NonNull String userId, @NonNull List<String> groupIDs) {
-    val user = getById(userRepository,Integer.parseInt(userId));
+    val user = getById(userRepository, UUID.fromString(userId));
     groupIDs.forEach(grpId -> {
       user.removeGroup(Integer.parseInt(grpId));
     });
@@ -178,7 +179,7 @@ public class UserService extends BaseService<User> {
   }
 
   public void deleteUserFromApps(@NonNull String userId, @NonNull List<String> appIDs) {
-    val user = getById(userRepository, Integer.parseInt(userId));
+    val user = getById(userRepository, UUID.fromString(userId));
     appIDs.forEach(appId -> {
       user.removeApplication(Integer.parseInt(appId));
     });

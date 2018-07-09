@@ -25,6 +25,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import javax.annotation.Nonnull;
 import javax.persistence.criteria.Join;
+import java.util.UUID;
 
 public class ApplicationSpecification extends SpecificationBase<Application> {
   public static Specification<Application> containsText(@Nonnull String text) {
@@ -44,7 +45,7 @@ public class ApplicationSpecification extends SpecificationBase<Application> {
 
   }
 
-  public static Specification<Application> usedBy(@Nonnull Integer userId) {
+  public static Specification<Application> usedBy(@Nonnull UUID userId) {
     return (root, query, builder) ->
     {
       Join<Application, User> applicationUserJoin = root.join("wholeUsers");
