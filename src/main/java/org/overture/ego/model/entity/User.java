@@ -149,6 +149,11 @@ public class User {
     this.wholeGroups.add(g);
   }
 
+  public void addNewPermission(@NonNull AclUserPermission permission) {
+    initPermissions();
+    this.userPermissions.add(permission);
+  }
+
   public void removeApplication(@NonNull Integer appId){
     if(this.wholeApplications == null) return;
     this.wholeApplications.removeIf(a -> a.id == appId);
@@ -157,6 +162,11 @@ public class User {
   public void removeGroup(@NonNull Integer grpId){
     if(this.wholeGroups == null) return;
     this.wholeGroups.removeIf(g -> g.id == grpId);
+  }
+
+  public void removePermission(@NonNull Integer permissionId){
+    if(this.userPermissions == null) return;
+    this.userPermissions.removeIf(p -> p.id == permissionId);
   }
 
   protected void initApplications(){
@@ -171,6 +181,12 @@ public class User {
     }
   }
 
+  protected void initPermissions() {
+    if(this.userPermissions == null) {
+      this.userPermissions = new HashSet<AclUserPermission>();
+    }
+  }
+
   public void update(User other) {
     this.name = other.name;
     this.firstName = other.firstName;
@@ -181,16 +197,21 @@ public class User {
 
     // Don't merge the ID, CreatedAt, or LastLogin date - those are procedural.
 
-    // Don't merge wholeGroups or wholeApplications if not present in other
-    //  This is because the PUT action for update usually does not include these fields
-    //  as a consequence of the GET option to retrieve a user not including these fields
-    // To clear wholeApplications and wholeGroups, use the dedicated services for deleting associations or pass in an empty Set.
+    // Don't merge wholeGroups, wholeApplications or userPermissions if not present in other
+    // This is because the PUT action for update usually does not include these fields
+    // as a consequence of the GET option to retrieve a user not including these fields
+    // To clear wholeApplications, wholeGroups or userPermissions, use the dedicated services
+    // for deleting associations or pass in an empty Set.
     if (other.wholeApplications != null) {
       this.wholeApplications = other.wholeApplications;
     }
 
     if (other.wholeGroups != null) {
       this.wholeGroups = other.wholeGroups;
+    }
+
+    if (other.userPermissions != null) {
+      this.userPermissions = other.userPermissions;
     }
   }
 

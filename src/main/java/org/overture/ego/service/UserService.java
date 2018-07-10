@@ -19,6 +19,7 @@ package org.overture.ego.service;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.model.entity.AclUserPermission;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.model.enums.UserRole;
 import org.overture.ego.model.enums.UserStatus;
@@ -68,6 +69,8 @@ public class UserService extends BaseService<User> {
   private GroupService groupService;
   @Autowired
   private ApplicationService applicationService;
+  @Autowired
+  private AclUserPermissionService aclUserPermissionService;
   @Autowired
   private SimpleDateFormat formatter;
 
@@ -133,6 +136,15 @@ public class UserService extends BaseService<User> {
     appIDs.forEach(appId -> {
       val app = applicationService.get(appId);
       user.addNewApplication(app);
+    });
+    userRepository.save(user);
+  }
+
+  public void addUserPermissions(@NonNull String userId, @NonNull List<String> permissionIds) {
+    val user = getById(userRepository, Integer.parseInt(userId));
+    permissionIds.forEach(permissionId -> {
+      val aclUserPermission = (AclUserPermission) aclUserPermissionService.get(permissionId);
+      user.addNewPermission(aclUserPermission);
     });
     userRepository.save(user);
   }

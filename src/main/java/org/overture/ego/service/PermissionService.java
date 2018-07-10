@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Slf4j
-@Service
 @Transactional
 public abstract class PermissionService extends BaseService<AclPermission> {
 
