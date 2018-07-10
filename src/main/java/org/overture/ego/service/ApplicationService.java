@@ -42,6 +42,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
+import static java.util.UUID.fromString;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 
@@ -89,7 +90,7 @@ public class ApplicationService extends BaseService<Application, Integer> implem
   public Page<Application> findUserApps(@NonNull String userId, @NonNull List<SearchFilter> filters,
                                         @NonNull Pageable pageable){
     return applicationRepository.findAll(
-            where(ApplicationSpecification.usedBy(UUID.fromString(userId)))
+            where(ApplicationSpecification.usedBy(fromString(userId)))
             .and(ApplicationSpecification.filterBy(filters)),
             pageable);
   }
@@ -97,7 +98,7 @@ public class ApplicationService extends BaseService<Application, Integer> implem
   public Page<Application> findUserApps(@NonNull String userId, @NonNull String query,
                                         @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
     return applicationRepository.findAll(
-            where(ApplicationSpecification.usedBy(UUID.fromString(userId)))
+            where(ApplicationSpecification.usedBy(fromString(userId)))
                     .and(ApplicationSpecification.containsText(query))
                     .and(ApplicationSpecification.filterBy(filters)),
             pageable);
