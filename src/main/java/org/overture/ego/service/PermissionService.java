@@ -1,25 +1,44 @@
 package org.overture.ego.service;
 
 import lombok.NonNull;
+import org.overture.ego.model.entity.AclPermission;
+import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.repository.PermissionRepository;
+import org.overture.ego.repository.queryspecification.AclPermissionSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.Optional;
+import java.util.List;
 
-public abstract class PermissionService<T> extends BaseService<T> {
+public abstract class PermissionService extends BaseService<AclPermission> {
 
-  private PermissionRepository<T> repository;
+  private PermissionRepository<AclPermission> repository;
 
   // Create
-  public T create(@NonNull T entity) {
+  public AclPermission create(@NonNull AclPermission entity) {
     return repository.save(entity);
   }
 
   // Read
-  public T get(@NonNull String aclEntityId) {
-    return getById(repository, Integer.parseInt(aclEntityId));
+  public AclPermission get(@NonNull String entityId) {
+    return getById(repository, Integer.parseInt(entityId));
   }
 
-  public Optional<T> getBySid(@NonNull int sid) {
-    return repository.findOneBySid(sid);
+  public Page<AclPermission> listAclEntities(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+    return repository.findAll(AclPermissionSpecification.filterBy(filters), pageable);
   }
+
+  // Update
+  public AclPermission update(@NonNull AclPermission updatedEntity) {
+    AclPermission entity = getById(repository, updatedEntity.getId());
+    entity.update(updatedEntity);
+    repository.save(entity);
+    return updatedEntity;
+  }
+
+  // Delete
+  public void delete(@NonNull String entityId) {
+    repository.deleteById(Integer.parseInt(entityId));
+  }
+
 }

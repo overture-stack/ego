@@ -20,7 +20,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
-public class AclUserPermission {
+public class AclUserPermission extends AclPermission {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
@@ -40,5 +40,4 @@ public class AclUserPermission {
   @NonNull
   @Column(nullable = false, name = Fields.MASK)
   AclMask mask;
-
 }

@@ -20,11 +20,12 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
-public class AclGroupPermission {
+public class AclGroupPermission extends AclPermission {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+
   int id;
 
   // Many to One
