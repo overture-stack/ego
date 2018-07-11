@@ -23,12 +23,16 @@ import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.enums.Fields;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Data
 @ToString(exclude={"wholeUsers","wholeApplications"})
@@ -79,7 +83,17 @@ public class Group implements AclOwnerEntity {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name=Fields.SID)
   @JsonIgnore
-  protected Set<AclGroupPermission> groupPermissions;
+  protected List<AclGroupPermission> groupPermissions;
+
+  @JsonIgnore
+  public List<String> getAllGroupPermissions() {
+    if (this.groupPermissions == null) {
+      return new ArrayList<String>();
+    }
+    return this.groupPermissions.stream().map(p ->
+        String.format("%s.%s", p.getEntity().getName(), p.getMask().toString()))
+        .collect(Collectors.toList());
+  }
 
   public void addApplication(@NonNull Application app){
     initApplications();
@@ -91,6 +105,16 @@ public class Group implements AclOwnerEntity {
     this.wholeUsers.add(u);
   }
 
+  public void addNewPermission(@NonNull AclEntity aclEntity, @NonNull AclMask mask) {
+    initPermissions();
+    val permission = AclGroupPermission.builder()
+        .entity(aclEntity)
+        .mask(mask)
+        .sid(this)
+        .build();
+    this.groupPermissions.add(permission);
+  }
+
   public void removeApplication(@NonNull Integer appId){
     this.wholeApplications.removeIf(a -> a.id == appId);
   }
@@ -98,6 +122,17 @@ public class Group implements AclOwnerEntity {
   public void removeUser(@NonNull Integer userId){
     if(this.wholeUsers == null) return;
     this.wholeUsers.removeIf(u -> u.id == userId);
+  }
+
+  public void removePermission(@NonNull AclGroupPermission permission) {
+    if (this.groupPermissions == null) return;
+    this.groupPermissions.remove(permission);
+  }
+
+  protected void initPermissions() {
+    if (this.groupPermissions == null) {
+      this.groupPermissions = new ArrayList<AclGroupPermission>();
+    }
   }
 
   public void update(Group other) {

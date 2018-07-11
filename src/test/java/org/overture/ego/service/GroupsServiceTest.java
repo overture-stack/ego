@@ -6,12 +6,14 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
+import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.utils.EntityGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.util.Pair;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +39,9 @@ public class GroupsServiceTest {
 
   @Autowired
   private GroupService groupService;
+
+  @Autowired
+  private AclEntityService aclEntityService;
 
   @Autowired
   private EntityGenerator entityGenerator;
@@ -584,5 +589,35 @@ public class GroupsServiceTest {
 
     assertThatExceptionOfType(NumberFormatException.class)
         .isThrownBy(() -> groupService.deleteAppsFromGroup(groupId, Arrays.asList("")));
+  }
+
+  @Test
+  public void testAddGroupPermissions() {
+    entityGenerator.setupSimpleGroups();
+    val groups = groupService
+        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
+        .getContent();
+    entityGenerator.setupSimpleAclEntities(groups);
+
+    val study001 = aclEntityService.getByName("Study001");
+    val study002 = aclEntityService.getByName("Study002");
+    val study003 = aclEntityService.getByName("Study003");
+
+    val permissions = Arrays.asList(
+        Pair.of(study001, AclMask.READ),
+        Pair.of(study002, AclMask.WRITE),
+        Pair.of(study003, AclMask.DENY)
+    );
+
+    val firstGroup = groups.get(0);
+
+    groupService.addGroupPermissions(Integer.toString(firstGroup.getId()), permissions);
+
+    assertThat(firstGroup.getAllGroupPermissions())
+        .containsExactlyInAnyOrder(
+            "Study001.read",
+            "Study002.write",
+            "Study003.deny"
+        );
   }
 }
