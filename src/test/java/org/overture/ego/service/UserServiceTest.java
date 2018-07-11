@@ -6,7 +6,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
+import org.overture.ego.model.entity.AclEntity;
+import org.overture.ego.model.entity.AclUserPermission;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.token.IDToken;
 import org.overture.ego.utils.EntityGenerator;
@@ -40,6 +43,9 @@ public class UserServiceTest {
 
   @Autowired
   private GroupService groupService;
+
+  @Autowired
+  private AclEntityService aclEntityService;
 
   @Autowired
   private EntityGenerator entityGenerator;
@@ -123,7 +129,7 @@ public class UserServiceTest {
   public void testGetByNameNotFound() {
     // TODO Currently returning null, should throw exception (EntityNotFoundException?)
     assertThatExceptionOfType(EntityNotFoundException.class)
-      .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
+        .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
   }
 
   @Test
@@ -871,5 +877,35 @@ public class UserServiceTest {
     assertThatExceptionOfType(NumberFormatException.class)
         .isThrownBy(() -> userService
             .deleteUserFromApps(userId, Arrays.asList("")));
+  }
+
+  @Test
+  public void testAddUserPermissions() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleGroups();
+    val groups = groupService
+        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
+        .getContent();
+    entityGenerator.setupSimpleAclEntities(groups);
+
+    val user = userService.getByName("FirstUser@domain.com");
+    val study001 = aclEntityService.getByName("Study001");
+    val study002 = aclEntityService.getByName("Study002");
+    val study003 = aclEntityService.getByName("Study003");
+
+    val permissions = Arrays.asList(
+        Pair.of(study001, AclMask.READ),
+        Pair.of(study002, AclMask.WRITE),
+        Pair.of(study003, AclMask.DENY)
+    );
+
+    userService.addUserPermissions(Integer.toString(user.getId()), permissions);
+
+    assertThat(user.getAllUserPermissions())
+        .containsExactlyInAnyOrder(
+            "Study001.read",
+            "Study002.write",
+            "Study003.deny"
+        );
   }
 }

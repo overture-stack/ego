@@ -6,12 +6,12 @@ import org.overture.ego.model.enums.AclMask;
 @Data
 public abstract class AclPermission {
   int id;
-  int entity;
-  int sid;
+  AclEntity entityId;
+  AclOwnerEntity sid;
   AclMask mask;
 
   public void update(AclPermission other) {
-    this.entity = other.entity;
+    this.entityId = other.entityId;
     this.sid = other.sid;
     this.mask = other.mask;
     // Don't merge the ID - that is procedural.

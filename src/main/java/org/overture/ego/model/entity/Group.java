@@ -40,7 +40,7 @@ import java.util.Set;
 @NoArgsConstructor
 @RequiredArgsConstructor
 @JsonView(Views.REST.class)
-public class Group {
+public class Group implements AclOwnerEntity {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
