@@ -41,7 +41,46 @@ public class UserTest {
   private EntityGenerator entityGenerator;
 
   @Test
-  public void testGetPermissions() {
+  public void testGetPermissionsNoPermissions() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleGroups();
+    val groups = groupService
+        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
+        .getContent();
+    entityGenerator.setupSimpleAclEntities(groups);
+
+    val user = userService.getByName("FirstUser@domain.com");
+
+    assertThat(user.getPermissions().size()).isEqualTo(0);
+  }
+
+  @Test
+  public void testGetPermissionsNoGroups() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleGroups();
+    val groups = groupService
+        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
+        .getContent();
+    entityGenerator.setupSimpleAclEntities(groups);
+
+    val user = userService.getByName("FirstUser@domain.com");
+    val study001 = aclEntityService.getByName("Study001");
+
+    val permissions = Arrays.asList(
+        Pair.of(study001, AclMask.READ),
+        Pair.of(study001, AclMask.WRITE),
+        Pair.of(study001, AclMask.DENY)
+    );
+
+    userService.addUserPermissions(Integer.toString(user.getId()), permissions);
+
+    assertThat(user.getPermissions()).containsExactlyInAnyOrder(
+        "Study001.deny"
+    );
+  }
+
+  @Test
+  public void testGetPermissionsGroups() {
     entityGenerator.setupSimpleUsers();
     entityGenerator.setupSimpleGroups();
     val groups = groupService
@@ -56,8 +95,8 @@ public class UserTest {
 
     val permissions = Arrays.asList(
         Pair.of(study001, AclMask.READ),
-        Pair.of(study001, AclMask.WRITE),
-        Pair.of(study001, AclMask.DENY)
+        Pair.of(study002, AclMask.WRITE),
+        Pair.of(study003, AclMask.DENY)
     );
 
     userService.addUserPermissions(Integer.toString(user.getId()), permissions);

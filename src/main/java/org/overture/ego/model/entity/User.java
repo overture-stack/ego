@@ -124,24 +124,37 @@ public class User implements AclOwnerEntity {
   @JsonView(Views.JWTAccessToken.class)
   public List<String> getPermissions() {
 
-    // Get permissions from the user's groups (leave in stream)
+    // Get user's individual permission (stream)
+    val userPermissions = Optional.ofNullable(this.getUserPermissions())
+        .orElse(new ArrayList<>())
+        .stream();
+
+    // Get permissions from the user's groups (stream)
     val userGroupsPermissions = Optional.ofNullable(this.getWholeGroups())
         .orElse(new HashSet<>())
         .stream()
         .map(Group::getGroupPermissions)
         .flatMap(List::stream);
 
-    // Combine individual user permissions and the user's groups (if they have any)
-    // permissions. Sort the grouped permissions (by AclEntity) on AclMask, extracting
-    // the first value of the sorted list into the final permissions list
+    // Combine individual user permissions and the user's
+    // groups (if they have any) permissions
+    val combinedPermissions = Stream.concat(userPermissions, userGroupsPermissions)
+        .collect(Collectors.groupingBy(AclPermission::getEntity));
+
+    // If we have no permissions at all return an empty list
+    if (combinedPermissions.values().size() == 0) {
+      return new ArrayList<>();
+    }
+
+    // If we do have permissions ... sort the grouped permissions (by AclEntity)
+    // on AclMask, extracting the first value of the sorted list into the final
+    // permissions list
     List<AclPermission> finalPermissionsList = new ArrayList<>();
 
-    Stream.concat(this.getUserPermissions().stream(), userGroupsPermissions)
-        .collect(Collectors.groupingBy(AclPermission::getEntity))
-        .forEach((entity, permissions) -> {
-          permissions.sort(Comparator.comparing(AclPermission::getMask).reversed());
-          finalPermissionsList.add(permissions.get(0));
-        });
+    combinedPermissions.forEach((entity, permissions) -> {
+      permissions.sort(Comparator.comparing(AclPermission::getMask).reversed());
+      finalPermissionsList.add(permissions.get(0));
+    });
 
     // Convert final permissions list for JSON output
     return extractPermissionStrings(finalPermissionsList);
