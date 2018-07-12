@@ -20,6 +20,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.AclEntity;
+import org.overture.ego.model.entity.AclUserPermission;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.enums.UserRole;
@@ -30,6 +31,7 @@ import org.overture.ego.repository.queryspecification.UserSpecification;
 import org.overture.ego.token.IDToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
@@ -239,4 +241,8 @@ public class UserService extends BaseService<User> {
             pageable);
   }
 
+  public Page<AclUserPermission> getUserPermissions(@NonNull String userid, @NonNull Pageable pageable) {
+    val userPermissions = getById(userRepository,Integer.parseInt(userid)).getUserPermissions();
+    return new PageImpl<>(userPermissions, pageable, userPermissions.size());
+  }
 }

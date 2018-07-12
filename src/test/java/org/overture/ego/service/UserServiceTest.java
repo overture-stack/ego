@@ -7,11 +7,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
 import org.overture.ego.model.entity.AclEntity;
+import org.overture.ego.model.entity.AclPermission;
 import org.overture.ego.model.entity.AclUserPermission;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.token.IDToken;
+import org.overture.ego.utils.AclPermissionUtils;
 import org.overture.ego.utils.EntityGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.overture.ego.utils.AclPermissionUtils.extractPermissionStrings;
 
 @Slf4j
 @SpringBootTest
@@ -902,7 +905,7 @@ public class UserServiceTest {
 
     userService.addUserPermissions(Integer.toString(user.getId()), permissions);
 
-    assertThat(user.getAllUserPermissions())
+    assertThat(extractPermissionStrings(user.getUserPermissions()))
         .containsExactlyInAnyOrder(
             "Study001.read",
             "Study002.write",
@@ -940,9 +943,36 @@ public class UserServiceTest {
 
     userService.deleteUserPermissions(Integer.toString(user.getId()), userPermissionsToRemove);
 
-    assertThat(user.getAllUserPermissions())
+    assertThat(extractPermissionStrings(user.getUserPermissions()))
         .containsExactlyInAnyOrder(
             "Study001.read"
         );
+  }
+
+  @Test
+  public void testGetUserPermissions() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleGroups();
+    val groups = groupService
+        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
+        .getContent();
+    entityGenerator.setupSimpleAclEntities(groups);
+
+    val user = userService.getByName("FirstUser@domain.com");
+    val study001 = aclEntityService.getByName("Study001");
+    val study002 = aclEntityService.getByName("Study002");
+    val study003 = aclEntityService.getByName("Study003");
+
+    val permissions = Arrays.asList(
+        Pair.of(study001, AclMask.READ),
+        Pair.of(study002, AclMask.WRITE),
+        Pair.of(study003, AclMask.DENY)
+    );
+
+    userService.addUserPermissions(Integer.toString(user.getId()), permissions);
+
+    val pagedUserPermissions = userService.getUserPermissions(Integer.toString(user.getId()), new PageableResolver().getPageable());
+
+    assertThat(pagedUserPermissions.getTotalElements()).isEqualTo(3L);
   }
 }

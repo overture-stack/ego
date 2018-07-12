@@ -19,6 +19,7 @@ package org.overture.ego.service;
 import lombok.NonNull;
 import lombok.val;
 import org.overture.ego.model.entity.AclEntity;
+import org.overture.ego.model.entity.AclGroupPermission;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.search.SearchFilter;
@@ -26,6 +27,7 @@ import org.overture.ego.repository.GroupRepository;
 import org.overture.ego.repository.queryspecification.GroupSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
@@ -84,6 +86,11 @@ public class GroupService extends BaseService<Group> {
 
   public Page<Group> listGroups(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return groupRepository.findAll(GroupSpecification.filterBy(filters), pageable);
+  }
+
+  public Page<AclGroupPermission> getGroupPermissions(@NonNull String groupId, @NonNull Pageable pageable) {
+    val groupPermissions = getById(groupRepository,Integer.parseInt(groupId)).getGroupPermissions();
+    return new PageImpl<>(groupPermissions, pageable, groupPermissions.size());
   }
 
   public Page<Group> findGroups(@NonNull String query, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {

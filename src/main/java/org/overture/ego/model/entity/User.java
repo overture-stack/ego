@@ -124,16 +124,6 @@ public class User implements AclOwnerEntity {
     return this.wholeApplications.stream().map(a -> a.getName()).collect(Collectors.toList());
   }
 
-  @JsonIgnore
-  public List<String> getAllUserPermissions() {
-    if (this.userPermissions == null) {
-      return new ArrayList<String>();
-    }
-    return this.userPermissions.stream().map(p ->
-        String.format("%s.%s", p.getEntity().getName(), p.getMask().toString()))
-        .collect(Collectors.toList());
-  }
-
   @JsonView(Views.JWTAccessToken.class)
   public List<String> getRoles() {
     return Arrays.asList(this.getRole());

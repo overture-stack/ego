@@ -85,16 +85,6 @@ public class Group implements AclOwnerEntity {
   @JsonIgnore
   protected List<AclGroupPermission> groupPermissions;
 
-  @JsonIgnore
-  public List<String> getAllGroupPermissions() {
-    if (this.groupPermissions == null) {
-      return new ArrayList<String>();
-    }
-    return this.groupPermissions.stream().map(p ->
-        String.format("%s.%s", p.getEntity().getName(), p.getMask().toString()))
-        .collect(Collectors.toList());
-  }
-
   public void addApplication(@NonNull Application app){
     initApplications();
     this.wholeApplications.add(app);
