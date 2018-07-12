@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -906,6 +907,42 @@ public class UserServiceTest {
             "Study001.read",
             "Study002.write",
             "Study003.deny"
+        );
+  }
+
+  @Test
+  public void testRemoveUserPermissions() {
+    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupSimpleGroups();
+    val groups = groupService
+        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
+        .getContent();
+    entityGenerator.setupSimpleAclEntities(groups);
+
+    val user = userService.getByName("FirstUser@domain.com");
+    val study001 = aclEntityService.getByName("Study001");
+    val study002 = aclEntityService.getByName("Study002");
+    val study003 = aclEntityService.getByName("Study003");
+
+    val permissions = Arrays.asList(
+        Pair.of(study001, AclMask.READ),
+        Pair.of(study002, AclMask.WRITE),
+        Pair.of(study003, AclMask.DENY)
+    );
+
+    userService.addUserPermissions(Integer.toString(user.getId()), permissions);
+
+    val userPermissionsToRemove = user.getUserPermissions()
+        .stream()
+        .filter(p -> !p.getEntity().getName().equals("Study001"))
+        .map(p -> Integer.toString(p.getId()))
+        .collect(Collectors.toList());
+
+    userService.deleteUserPermissions(Integer.toString(user.getId()), userPermissionsToRemove);
+
+    assertThat(user.getAllUserPermissions())
+        .containsExactlyInAnyOrder(
+            "Study001.read"
         );
   }
 }

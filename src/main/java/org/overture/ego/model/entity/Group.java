@@ -124,9 +124,9 @@ public class Group implements AclOwnerEntity {
     this.wholeUsers.removeIf(u -> u.id == userId);
   }
 
-  public void removePermission(@NonNull AclGroupPermission permission) {
+  public void removePermission(@NonNull Integer permissionId) {
     if (this.groupPermissions == null) return;
-    this.groupPermissions.remove(permission);
+    this.groupPermissions.removeIf(p -> p.id == permissionId);
   }
 
   protected void initPermissions() {

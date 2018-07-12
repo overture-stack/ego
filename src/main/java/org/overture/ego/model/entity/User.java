@@ -180,9 +180,9 @@ public class User implements AclOwnerEntity {
     this.wholeGroups.removeIf(g -> g.id == grpId);
   }
 
-  public void removePermission(@NonNull AclUserPermission permission) {
+  public void removePermission(@NonNull Integer permissionId) {
     if (this.userPermissions == null) return;
-    this.userPermissions.remove(permission);
+    this.userPermissions.removeIf(p -> p.id == permissionId);
   }
 
   protected void initApplications() {

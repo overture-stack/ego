@@ -196,6 +196,14 @@ public class UserService extends BaseService<User> {
     userRepository.save(user);
   }
 
+  public void deleteUserPermissions(@NonNull String userId, @NonNull List<String> permissionsIds) {
+    val user = getById(userRepository, Integer.parseInt(userId));
+    permissionsIds.forEach(permissionsId -> {
+      user.removePermission(Integer.parseInt(permissionsId));
+    });
+    userRepository.save(user);
+  }
+
   public Page<User> findGroupUsers(@NonNull String groupId, @NonNull List<SearchFilter> filters,
                                    @NonNull Pageable pageable){
     return userRepository.findAll(

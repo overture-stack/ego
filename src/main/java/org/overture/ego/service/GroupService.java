@@ -132,4 +132,12 @@ public class GroupService extends BaseService<Group> {
     });
     groupRepository.save(group);
   }
+
+  public void deleteGroupPermissions(@NonNull String userId, @NonNull List<String> permissionsIds) {
+    val group = getById(groupRepository, Integer.parseInt(userId));
+    permissionsIds.forEach(permissionsId -> {
+      group.removePermission(Integer.parseInt(permissionsId));
+    });
+    groupRepository.save(group);
+  }
 }

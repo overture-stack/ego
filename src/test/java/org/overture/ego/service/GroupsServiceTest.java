@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -618,6 +619,42 @@ public class GroupsServiceTest {
             "Study001.read",
             "Study002.write",
             "Study003.deny"
+        );
+  }
+
+  @Test
+  public void testDeleteGroupPermissions() {
+    entityGenerator.setupSimpleGroups();
+    val groups = groupService
+        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
+        .getContent();
+    entityGenerator.setupSimpleAclEntities(groups);
+
+    val study001 = aclEntityService.getByName("Study001");
+    val study002 = aclEntityService.getByName("Study002");
+    val study003 = aclEntityService.getByName("Study003");
+
+    val permissions = Arrays.asList(
+        Pair.of(study001, AclMask.READ),
+        Pair.of(study002, AclMask.WRITE),
+        Pair.of(study003, AclMask.DENY)
+    );
+
+    val firstGroup = groups.get(0);
+
+    groupService.addGroupPermissions(Integer.toString(firstGroup.getId()), permissions);
+
+    val groupPermissionsToRemove = firstGroup.getGroupPermissions()
+        .stream()
+        .filter(p -> !p.getEntity().getName().equals("Study001"))
+        .map(p -> Integer.toString(p.getId()))
+        .collect(Collectors.toList());
+
+    groupService.deleteGroupPermissions(Integer.toString(firstGroup.getId()), groupPermissionsToRemove);
+
+    assertThat(firstGroup.getAllGroupPermissions())
+        .containsExactlyInAnyOrder(
+            "Study001.read"
         );
   }
 }
