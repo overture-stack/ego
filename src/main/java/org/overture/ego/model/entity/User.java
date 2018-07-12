@@ -30,6 +30,9 @@ import org.overture.ego.view.Views;
 import javax.persistence.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.overture.ego.utils.AclPermissionUtils.extractPermissionStrings;
 
 @Entity
 @Table(name = "egouser")
@@ -108,12 +111,40 @@ public class User implements AclOwnerEntity {
   @JsonIgnore
   protected List<AclUserPermission> userPermissions;
 
+  // Creates groups in JWTAccessToken::context::user
   @JsonView(Views.JWTAccessToken.class)
   public List<String> getGroups() {
     if (this.wholeGroups == null) {
       return new ArrayList<String>();
     }
     return this.wholeGroups.stream().map(g -> g.getName()).collect(Collectors.toList());
+  }
+
+  // Creates permissions in JWTAccessToken::context::user
+  @JsonView(Views.JWTAccessToken.class)
+  public List<String> getPermissions() {
+
+    // Get permissions from the user's groups (leave in stream)
+    val userGroupsPermissions = Optional.ofNullable(this.getWholeGroups())
+        .orElse(new HashSet<>())
+        .stream()
+        .map(Group::getGroupPermissions)
+        .flatMap(List::stream);
+
+    // Combine individual user permissions and the user's groups (if they have any)
+    // permissions. Sort the grouped permissions (by AclEntity) on AclMask, extracting
+    // the first value of the sorted list into the final permissions list
+    List<AclPermission> finalPermissionsList = new ArrayList<>();
+
+    Stream.concat(this.getUserPermissions().stream(), userGroupsPermissions)
+        .collect(Collectors.groupingBy(AclPermission::getEntity))
+        .forEach((entity, permissions) -> {
+          permissions.sort(Comparator.comparing(AclPermission::getMask).reversed());
+          finalPermissionsList.add(permissions.get(0));
+        });
+
+    // Convert final permissions list for JSON output
+    return extractPermissionStrings(finalPermissionsList);
   }
 
   @JsonIgnore

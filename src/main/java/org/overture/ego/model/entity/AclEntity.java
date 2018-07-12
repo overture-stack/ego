@@ -11,7 +11,6 @@ import org.overture.ego.model.enums.Fields;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
-import java.security.acl.Acl;
 import java.util.Set;
 
 @Entity

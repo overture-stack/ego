@@ -8,7 +8,6 @@ import org.overture.ego.repository.PermissionRepository;
 import org.overture.ego.repository.queryspecification.AclPermissionSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;

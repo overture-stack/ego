@@ -69,6 +69,7 @@ public class TokenService {
     // If the demo flag is set, all tokens will be generated as the Demo User,
     // otherwise, get the user associated with their idToken
     User user;
+
     if (demo) {
       user = userService.getOrCreateDemoUser();
     } else {
