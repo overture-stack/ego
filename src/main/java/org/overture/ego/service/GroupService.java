@@ -18,10 +18,10 @@ package org.overture.ego.service;
 
 import lombok.NonNull;
 import lombok.val;
-import org.overture.ego.model.entity.AclEntity;
 import org.overture.ego.model.entity.AclGroupPermission;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.enums.AclMask;
+import org.overture.ego.model.params.Permission;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.repository.GroupRepository;
 import org.overture.ego.repository.queryspecification.GroupSpecification;
@@ -29,7 +29,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -41,9 +40,10 @@ public class GroupService extends BaseService<Group> {
 
   @Autowired
   private GroupRepository groupRepository;
-
   @Autowired
   private ApplicationService applicationService;
+  @Autowired
+  private AclEntityService aclEntityService;
 
   public Group create(@NonNull Group groupInfo) {
     return groupRepository.save(groupInfo);
@@ -58,10 +58,10 @@ public class GroupService extends BaseService<Group> {
     groupRepository.save(group);
   }
 
-  public void addGroupPermissions(@NonNull String groupId, @NonNull List<Pair<AclEntity, AclMask>> permissions) {
+  public void addGroupPermissions(@NonNull String groupId, @NonNull List<Permission> permissions) {
     val group = getById(groupRepository, Integer.parseInt(groupId));
     permissions.forEach(permission -> {
-      group.addNewPermission(permission.getFirst(), permission.getSecond());
+      group.addNewPermission(aclEntityService.get(permission.getAclEntityId()), AclMask.fromValue(permission.getMask()));
     });
     groupRepository.save(group);
   }

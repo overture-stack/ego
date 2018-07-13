@@ -5,14 +5,13 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
-import org.overture.ego.model.enums.AclMask;
+import org.overture.ego.model.params.Permission;
 import org.overture.ego.service.AclEntityService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
 import org.overture.ego.utils.EntityGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.util.Pair;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,12 +63,12 @@ public class UserTest {
     entityGenerator.setupSimpleAclEntities(groups);
 
     val user = userService.getByName("FirstUser@domain.com");
-    val study001 = aclEntityService.getByName("Study001");
+    val study001id = Integer.toString(aclEntityService.getByName("Study001").getId());
 
     val permissions = Arrays.asList(
-        Pair.of(study001, AclMask.READ),
-        Pair.of(study001, AclMask.WRITE),
-        Pair.of(study001, AclMask.DENY)
+        new Permission(study001id, "write"),
+        new Permission(study001id, "read"),
+        new Permission(study001id, "deny")
     );
 
     userService.addUserPermissions(Integer.toString(user.getId()), permissions);
@@ -121,38 +120,43 @@ public class UserTest {
 
     // Get the studies so we can
     val study001 = aclEntityService.getByName("Study001");
+    val study001id = Integer.toString(study001.getId());
+
     val study002 = aclEntityService.getByName("Study002");
+    val study002id = Integer.toString(study002.getId());
+
     val study003 = aclEntityService.getByName("Study003");
+    val study003id = Integer.toString(study003.getId());
 
     // Assign ACL Permissions for each user/group
     userService.addUserPermissions(alexId, Arrays.asList(
-        Pair.of(study001, AclMask.WRITE),
-        Pair.of(study002, AclMask.READ),
-        Pair.of(study003, AclMask.DENY)
+        new Permission(study001id, "write"),
+        new Permission(study002id, "read"),
+        new Permission(study003id, "deny")
     ));
 
     userService.addUserPermissions(bobId, Arrays.asList(
-        Pair.of(study001, AclMask.READ),
-        Pair.of(study002, AclMask.DENY),
-        Pair.of(study003, AclMask.WRITE)
+        new Permission(study001id, "read"),
+        new Permission(study002id, "deny"),
+        new Permission(study003id, "write")
     ));
 
     userService.addUserPermissions(marryId, Arrays.asList(
-        Pair.of(study001, AclMask.DENY),
-        Pair.of(study002, AclMask.WRITE),
-        Pair.of(study003, AclMask.READ)
+        new Permission(study001id, "deny"),
+        new Permission(study002id, "write"),
+        new Permission(study003id, "read")
     ));
 
     groupService.addGroupPermissions(wizardsId, Arrays.asList(
-        Pair.of(study001, AclMask.WRITE),
-        Pair.of(study002, AclMask.READ),
-        Pair.of(study003, AclMask.DENY)
+        new Permission(study001id, "write"),
+        new Permission(study002id, "read"),
+        new Permission(study003id, "deny")
     ));
 
     groupService.addGroupPermissions(robotsId, Arrays.asList(
-        Pair.of(study001, AclMask.DENY),
-        Pair.of(study002, AclMask.WRITE),
-        Pair.of(study003, AclMask.READ)
+        new Permission(study001id, "deny"),
+        new Permission(study002id, "write"),
+        new Permission(study003id, "read")
     ));
 
     /**

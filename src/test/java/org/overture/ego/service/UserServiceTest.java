@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.model.enums.AclMask;
+import org.overture.ego.model.params.Permission;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.token.IDToken;
 import org.overture.ego.utils.EntityGenerator;
@@ -889,14 +889,20 @@ public class UserServiceTest {
     entityGenerator.setupSimpleAclEntities(groups);
 
     val user = userService.getByName("FirstUser@domain.com");
+
     val study001 = aclEntityService.getByName("Study001");
+    val study001id = Integer.toString(study001.getId());
+
     val study002 = aclEntityService.getByName("Study002");
+    val study002id = Integer.toString(study002.getId());
+
     val study003 = aclEntityService.getByName("Study003");
+    val study003id = Integer.toString(study003.getId());
 
     val permissions = Arrays.asList(
-        Pair.of(study001, AclMask.READ),
-        Pair.of(study002, AclMask.WRITE),
-        Pair.of(study003, AclMask.DENY)
+        new Permission(study001id, "read"),
+        new Permission(study002id, "write"),
+        new Permission(study003id, "deny")
     );
 
     userService.addUserPermissions(Integer.toString(user.getId()), permissions);
@@ -919,14 +925,20 @@ public class UserServiceTest {
     entityGenerator.setupSimpleAclEntities(groups);
 
     val user = userService.getByName("FirstUser@domain.com");
+
     val study001 = aclEntityService.getByName("Study001");
+    val study001id = Integer.toString(study001.getId());
+
     val study002 = aclEntityService.getByName("Study002");
+    val study002id = Integer.toString(study002.getId());
+
     val study003 = aclEntityService.getByName("Study003");
+    val study003id = Integer.toString(study003.getId());
 
     val permissions = Arrays.asList(
-        Pair.of(study001, AclMask.READ),
-        Pair.of(study002, AclMask.WRITE),
-        Pair.of(study003, AclMask.DENY)
+        new Permission(study001id, "read"),
+        new Permission(study002id, "write"),
+        new Permission(study003id, "deny")
     );
 
     userService.addUserPermissions(Integer.toString(user.getId()), permissions);
@@ -955,14 +967,20 @@ public class UserServiceTest {
     entityGenerator.setupSimpleAclEntities(groups);
 
     val user = userService.getByName("FirstUser@domain.com");
+
     val study001 = aclEntityService.getByName("Study001");
+    val study001id = Integer.toString(study001.getId());
+
     val study002 = aclEntityService.getByName("Study002");
+    val study002id = Integer.toString(study002.getId());
+
     val study003 = aclEntityService.getByName("Study003");
+    val study003id = Integer.toString(study003.getId());
 
     val permissions = Arrays.asList(
-        Pair.of(study001, AclMask.READ),
-        Pair.of(study002, AclMask.WRITE),
-        Pair.of(study003, AclMask.DENY)
+        new Permission(study001id, "read"),
+        new Permission(study002id, "write"),
+        new Permission(study003id, "deny")
     );
 
     userService.addUserPermissions(Integer.toString(user.getId()), permissions);

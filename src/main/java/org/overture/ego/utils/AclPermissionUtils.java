@@ -1,7 +1,6 @@
 package org.overture.ego.utils;
 
 import org.overture.ego.model.entity.AclPermission;
-import org.overture.ego.model.enums.AclMask;
 
 import java.util.List;
 import java.util.stream.Collectors;

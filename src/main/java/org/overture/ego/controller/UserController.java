@@ -19,13 +19,11 @@ package org.overture.ego.controller;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.overture.ego.model.dto.PageDTO;
 import org.overture.ego.model.entity.AclUserPermission;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.params.Permission;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
@@ -34,11 +32,9 @@ import org.overture.ego.service.AclEntityService;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
-import org.overture.ego.utils.AclPermissionUtils;
 import org.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.util.Pair;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +45,6 @@ import springfox.documentation.annotations.ApiIgnore;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -200,11 +195,7 @@ public class UserController {
       @PathVariable(value = "id", required = true) String id,
       @RequestBody(required = true) List<Permission> permissions
   ) {
-    val resolvedPermissions = permissions.stream().map(permission -> Pair.of(
-        aclEntityService.get(permission.getAclEntityId()),
-        AclMask.fromValue(permission.getMask())
-    )).collect(Collectors.toList());
-    userService.addUserPermissions(id, resolvedPermissions);
+    userService.addUserPermissions(id, permissions);
     return permissions.size() + " permissions added to user successfully.";
   }
 

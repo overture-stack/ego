@@ -19,12 +19,12 @@ package org.overture.ego.service;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.overture.ego.model.entity.AclEntity;
 import org.overture.ego.model.entity.AclUserPermission;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.enums.UserRole;
 import org.overture.ego.model.enums.UserStatus;
+import org.overture.ego.model.params.Permission;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.repository.UserRepository;
 import org.overture.ego.repository.queryspecification.UserSpecification;
@@ -33,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -73,6 +72,8 @@ public class UserService extends BaseService<User> {
   private GroupService groupService;
   @Autowired
   private ApplicationService applicationService;
+  @Autowired
+  private AclEntityService aclEntityService;
   @Autowired
   private SimpleDateFormat formatter;
 
@@ -142,10 +143,10 @@ public class UserService extends BaseService<User> {
     userRepository.save(user);
   }
 
-  public void addUserPermissions(@NonNull String userId, @NonNull List<Pair<AclEntity, AclMask>> permissions) {
+  public void addUserPermissions(@NonNull String userId, @NonNull List<Permission> permissions) {
     val user = getById(userRepository, Integer.parseInt(userId));
     permissions.forEach(permission -> {
-      user.addNewPermission(permission.getFirst(), permission.getSecond());
+      user.addNewPermission(aclEntityService.get(permission.getAclEntityId()), AclMask.fromValue(permission.getMask()));
     });
     userRepository.save(user);
   }
