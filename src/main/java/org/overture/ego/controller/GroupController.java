@@ -22,20 +22,25 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.overture.ego.model.dto.PageDTO;
 import org.overture.ego.model.entity.AclGroupPermission;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.model.enums.AclMask;
+import org.overture.ego.model.params.Permission;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.security.AdminScoped;
+import org.overture.ego.service.AclEntityService;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
 import org.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Pair;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +51,7 @@ import springfox.documentation.annotations.ApiIgnore;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -62,6 +68,8 @@ public class GroupController {
   private ApplicationService applicationService;
   @Autowired
   private UserService userService;
+  @Autowired
+  private AclEntityService aclEntityService;
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
@@ -180,6 +188,42 @@ public class GroupController {
       Pageable pageable)
   {
     return new PageDTO<>(groupService.getGroupPermissions(id, pageable));
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.POST, value = "/{id}/permissions")
+  @ApiResponses(
+      value = {
+          @ApiResponse(code = 200, message = "Add group permissions", response = String.class)
+      }
+  )
+  public @ResponseBody
+  String addPermissions(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @PathVariable(value = "id", required = true) String id,
+      @RequestBody(required = true) List<Permission> permissions
+  ) {
+    val resolvedPermissions = permissions.stream().map(permission -> Pair.of(
+        aclEntityService.get(permission.getAclEntityId()),
+        AclMask.valueOf(permission.getMask()))
+    ).collect(Collectors.toList());
+    groupService.addGroupPermissions(id, resolvedPermissions);
+    return permissions.size() + " permissions added to group successfully.";
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/permissions/{permissionIds}")
+  @ApiResponses(
+      value = {
+          @ApiResponse(code = 200, message = "Delete group permissions")
+      }
+  )
+  @ResponseStatus(value = HttpStatus.OK)
+  public void deletePermissions(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @PathVariable(value = "id", required = true) String id,
+      @PathVariable(value = "permissionIds", required = true) List<String> permissionIds) {
+    groupService.deleteGroupPermissions(id,permissionIds);
   }
 
   /*

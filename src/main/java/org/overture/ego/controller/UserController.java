@@ -19,17 +19,22 @@ package org.overture.ego.controller;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.overture.ego.model.dto.PageDTO;
 import org.overture.ego.model.entity.*;
+import org.overture.ego.model.enums.AclMask;
+import org.overture.ego.model.params.Permission;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.security.AdminScoped;
+import org.overture.ego.service.AclEntityService;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
 import org.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Pair;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +44,9 @@ import springfox.documentation.annotations.ApiIgnore;
 
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -55,6 +62,8 @@ public class UserController {
   private GroupService groupService;
   @Autowired
   private ApplicationService applicationService;
+  @Autowired
+  private AclEntityService aclEntityService;
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
@@ -173,6 +182,42 @@ public class UserController {
       Pageable pageable)
   {
     return new PageDTO<>(userService.getUserPermissions(id, pageable));
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.POST, value = "/{id}/permissions")
+  @ApiResponses(
+      value = {
+          @ApiResponse(code = 200, message = "Add user permissions", response = String.class)
+      }
+  )
+  public @ResponseBody
+  String addPermissions(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @PathVariable(value = "id", required = true) String id,
+      @RequestBody(required = true) List<Permission> permissions
+  ) {
+    val resolvedPermissions = permissions.stream().map(permission -> Pair.of(
+          aclEntityService.get(permission.getAclEntityId()),
+          AclMask.valueOf(permission.getMask()))
+    ).collect(Collectors.toList());
+    userService.addUserPermissions(id, resolvedPermissions);
+    return permissions.size() + " permissions added to user successfully.";
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/permissions/{permissionIds}")
+  @ApiResponses(
+      value = {
+          @ApiResponse(code = 200, message = "Delete user permissions")
+      }
+  )
+  @ResponseStatus(value = HttpStatus.OK)
+  public void deletePermissions(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @PathVariable(value = "id", required = true) String id,
+      @PathVariable(value = "permissionIds", required = true) List<String> permissionIds) {
+    userService.deleteUserPermissions(id,permissionIds);
   }
 
   /*
