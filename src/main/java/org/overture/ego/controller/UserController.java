@@ -21,7 +21,10 @@ import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.dto.PageDTO;
-import org.overture.ego.model.entity.*;
+import org.overture.ego.model.entity.AclUserPermission;
+import org.overture.ego.model.entity.Application;
+import org.overture.ego.model.entity.Group;
+import org.overture.ego.model.entity.User;
 import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.params.Permission;
 import org.overture.ego.model.search.Filters;
@@ -44,7 +47,6 @@ import springfox.documentation.annotations.ApiIgnore;
 
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

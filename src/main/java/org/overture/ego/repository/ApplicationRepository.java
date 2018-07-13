@@ -17,7 +17,6 @@
 package org.overture.ego.repository;
 
 import org.overture.ego.model.entity.Application;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
