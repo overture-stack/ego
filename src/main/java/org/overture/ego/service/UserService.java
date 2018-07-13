@@ -27,6 +27,7 @@ import org.overture.ego.repository.UserRepository;
 import org.overture.ego.repository.queryspecification.UserSpecification;
 import org.overture.ego.token.IDToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -48,8 +49,10 @@ public class UserService extends BaseService<User> {
     Constants
    */
   // DEFAULTS
-  private final static String DEFAULT_USER_ROLE = UserRole.USER.toString();
-  private final static String DEFAULT_USER_STATUS = UserStatus.PENDING.toString();
+  @Value("${default.user.role}")
+  private String DEFAULT_USER_ROLE;
+  @Value("${default.user.status}")
+  private String DEFAULT_USER_STATUS;
 
   // DEMO USER
   private final static String DEMO_USER_NAME = "Demo.User@example.com";
