@@ -21,6 +21,10 @@ spring.datasource:
   max-idle: 1
   min-idle: 1
 
+spring:
+  flyway:
+    enabled: false
+
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
 spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
 
@@ -110,10 +114,10 @@ spring:
 
 spring.datasource:
   driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-  url: jdbc:tc:postgresql:9.5.13://localhost:5432/ego?TC_INITSCRIPT=01-psql-schema.sql
+  url: jdbc:tc:postgresql:9.5.13://localhost:5432/ego?TC_INITFUNCTION=org.overture.ego.test.FlywayInit::initTestContainers
 
   username: postgres
   password:
-  max-active: 10
-  max-idle: 1
+  max-active: 1000
+  max-idle: 10
   min-idle: 1

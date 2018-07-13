@@ -74,7 +74,25 @@ Ego should now be deployed locally with the swagger ui at
 ### Step 1 - Setup Database
 1. Install Postgres
 2. Create a Database: ego with user postgres and empty password
-3. Execute [SQL Script](/src/main/resources/schemas/01-psql-schema.sql) to setup tables.
+3. Run the migrations found here: [SQL Script](/src/main/resources/flyway/sql/) to setup tables.
+
+#### Database Migrations with Flyway
+Database migrations and versioning is managed by [flyway](https://flywaydb.org/). 
+
+1. Download the flyway cli client here: [flyway-commandline](https://flywaydb.org/download/community)
+2. Unpack the client in a directory of your choosing
+3. Execute the flyway client pointing it to the configuration and migration directories in this repository.
+
+Get current version information:
+```bash
+./flyway -configFiles=<path_to_ego>/ego/src/main/resources/flyway/conf/flyway.conf -locations=filesystem:<path_to_ego>/ego/src/main/resources/flyway/sql info
+```
+Run outstanding migrations:
+```bash
+./flyway -configFiles=<path_to_ego>/ego/src/main/resources/flyway/conf/flyway.conf -locations=filesystem:<path_to_ego>/ego/src/main/resources/flyway/sql migrate
+```
+
+To see the migration naming convention, [click here.](https://flywaydb.org/documentation/migrations#naming)
 
 ### Step 2 - Run
 
@@ -135,3 +153,4 @@ An example ego JWT is mentioned below:
 #### Notes
 * "aud" field can contain one or more client IDs. This field indicates the client services that are authorized to use this JWT.
 * "groups" will differ based on the domain of client services - each domain of service should get list of groups from that domain's ego service.
+* Unit Tests using testcontainers will also run flyway migrations to ensure database has the correct structure

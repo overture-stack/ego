@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.overture.ego.model.enums.Fields;
@@ -46,17 +47,20 @@ public class User {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  int id;
+  @GenericGenerator(
+    name = "user_uuid",
+    strategy = "org.hibernate.id.UUIDGenerator")
+  @GeneratedValue(generator = "user_uuid")
+  UUID id;
 
   @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @NonNull
-  @Column(nullable = false, name = Fields.NAME)
+  @Column(nullable = false, name = Fields.NAME, unique = true)
   String name;
 
   @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @NonNull
-  @Column(nullable = false, name = Fields.EMAIL)
+  @Column(nullable = false, name = Fields.EMAIL, unique = true)
   String email;
 
   @NonNull
