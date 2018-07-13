@@ -1,6 +1,7 @@
 package org.overture.ego.utils;
 
 import org.overture.ego.model.entity.AclPermission;
+import org.overture.ego.model.enums.AclMask;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,5 +14,9 @@ public class AclPermissionUtils {
   public static List<String> extractPermissionStrings(List<? extends AclPermission> permissions) {
     return permissions.stream().map(AclPermissionUtils::extractPermissionString)
         .collect(Collectors.toList());
+  }
+
+  public static AclMask convertStringToAclMask(String mask) {
+    return AclMask.valueOf(mask.toUpperCase());
   }
 }

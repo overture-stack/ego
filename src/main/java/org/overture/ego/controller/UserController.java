@@ -34,6 +34,7 @@ import org.overture.ego.service.AclEntityService;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
+import org.overture.ego.utils.AclPermissionUtils;
 import org.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -49,6 +50,8 @@ import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.overture.ego.utils.AclPermissionUtils.convertStringToAclMask;
 
 @Slf4j
 @RestController
@@ -200,9 +203,9 @@ public class UserController {
       @RequestBody(required = true) List<Permission> permissions
   ) {
     val resolvedPermissions = permissions.stream().map(permission -> Pair.of(
-          aclEntityService.get(permission.getAclEntityId()),
-          AclMask.valueOf(permission.getMask()))
-    ).collect(Collectors.toList());
+        aclEntityService.get(permission.getAclEntityId()),
+        convertStringToAclMask(permission.getMask())
+    )).collect(Collectors.toList());
     userService.addUserPermissions(id, resolvedPermissions);
     return permissions.size() + " permissions added to user successfully.";
   }
