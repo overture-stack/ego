@@ -29,3 +29,5 @@ services:
       - ./src/main/resources/schemas/01-psql-schema.sql:/docker-entrypoint-initdb.d/init.sql
     expose:
       - "5432"
+    ports:
+      - "8001:5432"
