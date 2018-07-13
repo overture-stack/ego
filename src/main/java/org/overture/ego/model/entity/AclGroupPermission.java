@@ -47,7 +47,6 @@ public class AclGroupPermission extends AclPermission {
   Group sid;
 
   @NonNull
-  @Enumerated(EnumType.STRING)
   @Column(nullable = false, name = Fields.MASK)
   @Type( type = "ego_acl_enum" )
   AclMask mask;
