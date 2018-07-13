@@ -23,6 +23,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.dto.PageDTO;
+import org.overture.ego.model.entity.AclGroupPermission;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
@@ -149,6 +150,36 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String groupId) {
     groupService.delete(groupId);
+  }
+
+  /*
+   Permissions related endpoints
+    */
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/permissions")
+  @ApiImplicitParams({
+      @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
+          value = "Results to retrieve"),
+      @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
+          value = "Index of first result to retrieve"),
+      @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
+          value = "Field to sort on"),
+      @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
+          value = "Sorting order: ASC|DESC. Default order: DESC")
+  })
+  @ApiResponses(
+      value = {
+          @ApiResponse(code = 200, message = "Page of group permissions", response = PageDTO.class)
+      }
+  )
+  @JsonView(Views.REST.class)
+  public @ResponseBody
+  PageDTO<AclGroupPermission> getPermissions(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @PathVariable(value = "id", required = true) String id,
+      Pageable pageable)
+  {
+    return new PageDTO<>(groupService.getGroupPermissions(id, pageable));
   }
 
   /*

@@ -20,9 +20,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.dto.PageDTO;
-import org.overture.ego.model.entity.Application;
-import org.overture.ego.model.entity.Group;
-import org.overture.ego.model.entity.User;
+import org.overture.ego.model.entity.*;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.security.AdminScoped;
@@ -145,6 +143,36 @@ public class UserController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String userId) {
     userService.delete(userId);
+  }
+
+  /*
+   Permissions related endpoints
+    */
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/permissions")
+  @ApiImplicitParams({
+      @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
+          value = "Results to retrieve"),
+      @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
+          value = "Index of first result to retrieve"),
+      @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
+          value = "Field to sort on"),
+      @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
+          value = "Sorting order: ASC|DESC. Default order: DESC")
+  })
+  @ApiResponses(
+      value = {
+          @ApiResponse(code = 200, message = "Page of user permissions", response = PageDTO.class)
+      }
+  )
+  @JsonView(Views.REST.class)
+  public @ResponseBody
+  PageDTO<AclUserPermission> getPermissions(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @PathVariable(value = "id", required = true) String id,
+      Pageable pageable)
+  {
+    return new PageDTO<>(userService.getUserPermissions(id, pageable));
   }
 
   /*
