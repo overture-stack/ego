@@ -631,6 +631,8 @@ public class GroupsServiceTest {
         .getContent();
     entityGenerator.setupSimpleAclEntities(groups);
 
+    val firstGroup = groups.get(0);
+
     val study001 = aclEntityService.getByName("Study001");
     val study002 = aclEntityService.getByName("Study002");
     val study003 = aclEntityService.getByName("Study003");
@@ -640,8 +642,6 @@ public class GroupsServiceTest {
         Pair.of(study002, AclMask.WRITE),
         Pair.of(study003, AclMask.DENY)
     );
-
-    val firstGroup = groups.get(0);
 
     groupService.addGroupPermissions(Integer.toString(firstGroup.getId()), permissions);
 
@@ -667,6 +667,8 @@ public class GroupsServiceTest {
         .getContent();
     entityGenerator.setupSimpleAclEntities(groups);
 
+    val firstGroup = groups.get(0);
+
     val study001 = aclEntityService.getByName("Study001");
     val study002 = aclEntityService.getByName("Study002");
     val study003 = aclEntityService.getByName("Study003");
@@ -676,8 +678,6 @@ public class GroupsServiceTest {
         Pair.of(study002, AclMask.WRITE),
         Pair.of(study003, AclMask.DENY)
     );
-
-    val firstGroup = groups.get(0);
 
     groupService.addGroupPermissions(Integer.toString(firstGroup.getId()), permissions);
 

@@ -34,10 +34,10 @@ import java.util.List;
 import java.util.Set;
 
 @Data
-@ToString(exclude={"wholeUsers","wholeApplications"})
+@ToString(exclude={"wholeUsers","wholeApplications", "groupPermissions"})
 @Table(name = "egogroup")
 @Entity
-@JsonPropertyOrder({"id", "name", "description", "status","wholeApplications"})
+@JsonPropertyOrder({"id", "name", "description", "status","wholeApplications", "groupPermissions"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @EqualsAndHashCode(of={"id"})
 @NoArgsConstructor
