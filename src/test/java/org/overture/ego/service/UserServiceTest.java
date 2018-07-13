@@ -80,7 +80,7 @@ public class UserServiceTest {
     assertThat(idTokenUser.getEmail()).isEqualTo("UserOne@domain.com");
     assertThat(idTokenUser.getFirstName()).isEqualTo("User");
     assertThat(idTokenUser.getLastName()).isEqualTo("User");
-    assertThat(idTokenUser.getStatus()).isEqualTo("Pending");
+    assertThat(idTokenUser.getStatus()).isEqualTo("Approved");
     assertThat(idTokenUser.getRole()).isEqualTo("USER");
   }
 
