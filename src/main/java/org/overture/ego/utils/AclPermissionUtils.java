@@ -15,8 +15,4 @@ public class AclPermissionUtils {
     return permissions.stream().map(AclPermissionUtils::extractPermissionString)
         .collect(Collectors.toList());
   }
-
-  public static AclMask convertStringToAclMask(String mask) {
-    return AclMask.valueOf(mask.toUpperCase());
-  }
 }

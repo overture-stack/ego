@@ -51,8 +51,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.overture.ego.utils.AclPermissionUtils.convertStringToAclMask;
-
 @Slf4j
 @RestController
 @RequestMapping("/users")
@@ -204,7 +202,7 @@ public class UserController {
   ) {
     val resolvedPermissions = permissions.stream().map(permission -> Pair.of(
         aclEntityService.get(permission.getAclEntityId()),
-        convertStringToAclMask(permission.getMask())
+        AclMask.fromValue(permission.getMask())
     )).collect(Collectors.toList());
     userService.addUserPermissions(id, resolvedPermissions);
     return permissions.size() + " permissions added to user successfully.";

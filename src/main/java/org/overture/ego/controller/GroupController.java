@@ -205,8 +205,8 @@ public class GroupController {
   ) {
     val resolvedPermissions = permissions.stream().map(permission -> Pair.of(
         aclEntityService.get(permission.getAclEntityId()),
-        AclMask.valueOf(permission.getMask()))
-    ).collect(Collectors.toList());
+        AclMask.fromValue(permission.getMask())
+    )).collect(Collectors.toList());
     groupService.addGroupPermissions(id, resolvedPermissions);
     return permissions.size() + " permissions added to group successfully.";
   }

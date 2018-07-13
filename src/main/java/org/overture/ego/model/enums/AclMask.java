@@ -19,6 +19,8 @@ package org.overture.ego.model.enums;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Arrays;
+
 @RequiredArgsConstructor
 public enum AclMask {
   READ("read"),
@@ -31,5 +33,15 @@ public enum AclMask {
   @Override
   public String toString() {
     return value;
+  }
+
+  public static AclMask fromValue(String value) {
+    for (AclMask aclMask : values()) {
+      if (aclMask.value.equalsIgnoreCase(value)) {
+        return aclMask;
+      }
+    }
+    throw new IllegalArgumentException(
+        "Unknown enum type " + value + ", Allowed values are " + Arrays.toString(values()));
   }
 }
