@@ -22,9 +22,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
+import java.util.UUID;
+
 
 public interface ApplicationRepository
-        extends PagingAndSortingRepository<Application, Integer>, JpaSpecificationExecutor {
+        extends PagingAndSortingRepository<Application, UUID>, JpaSpecificationExecutor {
 
   Application findOneByClientIdIgnoreCase(String clientId);
   Application findOneByNameIgnoreCase(String name);
