@@ -155,8 +155,8 @@ public class GroupsServiceTest {
     entityGenerator.setupSimpleGroups();
     entityGenerator.setupSimpleUsers();
 
-    val userId = Integer.toString(userService.getByName("FirstUser@domain.com").getId());
-    val userTwoId = Integer.toString(userService.getByName("SecondUser@domain.com").getId());
+    val userId = userService.getByName("FirstUser@domain.com").getId().toString();
+    val userTwoId = userService.getByName("SecondUser@domain.com").getId().toString();
     val groupId = Integer.toString(groupService.getByName("Group One").getId());
 
     userService.addUserToGroups(userId, Arrays.asList(groupId));
@@ -177,8 +177,7 @@ public class GroupsServiceTest {
     entityGenerator.setupSimpleGroups();
     entityGenerator.setupSimpleUsers();
 
-    val userId = Integer.toString(userService.
-        getByName("FirstUser@domain.com").getId());
+    val userId = userService.getByName("FirstUser@domain.com").getId().toString();
 
     val groups = groupService.findUserGroups(
         userId,
@@ -193,7 +192,7 @@ public class GroupsServiceTest {
   public void testFindUsersGroupsNoQueryNoFiltersEmptyGroupString() {
     entityGenerator.setupSimpleGroups();
     entityGenerator.setupSimpleUsers();
-    assertThatExceptionOfType(NumberFormatException.class).isThrownBy(() -> groupService.findUserGroups("", Collections.emptyList(), new PageableResolver().getPageable()));
+    assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> groupService.findUserGroups("", Collections.emptyList(), new PageableResolver().getPageable()));
   }
 
   @Test
@@ -201,7 +200,7 @@ public class GroupsServiceTest {
     entityGenerator.setupSimpleGroups();
     entityGenerator.setupSimpleUsers();
 
-    val userId = Integer.toString(userService.getByName("FirstUser@domain.com").getId());
+    val userId = userService.getByName("FirstUser@domain.com").getId().toString();
     val groupId = Integer.toString(groupService.getByName("Group One").getId());
     val groupTwoId = Integer.toString(groupService.getByName("Group Two").getId());
 
@@ -224,7 +223,7 @@ public class GroupsServiceTest {
     entityGenerator.setupSimpleGroups();
     entityGenerator.setupSimpleUsers();
 
-    val userId = Integer.toString(userService.getByName("FirstUser@domain.com").getId());
+    val userId = userService.getByName("FirstUser@domain.com").getId().toString();
     val groupId = Integer.toString(groupService.getByName("Group One").getId());
     val groupTwoId = Integer.toString(groupService.getByName("Group Two").getId());
 
@@ -247,7 +246,7 @@ public class GroupsServiceTest {
     entityGenerator.setupSimpleGroups();
     entityGenerator.setupSimpleUsers();
 
-    val userId = Integer.toString(userService.getByName("FirstUser@domain.com").getId());
+    val userId = userService.getByName("FirstUser@domain.com").getId().toString();
     val groupId = Integer.toString(groupService.getByName("Group One").getId());
     val groupTwoId = Integer.toString(groupService.getByName("Group Two").getId());
 

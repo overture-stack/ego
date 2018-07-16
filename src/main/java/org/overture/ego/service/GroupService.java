@@ -33,10 +33,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static java.util.UUID.fromString;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
-public class GroupService extends BaseService<Group> {
+public class GroupService extends BaseService<Group, Integer> {
 
   @Autowired
   private GroupRepository groupRepository;
@@ -100,7 +101,7 @@ public class GroupService extends BaseService<Group> {
 
   public Page<Group> findUserGroups(@NonNull String userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
     return groupRepository.findAll(
-            where(GroupSpecification.containsUser(Integer.parseInt(userId)))
+            where(GroupSpecification.containsUser(fromString(userId)))
             .and(GroupSpecification.filterBy(filters)),
             pageable);
   }
@@ -108,7 +109,7 @@ public class GroupService extends BaseService<Group> {
   public Page<Group> findUserGroups(@NonNull String userId, @NonNull String query, @NonNull List<SearchFilter> filters,
                                     @NonNull Pageable pageable){
     return groupRepository.findAll(
-            where(GroupSpecification.containsUser(Integer.parseInt(userId)))
+            where(GroupSpecification.containsUser(fromString(userId)))
                     .and(GroupSpecification.containsText(query))
                     .and(GroupSpecification.filterBy(filters)),
             pageable);

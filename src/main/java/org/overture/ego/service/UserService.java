@@ -30,6 +30,7 @@ import org.overture.ego.repository.UserRepository;
 import org.overture.ego.repository.queryspecification.UserSpecification;
 import org.overture.ego.token.IDToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -40,20 +41,24 @@ import org.springframework.util.StringUtils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
+import static java.util.UUID.fromString;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Slf4j
 @Service
 @Transactional
-public class UserService extends BaseService<User> {
+public class UserService extends BaseService<User, UUID> {
 
   /*
     Constants
    */
   // DEFAULTS
-  private final static String DEFAULT_USER_ROLE = UserRole.USER.toString();
-  private final static String DEFAULT_USER_STATUS = UserStatus.PENDING.toString();
+  @Value("${default.user.role}")
+  private String DEFAULT_USER_ROLE;
+  @Value("${default.user.status}")
+  private String DEFAULT_USER_STATUS;
 
   // DEMO USER
   private final static String DEMO_USER_NAME = "Demo.User@example.com";
@@ -126,7 +131,7 @@ public class UserService extends BaseService<User> {
   }
 
   public void addUserToGroups(@NonNull String userId, @NonNull List<String> groupIDs){
-    val user = getById(userRepository, Integer.parseInt(userId));
+    val user = getById(userRepository, fromString(userId));
     groupIDs.forEach(grpId -> {
       val group = groupService.get(grpId);
       user.addNewGroup(group);
@@ -135,7 +140,7 @@ public class UserService extends BaseService<User> {
   }
 
   public void addUserToApps(@NonNull String userId, @NonNull List<String> appIDs){
-    val user = getById(userRepository, Integer.parseInt(userId));
+    val user = getById(userRepository, fromString(userId));
     appIDs.forEach(appId -> {
       val app = applicationService.get(appId);
       user.addNewApplication(app);
@@ -152,7 +157,7 @@ public class UserService extends BaseService<User> {
   }
 
   public User get(@NonNull String userId) {
-    return getById(userRepository, Integer.parseInt(userId));
+    return getById(userRepository, fromString(userId));
   }
 
   public User getByName(@NonNull String userName) {
@@ -170,7 +175,7 @@ public class UserService extends BaseService<User> {
   }
 
   public void delete(@NonNull String userId) {
-    userRepository.deleteById(Integer.parseInt(userId));
+    userRepository.deleteById(fromString(userId));
   }
 
   public Page<User> listUsers(@NonNull List<SearchFilter> filters,@NonNull Pageable pageable) {
@@ -184,7 +189,7 @@ public class UserService extends BaseService<User> {
   }
 
   public void deleteUserFromGroups(@NonNull String userId, @NonNull List<String> groupIDs) {
-    val user = getById(userRepository,Integer.parseInt(userId));
+    val user = getById(userRepository, fromString(userId));
     groupIDs.forEach(grpId -> {
       user.removeGroup(Integer.parseInt(grpId));
     });
@@ -192,7 +197,7 @@ public class UserService extends BaseService<User> {
   }
 
   public void deleteUserFromApps(@NonNull String userId, @NonNull List<String> appIDs) {
-    val user = getById(userRepository, Integer.parseInt(userId));
+    val user = getById(userRepository, fromString(userId));
     appIDs.forEach(appId -> {
       user.removeApplication(Integer.parseInt(appId));
     });

@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Data
 @ToString(exclude={"wholeUsers","wholeApplications", "groupPermissions"})
@@ -108,7 +109,7 @@ public class Group implements AclOwnerEntity {
     this.wholeApplications.removeIf(a -> a.id == appId);
   }
 
-  public void removeUser(@NonNull Integer userId){
+  public void removeUser(@NonNull UUID userId){
     if(this.wholeUsers == null) return;
     this.wholeUsers.removeIf(u -> u.id == userId);
   }
