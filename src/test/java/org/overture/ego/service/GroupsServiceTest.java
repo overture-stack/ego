@@ -610,9 +610,9 @@ public class GroupsServiceTest {
     val study003id = Integer.toString(study003.getId());
 
     val permissions = Arrays.asList(
-        new Permission(study001id, "read"),
-        new Permission(study002id, "write"),
-        new Permission(study003id, "deny")
+        new Permission(study001id, "READ"),
+        new Permission(study002id, "WRITE"),
+        new Permission(study003id, "DENY")
     );
 
     val firstGroup = groups.get(0);
@@ -621,9 +621,9 @@ public class GroupsServiceTest {
 
     assertThat(extractPermissionStrings(firstGroup.getGroupPermissions()))
         .containsExactlyInAnyOrder(
-            "Study001.read",
-            "Study002.write",
-            "Study003.deny"
+            "Study001.READ",
+            "Study002.WRITE",
+            "Study003.DENY"
         );
   }
 
@@ -647,9 +647,9 @@ public class GroupsServiceTest {
     val study003id = Integer.toString(study003.getId());
 
     val permissions = Arrays.asList(
-        new Permission(study001id, "read"),
-        new Permission(study002id, "write"),
-        new Permission(study003id, "deny")
+        new Permission(study001id, "READ"),
+        new Permission(study002id, "WRITE"),
+        new Permission(study003id, "DENY")
     );
 
     groupService.addGroupPermissions(Integer.toString(firstGroup.getId()), permissions);
@@ -664,7 +664,7 @@ public class GroupsServiceTest {
 
     assertThat(extractPermissionStrings(firstGroup.getGroupPermissions()))
         .containsExactlyInAnyOrder(
-            "Study001.read"
+            "Study001.READ"
         );
   }
 
@@ -688,9 +688,9 @@ public class GroupsServiceTest {
     val study003id = Integer.toString(study003.getId());
 
     val permissions = Arrays.asList(
-        new Permission(study001id, "read"),
-        new Permission(study002id, "write"),
-        new Permission(study003id, "deny")
+        new Permission(study001id, "READ"),
+        new Permission(study002id, "WRITE"),
+        new Permission(study003id, "DENY")
     );
 
     groupService.addGroupPermissions(Integer.toString(firstGroup.getId()), permissions);

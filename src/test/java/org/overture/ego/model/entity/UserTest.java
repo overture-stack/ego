@@ -66,15 +66,15 @@ public class UserTest {
     val study001id = Integer.toString(aclEntityService.getByName("Study001").getId());
 
     val permissions = Arrays.asList(
-        new Permission(study001id, "write"),
-        new Permission(study001id, "read"),
-        new Permission(study001id, "deny")
+        new Permission(study001id, "WRITE"),
+        new Permission(study001id, "READ"),
+        new Permission(study001id, "DENY")
     );
 
     userService.addUserPermissions(Integer.toString(user.getId()), permissions);
 
     assertThat(user.getPermissions()).containsExactlyInAnyOrder(
-        "Study001.deny"
+        "Study001.DENY"
     );
   }
 
@@ -130,33 +130,33 @@ public class UserTest {
 
     // Assign ACL Permissions for each user/group
     userService.addUserPermissions(alexId, Arrays.asList(
-        new Permission(study001id, "write"),
-        new Permission(study002id, "read"),
-        new Permission(study003id, "deny")
+        new Permission(study001id, "WRITE"),
+        new Permission(study002id, "READ"),
+        new Permission(study003id, "DENY")
     ));
 
     userService.addUserPermissions(bobId, Arrays.asList(
-        new Permission(study001id, "read"),
-        new Permission(study002id, "deny"),
-        new Permission(study003id, "write")
+        new Permission(study001id, "READ"),
+        new Permission(study002id, "DENY"),
+        new Permission(study003id, "WRITE")
     ));
 
     userService.addUserPermissions(marryId, Arrays.asList(
-        new Permission(study001id, "deny"),
-        new Permission(study002id, "write"),
-        new Permission(study003id, "read")
+        new Permission(study001id, "DENY"),
+        new Permission(study002id, "WRITE"),
+        new Permission(study003id, "READ")
     ));
 
     groupService.addGroupPermissions(wizardsId, Arrays.asList(
-        new Permission(study001id, "write"),
-        new Permission(study002id, "read"),
-        new Permission(study003id, "deny")
+        new Permission(study001id, "WRITE"),
+        new Permission(study002id, "READ"),
+        new Permission(study003id, "DENY")
     ));
 
     groupService.addGroupPermissions(robotsId, Arrays.asList(
-        new Permission(study001id, "deny"),
-        new Permission(study002id, "write"),
-        new Permission(study003id, "read")
+        new Permission(study001id, "DENY"),
+        new Permission(study002id, "WRITE"),
+        new Permission(study003id, "READ")
     ));
 
     /**
@@ -184,21 +184,21 @@ public class UserTest {
 
     // Test that all is well
     assertThat(alex.getPermissions()).containsExactlyInAnyOrder(
-        "Study001.deny",
-        "Study002.write",
-        "Study003.deny"
+        "Study001.DENY",
+        "Study002.WRITE",
+        "Study003.DENY"
     );
 
     assertThat(bob.getPermissions()).containsExactlyInAnyOrder(
-        "Study001.deny",
-        "Study002.deny",
-        "Study003.write"
+        "Study001.DENY",
+        "Study002.DENY",
+        "Study003.WRITE"
     );
 
     assertThat(marry.getPermissions()).containsExactlyInAnyOrder(
-        "Study001.deny",
-        "Study002.write",
-        "Study003.read"
+        "Study001.DENY",
+        "Study002.WRITE",
+        "Study003.READ"
     );
   }
 
