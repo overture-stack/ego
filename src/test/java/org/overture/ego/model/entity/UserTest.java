@@ -63,7 +63,7 @@ public class UserTest {
     entityGenerator.setupSimpleAclEntities(groups);
 
     val user = userService.getByName("FirstUser@domain.com");
-    val study001id = Integer.toString(aclEntityService.getByName("Study001").getId());
+    val study001id = aclEntityService.getByName("Study001").getId().toString();
 
     val permissions = Arrays.asList(
         new Permission(study001id, "WRITE"),
@@ -71,7 +71,7 @@ public class UserTest {
         new Permission(study001id, "DENY")
     );
 
-    userService.addUserPermissions(Integer.toString(user.getId()), permissions);
+    userService.addUserPermissions(user.getId().toString(), permissions);
 
     assertThat(user.getPermissions()).containsExactlyInAnyOrder(
         "Study001.DENY"
@@ -99,19 +99,19 @@ public class UserTest {
 
     // Get Users and Groups
     val alex = userService.getByName("FirstUser@domain.com");
-    val alexId = Integer.toString(alex.getId());
+    val alexId = alex.getId().toString();
 
     val bob = userService.getByName("SecondUser@domain.com");
-    val bobId = Integer.toString(bob.getId());
+    val bobId = bob.getId().toString();
 
     val marry = userService.getByName("ThirdUser@domain.com");
-    val marryId = Integer.toString(marry.getId());
+    val marryId = marry.getId().toString();
 
     val wizards = groups.get(0);
-    val wizardsId = Integer.toString(wizards.getId());
+    val wizardsId = wizards.getId().toString();
 
     val robots = groups.get(1);
-    val robotsId = Integer.toString(robots.getId());
+    val robotsId = robots.getId().toString();
 
     // Add user's to their respective groups
     userService.addUserToGroups(alexId, Arrays.asList(wizardsId, robotsId));
@@ -120,13 +120,13 @@ public class UserTest {
 
     // Get the studies so we can
     val study001 = aclEntityService.getByName("Study001");
-    val study001id = Integer.toString(study001.getId());
+    val study001id = study001.getId().toString();
 
     val study002 = aclEntityService.getByName("Study002");
-    val study002id = Integer.toString(study002.getId());
+    val study002id = study002.getId().toString();
 
     val study003 = aclEntityService.getByName("Study003");
-    val study003id = Integer.toString(study003.getId());
+    val study003id = study003.getId().toString();
 
     // Assign ACL Permissions for each user/group
     userService.addUserPermissions(alexId, Arrays.asList(

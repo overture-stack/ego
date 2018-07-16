@@ -22,8 +22,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -234,7 +236,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val groupId = Integer.toString(groupService.getByName("Group One").getId());
+    val groupId = groupService.getByName("Group One").getId().toString();
 
     userService.addUserToGroups(user.getId().toString(), singletonList(groupId));
     userService.addUserToGroups(userTwo.getId().toString(), singletonList(groupId));
@@ -254,7 +256,7 @@ public class UserServiceTest {
     entityGenerator.setupSimpleUsers();
     entityGenerator.setupSimpleGroups();
 
-    val groupId = Integer.toString(groupService.getByName("Group One").getId());
+    val groupId = groupService.getByName("Group One").getId().toString();
 
     val users = userService.findGroupUsers(
       groupId,
@@ -283,7 +285,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val groupId = Integer.toString(groupService.getByName("Group One").getId());
+    val groupId = groupService.getByName("Group One").getId().toString();
 
     userService.addUserToGroups(user.getId().toString(), singletonList(groupId));
     userService.addUserToGroups(userTwo.getId().toString(), singletonList(groupId));
@@ -307,7 +309,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val groupId = Integer.toString(groupService.getByName("Group One").getId());
+    val groupId = groupService.getByName("Group One").getId().toString();
 
     userService.addUserToGroups(user.getId().toString(), singletonList(groupId));
     userService.addUserToGroups(userTwo.getId().toString(), singletonList(groupId));
@@ -331,7 +333,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val groupId = Integer.toString(groupService.getByName("Group One").getId());
+    val groupId = groupService.getByName("Group One").getId().toString();
 
     userService.addUserToGroups(user.getId().toString(), singletonList(groupId));
     userService.addUserToGroups(userTwo.getId().toString(), singletonList(groupId));
@@ -357,7 +359,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = Integer.toString(applicationService.getByClientId("111111").getId());
+    val appId = applicationService.getByClientId("111111").getId().toString();
 
     userService.addUserToApps(user.getId().toString(), singletonList(appId));
     userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
@@ -377,7 +379,7 @@ public class UserServiceTest {
     entityGenerator.setupSimpleUsers();
     entityGenerator.setupSimpleApplications();
 
-    val appId = Integer.toString(applicationService.getByClientId("111111").getId());
+    val appId = applicationService.getByClientId("111111").getId().toString();
 
     val users = userService.findAppUsers(
       appId,
@@ -409,7 +411,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = Integer.toString(applicationService.getByClientId("111111").getId());
+    val appId = applicationService.getByClientId("111111").getId().toString();
 
     userService.addUserToApps(user.getId().toString(), singletonList(appId));
     userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
@@ -433,7 +435,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = Integer.toString(applicationService.getByClientId("111111").getId());
+    val appId = applicationService.getByClientId("111111").getId().toString();
 
     userService.addUserToApps(user.getId().toString(), singletonList(appId));
     userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
@@ -457,7 +459,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = Integer.toString(applicationService.getByClientId("111111").getId());
+    val appId = applicationService.getByClientId("111111").getId().toString();
 
     userService.addUserToApps(user.getId().toString(), singletonList(appId));
     userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
@@ -564,9 +566,9 @@ public class UserServiceTest {
     entityGenerator.setupSimpleGroups();
 
     val group = groupService.getByName("Group One");
-    val groupId = Integer.toString(group.getId());
+    val groupId = group.getId().toString();
     val groupTwo = groupService.getByName("Group Two");
-    val groupTwoId = Integer.toString(groupTwo.getId());
+    val groupTwoId = groupTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
 
@@ -587,7 +589,7 @@ public class UserServiceTest {
     entityGenerator.setupSimpleGroups();
 
     val group = groupService.getByName("Group One");
-    val groupId = Integer.toString(group.getId());
+    val groupId = group.getId().toString();
 
     assertThatExceptionOfType(EntityNotFoundException.class)
       .isThrownBy(() -> userService.addUserToGroups(NON_EXISTENT_USER, singletonList(groupId)));
@@ -599,7 +601,7 @@ public class UserServiceTest {
     entityGenerator.setupSimpleGroups();
 
     val group = groupService.getByName("Group One");
-    val groupId = Integer.toString(group.getId());
+    val groupId = group.getId().toString();
 
     assertThatExceptionOfType(IllegalArgumentException.class)
       .isThrownBy(() -> userService.addUserToGroups("", singletonList(groupId)));
@@ -638,9 +640,9 @@ public class UserServiceTest {
     entityGenerator.setupSimpleApplications();
 
     val app = applicationService.getByClientId("111111");
-    val appId = Integer.toString(app.getId());
+    val appId = app.getId().toString();
     val appTwo = applicationService.getByClientId("222222");
-    val appTwoId = Integer.toString(appTwo.getId());
+    val appTwoId = appTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
 
@@ -661,7 +663,7 @@ public class UserServiceTest {
     entityGenerator.setupSimpleApplications();
 
     val app = applicationService.getByClientId("111111");
-    val appId = Integer.toString(app.getId());
+    val appId = app.getId().toString();
 
     assertThatExceptionOfType(EntityNotFoundException.class)
       .isThrownBy(() -> userService.addUserToApps(NON_EXISTENT_USER, singletonList(appId)));
@@ -728,9 +730,9 @@ public class UserServiceTest {
     entityGenerator.setupSimpleGroups();
 
     val group = groupService.getByName("Group One");
-    val groupId = Integer.toString(group.getId());
+    val groupId = group.getId().toString();
     val groupTwo = groupService.getByName("Group Two");
-    val groupTwoId = Integer.toString(groupTwo.getId());
+    val groupTwoId = groupTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
 
@@ -753,9 +755,9 @@ public class UserServiceTest {
     entityGenerator.setupSimpleGroups();
 
     val group = groupService.getByName("Group One");
-    val groupId = Integer.toString(group.getId());
+    val groupId = group.getId().toString();
     val groupTwo = groupService.getByName("Group Two");
-    val groupTwoId = Integer.toString(groupTwo.getId());
+    val groupTwoId = groupTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
 
@@ -772,9 +774,9 @@ public class UserServiceTest {
     entityGenerator.setupSimpleGroups();
 
     val group = groupService.getByName("Group One");
-    val groupId = Integer.toString(group.getId());
+    val groupId = group.getId().toString();
     val groupTwo = groupService.getByName("Group Two");
-    val groupTwoId = Integer.toString(groupTwo.getId());
+    val groupTwoId = groupTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
 
@@ -793,7 +795,7 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
     val group = groupService.getByName("Group One");
-    val groupId = Integer.toString(group.getId());
+    val groupId = group.getId().toString();
 
     userService.addUserToGroups(userId, singletonList(groupId));
     assertThat(user.getWholeGroups().size()).isEqualTo(1);
@@ -810,9 +812,9 @@ public class UserServiceTest {
     entityGenerator.setupSimpleApplications();
 
     val app = applicationService.getByClientId("111111");
-    val appId = Integer.toString(app.getId());
+    val appId = app.getId().toString();
     val appTwo = applicationService.getByClientId("222222");
-    val appTwoId = Integer.toString(appTwo.getId());
+    val appTwoId = appTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
 
@@ -835,9 +837,9 @@ public class UserServiceTest {
     entityGenerator.setupSimpleApplications();
 
     val app = applicationService.getByClientId("111111");
-    val appId = Integer.toString(app.getId());
+    val appId = app.getId().toString();
     val appTwo = applicationService.getByClientId("222222");
-    val appTwoId = Integer.toString(appTwo.getId());
+    val appTwoId = appTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
 
@@ -854,9 +856,9 @@ public class UserServiceTest {
     entityGenerator.setupSimpleApplications();
 
     val app = applicationService.getByClientId("111111");
-    val appId = Integer.toString(app.getId());
+    val appId = app.getId().toString();
     val appTwo = applicationService.getByClientId("222222");
-    val appTwoId = Integer.toString(appTwo.getId());
+    val appTwoId = appTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
 
@@ -873,9 +875,9 @@ public class UserServiceTest {
     entityGenerator.setupSimpleApplications();
 
     val app = applicationService.getByClientId("111111");
-    val appId = Integer.toString(app.getId());
+    val appId = app.getId().toString();
     val appTwo = applicationService.getByClientId("222222");
-    val appTwoId = Integer.toString(appTwo.getId());
+    val appTwoId = appTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
 
@@ -898,13 +900,13 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
 
     val study001 = aclEntityService.getByName("Study001");
-    val study001id = Integer.toString(study001.getId());
+    val study001id = study001.getId().toString();
 
     val study002 = aclEntityService.getByName("Study002");
-    val study002id = Integer.toString(study002.getId());
+    val study002id = study002.getId().toString();
 
     val study003 = aclEntityService.getByName("Study003");
-    val study003id = Integer.toString(study003.getId());
+    val study003id = study003.getId().toString();
 
     val permissions = Arrays.asList(
         new Permission(study001id, "READ"),
@@ -912,7 +914,7 @@ public class UserServiceTest {
         new Permission(study003id, "DENY")
     );
 
-    userService.addUserPermissions(Integer.toString(user.getId()), permissions);
+    userService.addUserPermissions(user.getId().toString(), permissions);
 
     assertThat(extractPermissionStrings(user.getUserPermissions()))
         .containsExactlyInAnyOrder(
@@ -934,13 +936,13 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
 
     val study001 = aclEntityService.getByName("Study001");
-    val study001id = Integer.toString(study001.getId());
+    val study001id = study001.getId().toString();
 
     val study002 = aclEntityService.getByName("Study002");
-    val study002id = Integer.toString(study002.getId());
+    val study002id = study002.getId().toString();
 
     val study003 = aclEntityService.getByName("Study003");
-    val study003id = Integer.toString(study003.getId());
+    val study003id = study003.getId().toString();
 
     val permissions = Arrays.asList(
         new Permission(study001id, "READ"),
@@ -948,15 +950,15 @@ public class UserServiceTest {
         new Permission(study003id, "DENY")
     );
 
-    userService.addUserPermissions(Integer.toString(user.getId()), permissions);
+    userService.addUserPermissions(user.getId().toString(), permissions);
 
     val userPermissionsToRemove = user.getUserPermissions()
         .stream()
         .filter(p -> !p.getEntity().getName().equals("Study001"))
-        .map(p -> Integer.toString(p.getId()))
+        .map(p -> p.getId().toString())
         .collect(Collectors.toList());
 
-    userService.deleteUserPermissions(Integer.toString(user.getId()), userPermissionsToRemove);
+    userService.deleteUserPermissions(user.getId().toString(), userPermissionsToRemove);
 
     assertThat(extractPermissionStrings(user.getUserPermissions()))
         .containsExactlyInAnyOrder(
@@ -976,13 +978,13 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
 
     val study001 = aclEntityService.getByName("Study001");
-    val study001id = Integer.toString(study001.getId());
+    val study001id = study001.getId().toString();
 
     val study002 = aclEntityService.getByName("Study002");
-    val study002id = Integer.toString(study002.getId());
+    val study002id = study002.getId().toString();
 
     val study003 = aclEntityService.getByName("Study003");
-    val study003id = Integer.toString(study003.getId());
+    val study003id = study003.getId().toString();
 
     val permissions = Arrays.asList(
         new Permission(study001id, "READ"),
@@ -990,9 +992,9 @@ public class UserServiceTest {
         new Permission(study003id, "DENY")
     );
 
-    userService.addUserPermissions(Integer.toString(user.getId()), permissions);
+    userService.addUserPermissions(user.getId().toString(), permissions);
 
-    val pagedUserPermissions = userService.getUserPermissions(Integer.toString(user.getId()), new PageableResolver().getPageable());
+    val pagedUserPermissions = userService.getUserPermissions(user.getId().toString(), new PageableResolver().getPageable());
 
     assertThat(pagedUserPermissions.getTotalElements()).isEqualTo(3L);
   }

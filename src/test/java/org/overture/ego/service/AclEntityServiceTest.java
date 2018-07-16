@@ -73,7 +73,7 @@ public class AclEntityServiceTest {
   @Test
   public void testGet() {
     val aclEntity = aclEntityService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
-    val savedEntity = aclEntityService.get(Integer.toString(aclEntity.getId()));
+    val savedEntity = aclEntityService.get(aclEntity.getId().toString());
     assertThat(savedEntity.getName()).isEqualTo("Study001");
   }
 
@@ -154,7 +154,7 @@ public class AclEntityServiceTest {
 
     val aclEntity = aclEntityService.getByName("Study001");
 
-    aclEntityService.delete(Integer.toString(aclEntity.getId()));
+    aclEntityService.delete(aclEntity.getId().toString());
 
     val remainingAclEntities = aclEntityService.listAclEntities(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(remainingAclEntities.getTotalElements()).isEqualTo(2L);
