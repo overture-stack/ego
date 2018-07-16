@@ -72,7 +72,7 @@ CREATE TABLE ACLENTITY (
 CREATE TABLE ACLUSERPERMISSION (
   id                      BIGSERIAL PRIMARY KEY,
   entity                  BIGSERIAL,
-  sid                     BIGSERIAL,
+  sid                     UUID,
   mask                    ACLMASK NOT NULL,
   FOREIGN KEY (entity)    REFERENCES ACLENTITY(id),
   FOREIGN KEY (sid)       REFERENCES EGOUSER(id)
