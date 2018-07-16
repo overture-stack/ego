@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -87,14 +88,14 @@ public class EntityGenerator {
     }
   }
 
-  public AclEntity createOneAclEntity(Pair<String, Integer> aclEntity) {
+  public AclEntity createOneAclEntity(Pair<String, UUID> aclEntity) {
     return AclEntity.builder()
         .name(aclEntity.getFirst())
         .owner(aclEntity.getSecond())
         .build();
   }
 
-  public List<AclEntity> createAclEntitiesFromList(List<Pair<String, Integer>> aclEntities) {
+  public List<AclEntity> createAclEntitiesFromList(List<Pair<String, UUID>> aclEntities) {
     return aclEntities.stream().map(this::createOneAclEntity).collect(Collectors.toList());
   }
 

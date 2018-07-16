@@ -13,11 +13,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
+
+import static java.util.UUID.fromString;
 
 @Slf4j
 @Service
 @Transactional
-public class AclEntityService extends BaseService<AclEntity> {
+public class AclEntityService extends BaseService<AclEntity, UUID> {
 
   /*
     Dependencies
@@ -33,7 +36,7 @@ public class AclEntityService extends BaseService<AclEntity> {
 
   // Read
   public AclEntity get(@NonNull String aclEntityId) {
-    return getById(aclEntityRepository, Integer.parseInt(aclEntityId));
+    return getById(aclEntityRepository, fromString(aclEntityId));
   }
 
   public AclEntity getByName(@NonNull String aclEntityName) {
@@ -55,7 +58,7 @@ public class AclEntityService extends BaseService<AclEntity> {
 
   // Delete
   public void delete(@NonNull String aclEntityId) {
-    aclEntityRepository.deleteById(Integer.parseInt(aclEntityId));
+    aclEntityRepository.deleteById(fromString(aclEntityId));
   }
 
 }

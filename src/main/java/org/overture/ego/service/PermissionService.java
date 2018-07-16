@@ -11,10 +11,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
+
+import static java.util.UUID.fromString;
 
 @Slf4j
 @Transactional
-public abstract class PermissionService extends BaseService<AclPermission> {
+public abstract class PermissionService extends BaseService<AclPermission, UUID> {
 
   private PermissionRepository<AclPermission> repository;
 
@@ -25,7 +28,7 @@ public abstract class PermissionService extends BaseService<AclPermission> {
 
   // Read
   public AclPermission get(@NonNull String entityId) {
-    return getById(repository, Integer.parseInt(entityId));
+    return getById(repository, fromString(entityId));
   }
 
   public Page<AclPermission> listAclEntities(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
@@ -42,7 +45,7 @@ public abstract class PermissionService extends BaseService<AclPermission> {
 
   // Delete
   public void delete(@NonNull String entityId) {
-    repository.deleteById(Integer.parseInt(entityId));
+    repository.deleteById(fromString(entityId));
   }
 
 }

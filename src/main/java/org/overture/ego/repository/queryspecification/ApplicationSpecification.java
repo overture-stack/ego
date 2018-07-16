@@ -36,7 +36,7 @@ public class ApplicationSpecification extends SpecificationBase<Application> {
     );
   }
 
-  public static Specification<Application> inGroup(@Nonnull Integer groupId) {
+  public static Specification<Application> inGroup(@Nonnull UUID groupId) {
     return (root, query, builder) ->
     {
       Join<Application, Group> groupJoin = root.join("wholeGroups");

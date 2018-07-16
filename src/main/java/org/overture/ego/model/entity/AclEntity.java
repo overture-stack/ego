@@ -37,7 +37,7 @@ public class AclEntity {
 
   @NonNull
   @Column(nullable = false, name = Fields.OWNER)
-  int owner;
+  UUID owner;
 
   @NonNull
   @Column(nullable = false, name = Fields.NAME)

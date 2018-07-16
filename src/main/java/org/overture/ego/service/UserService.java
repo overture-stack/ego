@@ -149,7 +149,7 @@ public class UserService extends BaseService<User, UUID> {
   }
 
   public void addUserPermissions(@NonNull String userId, @NonNull List<Permission> permissions) {
-    val user = getById(userRepository, Integer.parseInt(userId));
+    val user = getById(userRepository, fromString(userId));
     permissions.forEach(permission -> {
       user.addNewPermission(aclEntityService.get(permission.getAclEntityId()), AclMask.fromValue(permission.getMask()));
     });
@@ -191,7 +191,7 @@ public class UserService extends BaseService<User, UUID> {
   public void deleteUserFromGroups(@NonNull String userId, @NonNull List<String> groupIDs) {
     val user = getById(userRepository, fromString(userId));
     groupIDs.forEach(grpId -> {
-      user.removeGroup(Integer.parseInt(grpId));
+      user.removeGroup(fromString(grpId));
     });
     userRepository.save(user);
   }
@@ -199,15 +199,15 @@ public class UserService extends BaseService<User, UUID> {
   public void deleteUserFromApps(@NonNull String userId, @NonNull List<String> appIDs) {
     val user = getById(userRepository, fromString(userId));
     appIDs.forEach(appId -> {
-      user.removeApplication(Integer.parseInt(appId));
+      user.removeApplication(fromString(appId));
     });
     userRepository.save(user);
   }
 
   public void deleteUserPermissions(@NonNull String userId, @NonNull List<String> permissionsIds) {
-    val user = getById(userRepository, Integer.parseInt(userId));
+    val user = getById(userRepository, fromString(userId));
     permissionsIds.forEach(permissionsId -> {
-      user.removePermission(Integer.parseInt(permissionsId));
+      user.removePermission(fromString(permissionsId));
     });
     userRepository.save(user);
   }
@@ -215,7 +215,7 @@ public class UserService extends BaseService<User, UUID> {
   public Page<User> findGroupUsers(@NonNull String groupId, @NonNull List<SearchFilter> filters,
                                    @NonNull Pageable pageable){
     return userRepository.findAll(
-            where(UserSpecification.inGroup(Integer.parseInt(groupId)))
+            where(UserSpecification.inGroup(fromString(groupId)))
             .and(UserSpecification.filterBy(filters)),
             pageable);
   }
@@ -223,7 +223,7 @@ public class UserService extends BaseService<User, UUID> {
   public Page<User> findGroupUsers(@NonNull String groupId, @NonNull String query,
                                    @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
     return userRepository.findAll(
-            where(UserSpecification.inGroup(Integer.parseInt(groupId)))
+            where(UserSpecification.inGroup(fromString(groupId)))
                     .and(UserSpecification.containsText(query))
                     .and(UserSpecification.filterBy(filters)),
             pageable);
@@ -232,7 +232,7 @@ public class UserService extends BaseService<User, UUID> {
   public Page<User> findAppUsers(@NonNull String appId, @NonNull List<SearchFilter> filters,
                                  @NonNull Pageable pageable){
     return userRepository.findAll(
-            where(UserSpecification.ofApplication(Integer.parseInt(appId)))
+            where(UserSpecification.ofApplication(fromString(appId)))
             .and(UserSpecification.filterBy(filters)),
             pageable);
   }
@@ -241,14 +241,14 @@ public class UserService extends BaseService<User, UUID> {
                                  @NonNull List<SearchFilter> filters,
                                  @NonNull Pageable pageable){
     return userRepository.findAll(
-            where(UserSpecification.ofApplication(Integer.parseInt(appId)))
+            where(UserSpecification.ofApplication(fromString(appId)))
                     .and(UserSpecification.containsText(query))
                     .and(UserSpecification.filterBy(filters)),
             pageable);
   }
 
-  public Page<AclUserPermission> getUserPermissions(@NonNull String userid, @NonNull Pageable pageable) {
-    val userPermissions = getById(userRepository,Integer.parseInt(userid)).getUserPermissions();
+  public Page<AclUserPermission> getUserPermissions(@NonNull String userId, @NonNull Pageable pageable) {
+    val userPermissions = getById(userRepository, fromString(userId)).getUserPermissions();
     return new PageImpl<>(userPermissions, pageable, userPermissions.size());
   }
 }

@@ -35,7 +35,7 @@ public class GroupSpecification extends SpecificationBase<Group>  {
     );
   }
 
-  public static Specification<Group> containsApplication(@Nonnull Integer appId) {
+  public static Specification<Group> containsApplication(@Nonnull UUID appId) {
     return (root, query, builder) ->
     {
       Join<Application, Group> groupJoin = root.join("wholeApplications");
