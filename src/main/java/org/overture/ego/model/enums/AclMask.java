@@ -23,9 +23,9 @@ import java.util.Arrays;
 
 @RequiredArgsConstructor
 public enum AclMask {
-  READ("read"),
-  WRITE("write"),
-  DENY("deny");
+  READ("READ"),
+  WRITE("WRITE"),
+  DENY("DENY");
 
   @NonNull
   private final String value;

@@ -33,21 +33,21 @@ public class AclGroupPermission extends AclPermission {
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-
   int id;
 
+  @NonNull
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(nullable = false, name = Fields.ENTITY)
-  @JsonIgnore
   AclEntity entity;
 
+  @NonNull
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(nullable = false, name = Fields.SID)
-  @JsonIgnore
   Group sid;
 
   @NonNull
   @Column(nullable = false, name = Fields.MASK)
+  @Enumerated(EnumType.STRING)
   @Type( type = "ego_acl_enum" )
   AclMask mask;
 }

@@ -46,6 +46,7 @@ public class AclUserPermission extends AclPermission {
 
   @NonNull
   @Column(nullable = false, name = Fields.MASK)
+  @Enumerated(EnumType.STRING)
   @Type( type = "ego_acl_enum" )
   AclMask mask;
 }
