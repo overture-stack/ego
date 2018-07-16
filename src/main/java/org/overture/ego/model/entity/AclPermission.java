@@ -3,9 +3,11 @@ package org.overture.ego.model.entity;
 import lombok.Data;
 import org.overture.ego.model.enums.AclMask;
 
+import java.util.UUID;
+
 @Data
 public abstract class AclPermission {
-  int id;
+  UUID id;
   AclEntity entity;
   AclOwnerEntity sid;
   AclMask mask;

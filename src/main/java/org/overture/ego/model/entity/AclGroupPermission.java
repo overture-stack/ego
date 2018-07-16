@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
 import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.overture.ego.model.enums.AclMask;
@@ -13,6 +14,7 @@ import org.overture.ego.model.enums.Fields;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
+import java.util.UUID;
 
 @Entity
 @Table(name = "aclgrouppermission")
@@ -32,8 +34,11 @@ public class AclGroupPermission extends AclPermission {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  int id;
+  @GenericGenerator(
+      name = "acl_user_group_uuid",
+      strategy = "org.hibernate.id.UUIDGenerator")
+  @GeneratedValue(generator = "acl_user_group_uuid")
+  UUID id;
 
   @NonNull
   @ManyToOne(fetch = FetchType.LAZY)

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.overture.ego.model.enums.Fields;
@@ -12,6 +13,7 @@ import org.overture.ego.view.Views;
 
 import javax.persistence.*;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "aclentity")
@@ -27,8 +29,11 @@ public class AclEntity {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  int id;
+  @GenericGenerator(
+      name = "acl_entity_uuid",
+      strategy = "org.hibernate.id.UUIDGenerator")
+  @GeneratedValue(generator = "acl_entity_uuid")
+  UUID id;
 
   @NonNull
   @Column(nullable = false, name = Fields.OWNER)

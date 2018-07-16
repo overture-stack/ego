@@ -21,16 +21,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.overture.ego.model.enums.Fields;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
@@ -47,8 +45,11 @@ public class Application {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  int id;
+  @GenericGenerator(
+      name = "application_uuid",
+      strategy = "org.hibernate.id.UUIDGenerator")
+  @GeneratedValue(generator = "application_uuid")
+  UUID id;
 
   @JsonView({Views.JWTAccessToken.class,Views.REST.class})
   @NonNull

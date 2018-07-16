@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.overture.ego.model.enums.AclMask;
@@ -48,8 +49,11 @@ public class Group implements AclOwnerEntity {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  int id;
+  @GenericGenerator(
+      name = "group_uuid",
+      strategy = "org.hibernate.id.UUIDGenerator")
+  @GeneratedValue(generator = "group_uuid")
+  UUID id;
 
   @Column(nullable = false, name = Fields.NAME, updatable = false)
   @NonNull
@@ -105,7 +109,7 @@ public class Group implements AclOwnerEntity {
     this.groupPermissions.add(permission);
   }
 
-  public void removeApplication(@NonNull Integer appId){
+  public void removeApplication(@NonNull UUID appId){
     this.wholeApplications.removeIf(a -> a.id == appId);
   }
 
@@ -114,7 +118,7 @@ public class Group implements AclOwnerEntity {
     this.wholeUsers.removeIf(u -> u.id == userId);
   }
 
-  public void removePermission(@NonNull Integer permissionId) {
+  public void removePermission(@NonNull UUID permissionId) {
     if (this.groupPermissions == null) return;
     this.groupPermissions.removeIf(p -> p.id == permissionId);
   }
