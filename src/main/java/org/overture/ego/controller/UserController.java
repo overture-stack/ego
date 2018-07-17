@@ -28,7 +28,6 @@ import org.overture.ego.model.params.Permission;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.security.AdminScoped;
-import org.overture.ego.service.AclEntityService;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
