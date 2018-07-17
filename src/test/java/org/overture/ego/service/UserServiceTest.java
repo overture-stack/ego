@@ -908,7 +908,7 @@ public class UserServiceTest {
     val study003 = aclEntityService.getByName("Study003");
     val study003id = study003.getId().toString();
 
-    val permissions = Arrays.asList(
+    val permissions = asList(
         new Permission(study001id, "READ"),
         new Permission(study002id, "WRITE"),
         new Permission(study003id, "DENY")
@@ -944,7 +944,7 @@ public class UserServiceTest {
     val study003 = aclEntityService.getByName("Study003");
     val study003id = study003.getId().toString();
 
-    val permissions = Arrays.asList(
+    val permissions = asList(
         new Permission(study001id, "READ"),
         new Permission(study002id, "WRITE"),
         new Permission(study003id, "DENY")
@@ -986,7 +986,7 @@ public class UserServiceTest {
     val study003 = aclEntityService.getByName("Study003");
     val study003id = study003.getId().toString();
 
-    val permissions = Arrays.asList(
+    val permissions = asList(
         new Permission(study001id, "READ"),
         new Permission(study002id, "WRITE"),
         new Permission(study003id, "DENY")

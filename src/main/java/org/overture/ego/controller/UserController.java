@@ -60,8 +60,6 @@ public class UserController {
   private GroupService groupService;
   @Autowired
   private ApplicationService applicationService;
-  @Autowired
-  private AclEntityService aclEntityService;
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")

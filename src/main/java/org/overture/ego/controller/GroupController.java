@@ -64,8 +64,6 @@ public class GroupController {
   private ApplicationService applicationService;
   @Autowired
   private UserService userService;
-  @Autowired
-  private AclEntityService aclEntityService;
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")

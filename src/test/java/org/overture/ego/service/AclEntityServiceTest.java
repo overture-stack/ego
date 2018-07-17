@@ -45,7 +45,7 @@ public class AclEntityServiceTest {
   private List<Group> groups;
 
   @Before
-  public void setup() {
+  public void setUp() {
     // We need groups to be owners of aclEntities
     entityGenerator.setupSimpleGroups();
     groups = groupService
