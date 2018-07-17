@@ -1,6 +1,6 @@
 
 CREATE TABLE EGOAPPLICATION (
-  id              UUID PRIMARY KEY,
+  id              BIGSERIAL PRIMARY KEY,
   name            VARCHAR(255),
   clientId        VARCHAR(255) UNIQUE,
   clientSecret    VARCHAR(255),
@@ -25,7 +25,7 @@ CREATE TABLE EGOUSER (
 
 
 CREATE TABLE EGOGROUP (
-  id                  UUID PRIMARY KEY,
+  id                  BIGSERIAL PRIMARY KEY,
   name                VARCHAR(255) UNIQUE,
   description         VARCHAR(255),
   status              VARCHAR(64) CHECK (status IN ('Pending', 'Approved', 'Rejected', 'Disabled'))
@@ -33,8 +33,8 @@ CREATE TABLE EGOGROUP (
 
 
 CREATE TABLE GROUPAPPLICATION (
-  grpId                UUID,
-  appId                UUID,
+  grpId                BIGSERIAL,
+  appId                BIGSERIAL,
   PRIMARY KEY (grpId,appId),
   FOREIGN KEY (grpId) REFERENCES EGOGROUP(id),
   FOREIGN KEY (appId) REFERENCES EGOAPPLICATION(id)
@@ -43,7 +43,7 @@ CREATE TABLE GROUPAPPLICATION (
 
 CREATE TABLE USERGROUP (
   userId                UUID,
-  grpId                 UUID,
+  grpId                 BIGSERIAL,
   PRIMARY KEY (grpId,userId),
   FOREIGN KEY (grpId)   REFERENCES EGOGROUP(id),
   FOREIGN KEY (userId)  REFERENCES EGOUSER(id)
@@ -52,7 +52,7 @@ CREATE TABLE USERGROUP (
 
 CREATE TABLE USERAPPLICATION (
   userId                UUID,
-  appId                 UUID,
+  appId                 BIGSERIAL,
   PRIMARY KEY (userId,appId),
   FOREIGN KEY (appId)   REFERENCES EGOAPPLICATION(id),
   FOREIGN KEY (userId)  REFERENCES EGOUSER(id)
