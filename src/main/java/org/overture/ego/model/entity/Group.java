@@ -110,17 +110,17 @@ public class Group implements AclOwnerEntity {
   }
 
   public void removeApplication(@NonNull UUID appId){
-    this.wholeApplications.removeIf(a -> a.id == appId);
+    this.wholeApplications.removeIf(a -> a.id.equals(appId));
   }
 
   public void removeUser(@NonNull UUID userId){
     if(this.wholeUsers == null) return;
-    this.wholeUsers.removeIf(u -> u.id == userId);
+    this.wholeUsers.removeIf(u -> u.id.equals(userId));
   }
 
   public void removePermission(@NonNull UUID permissionId) {
     if (this.groupPermissions == null) return;
-    this.groupPermissions.removeIf(p -> p.id == permissionId);
+    this.groupPermissions.removeIf(p -> p.id.equals(permissionId));
   }
 
   protected void initPermissions() {

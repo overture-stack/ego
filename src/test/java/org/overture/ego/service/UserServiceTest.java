@@ -271,7 +271,7 @@ public class UserServiceTest {
   public void testFindGroupUsersNoQueryFiltersEmptyGroupString() {
     entityGenerator.setupSimpleGroups();
     entityGenerator.setupSimpleUsers();
-    assertThatExceptionOfType(NumberFormatException.class)
+    assertThatExceptionOfType(IllegalArgumentException.class)
       .isThrownBy(() -> userService.findGroupUsers("",
         Collections.emptyList(),
         new PageableResolver().getPageable())
@@ -394,7 +394,7 @@ public class UserServiceTest {
   public void testFindAppUsersNoQueryNoFiltersEmptyUserString() {
     entityGenerator.setupSimpleUsers();
     entityGenerator.setupSimpleApplications();
-    assertThatExceptionOfType(NumberFormatException.class)
+    assertThatExceptionOfType(IllegalArgumentException.class)
       .isThrownBy(() -> userService
         .findAppUsers(
           "",
@@ -615,7 +615,7 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
 
-    assertThatExceptionOfType(NumberFormatException.class)
+    assertThatExceptionOfType(IllegalArgumentException.class)
       .isThrownBy(() -> userService.addUserToGroups(userId, singletonList("")));
   }
 
@@ -677,7 +677,7 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
 
-    assertThatExceptionOfType(NumberFormatException.class)
+    assertThatExceptionOfType(IllegalArgumentException.class)
       .isThrownBy(() -> userService.addUserToApps(userId, singletonList("")));
   }
 
@@ -800,7 +800,7 @@ public class UserServiceTest {
     userService.addUserToGroups(userId, singletonList(groupId));
     assertThat(user.getWholeGroups().size()).isEqualTo(1);
 
-    assertThatExceptionOfType(NumberFormatException.class)
+    assertThatExceptionOfType(IllegalArgumentException.class)
       .isThrownBy(() -> userService
         .deleteUserFromGroups(userId, singletonList("")));
   }
@@ -883,7 +883,7 @@ public class UserServiceTest {
 
     userService.addUserToApps(userId, asList(appId, appTwoId));
 
-    assertThatExceptionOfType(NumberFormatException.class)
+    assertThatExceptionOfType(IllegalArgumentException.class)
       .isThrownBy(() -> userService
         .deleteUserFromApps(userId, singletonList("")));
   }

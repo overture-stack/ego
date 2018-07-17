@@ -210,17 +210,17 @@ public class User implements AclOwnerEntity {
 
   public void removeApplication(@NonNull UUID appId) {
     if (this.wholeApplications == null) return;
-    this.wholeApplications.removeIf(a -> a.id == appId);
+    this.wholeApplications.removeIf(a -> a.id.equals(appId));
   }
 
   public void removeGroup(@NonNull UUID grpId) {
     if (this.wholeGroups == null) return;
-    this.wholeGroups.removeIf(g -> g.id == grpId);
+    this.wholeGroups.removeIf(g -> g.id.equals(grpId));
   }
 
   public void removePermission(@NonNull UUID permissionId) {
     if (this.userPermissions == null) return;
-    this.userPermissions.removeIf(p -> p.id == permissionId);
+    this.userPermissions.removeIf(p -> p.id.equals(permissionId));
   }
 
   protected void initApplications() {

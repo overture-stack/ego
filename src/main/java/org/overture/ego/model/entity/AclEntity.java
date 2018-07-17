@@ -40,7 +40,7 @@ public class AclEntity {
   UUID owner;
 
   @NonNull
-  @Column(nullable = false, name = Fields.NAME)
+  @Column(nullable = false, name = Fields.NAME, unique = true)
   String name;
 
   @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
