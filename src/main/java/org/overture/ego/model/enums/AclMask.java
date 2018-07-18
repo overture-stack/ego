@@ -18,6 +18,7 @@ package org.overture.ego.model.enums;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 
 import java.util.Arrays;
 
@@ -36,7 +37,7 @@ public enum AclMask {
   }
 
   public static AclMask fromValue(String value) {
-    for (AclMask aclMask : values()) {
+    for (val aclMask : values()) {
       if (aclMask.value.equalsIgnoreCase(value)) {
         return aclMask;
       }
