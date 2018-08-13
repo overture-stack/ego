@@ -23,6 +23,7 @@ import lombok.NonNull;
 import org.overture.ego.token.TokenClaims;
 import org.overture.ego.view.Views;
 import org.springframework.util.StringUtils;
+
 import java.util.Arrays;
 import java.util.List;
 

@@ -46,6 +46,7 @@ Here are some of the features of EGO:
 * Single Sign on for microservices
 * User-authentication through Federated Identities such as Google, Facebook, Github (Coming Soon), ORCID (Coming Soon)
 * Uses JWT(Json Web Tokens) for Authorization Tokens
+* Provides ability to create permission lists for users and/or groups on user-defined permission entities
 * Built using well established Frameworks - Spring Boot, Spring Security
 
 ## Tech Stack
@@ -142,7 +143,9 @@ An example ego JWT is mentioned below:
             "createdAt": "2017-11-23 10:24:41",
             "lastLogin": "2017-11-23 11:23:58",
             "preferredLanguage": null,
-            "roles": ["ADMIN"]
+            "roles": ["ADMIN"],
+            "groups": ["GroupOne", "GroupTwo"],
+            "permissions": ["Study001.WRITE", "Study002.DENY"]
         }
     }
 }
@@ -153,4 +156,5 @@ An example ego JWT is mentioned below:
 #### Notes
 * "aud" field can contain one or more client IDs. This field indicates the client services that are authorized to use this JWT.
 * "groups" will differ based on the domain of client services - each domain of service should get list of groups from that domain's ego service.
+* "permissions" will differ based on domain of client service - each domain of service should get list of permissions from that domain's ego service.
 * Unit Tests using testcontainers will also run flyway migrations to ensure database has the correct structure

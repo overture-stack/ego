@@ -28,9 +28,9 @@ import org.overture.ego.token.app.AppJWTAccessToken;
 import org.overture.ego.token.app.AppTokenClaims;
 import org.overture.ego.token.app.AppTokenContext;
 import org.overture.ego.token.signer.TokenSigner;
+import org.overture.ego.token.user.UserJWTAccessToken;
 import org.overture.ego.token.user.UserTokenClaims;
 import org.overture.ego.token.user.UserTokenContext;
-import org.overture.ego.token.user.UserJWTAccessToken;
 import org.overture.ego.utils.TypeUtils;
 import org.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +69,7 @@ public class TokenService {
     // If the demo flag is set, all tokens will be generated as the Demo User,
     // otherwise, get the user associated with their idToken
     User user;
+
     if (demo) {
       user = userService.getOrCreateDemoUser();
     } else {

@@ -18,7 +18,9 @@ package org.overture.ego.token.user;
 
 
 import com.fasterxml.jackson.annotation.JsonView;
-import lombok.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.overture.ego.token.TokenClaims;
 import org.overture.ego.view.Views;
 import org.springframework.util.StringUtils;

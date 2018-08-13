@@ -23,10 +23,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
+import java.util.UUID;
 
 
 public interface GroupRepository extends
-        PagingAndSortingRepository<Group, Integer>, JpaSpecificationExecutor {
+        PagingAndSortingRepository<Group, UUID>, JpaSpecificationExecutor {
 
   Group findOneByNameIgnoreCase(String name);
   Page<Group> findAllByStatusIgnoreCase(String status, Pageable pageable);

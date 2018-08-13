@@ -29,6 +29,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;

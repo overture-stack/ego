@@ -39,13 +39,14 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 
 import static java.util.UUID.fromString;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 
 @Service
-public class ApplicationService extends BaseService<Application, Integer> implements ClientDetailsService  {
+public class ApplicationService extends BaseService<Application, UUID> implements ClientDetailsService  {
 
   /*
     Dependencies
@@ -61,18 +62,18 @@ public class ApplicationService extends BaseService<Application, Integer> implem
   }
 
   public Application get(@NonNull String applicationId) {
-    return getById(applicationRepository,Integer.parseInt(applicationId));
+    return getById(applicationRepository, fromString(applicationId));
   }
 
   public Application update(@NonNull Application updatedApplicationInfo) {
-    Application app = getById(applicationRepository,updatedApplicationInfo.getId());
+    Application app = getById(applicationRepository, updatedApplicationInfo.getId());
     app.update(updatedApplicationInfo);
     applicationRepository.save(app);
     return updatedApplicationInfo;
   }
 
   public void delete(@NonNull String applicationId) {
-    applicationRepository.deleteById(Integer.parseInt(applicationId));
+    applicationRepository.deleteById(fromString(applicationId));
   }
 
   public Page<Application> listApps(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
@@ -105,7 +106,7 @@ public class ApplicationService extends BaseService<Application, Integer> implem
   public Page<Application> findGroupApplications(@NonNull String groupId, @NonNull List<SearchFilter> filters,
                                                  @NonNull Pageable pageable){
     return applicationRepository.findAll(
-            where(ApplicationSpecification.inGroup(Integer.parseInt(groupId)))
+            where(ApplicationSpecification.inGroup(fromString(groupId)))
             .and(ApplicationSpecification.filterBy(filters)),
             pageable);
   }
@@ -114,7 +115,7 @@ public class ApplicationService extends BaseService<Application, Integer> implem
                                                  @NonNull List<SearchFilter> filters,
                                                  @NonNull Pageable pageable){
     return applicationRepository.findAll(
-            where(ApplicationSpecification.inGroup(Integer.parseInt(groupId)))
+            where(ApplicationSpecification.inGroup(fromString(groupId)))
                     .and(ApplicationSpecification.containsText(query))
                     .and(ApplicationSpecification.filterBy(filters)),
             pageable);

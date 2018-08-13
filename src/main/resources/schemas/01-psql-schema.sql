@@ -1,4 +1,3 @@
-
 CREATE TABLE EGOAPPLICATION (
   id              BIGSERIAL PRIMARY KEY,
   name            VARCHAR(255),
@@ -59,3 +58,32 @@ CREATE TABLE USERAPPLICATION (
 );
 
 
+CREATE TYPE ACLMASK AS ENUM ('READ', 'WRITE', 'DENY');
+
+
+CREATE TABLE ACLENTITY (
+  id                    BIGSERIAL PRIMARY KEY,
+  owner                 BIGSERIAL,
+  name                  varchar(255) UNIQUE NOT NULL,
+  FOREIGN KEY (owner)   REFERENCES EGOGROUP(id)
+);
+
+
+CREATE TABLE ACLUSERPERMISSION (
+  id                      BIGSERIAL PRIMARY KEY,
+  entity                  BIGSERIAL,
+  sid                     UUID,
+  mask                    ACLMASK NOT NULL,
+  FOREIGN KEY (entity)    REFERENCES ACLENTITY(id),
+  FOREIGN KEY (sid)       REFERENCES EGOUSER(id)
+);
+
+
+CREATE TABLE ACLGROUPPERMISSION (
+  id                      BIGSERIAL PRIMARY KEY,
+  entity                  BIGSERIAL,
+  sid                     BIGSERIAL,
+  mask                    ACLMASK NOT NULL,
+  FOREIGN KEY (entity)    REFERENCES ACLENTITY(id),
+  FOREIGN KEY (sid)       REFERENCES EGOGROUP(id)
+);

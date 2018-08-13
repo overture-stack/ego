@@ -19,9 +19,12 @@ package org.overture.ego.service;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.model.entity.AclUserPermission;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.enums.UserRole;
 import org.overture.ego.model.enums.UserStatus;
+import org.overture.ego.model.params.Permission;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.repository.UserRepository;
 import org.overture.ego.repository.queryspecification.UserSpecification;
@@ -29,6 +32,7 @@ import org.overture.ego.token.IDToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,6 +77,8 @@ public class UserService extends BaseService<User, UUID> {
   private GroupService groupService;
   @Autowired
   private ApplicationService applicationService;
+  @Autowired
+  private AclEntityService aclEntityService;
   @Autowired
   private SimpleDateFormat formatter;
 
@@ -142,6 +148,14 @@ public class UserService extends BaseService<User, UUID> {
     userRepository.save(user);
   }
 
+  public void addUserPermissions(@NonNull String userId, @NonNull List<Permission> permissions) {
+    val user = getById(userRepository, fromString(userId));
+    permissions.forEach(permission -> {
+      user.addNewPermission(aclEntityService.get(permission.getAclEntityId()), AclMask.fromValue(permission.getMask()));
+    });
+    userRepository.save(user);
+  }
+
   public User get(@NonNull String userId) {
     return getById(userRepository, fromString(userId));
   }
@@ -177,7 +191,7 @@ public class UserService extends BaseService<User, UUID> {
   public void deleteUserFromGroups(@NonNull String userId, @NonNull List<String> groupIDs) {
     val user = getById(userRepository, fromString(userId));
     groupIDs.forEach(grpId -> {
-      user.removeGroup(Integer.parseInt(grpId));
+      user.removeGroup(fromString(grpId));
     });
     userRepository.save(user);
   }
@@ -185,7 +199,15 @@ public class UserService extends BaseService<User, UUID> {
   public void deleteUserFromApps(@NonNull String userId, @NonNull List<String> appIDs) {
     val user = getById(userRepository, fromString(userId));
     appIDs.forEach(appId -> {
-      user.removeApplication(Integer.parseInt(appId));
+      user.removeApplication(fromString(appId));
+    });
+    userRepository.save(user);
+  }
+
+  public void deleteUserPermissions(@NonNull String userId, @NonNull List<String> permissionsIds) {
+    val user = getById(userRepository, fromString(userId));
+    permissionsIds.forEach(permissionsId -> {
+      user.removePermission(fromString(permissionsId));
     });
     userRepository.save(user);
   }
@@ -193,7 +215,7 @@ public class UserService extends BaseService<User, UUID> {
   public Page<User> findGroupUsers(@NonNull String groupId, @NonNull List<SearchFilter> filters,
                                    @NonNull Pageable pageable){
     return userRepository.findAll(
-            where(UserSpecification.inGroup(Integer.parseInt(groupId)))
+            where(UserSpecification.inGroup(fromString(groupId)))
             .and(UserSpecification.filterBy(filters)),
             pageable);
   }
@@ -201,7 +223,7 @@ public class UserService extends BaseService<User, UUID> {
   public Page<User> findGroupUsers(@NonNull String groupId, @NonNull String query,
                                    @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
     return userRepository.findAll(
-            where(UserSpecification.inGroup(Integer.parseInt(groupId)))
+            where(UserSpecification.inGroup(fromString(groupId)))
                     .and(UserSpecification.containsText(query))
                     .and(UserSpecification.filterBy(filters)),
             pageable);
@@ -210,7 +232,7 @@ public class UserService extends BaseService<User, UUID> {
   public Page<User> findAppUsers(@NonNull String appId, @NonNull List<SearchFilter> filters,
                                  @NonNull Pageable pageable){
     return userRepository.findAll(
-            where(UserSpecification.ofApplication(Integer.parseInt(appId)))
+            where(UserSpecification.ofApplication(fromString(appId)))
             .and(UserSpecification.filterBy(filters)),
             pageable);
   }
@@ -219,10 +241,14 @@ public class UserService extends BaseService<User, UUID> {
                                  @NonNull List<SearchFilter> filters,
                                  @NonNull Pageable pageable){
     return userRepository.findAll(
-            where(UserSpecification.ofApplication(Integer.parseInt(appId)))
+            where(UserSpecification.ofApplication(fromString(appId)))
                     .and(UserSpecification.containsText(query))
                     .and(UserSpecification.filterBy(filters)),
             pageable);
   }
 
+  public Page<AclUserPermission> getUserPermissions(@NonNull String userId, @NonNull Pageable pageable) {
+    val userPermissions = getById(userRepository, fromString(userId)).getUserPermissions();
+    return new PageImpl<>(userPermissions, pageable, userPermissions.size());
+  }
 }

@@ -17,10 +17,10 @@
 package org.overture.ego.repository.queryspecification;
 
 import lombok.val;
-import org.overture.ego.utils.QueryUtils;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.utils.QueryUtils;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.annotation.Nonnull;
@@ -36,7 +36,7 @@ public class ApplicationSpecification extends SpecificationBase<Application> {
     );
   }
 
-  public static Specification<Application> inGroup(@Nonnull Integer groupId) {
+  public static Specification<Application> inGroup(@Nonnull UUID groupId) {
     return (root, query, builder) ->
     {
       Join<Application, Group> groupJoin = root.join("wholeGroups");

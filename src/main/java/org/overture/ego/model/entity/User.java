@@ -24,26 +24,30 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.enums.Fields;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.overture.ego.utils.AclPermissionUtils.extractPermissionStrings;
 
 @Entity
 @Table(name = "egouser")
 @Data
-@ToString(exclude={"wholeGroups","wholeApplications"})
+@ToString(exclude = {"wholeGroups", "wholeApplications", "userPermissions"})
 @JsonPropertyOrder({"id", "name", "email", "role", "status", "wholeGroups",
-    "wholeApplications", "firstName", "lastName", "createdAt", "lastLogin", "preferredLanguage"})
+    "wholeApplications", "userPermissions", "firstName", "lastName", "createdAt", "lastLogin", "preferredLanguage"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@EqualsAndHashCode(of={"id"})
+@EqualsAndHashCode(of = {"id"})
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
-public class User {
+public class User implements AclOwnerEntity {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
@@ -53,12 +57,12 @@ public class User {
   @GeneratedValue(generator = "user_uuid")
   UUID id;
 
-  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @NonNull
   @Column(nullable = false, name = Fields.NAME, unique = true)
   String name;
 
-  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @NonNull
   @Column(nullable = false, name = Fields.EMAIL, unique = true)
   String email;
@@ -67,60 +71,109 @@ public class User {
   @Column(nullable = false, name = Fields.ROLE)
   String role;
 
-  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.STATUS)
   String status;
 
-  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.FIRSTNAME)
   String firstName;
 
-  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.LASTNAME)
   String lastName;
 
-  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.CREATEDAT)
   String createdAt;
 
-  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.LASTLOGIN)
   String lastLogin;
 
-  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.PREFERREDLANGUAGE)
   String preferredLanguage;
 
   @ManyToMany(targetEntity = Group.class, cascade = {CascadeType.ALL})
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(name = "usergroup", joinColumns = { @JoinColumn(name = Fields.USERID_JOIN) },
-          inverseJoinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) })
-  @JsonIgnore protected Set<Group> wholeGroups;
+  @JoinTable(name = "usergroup", joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)})
+  @JsonIgnore
+  protected Set<Group> wholeGroups;
 
   @ManyToMany(targetEntity = Application.class, cascade = {CascadeType.ALL})
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(name = "userapplication", joinColumns = { @JoinColumn(name = Fields.USERID_JOIN) },
-          inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
-  @JsonIgnore protected Set<Application> wholeApplications;
+  @JoinTable(name = "userapplication", joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
+  @JsonIgnore
+  protected Set<Application> wholeApplications;
 
+  @OneToMany(cascade = CascadeType.ALL)
+  @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinColumn(name = Fields.SID)
+  @JsonIgnore
+  protected List<AclUserPermission> userPermissions;
+
+  // Creates groups in JWTAccessToken::context::user
   @JsonView(Views.JWTAccessToken.class)
-  public List<String> getGroups(){
-    if(this.wholeGroups == null) {
+  public List<String> getGroups() {
+    if (this.wholeGroups == null) {
       return new ArrayList<String>();
     }
     return this.wholeGroups.stream().map(g -> g.getName()).collect(Collectors.toList());
   }
 
+  // Creates permissions in JWTAccessToken::context::user
+  @JsonView(Views.JWTAccessToken.class)
+  public List<String> getPermissions() {
+
+    // Get user's individual permission (stream)
+    val userPermissions = Optional.ofNullable(this.getUserPermissions())
+        .orElse(new ArrayList<>())
+        .stream();
+
+    // Get permissions from the user's groups (stream)
+    val userGroupsPermissions = Optional.ofNullable(this.getWholeGroups())
+        .orElse(new HashSet<>())
+        .stream()
+        .map(Group::getGroupPermissions)
+        .flatMap(List::stream);
+
+    // Combine individual user permissions and the user's
+    // groups (if they have any) permissions
+    val combinedPermissions = Stream.concat(userPermissions, userGroupsPermissions)
+        .collect(Collectors.groupingBy(AclPermission::getEntity));
+
+    // If we have no permissions at all return an empty list
+    if (combinedPermissions.values().size() == 0) {
+      return new ArrayList<>();
+    }
+
+    // If we do have permissions ... sort the grouped permissions (by AclEntity)
+    // on AclMask, extracting the first value of the sorted list into the final
+    // permissions list
+    List<AclPermission> finalPermissionsList = new ArrayList<>();
+
+    combinedPermissions.forEach((entity, permissions) -> {
+      permissions.sort(Comparator.comparing(AclPermission::getMask).reversed());
+      finalPermissionsList.add(permissions.get(0));
+    });
+
+    // Convert final permissions list for JSON output
+    return extractPermissionStrings(finalPermissionsList);
+  }
+
   @JsonIgnore
-  public List<String> getApplications(){
-    if(this.wholeApplications == null){
+  public List<String> getApplications() {
+    if (this.wholeApplications == null) {
       return new ArrayList<String>();
     }
     return this.wholeApplications.stream().map(a -> a.getName()).collect(Collectors.toList());
   }
 
   @JsonView(Views.JWTAccessToken.class)
-  public List<String> getRoles(){
+  public List<String> getRoles() {
     return Arrays.asList(this.getRole());
   }
 
@@ -130,40 +183,61 @@ public class User {
      as project progresses.
      Currently, using the only role by extracting first role in the array
    */
-  public void setRoles(@NonNull List<String> roles){
-    if(roles.size() > 0)
+  public void setRoles(@NonNull List<String> roles) {
+    if (roles.size() > 0)
       this.role = roles.get(0);
   }
 
-  public void addNewApplication(@NonNull Application app){
+  public void addNewApplication(@NonNull Application app) {
     initApplications();
     this.wholeApplications.add(app);
   }
 
-  public void addNewGroup(@NonNull Group g){
+  public void addNewGroup(@NonNull Group g) {
     initGroups();
     this.wholeGroups.add(g);
   }
 
-  public void removeApplication(@NonNull Integer appId){
-    if(this.wholeApplications == null) return;
-    this.wholeApplications.removeIf(a -> a.id == appId);
+  public void addNewPermission(@NonNull AclEntity aclEntity, @NonNull AclMask mask) {
+    initPermissions();
+    val permission = AclUserPermission.builder()
+        .entity(aclEntity)
+        .mask(mask)
+        .sid(this)
+        .build();
+    this.userPermissions.add(permission);
   }
 
-  public void removeGroup(@NonNull Integer grpId){
-    if(this.wholeGroups == null) return;
-    this.wholeGroups.removeIf(g -> g.id == grpId);
+  public void removeApplication(@NonNull UUID appId) {
+    if (this.wholeApplications == null) return;
+    this.wholeApplications.removeIf(a -> a.id.equals(appId));
   }
 
-  protected void initApplications(){
-    if(this.wholeApplications == null){
+  public void removeGroup(@NonNull UUID grpId) {
+    if (this.wholeGroups == null) return;
+    this.wholeGroups.removeIf(g -> g.id.equals(grpId));
+  }
+
+  public void removePermission(@NonNull UUID permissionId) {
+    if (this.userPermissions == null) return;
+    this.userPermissions.removeIf(p -> p.id.equals(permissionId));
+  }
+
+  protected void initApplications() {
+    if (this.wholeApplications == null) {
       this.wholeApplications = new HashSet<Application>();
     }
   }
 
-  protected void initGroups(){
-    if(this.wholeGroups == null) {
+  protected void initGroups() {
+    if (this.wholeGroups == null) {
       this.wholeGroups = new HashSet<Group>();
+    }
+  }
+
+  protected void initPermissions() {
+    if (this.userPermissions == null) {
+      this.userPermissions = new ArrayList<AclUserPermission>();
     }
   }
 
@@ -177,16 +251,21 @@ public class User {
 
     // Don't merge the ID, CreatedAt, or LastLogin date - those are procedural.
 
-    // Don't merge wholeGroups or wholeApplications if not present in other
-    //  This is because the PUT action for update usually does not include these fields
-    //  as a consequence of the GET option to retrieve a user not including these fields
-    // To clear wholeApplications and wholeGroups, use the dedicated services for deleting associations or pass in an empty Set.
+    // Don't merge wholeGroups, wholeApplications or userPermissions if not present in other
+    // This is because the PUT action for update usually does not include these fields
+    // as a consequence of the GET option to retrieve a user not including these fields
+    // To clear wholeApplications, wholeGroups or userPermissions, use the dedicated services
+    // for deleting associations or pass in an empty Set.
     if (other.wholeApplications != null) {
       this.wholeApplications = other.wholeApplications;
     }
 
     if (other.wholeGroups != null) {
       this.wholeGroups = other.wholeGroups;
+    }
+
+    if (other.userPermissions != null) {
+      this.userPermissions = other.userPermissions;
     }
   }
 

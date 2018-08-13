@@ -14,7 +14,7 @@ public class FlywayInit {
     log.info("init test containers with flyway ******************************");
 
     Flyway flyway = new Flyway();
-    flyway.setLocations("classpath:flyway/sql");
+    flyway.setLocations("classpath:flyway/sql", "classpath:db/migration");
     flyway.setDataSource(new SingleConnectionDataSource(connection, true));
     flyway.migrate();
   }

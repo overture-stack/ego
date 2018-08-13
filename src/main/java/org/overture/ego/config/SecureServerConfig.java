@@ -17,7 +17,9 @@
 package org.overture.ego.config;
 
 import lombok.SneakyThrows;
-import org.overture.ego.security.*;
+import org.overture.ego.security.AuthorizationManager;
+import org.overture.ego.security.JWTAuthorizationFilter;
+import org.overture.ego.security.SecureAuthorizationManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

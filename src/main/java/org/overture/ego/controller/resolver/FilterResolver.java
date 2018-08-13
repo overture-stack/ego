@@ -18,7 +18,6 @@ package org.overture.ego.controller.resolver;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-
 import lombok.val;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
@@ -29,7 +28,6 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.util.ArrayList;
-
 import java.util.List;
 
 @Slf4j

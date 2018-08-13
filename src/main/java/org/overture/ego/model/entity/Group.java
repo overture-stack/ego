@@ -21,32 +21,35 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.enums.Fields;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Data
-@ToString(exclude={"wholeUsers","wholeApplications"})
+@ToString(exclude={"wholeUsers","wholeApplications", "groupPermissions"})
 @Table(name = "egogroup")
 @Entity
-@JsonPropertyOrder({"id", "name", "description", "status","wholeApplications"})
+@JsonPropertyOrder({"id", "name", "description", "status","wholeApplications", "groupPermissions"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @EqualsAndHashCode(of={"id"})
 @NoArgsConstructor
 @RequiredArgsConstructor
 @JsonView(Views.REST.class)
-public class Group {
+public class Group implements AclOwnerEntity {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  int id;
+  @GenericGenerator(
+      name = "group_uuid",
+      strategy = "org.hibernate.id.UUIDGenerator")
+  @GeneratedValue(generator = "group_uuid")
+  UUID id;
 
   @Column(nullable = false, name = Fields.NAME, updatable = false)
   @NonNull
@@ -62,12 +65,25 @@ public class Group {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "groupapplication", joinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) },
           inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
-  @JsonIgnore Set<Application> wholeApplications;
+  @JsonIgnore
+  Set<Application> wholeApplications;
 
   @ManyToMany(mappedBy = "wholeGroups", cascade = CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
   Set<User> wholeUsers;
+
+  @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+  @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinColumn(name=Fields.OWNER)
+  @JsonIgnore
+  protected Set<AclEntity> groupOwnedAclEntities;
+
+  @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+  @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinColumn(name=Fields.SID)
+  @JsonIgnore
+  protected List<AclGroupPermission> groupPermissions;
 
   public void addApplication(@NonNull Application app){
     initApplications();
@@ -79,13 +95,34 @@ public class Group {
     this.wholeUsers.add(u);
   }
 
-  public void removeApplication(@NonNull Integer appId){
-    this.wholeApplications.removeIf(a -> a.id == appId);
+  public void addNewPermission(@NonNull AclEntity aclEntity, @NonNull AclMask mask) {
+    initPermissions();
+    val permission = AclGroupPermission.builder()
+        .entity(aclEntity)
+        .mask(mask)
+        .sid(this)
+        .build();
+    this.groupPermissions.add(permission);
+  }
+
+  public void removeApplication(@NonNull UUID appId){
+    this.wholeApplications.removeIf(a -> a.id.equals(appId));
   }
 
   public void removeUser(@NonNull UUID userId){
     if(this.wholeUsers == null) return;
-    this.wholeUsers.removeIf(u -> u.id == userId);
+    this.wholeUsers.removeIf(u -> u.id.equals(userId));
+  }
+
+  public void removePermission(@NonNull UUID permissionId) {
+    if (this.groupPermissions == null) return;
+    this.groupPermissions.removeIf(p -> p.id.equals(permissionId));
+  }
+
+  protected void initPermissions() {
+    if (this.groupPermissions == null) {
+      this.groupPermissions = new ArrayList<AclGroupPermission>();
+    }
   }
 
   public void update(Group other) {

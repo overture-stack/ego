@@ -16,7 +16,8 @@
 
 package org.overture.ego.config;
 
-import org.overture.ego.security.*;
+import org.overture.ego.security.AuthorizationManager;
+import org.overture.ego.security.DefaultAuthorizationManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;

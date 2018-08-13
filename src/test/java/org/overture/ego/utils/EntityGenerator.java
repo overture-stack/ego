@@ -1,9 +1,11 @@
 package org.overture.ego.utils;
 
 import lombok.val;
+import org.overture.ego.model.entity.AclEntity;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.service.AclEntityService;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -26,6 +29,9 @@ public class EntityGenerator {
 
   @Autowired
   private GroupService groupService;
+
+  @Autowired
+  private AclEntityService aclEntityService;
 
   public Application createOneApplication(String clientId) {
     return new Application(String.format("Application %s", clientId), clientId, new StringBuilder(clientId).reverse().toString());
@@ -79,6 +85,29 @@ public class EntityGenerator {
   public void setupSimpleGroups() {
     for (Group group : createGroupsfromList(Arrays.asList("Group One", "Group Two", "Group Three"))) {
       groupService.create(group);
+    }
+  }
+
+  public AclEntity createOneAclEntity(Pair<String, UUID> aclEntity) {
+    return AclEntity.builder()
+        .name(aclEntity.getFirst())
+        .owner(aclEntity.getSecond())
+        .build();
+  }
+
+  public List<AclEntity> createAclEntitiesFromList(List<Pair<String, UUID>> aclEntities) {
+    return aclEntities.stream().map(this::createOneAclEntity).collect(Collectors.toList());
+  }
+
+  public void setupSimpleAclEntities(List<Group> threeGroups) {
+
+    for (AclEntity aclEntity : createAclEntitiesFromList(
+        Arrays.asList(
+            Pair.of("Study001", threeGroups.get(0).getId()),
+            Pair.of("Study002", threeGroups.get(1).getId()),
+            Pair.of("Study003", threeGroups.get(2).getId())
+        ))) {
+      aclEntityService.create(aclEntity);
     }
   }
 }
