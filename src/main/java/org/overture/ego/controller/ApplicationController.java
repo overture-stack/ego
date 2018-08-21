@@ -26,6 +26,7 @@ import org.overture.ego.model.dto.PageDTO;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.model.exceptions.PostWithIdentifierException;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.security.AdminScoped;
@@ -98,13 +99,18 @@ public class ApplicationController {
   @RequestMapping(method = RequestMethod.POST, value = "")
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "New Application", response = Application.class)
+          @ApiResponse(code = 200, message = "New Application", response = Application.class),
+          @ApiResponse(code = 400, message = PostWithIdentifierException.reason, response = Application.class)
       }
   )
   public @ResponseBody
   Application create(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @RequestBody(required = true) Application applicationInfo) {
+    if (applicationInfo.getId() != null) {
+      throw new PostWithIdentifierException();
+    }
+
     return applicationService.create(applicationInfo);
   }
 
