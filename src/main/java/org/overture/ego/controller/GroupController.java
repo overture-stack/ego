@@ -27,7 +27,7 @@ import org.overture.ego.model.entity.AclGroupPermission;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.model.exceptions.DontSetIdInCreateRequestException;
+import org.overture.ego.model.exceptions.PostWithIdentifierException;
 import org.overture.ego.model.params.Permission;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
@@ -106,7 +106,7 @@ public class GroupController {
   @ApiResponses(
       value = {
         @ApiResponse(code = 200, message = "New Group", response = Group.class),
-        @ApiResponse(code = 400, message = DontSetIdInCreateRequestException.reason, response = Group.class)
+        @ApiResponse(code = 400, message = PostWithIdentifierException.reason, response = Group.class)
       }
   )
   public @ResponseBody
@@ -114,7 +114,7 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @RequestBody(required = true) Group groupInfo) {
     if (groupInfo.getId() != null) {
-      throw new DontSetIdInCreateRequestException();
+      throw new PostWithIdentifierException();
     }
     return groupService.create(groupInfo);
   }
