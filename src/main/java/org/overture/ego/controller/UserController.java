@@ -24,6 +24,7 @@ import org.overture.ego.model.entity.AclUserPermission;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.model.exceptions.DontSetIdInCreateRequestException;
 import org.overture.ego.model.params.Permission;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
@@ -101,13 +102,17 @@ public class UserController {
   @RequestMapping(method = RequestMethod.POST, value = "")
   @ApiResponses(
           value = {
-                  @ApiResponse(code = 200, message = "Create new user", response = User.class)
+            @ApiResponse(code = 200, message = "Create new user", response = User.class),
+            @ApiResponse(code = 400, message = DontSetIdInCreateRequestException.reason, response = User.class)
           }
   )
   public @ResponseBody
   User create(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @RequestBody(required = true) User userInfo) {
+    if (userInfo.getId() != null) {
+      throw new DontSetIdInCreateRequestException();
+    }
     return userService.create(userInfo);
   }
 

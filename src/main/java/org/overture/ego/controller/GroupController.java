@@ -27,6 +27,7 @@ import org.overture.ego.model.entity.AclGroupPermission;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.model.exceptions.DontSetIdInCreateRequestException;
 import org.overture.ego.model.params.Permission;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
@@ -104,13 +105,17 @@ public class GroupController {
   @RequestMapping(method = RequestMethod.POST, value = "")
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "New Group", response = Group.class)
+        @ApiResponse(code = 200, message = "New Group", response = Group.class),
+        @ApiResponse(code = 400, message = DontSetIdInCreateRequestException.reason, response = Group.class)
       }
   )
   public @ResponseBody
   Group createGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @RequestBody(required = true) Group groupInfo) {
+    if (groupInfo.getId() != null) {
+      throw new DontSetIdInCreateRequestException();
+    }
     return groupService.create(groupInfo);
   }
 
@@ -187,7 +192,7 @@ public class GroupController {
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/permissions")
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "Add group permissions", response = String.class)
+        @ApiResponse(code = 200, message = "Add group permissions", response = String.class)
       }
   )
   public @ResponseBody
