@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.dto.PageDTO;
 import org.overture.ego.model.entity.AclEntity;
+import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.exceptions.PostWithIdentifierException;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
@@ -29,6 +30,21 @@ public class AclEntityController {
 
   @Autowired
   private AclEntityService aclEntityService;
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}")
+  @ApiResponses(
+    value = {
+      @ApiResponse(code = 200, message = "Get resource by id", response = AclEntity.class)
+    }
+  )
+  @JsonView(Views.REST.class)
+  public @ResponseBody
+  AclEntity get(
+    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+    @PathVariable(value = "id", required = true) String applicationId) {
+    return aclEntityService.get(applicationId);
+  }
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
