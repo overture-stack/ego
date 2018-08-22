@@ -24,8 +24,8 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/acl-entity")
-public class AclEntityController {
+@RequestMapping("/resources")
+public class ResourceController {
 
   @Autowired
   private AclEntityService aclEntityService;
