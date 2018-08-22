@@ -25,8 +25,8 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/acl-entity")
-public class AclEntityController {
+@RequestMapping("/resources")
+public class ResourceController {
 
   @Autowired
   private AclEntityService aclEntityService;
@@ -70,7 +70,7 @@ public class AclEntityController {
   )
   @JsonView(Views.REST.class)
   public @ResponseBody
-  PageDTO<AclEntity> getAclEntityList(
+  PageDTO<AclEntity> getResources(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
