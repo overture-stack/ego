@@ -8,7 +8,6 @@ import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.dto.PageDTO;
 import org.overture.ego.model.entity.AclEntity;
-import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.exceptions.PostWithIdentifierException;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
