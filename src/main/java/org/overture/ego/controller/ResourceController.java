@@ -31,6 +31,21 @@ public class ResourceController {
   private AclEntityService aclEntityService;
 
   @AdminScoped
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}")
+  @ApiResponses(
+    value = {
+      @ApiResponse(code = 200, message = "Get resource by id", response = AclEntity.class)
+    }
+  )
+  @JsonView(Views.REST.class)
+  public @ResponseBody
+  AclEntity get(
+    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+    @PathVariable(value = "id", required = true) String applicationId) {
+    return aclEntityService.get(applicationId);
+  }
+
+  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiImplicitParams({
       @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
