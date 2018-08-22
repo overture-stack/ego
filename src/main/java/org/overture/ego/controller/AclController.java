@@ -24,8 +24,8 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/resources")
-public class ResourceController {
+@RequestMapping("/acls")
+public class AclController {
 
   @Autowired
   private AclEntityService aclEntityService;
@@ -34,12 +34,12 @@ public class ResourceController {
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
   @ApiResponses(
     value = {
-      @ApiResponse(code = 200, message = "Get resource by id", response = AclEntity.class)
+      @ApiResponse(code = 200, message = "Get acl by id", response = AclEntity.class)
     }
   )
   @JsonView(Views.REST.class)
   public @ResponseBody
-  AclEntity get(
+  AclEntity getAcl(
     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
     @PathVariable(value = "id", required = true) String applicationId) {
     return aclEntityService.get(applicationId);
