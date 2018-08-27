@@ -25,7 +25,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
-public class Policy {
+public class AclEntity {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
@@ -47,15 +47,15 @@ public class Policy {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name=Fields.ENTITY)
   @JsonIgnore
-  protected Set<GroupPermission> groupPermissions;
+  protected Set<AclGroupPermission> groupPermissions;
 
   @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name=Fields.ENTITY)
   @JsonIgnore
-  protected Set<UserPermission> userPermissions;
+  protected Set<AclUserPermission> userPermissions;
 
-  public void update(Policy other) {
+  public void update(AclEntity other) {
     this.owner = other.owner;
     this.name = other.name;
 

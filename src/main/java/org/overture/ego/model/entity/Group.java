@@ -24,7 +24,7 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.enums.Fields;
 import org.overture.ego.view.Views;
 
@@ -41,7 +41,7 @@ import java.util.*;
 @NoArgsConstructor
 @RequiredArgsConstructor
 @JsonView(Views.REST.class)
-public class Group implements PolicyOwner {
+public class Group implements AclOwnerEntity {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
@@ -77,13 +77,13 @@ public class Group implements PolicyOwner {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name=Fields.OWNER)
   @JsonIgnore
-  protected Set<Policy> groupOwnedAclEntities;
+  protected Set<AclEntity> groupOwnedAclEntities;
 
   @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name=Fields.SID)
   @JsonIgnore
-  protected List<GroupPermission> groupPermissions;
+  protected List<AclGroupPermission> groupPermissions;
 
   public void addApplication(@NonNull Application app){
     initApplications();
@@ -95,10 +95,10 @@ public class Group implements PolicyOwner {
     this.wholeUsers.add(u);
   }
 
-  public void addNewPermission(@NonNull Policy policy, @NonNull PolicyMask mask) {
+  public void addNewPermission(@NonNull AclEntity aclEntity, @NonNull AclMask mask) {
     initPermissions();
-    val permission = GroupPermission.builder()
-        .entity(policy)
+    val permission = AclGroupPermission.builder()
+        .entity(aclEntity)
         .mask(mask)
         .sid(this)
         .build();
@@ -121,7 +121,7 @@ public class Group implements PolicyOwner {
 
   protected void initPermissions() {
     if (this.groupPermissions == null) {
-      this.groupPermissions = new ArrayList<GroupPermission>();
+      this.groupPermissions = new ArrayList<AclGroupPermission>();
     }
   }
 

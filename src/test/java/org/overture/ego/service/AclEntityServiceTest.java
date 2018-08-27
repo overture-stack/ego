@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Transactional
-public class PolicyServiceTest {
+public class AclEntityServiceTest {
 
   @Autowired
   private AclEntityService aclEntityService;
@@ -56,9 +56,9 @@ public class PolicyServiceTest {
   // Create
   @Test
   public void testCreate() {
-    val policy = aclEntityService
+    val aclEntity = aclEntityService
         .create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
-    assertThat(policy.getName()).isEqualTo("Study001");
+    assertThat(aclEntity.getName()).isEqualTo("Study001");
   }
 
   @Test
@@ -75,9 +75,9 @@ public class PolicyServiceTest {
   // Read
   @Test
   public void testGet() {
-    val policy = aclEntityService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
-    val savedPolicy = aclEntityService.get(policy.getId().toString());
-    assertThat(savedPolicy.getName()).isEqualTo("Study001");
+    val aclEntity = aclEntityService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
+    val savedEntity = aclEntityService.get(aclEntity.getId().toString());
+    assertThat(savedEntity.getName()).isEqualTo("Study001");
   }
 
   @Test
@@ -144,9 +144,9 @@ public class PolicyServiceTest {
   // Update
   @Test
   public void testUpdate() {
-    val policy = aclEntityService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
-    policy.setName("StudyOne");
-    val updated = aclEntityService.update(policy);
+    val aclEntity = aclEntityService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
+    aclEntity.setName("StudyOne");
+    val updated = aclEntityService.update(aclEntity);
     assertThat(updated.getName()).isEqualTo("StudyOne");
   }
 
@@ -155,13 +155,13 @@ public class PolicyServiceTest {
   public void testDelete() {
     entityGenerator.setupSimpleAclEntities(groups);
 
-    val policy = aclEntityService.getByName("Study001");
+    val aclEntity = aclEntityService.getByName("Study001");
 
-    aclEntityService.delete(policy.getId().toString());
+    aclEntityService.delete(aclEntity.getId().toString());
 
     val remainingAclEntities = aclEntityService.listAclEntities(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(remainingAclEntities.getTotalElements()).isEqualTo(2L);
-    assertThat(remainingAclEntities.getContent()).doesNotContain(policy);
+    assertThat(remainingAclEntities.getContent()).doesNotContain(aclEntity);
   }
 
 }

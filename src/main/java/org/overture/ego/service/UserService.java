@@ -19,9 +19,9 @@ package org.overture.ego.service;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.overture.ego.model.entity.UserPermission;
+import org.overture.ego.model.entity.AclUserPermission;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.enums.UserRole;
 import org.overture.ego.model.enums.UserStatus;
 import org.overture.ego.model.params.Permission;
@@ -151,7 +151,7 @@ public class UserService extends BaseService<User, UUID> {
   public void addUserPermissions(@NonNull String userId, @NonNull List<Permission> permissions) {
     val user = getById(userRepository, fromString(userId));
     permissions.forEach(permission -> {
-      user.addNewPermission(aclEntityService.get(permission.getAclEntityId()), PolicyMask.fromValue(permission.getMask()));
+      user.addNewPermission(aclEntityService.get(permission.getAclEntityId()), AclMask.fromValue(permission.getMask()));
     });
     userRepository.save(user);
   }
@@ -247,7 +247,7 @@ public class UserService extends BaseService<User, UUID> {
             pageable);
   }
 
-  public Page<UserPermission> getUserPermissions(@NonNull String userId, @NonNull Pageable pageable) {
+  public Page<AclUserPermission> getUserPermissions(@NonNull String userId, @NonNull Pageable pageable) {
     val userPermissions = getById(userRepository, fromString(userId)).getUserPermissions();
     return new PageImpl<>(userPermissions, pageable, userPermissions.size());
   }

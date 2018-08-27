@@ -15,12 +15,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Transactional
-public class PolicyMaskTest {
+public class AclMaskTest {
 
   @Test
   public void testFromValue() {
-    assertThat(PolicyMask.fromValue("read")).isEqualByComparingTo(PolicyMask.READ);
-    assertThat(PolicyMask.fromValue("write")).isEqualByComparingTo(PolicyMask.WRITE);
-    assertThat(PolicyMask.fromValue("deny")).isEqualByComparingTo(PolicyMask.DENY);
+    assertThat(AclMask.fromValue("read")).isEqualByComparingTo(AclMask.READ);
+    assertThat(AclMask.fromValue("write")).isEqualByComparingTo(AclMask.WRITE);
+    assertThat(AclMask.fromValue("deny")).isEqualByComparingTo(AclMask.DENY);
   }
 }

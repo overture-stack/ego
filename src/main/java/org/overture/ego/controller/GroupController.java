@@ -23,7 +23,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.dto.PageDTO;
-import org.overture.ego.model.entity.GroupPermission;
+import org.overture.ego.model.entity.AclGroupPermission;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
@@ -180,7 +180,7 @@ public class GroupController {
   )
   @JsonView(Views.REST.class)
   public @ResponseBody
-  PageDTO<GroupPermission> getPermissions(
+  PageDTO<AclGroupPermission> getPermissions(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String id,
       Pageable pageable)

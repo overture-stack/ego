@@ -24,7 +24,7 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.enums.Fields;
 import org.overture.ego.view.Views;
 
@@ -47,7 +47,7 @@ import static org.overture.ego.utils.AclPermissionUtils.extractPermissionStrings
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
-public class User implements PolicyOwner {
+public class User implements AclOwnerEntity {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
@@ -113,7 +113,7 @@ public class User implements PolicyOwner {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name = Fields.SID)
   @JsonIgnore
-  protected List<UserPermission> userPermissions;
+  protected List<AclUserPermission> userPermissions;
 
   // Creates groups in JWTAccessToken::context::user
   @JsonView(Views.JWTAccessToken.class)
@@ -143,20 +143,20 @@ public class User implements PolicyOwner {
     // Combine individual user permissions and the user's
     // groups (if they have any) permissions
     val combinedPermissions = Stream.concat(userPermissions, userGroupsPermissions)
-        .collect(Collectors.groupingBy(Permission::getEntity));
+        .collect(Collectors.groupingBy(AclPermission::getEntity));
 
     // If we have no permissions at all return an empty list
     if (combinedPermissions.values().size() == 0) {
       return new ArrayList<>();
     }
 
-    // If we do have permissions ... sort the grouped permissions (by Policy)
-    // on PolicyMask, extracting the first value of the sorted list into the final
+    // If we do have permissions ... sort the grouped permissions (by AclEntity)
+    // on AclMask, extracting the first value of the sorted list into the final
     // permissions list
-    List<Permission> finalPermissionsList = new ArrayList<>();
+    List<AclPermission> finalPermissionsList = new ArrayList<>();
 
     combinedPermissions.forEach((entity, permissions) -> {
-      permissions.sort(Comparator.comparing(Permission::getMask).reversed());
+      permissions.sort(Comparator.comparing(AclPermission::getMask).reversed());
       finalPermissionsList.add(permissions.get(0));
     });
 
@@ -198,10 +198,10 @@ public class User implements PolicyOwner {
     this.wholeGroups.add(g);
   }
 
-  public void addNewPermission(@NonNull Policy policy, @NonNull PolicyMask mask) {
+  public void addNewPermission(@NonNull AclEntity aclEntity, @NonNull AclMask mask) {
     initPermissions();
-    val permission = UserPermission.builder()
-        .entity(policy)
+    val permission = AclUserPermission.builder()
+        .entity(aclEntity)
         .mask(mask)
         .sid(this)
         .build();
@@ -237,7 +237,7 @@ public class User implements PolicyOwner {
 
   protected void initPermissions() {
     if (this.userPermissions == null) {
-      this.userPermissions = new ArrayList<UserPermission>();
+      this.userPermissions = new ArrayList<AclUserPermission>();
     }
   }
 
