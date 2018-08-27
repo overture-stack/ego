@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.dto.PageDTO;
-import org.overture.ego.model.entity.AclUserPermission;
+import org.overture.ego.model.entity.UserPermission;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
@@ -176,7 +176,7 @@ public class UserController {
   )
   @JsonView(Views.REST.class)
   public @ResponseBody
-  PageDTO<AclUserPermission> getPermissions(
+  PageDTO<UserPermission> getPermissions(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String id,
       Pageable pageable)

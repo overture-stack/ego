@@ -1,7 +1,7 @@
 package org.overture.ego.utils;
 
 import lombok.val;
-import org.overture.ego.model.entity.AclEntity;
+import org.overture.ego.model.entity.Policy;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
@@ -88,26 +88,26 @@ public class EntityGenerator {
     }
   }
 
-  public AclEntity createOneAclEntity(Pair<String, UUID> aclEntity) {
-    return AclEntity.builder()
+  public Policy createOneAclEntity(Pair<String, UUID> aclEntity) {
+    return Policy.builder()
         .name(aclEntity.getFirst())
         .owner(aclEntity.getSecond())
         .build();
   }
 
-  public List<AclEntity> createAclEntitiesFromList(List<Pair<String, UUID>> aclEntities) {
+  public List<Policy> createAclEntitiesFromList(List<Pair<String, UUID>> aclEntities) {
     return aclEntities.stream().map(this::createOneAclEntity).collect(Collectors.toList());
   }
 
   public void setupSimpleAclEntities(List<Group> threeGroups) {
 
-    for (AclEntity aclEntity : createAclEntitiesFromList(
+    for (Policy policy : createAclEntitiesFromList(
         Arrays.asList(
             Pair.of("Study001", threeGroups.get(0).getId()),
             Pair.of("Study002", threeGroups.get(1).getId()),
             Pair.of("Study003", threeGroups.get(2).getId())
         ))) {
-      aclEntityService.create(aclEntity);
+      aclEntityService.create(policy);
     }
   }
 }

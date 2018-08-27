@@ -1,7 +1,7 @@
 package org.overture.ego.repository;
 
-import org.overture.ego.model.entity.AclUserPermission;
+import org.overture.ego.model.entity.UserPermission;
 
 public interface AclUserPermissionRepository
-    extends PermissionRepository<AclUserPermission> {
+    extends PermissionRepository<UserPermission> {
 }
