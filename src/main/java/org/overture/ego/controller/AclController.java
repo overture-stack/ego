@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.dto.PageDTO;
 import org.overture.ego.model.entity.AclEntity;
-import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.exceptions.PostWithIdentifierException;
 import org.overture.ego.model.params.Permission;
 import org.overture.ego.model.search.Filters;
