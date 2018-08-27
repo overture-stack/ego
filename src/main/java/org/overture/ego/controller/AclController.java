@@ -6,13 +6,16 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.overture.ego.model.dto.PageDTO;
 import org.overture.ego.model.entity.AclEntity;
+import org.overture.ego.model.enums.AclMask;
 import org.overture.ego.model.exceptions.PostWithIdentifierException;
+import org.overture.ego.model.params.Permission;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.security.AdminScoped;
-import org.overture.ego.service.AclEntityService;
+import org.overture.ego.service.*;
 import org.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -20,15 +23,20 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 @RestController
 @RequestMapping("/acls")
 public class AclController {
-
   @Autowired
   private AclEntityService aclEntityService;
+  @Autowired
+  private GroupService groupService;
+  @Autowired
+  private UserService userService;
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
@@ -116,4 +124,49 @@ public class AclController {
       @PathVariable(value = "id", required = true) String id) {
     aclEntityService.delete(id);
   }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.POST, value = "/{id}/permission/group/{group_id}")
+  @ApiResponses(
+    value = {
+      @ApiResponse(code = 200, message = "Add group permissions", response = String.class)
+    }
+  )
+  public @ResponseBody
+  String createGroupPermission(
+    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+    @PathVariable(value = "id", required = true) String id,
+    @PathVariable(value = "group_id", required=true) String groupId,
+    @RequestBody(required = true) String mask
+  ) {
+    val permission=new Permission(id, mask);
+    val list = new ArrayList<Permission>();
+    list.add(permission);
+    groupService.addGroupPermissions(groupId,list);
+    return "1 group permission added to ACL successfully";
+  }
+
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.POST, value = "/{id}/permission/user/{user_id}")
+  @ApiResponses(
+    value = {
+      @ApiResponse(code = 200, message = "Add user permission", response = String.class)
+    }
+  )
+  public @ResponseBody
+  String createUserPermission(
+    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+    @PathVariable(value = "id", required = true) String id,
+    @PathVariable(value = "user_id", required=true) String userId,
+    @RequestBody(required = true) String mask
+  ) {
+    val permission=new Permission(id, mask);
+    val list = new ArrayList<Permission>();
+    list.add(permission);
+    userService.addUserPermissions(userId, list);
+
+    return "1 user permission successfully added to ACL '" + id + "'";
+  }
+
 }
