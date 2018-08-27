@@ -23,7 +23,7 @@ import lombok.val;
 import java.util.Arrays;
 
 @RequiredArgsConstructor
-public enum PolicyMask {
+public enum AclMask {
   READ("READ"),
   WRITE("WRITE"),
   DENY("DENY");
@@ -36,7 +36,7 @@ public enum PolicyMask {
     return value;
   }
 
-  public static PolicyMask fromValue(String value) {
+  public static AclMask fromValue(String value) {
     for (val aclMask : values()) {
       if (aclMask.value.equalsIgnoreCase(value)) {
         return aclMask;

@@ -1,13 +1,13 @@
 package org.overture.ego.repository;
 
-import org.overture.ego.model.entity.Policy;
+import org.overture.ego.model.entity.AclEntity;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.UUID;
 
 public interface AclEntityRepository
-    extends PagingAndSortingRepository<Policy, UUID>, JpaSpecificationExecutor {
+    extends PagingAndSortingRepository<AclEntity, UUID>, JpaSpecificationExecutor {
 
-  Policy findOneByNameIgnoreCase(String name);
+  AclEntity findOneByNameIgnoreCase(String name);
 }
