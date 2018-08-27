@@ -8,7 +8,7 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
-import org.overture.ego.model.enums.AclMask;
+import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.enums.Fields;
 import org.overture.ego.view.Views;
 
@@ -16,9 +16,9 @@ import javax.persistence.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "aclgrouppermission")
+@Table(name = "acluserpermission")
 @Data
-@JsonPropertyOrder({"id","entity","sid", "mask"})
+@JsonPropertyOrder({"id","entity","sid","mask"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @EqualsAndHashCode(of={"id"})
 @TypeDef(
@@ -29,29 +29,29 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
-public class AclGroupPermission extends AclPermission {
+public class UserPermission extends Permission {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(
-      name = "acl_user_group_uuid",
+      name = "acl_user_permission_uuid",
       strategy = "org.hibernate.id.UUIDGenerator")
-  @GeneratedValue(generator = "acl_user_group_uuid")
+  @GeneratedValue(generator = "acl_user_permission_uuid")
   UUID id;
 
   @NonNull
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(nullable = false, name = Fields.ENTITY)
-  AclEntity entity;
+  Policy entity;
 
   @NonNull
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(nullable = false, name = Fields.SID)
-  Group sid;
+  User sid;
 
   @NonNull
   @Column(nullable = false, name = Fields.MASK)
   @Enumerated(EnumType.STRING)
   @Type( type = "ego_acl_enum" )
-  AclMask mask;
+  PolicyMask mask;
 }

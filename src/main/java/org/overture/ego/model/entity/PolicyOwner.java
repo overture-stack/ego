@@ -1,4 +1,4 @@
 package org.overture.ego.model.entity;
 
-public interface AclOwnerEntity {
+public interface PolicyOwner {
 }

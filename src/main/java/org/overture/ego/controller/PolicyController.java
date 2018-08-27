@@ -7,7 +7,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.dto.PageDTO;
-import org.overture.ego.model.entity.AclEntity;
+import org.overture.ego.model.entity.Policy;
 import org.overture.ego.model.exceptions.PostWithIdentifierException;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
@@ -24,8 +24,8 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/resources")
-public class ResourceController {
+@RequestMapping("/policies")
+public class PolicyController {
 
   @Autowired
   private AclEntityService aclEntityService;
@@ -34,12 +34,12 @@ public class ResourceController {
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
   @ApiResponses(
     value = {
-      @ApiResponse(code = 200, message = "Get resource by id", response = AclEntity.class)
+      @ApiResponse(code = 200, message = "Get policy by id", response = Policy.class)
     }
   )
   @JsonView(Views.REST.class)
   public @ResponseBody
-  AclEntity get(
+  Policy get(
     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
     @PathVariable(value = "id", required = true) String applicationId) {
     return aclEntityService.get(applicationId);
@@ -64,12 +64,12 @@ public class ResourceController {
   })
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "Page of ACL Entities", response = PageDTO.class)
+          @ApiResponse(code = 200, message = "Page of Policies", response = PageDTO.class)
       }
   )
   @JsonView(Views.REST.class)
   public @ResponseBody
-  PageDTO<AclEntity> getResources(
+  PageDTO<Policy> getPolicies(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
@@ -80,32 +80,32 @@ public class ResourceController {
   @RequestMapping(method = RequestMethod.POST, value = "")
   @ApiResponses(
         value = {
-          @ApiResponse(code = 200, message = "New ACL Entity", response = AclEntity.class),
-          @ApiResponse(code = 400, message = PostWithIdentifierException.reason, response=AclEntity.class)
+          @ApiResponse(code = 200, message = "New ACL Entity", response = Policy.class),
+          @ApiResponse(code = 400, message = PostWithIdentifierException.reason, response=Policy.class)
       }
   )
   public @ResponseBody
-  AclEntity create(
+  Policy create(
     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-    @RequestBody(required = true) AclEntity aclEntity ) {
-    if (aclEntity.getId() != null) {
+    @RequestBody(required = true) Policy policy) {
+    if (policy.getId() != null) {
       throw new PostWithIdentifierException();
     }
-    return aclEntityService.create(aclEntity);
+    return aclEntityService.create(policy);
   }
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "Updated ACL Entity", response = AclEntity.class)
+          @ApiResponse(code = 200, message = "Updated Policy", response = Policy.class)
       }
   )
   public @ResponseBody
-  AclEntity update(
+  Policy update(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestBody(required = true) AclEntity updatedAclEntity) {
-    return aclEntityService.update(updatedAclEntity);
+      @RequestBody(required = true) Policy updatedPolicy) {
+    return aclEntityService.update(updatedPolicy);
   }
 
   @AdminScoped
