@@ -2,7 +2,7 @@ package org.overture.ego.service;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.overture.ego.model.entity.AclEntity;
+import org.overture.ego.model.entity.Policy;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.repository.AclEntityRepository;
 import org.overture.ego.repository.queryspecification.AclEntitySpecification;
@@ -20,7 +20,7 @@ import static java.util.UUID.fromString;
 @Slf4j
 @Service
 @Transactional
-public class AclEntityService extends BaseService<AclEntity, UUID> {
+public class AclEntityService extends BaseService<Policy, UUID> {
 
   /*
     Dependencies
@@ -29,31 +29,31 @@ public class AclEntityService extends BaseService<AclEntity, UUID> {
   private AclEntityRepository aclEntityRepository;
 
   // Create
-  public AclEntity create(@NonNull AclEntity aclEntity) {
-    return aclEntityRepository.save(aclEntity);
+  public Policy create(@NonNull Policy policy) {
+    return aclEntityRepository.save(policy);
   }
 
 
   // Read
-  public AclEntity get(@NonNull String aclEntityId) {
+  public Policy get(@NonNull String aclEntityId) {
     return getById(aclEntityRepository, fromString(aclEntityId));
   }
 
-  public AclEntity getByName(@NonNull String aclEntityName) {
+  public Policy getByName(@NonNull String aclEntityName) {
     return aclEntityRepository.findOneByNameIgnoreCase(aclEntityName);
   }
 
-  public Page<AclEntity> listAclEntities(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+  public Page<Policy> listAclEntities(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return aclEntityRepository.findAll(AclEntitySpecification.filterBy(filters), pageable);
   }
 
 
   // Update
-  public AclEntity update(@NonNull AclEntity updatedAclEntity) {
-    AclEntity aclEntity = getById(aclEntityRepository, updatedAclEntity.getId());
-    aclEntity.update(updatedAclEntity);
-    aclEntityRepository.save(aclEntity);
-    return updatedAclEntity;
+  public Policy update(@NonNull Policy updatedPolicy) {
+    Policy policy = getById(aclEntityRepository, updatedPolicy.getId());
+    policy.update(updatedPolicy);
+    aclEntityRepository.save(policy);
+    return updatedPolicy;
   }
 
   // Delete

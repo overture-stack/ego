@@ -1,18 +1,18 @@
 package org.overture.ego.model.entity;
 
 import lombok.Data;
-import org.overture.ego.model.enums.AclMask;
+import org.overture.ego.model.enums.PolicyMask;
 
 import java.util.UUID;
 
 @Data
-public abstract class AclPermission {
+public abstract class Permission {
   UUID id;
-  AclEntity entity;
-  AclOwnerEntity sid;
-  AclMask mask;
+  Policy entity;
+  PolicyOwner sid;
+  PolicyMask mask;
 
-  public void update(AclPermission other) {
+  public void update(Permission other) {
     this.entity = other.entity;
     this.sid = other.sid;
     this.mask = other.mask;

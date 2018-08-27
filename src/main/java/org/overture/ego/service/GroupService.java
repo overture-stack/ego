@@ -18,9 +18,9 @@ package org.overture.ego.service;
 
 import lombok.NonNull;
 import lombok.val;
-import org.overture.ego.model.entity.AclGroupPermission;
+import org.overture.ego.model.entity.GroupPermission;
 import org.overture.ego.model.entity.Group;
-import org.overture.ego.model.enums.AclMask;
+import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.params.Permission;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.repository.GroupRepository;
@@ -63,7 +63,7 @@ public class GroupService extends BaseService<Group, UUID> {
   public void addGroupPermissions(@NonNull String groupId, @NonNull List<Permission> permissions) {
     val group = getById(groupRepository, fromString(groupId));
     permissions.forEach(permission -> {
-      group.addNewPermission(aclEntityService.get(permission.getAclEntityId()), AclMask.fromValue(permission.getMask()));
+      group.addNewPermission(aclEntityService.get(permission.getAclEntityId()), PolicyMask.fromValue(permission.getMask()));
     });
     groupRepository.save(group);
   }
@@ -90,7 +90,7 @@ public class GroupService extends BaseService<Group, UUID> {
     return groupRepository.findAll(GroupSpecification.filterBy(filters), pageable);
   }
 
-  public Page<AclGroupPermission> getGroupPermissions(@NonNull String groupId, @NonNull Pageable pageable) {
+  public Page<GroupPermission> getGroupPermissions(@NonNull String groupId, @NonNull Pageable pageable) {
     val groupPermissions = getById(groupRepository,fromString(groupId)).getGroupPermissions();
     return new PageImpl<>(groupPermissions, pageable, groupPermissions.size());
   }
