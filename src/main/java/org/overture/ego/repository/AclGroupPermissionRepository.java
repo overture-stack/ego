@@ -1,7 +1,7 @@
 package org.overture.ego.repository;
 
-import org.overture.ego.model.entity.GroupScope;
+import org.overture.ego.model.entity.GroupPermission;
 
 public interface AclGroupPermissionRepository
-    extends PermissionRepository<GroupScope> {
+    extends PermissionRepository<GroupPermission> {
 }

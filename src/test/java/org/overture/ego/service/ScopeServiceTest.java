@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Transactional
-public class PolicyServiceTest {
+public class ScopeServiceTest {
 
   @Autowired
   private PolicyService policyService;

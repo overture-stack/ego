@@ -113,7 +113,7 @@ public class User implements PolicyOwner {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name = Fields.SID)
   @JsonIgnore
-  protected List<UserScope> userPermissions;
+  protected List<UserPermission> userPermissions;
 
   // Creates groups in JWTAccessToken::context::user
   @JsonView(Views.JWTAccessToken.class)
@@ -143,20 +143,20 @@ public class User implements PolicyOwner {
     // Combine individual user permissions and the user's
     // groups (if they have any) permissions
     val combinedPermissions = Stream.concat(userPermissions, userGroupsPermissions)
-        .collect(Collectors.groupingBy(Scope::getEntity));
+        .collect(Collectors.groupingBy(Permission::getEntity));
 
     // If we have no permissions at all return an empty list
     if (combinedPermissions.values().size() == 0) {
       return new ArrayList<>();
     }
 
-    // If we do have permissions ... sort the grouped permissions (by Policy)
+    // If we do have permissions ... sort the grouped permissions (by Scope)
     // on PolicyMask, extracting the first value of the sorted list into the final
     // permissions list
-    List<Scope> finalPermissionsList = new ArrayList<>();
+    List<Permission> finalPermissionsList = new ArrayList<>();
 
     combinedPermissions.forEach((entity, permissions) -> {
-      permissions.sort(Comparator.comparing(Scope::getMask).reversed());
+      permissions.sort(Comparator.comparing(Permission::getMask).reversed());
       finalPermissionsList.add(permissions.get(0));
     });
 
@@ -200,7 +200,7 @@ public class User implements PolicyOwner {
 
   public void addNewPermission(@NonNull Policy policy, @NonNull PolicyMask mask) {
     initPermissions();
-    val permission = UserScope.builder()
+    val permission = UserPermission.builder()
         .entity(policy)
         .mask(mask)
         .sid(this)
@@ -237,7 +237,7 @@ public class User implements PolicyOwner {
 
   protected void initPermissions() {
     if (this.userPermissions == null) {
-      this.userPermissions = new ArrayList<UserScope>();
+      this.userPermissions = new ArrayList<UserPermission>();
     }
   }
 

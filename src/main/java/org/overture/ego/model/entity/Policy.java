@@ -47,13 +47,13 @@ public class Policy {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name=Fields.ENTITY)
   @JsonIgnore
-  protected Set<GroupScope> groupPermissions;
+  protected Set<GroupPermission> groupPermissions;
 
   @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name=Fields.ENTITY)
   @JsonIgnore
-  protected Set<UserScope> userPermissions;
+  protected Set<UserPermission> userPermissions;
 
   public void update(Policy other) {
     this.owner = other.owner;

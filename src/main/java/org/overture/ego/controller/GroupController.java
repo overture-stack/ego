@@ -23,12 +23,12 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.dto.PageDTO;
-import org.overture.ego.model.entity.GroupScope;
+import org.overture.ego.model.entity.GroupPermission;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.model.exceptions.PostWithIdentifierException;
-import org.overture.ego.model.params.Permission;
+import org.overture.ego.model.params.Scope;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.security.AdminScoped;
@@ -180,7 +180,7 @@ public class GroupController {
   )
   @JsonView(Views.REST.class)
   public @ResponseBody
-  PageDTO<GroupScope> getScopes(
+  PageDTO<GroupPermission> getScopes(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String id,
       Pageable pageable)
@@ -199,7 +199,7 @@ public class GroupController {
   String addPermissions(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String id,
-      @RequestBody(required = true) List<Permission> permissions
+      @RequestBody(required = true) List<Scope> permissions
   ) {
     groupService.addGroupPermissions(id, permissions);
     return permissions.size() + " permissions added to group successfully.";

@@ -83,7 +83,7 @@ public class Group implements PolicyOwner {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name=Fields.SID)
   @JsonIgnore
-  protected List<GroupScope> groupPermissions;
+  protected List<GroupPermission> groupPermissions;
 
   public void addApplication(@NonNull Application app){
     initApplications();
@@ -97,7 +97,7 @@ public class Group implements PolicyOwner {
 
   public void addNewPermission(@NonNull Policy policy, @NonNull PolicyMask mask) {
     initPermissions();
-    val permission = GroupScope.builder()
+    val permission = GroupPermission.builder()
         .entity(policy)
         .mask(mask)
         .sid(this)
@@ -121,7 +121,7 @@ public class Group implements PolicyOwner {
 
   protected void initPermissions() {
     if (this.groupPermissions == null) {
-      this.groupPermissions = new ArrayList<GroupScope>();
+      this.groupPermissions = new ArrayList<GroupPermission>();
     }
   }
 

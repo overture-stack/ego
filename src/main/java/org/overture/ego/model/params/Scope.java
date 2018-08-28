@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @Data
 @NoArgsConstructor
 @RequiredArgsConstructor
-public class Permission {
+public class Scope {
   @NonNull
   private String aclEntityId;
   @NonNull

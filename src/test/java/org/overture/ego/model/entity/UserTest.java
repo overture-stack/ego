@@ -5,7 +5,7 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
-import org.overture.ego.model.params.Permission;
+import org.overture.ego.model.params.Scope;
 import org.overture.ego.service.PolicyService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
@@ -66,9 +66,9 @@ public class UserTest {
     val study001id = policyService.getByName("Study001").getId().toString();
 
     val permissions = Arrays.asList(
-        new Permission(study001id, "WRITE"),
-        new Permission(study001id, "READ"),
-        new Permission(study001id, "DENY")
+        new Scope(study001id, "WRITE"),
+        new Scope(study001id, "READ"),
+        new Scope(study001id, "DENY")
     );
 
     userService.addUserPermissions(user.getId().toString(), permissions);
@@ -130,33 +130,33 @@ public class UserTest {
 
     // Assign ACL Permissions for each user/group
     userService.addUserPermissions(alexId, Arrays.asList(
-        new Permission(study001id, "WRITE"),
-        new Permission(study002id, "READ"),
-        new Permission(study003id, "DENY")
+        new Scope(study001id, "WRITE"),
+        new Scope(study002id, "READ"),
+        new Scope(study003id, "DENY")
     ));
 
     userService.addUserPermissions(bobId, Arrays.asList(
-        new Permission(study001id, "READ"),
-        new Permission(study002id, "DENY"),
-        new Permission(study003id, "WRITE")
+        new Scope(study001id, "READ"),
+        new Scope(study002id, "DENY"),
+        new Scope(study003id, "WRITE")
     ));
 
     userService.addUserPermissions(marryId, Arrays.asList(
-        new Permission(study001id, "DENY"),
-        new Permission(study002id, "WRITE"),
-        new Permission(study003id, "READ")
+        new Scope(study001id, "DENY"),
+        new Scope(study002id, "WRITE"),
+        new Scope(study003id, "READ")
     ));
 
     groupService.addGroupPermissions(wizardsId, Arrays.asList(
-        new Permission(study001id, "WRITE"),
-        new Permission(study002id, "READ"),
-        new Permission(study003id, "DENY")
+        new Scope(study001id, "WRITE"),
+        new Scope(study002id, "READ"),
+        new Scope(study003id, "DENY")
     ));
 
     groupService.addGroupPermissions(robotsId, Arrays.asList(
-        new Permission(study001id, "DENY"),
-        new Permission(study002id, "WRITE"),
-        new Permission(study003id, "READ")
+        new Scope(study001id, "DENY"),
+        new Scope(study002id, "WRITE"),
+        new Scope(study003id, "READ")
     ));
 
     /**

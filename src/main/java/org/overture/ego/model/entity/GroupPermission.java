@@ -29,7 +29,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
-public class GroupScope extends Scope {
+public class GroupPermission extends Permission {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
