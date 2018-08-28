@@ -43,7 +43,7 @@ public class GroupsServiceTest {
   private GroupService groupService;
 
   @Autowired
-  private AclEntityService aclEntityService;
+  private PolicyService policyService;
 
   @Autowired
   private EntityGenerator entityGenerator;
@@ -603,13 +603,13 @@ public class GroupsServiceTest {
         .getContent();
     entityGenerator.setupSimpleAclEntities(groups);
 
-    val study001 = aclEntityService.getByName("Study001");
+    val study001 = policyService.getByName("Study001");
     val study001id = study001.getId().toString();
 
-    val study002 = aclEntityService.getByName("Study002");
+    val study002 = policyService.getByName("Study002");
     val study002id = study002.getId().toString();
 
-    val study003 = aclEntityService.getByName("Study003");
+    val study003 = policyService.getByName("Study003");
     val study003id = study003.getId().toString();
 
     val permissions = Arrays.asList(
@@ -640,13 +640,13 @@ public class GroupsServiceTest {
 
     val firstGroup = groups.get(0);
 
-    val study001 = aclEntityService.getByName("Study001");
+    val study001 = policyService.getByName("Study001");
     val study001id = study001.getId().toString();
 
-    val study002 = aclEntityService.getByName("Study002");
+    val study002 = policyService.getByName("Study002");
     val study002id = study002.getId().toString();
 
-    val study003 = aclEntityService.getByName("Study003");
+    val study003 = policyService.getByName("Study003");
     val study003id = study003.getId().toString();
 
     val permissions = Arrays.asList(
@@ -681,13 +681,13 @@ public class GroupsServiceTest {
 
     val firstGroup = groups.get(0);
 
-    val study001 = aclEntityService.getByName("Study001");
+    val study001 = policyService.getByName("Study001");
     val study001id = study001.getId().toString();
 
-    val study002 = aclEntityService.getByName("Study002");
+    val study002 = policyService.getByName("Study002");
     val study002id = study002.getId().toString();
 
-    val study003 = aclEntityService.getByName("Study003");
+    val study003 = policyService.getByName("Study003");
     val study003id = study003.getId().toString();
 
     val permissions = Arrays.asList(

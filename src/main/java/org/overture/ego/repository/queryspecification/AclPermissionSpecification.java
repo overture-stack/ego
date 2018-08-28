@@ -16,8 +16,8 @@
 
 package org.overture.ego.repository.queryspecification;
 
-import org.overture.ego.model.entity.Permission;
+import org.overture.ego.model.entity.Scope;
 
-public class AclPermissionSpecification extends SpecificationBase<Permission> {
+public class AclPermissionSpecification extends SpecificationBase<Scope> {
 
 }

@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 public class PolicyServiceTest {
 
   @Autowired
-  private AclEntityService aclEntityService;
+  private PolicyService policyService;
 
   @Autowired
   private GroupService groupService;
@@ -56,7 +56,7 @@ public class PolicyServiceTest {
   // Create
   @Test
   public void testCreate() {
-    val policy = aclEntityService
+    val policy = policyService
         .create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
     assertThat(policy.getName()).isEqualTo("Study001");
   }
@@ -75,27 +75,27 @@ public class PolicyServiceTest {
   // Read
   @Test
   public void testGet() {
-    val policy = aclEntityService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
-    val savedPolicy = aclEntityService.get(policy.getId().toString());
+    val policy = policyService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
+    val savedPolicy = policyService.get(policy.getId().toString());
     assertThat(savedPolicy.getName()).isEqualTo("Study001");
   }
 
   @Test
   public void testGetEntityNotFoundException() {
-    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> aclEntityService.get(UUID.randomUUID().toString()));
+    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> policyService.get(UUID.randomUUID().toString()));
   }
 
   @Test
   public void testGetByName() {
-    aclEntityService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
-    val savedUser = aclEntityService.getByName("Study001");
+    policyService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
+    val savedUser = policyService.getByName("Study001");
     assertThat(savedUser.getName()).isEqualTo("Study001");
   }
 
   @Test
   public void testGetByNameAllCaps() {
-    aclEntityService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
-    val savedUser = aclEntityService.getByName("STUDY001");
+    policyService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
+    val savedUser = policyService.getByName("STUDY001");
     assertThat(savedUser.getName()).isEqualTo("Study001");
   }
 
@@ -104,20 +104,20 @@ public class PolicyServiceTest {
   public void testGetByNameNotFound() {
     // TODO Currently returning null, should throw exception (EntityNotFoundException?)
     assertThatExceptionOfType(EntityNotFoundException.class)
-        .isThrownBy(() -> aclEntityService.getByName("Study000"));
+        .isThrownBy(() -> policyService.getByName("Study000"));
   }
 
   @Test
   public void testListUsersNoFilters() {
     entityGenerator.setupSimpleAclEntities(groups);
-    val aclEntities = aclEntityService
+    val aclEntities = policyService
         .listAclEntities(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(aclEntities.getTotalElements()).isEqualTo(3L);
   }
 
   @Test
   public void testListUsersNoFiltersEmptyResult() {
-    val aclEntities = aclEntityService
+    val aclEntities = policyService
         .listAclEntities(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(aclEntities.getTotalElements()).isEqualTo(0L);
   }
@@ -126,7 +126,7 @@ public class PolicyServiceTest {
   public void testListUsersFiltered() {
     entityGenerator.setupSimpleAclEntities(groups);
     val userFilter = new SearchFilter("name", "Study001");
-    val aclEntities = aclEntityService
+    val aclEntities = policyService
         .listAclEntities(Arrays.asList(userFilter), new PageableResolver().getPageable());
     assertThat(aclEntities.getTotalElements()).isEqualTo(1L);
   }
@@ -135,7 +135,7 @@ public class PolicyServiceTest {
   public void testListUsersFilteredEmptyResult() {
     entityGenerator.setupSimpleAclEntities(groups);
     val userFilter = new SearchFilter("name", "Study004");
-    val aclEntities = aclEntityService
+    val aclEntities = policyService
         .listAclEntities(Arrays.asList(userFilter), new PageableResolver().getPageable());
     assertThat(aclEntities.getTotalElements()).isEqualTo(0L);
   }
@@ -144,9 +144,9 @@ public class PolicyServiceTest {
   // Update
   @Test
   public void testUpdate() {
-    val policy = aclEntityService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
+    val policy = policyService.create(entityGenerator.createOneAclEntity(Pair.of("Study001", groups.get(0).getId())));
     policy.setName("StudyOne");
-    val updated = aclEntityService.update(policy);
+    val updated = policyService.update(policy);
     assertThat(updated.getName()).isEqualTo("StudyOne");
   }
 
@@ -155,11 +155,11 @@ public class PolicyServiceTest {
   public void testDelete() {
     entityGenerator.setupSimpleAclEntities(groups);
 
-    val policy = aclEntityService.getByName("Study001");
+    val policy = policyService.getByName("Study001");
 
-    aclEntityService.delete(policy.getId().toString());
+    policyService.delete(policy.getId().toString());
 
-    val remainingAclEntities = aclEntityService.listAclEntities(Collections.emptyList(), new PageableResolver().getPageable());
+    val remainingAclEntities = policyService.listAclEntities(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(remainingAclEntities.getTotalElements()).isEqualTo(2L);
     assertThat(remainingAclEntities.getContent()).doesNotContain(policy);
   }

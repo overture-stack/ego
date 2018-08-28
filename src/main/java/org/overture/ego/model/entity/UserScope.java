@@ -16,9 +16,9 @@ import javax.persistence.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "aclgrouppermission")
+@Table(name = "acluserpermission")
 @Data
-@JsonPropertyOrder({"id","entity","sid", "mask"})
+@JsonPropertyOrder({"id","entity","sid","mask"})
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @EqualsAndHashCode(of={"id"})
 @TypeDef(
@@ -29,25 +29,25 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
-public class GroupPermission extends Permission {
+public class UserScope extends Scope {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(
-      name = "acl_user_group_uuid",
+      name = "acl_user_permission_uuid",
       strategy = "org.hibernate.id.UUIDGenerator")
-  @GeneratedValue(generator = "acl_user_group_uuid")
+  @GeneratedValue(generator = "acl_user_permission_uuid")
   UUID id;
 
   @NonNull
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(nullable = false, name = Fields.ENTITY)
   Policy entity;
 
   @NonNull
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(nullable = false, name = Fields.SID)
-  Group sid;
+  User sid;
 
   @NonNull
   @Column(nullable = false, name = Fields.MASK)

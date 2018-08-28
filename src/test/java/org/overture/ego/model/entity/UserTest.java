@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
 import org.overture.ego.model.params.Permission;
-import org.overture.ego.service.AclEntityService;
+import org.overture.ego.service.PolicyService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
 import org.overture.ego.utils.EntityGenerator;
@@ -34,7 +34,7 @@ public class UserTest {
   private GroupService groupService;
 
   @Autowired
-  private AclEntityService aclEntityService;
+  private PolicyService policyService;
 
   @Autowired
   private EntityGenerator entityGenerator;
@@ -63,7 +63,7 @@ public class UserTest {
     entityGenerator.setupSimpleAclEntities(groups);
 
     val user = userService.getByName("FirstUser@domain.com");
-    val study001id = aclEntityService.getByName("Study001").getId().toString();
+    val study001id = policyService.getByName("Study001").getId().toString();
 
     val permissions = Arrays.asList(
         new Permission(study001id, "WRITE"),
@@ -119,13 +119,13 @@ public class UserTest {
     userService.addUserToGroups(marryId, Arrays.asList(robotsId));
 
     // Get the studies so we can
-    val study001 = aclEntityService.getByName("Study001");
+    val study001 = policyService.getByName("Study001");
     val study001id = study001.getId().toString();
 
-    val study002 = aclEntityService.getByName("Study002");
+    val study002 = policyService.getByName("Study002");
     val study002id = study002.getId().toString();
 
-    val study003 = aclEntityService.getByName("Study003");
+    val study003 = policyService.getByName("Study003");
     val study003id = study003.getId().toString();
 
     // Assign ACL Permissions for each user/group

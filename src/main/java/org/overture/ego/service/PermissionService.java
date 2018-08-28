@@ -2,7 +2,7 @@ package org.overture.ego.service;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.overture.ego.model.entity.Permission;
+import org.overture.ego.model.entity.Scope;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.repository.PermissionRepository;
 import org.overture.ego.repository.queryspecification.AclPermissionSpecification;
@@ -17,27 +17,27 @@ import static java.util.UUID.fromString;
 
 @Slf4j
 @Transactional
-public abstract class PermissionService extends BaseService<Permission, UUID> {
+public abstract class PermissionService extends BaseService<Scope, UUID> {
 
-  private PermissionRepository<Permission> repository;
+  private PermissionRepository<Scope> repository;
 
   // Create
-  public Permission create(@NonNull Permission entity) {
+  public Scope create(@NonNull Scope entity) {
     return repository.save(entity);
   }
 
   // Read
-  public Permission get(@NonNull String entityId) {
+  public Scope get(@NonNull String entityId) {
     return getById(repository, fromString(entityId));
   }
 
-  public Page<Permission> listAclEntities(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+  public Page<Scope> listAclEntities(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return repository.findAll(AclPermissionSpecification.filterBy(filters), pageable);
   }
 
   // Update
-  public Permission update(@NonNull Permission updatedEntity) {
-    Permission entity = getById(repository, updatedEntity.getId());
+  public Scope update(@NonNull Scope updatedEntity) {
+    Scope entity = getById(repository, updatedEntity.getId());
     entity.update(updatedEntity);
     repository.save(entity);
     return updatedEntity;
