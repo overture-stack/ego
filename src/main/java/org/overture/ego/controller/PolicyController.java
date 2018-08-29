@@ -32,12 +32,16 @@ import java.util.List;
 @RestController
 @RequestMapping("/policies")
 public class PolicyController {
+  private final PolicyService policyService;
+  private final GroupService groupService;
+  private final UserService userService;
 
   @Autowired
-  private PolicyService policyService;
-  private GroupService groupService;
-  private UserService userService;
-
+  public PolicyController(PolicyService policyService, GroupService groupService, UserService userService) {
+    this.policyService=policyService;
+    this.groupService=groupService;
+    this.userService=userService;
+  }
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
   @ApiResponses(
@@ -125,6 +129,13 @@ public class PolicyController {
     policyService.delete(id);
   }
 
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.POST, value = "/{id}/permission/group/{group_id}")
+  @ApiResponses(
+    value = {
+      @ApiResponse(code = 200, message = "Add user permission", response = String.class)
+    }
+  )
   public @ResponseBody
   String createGroupPermission(
     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,

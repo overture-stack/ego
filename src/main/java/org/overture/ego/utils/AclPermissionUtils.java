@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class AclPermissionUtils {
-  public static String extractPermissionString(Permission scope) {
-    return String.format("%s.%s", scope.getEntity().getName(), scope.getMask().toString());
+  public static String extractPermissionString(Permission permission) {
+    return String.format("%s.%s", permission.getEntity().getName(), permission.getMask().toString());
   }
 
   public static List<String> extractPermissionStrings(List<? extends Permission> permissions) {
