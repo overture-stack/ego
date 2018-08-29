@@ -18,12 +18,13 @@ package org.overture.ego.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.*;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.dto.PageDTO;
-import org.overture.ego.model.entity.UserPermission;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.model.entity.UserPermission;
 import org.overture.ego.model.exceptions.PostWithIdentifierException;
 import org.overture.ego.model.params.Scope;
 import org.overture.ego.model.search.Filters;
@@ -49,17 +50,15 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/users")
+@AllArgsConstructor(onConstructor = @__({@Autowired}))
 public class UserController {
-
   /**
    * Dependencies
    */
-  @Autowired
-  private UserService userService;
-  @Autowired
-  private GroupService groupService;
-  @Autowired
-  private ApplicationService applicationService;
+
+  private final UserService userService;
+  private final GroupService groupService;
+  private final ApplicationService applicationService;
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
@@ -83,6 +82,7 @@ public class UserController {
           @ApiResponse(code = 200, message = "Page of Users", response = PageDTO.class)
       }
   )
+
   @JsonView(Views.REST.class)
   public @ResponseBody
   PageDTO<User> getUsersList(
@@ -188,17 +188,16 @@ public class UserController {
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/permissions")
   @ApiResponses(
       value = {
-          @ApiResponse(code = 200, message = "Add user permissions", response = String.class)
+          @ApiResponse(code = 200, message = "Add user permissions", response = User.class)
       }
   )
   public @ResponseBody
-  String addPermissions(
+  User addPermissions(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String id,
       @RequestBody(required = true) List<Scope> permissions
   ) {
-    userService.addUserPermissions(id, permissions);
-    return permissions.size() + " permissions added to user successfully.";
+    return userService.addUserPermissions(id, permissions);
   }
 
   @AdminScoped
@@ -261,16 +260,16 @@ public class UserController {
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/groups")
   @ApiResponses(
           value = {
-                  @ApiResponse(code = 200, message = "Add Groups to user", response = String.class)
+                  @ApiResponse(code = 200, message = "Add Groups to user", response = User.class)
           }
   )
   public @ResponseBody
-  String addGroupsToUser(
+  User addGroupsToUser(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String userId,
           @RequestBody(required = true) List<String> groupIDs) {
-    userService.addUserToGroups(userId,groupIDs);
-    return "User added to : "+groupIDs.size() + " Group(s) successfully.";
+
+    return userService.addUserToGroups(userId,groupIDs);
   }
 
   @AdminScoped
@@ -333,16 +332,15 @@ public class UserController {
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/applications")
   @ApiResponses(
           value = {
-                  @ApiResponse(code = 200, message = "Add Applications to user", response = String.class)
+                  @ApiResponse(code = 200, message = "Add Applications to user", response = User.class)
           }
   )
   public @ResponseBody
-  String addAppsToUser(
+  User addAppsToUser(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String userId,
           @RequestBody(required = true) List<String> appIDs) {
-    userService.addUserToApps(userId,appIDs);
-    return "User added to : "+appIDs.size() + " apps successfully.";
+    return userService.addUserToApps(userId,appIDs);
   }
 
   @AdminScoped

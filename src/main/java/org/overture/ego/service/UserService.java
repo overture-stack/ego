@@ -130,30 +130,30 @@ public class UserService extends BaseService<User, UUID> {
     return output;
   }
 
-  public void addUserToGroups(@NonNull String userId, @NonNull List<String> groupIDs){
+  public User addUserToGroups(@NonNull String userId, @NonNull List<String> groupIDs){
     val user = getById(userRepository, fromString(userId));
     groupIDs.forEach(grpId -> {
       val group = groupService.get(grpId);
       user.addNewGroup(group);
     });
-    userRepository.save(user);
+    return userRepository.save(user);
   }
 
-  public void addUserToApps(@NonNull String userId, @NonNull List<String> appIDs){
+  public User addUserToApps(@NonNull String userId, @NonNull List<String> appIDs){
     val user = getById(userRepository, fromString(userId));
     appIDs.forEach(appId -> {
       val app = applicationService.get(appId);
       user.addNewApplication(app);
     });
-    userRepository.save(user);
+    return userRepository.save(user);
   }
 
-  public void addUserPermissions(@NonNull String userId, @NonNull List<Scope> permissions) {
+  public User addUserPermissions(@NonNull String userId, @NonNull List<Scope> permissions) {
     val user = getById(userRepository, fromString(userId));
     permissions.forEach(permission -> {
       user.addNewPermission(policyService.get(permission.getAclEntityId()), PolicyMask.fromValue(permission.getMask()));
     });
-    userRepository.save(user);
+    return userRepository.save(user);
   }
 
   public User get(@NonNull String userId) {
