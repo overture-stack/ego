@@ -150,7 +150,7 @@ public class User implements PolicyOwner {
       return new ArrayList<>();
     }
 
-    // If we do have permissions ... sort the grouped permissions (by Policy)
+    // If we do have permissions ... sort the grouped permissions (by Scope)
     // on PolicyMask, extracting the first value of the sorted list into the final
     // permissions list
     List<Permission> finalPermissionsList = new ArrayList<>();

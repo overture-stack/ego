@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Transactional
-public class PolicyMaskTest {
+public class ScopeMaskTest {
 
   @Test
   public void testFromValue() {

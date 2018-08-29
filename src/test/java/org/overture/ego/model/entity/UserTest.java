@@ -5,8 +5,8 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
-import org.overture.ego.model.params.Permission;
-import org.overture.ego.service.AclEntityService;
+import org.overture.ego.model.params.Scope;
+import org.overture.ego.service.PolicyService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
 import org.overture.ego.utils.EntityGenerator;
@@ -34,7 +34,7 @@ public class UserTest {
   private GroupService groupService;
 
   @Autowired
-  private AclEntityService aclEntityService;
+  private PolicyService policyService;
 
   @Autowired
   private EntityGenerator entityGenerator;
@@ -63,12 +63,12 @@ public class UserTest {
     entityGenerator.setupSimpleAclEntities(groups);
 
     val user = userService.getByName("FirstUser@domain.com");
-    val study001id = aclEntityService.getByName("Study001").getId().toString();
+    val study001id = policyService.getByName("Study001").getId().toString();
 
     val permissions = Arrays.asList(
-        new Permission(study001id, "WRITE"),
-        new Permission(study001id, "READ"),
-        new Permission(study001id, "DENY")
+        new Scope(study001id, "WRITE"),
+        new Scope(study001id, "READ"),
+        new Scope(study001id, "DENY")
     );
 
     userService.addUserPermissions(user.getId().toString(), permissions);
@@ -119,44 +119,44 @@ public class UserTest {
     userService.addUserToGroups(marryId, Arrays.asList(robotsId));
 
     // Get the studies so we can
-    val study001 = aclEntityService.getByName("Study001");
+    val study001 = policyService.getByName("Study001");
     val study001id = study001.getId().toString();
 
-    val study002 = aclEntityService.getByName("Study002");
+    val study002 = policyService.getByName("Study002");
     val study002id = study002.getId().toString();
 
-    val study003 = aclEntityService.getByName("Study003");
+    val study003 = policyService.getByName("Study003");
     val study003id = study003.getId().toString();
 
     // Assign ACL Permissions for each user/group
     userService.addUserPermissions(alexId, Arrays.asList(
-        new Permission(study001id, "WRITE"),
-        new Permission(study002id, "READ"),
-        new Permission(study003id, "DENY")
+        new Scope(study001id, "WRITE"),
+        new Scope(study002id, "READ"),
+        new Scope(study003id, "DENY")
     ));
 
     userService.addUserPermissions(bobId, Arrays.asList(
-        new Permission(study001id, "READ"),
-        new Permission(study002id, "DENY"),
-        new Permission(study003id, "WRITE")
+        new Scope(study001id, "READ"),
+        new Scope(study002id, "DENY"),
+        new Scope(study003id, "WRITE")
     ));
 
     userService.addUserPermissions(marryId, Arrays.asList(
-        new Permission(study001id, "DENY"),
-        new Permission(study002id, "WRITE"),
-        new Permission(study003id, "READ")
+        new Scope(study001id, "DENY"),
+        new Scope(study002id, "WRITE"),
+        new Scope(study003id, "READ")
     ));
 
     groupService.addGroupPermissions(wizardsId, Arrays.asList(
-        new Permission(study001id, "WRITE"),
-        new Permission(study002id, "READ"),
-        new Permission(study003id, "DENY")
+        new Scope(study001id, "WRITE"),
+        new Scope(study002id, "READ"),
+        new Scope(study003id, "DENY")
     ));
 
     groupService.addGroupPermissions(robotsId, Arrays.asList(
-        new Permission(study001id, "DENY"),
-        new Permission(study002id, "WRITE"),
-        new Permission(study003id, "READ")
+        new Scope(study001id, "DENY"),
+        new Scope(study002id, "WRITE"),
+        new Scope(study003id, "READ")
     ));
 
     /**

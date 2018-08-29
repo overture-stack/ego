@@ -24,7 +24,7 @@ import org.overture.ego.model.entity.User;
 import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.enums.UserRole;
 import org.overture.ego.model.enums.UserStatus;
-import org.overture.ego.model.params.Permission;
+import org.overture.ego.model.params.Scope;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.repository.UserRepository;
 import org.overture.ego.repository.queryspecification.UserSpecification;
@@ -78,7 +78,7 @@ public class UserService extends BaseService<User, UUID> {
   @Autowired
   private ApplicationService applicationService;
   @Autowired
-  private AclEntityService aclEntityService;
+  private PolicyService policyService;
   @Autowired
   private SimpleDateFormat formatter;
 
@@ -148,10 +148,10 @@ public class UserService extends BaseService<User, UUID> {
     userRepository.save(user);
   }
 
-  public void addUserPermissions(@NonNull String userId, @NonNull List<Permission> permissions) {
+  public void addUserPermissions(@NonNull String userId, @NonNull List<Scope> permissions) {
     val user = getById(userRepository, fromString(userId));
     permissions.forEach(permission -> {
-      user.addNewPermission(aclEntityService.get(permission.getAclEntityId()), PolicyMask.fromValue(permission.getMask()));
+      user.addNewPermission(policyService.get(permission.getAclEntityId()), PolicyMask.fromValue(permission.getMask()));
     });
     userRepository.save(user);
   }

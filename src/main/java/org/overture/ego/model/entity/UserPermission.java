@@ -40,12 +40,12 @@ public class UserPermission extends Permission {
   UUID id;
 
   @NonNull
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(nullable = false, name = Fields.ENTITY)
   Policy entity;
 
   @NonNull
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(nullable = false, name = Fields.SID)
   User sid;
 

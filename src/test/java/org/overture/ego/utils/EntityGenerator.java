@@ -5,7 +5,7 @@ import org.overture.ego.model.entity.Policy;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.service.AclEntityService;
+import org.overture.ego.service.PolicyService;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
@@ -31,7 +31,7 @@ public class EntityGenerator {
   private GroupService groupService;
 
   @Autowired
-  private AclEntityService aclEntityService;
+  private PolicyService policyService;
 
   public Application createOneApplication(String clientId) {
     return new Application(String.format("Application %s", clientId), clientId, new StringBuilder(clientId).reverse().toString());
@@ -107,7 +107,7 @@ public class EntityGenerator {
             Pair.of("Study002", threeGroups.get(1).getId()),
             Pair.of("Study003", threeGroups.get(2).getId())
         ))) {
-      aclEntityService.create(policy);
+      policyService.create(policy);
     }
   }
 }

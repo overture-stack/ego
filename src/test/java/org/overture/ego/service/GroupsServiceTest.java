@@ -6,7 +6,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
-import org.overture.ego.model.params.Permission;
+import org.overture.ego.model.params.Scope;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.utils.EntityGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +43,7 @@ public class GroupsServiceTest {
   private GroupService groupService;
 
   @Autowired
-  private AclEntityService aclEntityService;
+  private PolicyService policyService;
 
   @Autowired
   private EntityGenerator entityGenerator;
@@ -603,19 +603,19 @@ public class GroupsServiceTest {
         .getContent();
     entityGenerator.setupSimpleAclEntities(groups);
 
-    val study001 = aclEntityService.getByName("Study001");
+    val study001 = policyService.getByName("Study001");
     val study001id = study001.getId().toString();
 
-    val study002 = aclEntityService.getByName("Study002");
+    val study002 = policyService.getByName("Study002");
     val study002id = study002.getId().toString();
 
-    val study003 = aclEntityService.getByName("Study003");
+    val study003 = policyService.getByName("Study003");
     val study003id = study003.getId().toString();
 
     val permissions = Arrays.asList(
-        new Permission(study001id, "READ"),
-        new Permission(study002id, "WRITE"),
-        new Permission(study003id, "DENY")
+        new Scope(study001id, "READ"),
+        new Scope(study002id, "WRITE"),
+        new Scope(study003id, "DENY")
     );
 
     val firstGroup = groups.get(0);
@@ -640,19 +640,19 @@ public class GroupsServiceTest {
 
     val firstGroup = groups.get(0);
 
-    val study001 = aclEntityService.getByName("Study001");
+    val study001 = policyService.getByName("Study001");
     val study001id = study001.getId().toString();
 
-    val study002 = aclEntityService.getByName("Study002");
+    val study002 = policyService.getByName("Study002");
     val study002id = study002.getId().toString();
 
-    val study003 = aclEntityService.getByName("Study003");
+    val study003 = policyService.getByName("Study003");
     val study003id = study003.getId().toString();
 
     val permissions = Arrays.asList(
-        new Permission(study001id, "READ"),
-        new Permission(study002id, "WRITE"),
-        new Permission(study003id, "DENY")
+        new Scope(study001id, "READ"),
+        new Scope(study002id, "WRITE"),
+        new Scope(study003id, "DENY")
     );
 
     groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);
@@ -681,19 +681,19 @@ public class GroupsServiceTest {
 
     val firstGroup = groups.get(0);
 
-    val study001 = aclEntityService.getByName("Study001");
+    val study001 = policyService.getByName("Study001");
     val study001id = study001.getId().toString();
 
-    val study002 = aclEntityService.getByName("Study002");
+    val study002 = policyService.getByName("Study002");
     val study002id = study002.getId().toString();
 
-    val study003 = aclEntityService.getByName("Study003");
+    val study003 = policyService.getByName("Study003");
     val study003id = study003.getId().toString();
 
     val permissions = Arrays.asList(
-        new Permission(study001id, "READ"),
-        new Permission(study002id, "WRITE"),
-        new Permission(study003id, "DENY")
+        new Scope(study001id, "READ"),
+        new Scope(study002id, "WRITE"),
+        new Scope(study003id, "DENY")
     );
 
     groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);

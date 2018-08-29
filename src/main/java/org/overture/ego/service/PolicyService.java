@@ -20,7 +20,7 @@ import static java.util.UUID.fromString;
 @Slf4j
 @Service
 @Transactional
-public class AclEntityService extends BaseService<Policy, UUID> {
+public class PolicyService extends BaseService<Policy, UUID> {
 
   /*
     Dependencies

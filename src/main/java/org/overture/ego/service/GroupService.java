@@ -21,7 +21,7 @@ import lombok.val;
 import org.overture.ego.model.entity.GroupPermission;
 import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.enums.PolicyMask;
-import org.overture.ego.model.params.Permission;
+import org.overture.ego.model.params.Scope;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.repository.GroupRepository;
 import org.overture.ego.repository.queryspecification.GroupSpecification;
@@ -45,7 +45,7 @@ public class GroupService extends BaseService<Group, UUID> {
   @Autowired
   private ApplicationService applicationService;
   @Autowired
-  private AclEntityService aclEntityService;
+  private PolicyService policyService;
 
   public Group create(@NonNull Group groupInfo) {
     return groupRepository.save(groupInfo);
@@ -60,10 +60,10 @@ public class GroupService extends BaseService<Group, UUID> {
     groupRepository.save(group);
   }
 
-  public void addGroupPermissions(@NonNull String groupId, @NonNull List<Permission> permissions) {
+  public void addGroupPermissions(@NonNull String groupId, @NonNull List<Scope> permissions) {
     val group = getById(groupRepository, fromString(groupId));
     permissions.forEach(permission -> {
-      group.addNewPermission(aclEntityService.get(permission.getAclEntityId()), PolicyMask.fromValue(permission.getMask()));
+      group.addNewPermission(policyService.get(permission.getAclEntityId()), PolicyMask.fromValue(permission.getMask()));
     });
     groupRepository.save(group);
   }
