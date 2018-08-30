@@ -21,6 +21,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.dto.PageDTO;
 import org.overture.ego.model.entity.GroupPermission;
@@ -52,18 +53,14 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/groups")
+@AllArgsConstructor(onConstructor = @__({@Autowired}))
 public class GroupController {
-
-
   /**
    * Dependencies
    */
-  @Autowired
-  private GroupService groupService;
-  @Autowired
-  private ApplicationService applicationService;
-  @Autowired
-  private UserService userService;
+  private final GroupService groupService;
+  private final ApplicationService applicationService;
+  private final UserService userService;
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
@@ -192,17 +189,16 @@ public class GroupController {
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/permissions")
   @ApiResponses(
       value = {
-        @ApiResponse(code = 200, message = "Add group permissions", response = String.class)
+        @ApiResponse(code = 200, message = "Add group permissions", response = Group.class)
       }
   )
   public @ResponseBody
-  String addPermissions(
+  Group addPermissions(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String id,
       @RequestBody(required = true) List<Scope> permissions
   ) {
-    groupService.addGroupPermissions(id, permissions);
-    return permissions.size() + " permissions added to group successfully.";
+    return groupService.addGroupPermissions(id, permissions);
   }
 
   @AdminScoped
@@ -265,16 +261,15 @@ public class GroupController {
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/applications")
   @ApiResponses(
           value = {
-                  @ApiResponse(code = 200, message = "Add Apps to Group", response = String.class)
+                  @ApiResponse(code = 200, message = "Add Apps to Group", response = Group.class)
           }
   )
   public @ResponseBody
-  String addAppsToGroups(
+  Group addAppsToGroups(
           @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
           @PathVariable(value = "id", required = true) String grpId,
           @RequestBody(required = true) List<String> apps) {
-    groupService.addAppsToGroup(grpId,apps);
-    return apps.size() + " apps added successfully.";
+    return groupService.addAppsToGroup(grpId,apps);
   }
 
 

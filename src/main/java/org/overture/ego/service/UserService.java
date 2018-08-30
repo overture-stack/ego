@@ -17,10 +17,11 @@
 package org.overture.ego.service;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.overture.ego.model.entity.UserPermission;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.model.entity.UserPermission;
 import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.enums.UserRole;
 import org.overture.ego.model.enums.UserStatus;
@@ -49,16 +50,16 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 @Slf4j
 @Service
 @Transactional
+@RequiredArgsConstructor(onConstructor = @__({@Autowired}))
 public class UserService extends BaseService<User, UUID> {
-
   /*
     Constants
    */
   // DEFAULTS
   @Value("${default.user.role}")
-  private String DEFAULT_USER_ROLE;
+  private static String DEFAULT_USER_ROLE;
   @Value("${default.user.status}")
-  private String DEFAULT_USER_STATUS;
+  private static String DEFAULT_USER_STATUS;
 
   // DEMO USER
   private final static String DEMO_USER_NAME = "Demo.User@example.com";
@@ -71,19 +72,13 @@ public class UserService extends BaseService<User, UUID> {
   /*
     Dependencies
    */
-  @Autowired
-  private UserRepository userRepository;
-  @Autowired
-  private GroupService groupService;
-  @Autowired
-  private ApplicationService applicationService;
-  @Autowired
-  private PolicyService policyService;
-  @Autowired
-  private SimpleDateFormat formatter;
+  private final UserRepository userRepository;
+  private final GroupService groupService;
+  private final ApplicationService applicationService;
+  private final PolicyService policyService;
+  private final SimpleDateFormat formatter;
 
   public User create(@NonNull User userInfo) {
-
     // Set Created At date to Now
     userInfo.setCreatedAt(formatter.format(new Date()));
 
