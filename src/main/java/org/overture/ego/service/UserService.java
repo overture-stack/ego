@@ -57,9 +57,9 @@ public class UserService extends BaseService<User, UUID> {
    */
   // DEFAULTS
   @Value("${default.user.role}")
-  private static String DEFAULT_USER_ROLE;
+  private String DEFAULT_USER_ROLE;
   @Value("${default.user.status}")
-  private static String DEFAULT_USER_STATUS;
+  private String DEFAULT_USER_STATUS;
 
   // DEMO USER
   private final static String DEMO_USER_NAME = "Demo.User@example.com";
