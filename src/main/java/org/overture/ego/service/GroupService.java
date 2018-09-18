@@ -16,6 +16,7 @@
 
 package org.overture.ego.service;
 
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.val;
 import org.overture.ego.model.entity.GroupPermission;
@@ -38,34 +39,31 @@ import static java.util.UUID.fromString;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
+@AllArgsConstructor(onConstructor = @__({@Autowired}))
 public class GroupService extends BaseService<Group, UUID> {
-
-  @Autowired
-  private GroupRepository groupRepository;
-  @Autowired
-  private ApplicationService applicationService;
-  @Autowired
-  private PolicyService policyService;
+  private final GroupRepository groupRepository;
+  private final ApplicationService applicationService;
+  private final PolicyService policyService;
 
   public Group create(@NonNull Group groupInfo) {
     return groupRepository.save(groupInfo);
   }
 
-  public void addAppsToGroup(@NonNull String grpId, @NonNull List<String> appIDs){
+  public Group addAppsToGroup(@NonNull String grpId, @NonNull List<String> appIDs){
     val group = getById(groupRepository, fromString(grpId));
     appIDs.forEach(appId -> {
       val app = applicationService.get(appId);
       group.addApplication(app);
     });
-    groupRepository.save(group);
+    return groupRepository.save(group);
   }
 
-  public void addGroupPermissions(@NonNull String groupId, @NonNull List<Scope> permissions) {
+  public Group addGroupPermissions(@NonNull String groupId, @NonNull List<Scope> permissions) {
     val group = getById(groupRepository, fromString(groupId));
     permissions.forEach(permission -> {
       group.addNewPermission(policyService.get(permission.getAclEntityId()), PolicyMask.fromValue(permission.getMask()));
     });
-    groupRepository.save(group);
+    return groupRepository.save(group);
   }
 
   public Group get(@NonNull String groupId) {

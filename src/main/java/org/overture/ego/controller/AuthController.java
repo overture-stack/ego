@@ -16,6 +16,7 @@
 
 package org.overture.ego.controller;
 
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -36,15 +37,11 @@ import javax.servlet.http.HttpServletRequest;
 @Slf4j
 @RestController
 @RequestMapping("/oauth")
+@AllArgsConstructor(onConstructor = @__({@Autowired}))
 public class AuthController {
-
-  @Autowired
   private TokenService tokenService;
-  @Autowired
   private GoogleTokenService googleTokenService;
-  @Autowired
   private FacebookTokenService facebookTokenService;
-  @Autowired
   private TokenSigner tokenSigner;
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
@@ -81,8 +78,14 @@ public class AuthController {
   public @ResponseBody
   boolean verifyJWToken(
       @RequestHeader(value = "token", required = true) final String token) {
-    if (StringUtils.isEmpty(token)) return false;
-    return tokenService.validateToken(token);
+    if (StringUtils.isEmpty(token))  {
+      throw new InvalidTokenException("Token is empty");
+    }
+
+    if ( ! tokenService.validateToken(token) ) {
+      throw new InvalidTokenException("Token failed validation");
+    }
+    return true;
   }
 
   @RequestMapping(method = RequestMethod.GET, value = "/token/public_key")
