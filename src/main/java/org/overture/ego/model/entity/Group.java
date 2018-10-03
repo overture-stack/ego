@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -68,8 +69,11 @@ public class Group implements PolicyOwner {
   @JsonIgnore
   Set<Application> wholeApplications;
 
-  @ManyToMany(mappedBy = "wholeGroups", cascade = CascadeType.ALL)
+  @ManyToMany()
+  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinTable(name = "usergroup", joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
+    inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
   @JsonIgnore
   Set<User> wholeUsers;
 
