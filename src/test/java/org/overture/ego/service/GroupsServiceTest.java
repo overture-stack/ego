@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.util.Pair;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -593,6 +594,36 @@ public class GroupsServiceTest {
 
     assertThatExceptionOfType(IllegalArgumentException.class)
         .isThrownBy(() -> groupService.deleteAppsFromGroup(groupId, Arrays.asList("")));
+  }
+
+  /**
+   * This test guards against bad cascades against users
+   */
+  @Test
+  public void testDeleteGroupWithUserRelations() {
+    val user = userService.create(entityGenerator.createOneUser(Pair.of("foo", "bar")));
+    val group = groupService.create(entityGenerator.createOneGroup("testGroup"));
+
+    group.addUser(user);
+    val updatedGroup = groupService.update(group);
+
+    groupService.delete(updatedGroup.getId().toString());
+    assertThat(userService.get(user.getId().toString())).isNotNull();
+  }
+
+  /**
+   * This test guards against bad cascades against applications
+   */
+  @Test
+  public void testDeleteGroupWithApplicationRelations() {
+    val app = applicationService.create(entityGenerator.createOneApplication("foobar"));
+    val group = groupService.create(entityGenerator.createOneGroup("testGroup"));
+
+    group.addApplication(app);
+    val updatedGroup = groupService.update(group);
+
+    groupService.delete(updatedGroup.getId().toString());
+    assertThat(applicationService.get(app.getId().toString())).isNotNull();
   }
 
   @Test
