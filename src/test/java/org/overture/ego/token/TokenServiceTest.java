@@ -63,7 +63,6 @@ public class TokenServiceTest {
     val group2 = groupService.getByName("testGroup");
     group2.addUser(user);
     groupService.update(group2);
-    val groupShit = groupService.getByName("testGroup");
 
     val app2 = applicationService.getByClientId("foo");
     app2.setWholeUsers(Sets.newHashSet(user));
