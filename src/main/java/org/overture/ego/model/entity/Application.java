@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -77,13 +78,19 @@ public class Application {
   @Column(name = Fields.STATUS)
   String status;
 
-  @ManyToMany(mappedBy = "wholeApplications", cascade = CascadeType.ALL)
+  @ManyToMany()
+  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinTable(name = "groupapplication", joinColumns = { @JoinColumn(name = Fields.APPID_JOIN) },
+    inverseJoinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) })
   @JsonIgnore
   Set<Group> wholeGroups;
 
-  @ManyToMany(mappedBy = "wholeApplications", cascade = CascadeType.ALL)
+  @ManyToMany()
+  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinTable(name = "userapplication", joinColumns = {@JoinColumn(name = Fields.APPID_JOIN)},
+    inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
   @JsonIgnore
   Set<User> wholeUsers;
 

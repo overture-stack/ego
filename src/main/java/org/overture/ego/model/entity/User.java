@@ -104,7 +104,8 @@ public class User implements PolicyOwner {
   @JsonIgnore
   protected Set<Group> wholeGroups;
 
-  @ManyToMany(targetEntity = Application.class, cascade = {CascadeType.ALL})
+  @ManyToMany(targetEntity = Application.class)
+  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "userapplication", joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})

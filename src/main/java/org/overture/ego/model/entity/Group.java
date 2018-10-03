@@ -62,7 +62,8 @@ public class Group implements PolicyOwner {
   @Column(nullable = false, name = Fields.STATUS, updatable = false)
   String status;
 
-  @ManyToMany(targetEntity = Application.class, cascade = {CascadeType.ALL})
+  @ManyToMany(targetEntity = Application.class)
+  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "groupapplication", joinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) },
           inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
