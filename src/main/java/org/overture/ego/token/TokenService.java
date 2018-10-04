@@ -39,8 +39,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.InvalidKeyException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -91,11 +90,18 @@ public class TokenService {
 
   @SneakyThrows
   public String generateUserToken(User u) {
+    val scope = new HashSet<>(u.getScopes());
+    return generateUserToken(u, scope);
+  }
+
+  public String generateUserToken(User u, Set<String> scope) {
     val tokenContext = new UserTokenContext(u);
+    tokenContext.setScope(scope);
     val tokenClaims = new UserTokenClaims();
     tokenClaims.setIss(ISSUER_NAME);
     tokenClaims.setValidDuration(DURATION);
-    tokenClaims.setContext(tokenContext);
+    //tokenClaims.setContext(tokenContext);
+
     return getSignedToken(tokenClaims);
   }
 
@@ -134,7 +140,6 @@ public class TokenService {
 
   @SneakyThrows
   public Claims getTokenClaims(String token) {
-
     if(tokenSigner.getKey().isPresent()) {
     return Jwts.parser()
         .setSigningKey(tokenSigner.getKey().get())

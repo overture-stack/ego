@@ -20,6 +20,7 @@ import io.jsonwebtoken.Claims;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.model.entity.User;
 import org.overture.ego.token.TokenService;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
@@ -46,7 +47,8 @@ public class UserJWTAccessToken implements OAuth2AccessToken {
 
   @Override
   public Set<String> getScope() {
-    return new HashSet<String>(((ArrayList<String>)getUser().get("roles")));
+    val scope = ((UserTokenContext) tokenClaims.get("context")).getScope();
+    return new HashSet<>(scope);
   }
 
   @Override

@@ -127,26 +127,24 @@ public class User implements PolicyOwner {
     return this.wholeGroups.stream().map(g -> g.getName()).collect(Collectors.toList());
   }
 
-  // Creates permissions in JWTAccessToken::context::user
-  @JsonView(Views.JWTAccessToken.class)
-  public List<String> getPermissions() {
-
+  @JsonIgnore
+  public List<Permission> getPermissionsList() {
     // Get user's individual permission (stream)
     val userPermissions = Optional.ofNullable(this.getUserPermissions())
-        .orElse(new ArrayList<>())
-        .stream();
+      .orElse(new ArrayList<>())
+      .stream();
 
     // Get permissions from the user's groups (stream)
     val userGroupsPermissions = Optional.ofNullable(this.getWholeGroups())
-        .orElse(new HashSet<>())
-        .stream()
-        .map(Group::getGroupPermissions)
-        .flatMap(List::stream);
+      .orElse(new HashSet<>())
+      .stream()
+      .map(Group::getGroupPermissions)
+      .flatMap(List::stream);
 
     // Combine individual user permissions and the user's
     // groups (if they have any) permissions
     val combinedPermissions = Stream.concat(userPermissions, userGroupsPermissions)
-        .collect(Collectors.groupingBy(Permission::getEntity));
+      .collect(Collectors.groupingBy(Permission::getEntity));
 
     // If we have no permissions at all return an empty list
     if (combinedPermissions.values().size() == 0) {
@@ -162,7 +160,22 @@ public class User implements PolicyOwner {
       permissions.sort(Comparator.comparing(Permission::getMask).reversed());
       finalPermissionsList.add(permissions.get(0));
     });
+    return finalPermissionsList;
+  }
+  @JsonIgnore
+  public List<String> getScopes() {
+    val permissions = getPermissionsList();
+    val scopes = permissions.stream().
+      filter(x -> x.getMask() != PolicyMask.DENY).
+      map(x -> x.getEntity().getName()).
+      collect(Collectors.toList());
+    return scopes;
+  }
 
+  // Creates permissions in JWTAccessToken::context::user
+  @JsonView(Views.JWTAccessToken.class)
+  public List<String> getPermissions() {
+    val finalPermissionsList = getPermissionsList();
     // Convert final permissions list for JSON output
     return extractPermissionStrings(finalPermissionsList);
   }

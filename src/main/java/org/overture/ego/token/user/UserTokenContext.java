@@ -26,14 +26,16 @@ import lombok.RequiredArgsConstructor;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.view.Views;
 
+import java.util.Set;
+
 @Data
 @NoArgsConstructor
 @RequiredArgsConstructor
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @JsonView(Views.JWTAccessToken.class)
 public class UserTokenContext {
-
   @NonNull
   @JsonProperty("user")
   private User userInfo;
+  private Set<String> Scope;
 }

@@ -17,14 +17,17 @@
 package org.overture.ego.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.overture.ego.provider.oauth.ScopeAwareOAuth2RequestFactory;
 import org.overture.ego.security.CorsFilter;
 import org.overture.ego.service.ApplicationService;
+import org.overture.ego.service.UserService;
 import org.overture.ego.token.CustomTokenEnhancer;
 import org.overture.ego.token.signer.TokenSigner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,6 +36,7 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.A
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.OAuth2RequestFactory;
 import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenEnhancerChain;
@@ -57,6 +61,9 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
 
   @Autowired
   TokenSigner tokenSigner;
+
+  @Autowired
+  UserService userService;
 
   @Bean
   @Primary
@@ -111,16 +118,23 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
     return new CustomTokenEnhancer();
   }
 
+  @Bean
+  @Profile("!no_scope_validation")
+  public OAuth2RequestFactory oAuth2RequestFactory() {
+    return new ScopeAwareOAuth2RequestFactory(clientDetailsService, userService);
+  }
+
   @Override
   public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
     TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
     tokenEnhancerChain.setTokenEnhancers(
             Arrays.asList(tokenEnhancer()));
+
     endpoints.tokenStore(tokenStore())
             .tokenEnhancer(tokenEnhancerChain)
             .accessTokenConverter(accessTokenConverter());
     endpoints.authenticationManager(this.authenticationManager);
-
+    endpoints.requestFactory(oAuth2RequestFactory());
   }
 
   @Override

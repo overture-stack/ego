@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.overture.ego.model.dto.PageDTO;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.Group;
@@ -39,6 +40,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
@@ -199,6 +201,8 @@ public class UserController {
   ) {
     return userService.addUserPermissions(id, permissions);
   }
+
+
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/permissions/{permissionIds}")

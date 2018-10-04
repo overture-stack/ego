@@ -20,19 +20,24 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.model.entity.User;
 import org.overture.ego.provider.facebook.FacebookTokenService;
 import org.overture.ego.provider.google.GoogleTokenService;
+import org.overture.ego.service.UserService;
 import org.overture.ego.token.TokenService;
 import org.overture.ego.token.signer.TokenSigner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Set;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -43,13 +48,14 @@ public class AuthController {
   private GoogleTokenService googleTokenService;
   private FacebookTokenService facebookTokenService;
   private TokenSigner tokenSigner;
+  private UserService userService;
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
   @ResponseStatus(value = HttpStatus.OK)
   @SneakyThrows
   public @ResponseBody
   String exchangeGoogleTokenForAuth(
-      @RequestHeader(value = "token", required = true) final String idToken) {
+      @RequestHeader(value = "token") final String idToken) {
     if (!googleTokenService.validToken(idToken))
       throw new InvalidTokenException("Invalid user token:" + idToken);
     val authInfo = googleTokenService.decode(idToken);
@@ -61,7 +67,7 @@ public class AuthController {
   @SneakyThrows
   public @ResponseBody
   String exchangeFacebookTokenForAuth(
-          @RequestHeader(value = "token", required = true) final String idToken) {
+          @RequestHeader(value = "token") final String idToken) {
     if (!facebookTokenService.validToken(idToken))
       throw new InvalidTokenException("Invalid user token:" + idToken);
     val authInfo = facebookTokenService.getAuthInfo(idToken);
@@ -72,12 +78,46 @@ public class AuthController {
     }
   }
 
+  @RequestMapping(method = RequestMethod.POST, value = "/user/{id}/authToken")
+  @ResponseStatus(value = HttpStatus.OK)
+  @SneakyThrows
+  public @ResponseBody
+  String issueToken(
+    @RequestHeader(value = HttpHeaders.AUTHORIZATION) final String accessToken,
+    @PathVariable(value = "id") UUID id,
+    @RequestBody() Set<String> scopes
+    ) {
+    User u = userService.get(id.toString());
+    val userScopes = u.getScopes();
+    if (!userScopes.containsAll(scopes)) {
+      scopes.removeAll(userScopes);
+      throw new InvalidScopeException(
+        "User %s does not have permission to access scope(s) %s".
+          format(u.getId().toString(), scopes));
+    }
+
+    return tokenService.generateUserToken(u, scopes);
+  }
+
+  @RequestMapping(method = RequestMethod.GET, value = "/user/{id}/scopes")
+  @ResponseStatus(value = HttpStatus.OK)
+  @SneakyThrows
+  public @ResponseBody
+  String getScopes(
+    @RequestHeader(value = HttpHeaders.AUTHORIZATION) final String accessToken,
+    @PathVariable(value = "id") UUID id
+  ) {
+    User u = userService.get(id.toString());
+    val userScopes = u.getScopes();
+    return userScopes.toString();
+  }
+
   @RequestMapping(method = RequestMethod.GET, value = "/token/verify")
   @ResponseStatus(value = HttpStatus.OK)
   @SneakyThrows
   public @ResponseBody
   boolean verifyJWToken(
-      @RequestHeader(value = "token", required = true) final String token) {
+      @RequestHeader(value = "token") final String token) {
     if (StringUtils.isEmpty(token))  {
       throw new InvalidTokenException("Token is empty");
     }

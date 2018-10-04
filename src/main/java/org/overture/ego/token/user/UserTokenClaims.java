@@ -26,7 +26,7 @@ import org.overture.ego.view.Views;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -42,6 +42,10 @@ public class UserTokenClaims extends TokenClaims {
     } else {
       return sub;
     }
+  }
+
+  public Set<String> getScope() {
+    return this.context.getScope();
   }
 
   public List<String> getAud(){

@@ -53,12 +53,14 @@ public class CustomTokenEnhancer implements TokenEnhancer {
   private UserJWTAccessToken getUserAccessToken(String userName){
     val user = userService.getByName(userName);
     val token = tokenService.generateUserToken(user);
+
     return tokenService.getUserAccessToken(token);
   }
 
   private AppJWTAccessToken getApplicationAccessToken(String clientId){
     val app = applicationService.getByClientId(clientId);
     val token = tokenService.generateAppToken(app);
+
     return tokenService.getAppAccessToken(token);
   }
 
