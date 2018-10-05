@@ -21,8 +21,11 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.Application;
+import org.overture.ego.model.entity.Token;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.reactor.events.UserEvents;
+import org.overture.ego.service.ApplicationService;
+import org.overture.ego.service.TokenStoreService;
 import org.overture.ego.service.UserService;
 import org.overture.ego.token.app.AppJWTAccessToken;
 import org.overture.ego.token.app.AppTokenClaims;
@@ -35,6 +38,7 @@ import org.overture.ego.utils.TypeUtils;
 import org.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.stereotype.Service;
 
 import java.security.InvalidKeyException;
@@ -53,11 +57,15 @@ public class TokenService {
   @Autowired
   private UserService userService;
   @Autowired
+  private ApplicationService applicationService;
+  @Autowired
   private UserEvents userEvents;
   @Autowired
   TokenSigner tokenSigner;
   @Autowired
   private SimpleDateFormat dateFormatter;
+  @Autowired
+  private TokenStoreService tokenStoreService;
   /*
     Constant
   */
@@ -94,13 +102,55 @@ public class TokenService {
     return generateUserToken(u, scope);
   }
 
+  public Token issueToken(String clientId, String name, Set<String> scopes) {
+    User u = userService.getByName(name);
+    val app = applicationService.getByClientId(clientId);
+
+    val missingScopes = u.missingScopes(scopes);
+    if (missingScopes != null) {
+      throw new InvalidScopeException(
+        "User %s does not have access to scope(s) %s".format(
+        u.getName(), missingScopes));
+    }
+
+    val tokenString = generateTokenString();
+    Token t = new Token();
+    t.setIssueDate(new Date());
+    t.setRevoked(false);
+    t.setToken(tokenString);
+    t.setOwner(u);
+    t.setApplication(app);
+
+    for(val p: u.getPermissionsList()) {
+      val policy=p.getEntity();
+
+      if (scopes.contains(policy.getName())) {
+        t.addPolicy(p.getEntity());
+      }
+    }
+
+    tokenStoreService.create(t);
+
+    return t;
+  }
+
+  public Token findByTokenString(String token) {
+      Token t = tokenStoreService.findByTokenString(token);
+
+      return t;
+  }
+
+  public String generateTokenString() {
+    return "ABC123-FixGenerateTokenStringPlease";
+  }
+
   public String generateUserToken(User u, Set<String> scope) {
     val tokenContext = new UserTokenContext(u);
     tokenContext.setScope(scope);
     val tokenClaims = new UserTokenClaims();
     tokenClaims.setIss(ISSUER_NAME);
     tokenClaims.setValidDuration(DURATION);
-    //tokenClaims.setContext(tokenContext);
+    tokenClaims.setContext(tokenContext);
 
     return getSignedToken(tokenClaims);
   }

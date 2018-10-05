@@ -34,10 +34,14 @@ public class Fields {
   public static final String REDIRECTURI = "redirecturi";
   public static final String USERID_JOIN = "userid";
   public static final String GROUPID_JOIN = "grpid";
+  public static final String TOKENID_JOIN = "tokenid";
+  public static final String SCOPEID_JOIN = "scopeid";
   public static final String APPID_JOIN = "appid";
   public static final String OWNER = "owner";
   public static final String ENTITY = "entity";
   public static final String SID = "sid";
   public static final String MASK = "mask";
-
+  public static final String TOKEN = "token";
+  public static final String ISSUEDATE = "issuedate";
+  public static final String ISREVOKED = "isrevoked";
 }

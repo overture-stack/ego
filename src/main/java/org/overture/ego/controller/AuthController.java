@@ -20,9 +20,13 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.model.dto.TokenResponse;
+import org.overture.ego.model.dto.TokenScope;
+import org.overture.ego.model.entity.Token;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.provider.facebook.FacebookTokenService;
 import org.overture.ego.provider.google.GoogleTokenService;
+import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.UserService;
 import org.overture.ego.token.TokenService;
 import org.overture.ego.token.signer.TokenSigner;
@@ -30,6 +34,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.common.exceptions.InvalidClientException;
+import org.springframework.security.oauth2.common.exceptions.InvalidGrantException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.util.StringUtils;
@@ -45,6 +51,7 @@ import java.util.UUID;
 @AllArgsConstructor(onConstructor = @__({@Autowired}))
 public class AuthController {
   private TokenService tokenService;
+  private ApplicationService applicationService;
   private GoogleTokenService googleTokenService;
   private FacebookTokenService facebookTokenService;
   private TokenSigner tokenSigner;
@@ -78,6 +85,42 @@ public class AuthController {
     }
   }
 
+  @RequestMapping(method = RequestMethod.GET, value = "/oauth/check_token")
+  @ResponseStatus(value = HttpStatus.OK)
+  @SneakyThrows
+  public @ResponseBody
+  TokenScope getScopesForToken(
+    @RequestHeader(value = "token") final String token) {
+    Token t =  tokenService.findByTokenString(token);
+
+    return new TokenScope(t.getToken(), t.getClientId(), t.getSecondsUntilExpiry(), t.getScope());
+  }
+
+  @RequestMapping(method = RequestMethod.POST, value="/token")
+  @ResponseStatus(value = HttpStatus.OK)
+  public @ResponseBody
+  TokenResponse issueToken(
+    @RequestHeader(value = HttpHeaders.AUTHORIZATION) final String accessToken,
+    @RequestBody() String grantType,
+    @RequestBody() String clientId,
+    @RequestBody() String clientSecret,
+    @RequestBody() String userName,
+    @RequestBody() Set<String> scopes
+
+  ) {
+    if (grantType.equals("client_credentials")) {
+      throw new InvalidGrantException("Invalid grant type %s".format(grantType));
+    }
+    val app = applicationService.getByClientId(clientId);
+    if (!app.getClientId().equals(clientSecret)) {
+      throw new InvalidClientException("Wrong client secret for clientId '%s'".format(clientId));
+    }
+
+    Token t = tokenService.issueToken(clientId, userName, scopes);
+    TokenResponse response=new TokenResponse(t.getAccessToken(), t.getScope(), t.getSecondsUntilExpiry());
+    return response;
+  }
+
   @RequestMapping(method = RequestMethod.POST, value = "/user/{id}/authToken")
   @ResponseStatus(value = HttpStatus.OK)
   @SneakyThrows
@@ -88,14 +131,7 @@ public class AuthController {
     @RequestBody() Set<String> scopes
     ) {
     User u = userService.get(id.toString());
-    val userScopes = u.getScopes();
-    if (!userScopes.containsAll(scopes)) {
-      scopes.removeAll(userScopes);
-      throw new InvalidScopeException(
-        "User %s does not have permission to access scope(s) %s".
-          format(u.getId().toString(), scopes));
-    }
-
+    userService.verifyScopes(u, scopes);
     return tokenService.generateUserToken(u, scopes);
   }
 
@@ -103,7 +139,7 @@ public class AuthController {
   @ResponseStatus(value = HttpStatus.OK)
   @SneakyThrows
   public @ResponseBody
-  String getScopes(
+  String getUserScopes(
     @RequestHeader(value = HttpHeaders.AUTHORIZATION) final String accessToken,
     @PathVariable(value = "id") UUID id
   ) {
@@ -147,4 +183,10 @@ public class AuthController {
         HttpStatus.BAD_REQUEST);
   }
 
+  @ExceptionHandler({ InvalidScopeException.class })
+  public ResponseEntity<Object> handleInvalidScopeException(HttpServletRequest req, InvalidTokenException ex) {
+    log.error("Invalid Scope: %s".format(ex.getMessage()));
+    return new ResponseEntity<Object>("{\"error\": \"%s\"}".format(ex.getMessage()),
+      HttpStatus.BAD_REQUEST);
+  }
 }

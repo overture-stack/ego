@@ -1,0 +1,14 @@
+CREATE TABLE TOKEN(
+  id        UUID PRIMARY KEY,
+  token     VARCHAR(2048) NOT NULL,
+  owner     UUID NOT NULL,
+  appid     UUID NOT NULL,
+  issuedate DATE,
+  isrevoked BOOLEAN
+);
+
+
+CREATE TABLE TOKENSCOPE (
+  tokenid   UUID REFERENCES TOKEN(ID),
+  scopeid   UUID REFERENCES ACLENTITY(ID)
+);

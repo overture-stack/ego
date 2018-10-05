@@ -26,7 +26,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @JsonView(Views.REST.class)
 public class Policy {
-
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(

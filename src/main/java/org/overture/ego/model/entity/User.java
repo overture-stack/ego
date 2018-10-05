@@ -28,6 +28,7 @@ import org.hibernate.annotations.LazyCollectionOption;
 import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.enums.Fields;
 import org.overture.ego.view.Views;
+import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 
 import javax.persistence.*;
 import java.util.*;
@@ -172,6 +173,15 @@ public class User implements PolicyOwner {
     return scopes;
   }
 
+  public Set<String> missingScopes(@NonNull Set<String> scopes) {
+    val userScopes = getScopes();
+    if (!userScopes.containsAll(scopes)) {
+      val missingScopes = new HashSet<>(scopes);
+      missingScopes.removeAll(userScopes);
+      return missingScopes;
+    }
+    return Collections.EMPTY_SET;
+  }
   // Creates permissions in JWTAccessToken::context::user
   @JsonView(Views.JWTAccessToken.class)
   public List<String> getPermissions() {
