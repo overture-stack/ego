@@ -3,7 +3,7 @@ CREATE TABLE TOKEN(
   token     VARCHAR(2048) NOT NULL,
   owner     UUID NOT NULL,
   appid     UUID NOT NULL,
-  issuedate DATE,
+  issuedate DATETIME,
   isrevoked BOOLEAN
 );
 

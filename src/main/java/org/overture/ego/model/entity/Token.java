@@ -5,6 +5,7 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.joda.time.DateTime;
 import org.overture.ego.model.enums.Fields;
 
 import javax.persistence.*;
@@ -38,28 +39,24 @@ public class Token {
     return this.token;
   }
 
-  @OneToOne()
-  @JoinColumn(name=Fields.ID)
-  User owner;
+  @Column(nullable = false, name = Fields.OWNER)
+  @NonNull
+  UUID owner;
 
-  public String getUserName() {
-    return owner.getName();
-  }
-
-  @OneToOne()
-  @JoinColumn(name = Fields.ID)
-  Application application;
-
-  public String getClientId() {
-    return application.getClientId();
-  }
+  @Column(nullable = false, name = Fields.APPID_JOIN)
+  @NonNull
+  UUID appId;
 
   @Column(nullable = false, name = Fields.ISSUEDATE, updatable = false)
-  Date issueDate;
+  Date expires;
 
+  public void setExpires(int seconds) {
+    expires = DateTime.now().plusSeconds(seconds).toDate();
+  }
+  @NonNull
   public Long getSecondsUntilExpiry() {
-    Date now=new Date();
-    return issueDate.toInstant().getEpochSecond()-now.toInstant().getEpochSecond();
+    val seconds = (expires.getTime() - DateTime.now().getMillis()) / 1000;
+    return seconds > 0 ? seconds:0;
   }
 
   @Column(nullable = false, name = Fields.ISREVOKED, updatable = false)

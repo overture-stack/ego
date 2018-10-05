@@ -31,6 +31,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.common.util.RandomValueStringGenerator;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
@@ -122,6 +123,11 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   @Profile("!no_scope_validation")
   public OAuth2RequestFactory oAuth2RequestFactory() {
     return new ScopeAwareOAuth2RequestFactory(clientDetailsService, userService);
+  }
+
+  @Bean
+  public RandomValueStringGenerator randomValueStringGenerator() {
+    return new RandomValueStringGenerator(32);
   }
 
   @Override

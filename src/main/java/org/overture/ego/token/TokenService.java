@@ -40,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.stereotype.Service;
+import org.springframework.security.oauth2.common.util.RandomValueStringGenerator;
 
 import java.security.InvalidKeyException;
 import java.text.SimpleDateFormat;
@@ -66,11 +67,13 @@ public class TokenService {
   private SimpleDateFormat dateFormatter;
   @Autowired
   private TokenStoreService tokenStoreService;
+
+  @Autowired
+  private RandomValueStringGenerator randomValueStringGenerator;
   /*
     Constant
   */
   private static final String ISSUER_NAME="ego";
-
 
   public String generateUserToken(IDToken idToken){
     // If the demo flag is set, all tokens will be generated as the Demo User,
@@ -107,31 +110,31 @@ public class TokenService {
     val app = applicationService.getByClientId(clientId);
 
     val missingScopes = u.missingScopes(scopes);
-    if (missingScopes != null) {
-      throw new InvalidScopeException(
-        "User %s does not have access to scope(s) %s".format(
-        u.getName(), missingScopes));
+
+    if (!missingScopes.isEmpty()) {
+      val msg=String.format("User %s has no access to scopes [%s]",name, missingScopes);
+      log.error(msg);
+      throw new InvalidScopeException(msg);
     }
 
     val tokenString = generateTokenString();
-    Token t = new Token();
-    t.setIssueDate(new Date());
-    t.setRevoked(false);
-    t.setToken(tokenString);
-    t.setOwner(u);
-    t.setApplication(app);
+    val token = new Token();
+    token.setExpires(DURATION);
+    token.setRevoked(false);
+    token.setToken(tokenString);
+    token.setOwner(u.getId());
+    token.setAppId(app.getId());
 
     for(val p: u.getPermissionsList()) {
       val policy=p.getEntity();
-
       if (scopes.contains(policy.getName())) {
-        t.addPolicy(p.getEntity());
+        token.addPolicy(p.getEntity());
       }
     }
 
-    tokenStoreService.create(t);
+    tokenStoreService.create(token);
 
-    return t;
+    return token;
   }
 
   public Token findByTokenString(String token) {
@@ -141,7 +144,7 @@ public class TokenService {
   }
 
   public String generateTokenString() {
-    return "ABC123-FixGenerateTokenStringPlease";
+    return randomValueStringGenerator.generate();
   }
 
   public String generateUserToken(User u, Set<String> scope) {

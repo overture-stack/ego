@@ -167,8 +167,8 @@ public class User implements PolicyOwner {
   public List<String> getScopes() {
     val permissions = getPermissionsList();
     val scopes = permissions.stream().
-      filter(x -> x.getMask() != PolicyMask.DENY).
-      map(x -> x.getEntity().getName()).
+      filter(p -> p.getMask() != PolicyMask.DENY).
+      map(p -> p.getEntity().getName()).
       collect(Collectors.toList());
     return scopes;
   }
@@ -193,7 +193,7 @@ public class User implements PolicyOwner {
   @JsonIgnore
   public List<String> getApplications() {
     if (this.wholeApplications == null) {
-      return new ArrayList<String>();
+      return new ArrayList<>();
     }
     return this.wholeApplications.stream().map(a -> a.getName()).collect(Collectors.toList());
   }
