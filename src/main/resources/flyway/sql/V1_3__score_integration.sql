@@ -1,9 +1,9 @@
 CREATE TABLE TOKEN(
   id        UUID PRIMARY KEY,
-  token     VARCHAR(2048) NOT NULL,
+  scopedAccessToken     VARCHAR(2048) NOT NULL,
   owner     UUID NOT NULL,
   appid     UUID NOT NULL,
-  issuedate DATETIME,
+  issuedate TIMESTAMP,
   isrevoked BOOLEAN
 );
 
@@ -12,3 +12,8 @@ CREATE TABLE TOKENSCOPE (
   tokenid   UUID REFERENCES TOKEN(ID),
   scopeid   UUID REFERENCES ACLENTITY(ID)
 );
+
+CREATE TABLE TOKENAPPLICATION (
+  tokenid   UUID REFERENCES TOKEN(ID),
+  application UUID REFERENCES EGOAPPLICATION(ID)
+)

@@ -16,12 +16,15 @@
 
 package org.overture.ego.security;
 
-import lombok.NonNull;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 
-public interface AuthorizationManager {
-  boolean authorize(Authentication authentication);
-  boolean authorizeWithAdminRole(Authentication authentication);
-  boolean authorizeWithApplication(@NonNull Authentication authentication);
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
+/**
+ * Method Security Meta Annotation
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@PreAuthorize("@authorizationManager.authorizeWithApplication(authentication)")
+public @interface ApplicationScoped {
 }
-

@@ -19,8 +19,7 @@ package org.overture.ego.service;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTime;
-import org.overture.ego.model.entity.Token;
+import org.overture.ego.model.entity.ScopedAccessToken;
 
 import org.overture.ego.repository.TokenStoreRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,14 +31,14 @@ import java.util.UUID;
 @Service
 @Transactional
 @RequiredArgsConstructor(onConstructor = @__({@Autowired}))
-public class TokenStoreService extends BaseService<Token, UUID> {
+public class TokenStoreService extends BaseService<ScopedAccessToken, UUID> {
   private final TokenStoreRepository tokenRepository;
 
-  public Token create(@NonNull Token token) {
-    return tokenRepository.save(token);
+  public ScopedAccessToken create(@NonNull ScopedAccessToken scopedAccessToken) {
+    return tokenRepository.save(scopedAccessToken);
   }
 
-  public Token findByTokenString(String token) {
+  public ScopedAccessToken findByTokenString(String token) {
     return tokenRepository.findOneByTokenIgnoreCase(token);
   }
 }

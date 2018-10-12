@@ -1,5 +1,6 @@
 package org.overture.ego.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Token {
+public class ScopedAccessToken {
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(
@@ -35,17 +36,17 @@ public class Token {
   @NonNull
   String token;
 
-  public String getAccessToken() {
-    return this.token;
-  }
+  @OneToOne()
+  @JoinColumn(name=Fields.OWNER)
+  @JsonIgnore
+  User owner;
 
-  @Column(nullable = false, name = Fields.OWNER)
-  @NonNull
-  UUID owner;
-
-  @Column(nullable = false, name = Fields.APPID_JOIN)
-  @NonNull
-  UUID appId;
+  @NonNull @ManyToMany()
+  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
+  @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinTable(name = "tokenapplication", joinColumns = {@JoinColumn(name = Fields.TOKENID_JOIN)},
+    inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
+  Set<Application> applications;
 
   @Column(nullable = false, name = Fields.ISSUEDATE, updatable = false)
   Date expires;
@@ -62,7 +63,7 @@ public class Token {
   @Column(nullable = false, name = Fields.ISREVOKED, updatable = false)
   boolean isRevoked;
 
-  @NonNull @ManyToMany()
+  @ManyToMany()
   @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "tokenscope", joinColumns = {@JoinColumn(name = Fields.TOKENID_JOIN)},
@@ -74,6 +75,13 @@ public class Token {
       policies = new HashSet<>();
     }
     policies.add(policy);
+  }
+
+  public void addApplication(Application app) {
+    if (applications == null) {
+      applications = new HashSet<>();
+    }
+    applications.add(app);
   }
 
   public Set<String> getScope() {

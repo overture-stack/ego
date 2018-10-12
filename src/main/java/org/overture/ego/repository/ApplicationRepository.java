@@ -17,11 +17,14 @@
 package org.overture.ego.repository;
 
 import org.overture.ego.model.entity.Application;
+import org.overture.ego.model.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -29,6 +32,10 @@ public interface ApplicationRepository
         extends PagingAndSortingRepository<Application, UUID>, JpaSpecificationExecutor {
 
   Application findOneByClientIdIgnoreCase(String clientId);
+
+  @Query("select id from Application where concat(clientId,clientSecret)=?1")
+  UUID findByBasicToken(String token);
+
   Application findOneByNameIgnoreCase(String name);
   Application findOneByName(String name);
   Page<Application> findAllByStatusIgnoreCase(String status, Pageable pageable);

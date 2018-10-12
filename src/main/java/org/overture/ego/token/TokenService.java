@@ -21,7 +21,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.Application;
-import org.overture.ego.model.entity.Token;
+import org.overture.ego.model.entity.ScopedAccessToken;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.reactor.events.UserEvents;
 import org.overture.ego.service.ApplicationService;
@@ -92,7 +92,7 @@ public class TokenService {
 
     // Update user.lastLogin in the DB
     // Use events as these are async:
-    //    the DB call won't block returning the Token
+    //    the DB call won't block returning the ScopedAccessToken
     user.setLastLogin(dateFormatter.format(new Date()));
     userEvents.update(user);
 
@@ -105,10 +105,9 @@ public class TokenService {
     return generateUserToken(u, scope);
   }
 
-  public Token issueToken(String clientId, String name, Set<String> scopes) {
-    User u = userService.getByName(name);
-    val app = applicationService.getByClientId(clientId);
 
+  public ScopedAccessToken issueToken(String name, Set<String> apps, Set<String> scopes) {
+    User u = userService.getByName(name);
     val missingScopes = u.missingScopes(scopes);
 
     if (!missingScopes.isEmpty()) {
@@ -118,18 +117,23 @@ public class TokenService {
     }
 
     val tokenString = generateTokenString();
-    val token = new Token();
+    val token = new ScopedAccessToken();
     token.setExpires(DURATION);
     token.setRevoked(false);
     token.setToken(tokenString);
-    token.setOwner(u.getId());
-    token.setAppId(app.getId());
+
+    token.setOwner(u);
 
     for(val p: u.getPermissionsList()) {
       val policy=p.getEntity();
       if (scopes.contains(policy.getName())) {
-        token.addPolicy(p.getEntity());
+        token.addPolicy(policy);
       }
+    }
+
+    for(val appName: apps) {
+      val app = applicationService.getByName(appName);
+      token.addApplication(app);
     }
 
     tokenStoreService.create(token);
@@ -137,8 +141,8 @@ public class TokenService {
     return token;
   }
 
-  public Token findByTokenString(String token) {
-      Token t = tokenStoreService.findByTokenString(token);
+  public ScopedAccessToken findByTokenString(String token) {
+      ScopedAccessToken t = tokenStoreService.findByTokenString(token);
 
       return t;
   }

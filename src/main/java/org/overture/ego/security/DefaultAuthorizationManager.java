@@ -36,4 +36,8 @@ public class DefaultAuthorizationManager implements AuthorizationManager {
     return true;
   }
 
+  @Override public boolean authorizeWithApplication(Authentication authentication) {
+    return true;
+  }
+
 }

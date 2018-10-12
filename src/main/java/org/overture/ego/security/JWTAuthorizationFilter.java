@@ -19,12 +19,15 @@ package org.overture.ego.security;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.service.ApplicationService;
 import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.util.StringUtils;
@@ -34,6 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 @Slf4j
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
@@ -45,6 +49,8 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
   @Autowired
   private TokenService tokenService;
+  @Autowired
+  private ApplicationService applicationService;
 
 
   public JWTAuthorizationFilter(AuthenticationManager authManager, String[] publicEndpoints) {
@@ -57,26 +63,49 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
   public void doFilterInternal(HttpServletRequest request,
                                HttpServletResponse response,
                                FilterChain chain) {
-    String tokenPayload = "";
 
-    // No need to validate a token even if one is passed for public endpoints
-    if(isPublicEndpoint(request.getServletPath())){
-      chain.doFilter(request,response);
+    if (isPublicEndpoint(request.getServletPath())) {
+      log.error("This is a public Endpoint.");
+      chain.doFilter(request, response);
       return;
-    } else{
-      tokenPayload = request.getHeader(HttpHeaders.AUTHORIZATION);
     }
+    val tokenPayload = request.getHeader(HttpHeaders.AUTHORIZATION);
+    log.error("Found token payload '%s'".format(tokenPayload));
+
+    if (tokenPayload.startsWith(applicationService.APP_TOKEN_PREFIX)) {
+      authenticateApplication(tokenPayload);
+    } else {
+      authenticateUser(tokenPayload);
+    }
+    chain.doFilter(request,response);
+  }
+
+  private void authenticateUser(String tokenPayload) {
     if (!isValidToken(tokenPayload)) {
       SecurityContextHolder.clearContext();
-      chain.doFilter(request,response);
       return;
     }
-   val authentication =
-           new UsernamePasswordAuthenticationToken(
-                   tokenService.getTokenUserInfo(removeTokenPrefix(tokenPayload)),
-                   null, new ArrayList<>());
+
+   val authentication = new UsernamePasswordAuthenticationToken(
+     tokenService.getTokenUserInfo(removeTokenPrefix(tokenPayload)),
+     null, new ArrayList<>());
+
    SecurityContextHolder.getContext().setAuthentication(authentication);
-   chain.doFilter(request,response);
+  }
+
+  private void authenticateApplication(String token) {
+    val application = applicationService.findByBasicToken(token);
+
+    // Deny access if they don't have a valid app token for
+    // one of our applications
+    if (application == null ) {
+      SecurityContextHolder.clearContext();
+      return;
+    }
+
+    val authentication =
+        new UsernamePasswordAuthenticationToken(application,null, new ArrayList<>());
+    SecurityContextHolder.getContext().setAuthentication(authentication);
   }
 
   private boolean isValidToken(String token){

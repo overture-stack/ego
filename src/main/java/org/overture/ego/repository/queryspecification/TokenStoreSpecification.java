@@ -16,8 +16,8 @@
 
 package org.overture.ego.repository.queryspecification;
 
-import org.overture.ego.model.entity.Token;
+import org.overture.ego.model.entity.ScopedAccessToken;
 
-public class TokenStoreSpecification extends SpecificationBase<Token> {
+public class TokenStoreSpecification extends SpecificationBase<ScopedAccessToken> {
 
 }
