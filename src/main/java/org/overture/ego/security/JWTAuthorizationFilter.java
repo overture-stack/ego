@@ -65,14 +65,12 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
                                FilterChain chain) {
 
     if (isPublicEndpoint(request.getServletPath())) {
-      log.error("This is a public Endpoint.");
       chain.doFilter(request, response);
       return;
     }
     val tokenPayload = request.getHeader(HttpHeaders.AUTHORIZATION);
-    log.error("Found token payload '%s'".format(tokenPayload));
 
-    if (tokenPayload.startsWith(applicationService.APP_TOKEN_PREFIX)) {
+    if (tokenPayload != null && tokenPayload.startsWith(applicationService.APP_TOKEN_PREFIX)) {
       authenticateApplication(tokenPayload);
     } else {
       authenticateUser(tokenPayload);
