@@ -16,7 +16,6 @@
 
 package org.overture.ego.provider.facebook;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -40,12 +39,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-
 @Slf4j
 @Component
 @NoArgsConstructor
 public class FacebookTokenService {
 
+  /*
+  Constants
+   */
+  private final static String USER_EMAIL = "email";
+  private final static String USER_NAME = "name";
+  private final static String USER_GIVEN_NAME = "given_name";
+  private final static String USER_LAST_NAME = "family_name";
+  private final static String IS_VALID = "is_valid";
+  private final static String DATA = "data";
+  /*
+    Dependencies
+   */
+  protected RestTemplate fbConnector;
   /*
    Variables
   */
@@ -63,78 +74,64 @@ public class FacebookTokenService {
   private int readTimeout;
   @Value("${facebook.resource.userInfoUri}")
   private String userInfoUri;
-  /*
-    Dependencies
-   */
-  protected RestTemplate fbConnector;
-
-  /*
-  Constants
-   */
-  private final static String USER_EMAIL = "email";
-  private final static String USER_NAME = "name";
-  private final static String USER_GIVEN_NAME = "given_name";
-  private final static String USER_LAST_NAME = "family_name";
-  private final static String IS_VALID = "is_valid";
-  private final static String DATA = "data";
-
 
   @PostConstruct
-  private void init(){
+  private void init() {
     fbConnector = new RestTemplate(httpRequestFactory());
   }
 
-  public boolean validToken(String fbToken){
+  public boolean validToken(String fbToken) {
     log.debug("Validating Facebook token: {}", fbToken);
     val tokenCheckUri = getValidationUri(fbToken);
     try {
       return fbConnector.execute(new URI(tokenCheckUri), HttpMethod.GET, null,
-              response -> {
-                val jsonObj = getJsonResponseAsMap(response.getBody());
-                if(jsonObj.isPresent()) {
-                  val output = ((HashMap<String, Object>) jsonObj.get().get(DATA));
-                  if (output.containsKey(IS_VALID)) {
-                    return  (Boolean)output.get(IS_VALID);
-                  } else {
-                    log.error("Error while validating Facebook token: {}", output);
-                    return false;
-                  }
-                } else return false;
-              });
-    } catch (URISyntaxException uex){
+        response -> {
+          val jsonObj = getJsonResponseAsMap(response.getBody());
+          if (jsonObj.isPresent()) {
+            val output = ((HashMap<String, Object>) jsonObj.get().get(DATA));
+            if (output.containsKey(IS_VALID)) {
+              return (Boolean) output.get(IS_VALID);
+            } else {
+              log.error("Error while validating Facebook token: {}", output);
+              return false;
+            }
+          } else
+            return false;
+        });
+    } catch (URISyntaxException uex) {
       log.error("Invalid URI syntax: {}, {}", tokenCheckUri, uex.getMessage());
       return false;
     }
   }
 
-  public Optional<IDToken> getAuthInfo(String fbToken){
+  public Optional<IDToken> getAuthInfo(String fbToken) {
     log.debug("Getting details for Facebook token: {}", fbToken);
     val userDetailsUri = getUserDetailsUri(fbToken);
     try {
       return fbConnector.execute(new URI(userDetailsUri), HttpMethod.GET, null,
-              response -> {
-                val jsonObj = getJsonResponseAsMap(response.getBody());
-                if(jsonObj.isPresent()) {
-                  val output = new HashMap<String, String>();
-                  output.put(USER_EMAIL, jsonObj.get().get(USER_EMAIL).toString());
-                  val name = jsonObj.get().get(USER_NAME).toString().split(" ");
-                  output.put(USER_GIVEN_NAME, name[0]);
-                  output.put(USER_LAST_NAME, name[1]);
-                  return Optional.of(TypeUtils.convertToAnotherType(output, IDToken.class));
-                } else return Optional.empty();
-              });
-    } catch (URISyntaxException uex){
+        response -> {
+          val jsonObj = getJsonResponseAsMap(response.getBody());
+          if (jsonObj.isPresent()) {
+            val output = new HashMap<String, String>();
+            output.put(USER_EMAIL, jsonObj.get().get(USER_EMAIL).toString());
+            val name = jsonObj.get().get(USER_NAME).toString().split(" ");
+            output.put(USER_GIVEN_NAME, name[0]);
+            output.put(USER_LAST_NAME, name[1]);
+            return Optional.of(TypeUtils.convertToAnotherType(output, IDToken.class));
+          } else
+            return Optional.empty();
+        });
+    } catch (URISyntaxException uex) {
       log.error("Invalid URI syntax: {}, {}", userDetailsUri, uex.getMessage());
       return Optional.empty();
-    }
-    catch (Exception ex){
+    } catch (Exception ex) {
       log.error("Error getting email response from Facebook: {}", ex.getMessage());
-      log.debug("Error getting email response from Facebook for uri: {}, {}", userDetailsUri,ex.getMessage());
+      log.debug("Error getting email response from Facebook for uri: {}, {}", userDetailsUri, ex.getMessage());
       return Optional.empty();
     }
   }
 
-  private Optional<Map> getJsonResponseAsMap(InputStream jsonResponse){
+  private Optional<Map> getJsonResponseAsMap(InputStream jsonResponse) {
 
     val objectMapper = new ObjectMapper();
     Map jsonObj = null;
@@ -152,9 +149,9 @@ public class FacebookTokenService {
   }
 
   @SneakyThrows
-  private String getValidationUri(String fbToken){
-    return tokenValidateUri+"?input_token=" + fbToken + "&access_token="+
-            URLEncoder.encode(clientId + "|" + clientSecret, "UTF-8");
+  private String getValidationUri(String fbToken) {
+    return tokenValidateUri + "?input_token=" + fbToken + "&access_token=" +
+      URLEncoder.encode(clientId + "|" + clientSecret, "UTF-8");
   }
 
   private HttpComponentsClientHttpRequestFactory httpRequestFactory() {

@@ -16,7 +16,6 @@
 
 package org.overture.ego.repository.queryspecification;
 
-
 import lombok.NonNull;
 import lombok.val;
 import org.overture.ego.model.search.SearchFilter;
@@ -32,23 +31,23 @@ import java.util.List;
 
 public class SpecificationBase<T> {
   protected static <T> Predicate[] getQueryPredicates(@NonNull CriteriaBuilder builder,
-                                                      @NonNull Root<T> root,
-                                                      String queryText,
-                                                      @NonNull String... params){
+    @NonNull Root<T> root,
+    String queryText,
+    @NonNull String... params) {
     return Arrays.stream(params).map(p ->
-            filterByField(builder, root, p, queryText)).toArray(Predicate[]::new);
+      filterByField(builder, root, p, queryText)).toArray(Predicate[]::new);
   }
 
   public static <T> Predicate filterByField(@NonNull CriteriaBuilder builder, @NonNull Root<T> root,
-                                            @NonNull String fieldName,String fieldValue) {
+    @NonNull String fieldName, String fieldValue) {
     val finalText = QueryUtils.prepareForQuery(fieldValue);
     return builder.like(builder.lower(root.get(fieldName)), finalText);
   }
 
   public static <T> Specification<T> filterBy(@Nonnull List<SearchFilter> filters) {
     return (root, query, builder) -> builder.and(
-            filters.stream().map(f -> filterByField(builder,root,
-                    f.getFilterField(),f.getFilterValue())).toArray(Predicate[]::new)
+      filters.stream().map(f -> filterByField(builder, root,
+        f.getFilterField(), f.getFilterValue())).toArray(Predicate[]::new)
     );
   }
 }

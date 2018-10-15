@@ -20,16 +20,14 @@ import org.overture.ego.model.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
-import java.util.List;
 import java.util.UUID;
 
-
-public interface UserRepository  extends
-        PagingAndSortingRepository<User, UUID>, JpaSpecificationExecutor {
+public interface UserRepository extends
+  PagingAndSortingRepository<User, UUID>, JpaSpecificationExecutor {
 
   Page<User> findAllByStatusIgnoreCase(String status, Pageable pageable);
+
   User findOneByNameIgnoreCase(String name);
 }

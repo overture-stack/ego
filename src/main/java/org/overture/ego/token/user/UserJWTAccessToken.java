@@ -20,7 +20,6 @@ import io.jsonwebtoken.Claims;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.overture.ego.model.entity.User;
 import org.overture.ego.token.TokenService;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
@@ -32,8 +31,9 @@ import java.util.*;
 public class UserJWTAccessToken implements OAuth2AccessToken {
 
   private Claims tokenClaims = null;
-  private String token= null;
-  public UserJWTAccessToken(String token, TokenService tokenService){
+  private String token = null;
+
+  public UserJWTAccessToken(String token, TokenService tokenService) {
     this.token = token;
     this.tokenClaims = tokenService.getTokenClaims(token);
   }
@@ -41,7 +41,7 @@ public class UserJWTAccessToken implements OAuth2AccessToken {
   @Override
   public Map<String, Object> getAdditionalInformation() {
     val output = new HashMap<String, Object>();
-    output.put("groups",getUser().get("groups"));
+    output.put("groups", getUser().get("groups"));
     return output;
   }
 
@@ -63,7 +63,7 @@ public class UserJWTAccessToken implements OAuth2AccessToken {
 
   @Override
   public boolean isExpired() {
-    return getExpiresIn() <=0;
+    return getExpiresIn() <= 0;
   }
 
   @Override
@@ -81,8 +81,8 @@ public class UserJWTAccessToken implements OAuth2AccessToken {
     return token;
   }
 
-  private Map getUser(){
-    return (Map)((Map)tokenClaims.get("context")).get("user");
+  private Map getUser() {
+    return (Map) ((Map) tokenClaims.get("context")).get("user");
   }
 
 }

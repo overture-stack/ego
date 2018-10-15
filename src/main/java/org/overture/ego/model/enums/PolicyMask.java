@@ -31,11 +31,6 @@ public enum PolicyMask {
   @NonNull
   private final String value;
 
-  @Override
-  public String toString() {
-    return value;
-  }
-
   public static PolicyMask fromValue(String value) {
     for (val aclMask : values()) {
       if (aclMask.value.equalsIgnoreCase(value)) {
@@ -43,6 +38,11 @@ public enum PolicyMask {
       }
     }
     throw new IllegalArgumentException(
-        "Unknown enum type " + value + ", Allowed values are " + Arrays.toString(values()));
+      "Unknown enum type " + value + ", Allowed values are " + Arrays.toString(values()));
+  }
+
+  @Override
+  public String toString() {
+    return value;
   }
 }

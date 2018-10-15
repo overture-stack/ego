@@ -40,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.stereotype.Service;
+
 import java.security.InvalidKeyException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -48,9 +49,14 @@ import java.util.*;
 @Service
 public class TokenService {
 
+  /*
+    Constant
+  */
+  private static final String ISSUER_NAME = "ego";
+  @Autowired
+  TokenSigner tokenSigner;
   @Value("${demo:false}")
   private boolean demo;
-
   @Value("${jwt.duration:86400000}")
   private int DURATION;
   @Autowired
@@ -60,17 +66,11 @@ public class TokenService {
   @Autowired
   private UserEvents userEvents;
   @Autowired
-  TokenSigner tokenSigner;
-  @Autowired
   private SimpleDateFormat dateFormatter;
   @Autowired
   private TokenStoreService tokenStoreService;
-  /*
-    Constant
-  */
-  private static final String ISSUER_NAME="ego";
 
-  public String generateUserToken(IDToken idToken){
+  public String generateUserToken(IDToken idToken) {
     // If the demo flag is set, all tokens will be generated as the Demo User,
     // otherwise, get the user associated with their idToken
     User user;
@@ -100,13 +100,12 @@ public class TokenService {
     return generateUserToken(u, scope);
   }
 
-
   public ScopedAccessToken issueToken(String name, Set<String> apps, Set<String> scopes) {
     User u = userService.getByName(name);
     val missingScopes = u.missingScopes(scopes);
 
     if (!missingScopes.isEmpty()) {
-      val msg=String.format("User %s has no access to scopes [%s]",name, missingScopes);
+      val msg = String.format("User %s has no access to scopes [%s]", name, missingScopes);
       log.error(msg);
       throw new InvalidScopeException(msg);
     }
@@ -118,14 +117,14 @@ public class TokenService {
     token.setToken(tokenString);
     token.setOwner(u);
 
-    for(val p: u.getPermissionsList()) {
-      val policy=p.getEntity();
+    for (val p : u.getPermissionsList()) {
+      val policy = p.getEntity();
       if (scopes.contains(policy.getName())) {
         token.addPolicy(policy);
       }
     }
 
-    for(val appName: apps) {
+    for (val appName : apps) {
       val app = applicationService.getByName(appName);
       token.addApplication(app);
     }
@@ -136,9 +135,9 @@ public class TokenService {
   }
 
   public ScopedAccessToken findByTokenString(String token) {
-      ScopedAccessToken t = tokenStoreService.findByTokenString(token);
+    ScopedAccessToken t = tokenStoreService.findByTokenString(token);
 
-      return t;
+    return t;
   }
 
   public String generateTokenString() {
@@ -169,11 +168,11 @@ public class TokenService {
   public boolean validateToken(String token) {
 
     Jws decodedToken = null;
-    try{
-        decodedToken  = Jwts.parser()
+    try {
+      decodedToken = Jwts.parser()
         .setSigningKey(tokenSigner.getKey().get())
         .parseClaimsJws(token);
-    } catch (Exception ex){
+    } catch (Exception ex) {
       log.error("Error parsing JWT: {}", ex);
     }
     return (decodedToken != null);
@@ -191,31 +190,31 @@ public class TokenService {
 
   @SneakyThrows
   public Claims getTokenClaims(String token) {
-    if(tokenSigner.getKey().isPresent()) {
-    return Jwts.parser()
+    if (tokenSigner.getKey().isPresent()) {
+      return Jwts.parser()
         .setSigningKey(tokenSigner.getKey().get())
         .parseClaimsJws(token)
         .getBody();
-  } else {
+    } else {
       throw new InvalidKeyException("Invalid signing key for the token.");
     }
   }
 
-  public UserJWTAccessToken getUserAccessToken(String token){
+  public UserJWTAccessToken getUserAccessToken(String token) {
     return new UserJWTAccessToken(token, this);
   }
 
-  public AppJWTAccessToken getAppAccessToken(String token){
+  public AppJWTAccessToken getAppAccessToken(String token) {
     return new AppJWTAccessToken(token, this);
   }
 
   @SneakyThrows
-  private String getSignedToken(TokenClaims claims){
-    if(tokenSigner.getKey().isPresent()) {
+  private String getSignedToken(TokenClaims claims) {
+    if (tokenSigner.getKey().isPresent()) {
       return Jwts.builder()
-          .setClaims(TypeUtils.convertToAnotherType(claims, Map.class, Views.JWTAccessToken.class))
-          .signWith(SignatureAlgorithm.RS256, tokenSigner.getKey().get())
-          .compact();
+        .setClaims(TypeUtils.convertToAnotherType(claims, Map.class, Views.JWTAccessToken.class))
+        .signWith(SignatureAlgorithm.RS256, tokenSigner.getKey().get())
+        .compact();
     } else {
       throw new InvalidKeyException("Invalid signing key for the token.");
     }

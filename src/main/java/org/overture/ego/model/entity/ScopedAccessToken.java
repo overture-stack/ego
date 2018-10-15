@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name = "token")
 @Data
-@EqualsAndHashCode(of={"id"})
+@EqualsAndHashCode(of = { "id" })
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -27,8 +27,8 @@ public class ScopedAccessToken {
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(
-      name = "token_entity_uuid",
-      strategy = "org.hibernate.id.UUIDGenerator")
+    name = "token_entity_uuid",
+    strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "token_entity_uuid")
   UUID id;
 
@@ -37,38 +37,37 @@ public class ScopedAccessToken {
   String token;
 
   @OneToOne()
-  @JoinColumn(name=Fields.OWNER)
+  @JoinColumn(name = Fields.OWNER)
   @JsonIgnore
   User owner;
 
   @NonNull @ManyToMany()
   @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(name = "tokenapplication", joinColumns = {@JoinColumn(name = Fields.TOKENID_JOIN)},
-    inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
+  @JoinTable(name = "tokenapplication", joinColumns = { @JoinColumn(name = Fields.TOKENID_JOIN) },
+    inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
   Set<Application> applications;
 
   @Column(nullable = false, name = Fields.ISSUEDATE, updatable = false)
   Date expires;
+  @Column(nullable = false, name = Fields.ISREVOKED, updatable = false)
+  boolean isRevoked;
+  @ManyToMany()
+  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
+  @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinTable(name = "tokenscope", joinColumns = { @JoinColumn(name = Fields.TOKENID_JOIN) },
+    inverseJoinColumns = { @JoinColumn(name = Fields.SCOPEID_JOIN) })
+  Set<Policy> policies;
 
   public void setExpires(int seconds) {
     expires = DateTime.now().plusSeconds(seconds).toDate();
   }
+
   @NonNull
   public Long getSecondsUntilExpiry() {
     val seconds = (expires.getTime() - DateTime.now().getMillis()) / 1000;
-    return seconds > 0 ? seconds:0;
+    return seconds > 0 ? seconds : 0;
   }
-
-  @Column(nullable = false, name = Fields.ISREVOKED, updatable = false)
-  boolean isRevoked;
-
-  @ManyToMany()
-  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(name = "tokenscope", joinColumns = {@JoinColumn(name = Fields.TOKENID_JOIN)},
-    inverseJoinColumns = {@JoinColumn(name = Fields.SCOPEID_JOIN)})
-  Set<Policy> policies;
 
   public void addPolicy(Policy policy) {
     if (policies == null) {
@@ -85,6 +84,6 @@ public class ScopedAccessToken {
   }
 
   public Set<String> getScope() {
-    return getPolicies().stream().map(policy->policy.getName()).collect(Collectors.toSet());
+    return getPolicies().stream().map(policy -> policy.getName()).collect(Collectors.toSet());
   }
 }

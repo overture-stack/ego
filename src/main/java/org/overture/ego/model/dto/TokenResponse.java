@@ -1,4 +1,5 @@
 package org.overture.ego.model.dto;
+
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,6 +14,7 @@ public class TokenResponse {
   String accessToken;
   private Set<String> scope;
   private Long exp;
+
   public String getTokenType() {
     return "Bearer";
   }

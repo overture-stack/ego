@@ -20,17 +20,17 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.entity.ScopedAccessToken;
-
 import org.overture.ego.repository.TokenStoreRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.UUID;
 
 @Slf4j
 @Service
 @Transactional
-@RequiredArgsConstructor(onConstructor = @__({@Autowired}))
+@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class TokenStoreService extends BaseService<ScopedAccessToken, UUID> {
   private final TokenStoreRepository tokenRepository;
 

@@ -31,7 +31,7 @@ import java.util.List;
 public class WebRequestConfig extends WebMvcConfigurerAdapter {
 
   @Bean
-  public List<String> fieldValues(){
+  public List<String> fieldValues() {
     return FieldUtils.getStaticFieldValueList(Fields.class);
   }
 

@@ -27,18 +27,18 @@ import org.springframework.security.core.Authentication;
 public class SecureAuthorizationManager implements AuthorizationManager {
   public boolean authorize(@NonNull Authentication authentication) {
     log.error("Trying to authorize as user");
-    User user = (User)authentication.getPrincipal();
+    User user = (User) authentication.getPrincipal();
     return "user".equals(user.getRole().toLowerCase()) && isActiveUser(user);
   }
 
   public boolean authorizeWithAdminRole(@NonNull Authentication authentication) {
     log.error("Trying to authorize as admin");
-    User user = (User)authentication.getPrincipal();
+    User user = (User) authentication.getPrincipal();
     return "admin".equals(user.getRole().toLowerCase()) && isActiveUser(user);
   }
 
   public boolean authorizeWithGroup(@NonNull Authentication authentication, String groupName) {
-    User user = (User)authentication.getPrincipal();
+    User user = (User) authentication.getPrincipal();
     return authorize(authentication) && user.getGroups().contains(groupName);
   }
 
@@ -49,7 +49,7 @@ public class SecureAuthorizationManager implements AuthorizationManager {
     return true;
   }
 
-  public boolean isActiveUser(User user){
+  public boolean isActiveUser(User user) {
     return "approved".equals(user.getStatus().toLowerCase());
   }
 

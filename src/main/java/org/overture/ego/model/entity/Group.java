@@ -25,77 +25,70 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.enums.Fields;
+import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
 import java.util.*;
 
 @Data
-@ToString(exclude={"wholeUsers","wholeApplications", "groupPermissions"})
+@ToString(exclude = { "wholeUsers", "wholeApplications", "groupPermissions" })
 @Table(name = "egogroup")
 @Entity
-@JsonPropertyOrder({"id", "name", "description", "status","wholeApplications", "groupPermissions"})
+@JsonPropertyOrder({ "id", "name", "description", "status", "wholeApplications", "groupPermissions" })
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@EqualsAndHashCode(of={"id"})
+@EqualsAndHashCode(of = { "id" })
 @NoArgsConstructor
 @RequiredArgsConstructor
 @JsonView(Views.REST.class)
 public class Group implements PolicyOwner {
 
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinColumn(name = Fields.OWNER)
+  @JsonIgnore
+  protected Set<Policy> groupOwnedAclEntities;
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinColumn(name = Fields.SID)
+  @JsonIgnore
+  protected List<GroupPermission> groupPermissions;
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(
-      name = "group_uuid",
-      strategy = "org.hibernate.id.UUIDGenerator")
+    name = "group_uuid",
+    strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "group_uuid")
   UUID id;
-
   @Column(nullable = false, name = Fields.NAME, updatable = false)
   @NonNull
   String name;
-
   @Column(nullable = false, name = Fields.DESCRIPTION, updatable = false)
   String description;
-
   @Column(nullable = false, name = Fields.STATUS, updatable = false)
   String status;
-
   @ManyToMany(targetEntity = Application.class)
   @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "groupapplication", joinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) },
-          inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
+    inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
   @JsonIgnore
   Set<Application> wholeApplications;
-
   @ManyToMany()
   @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(name = "usergroup", joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
-    inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
+  @JoinTable(name = "usergroup", joinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) },
+    inverseJoinColumns = { @JoinColumn(name = Fields.USERID_JOIN) })
   @JsonIgnore
   Set<User> wholeUsers;
 
-  @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinColumn(name=Fields.OWNER)
-  @JsonIgnore
-  protected Set<Policy> groupOwnedAclEntities;
-
-  @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinColumn(name=Fields.SID)
-  @JsonIgnore
-  protected List<GroupPermission> groupPermissions;
-
-  public void addApplication(@NonNull Application app){
+  public void addApplication(@NonNull Application app) {
     initApplications();
     this.wholeApplications.add(app);
   }
 
-  public void addUser(@NonNull User u){
+  public void addUser(@NonNull User u) {
     initUsers();
     this.wholeUsers.add(u);
   }
@@ -103,24 +96,26 @@ public class Group implements PolicyOwner {
   public void addNewPermission(@NonNull Policy policy, @NonNull PolicyMask mask) {
     initPermissions();
     val permission = GroupPermission.builder()
-        .entity(policy)
-        .mask(mask)
-        .sid(this)
-        .build();
+      .entity(policy)
+      .mask(mask)
+      .sid(this)
+      .build();
     this.groupPermissions.add(permission);
   }
 
-  public void removeApplication(@NonNull UUID appId){
+  public void removeApplication(@NonNull UUID appId) {
     this.wholeApplications.removeIf(a -> a.id.equals(appId));
   }
 
-  public void removeUser(@NonNull UUID userId){
-    if(this.wholeUsers == null) return;
+  public void removeUser(@NonNull UUID userId) {
+    if (this.wholeUsers == null)
+      return;
     this.wholeUsers.removeIf(u -> u.id.equals(userId));
   }
 
   public void removePermission(@NonNull UUID permissionId) {
-    if (this.groupPermissions == null) return;
+    if (this.groupPermissions == null)
+      return;
     this.groupPermissions.removeIf(p -> p.id.equals(permissionId));
   }
 
@@ -147,18 +142,17 @@ public class Group implements PolicyOwner {
     }
   }
 
-  private void initApplications(){
-    if(this.wholeApplications == null){
+  private void initApplications() {
+    if (this.wholeApplications == null) {
       this.wholeApplications = new HashSet<>();
     }
   }
 
-  private void initUsers(){
-    if(this.wholeUsers == null) {
+  private void initUsers() {
+    if (this.wholeUsers == null) {
       this.wholeUsers = new HashSet<>();
     }
   }
-
 
 }
 

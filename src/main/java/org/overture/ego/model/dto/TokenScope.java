@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.overture.ego.view.Views;
+
 import java.util.Set;
 
 @AllArgsConstructor

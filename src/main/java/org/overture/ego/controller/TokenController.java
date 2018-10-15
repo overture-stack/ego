@@ -23,18 +23,15 @@ import lombok.val;
 import org.overture.ego.model.dto.TokenResponse;
 import org.overture.ego.model.dto.TokenScope;
 import org.overture.ego.model.entity.ScopedAccessToken;
-
 import org.overture.ego.security.ApplicationScoped;
 import org.overture.ego.service.ApplicationService;
-import org.overture.ego.service.UserService;
 import org.overture.ego.token.TokenService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.common.exceptions.*;
-
+import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
+import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,7 +40,7 @@ import java.util.Set;
 @Slf4j
 @RestController
 @RequestMapping("/o")
-@AllArgsConstructor(onConstructor = @__({@Autowired}))
+@AllArgsConstructor(onConstructor = @__({ @Autowired }))
 public class TokenController {
   private TokenService tokenService;
   private ApplicationService applicationService;
@@ -64,7 +61,7 @@ public class TokenController {
   @SneakyThrows
   public @ResponseBody
   TokenScope check_token(
-    @RequestHeader(value="Authorization") final String authToken,
+    @RequestHeader(value = "Authorization") final String authToken,
     @RequestBody() final String content) {
 
     val token = getValue(content, "token=");
@@ -73,7 +70,7 @@ public class TokenController {
     }
     val application = applicationService.findByBasicToken(authToken);
 
-    ScopedAccessToken t =  tokenService.findByTokenString(token);
+    ScopedAccessToken t = tokenService.findByTokenString(token);
     if (t == null) {
       throw new InvalidTokenException("Token not found");
     }
@@ -81,7 +78,7 @@ public class TokenController {
     val clientId = application.getClientId();
     val apps = t.getApplications();
     if (apps != null && !apps.isEmpty()) {
-      if (!apps.stream().anyMatch(app -> app.getClientId() == clientId)){
+      if (!apps.stream().anyMatch(app -> app.getClientId() == clientId)) {
         throw new InvalidTokenException("Token not authorized for this client");
       }
     }
@@ -90,27 +87,24 @@ public class TokenController {
       t.getSecondsUntilExpiry(), t.getScope());
   }
 
-
-  @RequestMapping(method = RequestMethod.POST, value="/token")
+  @RequestMapping(method = RequestMethod.POST, value = "/token")
   @ResponseStatus(value = HttpStatus.OK)
   public @ResponseBody
   TokenResponse issueToken(
-    @RequestHeader(value="Authorization") final String authorization,
+    @RequestHeader(value = "Authorization") final String authorization,
     String name,
     Set<String> scopes,
-    Set<String> applications)
-  {
+    Set<String> applications) {
     val t = tokenService.issueToken(name, applications, scopes);
-    TokenResponse response=new TokenResponse(t.getToken(), t.getScope(), t.getSecondsUntilExpiry());
+    TokenResponse response = new TokenResponse(t.getToken(), t.getScope(), t.getSecondsUntilExpiry());
     return response;
   }
-
 
   @ExceptionHandler({ InvalidTokenException.class })
   public ResponseEntity<Object> handleInvalidTokenException(HttpServletRequest req, InvalidTokenException ex) {
     log.error("ID ScopedAccessToken not found.");
     return new ResponseEntity<Object>("Invalid ID ScopedAccessToken provided.", new HttpHeaders(),
-        HttpStatus.BAD_REQUEST);
+      HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler({ InvalidScopeException.class })

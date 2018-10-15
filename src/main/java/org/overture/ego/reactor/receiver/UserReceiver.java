@@ -13,7 +13,6 @@ import reactor.fn.Consumer;
 
 import javax.annotation.PostConstruct;
 
-
 @Component
 @Slf4j
 public class UserReceiver {

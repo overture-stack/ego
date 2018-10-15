@@ -27,7 +27,6 @@ import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 
-
 public class CustomTokenEnhancer implements TokenEnhancer {
 
   @Autowired
@@ -42,22 +41,22 @@ public class CustomTokenEnhancer implements TokenEnhancer {
 
     // get user or application token
     return
-        oAuth2Authentication.getAuthorities() != null
+      oAuth2Authentication.getAuthorities() != null
         &&
         oAuth2Authentication
-            .getAuthorities().stream().anyMatch(authority ->  AppTokenClaims.ROLE.equals(authority.getAuthority())) ?
-      getApplicationAccessToken(oAuth2Authentication.getPrincipal().toString()) :
-      getUserAccessToken(oAuth2Authentication.getPrincipal().toString());
+          .getAuthorities().stream().anyMatch(authority -> AppTokenClaims.ROLE.equals(authority.getAuthority())) ?
+        getApplicationAccessToken(oAuth2Authentication.getPrincipal().toString()) :
+        getUserAccessToken(oAuth2Authentication.getPrincipal().toString());
   }
 
-  private UserJWTAccessToken getUserAccessToken(String userName){
+  private UserJWTAccessToken getUserAccessToken(String userName) {
     val user = userService.getByName(userName);
     val token = tokenService.generateUserToken(user);
 
     return tokenService.getUserAccessToken(token);
   }
 
-  private AppJWTAccessToken getApplicationAccessToken(String clientId){
+  private AppJWTAccessToken getApplicationAccessToken(String clientId) {
     val app = applicationService.getByClientId(clientId);
     val token = tokenService.generateAppToken(app);
 

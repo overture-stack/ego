@@ -24,7 +24,8 @@ public enum ApplicationStatus {
   APPROVED("Approved"),
   DISABLED("Disabled"),
   PENDING("Pending"),
-  REJECTED("Rejected"),;
+  REJECTED("Rejected"),
+  ;
 
   @NonNull
   private final String value;

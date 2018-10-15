@@ -36,7 +36,7 @@ public class FilterResolver implements HandlerMethodArgumentResolver {
   @NonNull
   private List<String> fieldValues;
 
-  public FilterResolver(@NonNull List<String> fieldValues){
+  public FilterResolver(@NonNull List<String> fieldValues) {
     this.fieldValues = fieldValues;
   }
 
@@ -47,15 +47,15 @@ public class FilterResolver implements HandlerMethodArgumentResolver {
 
   @Override
   public Object resolveArgument(MethodParameter methodParameter,
-                                ModelAndViewContainer modelAndViewContainer,
-                                NativeWebRequest nativeWebRequest,
-                                WebDataBinderFactory webDataBinderFactory) throws Exception {
+    ModelAndViewContainer modelAndViewContainer,
+    NativeWebRequest nativeWebRequest,
+    WebDataBinderFactory webDataBinderFactory) throws Exception {
 
     val filters = new ArrayList<SearchFilter>();
     nativeWebRequest.getParameterNames().forEachRemaining(p -> {
       val matchingField = fieldValues.stream().filter(f -> f.equalsIgnoreCase(p)).findFirst();
-      if(matchingField.isPresent()){
-        filters.add(new SearchFilter(matchingField.get(),nativeWebRequest.getParameter(p)));
+      if (matchingField.isPresent()) {
+        filters.add(new SearchFilter(matchingField.get(), nativeWebRequest.getParameter(p)));
       }
     });
     return filters;

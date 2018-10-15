@@ -6,6 +6,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.UUID;
 
-public interface TokenStoreRepository extends PagingAndSortingRepository<ScopedAccessToken, UUID>, JpaSpecificationExecutor {
+public interface TokenStoreRepository
+  extends PagingAndSortingRepository<ScopedAccessToken, UUID>, JpaSpecificationExecutor {
   ScopedAccessToken findOneByTokenIgnoreCase(String token);
 }

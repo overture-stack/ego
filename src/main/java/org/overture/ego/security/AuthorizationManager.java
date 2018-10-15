@@ -21,7 +21,9 @@ import org.springframework.security.core.Authentication;
 
 public interface AuthorizationManager {
   boolean authorize(Authentication authentication);
+
   boolean authorizeWithAdminRole(Authentication authentication);
+
   boolean authorizeWithApplication(@NonNull Authentication authentication);
 }
 

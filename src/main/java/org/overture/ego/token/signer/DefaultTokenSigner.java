@@ -37,11 +37,10 @@ import java.util.Optional;
 @Profile("!jks")
 public class DefaultTokenSigner implements TokenSigner {
 
-
   /*
   Constants
  */
-  private static final String KEYFACTORY_TYPE= "RSA";
+  private static final String KEYFACTORY_TYPE = "RSA";
   /*
     Dependencies
    */
@@ -58,22 +57,22 @@ public class DefaultTokenSigner implements TokenSigner {
   private PrivateKey privateKey;
   private PublicKey publicKey;
 
-
   @PostConstruct
   @SneakyThrows
-  private void init(){
+  private void init() {
     keyFactory = KeyFactory.getInstance(KEYFACTORY_TYPE);
     try {
       val decodedpriv = Base64.getDecoder().decode(encodedPrivKey);
-      val decodedPub =  Base64.getDecoder().decode(encodedPubKey);
+      val decodedPub = Base64.getDecoder().decode(encodedPubKey);
       X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(decodedPub);
       PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(decodedpriv);
       publicKey = keyFactory.generatePublic(pubKeySpec);
       privateKey = keyFactory.generatePrivate(privKeySpec);
-    } catch (InvalidKeySpecException specEx){
+    } catch (InvalidKeySpecException specEx) {
       log.error("Error loading keys:{}", specEx);
     }
   }
+
   @Override
   public Optional<Key> getKey() {
     return Optional.of(privateKey);
@@ -86,10 +85,10 @@ public class DefaultTokenSigner implements TokenSigner {
 
   @Override
   public Optional<String> getEncodedPublicKey() {
-    if(publicKey != null){
+    if (publicKey != null) {
       val b64 = new BASE64Encoder();
       String encodedKey = b64.encodeBuffer(publicKey.getEncoded());
-      encodedKey= "-----BEGIN PUBLIC KEY-----\r\n" + encodedKey + "-----END PUBLIC KEY-----";
+      encodedKey = "-----BEGIN PUBLIC KEY-----\r\n" + encodedKey + "-----END PUBLIC KEY-----";
       return Optional.of(encodedKey);
     } else {
       return Optional.empty();

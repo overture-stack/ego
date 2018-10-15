@@ -16,7 +16,6 @@
 
 package org.overture.ego.security;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.ApplicationContext;
@@ -36,7 +35,6 @@ public class AuthorizationStrategyConfig extends GlobalMethodSecurityConfigurati
 
   @Autowired
   private ApplicationContext context;
-
 
   @Override
   protected MethodSecurityExpressionHandler createExpressionHandler() {

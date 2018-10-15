@@ -16,7 +16,6 @@
 
 package org.overture.ego.model.dto;
 
-
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Getter;
 import lombok.NonNull;
@@ -35,10 +34,10 @@ public class PageDTO<T> {
   private final List<T> resultSet;
 
   public PageDTO(@NonNull final Page<T> page) {
-    this.limit      = page.getSize();
-    this.offset     = page.getNumber();
-    this.count      = page.getTotalElements();
-    this.resultSet  = page.getContent();
+    this.limit = page.getSize();
+    this.offset = page.getNumber();
+    this.count = page.getTotalElements();
+    this.resultSet = page.getContent();
   }
 
 }

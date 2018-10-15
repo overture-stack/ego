@@ -24,10 +24,8 @@ import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.util.StringUtils;
@@ -37,7 +35,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 
 @Slf4j
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
@@ -52,7 +49,6 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
   @Autowired
   private ApplicationService applicationService;
 
-
   public JWTAuthorizationFilter(AuthenticationManager authManager, String[] publicEndpoints) {
     super(authManager);
     this.publicEndpoints = publicEndpoints;
@@ -61,8 +57,8 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
   @Override
   @SneakyThrows
   public void doFilterInternal(HttpServletRequest request,
-                               HttpServletResponse response,
-                               FilterChain chain) {
+    HttpServletResponse response,
+    FilterChain chain) {
 
     if (isPublicEndpoint(request.getServletPath())) {
       chain.doFilter(request, response);
@@ -75,7 +71,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     } else {
       authenticateUser(tokenPayload);
     }
-    chain.doFilter(request,response);
+    chain.doFilter(request, response);
   }
 
   private void authenticateUser(String tokenPayload) {
@@ -84,11 +80,11 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
       return;
     }
 
-   val authentication = new UsernamePasswordAuthenticationToken(
-     tokenService.getTokenUserInfo(removeTokenPrefix(tokenPayload)),
-     null, new ArrayList<>());
+    val authentication = new UsernamePasswordAuthenticationToken(
+      tokenService.getTokenUserInfo(removeTokenPrefix(tokenPayload)),
+      null, new ArrayList<>());
 
-   SecurityContextHolder.getContext().setAuthentication(authentication);
+    SecurityContextHolder.getContext().setAuthentication(authentication);
   }
 
   private void authenticateApplication(String token) {
@@ -96,30 +92,31 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
     // Deny access if they don't have a valid app token for
     // one of our applications
-    if (application == null ) {
+    if (application == null) {
       SecurityContextHolder.clearContext();
       return;
     }
 
     val authentication =
-        new UsernamePasswordAuthenticationToken(application,null, new ArrayList<>());
+      new UsernamePasswordAuthenticationToken(application, null, new ArrayList<>());
     SecurityContextHolder.getContext().setAuthentication(authentication);
   }
 
-  private boolean isValidToken(String token){
-    return  !StringUtils.isEmpty(token)  &&
-            token.contains(TOKEN_PREFIX) &&
-            tokenService.validateToken(removeTokenPrefix(token));
-    }
-
-  private String removeTokenPrefix(String token){
-    return token.replace(TOKEN_PREFIX,"").trim();
+  private boolean isValidToken(String token) {
+    return !StringUtils.isEmpty(token) &&
+      token.contains(TOKEN_PREFIX) &&
+      tokenService.validateToken(removeTokenPrefix(token));
   }
 
-  private boolean isPublicEndpoint(String endpointPath){
-    if(this.publicEndpoints != null){
+  private String removeTokenPrefix(String token) {
+    return token.replace(TOKEN_PREFIX, "").trim();
+  }
+
+  private boolean isPublicEndpoint(String endpointPath) {
+    if (this.publicEndpoints != null) {
       return Arrays.stream(this.publicEndpoints).anyMatch(item -> item.equals(endpointPath));
-    } else return false;
+    } else
+      return false;
   }
 
 }

@@ -38,7 +38,7 @@ public class JKSTokenSigner implements TokenSigner {
   /*
     Constants
    */
-  private static final String KEYSTORE_TYPE= "JKS";
+  private static final String KEYSTORE_TYPE = "JKS";
   /*
     Dependencies
    */
@@ -55,54 +55,54 @@ public class JKSTokenSigner implements TokenSigner {
    */
   private KeyStore keyStore;
 
-
   @PostConstruct
   @SneakyThrows
-  private void init(){
+  private void init() {
     keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
-    try(val keyStoreFile = new FileInputStream(keyStorePath)) {
+    try (val keyStoreFile = new FileInputStream(keyStorePath)) {
       keyStore.load(keyStoreFile, keyStorePwd.toCharArray());
-    } catch (IOException ioex){
+    } catch (IOException ioex) {
       log.error("Error loading keystore:{}", ioex);
     }
   }
-  public Optional<Key> getKey(){
-    try{
-       return Optional.of(keyStore.getKey(keyalias,keyStorePwd.toCharArray()));
-    }catch (Exception ex) {
+
+  public Optional<Key> getKey() {
+    try {
+      return Optional.of(keyStore.getKey(keyalias, keyStorePwd.toCharArray()));
+    } catch (Exception ex) {
       log.error("Error getting the key:{}", ex);
       return Optional.empty();
     }
   }
 
-  public Optional<KeyPair> getKeyPair(){
-      val key = this.getKey();
-      val publicKey = this.getPublicKey();
-      if(key.isPresent() && publicKey.isPresent()){
-        return Optional.of(new KeyPair(publicKey.get(), (PrivateKey) key.get()));
-      } else {
-        return Optional.empty();
-      }
+  public Optional<KeyPair> getKeyPair() {
+    val key = this.getKey();
+    val publicKey = this.getPublicKey();
+    if (key.isPresent() && publicKey.isPresent()) {
+      return Optional.of(new KeyPair(publicKey.get(), (PrivateKey) key.get()));
+    } else {
+      return Optional.empty();
+    }
   }
 
-  public Optional<PublicKey> getPublicKey(){
-    try{
+  public Optional<PublicKey> getPublicKey() {
+    try {
       val cert = keyStore.getCertificate(keyalias);
       val publicKey = cert.getPublicKey();
       return Optional.of(publicKey);
-    }catch (Exception ex) {
+    } catch (Exception ex) {
       log.error("Error getting the public key:{}", ex);
       return Optional.empty();
     }
   }
 
   @SneakyThrows
-  public Optional<String> getEncodedPublicKey(){
+  public Optional<String> getEncodedPublicKey() {
     val publicKey = this.getPublicKey();
-    if(publicKey.isPresent()){
+    if (publicKey.isPresent()) {
       val b64 = new BASE64Encoder();
       String encodedKey = b64.encodeBuffer(publicKey.get().getEncoded());
-      encodedKey= "-----BEGIN PUBLIC KEY-----\r\n" + encodedKey + "-----END PUBLIC KEY-----";
+      encodedKey = "-----BEGIN PUBLIC KEY-----\r\n" + encodedKey + "-----END PUBLIC KEY-----";
       return Optional.of(encodedKey);
     } else {
       return Optional.empty();

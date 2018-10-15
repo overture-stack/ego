@@ -55,16 +55,13 @@ import java.util.TimeZone;
 public class AuthConfig extends AuthorizationServerConfigurerAdapter {
 
   @Autowired
-  private ApplicationService clientDetailsService;
-
-  @Autowired
-  private AuthenticationManager authenticationManager;
-
-  @Autowired
   TokenSigner tokenSigner;
-
   @Autowired
   UserService userService;
+  @Autowired
+  private ApplicationService clientDetailsService;
+  @Autowired
+  private AuthenticationManager authenticationManager;
 
   @Bean
   @Primary
@@ -73,9 +70,9 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   }
 
   @Bean
-  public SimpleDateFormat formatter(){
+  public SimpleDateFormat formatter() {
     SimpleDateFormat formatter =
-            new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+      new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
     formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
     return formatter;
   }
@@ -93,7 +90,7 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   @Bean
   public JwtAccessTokenConverter accessTokenConverter() {
     JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
-    if(tokenSigner.getKeyPair().isPresent()) {
+    if (tokenSigner.getKeyPair().isPresent()) {
       converter.setKeyPair(tokenSigner.getKeyPair().get());
     }
     return converter;
@@ -110,7 +107,7 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
 
   @Override
   public void configure(ClientDetailsServiceConfigurer clients)
-          throws Exception {
+    throws Exception {
     clients.withClientDetails(clientDetailsService);
   }
 
@@ -134,11 +131,11 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
     TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
     tokenEnhancerChain.setTokenEnhancers(
-            Arrays.asList(tokenEnhancer()));
+      Arrays.asList(tokenEnhancer()));
 
     endpoints.tokenStore(tokenStore())
-            .tokenEnhancer(tokenEnhancerChain)
-            .accessTokenConverter(accessTokenConverter());
+      .tokenEnhancer(tokenEnhancerChain)
+      .accessTokenConverter(accessTokenConverter());
     endpoints.authenticationManager(this.authenticationManager);
     endpoints.requestFactory(oAuth2RequestFactory());
   }

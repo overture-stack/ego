@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import reactor.Environment;
 import reactor.bus.EventBus;
 
-
 @Configuration
 public class ReactorConfig {
 

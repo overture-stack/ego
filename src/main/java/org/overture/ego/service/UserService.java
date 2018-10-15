@@ -52,17 +52,8 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 @Slf4j
 @Service
 @Transactional
-@RequiredArgsConstructor(onConstructor = @__({@Autowired}))
+@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
 public class UserService extends BaseService<User, UUID> {
-  /*
-    Constants
-   */
-  // DEFAULTS
-  @Value("${default.user.role}")
-  private String DEFAULT_USER_ROLE;
-  @Value("${default.user.status}")
-  private String DEFAULT_USER_STATUS;
-
   // DEMO USER
   private final static String DEMO_USER_NAME = "Demo.User@example.com";
   private final static String DEMO_USER_EMAIL = "Demo.User@example.com";
@@ -70,7 +61,6 @@ public class UserService extends BaseService<User, UUID> {
   private final static String DEMO_LAST_NAME = "User";
   private final static String DEMO_USER_ROLE = UserRole.ADMIN.toString();
   private final static String DEMO_USER_STATUS = UserStatus.APPROVED.toString();
-
   /*
     Dependencies
    */
@@ -79,6 +69,14 @@ public class UserService extends BaseService<User, UUID> {
   private final ApplicationService applicationService;
   private final PolicyService policyService;
   private final SimpleDateFormat formatter;
+  /*
+    Constants
+   */
+  // DEFAULTS
+  @Value("${default.user.role}")
+  private String DEFAULT_USER_ROLE;
+  @Value("${default.user.status}")
+  private String DEFAULT_USER_STATUS;
 
   public User create(@NonNull User userInfo) {
     // Set Created At date to Now
@@ -127,7 +125,7 @@ public class UserService extends BaseService<User, UUID> {
     return output;
   }
 
-  public User addUserToGroups(@NonNull String userId, @NonNull List<String> groupIDs){
+  public User addUserToGroups(@NonNull String userId, @NonNull List<String> groupIDs) {
     val user = getById(userRepository, fromString(userId));
     groupIDs.forEach(grpId -> {
       val group = groupService.get(grpId);
@@ -136,7 +134,7 @@ public class UserService extends BaseService<User, UUID> {
     return userRepository.save(user);
   }
 
-  public User addUserToApps(@NonNull String userId, @NonNull List<String> appIDs){
+  public User addUserToApps(@NonNull String userId, @NonNull List<String> appIDs) {
     val user = getById(userRepository, fromString(userId));
     appIDs.forEach(appId -> {
       val app = applicationService.get(appId);
@@ -163,9 +161,9 @@ public class UserService extends BaseService<User, UUID> {
 
   public User update(@NonNull User updatedUserInfo) {
     val user = getById(userRepository, updatedUserInfo.getId());
-    if(UserRole.USER.toString().equals(updatedUserInfo.getRole().toUpperCase()))
+    if (UserRole.USER.toString().equals(updatedUserInfo.getRole().toUpperCase()))
       updatedUserInfo.setRole(UserRole.USER.toString());
-    else if(UserRole.ADMIN.toString().equals(updatedUserInfo.getRole().toUpperCase()))
+    else if (UserRole.ADMIN.toString().equals(updatedUserInfo.getRole().toUpperCase()))
       updatedUserInfo.setRole(UserRole.ADMIN.toString());
     user.update(updatedUserInfo);
     return userRepository.save(user);
@@ -175,14 +173,14 @@ public class UserService extends BaseService<User, UUID> {
     userRepository.deleteById(fromString(userId));
   }
 
-  public Page<User> listUsers(@NonNull List<SearchFilter> filters,@NonNull Pageable pageable) {
+  public Page<User> listUsers(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return userRepository.findAll(UserSpecification.filterBy(filters), pageable);
   }
 
   public Page<User> findUsers(@NonNull String query, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return userRepository.findAll(
-            where(UserSpecification.containsText(query))
-            .and(UserSpecification.filterBy(filters)), pageable);
+      where(UserSpecification.containsText(query))
+        .and(UserSpecification.filterBy(filters)), pageable);
   }
 
   public void deleteUserFromGroups(@NonNull String userId, @NonNull List<String> groupIDs) {
@@ -210,38 +208,38 @@ public class UserService extends BaseService<User, UUID> {
   }
 
   public Page<User> findGroupUsers(@NonNull String groupId, @NonNull List<SearchFilter> filters,
-                                   @NonNull Pageable pageable){
+    @NonNull Pageable pageable) {
     return userRepository.findAll(
-            where(UserSpecification.inGroup(fromString(groupId)))
-            .and(UserSpecification.filterBy(filters)),
-            pageable);
+      where(UserSpecification.inGroup(fromString(groupId)))
+        .and(UserSpecification.filterBy(filters)),
+      pageable);
   }
 
   public Page<User> findGroupUsers(@NonNull String groupId, @NonNull String query,
-                                   @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
+    @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return userRepository.findAll(
-            where(UserSpecification.inGroup(fromString(groupId)))
-                    .and(UserSpecification.containsText(query))
-                    .and(UserSpecification.filterBy(filters)),
-            pageable);
+      where(UserSpecification.inGroup(fromString(groupId)))
+        .and(UserSpecification.containsText(query))
+        .and(UserSpecification.filterBy(filters)),
+      pageable);
   }
 
   public Page<User> findAppUsers(@NonNull String appId, @NonNull List<SearchFilter> filters,
-                                 @NonNull Pageable pageable){
+    @NonNull Pageable pageable) {
     return userRepository.findAll(
-            where(UserSpecification.ofApplication(fromString(appId)))
-            .and(UserSpecification.filterBy(filters)),
-            pageable);
+      where(UserSpecification.ofApplication(fromString(appId)))
+        .and(UserSpecification.filterBy(filters)),
+      pageable);
   }
 
   public Page<User> findAppUsers(@NonNull String appId, @NonNull String query,
-                                 @NonNull List<SearchFilter> filters,
-                                 @NonNull Pageable pageable){
+    @NonNull List<SearchFilter> filters,
+    @NonNull Pageable pageable) {
     return userRepository.findAll(
-            where(UserSpecification.ofApplication(fromString(appId)))
-                    .and(UserSpecification.containsText(query))
-                    .and(UserSpecification.filterBy(filters)),
-            pageable);
+      where(UserSpecification.ofApplication(fromString(appId)))
+        .and(UserSpecification.containsText(query))
+        .and(UserSpecification.filterBy(filters)),
+      pageable);
   }
 
   public Page<UserPermission> getUserPermissions(@NonNull String userId, @NonNull Pageable pageable) {
