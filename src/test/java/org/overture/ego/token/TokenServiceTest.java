@@ -33,6 +33,8 @@ import org.springframework.data.util.Pair;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import static org.junit.Assert.assertNotNull;
+
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -57,8 +59,8 @@ public class TokenServiceTest {
   @Test
   public void generateUserToken() {
     val user = userService.create(entityGenerator.createOneUser(Pair.of("foo", "bar")));
-    val group = groupService.create(entityGenerator.createOneGroup("testGroup"));
-    val app = applicationService.create(entityGenerator.createOneApplication("foo"));
+    groupService.create(entityGenerator.createOneGroup("testGroup"));
+    applicationService.create(entityGenerator.createOneApplication("foo"));
 
     val group2 = groupService.getByName("testGroup");
     group2.addUser(user);
@@ -70,6 +72,7 @@ public class TokenServiceTest {
 
 
     val token = tokenService.generateUserToken(userService.get(user.getId().toString()));
+    assertNotNull(token);
   }
 
 }

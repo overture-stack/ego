@@ -60,7 +60,7 @@ public class TokenController {
   @ResponseStatus(value = HttpStatus.MULTI_STATUS)
   @SneakyThrows
   public @ResponseBody
-  TokenScope check_token(
+  TokenScope checkToken(
     @RequestHeader(value = "Authorization") final String authToken,
     @RequestBody() final String content) {
 
@@ -77,10 +77,8 @@ public class TokenController {
 
     val clientId = application.getClientId();
     val apps = t.getApplications();
-    if (apps != null && !apps.isEmpty()) {
-      if (!apps.stream().anyMatch(app -> app.getClientId() == clientId)) {
-        throw new InvalidTokenException("Token not authorized for this client");
-      }
+    if (apps != null && !apps.isEmpty() && !apps.stream().anyMatch(app -> app.getClientId() == clientId)) {
+      throw new InvalidTokenException("Token not authorized for this client");
     }
 
     return new TokenScope(t.getOwner().getName(), clientId,
