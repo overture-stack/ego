@@ -40,8 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.stereotype.Service;
-import org.springframework.security.oauth2.common.util.RandomValueStringGenerator;
-
 import java.security.InvalidKeyException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -67,9 +65,6 @@ public class TokenService {
   private SimpleDateFormat dateFormatter;
   @Autowired
   private TokenStoreService tokenStoreService;
-
-  @Autowired
-  private RandomValueStringGenerator randomValueStringGenerator;
   /*
     Constant
   */
@@ -121,7 +116,6 @@ public class TokenService {
     token.setExpires(DURATION);
     token.setRevoked(false);
     token.setToken(tokenString);
-
     token.setOwner(u);
 
     for(val p: u.getPermissionsList()) {
@@ -148,7 +142,7 @@ public class TokenService {
   }
 
   public String generateTokenString() {
-    return randomValueStringGenerator.generate();
+    return UUID.randomUUID().toString();
   }
 
   public String generateUserToken(User u, Set<String> scope) {

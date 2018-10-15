@@ -95,6 +95,7 @@ public class TokenController {
   @ResponseStatus(value = HttpStatus.OK)
   public @ResponseBody
   TokenResponse issueToken(
+    @RequestHeader(value="Authorization") final String authorization,
     String name,
     Set<String> scopes,
     Set<String> applications)
