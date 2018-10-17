@@ -1,6 +1,6 @@
 CREATE TABLE TOKEN(
   id        UUID PRIMARY KEY,
-  scopedAccessToken     VARCHAR(2048) NOT NULL,
+  token     VARCHAR(2048) NOT NULL,
   owner     UUID NOT NULL,
   appid     UUID NOT NULL,
   issuedate TIMESTAMP,
