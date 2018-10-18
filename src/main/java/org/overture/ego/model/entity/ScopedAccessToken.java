@@ -46,17 +46,20 @@ public class ScopedAccessToken {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "tokenapplication", joinColumns = { @JoinColumn(name = Fields.TOKENID_JOIN) },
     inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
+  @JsonIgnore
   Set<Application> applications;
 
   @Column(nullable = false, name = Fields.ISSUEDATE, updatable = false)
   Date expires;
   @Column(nullable = false, name = Fields.ISREVOKED, updatable = false)
   boolean isRevoked;
+
   @ManyToMany()
   @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "tokenscope", joinColumns = { @JoinColumn(name = Fields.TOKENID_JOIN) },
     inverseJoinColumns = { @JoinColumn(name = Fields.SCOPEID_JOIN) })
+  @JsonIgnore
   Set<Policy> policies;
 
   public void setExpires(int seconds) {
@@ -84,6 +87,9 @@ public class ScopedAccessToken {
   }
 
   public Set<String> getScope() {
+    if (policies == null) {
+      policies = new HashSet<>();
+    }
     return getPolicies().stream().map(policy -> policy.getName()).collect(Collectors.toSet());
   }
 }

@@ -86,11 +86,11 @@ Database migrations and versioning is managed by [flyway](https://flywaydb.org/)
 
 Get current version information:
 ```bash
-./flyway -configFiles=<path_to_ego>/ego/src/main/resources/flyway/conf/flyway.conf -locations=filesystem:<path_to_ego>/ego/src/main/resources/flyway/sql info
+./fly
 ```
 Run outstanding migrations:
 ```bash
-./flyway -configFiles=<path_to_ego>/ego/src/main/resources/flyway/conf/flyway.conf -locations=filesystem:<path_to_ego>/ego/src/main/resources/flyway/sql migrate
+./fly migrate
 ```
 
 To see the migration naming convention, [click here.](https://flywaydb.org/documentation/migrations#naming)
