@@ -21,9 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class TokenStoreServiceTest {
   @Autowired
   private EntityGenerator entityGenerator;
-
-  @Autowired
-  private UserService userService;
+  
   @Autowired
   private TokenStoreService tokenStoreService;
 
