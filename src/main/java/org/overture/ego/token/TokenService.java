@@ -38,6 +38,7 @@ import org.overture.ego.utils.TypeUtils;
 import org.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.stereotype.Service;
 
@@ -45,10 +46,11 @@ import java.security.InvalidKeyException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static java.lang.String.format;
+
 @Slf4j
 @Service
 public class TokenService {
-
   /*
     Constant
   */
@@ -100,23 +102,32 @@ public class TokenService {
     return generateUserToken(u, scope);
   }
 
-  public ScopedAccessToken issueToken(String name, Set<String> apps, Set<String> scopes) {
+  public ScopedAccessToken issueToken(String name, Set<String> scopes, Set<String> apps) {
+    log.info(format("Looking for user '%s'",name));
+    log.info(format("Scopes are '%s'", new ArrayList(scopes).toString()));
+    log.info(format("Apps are '%s'",new ArrayList(apps).toString()));
     User u = userService.getByName(name);
+    if (u == null) {
+      throw new UsernameNotFoundException(format("Can't find user '%s'",name));
+    }
+    log.info(format("Got user with id '%s'",u.getId().toString()));
     val missingScopes = u.missingScopes(scopes);
 
     if (!missingScopes.isEmpty()) {
-      val msg = String.format("User %s has no access to scopes [%s]", name, missingScopes);
-      log.error(msg);
+      val msg = format("User %s has no access to scopes [%s]", name, missingScopes);
+      log.info(msg);
       throw new InvalidScopeException(msg);
     }
 
     val tokenString = generateTokenString();
+    log.info(format("Generated token string '%s'",tokenString));
     val token = new ScopedAccessToken();
     token.setExpires(DURATION);
     token.setRevoked(false);
     token.setToken(tokenString);
     token.setOwner(u);
 
+    log.info("Generating permissions list");
     for (val p : u.getPermissionsList()) {
       val policy = p.getEntity();
       if (scopes.contains(policy.getName())) {
@@ -124,12 +135,16 @@ public class TokenService {
       }
     }
 
+    log.info("Generating apps list");
     for (val appName : apps) {
       val app = applicationService.getByName(appName);
       token.addApplication(app);
     }
 
+    log.info("Creating token in token store");
     tokenStoreService.create(token);
+
+    log.info("Returning");
 
     return token;
   }

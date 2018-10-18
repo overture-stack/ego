@@ -1,0 +1,2 @@
+#!/bin/bash
+psql ego < check_token_test.sql

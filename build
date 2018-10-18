@@ -1,3 +1,3 @@
 #!/bin/sh
-./fly
+./fly migrate
 mvn clean package

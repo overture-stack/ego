@@ -30,12 +30,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
+
+import static java.lang.String.format;
 
 @Slf4j
 @RestController
@@ -62,12 +68,11 @@ public class TokenController {
   public @ResponseBody
   TokenScope checkToken(
     @RequestHeader(value = "Authorization") final String authToken,
-    @RequestBody() final String content) {
-
-    val token = getValue(content, "token=");
+    @RequestParam(value = "token") final String token) {
     if (token == null) {
       throw new InvalidTokenException("No token field found in POST request");
     }
+    log.error(format("token='%s'",token));
     val application = applicationService.findByBasicToken(authToken);
 
     ScopedAccessToken t = tokenService.findByTokenString(token);
@@ -90,25 +95,42 @@ public class TokenController {
   public @ResponseBody
   TokenResponse issueToken(
     @RequestHeader(value = "Authorization") final String authorization,
-    String name,
-    Set<String> scopes,
-    Set<String> applications) {
-    val t = tokenService.issueToken(name, applications, scopes);
+    @RequestParam(value = "name")String name,
+    @RequestParam(value = "scopes") ArrayList<String> scopes,
+    @RequestParam(value = "applications", required = false) ArrayList<String> applications) {
+    val t = tokenService.issueToken(name, toSet(scopes), toSet(applications));
     TokenResponse response = new TokenResponse(t.getToken(), t.getScope(), t.getSecondsUntilExpiry());
     return response;
   }
 
+  private Set<String> toSet(Collection<String> collection) {
+    if (collection == null) {
+      return new HashSet<>();
+    } else {
+      return new HashSet<>(collection);
+    }
+  }
+
   @ExceptionHandler({ InvalidTokenException.class })
   public ResponseEntity<Object> handleInvalidTokenException(HttpServletRequest req, InvalidTokenException ex) {
-    log.error("ID ScopedAccessToken not found.");
-    return new ResponseEntity<Object>("Invalid ID ScopedAccessToken provided.", new HttpHeaders(),
+    log.error(format("ID ScopedAccessToken not found.:%s",ex.toString()));
+    return new ResponseEntity<>(format("{\"error\": \"Invalid ID ScopedAccessToken provided:'%s'\"}",
+      ex.toString()), new HttpHeaders(),
       HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler({ InvalidScopeException.class })
   public ResponseEntity<Object> handleInvalidScopeException(HttpServletRequest req, InvalidTokenException ex) {
-    log.error("Invalid Scope: %s".format(ex.getMessage()));
-    return new ResponseEntity<Object>("{\"error\": \"%s\"}".format(ex.getMessage()),
+    log.error(format("Invalid Scope: %s",ex.getMessage()));
+    return new ResponseEntity<>("{\"error\": \"%s\"}".format(ex.getMessage()),
       HttpStatus.BAD_REQUEST);
   }
+
+  @ExceptionHandler({ UsernameNotFoundException.class })
+  public ResponseEntity<Object> handleUserNotFoundException(HttpServletRequest req, InvalidTokenException ex) {
+    log.error(format("User not found: %s",ex.getMessage()));
+    return new ResponseEntity<>("{\"error\": \"%s\"}".format(ex.getMessage()),
+      HttpStatus.BAD_REQUEST);
+  }
+
 }
