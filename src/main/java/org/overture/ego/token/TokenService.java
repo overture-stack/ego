@@ -16,12 +16,10 @@
 
 package org.overture.ego.token;
 
-import com.google.common.collect.Sets;
 import io.jsonwebtoken.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.overture.ego.model.dto.TokenScope;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.ScopedAccessToken;
 import org.overture.ego.model.entity.User;
@@ -42,10 +40,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
-import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
 
-import javax.management.InvalidApplicationException;
 import java.security.InvalidKeyException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -106,7 +102,6 @@ public class TokenService {
     return generateUserToken(u, scope);
   }
 
-  @SneakyThrows
   public ScopedAccessToken issueToken(String name, Set<String> scopes, Set<String> apps) {
     log.info(format("Looking for user '%s'",name));
     log.info(format("Scopes are '%s'", new ArrayList(scopes).toString()));
@@ -143,10 +138,6 @@ public class TokenService {
     log.info("Generating apps list");
     for (val appName : apps) {
       val app = applicationService.getByName(appName);
-      if (app == null) {
-        log.info(format("Can't issue token for non-existant application '%s'", appName));
-        throw new InvalidApplicationException(format("No such application %s",appName));
-      }
       token.addApplication(app);
     }
 
@@ -242,35 +233,5 @@ public class TokenService {
     } else {
       throw new InvalidKeyException("Invalid signing key for the token.");
     }
-  }
-
-  @SneakyThrows
-  public TokenScope checkToken(String authToken, String token) {
-    if (token == null) {
-      throw new InvalidTokenException("No token field found in POST request");
-    }
-
-    log.error(format("token='%s'",token));
-    val application = applicationService.findByBasicToken(authToken);
-
-    ScopedAccessToken t = findByTokenString(token);
-    if (t == null) {
-      throw new InvalidTokenException("Token not found");
-    }
-
-    val clientId = application.getClientId();
-    val apps = t.getApplications();
-    log.info(format("Applications are %s",apps.toString()));
-    if (apps != null && !apps.isEmpty() ) {
-      if (!(apps.stream().anyMatch(app -> app.getClientId().equals(clientId)))) {
-        throw new InvalidTokenException("Token not authorized for this client");
-      }
-    }
-    /// We want to limit the scopes listed in the token to those scopes that the owner
-    // is allowed to access at the time the token is checked -- we don't assume that they
-    // have not changed since the token was issued.
-    val legalScopes = Sets.intersection(t.getScope(), new HashSet<>(t.getOwner().getScopes()));
-    return new TokenScope(t.getOwner().getName(), clientId,
-      t.getSecondsUntilExpiry(), legalScopes);
   }
 }

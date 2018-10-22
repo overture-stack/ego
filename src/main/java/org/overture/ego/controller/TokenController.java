@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.dto.TokenResponse;
 import org.overture.ego.model.dto.TokenScope;
+import org.overture.ego.model.entity.ScopedAccessToken;
 import org.overture.ego.security.ApplicationScoped;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.token.TokenService;
@@ -50,6 +51,16 @@ public class TokenController {
   private TokenService tokenService;
   private ApplicationService applicationService;
 
+  String getValue(String content, String key) {
+    val lines = content.split("\n");
+    for (val l : lines) {
+      if (l.startsWith(key)) {
+        return l.replaceFirst(key, "");
+      }
+    }
+    return "";
+  }
+
   @ApplicationScoped()
   @RequestMapping(method = RequestMethod.POST, value = "/check_token")
   @ResponseStatus(value = HttpStatus.MULTI_STATUS)
@@ -58,9 +69,25 @@ public class TokenController {
   TokenScope checkToken(
     @RequestHeader(value = "Authorization") final String authToken,
     @RequestParam(value = "token") final String token) {
+    if (token == null) {
+      throw new InvalidTokenException("No token field found in POST request");
+    }
+    log.error(format("token='%s'",token));
+    val application = applicationService.findByBasicToken(authToken);
 
-    val t = tokenService.checkToken(authToken, token);
-    return t;
+    ScopedAccessToken t = tokenService.findByTokenString(token);
+    if (t == null) {
+      throw new InvalidTokenException("Token not found");
+    }
+
+    val clientId = application.getClientId();
+    val apps = t.getApplications();
+    if (apps != null && !apps.isEmpty() && !apps.stream().anyMatch(app -> app.getClientId() == clientId)) {
+      throw new InvalidTokenException("Token not authorized for this client");
+    }
+
+    return new TokenScope(t.getOwner().getName(), clientId,
+      t.getSecondsUntilExpiry(), t.getScope());
   }
 
   @RequestMapping(method = RequestMethod.POST, value = "/token")
