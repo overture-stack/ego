@@ -37,3 +37,4 @@ nbdist/
 _build/
 _source/
 _templates/
+.DS_Store
