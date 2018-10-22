@@ -19,8 +19,8 @@ package org.overture.ego.service;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.val;
-import org.overture.ego.model.entity.GroupPermission;
 import org.overture.ego.model.entity.Group;
+import org.overture.ego.model.entity.GroupPermission;
 import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.params.Scope;
 import org.overture.ego.model.search.SearchFilter;
@@ -39,7 +39,7 @@ import static java.util.UUID.fromString;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
-@AllArgsConstructor(onConstructor = @__({@Autowired}))
+@AllArgsConstructor(onConstructor = @__({ @Autowired }))
 public class GroupService extends BaseService<Group, UUID> {
   private final GroupRepository groupRepository;
   private final ApplicationService applicationService;
@@ -49,7 +49,7 @@ public class GroupService extends BaseService<Group, UUID> {
     return groupRepository.save(groupInfo);
   }
 
-  public Group addAppsToGroup(@NonNull String grpId, @NonNull List<String> appIDs){
+  public Group addAppsToGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
     val group = getById(groupRepository, fromString(grpId));
     appIDs.forEach(appId -> {
       val app = applicationService.get(appId);
@@ -61,7 +61,8 @@ public class GroupService extends BaseService<Group, UUID> {
   public Group addGroupPermissions(@NonNull String groupId, @NonNull List<Scope> permissions) {
     val group = getById(groupRepository, fromString(groupId));
     permissions.forEach(permission -> {
-      group.addNewPermission(policyService.get(permission.getAclEntityId()), PolicyMask.fromValue(permission.getMask()));
+      group
+        .addNewPermission(policyService.get(permission.getAclEntityId()), PolicyMask.fromValue(permission.getMask()));
     });
     return groupRepository.save(group);
   }
@@ -75,13 +76,13 @@ public class GroupService extends BaseService<Group, UUID> {
   }
 
   public Group update(@NonNull Group updatedGroupInfo) {
-    Group group = getById(groupRepository,updatedGroupInfo.getId());
+    Group group = getById(groupRepository, updatedGroupInfo.getId());
     group.update(updatedGroupInfo);
     return groupRepository.save(group);
   }
 
   public void delete(@NonNull String groupId) {
-     groupRepository.deleteById(fromString(groupId));
+    groupRepository.deleteById(fromString(groupId));
   }
 
   public Page<Group> listGroups(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
@@ -89,50 +90,52 @@ public class GroupService extends BaseService<Group, UUID> {
   }
 
   public Page<GroupPermission> getGroupPermissions(@NonNull String groupId, @NonNull Pageable pageable) {
-    val groupPermissions = getById(groupRepository,fromString(groupId)).getGroupPermissions();
+    val groupPermissions = getById(groupRepository, fromString(groupId)).getGroupPermissions();
     return new PageImpl<>(groupPermissions, pageable, groupPermissions.size());
   }
 
-  public Page<Group> findGroups(@NonNull String query, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+  public Page<Group> findGroups(@NonNull String query, @NonNull List<SearchFilter> filters,
+    @NonNull Pageable pageable) {
     return groupRepository.findAll(where(GroupSpecification.containsText(query))
-            .and(GroupSpecification.filterBy(filters)), pageable);
+      .and(GroupSpecification.filterBy(filters)), pageable);
   }
 
-  public Page<Group> findUserGroups(@NonNull String userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
+  public Page<Group> findUserGroups(@NonNull String userId, @NonNull List<SearchFilter> filters,
+    @NonNull Pageable pageable) {
     return groupRepository.findAll(
-            where(GroupSpecification.containsUser(fromString(userId)))
-            .and(GroupSpecification.filterBy(filters)),
-            pageable);
+      where(GroupSpecification.containsUser(fromString(userId)))
+        .and(GroupSpecification.filterBy(filters)),
+      pageable);
   }
 
   public Page<Group> findUserGroups(@NonNull String userId, @NonNull String query, @NonNull List<SearchFilter> filters,
-                                    @NonNull Pageable pageable){
+    @NonNull Pageable pageable) {
     return groupRepository.findAll(
-            where(GroupSpecification.containsUser(fromString(userId)))
-                    .and(GroupSpecification.containsText(query))
-                    .and(GroupSpecification.filterBy(filters)),
-            pageable);
+      where(GroupSpecification.containsUser(fromString(userId)))
+        .and(GroupSpecification.containsText(query))
+        .and(GroupSpecification.filterBy(filters)),
+      pageable);
   }
 
   public Page<Group> findApplicationGroups(@NonNull String appId, @NonNull List<SearchFilter> filters,
-                                           @NonNull Pageable pageable){
+    @NonNull Pageable pageable) {
     return groupRepository.findAll(
-            where(GroupSpecification.containsApplication(fromString(appId)))
-            .and(GroupSpecification.filterBy(filters)),
-            pageable);
+      where(GroupSpecification.containsApplication(fromString(appId)))
+        .and(GroupSpecification.filterBy(filters)),
+      pageable);
   }
 
   public Page<Group> findApplicationGroups(@NonNull String appId, @NonNull String query,
-                                           @NonNull List<SearchFilter> filters, @NonNull Pageable pageable){
+    @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return groupRepository.findAll(
-            where(GroupSpecification.containsApplication(fromString(appId)))
-                    .and(GroupSpecification.containsText(query))
-            .and(GroupSpecification.filterBy(filters)),
-            pageable);
+      where(GroupSpecification.containsApplication(fromString(appId)))
+        .and(GroupSpecification.containsText(query))
+        .and(GroupSpecification.filterBy(filters)),
+      pageable);
   }
 
   public void deleteAppsFromGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
-    val group = getById(groupRepository,fromString(grpId));
+    val group = getById(groupRepository, fromString(grpId));
     appIDs.forEach(appId -> {
       // TODO if app id not valid (does not exist) we need to throw EntityNotFoundException
       group.removeApplication(fromString(appId));

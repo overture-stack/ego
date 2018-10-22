@@ -18,42 +18,37 @@ import java.util.UUID;
 @Entity
 @Table(name = "aclentity")
 @Data
-@JsonPropertyOrder({"id","owner","name"})
+@JsonPropertyOrder({ "id", "owner", "name" })
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@EqualsAndHashCode(of={"id"})
+@EqualsAndHashCode(of = { "id" })
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
 public class Policy {
-
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinColumn(name = Fields.ENTITY)
+  @JsonIgnore
+  protected Set<GroupPermission> groupPermissions;
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @LazyCollection(LazyCollectionOption.FALSE)
+  @JoinColumn(name = Fields.ENTITY)
+  @JsonIgnore
+  protected Set<UserPermission> userPermissions;
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(
-      name = "acl_entity_uuid",
-      strategy = "org.hibernate.id.UUIDGenerator")
+    name = "acl_entity_uuid",
+    strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "acl_entity_uuid")
   UUID id;
-
   @NonNull
   @Column(nullable = false, name = Fields.OWNER)
   UUID owner;
-
   @NonNull
   @Column(nullable = false, name = Fields.NAME, unique = true)
   String name;
-
-  @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinColumn(name=Fields.ENTITY)
-  @JsonIgnore
-  protected Set<GroupPermission> groupPermissions;
-
-  @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinColumn(name=Fields.ENTITY)
-  @JsonIgnore
-  protected Set<UserPermission> userPermissions;
 
   public void update(Policy other) {
     this.owner = other.owner;

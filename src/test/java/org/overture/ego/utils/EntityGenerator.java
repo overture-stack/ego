@@ -1,19 +1,18 @@
 package org.overture.ego.utils;
 
 import lombok.val;
-import org.overture.ego.model.entity.Policy;
-import org.overture.ego.model.entity.Application;
-import org.overture.ego.model.entity.Group;
-import org.overture.ego.model.entity.User;
-import org.overture.ego.service.PolicyService;
+import org.overture.ego.model.entity.*;
+import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
+import org.overture.ego.service.PolicyService;
 import org.overture.ego.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -68,6 +67,12 @@ public class EntityGenerator {
     return users.stream().map(this::createOneUser).collect(Collectors.toList());
   }
 
+  public User setupUser(String name) {
+    val names= name.split(" ",2);
+    val user = createOneUser(Pair.of(names[0], names[1]));
+    return userService.create(user);
+  }
+
   public void setupSimpleUsers() {
     for (User user : createUsersFromList(Arrays.asList(Pair.of("First", "User"), Pair.of("Second", "User"), Pair.of("Third", "User")))) {
       userService.create(user);
@@ -76,6 +81,11 @@ public class EntityGenerator {
 
   public Group createOneGroup(String name) {
     return new Group(name);
+  }
+
+  public Group setupGroup(String name) {
+    val group = createOneGroup(name);
+    return groupService.create(group);
   }
 
   public List<Group> createGroupsfromList(List<String> groups) {
@@ -95,6 +105,11 @@ public class EntityGenerator {
         .build();
   }
 
+  public Policy setupPolicy(String name, UUID groupId) {
+    val policy = createOneAclEntity(Pair.of(name, groupId));
+    return policyService.create(policy);
+  }
+
   public List<Policy> createAclEntitiesFromList(List<Pair<String, UUID>> aclEntities) {
     return aclEntities.stream().map(this::createOneAclEntity).collect(Collectors.toList());
   }
@@ -109,5 +124,39 @@ public class EntityGenerator {
         ))) {
       policyService.create(policy);
     }
+  }
+
+  public ScopedAccessToken createSampleToken() {
+    val user  = "Shadow Cat";
+    val token = "9bc774b0-8d50-4ada-952f-b2a792fe96e9";
+    val group = "Song Users";
+    val scopes = list("id.create", "song.upload");
+    return createToken(user, token, group, scopes);
+  }
+
+  private List<String> list(String... s) {
+    return Arrays.asList(s);
+  }
+
+  public ScopedAccessToken createToken(String userName, String token, String groupName, List<String> policyNames) {
+    val user = setupUser(userName);
+    val group = setupGroup(groupName);
+
+    for(val policyName: policyNames) {
+      val policy = setupPolicy(policyName, group.getId());
+      user.addNewPermission(policy, PolicyMask.READ);
+    }
+
+    userService.update(user);
+
+    val tokenObject = ScopedAccessToken.builder().
+      token(token).owner(user).policies(new HashSet<>()).
+      applications(new HashSet<>()).build();
+
+    for(val permission: user.getPermissionsList()) {
+      tokenObject.addPolicy(permission.getEntity());
+    }
+
+    return tokenObject;
   }
 }

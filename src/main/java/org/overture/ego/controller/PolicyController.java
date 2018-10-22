@@ -38,10 +38,11 @@ public class PolicyController {
 
   @Autowired
   public PolicyController(PolicyService policyService, GroupService groupService, UserService userService) {
-    this.policyService=policyService;
-    this.groupService=groupService;
-    this.userService=userService;
+    this.policyService = policyService;
+    this.groupService = groupService;
+    this.userService = userService;
   }
+
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
   @ApiResponses(

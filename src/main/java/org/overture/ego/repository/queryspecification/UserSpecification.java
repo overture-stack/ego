@@ -27,13 +27,12 @@ import javax.annotation.Nonnull;
 import javax.persistence.criteria.Join;
 import java.util.UUID;
 
-
 public class UserSpecification extends SpecificationBase<User> {
 
   public static Specification<User> containsText(@Nonnull String text) {
     val finalText = QueryUtils.prepareForQuery(text);
-    return (root, query, builder) -> builder.or(getQueryPredicates(builder,root,finalText,
-            "name","email","firstName","lastName","status")
+    return (root, query, builder) -> builder.or(getQueryPredicates(builder, root, finalText,
+      "name", "email", "firstName", "lastName", "status")
     );
   }
 
@@ -41,7 +40,7 @@ public class UserSpecification extends SpecificationBase<User> {
     return (root, query, builder) ->
     {
       Join<User, Group> groupJoin = root.join("wholeGroups");
-      return builder.equal(groupJoin.<Integer> get("id"), groupId);
+      return builder.equal(groupJoin.<Integer>get("id"), groupId);
     };
 
   }
@@ -50,7 +49,7 @@ public class UserSpecification extends SpecificationBase<User> {
     return (root, query, builder) ->
     {
       Join<User, Application> applicationJoin = root.join("wholeApplications");
-      return builder.equal(applicationJoin.<Integer> get("id"), appId);
+      return builder.equal(applicationJoin.<Integer>get("id"), appId);
     };
 
   }

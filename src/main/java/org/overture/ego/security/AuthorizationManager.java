@@ -16,12 +16,14 @@
 
 package org.overture.ego.security;
 
+import lombok.NonNull;
 import org.springframework.security.core.Authentication;
 
 public interface AuthorizationManager {
+  boolean authorize(Authentication authentication);
 
-     boolean authorize(Authentication authentication);
-     boolean authorizeWithAdminRole(Authentication authentication);
+  boolean authorizeWithAdminRole(Authentication authentication);
 
+  boolean authorizeWithApplication(@NonNull Authentication authentication);
 }
 

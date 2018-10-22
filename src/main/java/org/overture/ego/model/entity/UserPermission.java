@@ -8,8 +8,8 @@ import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
-import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.enums.Fields;
+import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
@@ -18,12 +18,12 @@ import java.util.UUID;
 @Entity
 @Table(name = "acluserpermission")
 @Data
-@JsonPropertyOrder({"id","entity","sid","mask"})
+@JsonPropertyOrder({ "id", "entity", "sid", "mask" })
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@EqualsAndHashCode(of={"id"})
+@EqualsAndHashCode(of = { "id" })
 @TypeDef(
-    name = "ego_acl_enum",
-    typeClass = PostgreSQLEnumType.class
+  name = "ego_acl_enum",
+  typeClass = PostgreSQLEnumType.class
 )
 @Builder
 @AllArgsConstructor
@@ -34,8 +34,8 @@ public class UserPermission extends Permission {
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(
-      name = "acl_user_permission_uuid",
-      strategy = "org.hibernate.id.UUIDGenerator")
+    name = "acl_user_permission_uuid",
+    strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "acl_user_permission_uuid")
   UUID id;
 
@@ -52,6 +52,6 @@ public class UserPermission extends Permission {
   @NonNull
   @Column(nullable = false, name = Fields.MASK)
   @Enumerated(EnumType.STRING)
-  @Type( type = "ego_acl_enum" )
+  @Type(type = "ego_acl_enum")
   PolicyMask mask;
 }

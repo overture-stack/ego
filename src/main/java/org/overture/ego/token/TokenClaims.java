@@ -57,11 +57,11 @@ public abstract class TokenClaims {
   @JsonIgnore
   private long initTime = System.currentTimeMillis();
 
-  public int getExp(){
-    return ((int) ((this.initTime + validDuration)/ 1000L));
+  public int getExp() {
+    return ((int) ((this.initTime + validDuration) / 1000L));
   }
 
-  public int getIat(){
+  public int getIat() {
     return (int) (this.initTime / 1000L);
   }
 

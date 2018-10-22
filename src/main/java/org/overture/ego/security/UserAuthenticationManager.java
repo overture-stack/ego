@@ -54,15 +54,16 @@ public class UserAuthenticationManager implements AuthenticationManager {
     val provider = request.getParameter("provider");
     val idToken = request.getParameter("id_token");
     String username = "";
-    if("google".equals(provider.toLowerCase())){
+    if ("google".equals(provider.toLowerCase())) {
       username = exchangeGoogleTokenForAuth(idToken);
-    } else if ("facebook".equals(provider.toLowerCase())){
+    } else if ("facebook".equals(provider.toLowerCase())) {
       username = exchangeFacebookTokenForAuth(idToken);
-    } else return null;
+    } else
+      return null;
 
     return new UsernamePasswordAuthenticationToken(
-            username,
-            null, new ArrayList<>());
+      username,
+      null, new ArrayList<>());
   }
 
   @SneakyThrows
@@ -79,7 +80,7 @@ public class UserAuthenticationManager implements AuthenticationManager {
     if (!facebookTokenService.validToken(idToken))
       throw new Exception("Invalid user token:" + idToken);
     val authInfo = facebookTokenService.getAuthInfo(idToken);
-    if(authInfo.isPresent()) {
+    if (authInfo.isPresent()) {
       return tokenService.generateUserToken(authInfo.get());
     } else {
       throw new Exception("Unable to generate auth token for this user");
