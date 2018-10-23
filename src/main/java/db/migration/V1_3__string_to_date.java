@@ -19,7 +19,7 @@ public class V1_3__string_to_date implements SpringJdbcMigration {
     public void migrate(JdbcTemplate jdbcTemplate) throws Exception {
         log.info("Flyway java migration: V1_3__string_to_date running ******************************");
 
-        boolean runWithTest = true;
+        boolean runWithTest = false;
         UUID userOneId = UUID.randomUUID();
         UUID userTwoId = UUID.randomUUID();
 
