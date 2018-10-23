@@ -80,7 +80,7 @@ public class UserService extends BaseService<User, UUID> {
 
   public User create(@NonNull User userInfo) {
     // Set Created At date to Now
-    userInfo.setCreatedAt(formatter.format(new Date()));
+    userInfo.setCreatedAt(new Date());
 
     // Set UserName to equal the email.
     userInfo.setName(userInfo.getEmail());
@@ -95,7 +95,7 @@ public class UserService extends BaseService<User, UUID> {
     userInfo.setFirstName(StringUtils.isEmpty(idToken.getGiven_name()) ? "" : idToken.getGiven_name());
     userInfo.setLastName(StringUtils.isEmpty(idToken.getFamily_name()) ? "" : idToken.getFamily_name());
     userInfo.setStatus(DEFAULT_USER_STATUS);
-    userInfo.setCreatedAt(formatter.format(new Date()));
+    userInfo.setCreatedAt(new Date());
     userInfo.setLastLogin(null);
     userInfo.setRole(DEFAULT_USER_ROLE);
     return this.create(userInfo);
@@ -116,7 +116,7 @@ public class UserService extends BaseService<User, UUID> {
       userInfo.setFirstName(DEMO_FIRST_NAME);
       userInfo.setLastName(DEMO_LAST_NAME);
       userInfo.setStatus(UserStatus.APPROVED.toString());
-      userInfo.setCreatedAt(formatter.format(new Date()));
+      userInfo.setCreatedAt(new Date());
       userInfo.setLastLogin(null);
       userInfo.setRole(UserRole.ADMIN.toString());
       output = this.create(userInfo);
