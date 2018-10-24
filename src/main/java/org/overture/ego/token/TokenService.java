@@ -258,19 +258,27 @@ public class TokenService {
       throw new InvalidTokenException("Token not found");
     }
 
-    val clientId = application.getClientId();
-    val apps = t.getApplications();
-    log.info(format("Applications are %s",apps.toString()));
-    if (apps != null && !apps.isEmpty() ) {
-      if (!(apps.stream().anyMatch(app -> app.getClientId().equals(clientId)))) {
-        throw new InvalidTokenException("Token not authorized for this client");
-      }
+    if (!isAuthorizedApplication(application, t.getApplications())) {
+      throw new InvalidTokenException("Token not authorized for this client");
     }
     /// We want to limit the scopes listed in the token to those scopes that the owner
     // is allowed to access at the time the token is checked -- we don't assume that they
     // have not changed since the token was issued.
     val legalScopes = Sets.intersection(t.getScope(), new HashSet<>(t.getOwner().getScopes()));
-    return new TokenScope(t.getOwner().getName(), clientId,
+    return new TokenScope(t.getOwner().getName(), application.getClientId(),
       t.getSecondsUntilExpiry(), legalScopes);
   }
+
+  public boolean isAuthorizedApplication(Application client, Set<Application> apps) {
+    val clientId = client.getClientId();
+
+    log.info(format("Applications are %s",apps.toString()));
+    if (apps != null && !apps.isEmpty() ) {
+      if (!(apps.stream().anyMatch(app -> app.getClientId().equals(clientId)))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
 }
