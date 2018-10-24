@@ -24,13 +24,12 @@ import org.springframework.data.jpa.domain.Specification;
 
 import javax.annotation.Nonnull;
 
-
 public class AclEntitySpecification extends SpecificationBase<User> {
 
   public static Specification<Policy> containsText(@Nonnull String text) {
     val finalText = QueryUtils.prepareForQuery(text);
-    return (root, query, builder) -> builder.or(getQueryPredicates(builder,root,finalText,
-            "name")
+    return (root, query, builder) -> builder.or(getQueryPredicates(builder, root, finalText,
+      "name")
     );
   }
 

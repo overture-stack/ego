@@ -16,13 +16,18 @@
 
 package org.overture.ego.token;
 
+import com.google.common.collect.Sets;
 import io.jsonwebtoken.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.model.dto.TokenScope;
 import org.overture.ego.model.entity.Application;
+import org.overture.ego.model.entity.ScopedAccessToken;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.reactor.events.UserEvents;
+import org.overture.ego.service.ApplicationService;
+import org.overture.ego.service.TokenStoreService;
 import org.overture.ego.service.UserService;
 import org.overture.ego.token.app.AppJWTAccessToken;
 import org.overture.ego.token.app.AppTokenClaims;
@@ -35,37 +40,43 @@ import org.overture.ego.utils.TypeUtils;
 import org.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
+import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
 
+import javax.management.InvalidApplicationException;
 import java.security.InvalidKeyException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
+
+import static java.lang.String.format;
 
 @Slf4j
 @Service
 public class TokenService {
-
+  /*
+    Constant
+  */
+  private static final String ISSUER_NAME = "ego";
+  @Autowired
+  TokenSigner tokenSigner;
   @Value("${demo:false}")
   private boolean demo;
-
   @Value("${jwt.duration:86400000}")
   private int DURATION;
   @Autowired
   private UserService userService;
   @Autowired
+  private ApplicationService applicationService;
+  @Autowired
   private UserEvents userEvents;
   @Autowired
-  TokenSigner tokenSigner;
-  @Autowired
   private SimpleDateFormat dateFormatter;
-  /*
-    Constant
-  */
-  private static final String ISSUER_NAME="ego";
+  @Autowired
+  private TokenStoreService tokenStoreService;
 
-
-  public String generateUserToken(IDToken idToken){
+  public String generateUserToken(IDToken idToken) {
     // If the demo flag is set, all tokens will be generated as the Demo User,
     // otherwise, get the user associated with their idToken
     User user;
@@ -82,8 +93,8 @@ public class TokenService {
 
     // Update user.lastLogin in the DB
     // Use events as these are async:
-    //    the DB call won't block returning the Token
-    user.setLastLogin(new Date());
+    //    the DB call won't block returning the ScopedAccessToken
+    user.setLastLogin(dateFormatter.format(new Date()));
     userEvents.update(user);
 
     return generateUserToken(user);
@@ -91,11 +102,80 @@ public class TokenService {
 
   @SneakyThrows
   public String generateUserToken(User u) {
+    val scope = new HashSet<>(u.getScopes());
+    return generateUserToken(u, scope);
+  }
+
+  @SneakyThrows
+  public ScopedAccessToken issueToken(String name, Set<String> scopes, Set<String> apps) {
+    log.info(format("Looking for user '%s'",name));
+    log.info(format("Scopes are '%s'", new ArrayList(scopes).toString()));
+    log.info(format("Apps are '%s'",new ArrayList(apps).toString()));
+    User u = userService.getByName(name);
+    if (u == null) {
+      throw new UsernameNotFoundException(format("Can't find user '%s'",name));
+    }
+    log.info(format("Got user with id '%s'",u.getId().toString()));
+    val missingScopes = u.missingScopes(scopes);
+
+    if (!missingScopes.isEmpty()) {
+      val msg = format("User %s has no access to scopes [%s]", name, missingScopes);
+      log.info(msg);
+      throw new InvalidScopeException(msg);
+    }
+
+    val tokenString = generateTokenString();
+    log.info(format("Generated token string '%s'",tokenString));
+    val token = new ScopedAccessToken();
+    token.setExpires(DURATION);
+    token.setRevoked(false);
+    token.setToken(tokenString);
+    token.setOwner(u);
+
+    log.info("Generating permissions list");
+    for (val p : u.getPermissionsList()) {
+      val policy = p.getEntity();
+      if (scopes.contains(policy.getName())) {
+        token.addPolicy(policy);
+      }
+    }
+
+    log.info("Generating apps list");
+    for (val appName : apps) {
+      val app = applicationService.getByName(appName);
+      if (app == null) {
+        log.info(format("Can't issue token for non-existant application '%s'", appName));
+        throw new InvalidApplicationException(format("No such application %s",appName));
+      }
+      token.addApplication(app);
+    }
+
+    log.info("Creating token in token store");
+    tokenStoreService.create(token);
+
+    log.info("Returning");
+
+    return token;
+  }
+
+  public ScopedAccessToken findByTokenString(String token) {
+    ScopedAccessToken t = tokenStoreService.findByTokenString(token);
+
+    return t;
+  }
+
+  public String generateTokenString() {
+    return UUID.randomUUID().toString();
+  }
+
+  public String generateUserToken(User u, Set<String> scope) {
     val tokenContext = new UserTokenContext(u);
+    tokenContext.setScope(scope);
     val tokenClaims = new UserTokenClaims();
     tokenClaims.setIss(ISSUER_NAME);
     tokenClaims.setValidDuration(DURATION);
     tokenClaims.setContext(tokenContext);
+
     return getSignedToken(tokenClaims);
   }
 
@@ -112,11 +192,11 @@ public class TokenService {
   public boolean validateToken(String token) {
 
     Jws decodedToken = null;
-    try{
-        decodedToken  = Jwts.parser()
+    try {
+      decodedToken = Jwts.parser()
         .setSigningKey(tokenSigner.getKey().get())
         .parseClaimsJws(token);
-    } catch (Exception ex){
+    } catch (Exception ex) {
       log.error("Error parsing JWT: {}", ex);
     }
     return (decodedToken != null);
@@ -134,34 +214,63 @@ public class TokenService {
 
   @SneakyThrows
   public Claims getTokenClaims(String token) {
-
-    if(tokenSigner.getKey().isPresent()) {
-    return Jwts.parser()
+    if (tokenSigner.getKey().isPresent()) {
+      return Jwts.parser()
         .setSigningKey(tokenSigner.getKey().get())
         .parseClaimsJws(token)
         .getBody();
-  } else {
+    } else {
       throw new InvalidKeyException("Invalid signing key for the token.");
     }
   }
 
-  public UserJWTAccessToken getUserAccessToken(String token){
+  public UserJWTAccessToken getUserAccessToken(String token) {
     return new UserJWTAccessToken(token, this);
   }
 
-  public AppJWTAccessToken getAppAccessToken(String token){
+  public AppJWTAccessToken getAppAccessToken(String token) {
     return new AppJWTAccessToken(token, this);
   }
 
   @SneakyThrows
-  private String getSignedToken(TokenClaims claims){
-    if(tokenSigner.getKey().isPresent()) {
+  private String getSignedToken(TokenClaims claims) {
+    if (tokenSigner.getKey().isPresent()) {
       return Jwts.builder()
-          .setClaims(TypeUtils.convertToAnotherType(claims, Map.class, Views.JWTAccessToken.class))
-          .signWith(SignatureAlgorithm.RS256, tokenSigner.getKey().get())
-          .compact();
+        .setClaims(TypeUtils.convertToAnotherType(claims, Map.class, Views.JWTAccessToken.class))
+        .signWith(SignatureAlgorithm.RS256, tokenSigner.getKey().get())
+        .compact();
     } else {
       throw new InvalidKeyException("Invalid signing key for the token.");
     }
+  }
+
+  @SneakyThrows
+  public TokenScope checkToken(String authToken, String token) {
+    if (token == null) {
+      throw new InvalidTokenException("No token field found in POST request");
+    }
+
+    log.error(format("token='%s'",token));
+    val application = applicationService.findByBasicToken(authToken);
+
+    ScopedAccessToken t = findByTokenString(token);
+    if (t == null) {
+      throw new InvalidTokenException("Token not found");
+    }
+
+    val clientId = application.getClientId();
+    val apps = t.getApplications();
+    log.info(format("Applications are %s",apps.toString()));
+    if (apps != null && !apps.isEmpty() ) {
+      if (!(apps.stream().anyMatch(app -> app.getClientId().equals(clientId)))) {
+        throw new InvalidTokenException("Token not authorized for this client");
+      }
+    }
+    /// We want to limit the scopes listed in the token to those scopes that the owner
+    // is allowed to access at the time the token is checked -- we don't assume that they
+    // have not changed since the token was issued.
+    val legalScopes = Sets.intersection(t.getScope(), new HashSet<>(t.getOwner().getScopes()));
+    return new TokenScope(t.getOwner().getName(), clientId,
+      t.getSecondsUntilExpiry(), legalScopes);
   }
 }

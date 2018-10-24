@@ -82,13 +82,13 @@ public class GoogleTokenService {
       targetAudience.add(clientIDs);
     }
     verifier =
-        new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
-            .setAudience(targetAudience)
-            .build();
+      new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
+        .setAudience(targetAudience)
+        .build();
   }
 
   @SneakyThrows
-  public IDToken decode(String token){
+  public IDToken decode(String token) {
     val tokenDecoded = JwtHelper.decode(token);
     val authInfo = new ObjectMapper().readValue(tokenDecoded.getClaims(), Map.class);
     return TypeUtils.convertToAnotherType(authInfo, IDToken.class);

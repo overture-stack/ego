@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +38,7 @@ import javax.servlet.http.HttpServletRequest;
 @Slf4j
 @RestController
 @RequestMapping("/oauth")
-@AllArgsConstructor(onConstructor = @__({@Autowired}))
+@AllArgsConstructor(onConstructor = @__({ @Autowired }))
 public class AuthController {
   private TokenService tokenService;
   private GoogleTokenService googleTokenService;
@@ -49,7 +50,7 @@ public class AuthController {
   @SneakyThrows
   public @ResponseBody
   String exchangeGoogleTokenForAuth(
-      @RequestHeader(value = "token", required = true) final String idToken) {
+    @RequestHeader(value = "token") final String idToken) {
     if (!googleTokenService.validToken(idToken))
       throw new InvalidTokenException("Invalid user token:" + idToken);
     val authInfo = googleTokenService.decode(idToken);
@@ -61,11 +62,11 @@ public class AuthController {
   @SneakyThrows
   public @ResponseBody
   String exchangeFacebookTokenForAuth(
-          @RequestHeader(value = "token", required = true) final String idToken) {
+    @RequestHeader(value = "token") final String idToken) {
     if (!facebookTokenService.validToken(idToken))
       throw new InvalidTokenException("Invalid user token:" + idToken);
     val authInfo = facebookTokenService.getAuthInfo(idToken);
-    if(authInfo.isPresent()) {
+    if (authInfo.isPresent()) {
       return tokenService.generateUserToken(authInfo.get());
     } else {
       throw new InvalidTokenException("Unable to generate auth token for this user");
@@ -77,13 +78,13 @@ public class AuthController {
   @SneakyThrows
   public @ResponseBody
   boolean verifyJWToken(
-      @RequestHeader(value = "token", required = true) final String token) {
-    if (StringUtils.isEmpty(token))  {
-      throw new InvalidTokenException("Token is empty");
+    @RequestHeader(value = "token") final String token) {
+    if (StringUtils.isEmpty(token)) {
+      throw new InvalidTokenException("ScopedAccessToken is empty");
     }
 
-    if ( ! tokenService.validateToken(token) ) {
-      throw new InvalidTokenException("Token failed validation");
+    if (!tokenService.validateToken(token)) {
+      throw new InvalidTokenException("ScopedAccessToken failed validation");
     }
     return true;
   }
@@ -93,7 +94,7 @@ public class AuthController {
   public @ResponseBody
   String getPublicKey() {
     val pubKey = tokenSigner.getEncodedPublicKey();
-    if(pubKey.isPresent()){
+    if (pubKey.isPresent()) {
       return pubKey.get();
     } else {
       return "";
@@ -102,9 +103,15 @@ public class AuthController {
 
   @ExceptionHandler({ InvalidTokenException.class })
   public ResponseEntity<Object> handleInvalidTokenException(HttpServletRequest req, InvalidTokenException ex) {
-    log.error("ID Token not found.");
-    return new ResponseEntity<Object>("Invalid ID Token provided.", new HttpHeaders(),
-        HttpStatus.BAD_REQUEST);
+    log.error("ID ScopedAccessToken not found.");
+    return new ResponseEntity<Object>("Invalid ID ScopedAccessToken provided.", new HttpHeaders(),
+      HttpStatus.BAD_REQUEST);
   }
 
+  @ExceptionHandler({ InvalidScopeException.class })
+  public ResponseEntity<Object> handleInvalidScopeException(HttpServletRequest req, InvalidTokenException ex) {
+    log.error("Invalid Scope: %s".format(ex.getMessage()));
+    return new ResponseEntity<Object>("{\"error\": \"%s\"}".format(ex.getMessage()),
+      HttpStatus.BAD_REQUEST);
+  }
 }

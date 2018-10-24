@@ -16,7 +16,6 @@
 
 package org.overture.ego.repository;
 
-
 import org.overture.ego.model.entity.Group;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,11 +24,11 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.UUID;
 
-
 public interface GroupRepository extends
-        PagingAndSortingRepository<Group, UUID>, JpaSpecificationExecutor {
+  PagingAndSortingRepository<Group, UUID>, JpaSpecificationExecutor {
 
   Group findOneByNameIgnoreCase(String name);
+
   Page<Group> findAllByStatusIgnoreCase(String status, Pageable pageable);
 
 }

@@ -19,14 +19,13 @@ package org.overture.ego.utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 
-
 @Slf4j
 public class QueryUtils {
 
-  public static String prepareForQuery(String text){
+  public static String prepareForQuery(String text) {
     String output = text;
-    if(StringUtils.isEmpty(output)){
-      return  "";
+    if (StringUtils.isEmpty(output)) {
+      return "";
     }
     if (!output.contains("%")) {
       output = "%" + output + "%";

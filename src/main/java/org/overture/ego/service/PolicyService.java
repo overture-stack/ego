@@ -33,7 +33,6 @@ public class PolicyService extends BaseService<Policy, UUID> {
     return aclEntityRepository.save(policy);
   }
 
-
   // Read
   public Policy get(@NonNull String aclEntityId) {
     return getById(aclEntityRepository, fromString(aclEntityId));
@@ -46,7 +45,6 @@ public class PolicyService extends BaseService<Policy, UUID> {
   public Page<Policy> listAclEntities(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return aclEntityRepository.findAll(AclEntitySpecification.filterBy(filters), pageable);
   }
-
 
   // Update
   public Policy update(@NonNull Policy updatedPolicy) {

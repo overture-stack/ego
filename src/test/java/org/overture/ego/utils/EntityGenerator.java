@@ -1,21 +1,15 @@
 package org.overture.ego.utils;
 
 import lombok.val;
-import org.overture.ego.model.entity.Policy;
-import org.overture.ego.model.entity.Application;
-import org.overture.ego.model.entity.Group;
-import org.overture.ego.model.entity.User;
-import org.overture.ego.service.PolicyService;
-import org.overture.ego.service.ApplicationService;
-import org.overture.ego.service.GroupService;
-import org.overture.ego.service.UserService;
+import org.overture.ego.model.entity.*;
+import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.time.Instant;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -33,6 +27,11 @@ public class EntityGenerator {
   @Autowired
   private PolicyService policyService;
 
+  @Autowired
+  private TokenStoreService tokenStoreService;
+
+  public static TestData instance = null;
+
   public Application createOneApplication(String clientId) {
     return new Application(String.format("Application %s", clientId), clientId, new StringBuilder(clientId).reverse().toString());
   }
@@ -45,6 +44,15 @@ public class EntityGenerator {
     for (Application application : createApplicationsFromList(Arrays.asList("111111", "222222", "333333", "444444", "555555"))) {
       applicationService.create(application);
     }
+  }
+
+  public Application setupApplication(String clientId, String clientSecret) {
+    val app = new Application();
+    app.setClientId(clientId);
+    app.setClientSecret(clientSecret);
+    app.setName(clientId);
+    app.setStatus("Approved");
+    return applicationService.create(app);
   }
 
   public User createOneUser(Pair<String, String> user) {
@@ -68,6 +76,12 @@ public class EntityGenerator {
     return users.stream().map(this::createOneUser).collect(Collectors.toList());
   }
 
+  public User setupUser(String name) {
+    val names= name.split(" ",2);
+    val user = createOneUser(Pair.of(names[0], names[1]));
+    return userService.create(user);
+  }
+
   public void setupSimpleUsers() {
     for (User user : createUsersFromList(Arrays.asList(Pair.of("First", "User"), Pair.of("Second", "User"), Pair.of("Third", "User")))) {
       userService.create(user);
@@ -76,6 +90,11 @@ public class EntityGenerator {
 
   public Group createOneGroup(String name) {
     return new Group(name);
+  }
+
+  public Group setupGroup(String name) {
+    val group = createOneGroup(name);
+    return groupService.create(group);
   }
 
   public List<Group> createGroupsfromList(List<String> groups) {
@@ -95,6 +114,11 @@ public class EntityGenerator {
         .build();
   }
 
+  public Policy setupPolicy(String name, UUID groupId) {
+    val policy = createOneAclEntity(Pair.of(name, groupId));
+    return policyService.create(policy);
+  }
+
   public List<Policy> createAclEntitiesFromList(List<Pair<String, UUID>> aclEntities) {
     return aclEntities.stream().map(this::createOneAclEntity).collect(Collectors.toList());
   }
@@ -110,4 +134,41 @@ public class EntityGenerator {
       policyService.create(policy);
     }
   }
+
+  private List<String> list(String... s) {
+    return Arrays.asList(s);
+  }
+
+  public ScopedAccessToken setupToken(User user, String token, long duration, Set<Policy> policies,
+    Set<Application> applications) {
+    val tokenObject = ScopedAccessToken.builder().
+      token(token).owner(user).
+      policies(policies == null ? new HashSet<>():policies).
+      applications(applications == null ? new HashSet<>():applications).
+      expires(Date.from(Instant.now().plusSeconds(duration))).
+      build();
+
+    tokenStoreService.create(tokenObject);
+    return tokenObject;
+  }
+
+  public void addGroups(User user, List<Group> groups) {
+    for(val g:groups) {
+      if (user.getWholeGroups().contains(g)) {
+        // user already has this group
+      } else {
+        user.addNewGroup(g);
+      }
+    }
+    userService.update(user);
+  }
+
+  public void addPermission(User user, PolicyMask mask, Set<Policy> scopes) {
+    for(val policy:scopes) {
+      user.addNewPermission(policy, mask);
+    }
+    userService.update(user);
+  }
+
 }
+

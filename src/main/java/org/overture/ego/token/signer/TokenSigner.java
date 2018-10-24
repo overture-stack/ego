@@ -23,6 +23,8 @@ import java.util.Optional;
 public interface TokenSigner {
 
   Optional<Key> getKey();
+
   Optional<KeyPair> getKeyPair();
+
   Optional<String> getEncodedPublicKey();
 }

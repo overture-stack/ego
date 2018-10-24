@@ -16,7 +16,6 @@
 
 package org.overture.ego.token.user;
 
-
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,7 +25,7 @@ import org.overture.ego.view.Views;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -36,15 +35,19 @@ public class UserTokenClaims extends TokenClaims {
   @NonNull
   private UserTokenContext context;
 
-  public String getSub(){
-    if(StringUtils.isEmpty(sub)) {
+  public String getSub() {
+    if (StringUtils.isEmpty(sub)) {
       return String.valueOf(this.context.getUserInfo().getId());
     } else {
       return sub;
     }
   }
 
-  public List<String> getAud(){
+  public Set<String> getScope() {
+    return this.context.getScope();
+  }
+
+  public List<String> getAud() {
     return this.context.getUserInfo().getApplications();
   }
 

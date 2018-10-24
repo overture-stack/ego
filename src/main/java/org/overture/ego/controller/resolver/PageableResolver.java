@@ -33,9 +33,9 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
 
   @Override
   public Object resolveArgument(MethodParameter methodParameter,
-                                ModelAndViewContainer modelAndViewContainer,
-                                NativeWebRequest nativeWebRequest,
-                                WebDataBinderFactory webDataBinderFactory) throws Exception {
+    ModelAndViewContainer modelAndViewContainer,
+    NativeWebRequest nativeWebRequest,
+    WebDataBinderFactory webDataBinderFactory) throws Exception {
     // get paging parameters
     String limit = nativeWebRequest.getParameter("limit");
     String offset = nativeWebRequest.getParameter("offset");
@@ -61,7 +61,7 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
 
       @Override
       public int getPageSize() {
-        if(StringUtils.isEmpty(limit)){
+        if (StringUtils.isEmpty(limit)) {
           return DEFAULT_LIMIT;
         } else {
           return Integer.parseInt(limit);
@@ -70,8 +70,8 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
 
       @Override
       public long getOffset() {
-        if(StringUtils.isEmpty(offset)){
-          return  DEFAULT_PAGE_NUM;
+        if (StringUtils.isEmpty(offset)) {
+          return DEFAULT_PAGE_NUM;
         } else {
           return Integer.parseInt(offset);
         }
@@ -82,7 +82,7 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
         // set default sort direction
         Sort.Direction direction = Sort.Direction.DESC;
 
-        if( (! StringUtils.isEmpty(sortOrder)) && "asc".equals(sortOrder.toLowerCase())){
+        if ((!StringUtils.isEmpty(sortOrder)) && "asc".equals(sortOrder.toLowerCase())) {
           direction = Sort.Direction.ASC;
         }
         // TODO: this is a hack for now to provide default sort on id field

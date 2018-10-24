@@ -31,8 +31,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
-
-
 @Configuration
 @EnableWebSecurity
 @Profile("auth")
@@ -42,8 +40,8 @@ public class SecureServerConfig extends WebSecurityConfigurerAdapter {
     Constants
    */
   private final String[] PUBLIC_ENDPOINTS =
-      new String[] {"/oauth/token","/oauth/google/token", "/oauth/facebook/token", "/oauth/token/public_key",
-          "/oauth/token/verify"};
+    new String[] { "/oauth/token", "/oauth/google/token", "/oauth/facebook/token", "/oauth/token/public_key",
+      "/oauth/token/verify" };
 
   @Autowired
   private AuthenticationManager authenticationManager;
@@ -51,7 +49,7 @@ public class SecureServerConfig extends WebSecurityConfigurerAdapter {
   @Bean
   @SneakyThrows
   public JWTAuthorizationFilter authorizationFilter() {
-    return new JWTAuthorizationFilter(authenticationManager,PUBLIC_ENDPOINTS);
+    return new JWTAuthorizationFilter(authenticationManager, PUBLIC_ENDPOINTS);
   }
 
   @Bean
@@ -62,12 +60,13 @@ public class SecureServerConfig extends WebSecurityConfigurerAdapter {
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http.csrf().disable()
-        .authorizeRequests()
-        .antMatchers("/", "/oauth/**","/swagger**","/swagger-resources/**","/configuration/ui","/configuration/**","/v2/api**","/webjars/**").permitAll()
-        .anyRequest().authenticated().and().authorizeRequests()
-        .and()
-        .addFilterAfter(authorizationFilter(), BasicAuthenticationFilter.class)
-        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+      .authorizeRequests()
+      .antMatchers("/", "/oauth/**", "/swagger**", "/swagger-resources/**", "/configuration/ui", "/configuration/**",
+        "/v2/api**", "/webjars/**").permitAll()
+      .anyRequest().authenticated().and().authorizeRequests()
+      .and()
+      .addFilterAfter(authorizationFilter(), BasicAuthenticationFilter.class)
+      .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
   }
 
 }

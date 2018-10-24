@@ -31,8 +31,9 @@ import java.util.*;
 public class UserJWTAccessToken implements OAuth2AccessToken {
 
   private Claims tokenClaims = null;
-  private String token= null;
-  public UserJWTAccessToken(String token, TokenService tokenService){
+  private String token = null;
+
+  public UserJWTAccessToken(String token, TokenService tokenService) {
     this.token = token;
     this.tokenClaims = tokenService.getTokenClaims(token);
   }
@@ -40,13 +41,14 @@ public class UserJWTAccessToken implements OAuth2AccessToken {
   @Override
   public Map<String, Object> getAdditionalInformation() {
     val output = new HashMap<String, Object>();
-    output.put("groups",getUser().get("groups"));
+    output.put("groups", getUser().get("groups"));
     return output;
   }
 
   @Override
   public Set<String> getScope() {
-    return new HashSet<String>(((ArrayList<String>)getUser().get("roles")));
+    val scope = ((UserTokenContext) tokenClaims.get("context")).getScope();
+    return new HashSet<>(scope);
   }
 
   @Override
@@ -61,7 +63,7 @@ public class UserJWTAccessToken implements OAuth2AccessToken {
 
   @Override
   public boolean isExpired() {
-    return getExpiresIn() <=0;
+    return getExpiresIn() <= 0;
   }
 
   @Override
@@ -79,8 +81,8 @@ public class UserJWTAccessToken implements OAuth2AccessToken {
     return token;
   }
 
-  private Map getUser(){
-    return (Map)((Map)tokenClaims.get("context")).get("user");
+  private Map getUser() {
+    return (Map) ((Map) tokenClaims.get("context")).get("user");
   }
 
 }

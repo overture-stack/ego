@@ -12,6 +12,6 @@ public class AclPermissionUtils {
 
   public static List<String> extractPermissionStrings(List<? extends Permission> permissions) {
     return permissions.stream().map(AclPermissionUtils::extractPermissionString)
-        .collect(Collectors.toList());
+      .collect(Collectors.toList());
   }
 }

@@ -1,0 +1,8 @@
+#!/bin/bash
+token=${1:-"8e63cd16-2db8-448e-b48c-f3d9d3c2dc8e"}
+client_id=${2:-"song"}
+client_secret=${3:-"lalala"}
+
+authToken="Basic `echo -n ${client_id}:${client_secret} | base64`"
+#echo $authToken
+curl -XPOST "http://localhost:8081/o/check_token" -H "Authorization: $authToken" -d "token=$token"
