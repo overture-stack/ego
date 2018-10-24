@@ -3,18 +3,13 @@ package org.overture.ego.utils;
 import lombok.val;
 import org.overture.ego.model.entity.*;
 import org.overture.ego.model.enums.PolicyMask;
-import org.overture.ego.service.ApplicationService;
-import org.overture.ego.service.GroupService;
-import org.overture.ego.service.PolicyService;
-import org.overture.ego.service.UserService;
+import org.overture.ego.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.time.Instant;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -32,6 +27,11 @@ public class EntityGenerator {
   @Autowired
   private PolicyService policyService;
 
+  @Autowired
+  private TokenStoreService tokenStoreService;
+
+  public static TestData instance = null;
+
   public Application createOneApplication(String clientId) {
     return new Application(String.format("Application %s", clientId), clientId, new StringBuilder(clientId).reverse().toString());
   }
@@ -44,6 +44,15 @@ public class EntityGenerator {
     for (Application application : createApplicationsFromList(Arrays.asList("111111", "222222", "333333", "444444", "555555"))) {
       applicationService.create(application);
     }
+  }
+
+  public Application setupApplication(String clientId, String clientSecret) {
+    val app = new Application();
+    app.setClientId(clientId);
+    app.setClientSecret(clientSecret);
+    app.setName(clientId);
+    app.setStatus("Approved");
+    return applicationService.create(app);
   }
 
   public User createOneUser(Pair<String, String> user) {
@@ -126,37 +135,38 @@ public class EntityGenerator {
     }
   }
 
-  public ScopedAccessToken createSampleToken() {
-    val user  = "Shadow Cat";
-    val token = "9bc774b0-8d50-4ada-952f-b2a792fe96e9";
-    val group = "Song Users";
-    val scopes = list("id.create", "song.upload");
-    return createToken(user, token, group, scopes);
-  }
-
   private List<String> list(String... s) {
     return Arrays.asList(s);
   }
 
-  public ScopedAccessToken createToken(String userName, String token, String groupName, List<String> policyNames) {
-    val user = setupUser(userName);
-    val group = setupGroup(groupName);
-
-    for(val policyName: policyNames) {
-      val policy = setupPolicy(policyName, group.getId());
-      user.addNewPermission(policy, PolicyMask.READ);
-    }
-
-    userService.update(user);
-
+  public ScopedAccessToken setupToken(User user, String token, long duration, Set<Policy> policies,
+    Set<Application> applications) {
     val tokenObject = ScopedAccessToken.builder().
-      token(token).owner(user).policies(new HashSet<>()).
-      applications(new HashSet<>()).build();
+      token(token).owner(user).
+      policies(policies == null ? new HashSet<>():policies).
+      applications(applications == null ? new HashSet<>():applications).
+      expires(Date.from(Instant.now().plusSeconds(duration))).
+      build();
 
-    for(val permission: user.getPermissionsList()) {
-      tokenObject.addPolicy(permission.getEntity());
-    }
-
+    tokenStoreService.create(tokenObject);
     return tokenObject;
   }
+
+  public void addGroups(User user, List<Group> groups) {
+    for(val g:groups) {
+      if (!user.getWholeGroups().contains(g)) {
+        user.addNewGroup(g);
+      }
+    }
+    userService.update(user);
+  }
+
+  public void addPermission(User user, PolicyMask mask, Set<Policy> scopes) {
+    for(val policy:scopes) {
+      user.addNewPermission(policy, mask);
+    }
+    userService.update(user);
+  }
+
 }
+
