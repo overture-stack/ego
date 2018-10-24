@@ -1,0 +1,94 @@
+version: 2
+executorType: machine
+jobs:
+  test:
+    docker:
+      - image: circleci/openjdk:8-jdk
+
+    working_directory: ~/repo
+
+    environment:
+      # Customize the JVM maximum heap limit
+      MAVEN_OPTS: -Xmx3200m
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "pom.xml" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+      - run:
+          name: Fetch Maven Dependencies
+          command: mvn dependency:go-offline
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+
+      # Run Tests
+      - run:
+          name: Maven Test
+          command: |
+            mvn test \
+            -D spring.profiles.active=test
+
+  deploy:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "pom.xml" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+      - run:
+          name: Fetch Maven Dependencies
+          command: mvn dependency:go-offline
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+
+      # Build!
+      # Skip tests - those are done in the test step and require specific DB configurations
+      - run:
+          name: Package Uber-Jar
+          command: |
+            mvn package \
+            -Dmaven.test.skip=true
+
+
+      # install rsync, needed for Deploy Script
+      - add_ssh_keys
+      - run:
+          name: Add Deploy Server to Known Hosts
+          command: ssh-keyscan -H $EGO_DEPLOY_SERVER >> ~/.ssh/known_hosts
+      - run:
+          name: Install rsync
+          command: sudo apt install rsync
+      - run:
+          name: Deploy Script
+          command: ./.circleci/deploy.sh
+
+
+workflows:
+  version: 2
+  test-deploy:
+    jobs:
+      - test
+      - deploy:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - develop
+                

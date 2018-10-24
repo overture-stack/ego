@@ -1,5 +1,10 @@
 target/
 !.mvn/wrapper/maven-wrapper.jar
+env.sh
+
+### Java Wrapper Logs ###
+*wrapper*.log
+
 
 ### STS ###
 .apt_generated
@@ -26,3 +31,10 @@ nbdist/
 ### VSCode ###
 .vscode
 
+.env
+
+### Docs ###
+_build/
+_source/
+_templates/
+.DS_Store

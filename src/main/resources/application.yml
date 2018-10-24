@@ -1,0 +1,129 @@
+server:
+  port: 8081
+
+jwt:
+  secret: testsecretisalsoasecret
+  duration: 86400000 #in milliseconds 86400000 = 1day, max = 2147483647
+
+# security
+auth:
+  token:
+    prefix:
+
+# Datasource
+spring.datasource:
+  driver-class-name: org.postgresql.Driver
+  url: jdbc:postgresql://localhost:5432/ego?stringtype=unspecified
+
+  username: postgres
+  password:
+  max-active: 10
+  max-idle: 1
+  min-idle: 1
+
+spring:
+  flyway:
+    enabled: false
+
+# set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
+spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
+
+# Facebook Connection Details
+facebook:
+  client:
+    id: 140524976574963
+    secret: 2439abe7ae008bda7ab5cfdf706b4d66
+    accessTokenUri: https://graph.facebook.com/oauth/access_token
+    tokenValidateUri: https://graph.facebook.com/debug_token
+    timeout:
+      connect: 5000
+      read: 5000
+  resource:
+    userInfoUri: https://graph.facebook.com/me
+
+# Google Connection Details
+google:
+  client:
+    Ids: 144611473365-k1aarg8qs6rlh67r3t7dssi1e34b6061.apps.googleusercontent.com
+
+# Logging settings.
+logging:
+  console:
+    enabled: true
+    threshold: ALL
+  loggers:
+    "org.skife.jdbi.v2": TRACE
+  level:
+    root: ERROR
+    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    org.springframework.boot: INFO
+    org.overture.ego: INFO
+
+token:
+  private-key: MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDSU6oy48sJW6xzqzOSU1dAvUUeFKQSBHsCf7wGWUGpOxEczhtFiiyx4YUJtg+fyvwWxa4wO3GnQLBPIxBHY8JsnvjQN2lsTUoLqMB9nGpwF617uA/S2igm1u+cDpfi82kbi6SG1Sg30PM047R6oxTRGDLLkeMRF1gRaTBM0HfSL0j6ccU5KPgwYsFLE2We6jeR56iYJGC2KYLH4v8rcc2jRAdMbUntHMtUByF9BPSW7elQnyQH5Qzr/o0b59XLKwnJFn2Bp2yviC8cdyTDyhQGna0e+oESQR1j6u3Ux/mOmm3slRXscA8sH+pHmOEAtjYVf/ww36U8uZv+ctBCJyFVAgMBAAECggEBALrEeJqAFUfWFCkSmdUSFKT0bW/svFUTjXgGnZy1ncz9GpENpMH3lQDQVibteKpYwcom+Cr0XlQ66VUcudPrDjcOY7vhuMfnSh1YWLYyM4IeRHtcUxDVkFoM+vEFNHLf2zIOqqbgmboW3iDVIurT7iRO7KxAe/YtWJL9aVqMtBn7Lu7S7OvAU4ji5iLIBxjl82JYA+9lu/aQ6YGaoZuSO7bcU8Sivi+DKAahqN9XMKiB1XpC+PpaS/aec2S7xIlTdzoDGxEALRGlMe+xBEeQTBVJHBWrRIDPoHLTREeRC/9Pp+1Y4Dz8hd5Bi0n8/5r/q0liD+0vtmjsdU4E2QrktYECgYEA73qWvhCYHPMREAFtwz1mpp9ZhDCW6SF+njG7fBKcjz8OLcy15LXiTGc268ewtQqTMjPQlm1n2C6hGccGAIlMibQJo3KZHlTs125FUzDpTVgdlei6vU7M+gmfRSZed00J6jC04/qMR1tnV3HME3np7eRTKTA6Ts+zBwEvkbCetSkCgYEA4NY5iSBO1ybouIecDdD15uI2ItLPCBNMzu7IiK7IygIzuf+SyKyjhtFSR4vEi0gScOM7UMlwCMOVU10e4nMDknIWCDG9iFvmIEkGHGxgRrN5hX1Wrq74wF212lvvagH1IVWSHa8cVpMe+UwKu5Q1h4yzuYt6Q9wPQ7Qtn5emBE0CgYB2syispMUA9GnsqQii0Xhj9nAEWaEzhOqhtrzbTs5TIkoA4Yr3BkBY5oAOdjhcRBWZuJ0XMrtaKCKqCEAtW+CYEKkGXvMOWcHbNkkeZwv8zkQ73dNRqhFnjgVn3RDNyV20uteueK23YNLkQP+KV89fnuCpdcIw9joiqq/NYuIHoQKBgB5WaZ8KH/lCA8babYEjv/pubZWXUl4plISbja17wBYZ4/bl+F1hhhMr7Wk//743dF2NG7TT6W0VTvHXr9IoaMP65uQmKgfbNpsGn294ZClGEFClz+t0KpZyTpZvL0fjibr8u+GLfkxkP5qt2wjif7KRlrKjklTTva+KAVn2cW1FAoGBAMkX9ekIwhx/7uY6ndxKl8ZMDerjr6MhV0b08hHp3RxHbYVbcpN0UKspoYvZVgHwP18xlDij8yWRE2fapwgi4m82ZmYlg0qqJmyqIU9vBB3Jow903h1KPQrkmQEZxJ/4H8yrbgVf2HT+WUfjTFgaDZRl01bI3YkydCw91/Ub9HU6
+  public-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0lOqMuPLCVusc6szklNXQL1FHhSkEgR7An+8BllBqTsRHM4bRYosseGFCbYPn8r8FsWuMDtxp0CwTyMQR2PCbJ740DdpbE1KC6jAfZxqcBete7gP0tooJtbvnA6X4vNpG4ukhtUoN9DzNOO0eqMU0Rgyy5HjERdYEWkwTNB30i9I+nHFOSj4MGLBSxNlnuo3keeomCRgtimCx+L/K3HNo0QHTG1J7RzLVAchfQT0lu3pUJ8kB+UM6/6NG+fVyysJyRZ9gadsr4gvHHckw8oUBp2tHvqBEkEdY+rt1Mf5jppt7JUV7HAPLB/qR5jhALY2FX/8MN+lPLmb/nLQQichVQIDAQAB
+
+# Default values available for creation of entities
+default:
+  user:
+    role: USER
+    status: Approved
+---
+###############################################################################
+# Profile - "jks"
+###############################################################################
+spring:
+  profiles: jks
+
+token:
+  key-store: src/main/resources/ego-jwt.jks
+  key-alias: ego-jwt
+  keystore-password: eG0tistic@lly
+
+---
+###############################################################################
+# Profile - "auth"
+###############################################################################
+spring:
+  profiles: auth
+  profiles.include: secure
+
+# security
+auth:
+  token:
+    prefix: Bearer
+
+# Logging settings.
+logging:
+  console:
+    enabled: true
+    threshold: ALL
+  loggers:
+    "org.skife.jdbi.v2": TRACE
+
+---
+###############################################################################
+# Profile - "demo"
+###############################################################################
+spring:
+  profiles: demo
+
+# demo flag
+demo: false
+
+---
+###############################################################################
+# Profile - "test"
+###############################################################################
+spring:
+  profiles: test
+
+spring.datasource:
+  driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  url: jdbc:tc:postgresql:9.5.13://localhost:5432/ego?TC_INITFUNCTION=org.overture.ego.test.FlywayInit::initTestContainers
+
+  username: postgres
+  password:
+  max-active: 1000
+  max-idle: 10
+  min-idle: 1
