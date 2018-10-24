@@ -154,9 +154,7 @@ public class EntityGenerator {
 
   public void addGroups(User user, List<Group> groups) {
     for(val g:groups) {
-      if (user.getWholeGroups().contains(g)) {
-        // user already has this group
-      } else {
+      if (!user.getWholeGroups().contains(g)) {
         user.addNewGroup(g);
       }
     }

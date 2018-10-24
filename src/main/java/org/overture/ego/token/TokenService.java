@@ -271,13 +271,12 @@ public class TokenService {
 
   public boolean isAuthorizedApplication(Application client, Set<Application> apps) {
     val clientId = client.getClientId();
-
     log.info(format("Applications are %s",apps.toString()));
-    if (apps != null && !apps.isEmpty() ) {
-      if (!(apps.stream().anyMatch(app -> app.getClientId().equals(clientId)))) {
+
+    if (apps != null && !apps.isEmpty() && !(apps.stream().anyMatch(app -> app.getClientId().equals(clientId)))) {
         return false;
-      }
     }
+
     return true;
   }
 
