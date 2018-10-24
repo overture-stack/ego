@@ -98,10 +98,10 @@ public class User implements PolicyOwner {
   String lastName;
   @JsonView({ Views.JWTAccessToken.class, Views.REST.class })
   @Column(name = Fields.CREATEDAT)
-  String createdAt;
+  Date createdAt;
   @JsonView({ Views.JWTAccessToken.class, Views.REST.class })
   @Column(name = Fields.LASTLOGIN)
-  String lastLogin;
+  Date lastLogin;
   @JsonView({ Views.JWTAccessToken.class, Views.REST.class })
   @Column(name = Fields.PREFERREDLANGUAGE)
   String preferredLanguage;

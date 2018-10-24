@@ -94,7 +94,7 @@ public class TokenService {
     // Update user.lastLogin in the DB
     // Use events as these are async:
     //    the DB call won't block returning the ScopedAccessToken
-    user.setLastLogin(dateFormatter.format(new Date()));
+    user.setLastLogin(new Date());
     userEvents.update(user);
 
     return generateUserToken(user);
