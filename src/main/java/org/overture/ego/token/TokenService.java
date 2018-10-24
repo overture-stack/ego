@@ -273,11 +273,7 @@ public class TokenService {
     val clientId = client.getClientId();
     log.info(format("Applications are %s",apps.toString()));
 
-    if (apps != null && !apps.isEmpty() && !(apps.stream().anyMatch(app -> app.getClientId().equals(clientId)))) {
-        return false;
-    }
-
-    return true;
+    return (apps != null && !apps.isEmpty() && !(apps.stream().anyMatch(app -> app.getClientId().equals(clientId))));
   }
 
 }

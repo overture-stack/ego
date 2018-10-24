@@ -2,7 +2,6 @@ package org.overture.ego.utils;
 
 import lombok.val;
 import org.overture.ego.model.entity.Application;
-import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.Policy;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.model.enums.PolicyMask;
@@ -19,7 +18,6 @@ public class TestData {
   public String scoreAuth;
 
   private Map<String, Policy> policyMap;
-  private Group developers;
 
   public User user1, user2;
 
@@ -37,7 +35,7 @@ public class TestData {
     score = entityGenerator.setupApplication(scoreId, scoreSecret);
 
     val admin = entityGenerator.setupGroup("admin");
-    developers = entityGenerator.setupGroup("developers");
+    val developers = entityGenerator.setupGroup("developers");
 
     val allPolicies = list("song.upload", "song.download","id.create", "collab.upload", "collab.download");
 
