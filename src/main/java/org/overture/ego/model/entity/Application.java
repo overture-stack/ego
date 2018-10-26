@@ -66,15 +66,15 @@ public class Application {
   @Column(nullable = false, name = Fields.CLIENTSECRET)
   String clientSecret;
 
-  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.REDIRECTURI)
   String redirectUri;
 
-  @JsonView({Views.JWTAccessToken.class,Views.REST.class})
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.DESCRIPTION)
   String description;
 
-  @JsonView(Views.JWTAccessToken.class)
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.STATUS)
   String status;
 
