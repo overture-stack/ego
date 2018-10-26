@@ -144,7 +144,7 @@ public class UserService extends BaseService<User, UUID> {
   public User addUserPermissions(@NonNull String userId, @NonNull List<ScopeName> permissions) {
     val user = getById(userRepository, fromString(userId));
     permissions.forEach(permission -> {
-      user.addNewPermission(policyService.get(permission.getAclEntityId()), PolicyMask.fromValue(permission.getMask()));
+      user.addNewPermission(policyService.get(permission.getPolicyId()), PolicyMask.fromValue(permission.getMask()));
     });
     return userRepository.save(user);
   }

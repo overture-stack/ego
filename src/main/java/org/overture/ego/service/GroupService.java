@@ -62,7 +62,7 @@ public class GroupService extends BaseService<Group, UUID> {
     val group = getById(groupRepository, fromString(groupId));
     permissions.forEach(permission -> {
       group
-        .addNewPermission(policyService.get(permission.getAclEntityId()), PolicyMask.fromValue(permission.getMask()));
+        .addNewPermission(policyService.get(permission.getPolicyId()), PolicyMask.fromValue(permission.getMask()));
     });
     return groupRepository.save(group);
   }

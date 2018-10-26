@@ -22,4 +22,3 @@ public class ScopeName {
     return policyId + ":" + mask;
   }
 }
-  
