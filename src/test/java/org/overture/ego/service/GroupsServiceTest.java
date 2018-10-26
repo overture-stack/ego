@@ -6,7 +6,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
-import org.overture.ego.model.params.Scope;
+import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.utils.EntityGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -644,9 +644,9 @@ public class GroupsServiceTest {
     val study003id = study003.getId().toString();
 
     val permissions = Arrays.asList(
-        new Scope(study001id, "READ"),
-        new Scope(study002id, "WRITE"),
-        new Scope(study003id, "DENY")
+        new ScopeName(study001id, "READ"),
+        new ScopeName(study002id, "WRITE"),
+        new ScopeName(study003id, "DENY")
     );
 
     val firstGroup = groups.get(0);
@@ -681,9 +681,9 @@ public class GroupsServiceTest {
     val study003id = study003.getId().toString();
 
     val permissions = Arrays.asList(
-        new Scope(study001id, "READ"),
-        new Scope(study002id, "WRITE"),
-        new Scope(study003id, "DENY")
+        new ScopeName(study001id, "READ"),
+        new ScopeName(study002id, "WRITE"),
+        new ScopeName(study003id, "DENY")
     );
 
     groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);
@@ -722,9 +722,9 @@ public class GroupsServiceTest {
     val study003id = study003.getId().toString();
 
     val permissions = Arrays.asList(
-        new Scope(study001id, "READ"),
-        new Scope(study002id, "WRITE"),
-        new Scope(study003id, "DENY")
+        new ScopeName(study001id, "READ"),
+        new ScopeName(study002id, "WRITE"),
+        new ScopeName(study003id, "DENY")
     );
 
     groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);

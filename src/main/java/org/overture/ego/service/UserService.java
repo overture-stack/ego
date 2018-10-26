@@ -25,7 +25,7 @@ import org.overture.ego.model.entity.UserPermission;
 import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.enums.UserRole;
 import org.overture.ego.model.enums.UserStatus;
-import org.overture.ego.model.params.Scope;
+import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.repository.UserRepository;
 import org.overture.ego.repository.queryspecification.UserSpecification;
@@ -35,7 +35,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -43,7 +42,6 @@ import org.springframework.util.StringUtils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import static java.util.UUID.fromString;
@@ -143,7 +141,7 @@ public class UserService extends BaseService<User, UUID> {
     return userRepository.save(user);
   }
 
-  public User addUserPermissions(@NonNull String userId, @NonNull List<Scope> permissions) {
+  public User addUserPermissions(@NonNull String userId, @NonNull List<ScopeName> permissions) {
     val user = getById(userRepository, fromString(userId));
     permissions.forEach(permission -> {
       user.addNewPermission(policyService.get(permission.getAclEntityId()), PolicyMask.fromValue(permission.getMask()));
@@ -245,17 +243,6 @@ public class UserService extends BaseService<User, UUID> {
   public Page<UserPermission> getUserPermissions(@NonNull String userId, @NonNull Pageable pageable) {
     val userPermissions = getById(userRepository, fromString(userId)).getUserPermissions();
     return new PageImpl<>(userPermissions, pageable, userPermissions.size());
-  }
-
-  public boolean verifyScopes(@NonNull User u, @NonNull Set<String> scopes) {
-    val userScopes = u.getScopes();
-    if (!userScopes.containsAll(scopes)) {
-      scopes.removeAll(userScopes);
-      throw new InvalidScopeException(
-        "User %s does not have permission to access scope(s) %s".
-          format(u.getId().toString(), scopes));
-    }
-    return true;
   }
 
 }

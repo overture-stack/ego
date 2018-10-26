@@ -21,9 +21,8 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.dto.TokenResponse;
-import org.overture.ego.model.dto.TokenScope;
+import org.overture.ego.model.dto.TokenScopeResponse;
 import org.overture.ego.security.ApplicationScoped;
-import org.overture.ego.service.ApplicationService;
 import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -36,9 +35,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 
 import static java.lang.String.format;
 
@@ -48,14 +45,13 @@ import static java.lang.String.format;
 @AllArgsConstructor(onConstructor = @__({ @Autowired }))
 public class TokenController {
   private TokenService tokenService;
-  private ApplicationService applicationService;
 
   @ApplicationScoped()
   @RequestMapping(method = RequestMethod.POST, value = "/check_token")
   @ResponseStatus(value = HttpStatus.MULTI_STATUS)
   @SneakyThrows
   public @ResponseBody
-  TokenScope checkToken(
+  TokenScopeResponse checkToken(
     @RequestHeader(value = "Authorization") final String authToken,
     @RequestParam(value = "token") final String token) {
 
@@ -71,17 +67,9 @@ public class TokenController {
     @RequestParam(value = "name")String name,
     @RequestParam(value = "scopes") ArrayList<String> scopes,
     @RequestParam(value = "applications", required = false) ArrayList<String> applications) {
-    val t = tokenService.issueToken(name, toSet(scopes), toSet(applications));
-    TokenResponse response = new TokenResponse(t.getToken(), t.getScope(), t.getSecondsUntilExpiry());
+    val t = tokenService.issueToken(name, scopes, applications);
+    TokenResponse response = new TokenResponse(t.getToken(), new HashSet<>(scopes), t.getSecondsUntilExpiry());
     return response;
-  }
-
-  private Set<String> toSet(Collection<String> collection) {
-    if (collection == null) {
-      return new HashSet<>();
-    } else {
-      return new HashSet<>(collection);
-    }
   }
 
   @ExceptionHandler({ InvalidTokenException.class })
@@ -94,7 +82,7 @@ public class TokenController {
 
   @ExceptionHandler({ InvalidScopeException.class })
   public ResponseEntity<Object> handleInvalidScopeException(HttpServletRequest req, InvalidTokenException ex) {
-    log.error(format("Invalid Scope: %s",ex.getMessage()));
+    log.error(format("Invalid ScopeName: %s",ex.getMessage()));
     return new ResponseEntity<>("{\"error\": \"%s\"}".format(ex.getMessage()),
       HttpStatus.BAD_REQUEST);
   }

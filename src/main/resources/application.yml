@@ -15,7 +15,7 @@ spring.datasource:
   driver-class-name: org.postgresql.Driver
   url: jdbc:postgresql://localhost:5432/ego?stringtype=unspecified
 
-  username: postgres
+  username: khartmann
   password:
   max-active: 10
   max-idle: 1
@@ -122,7 +122,7 @@ spring.datasource:
   driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
   url: jdbc:tc:postgresql:9.5.13://localhost:5432/ego?TC_INITFUNCTION=org.overture.ego.test.FlywayInit::initTestContainers
 
-  username: postgres
+  username: postgres 
   password:
   max-active: 1000
   max-idle: 10

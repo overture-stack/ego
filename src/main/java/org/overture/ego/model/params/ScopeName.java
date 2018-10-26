@@ -8,9 +8,18 @@ import lombok.RequiredArgsConstructor;
 @Data
 @NoArgsConstructor
 @RequiredArgsConstructor
-public class Scope {
+public class ScopeName {
   @NonNull
-  private String aclEntityId;
+  private String policyId;
   @NonNull
   private String mask;
+
+  public ScopeName(String name) {
+
+  }
+  @Override
+  public String toString() {
+    return policyId + ":" + mask;
+  }
 }
+  

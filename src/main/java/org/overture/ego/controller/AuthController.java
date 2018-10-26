@@ -110,7 +110,7 @@ public class AuthController {
 
   @ExceptionHandler({ InvalidScopeException.class })
   public ResponseEntity<Object> handleInvalidScopeException(HttpServletRequest req, InvalidTokenException ex) {
-    log.error("Invalid Scope: %s".format(ex.getMessage()));
+    log.error("Invalid ScopeName: %s".format(ex.getMessage()));
     return new ResponseEntity<Object>("{\"error\": \"%s\"}".format(ex.getMessage()),
       HttpStatus.BAD_REQUEST);
   }

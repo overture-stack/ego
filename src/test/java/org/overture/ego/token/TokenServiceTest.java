@@ -39,10 +39,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.management.InvalidApplicationException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -206,8 +203,8 @@ public class TokenServiceTest {
   public void issueTokenForInvalidUser() {
     // Try to issue a token for a user that does not exist
     val name="Invalid";
-    val scopes = setOf("collab.upload", "collab.download");
-    val applications = setOf("song", "score");
+    val scopes = listOf("collab.upload", "collab.download");
+    val applications = listOf("song", "score");
 
     UsernameNotFoundException ex=null;
     try {
@@ -226,8 +223,8 @@ public class TokenServiceTest {
     //
     // issueToken() should throw an InvalidScope exception
     val name = test.user2.getName();
-    val scopes = setOf("collab.upload", "collab.download");
-    val applications = setOf();
+    val scopes = listOf("collab.upload", "collab.download");
+    val applications = listOf();
 
     InvalidScopeException ex=null;
 
@@ -245,14 +242,14 @@ public class TokenServiceTest {
     //
     // issue_token() should return a token with values we set.
     val name = test.user1.getName();
-    val scopes = setOf("collab.upload", "collab.download");
-    val applications = setOf();
+    val scopes = listOf("collab.upload", "collab.download");
+    val applications = listOf();
 
     val token = tokenService.issueToken(name, scopes, applications);
 
     assertFalse(token.isRevoked());
     assertEquals(token.getOwner().getId(), test.user1.getId());
-    assertTrue(token.getScope().equals(scopes));
+    assertTrue(token.getScopes().equals(scopes));
   }
 
   @Test
@@ -262,8 +259,8 @@ public class TokenServiceTest {
     // issue_token() should throw an exception
 
     val name = test.user1.getName();
-    val scopes = setOf("collab.download", "collab.offload");
-    val applications = setOf();
+    val scopes = listOf("collab.download", "collab.offload");
+    val applications = listOf();
 
     InvalidScopeException ex=null;
 
@@ -282,8 +279,8 @@ public class TokenServiceTest {
     // issue_token() should throw an exception
 
     val name = test.user1.getName();
-    val scopes = setOf("collab.download", "id.create");
-    val applications = setOf("NotAnApplication");
+    val scopes = listOf("collab.download", "id.create");
+    val applications = listOf("NotAnApplication");
 
     Exception ex=null;
 
@@ -299,4 +296,6 @@ public class TokenServiceTest {
   private static Set<String> setOf(String... strings) {
     return new HashSet<>(Arrays.asList(strings));
   }
+
+  private static List<String> listOf(String... strings) { return Arrays.asList(strings);}
 }

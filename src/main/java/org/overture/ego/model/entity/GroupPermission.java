@@ -30,7 +30,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @JsonView(Views.REST.class)
 public class GroupPermission extends Permission {
-
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(

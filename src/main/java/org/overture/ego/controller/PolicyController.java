@@ -10,7 +10,7 @@ import lombok.val;
 import org.overture.ego.model.dto.PageDTO;
 import org.overture.ego.model.entity.Policy;
 import org.overture.ego.model.exceptions.PostWithIdentifierException;
-import org.overture.ego.model.params.Scope;
+import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.security.AdminScoped;
@@ -93,7 +93,7 @@ public class PolicyController {
   @RequestMapping(method = RequestMethod.POST, value = "")
   @ApiResponses(
     value = {
-      @ApiResponse(code = 200, message = "New ACL Entity", response = Policy.class),
+      @ApiResponse(code = 200, message = "New Policy", response = Policy.class),
       @ApiResponse(code = 400, message = PostWithIdentifierException.reason, response = Policy.class)
     }
   )
@@ -111,7 +111,7 @@ public class PolicyController {
   @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
   @ApiResponses(
     value = {
-      @ApiResponse(code = 200, message = "Updated Scope", response = Policy.class)
+      @ApiResponse(code = 200, message = "Updated Policy", response = Policy.class)
     }
   )
   public @ResponseBody
@@ -144,8 +144,8 @@ public class PolicyController {
     @PathVariable(value = "group_id", required = true) String groupId,
     @RequestBody(required = true) String mask
   ) {
-    val permission = new Scope(id, mask);
-    val list = new ArrayList<Scope>();
+    val permission = new ScopeName(id, mask);
+    val list = new ArrayList<ScopeName>();
     list.add(permission);
     groupService.addGroupPermissions(groupId, list);
     return "1 group permission added to ACL successfully";
@@ -165,8 +165,8 @@ public class PolicyController {
     @PathVariable(value = "user_id", required = true) String userId,
     @RequestBody(required = true) String mask
   ) {
-    val permission = new Scope(id, mask);
-    val list = new ArrayList<Scope>();
+    val permission = new ScopeName(id, mask);
+    val list = new ArrayList<ScopeName>();
     list.add(permission);
     userService.addUserPermissions(userId, list);
 

@@ -19,6 +19,7 @@ package org.overture.ego.model.enums;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import org.overture.ego.model.entity.Policy;
 
 import java.util.Arrays;
 
@@ -39,6 +40,29 @@ public enum PolicyMask {
     }
     throw new IllegalArgumentException(
       "Unknown enum type " + value + ", Allowed values are " + Arrays.toString(values()));
+  }
+
+  /**
+   * Determine if we are allowed access to what we want, based upon what we have.
+   * @param have The PolicyMask we have.
+   * @param want The PolicyMask we want.
+   * @return true if we have access, false if not.
+   */
+  public static boolean allows(PolicyMask have, PolicyMask want) {
+    // 1) If we're to be denied everything, or the permission is deny everyone, we're denied.
+    if (have == PolicyMask.DENY || want == PolicyMask.DENY) {
+      return false;
+    }
+    // 2) Otherwise, if we have exactly what we need, we're allowed access.
+    if (have == want) {
+      return true;
+    }
+    // 3) We're allowed access to READ if we have WRITE
+    if (have == PolicyMask.WRITE && want== PolicyMask.READ) {
+      return true;
+    }
+    // 4) Otherwise, we're denied access.
+    return false;
   }
 
   @Override

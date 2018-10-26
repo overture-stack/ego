@@ -22,6 +22,7 @@ import org.overture.ego.security.CorsFilter;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.UserService;
 import org.overture.ego.token.CustomTokenEnhancer;
+import org.overture.ego.token.TokenService;
 import org.overture.ego.token.signer.TokenSigner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -57,7 +58,7 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   @Autowired
   TokenSigner tokenSigner;
   @Autowired
-  UserService userService;
+  TokenService tokenService;
   @Autowired
   private ApplicationService clientDetailsService;
   @Autowired
@@ -119,7 +120,7 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   @Bean
   @Profile("!no_scope_validation")
   public OAuth2RequestFactory oAuth2RequestFactory() {
-    return new ScopeAwareOAuth2RequestFactory(clientDetailsService, userService);
+    return new ScopeAwareOAuth2RequestFactory(clientDetailsService, tokenService);
   }
 
   @Bean

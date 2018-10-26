@@ -54,14 +54,10 @@ public class ScopedAccessToken {
   @Column(nullable = false, name = Fields.ISREVOKED, updatable = false)
   boolean isRevoked;
 
-  @ManyToMany()
+  @OneToMany(mappedBy = "token")
   @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(name = "tokenscope", joinColumns = { @JoinColumn(name = Fields.TOKENID_JOIN) },
-    inverseJoinColumns = { @JoinColumn(name = Fields.SCOPEID_JOIN) })
   @JsonIgnore
-  Set<Policy> policies;
-
+  Set<TokenScope> scopes;
   public void setExpires(int seconds) {
     expires = DateTime.now().plusSeconds(seconds).toDate();
   }
@@ -72,11 +68,21 @@ public class ScopedAccessToken {
     return seconds > 0 ? seconds : 0;
   }
 
-  public void addPolicy(Policy policy) {
-    if (policies == null) {
-      policies = new HashSet<>();
+  public void addScope(Scope scope) {
+    if (scopes == null) {
+      scopes = new HashSet<>();
     }
-    policies.add(policy);
+    scopes.add(new TokenScope(this, scope.getPolicy(), scope.getPolicyMask()));
+  }
+
+  @JsonIgnore
+  public  Set<Scope> getScopes() {
+    return scopes.stream().map(s -> new Scope(s.getPolicy(), s.getAccessLevel())).collect(Collectors.toSet());
+  }
+
+  public void setScopes(Set<Scope> scopes) {
+    this.scopes = scopes.stream().
+      map( s -> new TokenScope(this, s.getPolicy(), s.getPolicyMask())).collect(Collectors.toSet());
   }
 
   public void addApplication(Application app) {
@@ -84,12 +90,5 @@ public class ScopedAccessToken {
       applications = new HashSet<>();
     }
     applications.add(app);
-  }
-
-  public Set<String> getScope() {
-    if (policies == null) {
-      policies = new HashSet<>();
-    }
-    return getPolicies().stream().map(policy -> policy.getName()).collect(Collectors.toSet());
   }
 }

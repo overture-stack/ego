@@ -1,6 +1,7 @@
 package org.overture.ego.utils;
 
 import lombok.val;
+import org.overture.ego.model.entity.Scope;
 import org.overture.ego.model.entity.*;
 import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.service.*;
@@ -141,12 +142,14 @@ public class EntityGenerator {
 
   public ScopedAccessToken setupToken(User user, String token, long duration, Set<Policy> policies,
     Set<Application> applications) {
+    val scopes = policies.stream().map(p -> new Scope(p, PolicyMask.WRITE)).collect(Collectors.toSet());
     val tokenObject = ScopedAccessToken.builder().
       token(token).owner(user).
-      policies(policies == null ? new HashSet<>():policies).
       applications(applications == null ? new HashSet<>():applications).
       expires(Date.from(Instant.now().plusSeconds(duration))).
       build();
+
+    tokenObject.setScopes(scopes);
 
     tokenStoreService.create(tokenObject);
     return tokenObject;

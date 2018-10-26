@@ -21,7 +21,8 @@ import com.google.common.collect.Sets;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.overture.ego.service.UserService;
+
+import org.overture.ego.token.TokenService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
@@ -30,11 +31,9 @@ import org.springframework.security.oauth2.provider.request.DefaultOAuth2Request
 
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.common.collect.Sets.difference;
 import static java.lang.String.format;
 import static org.springframework.security.oauth2.common.util.OAuth2Utils.SCOPE;
 
@@ -42,12 +41,12 @@ import static org.springframework.security.oauth2.common.util.OAuth2Utils.SCOPE;
 public class ScopeAwareOAuth2RequestFactory extends DefaultOAuth2RequestFactory {
 
   private static final String USERNAME_REQUEST_PARAM = "username";
-  private final UserService userService;
+  private final TokenService tokenService;
 
   public ScopeAwareOAuth2RequestFactory(@NonNull ClientDetailsService clientDetailsService,
-    @NonNull UserService userService) {
+    @NonNull TokenService tokenService) {
     super(clientDetailsService);
-    this.userService = userService;
+    this.tokenService = tokenService;
   }
 
   private static Set<String> resolveRequestedScopes(Map<String, String> requestParameters) {
@@ -71,17 +70,13 @@ public class ScopeAwareOAuth2RequestFactory extends DefaultOAuth2RequestFactory 
   }
 
   void validateScope(Map<String, String> requestParameters) {
-    val user = resolveUserName(requestParameters);
+    val userName = resolveUserName(requestParameters);
     val requestScope = resolveRequestedScopes(requestParameters);
-    val userScopes = userService.get(user).getScopes();
-    log.debug("Verifying allowed scopes for user '{}'...", user);
-    log.debug("User scopes: {}. RequestScopes: {}", userScopes, requestScope);
 
-    val scopeDiff = difference(requestScope, Sets.newHashSet(userScopes));
-    if (!scopeDiff.isEmpty()) {
-      val extraScope = scopeDiff.stream().collect(Collectors.joining(" "));
-      throw new AccessDeniedException(format("Invalid token scope '%s' requested for user '%s'. Valid scopes: %s",
-        extraScope, user, userScopes));
+    val missing = tokenService.missingScopes(userName, requestScope);
+    if (!missing.isEmpty()) {
+      throw new AccessDeniedException(format("Invalid token scopes '%s' requested for user '%s'",
+        missing, userName));
     }
   }
 

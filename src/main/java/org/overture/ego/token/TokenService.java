@@ -16,17 +16,19 @@
 
 package org.overture.ego.token;
 
-import com.google.common.collect.Sets;
 import io.jsonwebtoken.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.overture.ego.model.dto.TokenScope;
+import org.overture.ego.model.entity.Scope;
+import org.overture.ego.model.dto.TokenScopeResponse;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.ScopedAccessToken;
 import org.overture.ego.model.entity.User;
+import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.reactor.events.UserEvents;
 import org.overture.ego.service.ApplicationService;
+import org.overture.ego.service.PolicyService;
 import org.overture.ego.service.TokenStoreService;
 import org.overture.ego.service.UserService;
 import org.overture.ego.token.app.AppJWTAccessToken;
@@ -47,8 +49,8 @@ import org.springframework.stereotype.Service;
 
 import javax.management.InvalidApplicationException;
 import java.security.InvalidKeyException;
-import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
@@ -72,9 +74,9 @@ public class TokenService {
   @Autowired
   private UserEvents userEvents;
   @Autowired
-  private SimpleDateFormat dateFormatter;
-  @Autowired
   private TokenStoreService tokenStoreService;
+  @Autowired
+  private PolicyService policyService;
 
   public String generateUserToken(IDToken idToken) {
     // If the demo flag is set, all tokens will be generated as the Demo User,
@@ -102,22 +104,52 @@ public class TokenService {
 
   @SneakyThrows
   public String generateUserToken(User u) {
-    val scope = new HashSet<>(u.getScopes());
+    val scope=u.getPermissionsList().stream().map(p->p.toString()).collect(Collectors.toSet());
     return generateUserToken(u, scope);
   }
 
+
+  public Set<Scope> getScopes(Set<String> scopeNames) {
+    return scopeNames.stream().map(name -> getScope(name)).collect(Collectors.toSet());
+  }
+
+  public Scope getScope(String scopeName) {
+    val results = scopeName.split(":");
+
+    if (results.length != 2) {
+      throw new InvalidScopeException(format("Bad scope name '%s'", scopeName));
+    }
+
+    val policyName=results[0];
+    val policyMaskName = results[1];
+    val policy = policyService.getByName(policyName);
+
+    return new Scope(policy, PolicyMask.fromValue(policyMaskName));
+  }
+
+  public Set<Scope> missingScopes(String userName, Set<String> scopeNames) {
+    val user= userService.get(userName);
+    log.debug("Verifying allowed scopes for user '{}'...", user);
+    log.debug("Requested Scopes: {}", scopeNames);
+
+    val missing = user.missingScopes(getScopes(scopeNames));
+
+    return missing;
+  }
+
   @SneakyThrows
-  public ScopedAccessToken issueToken(String name, Set<String> scopes, Set<String> apps) {
+  public ScopedAccessToken issueToken(String name, List<String> scopeNames, List<String> apps) {
     log.info(format("Looking for user '%s'",name));
-    log.info(format("Scopes are '%s'", new ArrayList(scopes).toString()));
+    log.info(format("Scopes are '%s'", new ArrayList(scopeNames).toString()));
     log.info(format("Apps are '%s'",new ArrayList(apps).toString()));
     User u = userService.getByName(name);
     if (u == null) {
       throw new UsernameNotFoundException(format("Can't find user '%s'",name));
     }
-    log.info(format("Got user with id '%s'",u.getId().toString()));
-    val missingScopes = u.missingScopes(scopes);
 
+    log.info(format("Got user with id '%s'",u.getId().toString()));
+    val scopes = getScopes(new HashSet<>(scopeNames));
+    val missingScopes = u.missingScopes(scopes);
     if (!missingScopes.isEmpty()) {
       val msg = format("User %s has no access to scopes [%s]", name, missingScopes);
       log.info(msg);
@@ -126,19 +158,13 @@ public class TokenService {
 
     val tokenString = generateTokenString();
     log.info(format("Generated token string '%s'",tokenString));
+
     val token = new ScopedAccessToken();
     token.setExpires(DURATION);
     token.setRevoked(false);
     token.setToken(tokenString);
     token.setOwner(u);
-
-    log.info("Generating permissions list");
-    for (val p : u.getPermissionsList()) {
-      val policy = p.getEntity();
-      if (scopes.contains(policy.getName())) {
-        token.addPolicy(policy);
-      }
-    }
+    scopes.stream().forEach(scope -> token.addScope(scope));
 
     log.info("Generating apps list");
     for (val appName : apps) {
@@ -245,7 +271,7 @@ public class TokenService {
   }
 
   @SneakyThrows
-  public TokenScope checkToken(String authToken, String token) {
+  public TokenScopeResponse checkToken(String authToken, String token) {
     if (token == null) {
       throw new InvalidTokenException("No token field found in POST request");
     }
@@ -269,8 +295,8 @@ public class TokenService {
     /// We want to limit the scopes listed in the token to those scopes that the owner
     // is allowed to access at the time the token is checked -- we don't assume that they
     // have not changed since the token was issued.
-    val legalScopes = Sets.intersection(t.getScope(), new HashSet<>(t.getOwner().getScopes()));
-    return new TokenScope(t.getOwner().getName(), clientId,
-      t.getSecondsUntilExpiry(), legalScopes);
+    val owner = t.getOwner();
+    return new TokenScopeResponse(owner.getName(), clientId,
+      t.getSecondsUntilExpiry(), owner.allowedScopes(t.getScopes()));
   }
 }

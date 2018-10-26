@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.google.common.collect.Sets;
 import lombok.*;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
@@ -139,7 +140,7 @@ public class User implements PolicyOwner {
       return new ArrayList<>();
     }
 
-    // If we do have permissions ... sort the grouped permissions (by Scope)
+    // If we do have permissions ... sort the grouped permissions (by ScopeName)
     // on PolicyMask, extracting the first value of the sorted list into the final
     // permissions list
     List<Permission> finalPermissionsList = new ArrayList<>();
@@ -152,23 +153,25 @@ public class User implements PolicyOwner {
   }
 
   @JsonIgnore
-  public List<String> getScopes() {
+  private Map<Policy, PolicyMask> getScopes() {
+    val scopes = new HashMap<Policy, PolicyMask>();
     val permissions = getPermissionsList();
-    val scopes = permissions.stream().
-      filter(p -> p.getMask() != PolicyMask.DENY).
-      map(p -> p.getEntity().getName()).
-      collect(Collectors.toList());
+    permissions.stream().forEach( permission -> scopes.put(permission.getEntity(), permission.getMask()));
+
     return scopes;
   }
 
-  public Set<String> missingScopes(@NonNull Set<String> scopes) {
-    val userScopes = getScopes();
-    if (!userScopes.containsAll(scopes)) {
-      val missingScopes = new HashSet<>(scopes);
-      missingScopes.removeAll(userScopes);
-      return missingScopes;
-    }
-    return Collections.EMPTY_SET;
+  public Set<Scope> allowedScopes(@NonNull Set<Scope> scopes) {
+    val ourScopes = getScopes();
+    val missingScopes = scopes.stream().
+      filter(scope -> PolicyMask.allows(
+        ourScopes.getOrDefault(scope.getPolicyMask(), PolicyMask.DENY),
+        scope.getPolicyMask())).collect(Collectors.toSet());
+    return missingScopes;
+  }
+
+  public Set<Scope> missingScopes(@NonNull Set<Scope> scopes) {
+    return Sets.difference(scopes, allowedScopes(scopes));
   }
 
   // Creates permissions in JWTAccessToken::context::user
