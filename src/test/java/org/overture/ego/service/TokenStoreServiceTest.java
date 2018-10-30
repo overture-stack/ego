@@ -40,11 +40,11 @@ public class TokenStoreServiceTest {
     val token  = "191044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val duration = 3600;
 
-    val policies = new HashSet<Scope>();
+    val scopes = new HashSet<Scope>();
     val p1 = entityGenerator.setupPolicy("policy1", group.getId());
-    policies.add(new Scope(p1, PolicyMask.READ));
+    scopes.add(new Scope(p1, PolicyMask.READ));
     val p2 = entityGenerator.setupPolicy("policy2", group.getId());
-    policies.add(new Scope(p2, PolicyMask.WRITE));
+    scopes.add(new Scope(p2, PolicyMask.WRITE));
 
     val applications = new HashSet<Application>();
     val a1 = entityGenerator.setupApplication("id123", "Shhh! Don't tell!");
@@ -55,10 +55,13 @@ public class TokenStoreServiceTest {
         applications(applications == null ? new HashSet<>():applications).
         expires(Date.from(Instant.now().plusSeconds(duration))).
         build();
-    tokenObject.setScopes(policies);
-    val result = tokenStoreService.create(tokenObject);
+    for (val s:scopes) {
+      tokenObject.addScope(s);
+    }
 
+    val result = tokenStoreService.create(tokenObject);
     assertThat(result.getToken()).isEqualTo(token);
+
     val found = tokenStoreService.findByTokenString(token);
     assertThat(found).isEqualTo(result);
   }

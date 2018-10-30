@@ -18,7 +18,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "acluserpermission")
 @Data
-@JsonPropertyOrder({ "id", "entity", "sid", "mask" })
+@JsonPropertyOrder({ "id", "policy", "sid", "mask" })
 @JsonInclude(JsonInclude.Include.ALWAYS)
 @EqualsAndHashCode(of = { "id" })
 @TypeDef(

@@ -8,4 +8,4 @@ insert into aclentity (id, owner, name) select uuid_generate_v4(), G.id, 'song.u
 insert into aclentity (id, owner, name) select uuid_generate_v4(), G.id, 'song.download' from egogroup G;
 insert into acluserpermission (id, entity, sid, mask) select uuid_generate_v4(),A.id, U.id, 'WRITE' from aclentity A, egouser U;
 insert into token (token, owner) select '8e63cd16-2db8-448e-b48c-f3d9d3c2dc8e', U.id from egouser U;
-insert into tokenscope (tokenid, scopeid) select T.id, A.id from token T, aclentity A;
+insert into tokenscope (token_id, policy_id, access_level) select T.id, A.id, 'WRITE' from token T, aclentity A;

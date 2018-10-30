@@ -6,7 +6,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
-import org.overture.ego.model.params.ScopeName;
+import org.overture.ego.model.params.PolicyIdStringWithMaskName;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.utils.EntityGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -396,7 +396,7 @@ public class GroupsServiceTest {
   public void testUpdateIdNotAllowed() {
     val group = groupService.create(entityGenerator.createOneGroup("Group One"));
     group.setId(new UUID(12312912931L,12312912931L));
-    // New id means new non-existent entity or one that exists and is being overwritten
+    // New id means new non-existent policy or one that exists and is being overwritten
     assertThatExceptionOfType(EntityNotFoundException.class)
         .isThrownBy(() -> groupService.update(group));
   }
@@ -644,9 +644,9 @@ public class GroupsServiceTest {
     val study003id = study003.getId().toString();
 
     val permissions = Arrays.asList(
-        new ScopeName(study001id, "READ"),
-        new ScopeName(study002id, "WRITE"),
-        new ScopeName(study003id, "DENY")
+        new PolicyIdStringWithMaskName(study001id, "READ"),
+        new PolicyIdStringWithMaskName(study002id, "WRITE"),
+        new PolicyIdStringWithMaskName(study003id, "DENY")
     );
 
     val firstGroup = groups.get(0);
@@ -681,9 +681,9 @@ public class GroupsServiceTest {
     val study003id = study003.getId().toString();
 
     val permissions = Arrays.asList(
-        new ScopeName(study001id, "READ"),
-        new ScopeName(study002id, "WRITE"),
-        new ScopeName(study003id, "DENY")
+        new PolicyIdStringWithMaskName(study001id, "READ"),
+        new PolicyIdStringWithMaskName(study002id, "WRITE"),
+        new PolicyIdStringWithMaskName(study003id, "DENY")
     );
 
     groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);
@@ -722,9 +722,9 @@ public class GroupsServiceTest {
     val study003id = study003.getId().toString();
 
     val permissions = Arrays.asList(
-        new ScopeName(study001id, "READ"),
-        new ScopeName(study002id, "WRITE"),
-        new ScopeName(study003id, "DENY")
+        new PolicyIdStringWithMaskName(study001id, "READ"),
+        new PolicyIdStringWithMaskName(study002id, "WRITE"),
+        new PolicyIdStringWithMaskName(study003id, "DENY")
     );
 
     groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);

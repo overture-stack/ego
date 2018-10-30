@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.dto.TokenResponse;
 import org.overture.ego.model.dto.TokenScopeResponse;
+import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.security.ApplicationScoped;
 import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
@@ -67,7 +69,8 @@ public class TokenController {
     @RequestParam(value = "name")String name,
     @RequestParam(value = "scopes") ArrayList<String> scopes,
     @RequestParam(value = "applications", required = false) ArrayList<String> applications) {
-    val t = tokenService.issueToken(name, scopes, applications);
+    val names = scopes.stream().map(s -> new ScopeName(s)).collect(Collectors.toList());
+    val t = tokenService.issueToken(name, names, applications);
     TokenResponse response = new TokenResponse(t.getToken(), new HashSet<>(scopes), t.getSecondsUntilExpiry());
     return response;
   }
@@ -82,7 +85,7 @@ public class TokenController {
 
   @ExceptionHandler({ InvalidScopeException.class })
   public ResponseEntity<Object> handleInvalidScopeException(HttpServletRequest req, InvalidTokenException ex) {
-    log.error(format("Invalid ScopeName: %s",ex.getMessage()));
+    log.error(format("Invalid PolicyIdStringWithMaskName: %s",ex.getMessage()));
     return new ResponseEntity<>("{\"error\": \"%s\"}".format(ex.getMessage()),
       HttpStatus.BAD_REQUEST);
   }

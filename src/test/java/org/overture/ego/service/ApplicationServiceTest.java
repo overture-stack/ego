@@ -371,7 +371,7 @@ public class ApplicationServiceTest {
   public void testUpdateIdNotAllowed() {
     val application = applicationService.create(entityGenerator.createOneApplication("123456"));
     application.setId(new UUID(12312912931L,12312912931L));
-    // New id means new non-existent entity or one that exists and is being overwritten
+    // New id means new non-existent policy or one that exists and is being overwritten
     assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> applicationService.update(application));
   }
 

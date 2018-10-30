@@ -22,6 +22,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
+import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.token.TokenService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.oauth2.provider.ClientDetails;
@@ -31,6 +32,8 @@ import org.springframework.security.oauth2.provider.request.DefaultOAuth2Request
 
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -49,10 +52,10 @@ public class ScopeAwareOAuth2RequestFactory extends DefaultOAuth2RequestFactory 
     this.tokenService = tokenService;
   }
 
-  private static Set<String> resolveRequestedScopes(Map<String, String> requestParameters) {
+  private static Set<ScopeName> resolveRequestedScopes(Map<String, String> requestParameters) {
     val scope = requestParameters.get(SCOPE);
     checkState(!isNullOrEmpty(scope), "Failed to resolve scope from request: %s", requestParameters);
-    return Sets.newHashSet(scope.split("/s+"));
+    return Sets.newHashSet(scope.split("/s+")).stream().map(s -> new ScopeName(s)).collect(Collectors.toSet());
   }
 
   private static String resolveUserName(Map<String, String> requestParameters) {

@@ -25,7 +25,7 @@ import org.overture.ego.model.dto.TokenScopeResponse;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.ScopedAccessToken;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.reactor.events.UserEvents;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.PolicyService;
@@ -109,25 +109,18 @@ public class TokenService {
   }
 
 
-  public Set<Scope> getScopes(Set<String> scopeNames) {
+  public Set<Scope> getScopes(Set<ScopeName> scopeNames) {
     return scopeNames.stream().map(name -> getScope(name)).collect(Collectors.toSet());
   }
 
-  public Scope getScope(String scopeName) {
-    val results = scopeName.split(":");
+  public Scope getScope(ScopeName name) {
 
-    if (results.length != 2) {
-      throw new InvalidScopeException(format("Bad scope name '%s'", scopeName));
-    }
+    val policy = policyService.getByName(name.getName());
 
-    val policyName=results[0];
-    val policyMaskName = results[1];
-    val policy = policyService.getByName(policyName);
-
-    return new Scope(policy, PolicyMask.fromValue(policyMaskName));
+    return new Scope(policy, name.getMask());
   }
 
-  public Set<Scope> missingScopes(String userName, Set<String> scopeNames) {
+  public Set<Scope> missingScopes(String userName, Set<ScopeName> scopeNames) {
     val user= userService.get(userName);
     log.debug("Verifying allowed scopes for user '{}'...", user);
     log.debug("Requested Scopes: {}", scopeNames);
@@ -138,7 +131,7 @@ public class TokenService {
   }
 
   @SneakyThrows
-  public ScopedAccessToken issueToken(String name, List<String> scopeNames, List<String> apps) {
+  public ScopedAccessToken issueToken(String name, List<ScopeName> scopeNames, List<String> apps) {
     log.info(format("Looking for user '%s'",name));
     log.info(format("Scopes are '%s'", new ArrayList(scopeNames).toString()));
     log.info(format("Apps are '%s'",new ArrayList(apps).toString()));
@@ -292,11 +285,13 @@ public class TokenService {
         throw new InvalidTokenException("Token not authorized for this client");
       }
     }
-    /// We want to limit the scopes listed in the token to those scopes that the owner
+    /// We want to limit the scopes listed in the token to those scopes that the sid
     // is allowed to access at the time the token is checked -- we don't assume that they
     // have not changed since the token was issued.
     val owner = t.getOwner();
+    val allowed = owner.allowedScopes(t.scopes());
+    val names = allowed.stream().map(s->s.toString()).collect(Collectors.toSet());
     return new TokenScopeResponse(owner.getName(), clientId,
-      t.getSecondsUntilExpiry(), owner.allowedScopes(t.getScopes()));
+      t.getSecondsUntilExpiry(), names);
   }
 }

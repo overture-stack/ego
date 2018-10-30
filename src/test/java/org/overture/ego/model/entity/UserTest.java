@@ -5,7 +5,7 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
-import org.overture.ego.model.params.ScopeName;
+import org.overture.ego.model.params.PolicyIdStringWithMaskName;
 import org.overture.ego.service.PolicyService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
@@ -15,11 +15,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.shaded.com.google.common.collect.Sets;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.setAllowExtractingPrivateFields;
 
 @Slf4j
 @SpringBootTest
@@ -66,9 +69,9 @@ public class UserTest {
     val study001id = policyService.getByName("Study001").getId().toString();
 
     val permissions = Arrays.asList(
-        new ScopeName(study001id, "WRITE"),
-        new ScopeName(study001id, "READ"),
-        new ScopeName(study001id, "DENY")
+        new PolicyIdStringWithMaskName(study001id, "WRITE"),
+        new PolicyIdStringWithMaskName(study001id, "READ"),
+        new PolicyIdStringWithMaskName(study001id, "DENY")
     );
 
     userService.addUserPermissions(user.getId().toString(), permissions);
@@ -78,23 +81,12 @@ public class UserTest {
     );
   }
 
-  /**
-   * This is the acl permission -> JWT output uber test,
-   * if this passes we can be assured that we are correctly
-   * coalescing permissions from the individual user and their
-   * groups, squashing on aclEntity while prioritizing the
-   * aclMask order of (DENY -> WRITE -> READ)
-   * <p>
-   * Original github issue with manual SQL:
-   * https://github.com/overture-stack/ego/issues/105
-   */
-  @Test
-  public void testGetPermissionsUberTest() {
+  private void setupUsers() {
     entityGenerator.setupSimpleUsers();
     entityGenerator.setupSimpleGroups();
     val groups = groupService
-        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
-        .getContent();
+      .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
+      .getContent();
     entityGenerator.setupSimpleAclEntities(groups);
 
     // Get Users and Groups
@@ -130,34 +122,54 @@ public class UserTest {
 
     // Assign ACL Permissions for each user/group
     userService.addUserPermissions(alexId, Arrays.asList(
-        new ScopeName(study001id, "WRITE"),
-        new ScopeName(study002id, "READ"),
-        new ScopeName(study003id, "DENY")
+      new PolicyIdStringWithMaskName(study001id, "WRITE"),
+      new PolicyIdStringWithMaskName(study002id, "READ"),
+      new PolicyIdStringWithMaskName(study003id, "DENY")
     ));
 
     userService.addUserPermissions(bobId, Arrays.asList(
-        new ScopeName(study001id, "READ"),
-        new ScopeName(study002id, "DENY"),
-        new ScopeName(study003id, "WRITE")
+      new PolicyIdStringWithMaskName(study001id, "READ"),
+      new PolicyIdStringWithMaskName(study002id, "DENY"),
+      new PolicyIdStringWithMaskName(study003id, "WRITE")
     ));
 
     userService.addUserPermissions(marryId, Arrays.asList(
-        new ScopeName(study001id, "DENY"),
-        new ScopeName(study002id, "WRITE"),
-        new ScopeName(study003id, "READ")
+      new PolicyIdStringWithMaskName(study001id, "DENY"),
+      new PolicyIdStringWithMaskName(study002id, "WRITE"),
+      new PolicyIdStringWithMaskName(study003id, "READ")
     ));
 
     groupService.addGroupPermissions(wizardsId, Arrays.asList(
-        new ScopeName(study001id, "WRITE"),
-        new ScopeName(study002id, "READ"),
-        new ScopeName(study003id, "DENY")
+      new PolicyIdStringWithMaskName(study001id, "WRITE"),
+      new PolicyIdStringWithMaskName(study002id, "READ"),
+      new PolicyIdStringWithMaskName(study003id, "DENY")
     ));
 
     groupService.addGroupPermissions(robotsId, Arrays.asList(
-        new ScopeName(study001id, "DENY"),
-        new ScopeName(study002id, "WRITE"),
-        new ScopeName(study003id, "READ")
+      new PolicyIdStringWithMaskName(study001id, "DENY"),
+      new PolicyIdStringWithMaskName(study002id, "WRITE"),
+      new PolicyIdStringWithMaskName(study003id, "READ")
     ));
+
+  }
+
+  /**
+   * This is the acl permission -> JWT output uber test,
+   * if this passes we can be assured that we are correctly
+   * coalescing permissions from the individual user and their
+   * groups, squashing on aclEntity while prioritizing the
+   * aclMask order of (DENY -> WRITE -> READ)
+   * <p>
+   * Original github issue with manual SQL:
+   * https://github.com/overture-stack/ego/issues/105
+   */
+  @Test
+  public void testGetPermissionsUberTest() {
+    setupUsers();
+    // Get Users and Groups
+    val alex = userService.getByName("FirstUser@domain.com");
+    val bob = userService.getByName("SecondUser@domain.com");
+    val marry = userService.getByName("ThirdUser@domain.com");
 
     /**
      * Expected Result Computations
@@ -200,6 +212,36 @@ public class UserTest {
         "Study002.WRITE",
         "Study003.READ"
     );
+  }
+
+  @Test
+  public void testAllowedScopes() {
+    setupUsers();
+    // Get Users and Groups
+    val alex = userService.getByName("FirstUser@domain.com");
+    val bob = userService.getByName("SecondUser@domain.com");
+    val marry = userService.getByName("ThirdUser@domain.com");
+
+    assertThat(alex).isNotNull();
+    val s = alex.allowedScopes(null);
+    assertThat(s).isNotNull();
+    assertThat(s).isEqualTo(new HashSet<>());
+
+    System.err.printf("alex='%s',bob='%s',marry='%s'", alex.getPermissions(),bob.getPermissions(),marry.getPermissions());
+  }
+
+  @Test
+  public void testMissingScopes() {
+    setupUsers();
+    // Get Users and Groups
+    val alex = userService.getByName("FirstUser@domain.com");
+    val bob = userService.getByName("SecondUser@domain.com");
+    val marry = userService.getByName("ThirdUser@domain.com");
+
+    assertThat(alex).isNotNull();
+    val s = alex.missingScopes(null);
+    assertThat(s).isNotNull();
+    assertThat(s).isEqualTo(new HashSet<>());
   }
 
 }

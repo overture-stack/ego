@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.model.params.ScopeName;
+import org.overture.ego.model.params.PolicyIdStringWithMaskName;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.token.IDToken;
 import org.overture.ego.utils.EntityGenerator;
@@ -908,9 +908,9 @@ public class UserServiceTest {
     val study003id = study003.getId().toString();
 
     val permissions = asList(
-        new ScopeName(study001id, "READ"),
-        new ScopeName(study002id, "WRITE"),
-        new ScopeName(study003id, "DENY")
+        new PolicyIdStringWithMaskName(study001id, "READ"),
+        new PolicyIdStringWithMaskName(study002id, "WRITE"),
+        new PolicyIdStringWithMaskName(study003id, "DENY")
     );
 
     userService.addUserPermissions(user.getId().toString(), permissions);
@@ -944,9 +944,9 @@ public class UserServiceTest {
     val study003id = study003.getId().toString();
 
     val permissions = asList(
-        new ScopeName(study001id, "READ"),
-        new ScopeName(study002id, "WRITE"),
-        new ScopeName(study003id, "DENY")
+        new PolicyIdStringWithMaskName(study001id, "READ"),
+        new PolicyIdStringWithMaskName(study002id, "WRITE"),
+        new PolicyIdStringWithMaskName(study003id, "DENY")
     );
 
     userService.addUserPermissions(user.getId().toString(), permissions);
@@ -986,9 +986,9 @@ public class UserServiceTest {
     val study003id = study003.getId().toString();
 
     val permissions = asList(
-        new ScopeName(study001id, "READ"),
-        new ScopeName(study002id, "WRITE"),
-        new ScopeName(study003id, "DENY")
+        new PolicyIdStringWithMaskName(study001id, "READ"),
+        new PolicyIdStringWithMaskName(study002id, "WRITE"),
+        new PolicyIdStringWithMaskName(study003id, "DENY")
     );
 
     userService.addUserPermissions(user.getId().toString(), permissions);

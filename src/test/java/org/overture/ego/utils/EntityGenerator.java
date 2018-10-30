@@ -31,8 +31,6 @@ public class EntityGenerator {
   @Autowired
   private TokenStoreService tokenStoreService;
 
-  public static TestData instance = null;
-
   public Application createOneApplication(String clientId) {
     return new Application(String.format("Application %s", clientId), clientId, new StringBuilder(clientId).reverse().toString());
   }

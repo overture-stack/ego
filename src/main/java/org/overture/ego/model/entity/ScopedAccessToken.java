@@ -55,7 +55,8 @@ public class ScopedAccessToken {
   boolean isRevoked;
 
   @OneToMany(mappedBy = "token")
-  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
+  @Cascade(org.hibernate.annotations.CascadeType.ALL)
+  @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
   Set<TokenScope> scopes;
   public void setExpires(int seconds) {
@@ -76,7 +77,7 @@ public class ScopedAccessToken {
   }
 
   @JsonIgnore
-  public  Set<Scope> getScopes() {
+  public  Set<Scope> scopes() {
     return scopes.stream().map(s -> new Scope(s.getPolicy(), s.getAccessLevel())).collect(Collectors.toSet());
   }
 

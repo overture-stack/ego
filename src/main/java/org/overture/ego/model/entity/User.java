@@ -140,7 +140,7 @@ public class User implements PolicyOwner {
       return new ArrayList<>();
     }
 
-    // If we do have permissions ... sort the grouped permissions (by ScopeName)
+    // If we do have permissions ... sort the grouped permissions (by PolicyIdStringWithMaskName)
     // on PolicyMask, extracting the first value of the sorted list into the final
     // permissions list
     List<Permission> finalPermissionsList = new ArrayList<>();
@@ -161,11 +161,15 @@ public class User implements PolicyOwner {
     return scopes;
   }
 
-  public Set<Scope> allowedScopes(@NonNull Set<Scope> scopes) {
+  public Set<Scope> allowedScopes(Set<Scope> scopes) {
+    if (scopes == null) {
+      return new HashSet<>();
+    }
+
     val ourScopes = getScopes();
     val missingScopes = scopes.stream().
       filter(scope -> PolicyMask.allows(
-        ourScopes.getOrDefault(scope.getPolicyMask(), PolicyMask.DENY),
+        ourScopes.getOrDefault(scope.getPolicy(), PolicyMask.DENY),
         scope.getPolicyMask())).collect(Collectors.toSet());
     return missingScopes;
   }

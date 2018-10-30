@@ -21,9 +21,11 @@ import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.overture.ego.model.entity.Scope;
+import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
@@ -40,6 +42,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.management.InvalidApplicationException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -47,7 +50,6 @@ import static org.junit.Assert.*;
 @SpringBootTest
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
-@Ignore
 public class TokenServiceTest {
   @Autowired
   private ApplicationService applicationService;
@@ -203,7 +205,7 @@ public class TokenServiceTest {
   public void issueTokenForInvalidUser() {
     // Try to issue a token for a user that does not exist
     val name="Invalid";
-    val scopes = listOf("collab.upload", "collab.download");
+    val scopes = scopeNames("collab.upload:READ", "collab.download:READ");
     val applications = listOf("song", "score");
 
     UsernameNotFoundException ex=null;
@@ -223,7 +225,7 @@ public class TokenServiceTest {
     //
     // issueToken() should throw an InvalidScope exception
     val name = test.user2.getName();
-    val scopes = listOf("collab.upload", "collab.download");
+    val scopes = scopeNames("collab.upload:WRITE", "collab.download:WRITE");
     val applications = listOf();
 
     InvalidScopeException ex=null;
@@ -242,24 +244,34 @@ public class TokenServiceTest {
     //
     // issue_token() should return a token with values we set.
     val name = test.user1.getName();
-    val scopes = listOf("collab.upload", "collab.download");
+    val scopes = scopeNames("collab.upload:READ", "collab.download:READ");
     val applications = listOf();
 
     val token = tokenService.issueToken(name, scopes, applications);
 
     assertFalse(token.isRevoked());
     assertEquals(token.getOwner().getId(), test.user1.getId());
-    assertTrue(token.getScopes().equals(scopes));
+
+    val s = token.scopes().stream().map(scope -> scope.toString()).collect(Collectors.toSet());
+    val t = scopes.stream().map(x -> x.toString()).collect(Collectors.toSet());
+    System.err.printf("s='%s",s);
+    System.err.printf("scopes='%s'",t);
+    assertTrue(s.containsAll(t));
+    assertTrue(t.containsAll(s));
+
+    //assertTrue(s.equals(scopes));
+
+
   }
 
   @Test
   public void issueTokenForInvalidScope() {
-    // Issue a token for a scope that does not exist.
+    // Issue a token for a scope that does not exist ("collab.offload")
     //
     // issue_token() should throw an exception
 
     val name = test.user1.getName();
-    val scopes = listOf("collab.download", "collab.offload");
+    val scopes = scopeNames("collab.download:READ", "collab.offload:WRITE");
     val applications = listOf();
 
     InvalidScopeException ex=null;
@@ -279,7 +291,7 @@ public class TokenServiceTest {
     // issue_token() should throw an exception
 
     val name = test.user1.getName();
-    val scopes = listOf("collab.download", "id.create");
+    val scopes = scopeNames("collab.download:WRITE", "id.create:WRITE");
     val applications = listOf("NotAnApplication");
 
     Exception ex=null;
@@ -293,9 +305,22 @@ public class TokenServiceTest {
     assertTrue(ex instanceof InvalidApplicationException);
   }
 
+  @Test
+  public void testGetScope() {
+    val name = new ScopeName("collab.upload:READ");
+    val o = tokenService.getScope(name);
+    assertTrue(o instanceof Scope);
+    assertTrue(o.getPolicy().getName().equals("collab.upload"));
+    assertTrue(o.getPolicyMask() == PolicyMask.READ);
+  }
+
   private static Set<String> setOf(String... strings) {
     return new HashSet<>(Arrays.asList(strings));
   }
 
   private static List<String> listOf(String... strings) { return Arrays.asList(strings);}
+
+  private static List<ScopeName> scopeNames(String ... strings) {
+    return listOf(strings).stream().map(s -> new ScopeName(s)).collect(Collectors.toList());
+  }
 }
