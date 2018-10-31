@@ -26,8 +26,10 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.overture.ego.controller.PolicyController;
 import org.overture.ego.model.enums.Fields;
 import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.params.PolicyIdStringWithMaskName;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
@@ -153,29 +155,11 @@ public class User implements PolicyOwner {
   }
 
   @JsonIgnore
-  private Map<Policy, PolicyMask> getScopes() {
-    val scopes = new HashMap<Policy, PolicyMask>();
-    val permissions = getPermissionsList();
-    permissions.stream().forEach( permission -> scopes.put(permission.getEntity(), permission.getMask()));
-
-    return scopes;
-  }
-
-  public Set<Scope> allowedScopes(Set<Scope> scopes) {
-    if (scopes == null) {
-      return new HashSet<>();
-    }
-
-    val ourScopes = getScopes();
-    val missingScopes = scopes.stream().
-      filter(scope -> PolicyMask.allows(
-        ourScopes.getOrDefault(scope.getPolicy(), PolicyMask.DENY),
-        scope.getPolicyMask())).collect(Collectors.toSet());
-    return missingScopes;
-  }
-
-  public Set<Scope> missingScopes(@NonNull Set<Scope> scopes) {
-    return Sets.difference(scopes, allowedScopes(scopes));
+  public Set<Scope> getScopes() {
+    return getPermissionsList().stream().
+      map( permission -> new Scope(permission.getEntity(), permission.getMask())).
+      filter(scope -> scope.getPolicyMask() != PolicyMask.DENY).
+      collect(Collectors.toSet());
   }
 
   // Creates permissions in JWTAccessToken::context::user

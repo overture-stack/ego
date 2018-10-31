@@ -5,6 +5,7 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.model.entity.Scope;
+import org.overture.ego.model.entity.ScopeTest;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.ScopedAccessToken;
 import org.overture.ego.model.enums.PolicyMask;

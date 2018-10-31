@@ -1,17 +1,25 @@
 package org.overture.ego.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
 import org.overture.ego.model.enums.PolicyMask;
 
 import javax.persistence.*;
 import java.io.Serializable;
 
 @NoArgsConstructor
+@AllArgsConstructor
 @Data
 @Entity
+@TypeDef(
+  name = "ego_acl_enum",
+  typeClass = PostgreSQLEnumType.class
+)
 @Table(name = "tokenscope")
 class TokenScope implements Serializable {
   @Id
@@ -24,22 +32,9 @@ class TokenScope implements Serializable {
   @JoinColumn(name = "policy_id")
   private Policy policy;
 
-  @Id
-  @Column(name="access_level")
-  private String accessLevel;
 
-  public TokenScope(ScopedAccessToken token, Policy policy, PolicyMask accessLevel) {
-    setToken(token);
-    setPolicy(policy);
-    setAccessLevel(accessLevel);
-  }
-
-  void setAccessLevel(PolicyMask m) {
-    this.accessLevel = m.toString();
-  }
-
-  @JsonIgnore
-  PolicyMask getAccessLevel() {
-    return PolicyMask.fromValue(accessLevel);
-  }
+  @Column(name="access_level", nullable = false)
+  @Type(type = "ego_acl_enum")
+  @Enumerated(EnumType.STRING)
+  private PolicyMask accessLevel;
 }

@@ -1,10 +1,12 @@
 package org.overture.ego.utils;
 
 import lombok.val;
-import org.overture.ego.model.entity.Scope;
+import org.overture.ego.model.entity.ScopeTest;
 import org.overture.ego.model.entity.*;
 import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.service.*;
+import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
@@ -27,6 +29,9 @@ public class EntityGenerator {
 
   @Autowired
   private PolicyService policyService;
+
+  @Autowired
+  private TokenService tokenService;
 
   @Autowired
   private TokenStoreService tokenStoreService;
@@ -171,5 +176,18 @@ public class EntityGenerator {
     userService.update(user);
   }
 
+  public static Set<String> setOf(String... strings) {
+    return new HashSet<>(Arrays.asList(strings));
+  }
+
+  public static List<String> listOf(String... strings) { return Arrays.asList(strings);}
+
+  public static List<ScopeName> scopeNames(String ... strings) {
+    return listOf(strings).stream().map(s -> new ScopeName(s)).collect(Collectors.toList());
+  }
+
+  public Set<Scope> getScopes(String... scope) {
+    return tokenService.getScopes(new HashSet<>(scopeNames(scope)));
+  }
 }
 

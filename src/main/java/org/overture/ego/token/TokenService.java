@@ -42,6 +42,7 @@ import org.overture.ego.utils.TypeUtils;
 import org.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
@@ -49,6 +50,7 @@ import org.springframework.stereotype.Service;
 
 import javax.management.InvalidApplicationException;
 import java.security.InvalidKeyException;
+import java.security.cert.CollectionCertStoreParameters;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -121,13 +123,13 @@ public class TokenService {
   }
 
   public Set<Scope> missingScopes(String userName, Set<ScopeName> scopeNames) {
-    val user= userService.get(userName);
-    log.debug("Verifying allowed scopes for user '{}'...", user);
-    log.debug("Requested Scopes: {}", scopeNames);
-
-    val missing = user.missingScopes(getScopes(scopeNames));
-
-    return missing;
+    val user = userService.getByName(userName);
+    if (user == null) {
+      throw new UsernameNotFoundException(format("Can't find user '%s'", userName));
+    }
+    val userScopes = user.getScopes();
+    val requestedScopes = getScopes(scopeNames);
+    return Scope.missingScopes(userScopes, requestedScopes);
   }
 
   @SneakyThrows
@@ -141,8 +143,13 @@ public class TokenService {
     }
 
     log.info(format("Got user with id '%s'",u.getId().toString()));
-    val scopes = getScopes(new HashSet<>(scopeNames));
-    val missingScopes = u.missingScopes(scopes);
+    val userScopes = u.getScopes();
+
+    log.info(format("User's scopes are '%s'", userScopes));
+
+    val requestedScopes = getScopes(new HashSet<>(scopeNames));
+
+    val missingScopes = Scope.missingScopes(userScopes, requestedScopes);
     if (!missingScopes.isEmpty()) {
       val msg = format("User %s has no access to scopes [%s]", name, missingScopes);
       log.info(msg);
@@ -157,7 +164,7 @@ public class TokenService {
     token.setRevoked(false);
     token.setToken(tokenString);
     token.setOwner(u);
-    scopes.stream().forEach(scope -> token.addScope(scope));
+    requestedScopes.stream().forEach(scope -> token.addScope(scope));
 
     log.info("Generating apps list");
     for (val appName : apps) {
@@ -289,8 +296,8 @@ public class TokenService {
     // is allowed to access at the time the token is checked -- we don't assume that they
     // have not changed since the token was issued.
     val owner = t.getOwner();
-    val allowed = owner.allowedScopes(t.scopes());
-    val names = allowed.stream().map(s->s.toString()).collect(Collectors.toSet());
+    val scopes = Scope.effectiveScopes(owner.getScopes(), t.scopes());
+    val names = scopes.stream().map(s ->s.toString()).collect(Collectors.toSet());
     return new TokenScopeResponse(owner.getName(), clientId,
       t.getSecondsUntilExpiry(), names);
   }

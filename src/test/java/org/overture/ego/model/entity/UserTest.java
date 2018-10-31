@@ -5,6 +5,7 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
+import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.params.PolicyIdStringWithMaskName;
 import org.overture.ego.service.PolicyService;
 import org.overture.ego.service.GroupService;
@@ -215,7 +216,7 @@ public class UserTest {
   }
 
   @Test
-  public void testAllowedScopes() {
+  public void testGetScopes() {
     setupUsers();
     // Get Users and Groups
     val alex = userService.getByName("FirstUser@domain.com");
@@ -223,25 +224,15 @@ public class UserTest {
     val marry = userService.getByName("ThirdUser@domain.com");
 
     assertThat(alex).isNotNull();
-    val s = alex.allowedScopes(null);
+    val s = alex.getScopes();
+
     assertThat(s).isNotNull();
-    assertThat(s).isEqualTo(new HashSet<>());
 
-    System.err.printf("alex='%s',bob='%s',marry='%s'", alex.getPermissions(),bob.getPermissions(),marry.getPermissions());
+    val expected = entityGenerator.getScopes("Study002:WRITE");
+
+
+    System.err.printf("alex='%s',bob='%s',marry='%s'", alex.getScopes(),bob.getScopes(),marry.getScopes());
+    assertThat(s).isEqualTo(expected);
+
   }
-
-  @Test
-  public void testMissingScopes() {
-    setupUsers();
-    // Get Users and Groups
-    val alex = userService.getByName("FirstUser@domain.com");
-    val bob = userService.getByName("SecondUser@domain.com");
-    val marry = userService.getByName("ThirdUser@domain.com");
-
-    assertThat(alex).isNotNull();
-    val s = alex.missingScopes(null);
-    assertThat(s).isNotNull();
-    assertThat(s).isEqualTo(new HashSet<>());
-  }
-
 }

@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.model.entity.Scope;
+import org.overture.ego.model.entity.ScopeTest;
 import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.service.ApplicationService;
@@ -39,16 +40,21 @@ import org.springframework.security.oauth2.common.exceptions.InvalidScopeExcepti
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.management.InvalidApplicationException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
+import static org.overture.ego.utils.EntityGenerator.listOf;
+import static org.overture.ego.utils.EntityGenerator.setOf;
+import static org.overture.ego.utils.EntityGenerator.scopeNames;
 
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
+@Transactional
 @ActiveProfiles("test")
 public class TokenServiceTest {
   @Autowired
@@ -106,12 +112,14 @@ public class TokenServiceTest {
     val scopes = test.policies("song.upload", "id.create", "collab.upload", "collab.download");
     entityGenerator.setupToken(test.user2, tokenString,1000, scopes,null);
     val result = tokenService.checkToken(test.scoreAuth, tokenString);
+    System.err.printf("result='%s'", result.toString());
 
     System.err.println(test.user2.getPermissions());
     assertEquals(test.scoreId, result.getClient_id() );
     assertTrue(result.getExp() > 900);
-    assertEquals(setOf("song.upload"), result.getScope());
     assertEquals(test.user2.getName(), result.getUser_name());
+    assertEquals(setOf("song.upload:READ"), result.getScope());
+
   }
 
   @Test
@@ -170,8 +178,10 @@ public class TokenServiceTest {
 
     assertEquals(test.scoreId, result.getClient_id());
     assertTrue( result.getExp() > 900);
-    assertEquals(setOf("song.upload", "song.download"), result.getScope());
+    val expected = tokenService.getScopes(new HashSet<>(scopeNames("song.upload:READ", "song.download:READ")));
     assertEquals(test.user1.getName(), result.getUser_name());
+    assertEquals(expected, result.getScope());
+
   }
 
   @Test
@@ -210,7 +220,7 @@ public class TokenServiceTest {
 
     UsernameNotFoundException ex=null;
     try {
-      tokenService.issueToken(name, scopes, applications);
+      tokenService.issueToken(name, new ArrayList<>(scopes), applications);
     } catch (UsernameNotFoundException e) {
       ex = e;
     }
@@ -260,8 +270,6 @@ public class TokenServiceTest {
     assertTrue(t.containsAll(s));
 
     //assertTrue(s.equals(scopes));
-
-
   }
 
   @Test
@@ -291,8 +299,8 @@ public class TokenServiceTest {
     // issue_token() should throw an exception
 
     val name = test.user1.getName();
-    val scopes = scopeNames("collab.download:WRITE", "id.create:WRITE");
-    val applications = listOf("NotAnApplication");
+    val scopes = entityGenerator.scopeNames("collab.download:WRITE", "id.create:WRITE");
+    val applications = entityGenerator.listOf("NotAnApplication");
 
     Exception ex=null;
 
@@ -302,7 +310,8 @@ public class TokenServiceTest {
       ex = e;
     }
     assertNotNull(ex);
-    assertTrue(ex instanceof InvalidApplicationException);
+    assert ex instanceof InvalidApplicationException;
+
   }
 
   @Test
@@ -314,13 +323,4 @@ public class TokenServiceTest {
     assertTrue(o.getPolicyMask() == PolicyMask.READ);
   }
 
-  private static Set<String> setOf(String... strings) {
-    return new HashSet<>(Arrays.asList(strings));
-  }
-
-  private static List<String> listOf(String... strings) { return Arrays.asList(strings);}
-
-  private static List<ScopeName> scopeNames(String ... strings) {
-    return listOf(strings).stream().map(s -> new ScopeName(s)).collect(Collectors.toList());
-  }
 }
