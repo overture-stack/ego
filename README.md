@@ -199,8 +199,8 @@ The Authenticate request details, to recreate manually:
 
 curl example:
 
-````curl -X POST \
+```curl -X POST \
   http://localhost:8081/oauth/token \
   -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'grant_type=client_credentials&client_id=kf-public-stats-api&client_secret=soopersecret'```
-````
+  -d 'grant_type=client_credentials&client_id=kf-public-stats-api&client_secret=soopersecret'
+```
