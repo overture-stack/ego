@@ -12,14 +12,17 @@ import org.overture.ego.model.enums.Fields;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+
+import static org.overture.ego.utils.MapUtils.mapToSet;
 
 @Entity
 @Table(name = "aclentity")
 @Data
 @JsonPropertyOrder({ "id", "owner", "name" })
-@JsonInclude(JsonInclude.Include.ALWAYS)
+@JsonInclude()
 @EqualsAndHashCode(of = { "id" })
 @Builder
 @AllArgsConstructor

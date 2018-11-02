@@ -1,6 +1,7 @@
 package org.overture.ego.model.entity;
 
 import lombok.Data;
+import lombok.val;
 import org.overture.ego.model.enums.PolicyMask;
 
 import java.util.UUID;
@@ -17,5 +18,9 @@ public abstract class Permission {
     this.sid = other.sid;
     this.mask = other.mask;
     // Don't merge the ID - that is procedural.
+  }
+
+  public Scope toScope() {
+    return new Scope(entity, mask);
   }
 }

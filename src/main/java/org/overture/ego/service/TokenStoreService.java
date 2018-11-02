@@ -30,8 +30,9 @@ import java.util.UUID;
 @Slf4j
 @Service
 @Transactional
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
+@RequiredArgsConstructor
 public class TokenStoreService extends BaseService<ScopedAccessToken, UUID> {
+  @Autowired
   private final TokenStoreRepository tokenRepository;
 
   public ScopedAccessToken create(@NonNull ScopedAccessToken scopedAccessToken) {

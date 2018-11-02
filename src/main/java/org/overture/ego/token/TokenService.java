@@ -55,6 +55,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static org.overture.ego.utils.MapUtils.mapToSet;
 
 @Slf4j
 @Service
@@ -112,11 +113,10 @@ public class TokenService {
 
 
   public Set<Scope> getScopes(Set<ScopeName> scopeNames) {
-    return scopeNames.stream().map(name -> getScope(name)).collect(Collectors.toSet());
+    return scopeNames.stream().map(this::getScope).collect(Collectors.toSet());
   }
 
   public Scope getScope(ScopeName name) {
-
     val policy = policyService.getByName(name.getName());
 
     return new Scope(policy, name.getMask());
@@ -179,15 +179,13 @@ public class TokenService {
     log.info("Creating token in token store");
     tokenStoreService.create(token);
 
-    log.info("Returning");
+    log.info("Returning '%s'", token);
 
     return token;
   }
 
   public ScopedAccessToken findByTokenString(String token) {
-    ScopedAccessToken t = tokenStoreService.findByTokenString(token);
-
-    return t;
+    return tokenStoreService.findByTokenString(token);
   }
 
   public String generateTokenString() {
@@ -297,7 +295,8 @@ public class TokenService {
     // have not changed since the token was issued.
     val owner = t.getOwner();
     val scopes = Scope.effectiveScopes(owner.getScopes(), t.scopes());
-    val names = scopes.stream().map(s ->s.toString()).collect(Collectors.toSet());
+    val names = mapToSet(scopes, Scope::toString);
+
     return new TokenScopeResponse(owner.getName(), clientId,
       t.getSecondsUntilExpiry(), names);
   }

@@ -31,6 +31,7 @@ import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
 import org.overture.ego.utils.EntityGenerator;
+import org.overture.ego.utils.MapUtils;
 import org.overture.ego.utils.TestData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,12 +45,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.management.InvalidApplicationException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
-import static org.overture.ego.utils.EntityGenerator.listOf;
-import static org.overture.ego.utils.EntityGenerator.setOf;
 import static org.overture.ego.utils.EntityGenerator.scopeNames;
+import static org.overture.ego.utils.MapUtils.listOf;
+import static org.overture.ego.utils.MapUtils.setOf;
 
 @Slf4j
 @SpringBootTest
@@ -109,8 +109,8 @@ public class TokenServiceTest {
     // the user still has.
     //
     val tokenString = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
-    val scopes = test.policies("song.upload", "id.create", "collab.upload", "collab.download");
-    entityGenerator.setupToken(test.user2, tokenString,1000, scopes,null);
+    val policies = test.policies("song.upload", "id.create", "collab.upload", "collab.download");
+    entityGenerator.setupToken(test.user2, tokenString,1000, policies,null);
     val result = tokenService.checkToken(test.scoreAuth, tokenString);
     System.err.printf("result='%s'", result.toString());
 
@@ -262,8 +262,9 @@ public class TokenServiceTest {
     assertFalse(token.isRevoked());
     assertEquals(token.getOwner().getId(), test.user1.getId());
 
-    val s = token.scopes().stream().map(scope -> scope.toString()).collect(Collectors.toSet());
-    val t = scopes.stream().map(x -> x.toString()).collect(Collectors.toSet());
+    val s = MapUtils.mapToSet(token.scopes(), Scope::toString);
+    val t = MapUtils.mapToSet(scopes, ScopeName::toString);
+
     System.err.printf("s='%s",s);
     System.err.printf("scopes='%s'",t);
     assertTrue(s.containsAll(t));
@@ -299,8 +300,8 @@ public class TokenServiceTest {
     // issue_token() should throw an exception
 
     val name = test.user1.getName();
-    val scopes = entityGenerator.scopeNames("collab.download:WRITE", "id.create:WRITE");
-    val applications = entityGenerator.listOf("NotAnApplication");
+    val scopes = entityGenerator.scopeNames("collab.download:READ");
+    val applications = listOf("NotAnApplication");
 
     Exception ex=null;
 
@@ -310,6 +311,7 @@ public class TokenServiceTest {
       ex = e;
     }
     assertNotNull(ex);
+    System.err.println(ex);
     assert ex instanceof InvalidApplicationException;
 
   }
@@ -319,6 +321,8 @@ public class TokenServiceTest {
     val name = new ScopeName("collab.upload:READ");
     val o = tokenService.getScope(name);
     assertTrue(o instanceof Scope);
+    assertNotNull(o.getPolicy());
+    assertNotNull(o.getPolicy().getName());
     assertTrue(o.getPolicy().getName().equals("collab.upload"));
     assertTrue(o.getPolicyMask() == PolicyMask.READ);
   }

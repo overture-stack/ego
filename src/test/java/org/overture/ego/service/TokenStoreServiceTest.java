@@ -66,4 +66,5 @@ public class TokenStoreServiceTest {
     val found = tokenStoreService.findByTokenString(token);
     assertThat(found).isEqualTo(result);
   }
+
 }

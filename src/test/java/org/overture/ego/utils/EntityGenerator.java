@@ -15,6 +15,9 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.overture.ego.utils.MapUtils.listOf;
+import static org.overture.ego.utils.MapUtils.mapToList;
+
 @Component
 public class EntityGenerator {
 
@@ -139,10 +142,6 @@ public class EntityGenerator {
     }
   }
 
-  private List<String> list(String... s) {
-    return Arrays.asList(s);
-  }
-
   public ScopedAccessToken setupToken(User user, String token, long duration, Set<Policy> policies,
     Set<Application> applications) {
     val scopes = policies.stream().map(p -> new Scope(p, PolicyMask.WRITE)).collect(Collectors.toSet());
@@ -176,14 +175,8 @@ public class EntityGenerator {
     userService.update(user);
   }
 
-  public static Set<String> setOf(String... strings) {
-    return new HashSet<>(Arrays.asList(strings));
-  }
-
-  public static List<String> listOf(String... strings) { return Arrays.asList(strings);}
-
   public static List<ScopeName> scopeNames(String ... strings) {
-    return listOf(strings).stream().map(s -> new ScopeName(s)).collect(Collectors.toList());
+    return mapToList(listOf(strings), ScopeName::new);
   }
 
   public Set<Scope> getScopes(String... scope) {

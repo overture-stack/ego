@@ -38,6 +38,7 @@ public class ScopedAccessToken {
 
   @OneToOne()
   @JoinColumn(name = Fields.OWNER)
+  @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
   User owner;
 

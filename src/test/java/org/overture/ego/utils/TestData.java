@@ -1,11 +1,9 @@
 package org.overture.ego.utils;
 
 import lombok.val;
-import org.overture.ego.model.entity.Application;
-import org.overture.ego.model.entity.Group;
-import org.overture.ego.model.entity.Policy;
-import org.overture.ego.model.entity.User;
+import org.overture.ego.model.entity.*;
 import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.params.ScopeName;
 
 import java.util.*;
 
@@ -65,6 +63,10 @@ public class TestData {
     return result;
   }
 
+  public Scope getScope(String name) {
+    val s = new ScopeName(name);
+    return new Scope(policyMap.get(s.getName()),s.getMask());
+  }
 
   private String authToken(String clientId, String clientSecret) {
     val s = clientId + ":" + clientSecret;

@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.Sets;
 import lombok.*;
+import lombok.experimental.var;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
@@ -37,15 +39,17 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.lang.String.format;
 import static org.overture.ego.utils.AclPermissionUtils.extractPermissionStrings;
 
+@Slf4j
 @Entity
 @Table(name = "egouser")
 @Data
 @ToString(exclude = { "wholeGroups", "wholeApplications", "userPermissions" })
 @JsonPropertyOrder({ "id", "name", "email", "role", "status", "wholeGroups",
   "wholeApplications", "userPermissions", "firstName", "lastName", "createdAt", "lastLogin", "preferredLanguage" })
-@JsonInclude(JsonInclude.Include.ALWAYS)
+@JsonInclude()
 @EqualsAndHashCode(of = { "id" })
 @Builder
 @AllArgsConstructor
@@ -54,14 +58,14 @@ import static org.overture.ego.utils.AclPermissionUtils.extractPermissionStrings
 public class User implements PolicyOwner {
 
   @ManyToMany(targetEntity = Group.class)
-  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
+  @Cascade(org.hibernate.annotations.CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "usergroup", joinColumns = { @JoinColumn(name = Fields.USERID_JOIN) },
     inverseJoinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) })
   @JsonIgnore
   protected Set<Group> wholeGroups;
   @ManyToMany(targetEntity = Application.class)
-  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
+  @Cascade(org.hibernate.annotations.CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(name = "userapplication", joinColumns = { @JoinColumn(name = Fields.USERID_JOIN) },
     inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
@@ -156,10 +160,16 @@ public class User implements PolicyOwner {
 
   @JsonIgnore
   public Set<Scope> getScopes() {
-    return getPermissionsList().stream().
-      map( permission -> new Scope(permission.getEntity(), permission.getMask())).
-      filter(scope -> scope.getPolicyMask() != PolicyMask.DENY).
-      collect(Collectors.toSet());
+    List<Permission> p;
+    try {
+      p=getPermissionsList();
+    } catch(NullPointerException e) {
+      log.error(format("Can't get permissions for user '%s'", getName()));
+      p=Collections.emptyList();
+    }
+    return Optional.ofNullable(p).
+      orElse(Collections.emptyList()).stream().
+      map(Permission::toScope).collect(Collectors.toSet());
   }
 
   // Creates permissions in JWTAccessToken::context::user

@@ -17,33 +17,27 @@
 
 package org.overture.ego.model.entity;
 
-import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.overture.ego.model.enums.PolicyMask;
-import org.overture.ego.model.params.ScopeName;
-import org.overture.ego.service.ApplicationService;
-import org.overture.ego.service.GroupService;
-import org.overture.ego.service.UserService;
 import org.overture.ego.token.TokenService;
 import org.overture.ego.utils.EntityGenerator;
 import org.overture.ego.utils.TestData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
-import org.springframework.data.util.Pair;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
-import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import static org.junit.Assert.*;
+import static org.overture.ego.utils.MapUtils.listOf;
+import static org.overture.ego.utils.MapUtils.mapToSet;
 
 @Slf4j
 @SpringBootTest
@@ -51,15 +45,9 @@ import static org.junit.Assert.*;
 @ActiveProfiles("test")
 @Transactional
 public class ScopeTest {
-
   @Autowired
   private EntityGenerator entityGenerator;
-
-  @Autowired
-  private TokenService tokenService;
-
   public static TestData test;
-
 
   @Before
   public void initDb() {
@@ -68,28 +56,129 @@ public class ScopeTest {
     }
   }
 
-  @Test
-  public void testMissing() {
-    val have = entityGenerator.getScopes("song.upload:WRITE", "song.upload:READ");
-    val missing = Scope.missingScopes(have, have);
-    System.err.printf("missing='%s'",missing);
-    assertTrue(missing.isEmpty());
+  public void testMissing(String msg, Set<Scope> have, Set<Scope> want, Set<Scope> expected) {
+    val result = Scope.missingScopes(have, want);
+    assertEquals(msg, expected, result);
+  }
 
-    val want = entityGenerator.getScopes("song.upload:WRITE", "song.upload:READ", "id.create:READ");
-    val missing2 = Scope.missingScopes(have, want);
-    val expected = entityGenerator.getScopes("id.create:READ");
-    System.err.printf("missing='%s'",missing2);
-    assertTrue(missing2.equals(expected));
+  public void testEffective(String msg, Set<Scope> have, Set<Scope> want, Set<Scope> expected) {
+    val result = Scope.effectiveScopes(have, want);
+    assertEquals(msg, expected, result);
+  }
+
+  @Test
+  public void testMissingSame() {
+    // Test for missing exactly what we have.
+    // It should return an empty set.
+    val have = getScopes("song.upload:WRITE", "song.download:READ");
+    val expected = new HashSet<Scope>();
+    testMissing("Same set", have, have, expected);
+  }
+
+  @Test
+  public void testEffectiveSame() {
+    // Basic sanity check. If what we have and want are the same, that's what our effective scope should be.
+    val have = getScopes("song.upload:WRITE", "song.download:READ");
+    testEffective("Same set", have, have, have);
+  }
+
+  @Test
+  public void testMissingSubset() {
+    // Test missing
+    // Test for when what we have is a subset of what we want,
+    // (ie. permissions are otherwise identical).
+
+    // We should get the set difference.
+    val have = getScopes("song.upload:WRITE", "song.download:READ");
+    val want = getScopes("song.upload:WRITE", "song.download:READ", "id.create:READ");
+    val expected = getScopes("id.create:READ");
+    testMissing("Subset", have, want, expected);
+  }
+  @Test
+  public void testEffectiveSubset() {
+    // When the permissions we have is a subset of what we want,
+    // our effective permissions are limited to what we have.
+    val have = getScopes("song.upload:WRITE", "song.download:READ");
+    val want = getScopes("song.upload:WRITE", "song.download:READ", "id.create:READ");
+    testEffective("Subset", have, want, have);
+  }
+
+  @Test
+  public void testMissingSuperset() {
+    // Test to see what happens if what we have is a superset of what we want.
+    // We should get an empty set (nothing missing).
+    val have = getScopes("song.upload:WRITE", "song.download:READ", "id.create:READ");
+    val want = getScopes("song.upload:WRITE", "song.download:READ");
+    val expected = new HashSet<Scope>();
+    testMissing("Superset", have, want, expected);
+  }
+
+  @Test
+  public void testEffectiveSuperset() {
+    // When the permissions we have exceed those we want,
+    // our effective permissions should be limited to those we want.
+    val have = getScopes("song.upload:WRITE", "song.download:READ", "id.create:READ");
+    val want = getScopes("song.upload:WRITE", "song.download:READ");
+    testEffective("Superset", have, want, want);
+  }
+
+  @Test
+  public void testMissingExcessPermissions() {
+    // Test what happens if we have more permissions that we want
+    // We should have an empty set (nothing missing)
+    val have = getScopes("song.upload:WRITE");
+    val want = getScopes("song.upload:READ");
+    val expected = new HashSet<Scope>();
+    testMissing("Excess Permission", have, want, expected);
+  }
+
+  @Test
+  public void testEffectiveExcessPermissions() {
+    // If we have more permissions that we want,
+    // our effective permissions should be those we want.
+    val have = getScopes("song.upload:WRITE");
+    val want = getScopes("song.upload:READ");
+    testEffective("Excess Permission", have, want, want);
+  }
+
+  @Test
+  public void testMissingInsufficientPermissions() {
+    // Test what happens if we have fewer permissions that we want
+    // We should get back the scope with the permission that isn't available)
+    val have = getScopes("song.upload:READ");
+    val want = getScopes("song.upload:WRITE");
+    val expected = want;
+    testMissing("Insufficient Permission", have, want, expected);
+  }
+
+  @Test
+  public void testEffectiveInsufficientPermissions() {
+    // If we have lesser permissions than those we want,
+    // our effective permission should be those we have.
+    val have = getScopes("song.upload:READ");
+    val want = getScopes("song.upload:WRITE");
+    testEffective("Insufficient Permission", have, want, have);
+  }
+
+  @Test
+  public void testMissingWithDeny() {
+    // If we have deny in the list of permissions we have,
+    // it should always be missing from our list of permissions.
+
   }
 
 
   @Test
   public void testEffective() {
-    val have = entityGenerator.getScopes("song.upload:WRITE", "song.download:READ");
-    val want = entityGenerator.getScopes("song.upload:READ");
+    val have = getScopes("song.upload:WRITE", "song.download:READ");
+    val want = getScopes("song.upload:READ");
 
     val e = Scope.effectiveScopes(have, want);
-    val expected = entityGenerator.getScopes("song.upload:READ");
+    val expected = getScopes("song.upload:READ");
     assertTrue(e.equals(expected));
+  }
+
+  Set<Scope> getScopes(String... scopes) {
+    return mapToSet(listOf(scopes), test::getScope);
   }
 }

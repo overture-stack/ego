@@ -220,18 +220,13 @@ public class UserTest {
     setupUsers();
     // Get Users and Groups
     val alex = userService.getByName("FirstUser@domain.com");
-    val bob = userService.getByName("SecondUser@domain.com");
-    val marry = userService.getByName("ThirdUser@domain.com");
-
     assertThat(alex).isNotNull();
     val s = alex.getScopes();
 
     assertThat(s).isNotNull();
-
     val expected = entityGenerator.getScopes("Study002:WRITE");
 
-
-    System.err.printf("alex='%s',bob='%s',marry='%s'", alex.getScopes(),bob.getScopes(),marry.getScopes());
+    //System.err.printf("alex='%s',bob='%s',marry='%s'", alex.getScopes(),bob.getScopes(),marry.getScopes());
     assertThat(s).isEqualTo(expected);
 
   }
