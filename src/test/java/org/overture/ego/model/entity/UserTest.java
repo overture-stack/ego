@@ -218,16 +218,13 @@ public class UserTest {
   @Test
   public void testGetScopes() {
     setupUsers();
-    // Get Users and Groups
     val alex = userService.getByName("FirstUser@domain.com");
     assertThat(alex).isNotNull();
+
     val s = alex.getScopes();
-
     assertThat(s).isNotNull();
-    val expected = entityGenerator.getScopes("Study002:WRITE");
 
-    //System.err.printf("alex='%s',bob='%s',marry='%s'", alex.getScopes(),bob.getScopes(),marry.getScopes());
+    val expected = entityGenerator.getScopes("Study001:DENY", "Study002:WRITE", "STUDY003:DENY");
     assertThat(s).isEqualTo(expected);
-
   }
 }

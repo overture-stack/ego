@@ -29,4 +29,9 @@ public class ScopeName {
     val results = scopeName.split(":");
     return results[0];
   }
+
+  @Override
+  public String toString() {
+    return scopeName;
+  }
 }

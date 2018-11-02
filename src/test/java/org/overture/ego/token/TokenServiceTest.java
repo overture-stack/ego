@@ -21,10 +21,10 @@ import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.model.entity.Scope;
-import org.overture.ego.model.entity.ScopeTest;
 import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.service.ApplicationService;
@@ -41,6 +41,7 @@ import org.springframework.security.oauth2.common.exceptions.InvalidScopeExcepti
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.management.InvalidApplicationException;
@@ -72,14 +73,12 @@ public class TokenServiceTest {
   @Autowired
   private TokenService tokenService;
 
-  public static TestData test;
+  public static TestData test=null;
 
 
   @Before
   public void initDb() {
-    if (test == null) {
-      test = new TestData(entityGenerator);
-    }
+    test = new TestData(entityGenerator);
   }
 
   @Test
@@ -102,7 +101,7 @@ public class TokenServiceTest {
 
   @Test
   public void checkTokenWithExcessiveScopes() {
-    // Create a token for a user who issued the token having had the
+    // Create a token for the situation where a user who issued the token having had the
     // full set of scopes for the token, but now no longer does.
     //
     // We should get back only those scopes that are both in the token and that
@@ -119,7 +118,6 @@ public class TokenServiceTest {
     assertTrue(result.getExp() > 900);
     assertEquals(test.user2.getName(), result.getUser_name());
     assertEquals(setOf("song.upload:READ"), result.getScope());
-
   }
 
   @Test
@@ -129,14 +127,14 @@ public class TokenServiceTest {
 
     val tokenString = "591044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.policies("song.upload", "song.download");
-    entityGenerator.setupToken(test.user1, tokenString,1000, scopes,null);
+    entityGenerator.setupToken(test.user2, tokenString,1000, scopes,null);
 
     val result = tokenService.checkToken(test.songAuth, tokenString);
 
     assertEquals(test.songId, result.getClient_id() );
     assertTrue(result.getExp() > 900);
-    assertEquals(setOf("song.upload", "song.download"), result.getScope());
-    assertEquals(test.user1.getName(), result.getUser_name());
+    assertEquals(setOf("song.upload:READ", "song.download:READ"), result.getScope());
+    assertEquals(test.user2.getName(), result.getUser_name());
   }
 
   @Test
@@ -178,7 +176,8 @@ public class TokenServiceTest {
 
     assertEquals(test.scoreId, result.getClient_id());
     assertTrue( result.getExp() > 900);
-    val expected = tokenService.getScopes(new HashSet<>(scopeNames("song.upload:READ", "song.download:READ")));
+
+    val expected = setOf("song.upload:WRITE", "song.download:WRITE");
     assertEquals(test.user1.getName(), result.getUser_name());
     assertEquals(expected, result.getScope());
 
@@ -246,6 +245,27 @@ public class TokenServiceTest {
       ex = e;
     }
     assertNotNull(ex);
+
+  }
+
+  @Test
+  public void checkTokenWithLimitedScope() {
+    // Check that a token issued for a subset of scopes that a user has
+    // returns only the scopes listed in token
+    val tokenString = "891044a1-3ffd-4164-a6a0-0e1e666b28dc";
+
+    val scopes = test.getScopes("collab.upload:READ","collab.download:READ");
+    val applications = Collections.singleton(test.score);
+    entityGenerator.setupToken2(test.user1, tokenString,1000,scopes,applications);
+
+    val result = tokenService.checkToken(test.scoreAuth, tokenString);
+
+    assertEquals(test.scoreId, result.getClient_id());
+    assertTrue( result.getExp() > 900);
+
+    val expected = setOf("collab.upload:READ", "collab.download:READ");
+    assertEquals(test.user1.getName(), result.getUser_name());
+    assertEquals(expected, result.getScope());
 
   }
   @Test

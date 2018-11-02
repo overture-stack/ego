@@ -14,7 +14,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
+
+import static org.overture.ego.utils.MapUtils.mapToSet;
 
 @Entity
 @Table(name = "token")
@@ -79,12 +80,11 @@ public class ScopedAccessToken {
 
   @JsonIgnore
   public  Set<Scope> scopes() {
-    return scopes.stream().map(s -> new Scope(s.getPolicy(), s.getAccessLevel())).collect(Collectors.toSet());
+    return mapToSet(scopes, s -> new Scope(s.getPolicy(), s.getAccessLevel()) );
   }
 
   public void setScopes(Set<Scope> scopes) {
-    this.scopes = scopes.stream().
-      map( s -> new TokenScope(this, s.getPolicy(), s.getPolicyMask())).collect(Collectors.toSet());
+    this.scopes = mapToSet(scopes, s -> new TokenScope(this, s.getPolicy(), s.getPolicyMask()));
   }
 
   public void addApplication(Application app) {

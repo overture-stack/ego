@@ -41,6 +41,7 @@ import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static org.overture.ego.utils.AclPermissionUtils.extractPermissionStrings;
+import static org.overture.ego.utils.MapUtils.mapToSet;
 
 @Slf4j
 @Entity
@@ -139,8 +140,8 @@ public class User implements PolicyOwner {
     // Combine individual user permissions and the user's
     // groups (if they have any) permissions
     val combinedPermissions = Stream.concat(userPermissions, userGroupsPermissions)
-      .collect(Collectors.groupingBy(Permission::getEntity));
-
+      //.collect(Collectors.groupingBy(p -> p.getEntity()));
+      .collect(Collectors.groupingBy(this::getP));
     // If we have no permissions at all return an empty list
     if (combinedPermissions.values().size() == 0) {
       return new ArrayList<>();
@@ -158,18 +159,22 @@ public class User implements PolicyOwner {
     return finalPermissionsList;
   }
 
+  public Policy getP(Permission permission) {
+    val p = permission.getEntity();
+    return p;
+  }
+
   @JsonIgnore
   public Set<Scope> getScopes() {
     List<Permission> p;
     try {
-      p=getPermissionsList();
+      p=this.getPermissionsList();
     } catch(NullPointerException e) {
       log.error(format("Can't get permissions for user '%s'", getName()));
       p=Collections.emptyList();
     }
-    return Optional.ofNullable(p).
-      orElse(Collections.emptyList()).stream().
-      map(Permission::toScope).collect(Collectors.toSet());
+
+    return mapToSet(p, Permission::toScope);
   }
 
   // Creates permissions in JWTAccessToken::context::user

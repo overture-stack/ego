@@ -1,11 +1,9 @@
 package org.overture.ego.model.entity;
 
 import lombok.Data;
-import lombok.val;
 import org.overture.ego.model.enums.PolicyMask;
 
 import java.util.UUID;
-
 @Data
 public abstract class Permission {
   UUID id;
@@ -21,6 +19,6 @@ public abstract class Permission {
   }
 
   public Scope toScope() {
-    return new Scope(entity, mask);
+    return new Scope(getEntity(), getMask());
   }
 }

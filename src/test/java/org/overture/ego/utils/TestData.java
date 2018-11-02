@@ -7,6 +7,9 @@ import org.overture.ego.model.params.ScopeName;
 
 import java.util.*;
 
+import static org.overture.ego.utils.MapUtils.listOf;
+import static org.overture.ego.utils.MapUtils.mapToSet;
+
 public class TestData {
   public Application song;
   public String songId;
@@ -46,8 +49,8 @@ public class TestData {
     }
 
     user1 = entityGenerator.setupUser("User One");
-    user1.addNewGroup(developers);
-    entityGenerator.addPermission(user1, PolicyMask.READ,
+    // user1.addNewGroup(developers);
+    entityGenerator.addPermission(user1, PolicyMask.WRITE,
       policies("song.upload","song.download", "collab.upload", "collab.download", "id.create"));
 
     user2 = entityGenerator.setupUser("User Two");
@@ -61,6 +64,10 @@ public class TestData {
       result.add(policyMap.get(name));
     }
     return result;
+  }
+
+  public Set<Scope> getScopes(String... scopeNames) {
+    return mapToSet(listOf(scopeNames), this::getScope);
   }
 
   public Scope getScope(String name) {

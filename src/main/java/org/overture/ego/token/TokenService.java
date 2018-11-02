@@ -42,7 +42,7 @@ import org.overture.ego.utils.TypeUtils;
 import org.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
@@ -50,7 +50,7 @@ import org.springframework.stereotype.Service;
 
 import javax.management.InvalidApplicationException;
 import java.security.InvalidKeyException;
-import java.security.cert.CollectionCertStoreParameters;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -110,7 +110,6 @@ public class TokenService {
     val scope=u.getPermissionsList().stream().map(p->p.toString()).collect(Collectors.toSet());
     return generateUserToken(u, scope);
   }
-
 
   public Set<Scope> getScopes(Set<ScopeName> scopeNames) {
     return scopeNames.stream().map(this::getScope).collect(Collectors.toSet());

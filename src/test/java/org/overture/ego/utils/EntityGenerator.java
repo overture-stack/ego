@@ -5,6 +5,7 @@ import org.overture.ego.model.entity.ScopeTest;
 import org.overture.ego.model.entity.*;
 import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.params.ScopeName;
+import org.overture.ego.provider.oauth.ScopeAwareOAuth2RequestFactory;
 import org.overture.ego.service.*;
 import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -145,6 +146,10 @@ public class EntityGenerator {
   public ScopedAccessToken setupToken(User user, String token, long duration, Set<Policy> policies,
     Set<Application> applications) {
     val scopes = policies.stream().map(p -> new Scope(p, PolicyMask.WRITE)).collect(Collectors.toSet());
+    return setupToken2(user, token, duration, scopes, applications);
+  }
+
+  public ScopedAccessToken setupToken2(User user, String token, long duration, Set<Scope> scopes, Set<Application> applications) {
     val tokenObject = ScopedAccessToken.builder().
       token(token).owner(user).
       applications(applications == null ? new HashSet<>():applications).
