@@ -4,8 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.overture.ego.model.entity.Scope;
-import org.overture.ego.model.entity.ScopeTest;
+import org.overture.ego.model.dto.Scope;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.ScopedAccessToken;
 import org.overture.ego.model.enums.PolicyMask;
@@ -37,14 +36,13 @@ public class TokenStoreServiceTest {
   @Test
   public void testCreate() {
     val user   = entityGenerator.setupUser("Developer One");
-    val group  = entityGenerator.setupGroup("Admin One");
     val token  = "191044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val duration = 3600;
 
     val scopes = new HashSet<Scope>();
-    val p1 = entityGenerator.setupPolicy("policy1", group.getId());
+    val p1 = entityGenerator.setupPolicy("policy1,Admin One");
     scopes.add(new Scope(p1, PolicyMask.READ));
-    val p2 = entityGenerator.setupPolicy("policy2", group.getId());
+    val p2 = entityGenerator.setupPolicy("policy2,Admin One");
     scopes.add(new Scope(p2, PolicyMask.WRITE));
 
     val applications = new HashSet<Application>();

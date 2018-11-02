@@ -1,6 +1,7 @@
 package org.overture.ego.model.entity;
 
 import lombok.Data;
+import org.overture.ego.model.dto.Scope;
 import org.overture.ego.model.enums.PolicyMask;
 
 import java.util.UUID;

@@ -1,14 +1,14 @@
 package org.overture.ego.utils;
 
 import lombok.val;
+import org.overture.ego.model.dto.Scope;
 import org.overture.ego.model.entity.*;
-import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.params.ScopeName;
 
 import java.util.*;
 
-import static org.overture.ego.utils.MapUtils.listOf;
-import static org.overture.ego.utils.MapUtils.mapToSet;
+import static org.overture.ego.utils.CollectionUtils.listOf;
+import static org.overture.ego.utils.CollectionUtils.mapToSet;
 
 public class TestData {
   public Application song;
@@ -36,34 +36,25 @@ public class TestData {
     scoreAuth = authToken(scoreId, scoreSecret);
 
     score = entityGenerator.setupApplication(scoreId, scoreSecret);
-
-    val admin = entityGenerator.setupGroup("admin");
     developers = entityGenerator.setupGroup("developers");
 
-    val allPolicies = list("song.upload", "song.download","id.create", "collab.upload", "collab.download");
+    val allPolicies = listOf("song.upload", "song.download","id.create", "collab.upload", "collab.download");
 
     policyMap = new HashMap<>();
     for(val p:allPolicies) {
-      val policy = entityGenerator.setupPolicy(p, admin.getId());
+      val policy = entityGenerator.setupPolicy(p, "admin");
       policyMap.put(p, policy);
     }
 
     user1 = entityGenerator.setupUser("User One");
     // user1.addNewGroup(developers);
-    entityGenerator.addPermission(user1, PolicyMask.WRITE,
-      policies("song.upload","song.download", "collab.upload", "collab.download", "id.create"));
+    entityGenerator.addPermissions(user1,
+      getScopes("song.upload:WRITE", "song.download:WRITE",
+      "collab.upload:WRITE", "collab.download:WRITE", "id.create:WRITE"));
 
     user2 = entityGenerator.setupUser("User Two");
-    entityGenerator.addPermission(user2, PolicyMask.READ,
-      policies("song.upload", "song.download"));
-  }
-
-  public HashSet<Policy> policies(String... policyNames) {
-    val result = new HashSet<Policy>();
-    for(val name: policyNames) {
-      result.add(policyMap.get(name));
-    }
-    return result;
+    entityGenerator.addPermissions(user2, getScopes(
+     "song.upload:READ", "song.download:WRITE"));
   }
 
   public Set<Scope> getScopes(String... scopeNames) {
@@ -79,9 +70,4 @@ public class TestData {
     val s = clientId + ":" + clientSecret;
     return "Basic " + Base64.getEncoder().encodeToString(s.getBytes());
   }
-
-  private List<String> list(String... s) {
-    return Arrays.asList(s);
-  }
-
 }

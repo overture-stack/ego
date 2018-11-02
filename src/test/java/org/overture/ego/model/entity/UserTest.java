@@ -5,7 +5,6 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
-import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.params.PolicyIdStringWithMaskName;
 import org.overture.ego.service.PolicyService;
 import org.overture.ego.service.GroupService;
@@ -16,14 +15,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.shaded.com.google.common.collect.Sets;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.setAllowExtractingPrivateFields;
 
 @Slf4j
 @SpringBootTest
@@ -45,12 +41,9 @@ public class UserTest {
 
   @Test
   public void testGetPermissionsNoPermissions() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
-    val groups = groupService
-        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
-        .getContent();
-    entityGenerator.setupSimpleAclEntities(groups);
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
+    entityGenerator.setupTestPolicies();
 
     val user = userService.getByName("FirstUser@domain.com");
 
@@ -59,12 +52,9 @@ public class UserTest {
 
   @Test
   public void testGetPermissionsNoGroups() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
-    val groups = groupService
-        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
-        .getContent();
-    entityGenerator.setupSimpleAclEntities(groups);
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
+    entityGenerator.setupTestPolicies();
 
     val user = userService.getByName("FirstUser@domain.com");
     val study001id = policyService.getByName("Study001").getId().toString();
@@ -83,12 +73,12 @@ public class UserTest {
   }
 
   private void setupUsers() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
     val groups = groupService
       .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
       .getContent();
-    entityGenerator.setupSimpleAclEntities(groups);
+    entityGenerator.setupTestPolicies();
 
     // Get Users and Groups
     val alex = userService.getByName("FirstUser@domain.com");

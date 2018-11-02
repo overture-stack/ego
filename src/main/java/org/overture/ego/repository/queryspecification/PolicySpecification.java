@@ -16,8 +16,21 @@
 
 package org.overture.ego.repository.queryspecification;
 
-import org.overture.ego.model.entity.Permission;
+import lombok.val;
+import org.overture.ego.model.entity.Policy;
+import org.overture.ego.model.entity.User;
+import org.overture.ego.utils.QueryUtils;
+import org.springframework.data.jpa.domain.Specification;
 
-public class AclPermissionSpecification extends SpecificationBase<Permission> {
+import javax.annotation.Nonnull;
+
+public class PolicySpecification extends SpecificationBase<User> {
+
+  public static Specification<Policy> containsText(@Nonnull String text) {
+    val finalText = QueryUtils.prepareForQuery(text);
+    return (root, query, builder) -> builder.or(getQueryPredicates(builder, root, finalText,
+      "name")
+    );
+  }
 
 }

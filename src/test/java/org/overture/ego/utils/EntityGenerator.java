@@ -1,11 +1,9 @@
 package org.overture.ego.utils;
 
 import lombok.val;
-import org.overture.ego.model.entity.ScopeTest;
+import org.overture.ego.model.dto.Scope;
 import org.overture.ego.model.entity.*;
-import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.params.ScopeName;
-import org.overture.ego.provider.oauth.ScopeAwareOAuth2RequestFactory;
 import org.overture.ego.service.*;
 import org.overture.ego.token.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,14 +12,19 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import static org.overture.ego.utils.MapUtils.listOf;
-import static org.overture.ego.utils.MapUtils.mapToList;
+import static org.overture.ego.utils.CollectionUtils.listOf;
+import static org.overture.ego.utils.CollectionUtils.mapToList;
 
 @Component
+/***
+ * For this class, we follow the following naming conventions:
+ * createEntity: returns a new object of type Entity.
+ * setupEntity: Create an entity, saves it using Hibernate, & returns it.
+ * setupEntities: Sets up multiple entities at once
+ * setupTestEntities: Sets up specific entities used in our unit tests
+ */
 public class EntityGenerator {
-
   @Autowired
   private ApplicationService applicationService;
 
@@ -40,18 +43,29 @@ public class EntityGenerator {
   @Autowired
   private TokenStoreService tokenStoreService;
 
-  public Application createOneApplication(String clientId) {
-    return new Application(String.format("Application %s", clientId), clientId, new StringBuilder(clientId).reverse().toString());
+  public Application createApplication(String clientId) {
+    return new Application(appName(clientId), clientId, clientSecret(clientId));
   }
 
-  public List<Application> createApplicationsFromList(List<String> clientIds) {
-    return clientIds.stream().map(this::createOneApplication).collect(Collectors.toList());
+  private String appName(String clientId) {
+    return String.format("Application %s", clientId);
   }
 
-  public void setupSimpleApplications() {
-    for (Application application : createApplicationsFromList(Arrays.asList("111111", "222222", "333333", "444444", "555555"))) {
-      applicationService.create(application);
-    }
+  private String clientSecret(String clientId) {
+    return new StringBuilder(clientId).reverse().toString();
+  }
+
+  public Application setupApplication(String clientId) {
+    val application = createApplication(clientId);
+    return applicationService.create(application);
+  }
+
+  public List<Application> setupApplications(String... clientIds) {
+    return mapToList(listOf(clientIds), this::setupApplication);
+  }
+
+  public void setupTestApplications() {
+    setupApplications("111111", "222222", "333333", "444444", "555555");
   }
 
   public Application setupApplication(String clientId, String clientSecret) {
@@ -63,10 +77,7 @@ public class EntityGenerator {
     return applicationService.create(app);
   }
 
-  public User createOneUser(Pair<String, String> user) {
-    val firstName = user.getFirst();
-    val lastName = user.getSecond();
-
+  public User createUser(String firstName, String lastName) {
     return User
         .builder()
         .email(String.format("%s%s@domain.com", firstName, lastName))
@@ -80,76 +91,80 @@ public class EntityGenerator {
         .build();
   }
 
-  public List<User> createUsersFromList(List<Pair<String, String>> users) {
-    return users.stream().map(this::createOneUser).collect(Collectors.toList());
-  }
-
-  public User setupUser(String name) {
+  public User createUser(String name) {
     val names= name.split(" ",2);
-    val user = createOneUser(Pair.of(names[0], names[1]));
+    return createUser(names[0], names[1]);
+  }
+  public User setupUser(String name) {
+    val user = createUser(name);
     return userService.create(user);
   }
 
-  public void setupSimpleUsers() {
-    for (User user : createUsersFromList(Arrays.asList(Pair.of("First", "User"), Pair.of("Second", "User"), Pair.of("Third", "User")))) {
-      userService.create(user);
-    }
+  public List<User> setupUsers(String... users) {
+    return mapToList(listOf(users), this::setupUser);
   }
 
-  public Group createOneGroup(String name) {
+  public void setupTestUsers() {
+    setupUsers("First User", "Second User", "Third User");
+  }
+
+  public Group createGroup(String name) {
     return new Group(name);
   }
 
   public Group setupGroup(String name) {
-    val group = createOneGroup(name);
+    val group = createGroup(name);
     return groupService.create(group);
   }
 
-  public List<Group> createGroupsfromList(List<String> groups) {
-    return groups.stream().map(this::createOneGroup).collect(Collectors.toList());
+  public List<Group> setupGroups(String... groupNames) {
+    return mapToList(listOf(groupNames), this::setupGroup);
   }
 
-  public void setupSimpleGroups() {
-    for (Group group : createGroupsfromList(Arrays.asList("Group One", "Group Two", "Group Three"))) {
-      groupService.create(group);
-    }
+  public void setupTestGroups() {
+    setupGroups("Group One", "Group Two", "Group Three");
   }
 
-  public Policy createOneAclEntity(Pair<String, UUID> aclEntity) {
+  public Policy createPolicy(String name, UUID policyId) {
     return Policy.builder()
-        .name(aclEntity.getFirst())
-        .owner(aclEntity.getSecond())
+        .name(name)
+        .owner(policyId)
         .build();
   }
 
-  public Policy setupPolicy(String name, UUID groupId) {
-    val policy = createOneAclEntity(Pair.of(name, groupId));
+  public Policy createPolicy(String name) {
+    val args = name.split(",");
+    return createPolicy(args[0], args[1]);
+  }
+
+  public Policy createPolicy(String name, String groupName) {
+    Group owner = groupService.getByName(groupName);
+    if (owner == null) {
+      owner = setupGroup(groupName);
+    }
+    return createPolicy(name, owner.getId());
+  }
+
+  public Policy setupPolicy(String name, String groupName) {
+    val policy=createPolicy(name, groupName);
     return policyService.create(policy);
   }
 
-  public List<Policy> createAclEntitiesFromList(List<Pair<String, UUID>> aclEntities) {
-    return aclEntities.stream().map(this::createOneAclEntity).collect(Collectors.toList());
+  public Policy setupPolicy(String name) {
+    val policy=createPolicy(name);
+    return policyService.create(policy);
   }
 
-  public void setupSimpleAclEntities(List<Group> threeGroups) {
-
-    for (Policy policy : createAclEntitiesFromList(
-        Arrays.asList(
-            Pair.of("Study001", threeGroups.get(0).getId()),
-            Pair.of("Study002", threeGroups.get(1).getId()),
-            Pair.of("Study003", threeGroups.get(2).getId())
-        ))) {
-      policyService.create(policy);
-    }
+  public List<Policy> setupPolicies(String... names) {
+    return mapToList(listOf(names), this::setupPolicy);
   }
 
-  public ScopedAccessToken setupToken(User user, String token, long duration, Set<Policy> policies,
+  public void setupTestPolicies() {
+    setupPolicies("Study001,Group One", "Study002,Group Two", "Study003,Group Three");
+  }
+
+  public ScopedAccessToken setupToken(User user, String token, long duration, Set<Scope> scopes,
     Set<Application> applications) {
-    val scopes = policies.stream().map(p -> new Scope(p, PolicyMask.WRITE)).collect(Collectors.toSet());
-    return setupToken2(user, token, duration, scopes, applications);
-  }
-
-  public ScopedAccessToken setupToken2(User user, String token, long duration, Set<Scope> scopes, Set<Application> applications) {
     val tokenObject = ScopedAccessToken.builder().
       token(token).owner(user).
       applications(applications == null ? new HashSet<>():applications).
@@ -162,20 +177,13 @@ public class EntityGenerator {
     return tokenObject;
   }
 
-  public void addGroups(User user, List<Group> groups) {
-    for(val g:groups) {
-      if (user.getWholeGroups().contains(g)) {
-        // user already has this group
-      } else {
-        user.addNewGroup(g);
-      }
-    }
-    userService.update(user);
+  public void addPermission(User user, Scope scope) {
+    user.addNewPermission(scope.getPolicy(), scope.getPolicyMask());
   }
 
-  public void addPermission(User user, PolicyMask mask, Set<Policy> scopes) {
-    for(val policy:scopes) {
-      user.addNewPermission(policy, mask);
+  public void addPermissions(User user, Set<Scope> scopes) {
+    for (val s: scopes) {
+      addPermission(user, s);
     }
     userService.update(user);
   }

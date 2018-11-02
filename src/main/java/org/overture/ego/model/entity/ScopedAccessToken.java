@@ -7,6 +7,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.joda.time.DateTime;
+import org.overture.ego.model.dto.Scope;
 import org.overture.ego.model.enums.Fields;
 
 import javax.persistence.*;
@@ -15,7 +16,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.overture.ego.utils.MapUtils.mapToSet;
+import static org.overture.ego.utils.CollectionUtils.mapToSet;
 
 @Entity
 @Table(name = "token")

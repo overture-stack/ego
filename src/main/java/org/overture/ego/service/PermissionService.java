@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.overture.ego.model.entity.Permission;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.repository.PermissionRepository;
-import org.overture.ego.repository.queryspecification.AclPermissionSpecification;
+import org.overture.ego.repository.queryspecification.PermissionSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +32,7 @@ public abstract class PermissionService extends BaseService<Permission, UUID> {
   }
 
   public Page<Permission> listAclEntities(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
-    return repository.findAll(AclPermissionSpecification.filterBy(filters), pageable);
+    return repository.findAll(PermissionSpecification.filterBy(filters), pageable);
   }
 
   // Update

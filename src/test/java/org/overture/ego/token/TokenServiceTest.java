@@ -21,27 +21,24 @@ import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.overture.ego.model.entity.Scope;
+import org.overture.ego.model.dto.Scope;
 import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
 import org.overture.ego.utils.EntityGenerator;
-import org.overture.ego.utils.MapUtils;
+import org.overture.ego.utils.CollectionUtils;
 import org.overture.ego.utils.TestData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.util.Pair;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.management.InvalidApplicationException;
@@ -49,8 +46,8 @@ import java.util.*;
 
 import static org.junit.Assert.*;
 import static org.overture.ego.utils.EntityGenerator.scopeNames;
-import static org.overture.ego.utils.MapUtils.listOf;
-import static org.overture.ego.utils.MapUtils.setOf;
+import static org.overture.ego.utils.CollectionUtils.listOf;
+import static org.overture.ego.utils.CollectionUtils.setOf;
 
 @Slf4j
 @SpringBootTest
@@ -83,15 +80,13 @@ public class TokenServiceTest {
 
   @Test
   public void generateUserToken() {
-    val user = userService.create(entityGenerator.createOneUser(Pair.of("foo", "bar")));
-    groupService.create(entityGenerator.createOneGroup("testGroup"));
-    applicationService.create(entityGenerator.createOneApplication("foo"));
+    val user = entityGenerator.setupUser("foo bar");
+    val group2 = entityGenerator.setupGroup("testGroup");
+    val app2 = entityGenerator.setupApplication("foo");
 
-    val group2 = groupService.getByName("testGroup");
     group2.addUser(user);
     groupService.update(group2);
 
-    val app2 = applicationService.getByClientId("foo");
     app2.setWholeUsers(Sets.newHashSet(user));
     applicationService.update(app2);
 
@@ -108,8 +103,9 @@ public class TokenServiceTest {
     // the user still has.
     //
     val tokenString = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
-    val policies = test.policies("song.upload", "id.create", "collab.upload", "collab.download");
-    entityGenerator.setupToken(test.user2, tokenString,1000, policies,null);
+    val scopes = test.getScopes("song.upload:WRITE",
+      "id.create:WRITE", "collab.upload:WRITE", "collab.download:WRITE");
+    entityGenerator.setupToken(test.user2, tokenString,1000, scopes,null);
     val result = tokenService.checkToken(test.scoreAuth, tokenString);
     System.err.printf("result='%s'", result.toString());
 
@@ -126,7 +122,7 @@ public class TokenServiceTest {
     // We should get back all the scopes that we set for our token.
 
     val tokenString = "591044a1-3ffd-4164-a6a0-0e1e666b28dc";
-    val scopes = test.policies("song.upload", "song.download");
+    val scopes = test.getScopes("song.upload:READ", "song.download:READ");
     entityGenerator.setupToken(test.user2, tokenString,1000, scopes,null);
 
     val result = tokenService.checkToken(test.songAuth, tokenString);
@@ -146,7 +142,7 @@ public class TokenServiceTest {
     //
     // check_token should fail with an InvalidToken exception.
     val tokenString = "691044a1-3ffd-4164-a6a0-0e1e666b28dc";
-    val scopes = test.policies("song.upload", "song.download");
+    val scopes = test.getScopes("song.upload:READ", "song.download:READ");
     val applications = Collections.singleton(test.score);
     entityGenerator.setupToken(test.user1, tokenString,1000, scopes,applications);
 
@@ -168,7 +164,7 @@ public class TokenServiceTest {
     // We should get back the values we sent.
     val tokenString = "791044a1-3ffd-4164-a6a0-0e1e666b28dc";
 
-    val scopes = test.policies("song.upload", "song.download");
+    val scopes = test.getScopes("song.upload:WRITE", "song.download:WRITE");
     val applications = Collections.singleton(test.score);
     entityGenerator.setupToken(test.user1, tokenString,1000, scopes,applications);
 
@@ -219,7 +215,7 @@ public class TokenServiceTest {
 
     UsernameNotFoundException ex=null;
     try {
-      tokenService.issueToken(name, new ArrayList<>(scopes), applications);
+      tokenService.issueToken(name, scopes, applications);
     } catch (UsernameNotFoundException e) {
       ex = e;
     }
@@ -256,7 +252,7 @@ public class TokenServiceTest {
 
     val scopes = test.getScopes("collab.upload:READ","collab.download:READ");
     val applications = Collections.singleton(test.score);
-    entityGenerator.setupToken2(test.user1, tokenString,1000,scopes,applications);
+    entityGenerator.setupToken(test.user1, tokenString,1000,scopes,applications);
 
     val result = tokenService.checkToken(test.scoreAuth, tokenString);
 
@@ -282,8 +278,8 @@ public class TokenServiceTest {
     assertFalse(token.isRevoked());
     assertEquals(token.getOwner().getId(), test.user1.getId());
 
-    val s = MapUtils.mapToSet(token.scopes(), Scope::toString);
-    val t = MapUtils.mapToSet(scopes, ScopeName::toString);
+    val s = CollectionUtils.mapToSet(token.scopes(), Scope::toString);
+    val t = CollectionUtils.mapToSet(scopes, ScopeName::toString);
 
     System.err.printf("s='%s",s);
     System.err.printf("scopes='%s'",t);

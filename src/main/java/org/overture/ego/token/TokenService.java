@@ -20,7 +20,7 @@ import io.jsonwebtoken.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.overture.ego.model.entity.Scope;
+import org.overture.ego.model.dto.Scope;
 import org.overture.ego.model.dto.TokenScopeResponse;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.ScopedAccessToken;
@@ -52,10 +52,9 @@ import javax.management.InvalidApplicationException;
 import java.security.InvalidKeyException;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import static org.overture.ego.utils.MapUtils.mapToSet;
+import static org.overture.ego.utils.CollectionUtils.mapToSet;
 
 @Slf4j
 @Service
@@ -107,12 +106,12 @@ public class TokenService {
 
   @SneakyThrows
   public String generateUserToken(User u) {
-    val scope=u.getPermissionsList().stream().map(p->p.toString()).collect(Collectors.toSet());
-    return generateUserToken(u, scope);
+    Set<String> permissionNames=mapToSet(u.getPermissionsList(), p->p.toString());
+    return generateUserToken(u, permissionNames);
   }
 
   public Set<Scope> getScopes(Set<ScopeName> scopeNames) {
-    return scopeNames.stream().map(this::getScope).collect(Collectors.toSet());
+    return mapToSet(scopeNames, this::getScope);
   }
 
   public Scope getScope(ScopeName name) {
@@ -163,7 +162,7 @@ public class TokenService {
     token.setRevoked(false);
     token.setToken(tokenString);
     token.setOwner(u);
-    requestedScopes.stream().forEach(scope -> token.addScope(scope));
+    requestedScopes.stream().forEach(token::addScope);
 
     log.info("Generating apps list");
     for (val appName : apps) {
@@ -213,7 +212,6 @@ public class TokenService {
   }
 
   public boolean validateToken(String token) {
-
     Jws decodedToken = null;
     try {
       decodedToken = Jwts.parser()

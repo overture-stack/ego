@@ -19,7 +19,6 @@ package org.overture.ego.model.enums;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import org.overture.ego.model.entity.Policy;
 
 import java.util.Arrays;
 
@@ -33,9 +32,9 @@ public enum PolicyMask {
   private final String value;
 
   public static PolicyMask fromValue(String value) {
-    for (val aclMask : values()) {
-      if (aclMask.value.equalsIgnoreCase(value)) {
-        return aclMask;
+    for (val policyMask : values()) {
+      if (policyMask.value.equalsIgnoreCase(value)) {
+        return policyMask;
       }
     }
     throw new IllegalArgumentException(

@@ -20,18 +20,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.common.collect.Sets;
 import lombok.*;
-import lombok.experimental.var;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import org.overture.ego.controller.PolicyController;
+import org.overture.ego.model.dto.Scope;
 import org.overture.ego.model.enums.Fields;
 import org.overture.ego.model.enums.PolicyMask;
-import org.overture.ego.model.params.PolicyIdStringWithMaskName;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
@@ -40,8 +37,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
-import static org.overture.ego.utils.AclPermissionUtils.extractPermissionStrings;
-import static org.overture.ego.utils.MapUtils.mapToSet;
+import static org.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
+import static org.overture.ego.utils.CollectionUtils.mapToSet;
 
 @Slf4j
 @Entity

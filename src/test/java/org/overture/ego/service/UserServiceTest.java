@@ -16,7 +16,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.util.Pair;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +29,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.overture.ego.utils.AclPermissionUtils.extractPermissionStrings;
+import static org.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
 
 @Slf4j
 @SpringBootTest
@@ -59,15 +58,15 @@ public class UserServiceTest {
   // Create
   @Test
   public void testCreate() {
-    val user = userService.create(entityGenerator.createOneUser(Pair.of("Demo", "User")));
+    val user = userService.create(entityGenerator.createUser("Demo", "User"));
     // UserName == UserEmail
     assertThat(user.getName()).isEqualTo("DemoUser@domain.com");
   }
 
   @Test
   public void testCreateUniqueNameAndEmail() {
-    userService.create(entityGenerator.createOneUser(Pair.of("User", "One")));
-    userService.create(entityGenerator.createOneUser(Pair.of("User", "One")));
+    userService.create(entityGenerator.createUser("User", "One"));
+    userService.create(entityGenerator.createUser("User", "One"));
     assertThatExceptionOfType(DataIntegrityViolationException.class)
       .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
   }
@@ -93,7 +92,7 @@ public class UserServiceTest {
   @Test
   public void testCreateFromIDTokenUniqueNameAndEmail() {
     // Note: This test has one strike due to Hibernate Cache.
-    userService.create(entityGenerator.createOneUser(Pair.of("User", "One")));
+    userService.create(entityGenerator.createUser("User", "One"));
     val idToken = IDToken.builder()
       .email("UserOne@domain.com")
       .given_name("User")
@@ -108,7 +107,7 @@ public class UserServiceTest {
   // Get
   @Test
   public void testGet() {
-    val user = userService.create(entityGenerator.createOneUser(Pair.of("User", "One")));
+    val user = userService.create(entityGenerator.createUser("User", "One"));
     val savedUser = userService.get(user.getId().toString());
     assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
@@ -120,14 +119,14 @@ public class UserServiceTest {
 
   @Test
   public void testGetByName() {
-    userService.create(entityGenerator.createOneUser(Pair.of("User", "One")));
+    userService.create(entityGenerator.createUser("User", "One"));
     val savedUser = userService.getByName("UserOne@domain.com");
     assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
 
   @Test
   public void testGetByNameAllCaps() {
-    userService.create(entityGenerator.createOneUser(Pair.of("User", "One")));
+    userService.create(entityGenerator.createUser("User", "One"));
     val savedUser = userService.getByName("USERONE@DOMAIN.COM");
     assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
@@ -176,7 +175,7 @@ public class UserServiceTest {
   // List Users
   @Test
   public void testListUsersNoFilters() {
-    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupTestUsers();
     val users = userService
       .listUsers(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(users.getTotalElements()).isEqualTo(3L);
@@ -191,7 +190,7 @@ public class UserServiceTest {
 
   @Test
   public void testListUsersFiltered() {
-    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupTestUsers();
     val userFilter = new SearchFilter("email", "FirstUser@domain.com");
     val users = userService
       .listUsers(singletonList(userFilter), new PageableResolver().getPageable());
@@ -200,7 +199,7 @@ public class UserServiceTest {
 
   @Test
   public void testListUsersFilteredEmptyResult() {
-    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupTestUsers();
     val userFilter = new SearchFilter("email", "FourthUser@domain.com");
     val users = userService
       .listUsers(singletonList(userFilter), new PageableResolver().getPageable());
@@ -210,7 +209,7 @@ public class UserServiceTest {
   // Find Users
   @Test
   public void testFindUsersNoFilters() {
-    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupTestUsers();
     val users = userService
       .findUsers("First", Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(users.getTotalElements()).isEqualTo(1L);
@@ -219,7 +218,7 @@ public class UserServiceTest {
 
   @Test
   public void testFindUsersFiltered() {
-    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupTestUsers();
     val userFilter = new SearchFilter("email", "FirstUser@domain.com");
     val users = userService
       .findUsers("Second", singletonList(userFilter), new PageableResolver().getPageable());
@@ -230,8 +229,8 @@ public class UserServiceTest {
   // Find Group Users
   @Test
   public void testFindGroupUsersNoQueryNoFilters() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
@@ -252,8 +251,8 @@ public class UserServiceTest {
 
   @Test
   public void testFindGroupUsersNoQueryNoFiltersNoUsersFound() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
 
     val groupId = groupService.getByName("Group One").getId().toString();
 
@@ -268,8 +267,8 @@ public class UserServiceTest {
 
   @Test
   public void testFindGroupUsersNoQueryFiltersEmptyGroupString() {
-    entityGenerator.setupSimpleGroups();
-    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupTestGroups();
+    entityGenerator.setupTestUsers();
     assertThatExceptionOfType(IllegalArgumentException.class)
       .isThrownBy(() -> userService.findGroupUsers("",
         Collections.emptyList(),
@@ -279,8 +278,8 @@ public class UserServiceTest {
 
   @Test
   public void testFindGroupUsersNoQueryFilters() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
@@ -303,8 +302,8 @@ public class UserServiceTest {
 
   @Test
   public void testFindGroupUsersQueryAndFilters() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
@@ -327,8 +326,8 @@ public class UserServiceTest {
 
   @Test
   public void testFindGroupUsersQueryNoFilters() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
@@ -353,8 +352,8 @@ public class UserServiceTest {
 
   @Test
   public void testFindAppUsersNoQueryNoFilters() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestApplications();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
@@ -375,8 +374,8 @@ public class UserServiceTest {
 
   @Test
   public void testFindAppUsersNoQueryNoFiltersNoUser() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestApplications();
 
     val appId = applicationService.getByClientId("111111").getId().toString();
 
@@ -391,8 +390,8 @@ public class UserServiceTest {
 
   @Test
   public void testFindAppUsersNoQueryNoFiltersEmptyUserString() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestApplications();
     assertThatExceptionOfType(IllegalArgumentException.class)
       .isThrownBy(() -> userService
         .findAppUsers(
@@ -405,8 +404,8 @@ public class UserServiceTest {
 
   @Test
   public void testFindAppUsersNoQueryFilters() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestApplications();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
@@ -429,8 +428,8 @@ public class UserServiceTest {
 
   @Test
   public void testFindAppUsersQueryAndFilters() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestApplications();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
@@ -453,8 +452,8 @@ public class UserServiceTest {
 
   @Test
   public void testFindAppUsersQueryNoFilters() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestApplications();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
@@ -477,7 +476,7 @@ public class UserServiceTest {
   // Update
   @Test
   public void testUpdate() {
-    val user = userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
+    val user = entityGenerator.setupUser("First User");
     user.setFirstName("NotFirst");
     val updated = userService.update(user);
     assertThat(updated.getFirstName()).isEqualTo("NotFirst");
@@ -485,7 +484,7 @@ public class UserServiceTest {
 
   @Test
   public void testUpdateRoleUser() {
-    val user = userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
+    val user = entityGenerator.setupUser("First User");
     user.setRole("user");
     val updated = userService.update(user);
     assertThat(updated.getRole()).isEqualTo("USER");
@@ -493,7 +492,7 @@ public class UserServiceTest {
 
   @Test
   public void testUpdateRoleAdmin() {
-    val user = userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
+    val user = entityGenerator.setupUser("First User");
     user.setRole("admin");
     val updated = userService.update(user);
     assertThat(updated.getRole()).isEqualTo("ADMIN");
@@ -501,15 +500,15 @@ public class UserServiceTest {
 
   @Test
   public void testUpdateNonexistentEntity() {
-    userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
-    val nonExistentEntity = entityGenerator.createOneUser(Pair.of("First", "User"));
+    userService.create(entityGenerator.createUser("First", "User"));
+    val nonExistentEntity = entityGenerator.createUser("First", "User");
     assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
       .isThrownBy(() -> userService.update(nonExistentEntity));
   }
 
   @Test
   public void testUpdateIdNotAllowed() {
-    val user = userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
+    val user = userService.create(entityGenerator.createUser("First", "User"));
     user.setId(UUID.fromString("0c1dc4b8-7fb8-11e8-adc0-fa7ae01bbebc"));
     // New id means new non-existent entity or one that exists and is being overwritten
     assertThatExceptionOfType(EntityNotFoundException.class)
@@ -519,7 +518,7 @@ public class UserServiceTest {
   @Test
   @Ignore
   public void testUpdateNameNotAllowed() {
-//    val user = userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
+//    val user = userService.create(entityGenerator.createUser(Pair.of("First", "User")));
 //    user.setName("NewName");
 //    val updated = userService.update(user);
     assertThat(1).isEqualTo(2);
@@ -529,7 +528,7 @@ public class UserServiceTest {
   @Test
   @Ignore
   public void testUpdateEmailNotAllowed() {
-//    val user = userService.create(entityGenerator.createOneUser(Pair.of("First", "User")));
+//    val user = userService.create(entityGenerator.createUser(Pair.of("First", "User")));
 //    user.setEmail("NewName@domain.com");
 //    val updated = userService.update(user);
     assertThat(1).isEqualTo(2);
@@ -539,7 +538,7 @@ public class UserServiceTest {
   @Test
   @Ignore
   public void testUpdateStatusNotInAllowedEnum() {
-//    entityGenerator.setupSimpleUsers();
+//    entityGenerator.setupTestUsers();
 //    val user = userService.getByName("FirstUser@domain.com");
 //    user.setStatus("Junk");
 //    val updated = userService.update(user);
@@ -550,7 +549,7 @@ public class UserServiceTest {
   @Test
   @Ignore
   public void testUpdateLanguageNotInAllowedEnum() {
-//    entityGenerator.setupSimpleUsers();
+//    entityGenerator.setupTestUsers();
 //    val user = userService.getByName("FirstUser@domain.com");
 //    user.setPreferredLanguage("Klingon");
 //    val updated = userService.update(user);
@@ -561,8 +560,8 @@ public class UserServiceTest {
   // Add User to Groups
   @Test
   public void addUserToGroups() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
     val groupId = group.getId().toString();
@@ -584,8 +583,8 @@ public class UserServiceTest {
 
   @Test
   public void addUserToGroupsNoUser() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
     val groupId = group.getId().toString();
@@ -596,8 +595,8 @@ public class UserServiceTest {
 
   @Test
   public void addUserToGroupsEmptyUserString() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
     val groupId = group.getId().toString();
@@ -608,8 +607,8 @@ public class UserServiceTest {
 
   @Test
   public void addUserToGroupsWithGroupsListOneEmptyString() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
@@ -620,8 +619,8 @@ public class UserServiceTest {
 
   @Test
   public void addUserToGroupsEmptyGroupsList() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
@@ -635,8 +634,8 @@ public class UserServiceTest {
   // Add User to Apps
   @Test
   public void addUserToApps() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestApplications();
 
     val app = applicationService.getByClientId("111111");
     val appId = app.getId().toString();
@@ -658,8 +657,8 @@ public class UserServiceTest {
 
   @Test
   public void addUserToAppsNoUser() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestApplications();
 
     val app = applicationService.getByClientId("111111");
     val appId = app.getId().toString();
@@ -670,8 +669,8 @@ public class UserServiceTest {
 
   @Test
   public void addUserToAppsWithAppsListOneEmptyString() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestApplications();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
@@ -682,8 +681,8 @@ public class UserServiceTest {
 
   @Test
   public void addUserToAppsEmptyAppsList() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestApplications();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
@@ -697,7 +696,7 @@ public class UserServiceTest {
   // Delete
   @Test
   public void testDelete() {
-    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupTestUsers();
 
     val user = userService.getByName("FirstUser@domain.com");
 
@@ -710,14 +709,14 @@ public class UserServiceTest {
 
   @Test
   public void testDeleteNonExisting() {
-    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupTestUsers();
     assertThatExceptionOfType(EmptyResultDataAccessException.class)
       .isThrownBy(() -> userService.delete(NON_EXISTENT_USER));
   }
 
   @Test
   public void testDeleteEmptyIdString() {
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestGroups();
     assertThatExceptionOfType(IllegalArgumentException.class)
       .isThrownBy(() -> userService.delete(""));
   }
@@ -725,8 +724,8 @@ public class UserServiceTest {
   // Delete User from Group
   @Test
   public void testDeleteUserFromGroup() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
     val groupId = group.getId().toString();
@@ -750,8 +749,8 @@ public class UserServiceTest {
 
   @Test
   public void testDeleteUserFromGroupNoUser() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
     val groupId = group.getId().toString();
@@ -769,8 +768,8 @@ public class UserServiceTest {
 
   @Test
   public void testDeleteUserFromGroupEmptyUserString() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
     val groupId = group.getId().toString();
@@ -788,8 +787,8 @@ public class UserServiceTest {
 
   @Test
   public void testDeleteUserFromGroupEmptyGroupsList() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
@@ -807,8 +806,8 @@ public class UserServiceTest {
   // Delete User from App
   @Test
   public void testDeleteUserFromApp() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestApplications();
 
     val app = applicationService.getByClientId("111111");
     val appId = app.getId().toString();
@@ -832,8 +831,8 @@ public class UserServiceTest {
 
   @Test
   public void testDeleteUserFromAppNoUser() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestApplications();
 
     val app = applicationService.getByClientId("111111");
     val appId = app.getId().toString();
@@ -851,8 +850,8 @@ public class UserServiceTest {
 
   @Test
   public void testDeleteUserFromAppEmptyUserString() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestApplications();
 
     val app = applicationService.getByClientId("111111");
     val appId = app.getId().toString();
@@ -870,8 +869,8 @@ public class UserServiceTest {
 
   @Test
   public void testDeleteUserFromAppEmptyAppsList() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestApplications();
 
     val app = applicationService.getByClientId("111111");
     val appId = app.getId().toString();
@@ -889,12 +888,9 @@ public class UserServiceTest {
 
   @Test
   public void testAddUserPermissions() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
-    val groups = groupService
-        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
-        .getContent();
-    entityGenerator.setupSimpleAclEntities(groups);
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
+    entityGenerator.setupTestPolicies();
 
     val user = userService.getByName("FirstUser@domain.com");
 
@@ -925,12 +921,9 @@ public class UserServiceTest {
 
   @Test
   public void testRemoveUserPermissions() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
-    val groups = groupService
-        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
-        .getContent();
-    entityGenerator.setupSimpleAclEntities(groups);
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
+    entityGenerator.setupTestPolicies();
 
     val user = userService.getByName("FirstUser@domain.com");
 
@@ -967,12 +960,9 @@ public class UserServiceTest {
 
   @Test
   public void testGetUserPermissions() {
-    entityGenerator.setupSimpleUsers();
-    entityGenerator.setupSimpleGroups();
-    val groups = groupService
-        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
-        .getContent();
-    entityGenerator.setupSimpleAclEntities(groups);
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestGroups();
+    entityGenerator.setupTestPolicies();
 
     val user = userService.getByName("FirstUser@domain.com");
 

@@ -86,7 +86,7 @@ public class PolicyController {
     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
     @ApiIgnore @Filters List<SearchFilter> filters,
     Pageable pageable) {
-    return new PageDTO<>(policyService.listAclEntities(filters, pageable));
+    return new PageDTO<>(policyService.listPolicies(filters, pageable));
   }
 
   @AdminScoped

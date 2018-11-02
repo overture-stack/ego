@@ -22,7 +22,7 @@ import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.overture.ego.token.TokenService;
+import org.overture.ego.model.dto.Scope;
 import org.overture.ego.utils.EntityGenerator;
 import org.overture.ego.utils.TestData;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,11 +33,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
-import static org.overture.ego.utils.MapUtils.listOf;
-import static org.overture.ego.utils.MapUtils.mapToSet;
+import static org.overture.ego.utils.CollectionUtils.listOf;
+import static org.overture.ego.utils.CollectionUtils.mapToSet;
 
 @Slf4j
 @SpringBootTest

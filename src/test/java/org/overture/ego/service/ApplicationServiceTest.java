@@ -50,17 +50,17 @@ public class ApplicationServiceTest {
   // Create
   @Test
   public void testCreate() {
-    val application = applicationService.create(entityGenerator.createOneApplication("123456"));
+    val application = applicationService.create(entityGenerator.createApplication("123456"));
     assertThat(application.getClientId()).isEqualTo("123456");
   }
 
   @Test
   @Ignore
   public void testCreateUniqueClientId() {
-//    applicationService.create(entityGenerator.createOneApplication("111111"));
-//    applicationService.create(entityGenerator.createOneApplication("222222"));
+//    applicationService.create(entityGenerator.createApplication("111111"));
+//    applicationService.create(entityGenerator.createApplication("222222"));
 //    assertThatExceptionOfType(DataIntegrityViolationException.class)
-//        .isThrownBy(() -> applicationService.create(entityGenerator.createOneApplication("111111")));
+//        .isThrownBy(() -> applicationService.create(entityGenerator.createApplication("111111")));
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
@@ -68,7 +68,7 @@ public class ApplicationServiceTest {
   // Get
   @Test
   public void testGet() {
-    val application = applicationService.create(entityGenerator.createOneApplication("123456"));
+    val application = applicationService.create(entityGenerator.createApplication("123456"));
     val savedApplication = applicationService.get(application.getId().toString());
     assertThat(savedApplication.getClientId()).isEqualTo("123456");
   }
@@ -80,14 +80,14 @@ public class ApplicationServiceTest {
 
   @Test
   public void testGetByName() {
-    applicationService.create(entityGenerator.createOneApplication("123456"));
+    applicationService.create(entityGenerator.createApplication("123456"));
     val savedApplication = applicationService.getByName("Application 123456");
     assertThat(savedApplication.getClientId()).isEqualTo("123456");
   }
 
   @Test
   public void testGetByNameAllCaps() {
-    applicationService.create(entityGenerator.createOneApplication("123456"));
+    applicationService.create(entityGenerator.createApplication("123456"));
     val savedApplication = applicationService.getByName("APPLICATION 123456");
     assertThat(savedApplication.getClientId()).isEqualTo("123456");
   }
@@ -101,7 +101,7 @@ public class ApplicationServiceTest {
 
   @Test
   public void testGetByClientId() {
-    applicationService.create(entityGenerator.createOneApplication("123456"));
+    applicationService.create(entityGenerator.createApplication("123456"));
     val savedApplication = applicationService.getByClientId("123456");
     assertThat(savedApplication.getClientId()).isEqualTo("123456");
   }
@@ -117,7 +117,7 @@ public class ApplicationServiceTest {
   // List
   @Test
   public void testListAppsNoFilters() {
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestApplications();
     val applications = applicationService.listApps(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(applications.getTotalElements()).isEqualTo(5L);
   }
@@ -130,7 +130,7 @@ public class ApplicationServiceTest {
 
   @Test
   public void testListAppsFiltered() {
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestApplications();
     val clientIdFilter = new SearchFilter("clientId", "333333");
     val applications = applicationService.listApps(singletonList(clientIdFilter), new PageableResolver().getPageable());
     assertThat(applications.getTotalElements()).isEqualTo(1L);
@@ -139,7 +139,7 @@ public class ApplicationServiceTest {
 
   @Test
   public void testListAppsFilteredEmptyResult() {
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestApplications();
     val clientIdFilter = new SearchFilter("clientId", "666666");
     val applications = applicationService.listApps(singletonList(clientIdFilter), new PageableResolver().getPageable());
     assertThat(applications.getTotalElements()).isEqualTo(0L);
@@ -148,7 +148,7 @@ public class ApplicationServiceTest {
   // Find
   @Test
   public void testFindAppsNoFilters() {
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestApplications();
     val applications = applicationService.findApps("222222", Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(applications.getTotalElements()).isEqualTo(1L);
     assertThat(applications.getContent().get(0).getClientId()).isEqualTo("222222");
@@ -156,7 +156,7 @@ public class ApplicationServiceTest {
 
   @Test
   public void testFindAppsFiltered() {
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestApplications();
     val clientIdFilter = new SearchFilter("clientId", "333333");
     val applications = applicationService.findApps("222222", singletonList(clientIdFilter), new PageableResolver().getPageable());
     // Expect empty list
@@ -165,8 +165,8 @@ public class ApplicationServiceTest {
 
   @Test
   public void testFindUsersAppsNoQueryNoFilters() {
-    entityGenerator.setupSimpleApplications();
-    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupTestApplications();
+    entityGenerator.setupTestUsers();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = userService.getByName("SecondUser@domain.com");
@@ -184,8 +184,8 @@ public class ApplicationServiceTest {
 
   @Test
   public void testFindUsersAppsNoQueryNoFiltersNoUser() {
-    entityGenerator.setupSimpleApplications();
-    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupTestApplications();
+    entityGenerator.setupTestUsers();
 
     val user = userService.getByName("FirstUser@domain.com");
     val applications = applicationService.findUserApps(user.getId().toString(), Collections.emptyList(), new PageableResolver().getPageable());
@@ -195,15 +195,15 @@ public class ApplicationServiceTest {
 
   @Test
   public void testFindUsersAppsNoQueryNoFiltersEmptyUserString() {
-    entityGenerator.setupSimpleApplications();
-    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupTestApplications();
+    entityGenerator.setupTestUsers();
     assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> applicationService.findUserApps("", Collections.emptyList(), new PageableResolver().getPageable()));
   }
 
   @Test
   public void testFindUsersAppsNoQueryFilters() {
-    entityGenerator.setupSimpleApplications();
-    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupTestApplications();
+    entityGenerator.setupTestUsers();
 
     val user = userService.getByName("FirstUser@domain.com");
     val applicationOne = applicationService.getByClientId("111111");
@@ -222,8 +222,8 @@ public class ApplicationServiceTest {
 
   @Test
   public void testFindUsersAppsQueryAndFilters() {
-    entityGenerator.setupSimpleApplications();
-    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupTestApplications();
+    entityGenerator.setupTestUsers();
 
     val user = userService.getByName("FirstUser@domain.com");
     val applicationOne = applicationService.getByClientId("333333");
@@ -241,8 +241,8 @@ public class ApplicationServiceTest {
 
   @Test
   public void testFindUsersAppsQueryNoFilters() {
-    entityGenerator.setupSimpleApplications();
-    entityGenerator.setupSimpleUsers();
+    entityGenerator.setupTestApplications();
+    entityGenerator.setupTestUsers();
 
     val user = userService.getByName("FirstUser@domain.com");
     val applicationOne = applicationService.getByClientId("222222");
@@ -259,8 +259,8 @@ public class ApplicationServiceTest {
 
   @Test
   public void testFindGroupsAppsNoQueryNoFilters() {
-    entityGenerator.setupSimpleApplications();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestApplications();
+    entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
     val groupTwo = groupService.getByName("Group Two");
@@ -278,8 +278,8 @@ public class ApplicationServiceTest {
 
   @Test
   public void testFindGroupsAppsNoQueryNoFiltersNoGroup() {
-    entityGenerator.setupSimpleApplications();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestApplications();
+    entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
     val applications = applicationService.findGroupApplications(group.getId().toString(), Collections.emptyList(), new PageableResolver().getPageable());
@@ -289,15 +289,15 @@ public class ApplicationServiceTest {
 
   @Test
   public void testFindGroupsAppsNoQueryNoFiltersEmptyGroupString() {
-    entityGenerator.setupSimpleApplications();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestApplications();
+    entityGenerator.setupTestGroups();
     assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> applicationService.findGroupApplications("", Collections.emptyList(), new PageableResolver().getPageable()));
   }
 
   @Test
   public void testFindGroupsAppsNoQueryFilters() {
-    entityGenerator.setupSimpleApplications();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestApplications();
+    entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
     val applicationOne = applicationService.getByClientId("222222");
@@ -316,8 +316,8 @@ public class ApplicationServiceTest {
 
   @Test
   public void testFindGroupsAppsQueryAndFilters() {
-    entityGenerator.setupSimpleApplications();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestApplications();
+    entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group Three");
     val applicationOne = applicationService.getByClientId("333333");
@@ -335,8 +335,8 @@ public class ApplicationServiceTest {
 
   @Test
   public void testFindGroupsAppsQueryNoFilters() {
-    entityGenerator.setupSimpleApplications();
-    entityGenerator.setupSimpleGroups();
+    entityGenerator.setupTestApplications();
+    entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
     val applicationOne = applicationService.getByClientId("444444");
@@ -354,7 +354,7 @@ public class ApplicationServiceTest {
   // Update
   @Test
   public void testUpdate() {
-    val application = applicationService.create(entityGenerator.createOneApplication("123456"));
+    val application = applicationService.create(entityGenerator.createApplication("123456"));
     application.setName("New Name");
     val updated = applicationService.update(application);
     assertThat(updated.getName()).isEqualTo("New Name");
@@ -362,14 +362,14 @@ public class ApplicationServiceTest {
 
   @Test
   public void testUpdateNonexistentEntity() {
-    applicationService.create(entityGenerator.createOneApplication("123456"));
-    val nonExistentEntity = entityGenerator.createOneApplication("654321");
+    applicationService.create(entityGenerator.createApplication("123456"));
+    val nonExistentEntity = entityGenerator.createApplication("654321");
     assertThatExceptionOfType(InvalidDataAccessApiUsageException.class).isThrownBy(() -> applicationService.update(nonExistentEntity));
   }
 
   @Test
   public void testUpdateIdNotAllowed() {
-    val application = applicationService.create(entityGenerator.createOneApplication("123456"));
+    val application = applicationService.create(entityGenerator.createApplication("123456"));
     application.setId(new UUID(12312912931L,12312912931L));
     // New id means new non-existent policy or one that exists and is being overwritten
     assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> applicationService.update(application));
@@ -378,7 +378,7 @@ public class ApplicationServiceTest {
   @Test
   @Ignore
   public void testUpdateClientIdNotAllowed() {
-//    entityGenerator.setupSimpleApplications();
+//    entityGenerator.setupTestApplications();
 //    val application = applicationService.getByClientId("111111");
 //    application.setClientId("222222");
 //    val updated = applicationService.update(application);
@@ -389,7 +389,7 @@ public class ApplicationServiceTest {
   @Test
   @Ignore
   public void testUpdateStatusNotInAllowedEnum() {
-//    entityGenerator.setupSimpleApplications();
+//    entityGenerator.setupTestApplications();
 //    val application = applicationService.getByClientId("111111");
 //    application.setStatus("Junk");
 //    val updated = applicationService.update(application);
@@ -400,7 +400,7 @@ public class ApplicationServiceTest {
   // Delete
   @Test
   public void testDelete() {
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestApplications();
 
     val application = applicationService.getByClientId("222222");
     applicationService.delete(application.getId().toString());
@@ -412,14 +412,14 @@ public class ApplicationServiceTest {
 
   @Test
   public void testDeleteNonExisting() {
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestApplications();
     assertThatExceptionOfType(EmptyResultDataAccessException.class)
         .isThrownBy(() -> applicationService.delete(UUID.randomUUID().toString()));
   }
 
   @Test
   public void testDeleteEmptyIdString() {
-    entityGenerator.setupSimpleApplications();
+    entityGenerator.setupTestApplications();
     assertThatExceptionOfType(IllegalArgumentException.class)
         .isThrownBy(() -> applicationService.delete(""));
   }
@@ -427,7 +427,7 @@ public class ApplicationServiceTest {
   // Special (LoadClient)
   @Test
   public void testLoadClientByClientId() {
-    val application = applicationService.create(entityGenerator.createOneApplication("123456"));
+    val application = applicationService.create(entityGenerator.createApplication("123456"));
     application.setStatus("Approved");
     applicationService.update(application);
 
@@ -454,7 +454,7 @@ public class ApplicationServiceTest {
 
   @Test
   public void testLoadClientByClientIdNotApproved() {
-    val application = applicationService.create(entityGenerator.createOneApplication("123456"));
+    val application = applicationService.create(entityGenerator.createApplication("123456"));
     application.setStatus("Pending");
     applicationService.update(application);
     assertThatExceptionOfType(ClientRegistrationException.class).isThrownBy(() -> applicationService.loadClientByClientId("123456")).withMessage("Client Access is not approved.");

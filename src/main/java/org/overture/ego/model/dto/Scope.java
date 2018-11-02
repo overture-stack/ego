@@ -1,8 +1,9 @@
-package org.overture.ego.model.entity;
+package org.overture.ego.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.val;
+import org.overture.ego.model.entity.Policy;
 import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.params.ScopeName;
 

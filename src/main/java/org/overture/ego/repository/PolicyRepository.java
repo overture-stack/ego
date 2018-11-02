@@ -6,7 +6,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.UUID;
 
-public interface AclEntityRepository
+public interface PolicyRepository
   extends PagingAndSortingRepository<Policy, UUID>, JpaSpecificationExecutor {
 
   Policy findOneByNameIgnoreCase(String name);
