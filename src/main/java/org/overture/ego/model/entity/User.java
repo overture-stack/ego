@@ -251,7 +251,7 @@ public class User implements PolicyOwner {
     this.role = other.role;
     this.status = other.status;
     this.preferredLanguage = other.preferredLanguage;
-
+    this.lastLogin = other.lastLogin;
     // Don't merge the ID, CreatedAt, or LastLogin date - those are procedural.
 
     // Don't merge wholeGroups, wholeApplications or userPermissions if not present in other

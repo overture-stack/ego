@@ -23,6 +23,7 @@ import lombok.val;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.overture.ego.model.entity.User;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
@@ -32,12 +33,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
-@Ignore
 public class TokenServiceTest {
   @Autowired
   private ApplicationService applicationService;
@@ -55,6 +58,7 @@ public class TokenServiceTest {
   private TokenService tokenService;
 
   @Test
+  @Ignore
   public void generateUserToken() {
     val user = userService.create(entityGenerator.createOneUser(Pair.of("foo", "bar")));
     val group = groupService.create(entityGenerator.createOneGroup("testGroup"));
@@ -70,6 +74,22 @@ public class TokenServiceTest {
 
 
     val token = tokenService.generateUserToken(userService.get(user.getId().toString()));
+  }
+
+  @Test
+  public void testLastloginUpdate(){
+    IDToken idToken = new IDToken();
+    idToken.setFamily_name("fName");
+    idToken.setGiven_name("gName");
+    idToken.setEmail("fNamegName@domain.com");
+    User user = userService.create(entityGenerator.createOneUser(Pair.of("fName", "gName")));
+
+    assertNull(" Verify before generatedUserToken, last login should be null. ", user.getLastLogin());
+
+    tokenService.generateUserToken(idToken);
+    user = userService.getByName(idToken.getEmail());
+
+    assertNotNull("Verify after generatedUserToken, last login is not null.", user.getLastLogin());
   }
 
 }

@@ -80,9 +80,6 @@ public class TokenService {
       }
     }
 
-    // Update user.lastLogin in the DB
-    // Use events as these are async:
-    //    the DB call won't block returning the Token
     user.setLastLogin(new Date());
     userService.update(user);
 
