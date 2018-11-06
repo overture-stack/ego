@@ -84,7 +84,7 @@ public class TokenService {
     // Use events as these are async:
     //    the DB call won't block returning the Token
     user.setLastLogin(new Date());
-    userEvents.update(user);
+    userService.update(user);
 
     return generateUserToken(user);
   }
