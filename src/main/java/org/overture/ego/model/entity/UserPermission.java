@@ -9,20 +9,20 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.overture.ego.model.enums.Fields;
-import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.enums.AccessLevel;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "acluserpermission")
+@Table(name = "userpermission")
 @Data
-@JsonPropertyOrder({ "id", "policy", "sid", "mask" })
-@JsonInclude(JsonInclude.Include.ALWAYS)
+@JsonPropertyOrder({ "id", "policy", "owner", "access_level" })
+@JsonInclude()
 @EqualsAndHashCode(of = { "id" })
 @TypeDef(
-  name = "ego_acl_enum",
+  name = "ego_access_level_enum",
   typeClass = PostgreSQLEnumType.class
 )
 @Builder
@@ -30,28 +30,27 @@ import java.util.UUID;
 @NoArgsConstructor
 @JsonView(Views.REST.class)
 public class UserPermission extends Permission {
-
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(
-    name = "acl_user_permission_uuid",
+    name = "user_permission_uuid",
     strategy = "org.hibernate.id.UUIDGenerator")
-  @GeneratedValue(generator = "acl_user_permission_uuid")
+  @GeneratedValue(generator = "user_permission_uuid")
   UUID id;
 
   @NonNull
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(nullable = false, name = Fields.ENTITY)
-  Policy entity;
+  @JoinColumn(nullable = false, name = Fields.POLICYID_JOIN)
+  Policy policy;
 
   @NonNull
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(nullable = false, name = Fields.SID)
-  User sid;
+  @JoinColumn(nullable = false, name = Fields.USERID_JOIN)
+  User owner;
 
   @NonNull
-  @Column(nullable = false, name = Fields.MASK)
+  @Column(nullable = false, name = Fields.ACCESS_LEVEL)
   @Enumerated(EnumType.STRING)
-  @Type(type = "ego_acl_enum")
-  PolicyMask mask;
+  @Type(type = "ego_access_level_enum")
+  AccessLevel accessLevel;
 }

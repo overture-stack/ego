@@ -26,7 +26,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.overture.ego.model.enums.Fields;
-import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.enums.AccessLevel;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
@@ -37,23 +37,24 @@ import java.util.*;
 @Table(name = "egogroup")
 @Entity
 @JsonPropertyOrder({ "id", "name", "description", "status", "wholeApplications", "groupPermissions" })
-@JsonInclude(JsonInclude.Include.ALWAYS)
+@JsonInclude()
 @EqualsAndHashCode(of = { "id" })
 @NoArgsConstructor
 @RequiredArgsConstructor
 @JsonView(Views.REST.class)
 public class Group implements PolicyOwner {
-
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name = Fields.OWNER)
   @JsonIgnore
-  protected Set<Policy> groupOwnedAclEntities;
+  protected Set<Policy> policies;
+
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinColumn(name = Fields.SID)
+  @JoinColumn(name = Fields.GROUPID_JOIN)
   @JsonIgnore
   protected List<GroupPermission> groupPermissions;
+
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(
@@ -93,12 +94,12 @@ public class Group implements PolicyOwner {
     this.wholeUsers.add(u);
   }
 
-  public void addNewPermission(@NonNull Policy policy, @NonNull PolicyMask mask) {
+  public void addNewPermission(@NonNull Policy policy, @NonNull AccessLevel mask) {
     initPermissions();
     val permission = GroupPermission.builder()
-      .entity(policy)
-      .mask(mask)
-      .sid(this)
+      .policy(policy)
+      .accessLevel(mask)
+      .owner(this)
       .build();
     this.groupPermissions.add(permission);
   }
@@ -121,24 +122,24 @@ public class Group implements PolicyOwner {
 
   protected void initPermissions() {
     if (this.groupPermissions == null) {
-      this.groupPermissions = new ArrayList<GroupPermission>();
+      this.groupPermissions = new ArrayList<>();
     }
   }
 
   public void update(Group other) {
-    this.name = other.name;
-    this.description = other.description;
-    this.status = other.status;
+    this.name = other.getName();
+    this.description = other.getDescription();
+    this.status = other.getStatus();
 
     // Do not update ID, that is programmatic.
 
     // Update Users and Applications only if provided (not null)
     if (other.wholeApplications != null) {
-      this.wholeApplications = other.wholeApplications;
+      this.wholeApplications = other.getWholeApplications();
     }
 
     if (other.wholeUsers != null) {
-      this.wholeUsers = other.wholeUsers;
+      this.wholeUsers = other.getWholeUsers();
     }
   }
 

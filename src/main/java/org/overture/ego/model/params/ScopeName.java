@@ -1,9 +1,8 @@
 package org.overture.ego.model.params;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.val;
-import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.enums.AccessLevel;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import static java.lang.String.format;
 @Data
@@ -20,9 +19,9 @@ public class ScopeName {
     this.scopeName = name;
   }
 
-  public PolicyMask getMask() {
+  public AccessLevel getMask() {
     val results = scopeName.split(":");
-    return PolicyMask.fromValue(results[1]);
+    return AccessLevel.fromValue(results[1]);
   }
 
   public String getName() {

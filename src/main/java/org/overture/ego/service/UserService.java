@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.model.entity.UserPermission;
-import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.enums.AccessLevel;
 import org.overture.ego.model.enums.UserRole;
 import org.overture.ego.model.enums.UserStatus;
 import org.overture.ego.model.params.PolicyIdStringWithMaskName;
@@ -144,7 +144,7 @@ public class UserService extends BaseService<User, UUID> {
   public User addUserPermissions(@NonNull String userId, @NonNull List<PolicyIdStringWithMaskName> permissions) {
     val user = getById(userRepository, fromString(userId));
     permissions.forEach(permission -> {
-      user.addNewPermission(policyService.get(permission.getPolicyId()), PolicyMask.fromValue(permission.getMask()));
+      user.addNewPermission(policyService.get(permission.getPolicyId()), AccessLevel.fromValue(permission.getMask()));
     });
     return userRepository.save(user);
   }

@@ -287,7 +287,7 @@ public class TokenService {
         throw new InvalidTokenException("Token not authorized for this client");
       }
     }
-    /// We want to limit the scopes listed in the token to those scopes that the sid
+    /// We want to limit the scopes listed in the token to those scopes that the user
     // is allowed to access at the time the token is checked -- we don't assume that they
     // have not changed since the token was issued.
     val owner = t.getOwner();

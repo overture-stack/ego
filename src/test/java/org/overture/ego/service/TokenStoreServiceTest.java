@@ -7,7 +7,7 @@ import org.junit.runner.RunWith;
 import org.overture.ego.model.dto.Scope;
 import org.overture.ego.model.entity.Application;
 import org.overture.ego.model.entity.ScopedAccessToken;
-import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.enums.AccessLevel;
 import org.overture.ego.utils.EntityGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,9 +41,9 @@ public class TokenStoreServiceTest {
 
     val scopes = new HashSet<Scope>();
     val p1 = entityGenerator.setupPolicy("policy1,Admin One");
-    scopes.add(new Scope(p1, PolicyMask.READ));
+    scopes.add(new Scope(p1, AccessLevel.READ));
     val p2 = entityGenerator.setupPolicy("policy2,Admin One");
-    scopes.add(new Scope(p2, PolicyMask.WRITE));
+    scopes.add(new Scope(p2, AccessLevel.WRITE));
 
     val applications = new HashSet<Application>();
     val a1 = entityGenerator.setupApplication("id123", "Shhh! Don't tell!");

@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.util.Pair;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -690,7 +689,7 @@ public class GroupsServiceTest {
 
     val groupPermissionsToRemove = firstGroup.getGroupPermissions()
         .stream()
-        .filter(p -> !p.getEntity().getName().equals("Study001"))
+        .filter(p -> !p.getPolicy().getName().equals("Study001"))
         .map(p -> p.getId().toString())
         .collect(Collectors.toList());
 

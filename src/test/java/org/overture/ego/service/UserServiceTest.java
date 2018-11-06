@@ -510,7 +510,7 @@ public class UserServiceTest {
   public void testUpdateIdNotAllowed() {
     val user = userService.create(entityGenerator.createUser("First", "User"));
     user.setId(UUID.fromString("0c1dc4b8-7fb8-11e8-adc0-fa7ae01bbebc"));
-    // New id means new non-existent entity or one that exists and is being overwritten
+    // New id means new non-existent policy or one that exists and is being overwritten
     assertThatExceptionOfType(EntityNotFoundException.class)
       .isThrownBy(() -> userService.update(user));
   }
@@ -946,7 +946,7 @@ public class UserServiceTest {
 
     val userPermissionsToRemove = user.getUserPermissions()
         .stream()
-        .filter(p -> !p.getEntity().getName().equals("Study001"))
+        .filter(p -> !p.getPolicy().getName().equals("Study001"))
         .map(p -> p.getId().toString())
         .collect(Collectors.toList());
 

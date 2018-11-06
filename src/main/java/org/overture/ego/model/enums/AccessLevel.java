@@ -23,7 +23,7 @@ import lombok.val;
 import java.util.Arrays;
 
 @RequiredArgsConstructor
-public enum PolicyMask {
+public enum AccessLevel {
   READ("READ"),
   WRITE("WRITE"),
   DENY("DENY");
@@ -31,7 +31,7 @@ public enum PolicyMask {
   @NonNull
   private final String value;
 
-  public static PolicyMask fromValue(String value) {
+  public static AccessLevel fromValue(String value) {
     for (val policyMask : values()) {
       if (policyMask.value.equalsIgnoreCase(value)) {
         return policyMask;
@@ -47,9 +47,9 @@ public enum PolicyMask {
    * @param want The PolicyMask we want.
    * @return true if we have access, false if not.
    */
-  public static boolean allows(PolicyMask have, PolicyMask want) {
+  public static boolean allows(AccessLevel have, AccessLevel want) {
     // 1) If we're to be denied everything, or the permission is deny everyone, we're denied.
-    if (have == PolicyMask.DENY || want == PolicyMask.DENY) {
+    if (have == AccessLevel.DENY || want == AccessLevel.DENY) {
       return false;
     }
     // 2) Otherwise, if we have exactly what we need, we're allowed access.
@@ -57,7 +57,7 @@ public enum PolicyMask {
       return true;
     }
     // 3) We're allowed access to READ if we have WRITE
-    if (have == PolicyMask.WRITE && want== PolicyMask.READ) {
+    if (have == AccessLevel.WRITE && want== AccessLevel.READ) {
       return true;
     }
     // 4) Otherwise, we're denied access.

@@ -2,24 +2,24 @@ package org.overture.ego.model.entity;
 
 import lombok.Data;
 import org.overture.ego.model.dto.Scope;
-import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.enums.AccessLevel;
 
 import java.util.UUID;
 @Data
 public abstract class Permission {
   UUID id;
-  Policy entity;
-  PolicyOwner sid;
-  PolicyMask mask;
+  Policy policy;
+  PolicyOwner owner;
+  AccessLevel accessLevel;
 
   public void update(Permission other) {
-    this.entity = other.entity;
-    this.sid = other.sid;
-    this.mask = other.mask;
+    this.policy = other.getPolicy();
+    this.owner = other.getOwner();
+    this.accessLevel = other.getAccessLevel();
     // Don't merge the ID - that is procedural.
   }
 
   public Scope toScope() {
-    return new Scope(getEntity(), getMask());
+    return new Scope(getPolicy(), getAccessLevel());
   }
 }

@@ -29,9 +29,9 @@ public class ScopedAccessToken {
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(
-    name = "token_entity_uuid",
+    name = "token_uuid",
     strategy = "org.hibernate.id.UUIDGenerator")
-  @GeneratedValue(generator = "token_entity_uuid")
+  @GeneratedValue(generator = "token_uuid")
   UUID id;
 
   @Column(nullable = false, name = Fields.TOKEN)

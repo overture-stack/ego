@@ -20,7 +20,7 @@ import static org.overture.ego.utils.CollectionUtils.mapToList;
 /***
  * For this class, we follow the following naming conventions:
  * createEntity: returns a new object of type Entity.
- * setupEntity: Create an entity, saves it using Hibernate, & returns it.
+ * setupEntity: Create an policy, saves it using Hibernate, & returns it.
  * setupEntities: Sets up multiple entities at once
  * setupTestEntities: Sets up specific entities used in our unit tests
  */

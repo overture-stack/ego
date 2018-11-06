@@ -28,7 +28,7 @@ import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.overture.ego.model.dto.Scope;
 import org.overture.ego.model.enums.Fields;
-import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.enums.AccessLevel;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
@@ -71,7 +71,7 @@ public class User implements PolicyOwner {
   protected Set<Application> wholeApplications;
   @OneToMany(cascade = CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinColumn(name = Fields.SID)
+  @JoinColumn(name = Fields.USERID_JOIN)
   @JsonIgnore
   protected List<UserPermission> userPermissions;
   @Id
@@ -137,7 +137,7 @@ public class User implements PolicyOwner {
     // Combine individual user permissions and the user's
     // groups (if they have any) permissions
     val combinedPermissions = Stream.concat(userPermissions, userGroupsPermissions)
-      //.collect(Collectors.groupingBy(p -> p.getEntity()));
+      //.collect(Collectors.groupingBy(p -> p.getPolicy()));
       .collect(Collectors.groupingBy(this::getP));
     // If we have no permissions at all return an empty list
     if (combinedPermissions.values().size() == 0) {
@@ -150,14 +150,14 @@ public class User implements PolicyOwner {
     List<Permission> finalPermissionsList = new ArrayList<>();
 
     combinedPermissions.forEach((entity, permissions) -> {
-      permissions.sort(Comparator.comparing(Permission::getMask).reversed());
+      permissions.sort(Comparator.comparing(Permission::getAccessLevel).reversed());
       finalPermissionsList.add(permissions.get(0));
     });
     return finalPermissionsList;
   }
 
-  public Policy getP(Permission permission) {
-    val p = permission.getEntity();
+  private Policy getP(Permission permission) {
+    val p = permission.getPolicy();
     return p;
   }
 
@@ -216,12 +216,12 @@ public class User implements PolicyOwner {
     this.wholeGroups.add(g);
   }
 
-  public void addNewPermission(@NonNull Policy policy, @NonNull PolicyMask mask) {
+  public void addNewPermission(@NonNull Policy policy, @NonNull AccessLevel accessLevel) {
     initPermissions();
     val permission = UserPermission.builder()
-      .entity(policy)
-      .mask(mask)
-      .sid(this)
+      .policy(policy)
+      .accessLevel(accessLevel)
+      .owner(this)
       .build();
     this.userPermissions.add(permission);
   }
@@ -246,7 +246,7 @@ public class User implements PolicyOwner {
 
   protected void initApplications() {
     if (this.wholeApplications == null) {
-      this.wholeApplications = new HashSet<Application>();
+      this.wholeApplications = new HashSet<>();
     }
   }
 
@@ -258,17 +258,17 @@ public class User implements PolicyOwner {
 
   protected void initPermissions() {
     if (this.userPermissions == null) {
-      this.userPermissions = new ArrayList<UserPermission>();
+      this.userPermissions = new ArrayList<>();
     }
   }
 
   public void update(User other) {
-    this.name = other.name;
-    this.firstName = other.firstName;
-    this.lastName = other.lastName;
-    this.role = other.role;
-    this.status = other.status;
-    this.preferredLanguage = other.preferredLanguage;
+    this.name = other.getName();
+    this.firstName = other.getFirstName();
+    this.lastName = other.getLastName();
+    this.role = other.getRole();
+    this.status = other.getStatus();
+    this.preferredLanguage = other.getPreferredLanguage();
 
     // Don't merge the ID, CreatedAt, or LastLogin date - those are procedural.
 
@@ -278,15 +278,15 @@ public class User implements PolicyOwner {
     // To clear wholeApplications, wholeGroups or userPermissions, use the dedicated services
     // for deleting associations or pass in an empty Set.
     if (other.wholeApplications != null) {
-      this.wholeApplications = other.wholeApplications;
+      this.wholeApplications = other.getWholeApplications();
     }
 
     if (other.wholeGroups != null) {
-      this.wholeGroups = other.wholeGroups;
+      this.wholeGroups = other.getWholeGroups();
     }
 
     if (other.userPermissions != null) {
-      this.userPermissions = other.userPermissions;
+      this.userPermissions = other.getUserPermissions();
     }
   }
 

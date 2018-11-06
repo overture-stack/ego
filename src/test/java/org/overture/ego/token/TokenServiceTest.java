@@ -24,7 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.model.dto.Scope;
-import org.overture.ego.model.enums.PolicyMask;
+import org.overture.ego.model.enums.AccessLevel;
 import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
@@ -340,7 +340,7 @@ public class TokenServiceTest {
     assertNotNull(o.getPolicy());
     assertNotNull(o.getPolicy().getName());
     assertTrue(o.getPolicy().getName().equals("collab.upload"));
-    assertTrue(o.getPolicyMask() == PolicyMask.READ);
+    assertTrue(o.getPolicyMask() == AccessLevel.READ);
   }
 
 }

@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "aclentity")
+@Table(name = "policy")
 @Data
 @JsonPropertyOrder({ "id", "owner", "name" })
 @JsonInclude()
@@ -28,20 +28,20 @@ import java.util.UUID;
 public class Policy {
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinColumn(name = Fields.ENTITY)
+  @JoinColumn(name = Fields.POLICYID_JOIN)
   @JsonIgnore
   protected Set<GroupPermission> groupPermissions;
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinColumn(name = Fields.ENTITY)
+  @JoinColumn(name = Fields.POLICYID_JOIN)
   @JsonIgnore
   protected Set<UserPermission> userPermissions;
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(
-    name = "acl_entity_uuid",
+    name = "policy_uuid",
     strategy = "org.hibernate.id.UUIDGenerator")
-  @GeneratedValue(generator = "acl_entity_uuid")
+  @GeneratedValue(generator = "policy_uuid")
   UUID id;
   @NonNull
   @Column(nullable = false, name = Fields.OWNER)

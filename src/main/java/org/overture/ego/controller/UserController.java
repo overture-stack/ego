@@ -73,7 +73,7 @@ public class UserController {
       value = "Sorting order: ASC|DESC. Default order: DESC"),
     @ApiImplicitParam(name = "status", dataType = "string", paramType = "query",
       value = "Filter by status. " +
-        "You could also specify filters on any field of the entity being queried as " +
+        "You could also specify filters on any field of the policy being queried as " +
         "query parameters in this format: name=something")
 
   })
@@ -229,7 +229,7 @@ public class UserController {
       value = "Sorting order: ASC|DESC. Default order: DESC"),
     @ApiImplicitParam(name = "status", dataType = "string", paramType = "query",
       value = "Filter by status. " +
-        "You could also specify filters on any field of the entity being queried as " +
+        "You could also specify filters on any field of the policy being queried as " +
         "query parameters in this format: name=something")
 
   })
@@ -300,7 +300,7 @@ public class UserController {
       value = "Sorting order: ASC|DESC. Default order: DESC"),
     @ApiImplicitParam(name = "status", dataType = "string", paramType = "query",
       value = "Filter by status. " +
-        "You could also specify filters on any field of the entity being queried as " +
+        "You could also specify filters on any field of the policy being queried as " +
         "query parameters in this format: name=something")
 
   })
