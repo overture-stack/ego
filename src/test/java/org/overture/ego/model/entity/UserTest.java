@@ -5,7 +5,7 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.controller.resolver.PageableResolver;
-import org.overture.ego.model.params.PolicyIdStringWithMaskName;
+import org.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import org.overture.ego.service.PolicyService;
 import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
@@ -60,9 +60,9 @@ public class UserTest {
     val study001id = policyService.getByName("Study001").getId().toString();
 
     val permissions = Arrays.asList(
-        new PolicyIdStringWithMaskName(study001id, "WRITE"),
-        new PolicyIdStringWithMaskName(study001id, "READ"),
-        new PolicyIdStringWithMaskName(study001id, "DENY")
+        new PolicyIdStringWithAccessLevel(study001id, "WRITE"),
+        new PolicyIdStringWithAccessLevel(study001id, "READ"),
+        new PolicyIdStringWithAccessLevel(study001id, "DENY")
     );
 
     userService.addUserPermissions(user.getId().toString(), permissions);
@@ -113,33 +113,33 @@ public class UserTest {
 
     // Assign ACL Permissions for each user/group
     userService.addUserPermissions(alexId, Arrays.asList(
-      new PolicyIdStringWithMaskName(study001id, "WRITE"),
-      new PolicyIdStringWithMaskName(study002id, "READ"),
-      new PolicyIdStringWithMaskName(study003id, "DENY")
+      new PolicyIdStringWithAccessLevel(study001id, "WRITE"),
+      new PolicyIdStringWithAccessLevel(study002id, "READ"),
+      new PolicyIdStringWithAccessLevel(study003id, "DENY")
     ));
 
     userService.addUserPermissions(bobId, Arrays.asList(
-      new PolicyIdStringWithMaskName(study001id, "READ"),
-      new PolicyIdStringWithMaskName(study002id, "DENY"),
-      new PolicyIdStringWithMaskName(study003id, "WRITE")
+      new PolicyIdStringWithAccessLevel(study001id, "READ"),
+      new PolicyIdStringWithAccessLevel(study002id, "DENY"),
+      new PolicyIdStringWithAccessLevel(study003id, "WRITE")
     ));
 
     userService.addUserPermissions(marryId, Arrays.asList(
-      new PolicyIdStringWithMaskName(study001id, "DENY"),
-      new PolicyIdStringWithMaskName(study002id, "WRITE"),
-      new PolicyIdStringWithMaskName(study003id, "READ")
+      new PolicyIdStringWithAccessLevel(study001id, "DENY"),
+      new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
+      new PolicyIdStringWithAccessLevel(study003id, "READ")
     ));
 
     groupService.addGroupPermissions(wizardsId, Arrays.asList(
-      new PolicyIdStringWithMaskName(study001id, "WRITE"),
-      new PolicyIdStringWithMaskName(study002id, "READ"),
-      new PolicyIdStringWithMaskName(study003id, "DENY")
+      new PolicyIdStringWithAccessLevel(study001id, "WRITE"),
+      new PolicyIdStringWithAccessLevel(study002id, "READ"),
+      new PolicyIdStringWithAccessLevel(study003id, "DENY")
     ));
 
     groupService.addGroupPermissions(robotsId, Arrays.asList(
-      new PolicyIdStringWithMaskName(study001id, "DENY"),
-      new PolicyIdStringWithMaskName(study002id, "WRITE"),
-      new PolicyIdStringWithMaskName(study003id, "READ")
+      new PolicyIdStringWithAccessLevel(study001id, "DENY"),
+      new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
+      new PolicyIdStringWithAccessLevel(study003id, "READ")
     ));
 
   }

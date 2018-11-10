@@ -5,9 +5,8 @@ import org.overture.ego.model.dto.Scope;
 import org.overture.ego.model.entity.*;
 import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.service.*;
-import org.overture.ego.token.TokenService;
+import org.overture.ego.service.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -163,9 +162,9 @@ public class EntityGenerator {
     setupPolicies("Study001,Group One", "Study002,Group Two", "Study003,Group Three");
   }
 
-  public ScopedAccessToken setupToken(User user, String token, long duration, Set<Scope> scopes,
+  public Token setupToken(User user, String token, long duration, Set<Scope> scopes,
     Set<Application> applications) {
-    val tokenObject = ScopedAccessToken.builder().
+    val tokenObject = Token.builder().
       token(token).owner(user).
       applications(applications == null ? new HashSet<>():applications).
       expires(Date.from(Instant.now().plusSeconds(duration))).

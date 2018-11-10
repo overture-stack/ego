@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.overture.ego.token;
+package org.overture.ego.service;
 
 import io.jsonwebtoken.*;
 import lombok.SneakyThrows;
@@ -23,14 +23,12 @@ import lombok.val;
 import org.overture.ego.model.dto.Scope;
 import org.overture.ego.model.dto.TokenScopeResponse;
 import org.overture.ego.model.entity.Application;
-import org.overture.ego.model.entity.ScopedAccessToken;
+import org.overture.ego.model.entity.Token;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.reactor.events.UserEvents;
-import org.overture.ego.service.ApplicationService;
-import org.overture.ego.service.PolicyService;
-import org.overture.ego.service.TokenStoreService;
-import org.overture.ego.service.UserService;
+import org.overture.ego.token.IDToken;
+import org.overture.ego.token.TokenClaims;
 import org.overture.ego.token.app.AppJWTAccessToken;
 import org.overture.ego.token.app.AppTokenClaims;
 import org.overture.ego.token.app.AppTokenContext;
@@ -131,7 +129,7 @@ public class TokenService {
   }
 
   @SneakyThrows
-  public ScopedAccessToken issueToken(String name, List<ScopeName> scopeNames, List<String> apps) {
+  public Token issueToken(String name, List<ScopeName> scopeNames, List<String> apps) {
     log.info(format("Looking for user '%s'",name));
     log.info(format("Scopes are '%s'", new ArrayList(scopeNames).toString()));
     log.info(format("Apps are '%s'",new ArrayList(apps).toString()));
@@ -157,7 +155,7 @@ public class TokenService {
     val tokenString = generateTokenString();
     log.info(format("Generated token string '%s'",tokenString));
 
-    val token = new ScopedAccessToken();
+    val token = new Token();
     token.setExpires(DURATION);
     token.setRevoked(false);
     token.setToken(tokenString);
@@ -182,7 +180,7 @@ public class TokenService {
     return token;
   }
 
-  public ScopedAccessToken findByTokenString(String token) {
+  public Token findByTokenString(String token) {
     return tokenStoreService.findByTokenString(token);
   }
 
@@ -274,7 +272,7 @@ public class TokenService {
     log.error(format("token='%s'",token));
     val application = applicationService.findByBasicToken(authToken);
 
-    ScopedAccessToken t = findByTokenString(token);
+    Token t = findByTokenString(token);
     if (t == null) {
       throw new InvalidTokenException("Token not found");
     }

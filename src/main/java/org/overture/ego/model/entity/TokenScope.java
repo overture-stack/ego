@@ -24,7 +24,7 @@ class TokenScope implements Serializable {
   @Id
   @ManyToOne
   @JoinColumn(name="token_id")
-  private ScopedAccessToken token;
+  private Token token;
 
   @Id
   @ManyToOne

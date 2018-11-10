@@ -10,7 +10,7 @@ import lombok.val;
 import org.overture.ego.model.dto.PageDTO;
 import org.overture.ego.model.entity.Policy;
 import org.overture.ego.model.exceptions.PostWithIdentifierException;
-import org.overture.ego.model.params.PolicyIdStringWithMaskName;
+import org.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.security.AdminScoped;
@@ -144,8 +144,8 @@ public class PolicyController {
     @PathVariable(value = "group_id", required = true) String groupId,
     @RequestBody(required = true) String mask
   ) {
-    val permission = new PolicyIdStringWithMaskName(id, mask);
-    val list = new ArrayList<PolicyIdStringWithMaskName>();
+    val permission = new PolicyIdStringWithAccessLevel(id, mask);
+    val list = new ArrayList<PolicyIdStringWithAccessLevel>();
     list.add(permission);
     groupService.addGroupPermissions(groupId, list);
     return "1 group permission added to ACL successfully";
@@ -165,8 +165,8 @@ public class PolicyController {
     @PathVariable(value = "user_id", required = true) String userId,
     @RequestBody(required = true) String mask
   ) {
-    val permission = new PolicyIdStringWithMaskName(id, mask);
-    val list = new ArrayList<PolicyIdStringWithMaskName>();
+    val permission = new PolicyIdStringWithAccessLevel(id, mask);
+    val list = new ArrayList<PolicyIdStringWithAccessLevel>();
     list.add(permission);
     userService.addUserPermissions(userId, list);
 

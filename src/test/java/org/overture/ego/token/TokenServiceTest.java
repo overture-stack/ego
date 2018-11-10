@@ -28,6 +28,7 @@ import org.overture.ego.model.enums.AccessLevel;
 import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.service.ApplicationService;
 import org.overture.ego.service.GroupService;
+import org.overture.ego.service.TokenService;
 import org.overture.ego.service.UserService;
 import org.overture.ego.utils.EntityGenerator;
 import org.overture.ego.utils.CollectionUtils;

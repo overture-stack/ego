@@ -18,7 +18,7 @@ package org.overture.ego.token.app;
 
 import io.jsonwebtoken.Claims;
 import lombok.val;
-import org.overture.ego.token.TokenService;
+import org.overture.ego.service.TokenService;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
 

@@ -26,7 +26,7 @@ import org.overture.ego.model.entity.Group;
 import org.overture.ego.model.entity.User;
 import org.overture.ego.model.entity.UserPermission;
 import org.overture.ego.model.exceptions.PostWithIdentifierException;
-import org.overture.ego.model.params.PolicyIdStringWithMaskName;
+import org.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import org.overture.ego.model.search.Filters;
 import org.overture.ego.model.search.SearchFilter;
 import org.overture.ego.security.AdminScoped;
@@ -193,7 +193,7 @@ public class UserController {
   User addPermissions(
     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
     @PathVariable(value = "id", required = true) String id,
-    @RequestBody(required = true) List<PolicyIdStringWithMaskName> permissions
+    @RequestBody(required = true) List<PolicyIdStringWithAccessLevel> permissions
   ) {
     return userService.addUserPermissions(id, permissions);
   }

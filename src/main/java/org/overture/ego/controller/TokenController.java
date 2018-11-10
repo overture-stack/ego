@@ -24,7 +24,7 @@ import org.overture.ego.model.dto.TokenResponse;
 import org.overture.ego.model.dto.TokenScopeResponse;
 import org.overture.ego.model.params.ScopeName;
 import org.overture.ego.security.ApplicationScoped;
-import org.overture.ego.token.TokenService;
+import org.overture.ego.service.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

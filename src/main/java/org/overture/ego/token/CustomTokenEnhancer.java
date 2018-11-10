@@ -18,6 +18,7 @@ package org.overture.ego.token;
 
 import lombok.val;
 import org.overture.ego.service.ApplicationService;
+import org.overture.ego.service.TokenService;
 import org.overture.ego.service.UserService;
 import org.overture.ego.token.app.AppJWTAccessToken;
 import org.overture.ego.token.app.AppTokenClaims;

@@ -25,7 +25,7 @@ import static org.overture.ego.utils.CollectionUtils.mapToSet;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ScopedAccessToken {
+public class Token {
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(

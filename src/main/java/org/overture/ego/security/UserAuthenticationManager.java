@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.overture.ego.provider.facebook.FacebookTokenService;
 import org.overture.ego.provider.google.GoogleTokenService;
-import org.overture.ego.token.TokenService;
+import org.overture.ego.service.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;

@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @Data
 @NoArgsConstructor
 @RequiredArgsConstructor
-public class PolicyIdStringWithMaskName {
+public class PolicyIdStringWithAccessLevel {
   @NonNull
   private String policyId;
   @NonNull

@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 import org.overture.ego.model.params.ScopeName;
-import org.overture.ego.token.TokenService;
+import org.overture.ego.service.TokenService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
@@ -32,7 +32,6 @@ import org.springframework.security.oauth2.provider.request.DefaultOAuth2Request
 
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkState;

@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.model.dto.Scope;
 import org.overture.ego.model.entity.Application;
-import org.overture.ego.model.entity.ScopedAccessToken;
+import org.overture.ego.model.entity.Token;
 import org.overture.ego.model.enums.AccessLevel;
 import org.overture.ego.utils.EntityGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +49,7 @@ public class TokenStoreServiceTest {
     val a1 = entityGenerator.setupApplication("id123", "Shhh! Don't tell!");
     applications.add(a1);
 
-    val tokenObject = ScopedAccessToken.builder().
+    val tokenObject = Token.builder().
         token(token).owner(user).
         applications(applications == null ? new HashSet<>():applications).
         expires(Date.from(Instant.now().plusSeconds(duration))).
