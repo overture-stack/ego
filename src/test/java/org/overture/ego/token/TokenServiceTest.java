@@ -33,6 +33,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -58,25 +59,7 @@ public class TokenServiceTest {
   private TokenService tokenService;
 
   @Test
-  @Ignore
-  public void generateUserToken() {
-    val user = userService.create(entityGenerator.createOneUser(Pair.of("foo", "bar")));
-    val group = groupService.create(entityGenerator.createOneGroup("testGroup"));
-    val app = applicationService.create(entityGenerator.createOneApplication("foo"));
-
-    val group2 = groupService.getByName("testGroup");
-    group2.addUser(user);
-    groupService.update(group2);
-
-    val app2 = applicationService.getByClientId("foo");
-    app2.setWholeUsers(Sets.newHashSet(user));
-    applicationService.update(app2);
-
-
-    val token = tokenService.generateUserToken(userService.get(user.getId().toString()));
-  }
-
-  @Test
+  @Transactional
   public void testLastloginUpdate(){
     IDToken idToken = new IDToken();
     idToken.setFamily_name("fName");
@@ -84,12 +67,12 @@ public class TokenServiceTest {
     idToken.setEmail("fNamegName@domain.com");
     User user = userService.create(entityGenerator.createOneUser(Pair.of("fName", "gName")));
 
-    assertNull(" Verify before generatedUserToken, last login should be null. ", user.getLastLogin());
+    assertNull(" Verify before generatedUserToken, last login after fetching the user should be null. ",
+            userService.getByName(idToken.getEmail()).getLastLogin());
 
     tokenService.generateUserToken(idToken);
     user = userService.getByName(idToken.getEmail());
 
     assertNotNull("Verify after generatedUserToken, last login is not null.", user.getLastLogin());
   }
-
 }
