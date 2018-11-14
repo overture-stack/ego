@@ -81,7 +81,7 @@ public class TokenService {
     }
 
     user.setLastLogin(new Date());
-    userService.update(user);
+    userEvents.update(user);
 
     return generateUserToken(user);
   }
