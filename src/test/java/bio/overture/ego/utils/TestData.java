@@ -2,7 +2,6 @@ package bio.overture.ego.utils;
 
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.params.ScopeName;
@@ -23,7 +22,6 @@ public class TestData {
   public String scoreAuth;
 
   private Map<String, Policy> policyMap;
-  private Group developers;
 
   public User user1, user2;
 
@@ -39,7 +37,7 @@ public class TestData {
     scoreAuth = authToken(scoreId, scoreSecret);
 
     score = entityGenerator.setupApplication(scoreId, scoreSecret);
-    developers = entityGenerator.setupGroup("developers");
+    val developers = entityGenerator.setupGroup("developers");
 
     val allPolicies = listOf("song.upload", "song.download","id.create", "collab.upload", "collab.download");
 

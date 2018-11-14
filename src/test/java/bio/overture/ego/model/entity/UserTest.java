@@ -8,7 +8,6 @@ import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +47,7 @@ public class UserTest {
 
     val user = userService.getByName("FirstUser@domain.com");
 
-    Assertions.assertThat(user.getPermissions().size()).isEqualTo(0);
+   assertThat(user.getPermissions().size()).isEqualTo(0);
   }
 
   @Test
@@ -68,7 +67,7 @@ public class UserTest {
 
     userService.addUserPermissions(user.getId().toString(), permissions);
 
-    Assertions.assertThat(user.getPermissions()).containsExactlyInAnyOrder(
+    assertThat(user.getPermissions()).containsExactlyInAnyOrder(
         "Study001.DENY"
     );
   }
@@ -187,19 +186,19 @@ public class UserTest {
      */
 
     // Test that all is well
-    Assertions.assertThat(alex.getPermissions()).containsExactlyInAnyOrder(
+    assertThat(alex.getPermissions()).containsExactlyInAnyOrder(
         "Study001.DENY",
         "Study002.WRITE",
         "Study003.DENY"
     );
 
-    Assertions.assertThat(bob.getPermissions()).containsExactlyInAnyOrder(
+    assertThat(bob.getPermissions()).containsExactlyInAnyOrder(
         "Study001.DENY",
         "Study002.DENY",
         "Study003.WRITE"
     );
 
-    Assertions.assertThat(marry.getPermissions()).containsExactlyInAnyOrder(
+    assertThat(marry.getPermissions()).containsExactlyInAnyOrder(
         "Study001.DENY",
         "Study002.WRITE",
         "Study003.READ"
@@ -210,12 +209,12 @@ public class UserTest {
   public void testGetScopes() {
     setupUsers();
     val alex = userService.getByName("FirstUser@domain.com");
-    Assertions.assertThat(alex).isNotNull();
+    assertThat(alex).isNotNull();
 
     val s = alex.getScopes();
-    Assertions.assertThat(s).isNotNull();
+    assertThat(s).isNotNull();
 
     val expected = entityGenerator.getScopes("Study001:DENY", "Study002:WRITE", "STUDY003:DENY");
-    Assertions.assertThat(s).isEqualTo(expected);
+    assertThat(s).isEqualTo(expected);
   }
 }

@@ -61,7 +61,7 @@ public class UserServiceTest {
   public void testCreate() {
     val user = userService.create(entityGenerator.createUser("Demo", "User"));
     // UserName == UserEmail
-    Assertions.assertThat(user.getName()).isEqualTo("DemoUser@domain.com");
+    assertThat(user.getName()).isEqualTo("DemoUser@domain.com");
   }
 
   @Test
@@ -82,12 +82,12 @@ public class UserServiceTest {
 
     val idTokenUser = userService.createFromIDToken(idToken);
 
-    Assertions.assertThat(idTokenUser.getName()).isEqualTo("UserOne@domain.com");
-    Assertions.assertThat(idTokenUser.getEmail()).isEqualTo("UserOne@domain.com");
-    Assertions.assertThat(idTokenUser.getFirstName()).isEqualTo("User");
-    Assertions.assertThat(idTokenUser.getLastName()).isEqualTo("User");
-    Assertions.assertThat(idTokenUser.getStatus()).isEqualTo("Approved");
-    Assertions.assertThat(idTokenUser.getRole()).isEqualTo("USER");
+    assertThat(idTokenUser.getName()).isEqualTo("UserOne@domain.com");
+    assertThat(idTokenUser.getEmail()).isEqualTo("UserOne@domain.com");
+    assertThat(idTokenUser.getFirstName()).isEqualTo("User");
+    assertThat(idTokenUser.getLastName()).isEqualTo("User");
+    assertThat(idTokenUser.getStatus()).isEqualTo("Approved");
+    assertThat(idTokenUser.getRole()).isEqualTo("USER");
   }
 
   @Test
@@ -110,7 +110,7 @@ public class UserServiceTest {
   public void testGet() {
     val user = userService.create(entityGenerator.createUser("User", "One"));
     val savedUser = userService.get(user.getId().toString());
-    Assertions.assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
+    assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
 
   @Test
@@ -122,14 +122,14 @@ public class UserServiceTest {
   public void testGetByName() {
     userService.create(entityGenerator.createUser("User", "One"));
     val savedUser = userService.getByName("UserOne@domain.com");
-    Assertions.assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
+    assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
 
   @Test
   public void testGetByNameAllCaps() {
     userService.create(entityGenerator.createUser("User", "One"));
     val savedUser = userService.getByName("USERONE@DOMAIN.COM");
-    Assertions.assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
+    assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
 
   @Test
@@ -143,12 +143,12 @@ public class UserServiceTest {
   @Test
   public void testGetOrCreateDemoUser() {
     val demoUser = userService.getOrCreateDemoUser();
-    Assertions.assertThat(demoUser.getName()).isEqualTo("Demo.User@example.com");
-    Assertions.assertThat(demoUser.getEmail()).isEqualTo("Demo.User@example.com");
-    Assertions.assertThat(demoUser.getFirstName()).isEqualTo("Demo");
-    Assertions.assertThat(demoUser.getLastName()).isEqualTo("User");
-    Assertions.assertThat(demoUser.getStatus()).isEqualTo("Approved");
-    Assertions.assertThat(demoUser.getRole()).isEqualTo("ADMIN");
+    assertThat(demoUser.getName()).isEqualTo("Demo.User@example.com");
+    assertThat(demoUser.getEmail()).isEqualTo("Demo.User@example.com");
+    assertThat(demoUser.getFirstName()).isEqualTo("Demo");
+    assertThat(demoUser.getLastName()).isEqualTo("User");
+    assertThat(demoUser.getStatus()).isEqualTo("Approved");
+    assertThat(demoUser.getRole()).isEqualTo("ADMIN");
   }
 
   @Test
@@ -165,12 +165,12 @@ public class UserServiceTest {
 
     val user = userService.create(demoUserObj);
 
-    Assertions.assertThat(user.getStatus()).isEqualTo("Pending");
-    Assertions.assertThat(user.getRole()).isEqualTo("USER");
+    assertThat(user.getStatus()).isEqualTo("Pending");
+    assertThat(user.getRole()).isEqualTo("USER");
 
     val demoUser = userService.getOrCreateDemoUser();
-    Assertions.assertThat(demoUser.getStatus()).isEqualTo("Approved");
-    Assertions.assertThat(demoUser.getRole()).isEqualTo("ADMIN");
+    assertThat(demoUser.getStatus()).isEqualTo("Approved");
+    assertThat(demoUser.getRole()).isEqualTo("ADMIN");
   }
 
   // List Users
@@ -214,7 +214,7 @@ public class UserServiceTest {
     val users = userService
       .findUsers("First", Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(users.getTotalElements()).isEqualTo(1L);
-    Assertions.assertThat(users.getContent().get(0).getName()).isEqualTo("FirstUser@domain.com");
+    assertThat(users.getContent().get(0).getName()).isEqualTo("FirstUser@domain.com");
   }
 
   @Test
@@ -247,7 +247,7 @@ public class UserServiceTest {
     );
 
     assertThat(users.getTotalElements()).isEqualTo(2L);
-    Assertions.assertThat(users.getContent()).contains(user, userTwo);
+    assertThat(users.getContent()).contains(user, userTwo);
   }
 
   @Test
@@ -298,7 +298,7 @@ public class UserServiceTest {
     );
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
-    Assertions.assertThat(users.getContent()).contains(user);
+    assertThat(users.getContent()).contains(user);
   }
 
   @Test
@@ -346,7 +346,7 @@ public class UserServiceTest {
     );
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
-    Assertions.assertThat(users.getContent()).contains(userTwo);
+    assertThat(users.getContent()).contains(userTwo);
   }
 
   // Find App Users
@@ -370,7 +370,7 @@ public class UserServiceTest {
     );
 
     assertThat(users.getTotalElements()).isEqualTo(2L);
-    Assertions.assertThat(users.getContent()).contains(user, userTwo);
+    assertThat(users.getContent()).contains(user, userTwo);
   }
 
   @Test
@@ -424,7 +424,7 @@ public class UserServiceTest {
     );
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
-    Assertions.assertThat(users.getContent()).contains(user);
+    assertThat(users.getContent()).contains(user);
   }
 
   @Test
@@ -471,7 +471,7 @@ public class UserServiceTest {
     );
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
-    Assertions.assertThat(users.getContent()).contains(user);
+    assertThat(users.getContent()).contains(user);
   }
 
   // Update
@@ -480,7 +480,7 @@ public class UserServiceTest {
     val user = entityGenerator.setupUser("First User");
     user.setFirstName("NotFirst");
     val updated = userService.update(user);
-    Assertions.assertThat(updated.getFirstName()).isEqualTo("NotFirst");
+    assertThat(updated.getFirstName()).isEqualTo("NotFirst");
   }
 
   @Test
@@ -488,7 +488,7 @@ public class UserServiceTest {
     val user = entityGenerator.setupUser("First User");
     user.setRole("user");
     val updated = userService.update(user);
-    Assertions.assertThat(updated.getRole()).isEqualTo("USER");
+    assertThat(updated.getRole()).isEqualTo("USER");
   }
 
   @Test
@@ -496,7 +496,7 @@ public class UserServiceTest {
     val user = entityGenerator.setupUser("First User");
     user.setRole("admin");
     val updated = userService.update(user);
-    Assertions.assertThat(updated.getRole()).isEqualTo("ADMIN");
+    assertThat(updated.getRole()).isEqualTo("ADMIN");
   }
 
   @Test
@@ -629,7 +629,7 @@ public class UserServiceTest {
     userService.addUserToGroups(userId, Collections.emptyList());
 
     val nonUpdated = userService.getByName("FirstUser@domain.com");
-    Assertions.assertThat(nonUpdated).isEqualTo(user);
+    assertThat(nonUpdated).isEqualTo(user);
   }
 
   // Add User to Apps
@@ -691,7 +691,7 @@ public class UserServiceTest {
     userService.addUserToApps(userId, Collections.emptyList());
 
     val nonUpdated = userService.getByName("FirstUser@domain.com");
-    Assertions.assertThat(nonUpdated).isEqualTo(user);
+    assertThat(nonUpdated).isEqualTo(user);
   }
 
   // Delete
@@ -705,7 +705,7 @@ public class UserServiceTest {
 
     val users = userService.listUsers(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(users.getTotalElements()).isEqualTo(2L);
-    Assertions.assertThat(users.getContent()).doesNotContain(user);
+    assertThat(users.getContent()).doesNotContain(user);
   }
 
   @Test
@@ -797,7 +797,7 @@ public class UserServiceTest {
     val groupId = group.getId().toString();
 
     userService.addUserToGroups(userId, singletonList(groupId));
-    Assertions.assertThat(user.getWholeGroups().size()).isEqualTo(1);
+    assertThat(user.getWholeGroups().size()).isEqualTo(1);
 
     assertThatExceptionOfType(IllegalArgumentException.class)
       .isThrownBy(() -> userService
@@ -912,7 +912,7 @@ public class UserServiceTest {
 
     userService.addUserPermissions(user.getId().toString(), permissions);
 
-    Assertions.assertThat(PolicyPermissionUtils.extractPermissionStrings(user.getUserPermissions()))
+    assertThat(PolicyPermissionUtils.extractPermissionStrings(user.getUserPermissions()))
         .containsExactlyInAnyOrder(
             "Study001.READ",
             "Study002.WRITE",
@@ -953,7 +953,7 @@ public class UserServiceTest {
 
     userService.deleteUserPermissions(user.getId().toString(), userPermissionsToRemove);
 
-    Assertions.assertThat(PolicyPermissionUtils.extractPermissionStrings(user.getUserPermissions()))
+    assertThat(PolicyPermissionUtils.extractPermissionStrings(user.getUserPermissions()))
         .containsExactlyInAnyOrder(
             "Study001.READ"
         );

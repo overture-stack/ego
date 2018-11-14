@@ -6,7 +6,6 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.EntityGenerator;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -50,7 +49,7 @@ public class PolicyServiceTest {
   @Test
   public void testCreate() {
     val policy = policyService.create(entityGenerator.createPolicy("Study001,Group One"));
-    Assertions.assertThat(policy.getName()).isEqualTo("Study001");
+    assertThat(policy.getName()).isEqualTo("Study001");
   }
 
   @Test
@@ -69,7 +68,7 @@ public class PolicyServiceTest {
   public void testGet() {
     val policy = policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
     val savedPolicy = policyService.get(policy.getId().toString());
-    Assertions.assertThat(savedPolicy.getName()).isEqualTo("Study001");
+    assertThat(savedPolicy.getName()).isEqualTo("Study001");
   }
 
   @Test
@@ -81,14 +80,14 @@ public class PolicyServiceTest {
   public void testGetByName() {
     policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
     val savedUser = policyService.getByName("Study001");
-    Assertions.assertThat(savedUser.getName()).isEqualTo("Study001");
+    assertThat(savedUser.getName()).isEqualTo("Study001");
   }
 
   @Test
   public void testGetByNameAllCaps() {
     policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
     val savedUser = policyService.getByName("STUDY001");
-    Assertions.assertThat(savedUser.getName()).isEqualTo("Study001");
+    assertThat(savedUser.getName()).isEqualTo("Study001");
   }
 
   @Test
@@ -139,7 +138,7 @@ public class PolicyServiceTest {
     val policy = policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
     policy.setName("StudyOne");
     val updated = policyService.update(policy);
-    Assertions.assertThat(updated.getName()).isEqualTo("StudyOne");
+    assertThat(updated.getName()).isEqualTo("StudyOne");
   }
 
   // Delete
@@ -151,7 +150,7 @@ public class PolicyServiceTest {
 
     val remainingAclEntities = policyService.listPolicies(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(remainingAclEntities.getTotalElements()).isEqualTo(2L);
-    Assertions.assertThat(remainingAclEntities.getContent()).doesNotContain(policy);
+    assertThat(remainingAclEntities.getContent()).doesNotContain(policy);
   }
 
 }

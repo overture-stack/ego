@@ -49,7 +49,7 @@ import java.util.*;
 import static org.junit.Assert.*;
 import static bio.overture.ego.utils.CollectionUtils.listOf;
 import static bio.overture.ego.utils.CollectionUtils.setOf;
-
+import static bio.overture.ego.utils.EntityGenerator.scopeNames;
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -317,7 +317,7 @@ public class TokenServiceTest {
     // issue_token() should throw an exception
 
     val name = test.user1.getName();
-    val scopes = entityGenerator.scopeNames("collab.download:READ");
+    val scopes = EntityGenerator.scopeNames("collab.download:READ");
     val applications = listOf("NotAnApplication");
 
     Exception ex=null;
@@ -337,11 +337,10 @@ public class TokenServiceTest {
   public void testGetScope() {
     val name = new ScopeName("collab.upload:READ");
     val o = tokenService.getScope(name);
-    assertTrue(o instanceof Scope);
     assertNotNull(o.getPolicy());
     assertNotNull(o.getPolicy().getName());
-    assertTrue(o.getPolicy().getName().equals("collab.upload"));
-    assertTrue(o.getPolicyMask() == AccessLevel.READ);
+    assertEquals("collab.upload", o.getPolicy().getName());
+    assertSame(o.getPolicyMask(), AccessLevel.READ);
   }
 
 }

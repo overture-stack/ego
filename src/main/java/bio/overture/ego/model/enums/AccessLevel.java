@@ -49,15 +49,15 @@ public enum AccessLevel {
    */
   public static boolean allows(AccessLevel have, AccessLevel want) {
     // 1) If we're to be denied everything, or the permission is deny everyone, we're denied.
-    if (have == AccessLevel.DENY || want == AccessLevel.DENY) {
+    if (have.equals(DENY) || want.equals(DENY)) {
       return false;
     }
     // 2) Otherwise, if we have exactly what we need, we're allowed access.
-    if (have == want) {
+    if (have.equals(want)) {
       return true;
     }
     // 3) We're allowed access to READ if we have WRITE
-    if (have == AccessLevel.WRITE && want== AccessLevel.READ) {
+    if (have.equals(WRITE) && want.equals(READ)) {
       return true;
     }
     // 4) Otherwise, we're denied access.
