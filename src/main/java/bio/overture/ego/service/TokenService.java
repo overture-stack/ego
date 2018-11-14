@@ -19,10 +19,12 @@ package bio.overture.ego.service;
 import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.params.ScopeName;
+
 import io.jsonwebtoken.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
@@ -272,12 +274,12 @@ public class TokenService {
     log.error(format("token='%s'",token));
     val application = applicationService.findByBasicToken(authToken);
 
-    Token t = findByTokenString(token);
+    val t = findByTokenString(token);
     if (t == null) {
       throw new InvalidTokenException("Token not found");
     }
 
-    val clientId = application.getClientId();
+   val clientId = application.getClientId();
     val apps = t.getApplications();
     log.info(format("Applications are %s",apps.toString()));
     if (apps != null && !apps.isEmpty() ) {
