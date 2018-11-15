@@ -13,6 +13,10 @@ jobs:
 
     steps:
       - checkout
+    
+      - run: 
+          name: Show maven version  
+          command: mvn --version 
 
       # Download and cache dependencies
       - restore_cache:
