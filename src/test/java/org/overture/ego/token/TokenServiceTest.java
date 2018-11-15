@@ -17,15 +17,10 @@
 
 package org.overture.ego.token;
 
-import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.overture.ego.model.entity.User;
-import org.overture.ego.service.ApplicationService;
-import org.overture.ego.service.GroupService;
 import org.overture.ego.service.UserService;
 import org.overture.ego.utils.EntityGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +28,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.util.Pair;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.transaction.annotation.Transactional;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -44,13 +39,7 @@ import static org.junit.Assert.assertNull;
 @ActiveProfiles("test")
 public class TokenServiceTest {
   @Autowired
-  private ApplicationService applicationService;
-
-  @Autowired
   private UserService userService;
-
-  @Autowired
-  private GroupService groupService;
 
   @Autowired
   private EntityGenerator entityGenerator;
@@ -59,7 +48,6 @@ public class TokenServiceTest {
   private TokenService tokenService;
 
   @Test
-  @Transactional
   public void testLastloginUpdate(){
     IDToken idToken = new IDToken();
     idToken.setFamily_name("fName");
@@ -74,5 +62,12 @@ public class TokenServiceTest {
     user = userService.getByName(idToken.getEmail());
 
     assertNotNull("Verify after generatedUserToken, last login is not null.", user.getLastLogin());
+
+    // Must manually delete user. Using @Transactional will
+    // trigger exception, as there are two
+    // threads involved, new thread will try to find user in an empty repo which
+    // will cause exception.
+    userService.delete(user.getId().toString());
+
   }
 }
