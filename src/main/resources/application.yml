@@ -17,7 +17,7 @@ spring.datasource:
   driver-class-name: org.postgresql.Driver
   url: jdbc:postgresql://localhost:5432/ego?stringtype=unspecified
 
-  username: khartmann
+  username: postgres
   password:
   max-active: 10
   max-idle: 1
