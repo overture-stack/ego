@@ -3,8 +3,8 @@ package db.migration;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.flywaydb.core.api.migration.spring.SpringJdbcMigration;
-import org.overture.ego.model.entity.Application;
-import org.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 
