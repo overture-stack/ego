@@ -60,7 +60,7 @@ logging:
     #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     #org.springframework.boot: INFO
-    org.overture.ego: INFO
+    bio.overture.ego: INFO
     #org.hibernate.SQL: DEBUG
     #org.hibernate.type.descriptor.sql: TRACE
 
