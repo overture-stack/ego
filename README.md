@@ -22,6 +22,7 @@
   - [Step 1 - Setup Database](#step-1---setup-database)
   - [Step 2 - Run](#step-2---run)
 - [Tech Specifications](#tech-specification)
+- [Usage](#usage)
 
 ## Introduction
 
@@ -31,7 +32,7 @@ Authorization Service built to provide Single Sign On for various microservices 
 
 Interactive documentation of the API is provided using Swagger UI.
 
-When run locally this can be found at:  [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
+When run locally this can be found at: [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
 
 <p align="center">
     <img alt="arch" title="EGO Architecture" src="/docs/ego-arch.png" width="480">
@@ -41,54 +42,60 @@ When run locally this can be found at:  [http://localhost:8081/swagger-ui.html](
 </p>
 
 ## Features
+
 Here are some of the features of EGO:
 
-* Single Sign on for microservices
-* User-authentication through Federated Identities such as Google, Facebook, Github (Coming Soon), ORCID (Coming Soon)
-* Uses JWT(Json Web Tokens) for Authorization Tokens
-* Provides ability to create permission lists for users and/or groups on user-defined permission entities
-* Built using well established Frameworks - Spring Boot, Spring Security
+- Single Sign on for microservices
+- User-authentication through Federated Identities such as Google, Facebook, Github (Coming Soon), ORCID (Coming Soon)
+- Uses JWT(Json Web Tokens) for Authorization Tokens
+- Provides ability to create permission lists for users and/or groups on user-defined permission entities
+- Built using well established Frameworks - Spring Boot, Spring Security
 
 ## Tech Stack
 
 The application is written in JAVA using Spring Boot and Spring Security Frameworks.
 
-* [Spring Security](https://projects.spring.io/spring-security/)
-* [JWT (JSON Web Tokens)](https://jwt.io/): This project uses [jjwt library](https://github.com/jwtk/jjwt) for JWT related features.
-* [OpenID Connect](http://openid.net/connect/)
-
+- [Spring Security](https://projects.spring.io/spring-security/)
+- [JWT (JSON Web Tokens)](https://jwt.io/): This project uses [jjwt library](https://github.com/jwtk/jjwt) for JWT related features.
+- [OpenID Connect](http://openid.net/connect/)
 
 ## Quick Start
 
 The goal of this quick start is to get a working application quickly up and running.
 
 Set the `API_HOST_PORT` where ego is to be run, then run docker compose:
+
 ```
 API_HOST_PORT=8080 docker-compose up -d
 ```
 
-Ego should now be deployed locally with the swagger ui at 
+Ego should now be deployed locally with the swagger ui at
 `http://localhost:8080/swagger-ui.html`
 
 ## Development Install
 
 ### Step 1 - Setup Database
+
 1. Install Postgres
 2. Create a Database: ego with user postgres and empty password
 3. Run the migrations found here: [SQL Script](/src/main/resources/flyway/sql/) to setup tables.
 
 #### Database Migrations with Flyway
-Database migrations and versioning is managed by [flyway](https://flywaydb.org/). 
+
+Database migrations and versioning is managed by [flyway](https://flywaydb.org/).
 
 1. Download the flyway cli client here: [flyway-commandline](https://flywaydb.org/download/community)
 2. Unpack the client in a directory of your choosing
 3. Execute the flyway client pointing it to the configuration and migration directories in this repository.
 
 Get current version information:
+
 ```bash
 ./fly
 ```
+
 Run outstanding migrations:
+
 ```bash
 ./fly migrate
 ```
@@ -97,17 +104,19 @@ To see the migration naming convention, [click here.](https://flywaydb.org/docum
 
 ### Step 2 - Run
 
-* EGO currently supports three Profiles:
-    * default: Use this to run the most simple setup. This lets you test various API endpoints without a valid JWT in 
+- EGO currently supports three Profiles:
+  - default: Use this to run the most simple setup. This lets you test various API endpoints without a valid JWT in
     authorization header.
-    * auth: Run this to include validations for JWT. 
-    * secure: Run this profile to enable https
-* Run using Maven. Maven can be used to prepare a runnable jar file, as well as the uber-jar for deployment:
+  - auth: Run this to include validations for JWT.
+  - secure: Run this profile to enable https
+- Run using Maven. Maven can be used to prepare a runnable jar file, as well as the uber-jar for deployment:
+
 ```bash
 $ mvn clean package
 ```
 
 To run from command line with maven:
+
 ```bash
 $ mvn spring-boot:run
 ```
@@ -123,7 +132,7 @@ An example ego JWT is mentioned below:
 }
 .
 {
-    "sub": "1234567", 
+    "sub": "1234567",
     "iss": "ego:56fc3842ccf2c1c7ec5c5d14",
     "iat": 1459458458,
     "exp": 1459487258,
@@ -154,7 +163,43 @@ An example ego JWT is mentioned below:
 ```
 
 #### Notes
-* "aud" field can contain one or more client IDs. This field indicates the client services that are authorized to use this JWT.
-* "groups" will differ based on the domain of client services - each domain of service should get list of groups from that domain's ego service.
-* "permissions" will differ based on domain of client service - each domain of service should get list of permissions from that domain's ego service.
-* Unit Tests using testcontainers will also run flyway migrations to ensure database has the correct structure
+- "aud" field can contain one or more client IDs. This field indicates the client services that are authorized to use this JWT.
+- "groups" will differ based on the domain of client services - each domain of service should get list of groups from that domain's ego service.
+- "permissions" will differ based on domain of client service - each domain of service should get list of permissions from that domain's ego service.
+- Unit Tests using testcontainers will also run flyway migrations to ensure database has the correct structure
+
+## Usage
+
+### Application Authentication
+
+Applications can be added to EGO with a client ID/Secret pair. The ID and Secret can be used to authenticate with EGO to retrieve a JWT.
+
+An application JWT will not have `roles` but will list the `groups` the application is associated with. Other applications are responsible for controlling authorization for applications based on the content of their signed JWT.
+
+#### Register application
+
+To register an application with EGO make a request as documented at [/swagger-ui.html#!/application-controller/createUsingPOST](/swagger-ui.html#!/application-controller/createUsingPOST)
+
+This request must have an `ADMIN` role JWT in the Authorization field.
+
+Keep the client ID/Secret pair in a secret place, for use by the application only. Do not make these values visible in the browser or in your code base.
+
+#### Authenticate
+
+Authentication uses the oauth client_credentials flow. This can be handled out-of-the-box by many REST clients (ex. [Insomnia](https://insomnia.rest/)).
+
+The Authenticate request details, to recreate manually:
+
+- `POST` request to `https://{{ego-domain}}/oauth/token`
+- Body content, content-type: `x-www-form-urlencoded`
+  - `grant_type:client_credentials`
+  - `client_id:{{application's client id}}`
+  - `client_secret:{{application's client secret}}`
+
+curl example:
+
+```curl -X POST \
+  http://localhost:8081/oauth/token \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'grant_type=client_credentials&client_id=my-app-id&client_secret=secretpassword'
+```
