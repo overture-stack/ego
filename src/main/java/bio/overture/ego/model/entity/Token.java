@@ -76,7 +76,7 @@ public class Token {
     if (scopes == null) {
       scopes = new HashSet<>();
     }
-    scopes.add(new TokenScope(this, scope.getPolicy(), scope.getPolicyMask()));
+    scopes.add(new TokenScope(this, scope.getPolicy(), scope.getAccessLevel()));
   }
 
   @JsonIgnore
@@ -85,7 +85,7 @@ public class Token {
   }
 
   public void setScopes(Set<Scope> scopes) {
-    this.scopes = mapToSet(scopes, s -> new TokenScope(this, s.getPolicy(), s.getPolicyMask()));
+    this.scopes = mapToSet(scopes, s -> new TokenScope(this, s.getPolicy(), s.getAccessLevel()));
   }
 
   public void addApplication(Application app) {

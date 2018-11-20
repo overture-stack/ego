@@ -214,7 +214,7 @@ public class UserTest {
     val s = alex.getScopes();
     assertThat(s).isNotNull();
 
-    val expected = entityGenerator.getScopes("Study001:DENY", "Study002:WRITE", "STUDY003:DENY");
+    val expected = entityGenerator.getScopes("Study001.DENY", "Study002.WRITE", "STUDY003.DENY");
     assertThat(s).isEqualTo(expected);
   }
 }

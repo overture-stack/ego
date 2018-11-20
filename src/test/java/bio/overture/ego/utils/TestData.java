@@ -39,7 +39,7 @@ public class TestData {
     score = entityGenerator.setupApplication(scoreId, scoreSecret);
     val developers = entityGenerator.setupGroup("developers");
 
-    val allPolicies = listOf("song.upload", "song.download","id.create", "collab.upload", "collab.download");
+    val allPolicies = listOf("song","id", "collab", "aws", "portal");
 
     policyMap = new HashMap<>();
     for(val p:allPolicies) {
@@ -50,12 +50,11 @@ public class TestData {
     user1 = entityGenerator.setupUser("User One");
     // user1.addNewGroup(developers);
     entityGenerator.addPermissions(user1,
-      getScopes("song.upload:WRITE", "song.download:WRITE",
-      "collab.upload:WRITE", "collab.download:WRITE", "id.create:WRITE"));
+      getScopes("id.WRITE", "song.WRITE", "collab.WRITE", "portal.READ"));
 
     user2 = entityGenerator.setupUser("User Two");
     entityGenerator.addPermissions(user2, getScopes(
-     "song.upload:READ", "song.download:WRITE"));
+     "song.READ", "collab.READ", "id.WRITE"));
   }
 
   public Set<Scope> getScopes(String... scopeNames) {
@@ -64,7 +63,7 @@ public class TestData {
 
   public Scope getScope(String name) {
     val s = new ScopeName(name);
-    return new Scope(policyMap.get(s.getName()),s.getMask());
+    return new Scope(policyMap.get(s.getName()),s.getAccessLevel());
   }
 
   private String authToken(String clientId, String clientSecret) {

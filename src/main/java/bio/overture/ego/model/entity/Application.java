@@ -74,7 +74,7 @@ public class Application {
   @Column(name = Fields.DESCRIPTION)
   String description;
 
-  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
+  @JsonView(Views.JWTAccessToken.class)
   @Column(name = Fields.STATUS)
   String status;
 

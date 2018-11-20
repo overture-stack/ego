@@ -54,6 +54,8 @@ import java.security.InvalidKeyException;
 import java.util.*;
 
 import static java.lang.String.format;
+import static bio.overture.ego.model.dto.Scope.effectiveScopes;
+import static bio.overture.ego.model.dto.Scope.explicitScopes;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 
 @Slf4j
@@ -117,7 +119,7 @@ public class TokenService {
   public Scope getScope(ScopeName name) {
     val policy = policyService.getByName(name.getName());
 
-    return new Scope(policy, name.getMask());
+    return new Scope(policy, name.getAccessLevel());
   }
 
   public Set<Scope> missingScopes(String userName, Set<ScopeName> scopeNames) {
@@ -162,7 +164,10 @@ public class TokenService {
     token.setRevoked(false);
     token.setToken(tokenString);
     token.setOwner(u);
-    requestedScopes.stream().forEach(token::addScope);
+
+    for (Scope requestedScope : requestedScopes) {
+      token.addScope(requestedScope);
+    }
 
     log.info("Generating apps list");
     for (val appName : apps) {
@@ -291,7 +296,7 @@ public class TokenService {
     // is allowed to access at the time the token is checked -- we don't assume that they
     // have not changed since the token was issued.
     val owner = t.getOwner();
-    val scopes = Scope.effectiveScopes(owner.getScopes(), t.scopes());
+    val scopes = explicitScopes(effectiveScopes(owner.getScopes(), t.scopes()));
     val names = mapToSet(scopes, Scope::toString);
 
     return new TokenScopeResponse(owner.getName(), clientId,
