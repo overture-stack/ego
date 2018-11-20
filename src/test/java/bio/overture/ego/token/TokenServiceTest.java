@@ -49,7 +49,7 @@ import java.util.*;
 import static org.junit.Assert.*;
 import static bio.overture.ego.utils.CollectionUtils.listOf;
 import static bio.overture.ego.utils.CollectionUtils.setOf;
-import static bio.overture.ego.utils.EntityGenerator.scopeNames;
+
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -113,7 +113,7 @@ public class TokenServiceTest {
     assertEquals(test.scoreId, result.getClient_id() );
     assertTrue(result.getExp() > 900);
     Assert.assertEquals(test.user2.getName(), result.getUser_name());
-    assertEquals(setOf("song.READ", "id.WRITE"), result.getScope());
+    assertEquals(setOf("song.READ", "id.WRITE", "id.READ"), result.getScope());
   }
 
   @Test
@@ -129,7 +129,7 @@ public class TokenServiceTest {
 
     assertEquals(test.songId, result.getClient_id() );
     assertTrue(result.getExp() > 900);
-    assertEquals(setOf("song.READ", "id.WRITE"), result.getScope());
+    assertEquals(setOf("song.READ", "id.WRITE", "id.READ"), result.getScope());
     Assert.assertEquals(test.user2.getName(), result.getUser_name());
   }
 
@@ -173,7 +173,7 @@ public class TokenServiceTest {
     assertEquals(test.scoreId, result.getClient_id());
     assertTrue( result.getExp() > 900);
 
-    val expected = setOf("song.WRITE", "id.WRITE");
+    val expected = setOf("song.WRITE", "song.READ", "id.WRITE", "id.READ");
     Assert.assertEquals(test.user1.getName(), result.getUser_name());
     assertEquals(expected, result.getScope());
 
@@ -339,7 +339,7 @@ public class TokenServiceTest {
     assertNotNull(o.getPolicy());
     assertNotNull(o.getPolicy().getName());
     assertEquals("collab", o.getPolicy().getName());
-    assertSame(o.getPolicyMask(), AccessLevel.READ);
+    assertSame(o.getAccessLevel(), AccessLevel.READ);
   }
 
 }

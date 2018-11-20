@@ -177,6 +177,15 @@ public class ScopeTest {
     assertTrue(e.equals(expected));
   }
 
+  @Test
+  public void testExplicit() {
+    val have = getScopes("song.READ", "collab.WRITE");
+
+    val e = Scope.explicitScopes(have);
+    val expected = getScopes("song.READ","collab.READ", "collab.WRITE");
+    assertEquals(expected, e);
+  }
+
   Set<Scope> getScopes(String... scopes) {
     return mapToSet(listOf(scopes), test::getScope);
   }

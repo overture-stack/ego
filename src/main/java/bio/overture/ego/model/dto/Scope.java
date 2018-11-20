@@ -15,11 +15,11 @@ import java.util.Set;
 @AllArgsConstructor
 public class Scope{
   Policy policy;
-  AccessLevel policyMask;
+  AccessLevel accessLevel;
 
   @Override
   public String toString() {
-    return getPolicyName()+"."+ getMaskName();
+    return getPolicyName()+"."+ getAccessLevelName();
   }
 
   public String getPolicyName() {
@@ -32,11 +32,11 @@ public class Scope{
     return policy.getName();
   }
 
-  public String getMaskName() {
-    if (policyMask == null) {
+  public String getAccessLevelName() {
+    if (accessLevel == null) {
       return "Null accessLevel";
     }
-    return policyMask.toString();
+    return accessLevel.toString();
   }
 
   public ScopeName toScopeName() {
@@ -47,11 +47,11 @@ public class Scope{
     val map = new HashMap<Policy, AccessLevel>();
     val missing = new HashSet<Scope>();
     for (Scope scope : have) {
-      map.put(scope.getPolicy(), scope.getPolicyMask());
+      map.put(scope.getPolicy(), scope.getAccessLevel());
     }
 
     for(val s: want) {
-      val need = s.getPolicyMask();
+      val need = s.getAccessLevel();
       AccessLevel got = map.get(s.getPolicy());
 
       if (got == null || !AccessLevel.allows(got, need)) {
@@ -68,12 +68,12 @@ public class Scope{
     val map = new HashMap<Policy, AccessLevel>();
     val effectiveScope = new HashSet<Scope>();
     for (val scope : have) {
-      map.put(scope.getPolicy(), scope.getPolicyMask());
+      map.put(scope.getPolicy(), scope.getAccessLevel());
     }
 
     for(val s:want) {
       val policy = s.getPolicy();
-      val need = s.getPolicyMask();
+      val need = s.getAccessLevel();
       val got=map.getOrDefault(policy, AccessLevel.DENY);
       // if we can do what we want, then add just what we need
       if (AccessLevel.allows(got, need)) {
@@ -81,12 +81,30 @@ public class Scope{
       } else {
         // If we can't do what we want, we can do what we have,
         // unless our permission is DENY, in which case we can't
-        // do anything with
+        // do anything
         if (got != AccessLevel.DENY) {
           effectiveScope.add(new Scope(policy, got));
         }
       }
     }
     return effectiveScope;
+  }
+
+  /**
+   * Return a set of explicit scopes, which always
+   * include a scope with READ access for each
+   * scope with WRITE access.
+   * @param scopes
+   * @return The explicit version of the set of scopes passed in.
+   */
+  public static Set<Scope> explicitScopes(Set<Scope> scopes) {
+    val explicit = new HashSet<Scope>();
+    for(val s:scopes) {
+      explicit.add(s);
+      if (s.getAccessLevel().equals(AccessLevel.WRITE)) {
+        explicit.add(new Scope(s.getPolicy(), AccessLevel.READ));
+      }
+    }
+    return explicit;
   }
 }

@@ -177,7 +177,7 @@ public class EntityGenerator {
   }
 
   public void addPermission(User user, Scope scope) {
-    user.addNewPermission(scope.getPolicy(), scope.getPolicyMask());
+    user.addNewPermission(scope.getPolicy(), scope.getAccessLevel());
   }
 
   public void addPermissions(User user, Set<Scope> scopes) {

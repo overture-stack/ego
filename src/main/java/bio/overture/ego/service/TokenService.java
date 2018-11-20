@@ -43,6 +43,7 @@ import bio.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
+import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
@@ -162,7 +163,10 @@ public class TokenService {
     token.setRevoked(false);
     token.setToken(tokenString);
     token.setOwner(u);
-    requestedScopes.stream().forEach(token::addScope);
+
+    for (Scope requestedScope : requestedScopes) {
+      token.addScope(requestedScope);
+    }
 
     log.info("Generating apps list");
     for (val appName : apps) {
@@ -291,7 +295,7 @@ public class TokenService {
     // is allowed to access at the time the token is checked -- we don't assume that they
     // have not changed since the token was issued.
     val owner = t.getOwner();
-    val scopes = Scope.effectiveScopes(owner.getScopes(), t.scopes());
+    val scopes = Scope.explicitScopes(Scope.effectiveScopes(owner.getScopes(), t.scopes()));
     val names = mapToSet(scopes, Scope::toString);
 
     return new TokenScopeResponse(owner.getName(), clientId,

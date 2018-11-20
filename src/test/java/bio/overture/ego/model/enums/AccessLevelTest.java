@@ -20,7 +20,7 @@ import static bio.overture.ego.model.enums.AccessLevel.DENY;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Transactional
-public class PolicyMaskTest {
+public class AccessLevelTest {
   @Test
   public void testFromValue() {
     assertThat(AccessLevel.fromValue("read")).isEqualByComparingTo(AccessLevel.READ);
