@@ -10,23 +10,19 @@ public class ScopeName {
   private String scopeName;
 
   public ScopeName(String name) {
-    val results = name.split(":");
-
-    if (results.length != 2) {
-      throw new InvalidScopeException(format("Bad scope name '%s'. Must be of the form \"<policyName>:<permission>\"",
+    if (name.indexOf(".") == -1) {
+      throw new InvalidScopeException(format("Bad scope name '%s'. Must be of the form \"<policyName>.<permission>\"",
         name));
     }
-    this.scopeName = name;
+    scopeName = name;
   }
 
-  public AccessLevel getMask() {
-    val results = scopeName.split(":");
-    return AccessLevel.fromValue(results[1]);
+  public AccessLevel getAccessLevel() {
+    return AccessLevel.fromValue(scopeName.substring(scopeName.lastIndexOf(".")+1));
   }
 
   public String getName() {
-    val results = scopeName.split(":");
-    return results[0];
+    return scopeName.substring(0, scopeName.lastIndexOf("."));
   }
 
   @Override

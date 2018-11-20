@@ -104,8 +104,7 @@ public class TokenServiceTest {
     // the user still has.
     //
     val tokenString = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
-    val scopes = test.getScopes("song.upload:WRITE",
-      "id.create:WRITE", "collab.upload:WRITE", "collab.download:WRITE");
+    val scopes = test.getScopes("song.WRITE", "id.WRITE", "portal.WRITE");
     entityGenerator.setupToken(test.user2, tokenString,1000, scopes,null);
     val result = tokenService.checkToken(test.scoreAuth, tokenString);
     System.err.printf("result='%s'", result.toString());
@@ -114,7 +113,7 @@ public class TokenServiceTest {
     assertEquals(test.scoreId, result.getClient_id() );
     assertTrue(result.getExp() > 900);
     Assert.assertEquals(test.user2.getName(), result.getUser_name());
-    assertEquals(setOf("song.upload:READ"), result.getScope());
+    assertEquals(setOf("song.READ", "id.WRITE"), result.getScope());
   }
 
   @Test
@@ -123,14 +122,14 @@ public class TokenServiceTest {
     // We should get back all the scopes that we set for our token.
 
     val tokenString = "591044a1-3ffd-4164-a6a0-0e1e666b28dc";
-    val scopes = test.getScopes("song.upload:READ", "song.download:READ");
+    val scopes = test.getScopes("song.READ", "id.WRITE");
     entityGenerator.setupToken(test.user2, tokenString,1000, scopes,null);
 
     val result = tokenService.checkToken(test.songAuth, tokenString);
 
     assertEquals(test.songId, result.getClient_id() );
     assertTrue(result.getExp() > 900);
-    assertEquals(setOf("song.upload:READ", "song.download:READ"), result.getScope());
+    assertEquals(setOf("song.READ", "id.WRITE"), result.getScope());
     Assert.assertEquals(test.user2.getName(), result.getUser_name());
   }
 
@@ -143,7 +142,7 @@ public class TokenServiceTest {
     //
     // check_token should fail with an InvalidToken exception.
     val tokenString = "691044a1-3ffd-4164-a6a0-0e1e666b28dc";
-    val scopes = test.getScopes("song.upload:READ", "song.download:READ");
+    val scopes = test.getScopes("song.READ");
     val applications = Collections.singleton(test.score);
     entityGenerator.setupToken(test.user1, tokenString,1000, scopes,applications);
 
@@ -165,7 +164,7 @@ public class TokenServiceTest {
     // We should get back the values we sent.
     val tokenString = "791044a1-3ffd-4164-a6a0-0e1e666b28dc";
 
-    val scopes = test.getScopes("song.upload:WRITE", "song.download:WRITE");
+    val scopes = test.getScopes("song.WRITE", "id.WRITE");
     val applications = Collections.singleton(test.score);
     entityGenerator.setupToken(test.user1, tokenString,1000, scopes,applications);
 
@@ -174,7 +173,7 @@ public class TokenServiceTest {
     assertEquals(test.scoreId, result.getClient_id());
     assertTrue( result.getExp() > 900);
 
-    val expected = setOf("song.upload:WRITE", "song.download:WRITE");
+    val expected = setOf("song.WRITE", "id.WRITE");
     Assert.assertEquals(test.user1.getName(), result.getUser_name());
     assertEquals(expected, result.getScope());
 
@@ -211,7 +210,7 @@ public class TokenServiceTest {
   public void issueTokenForInvalidUser() {
     // Try to issue a token for a user that does not exist
     val name="Invalid";
-    val scopes = EntityGenerator.scopeNames("collab.upload:READ", "collab.download:READ");
+    val scopes = EntityGenerator.scopeNames("collab.READ", "id.READ");
     val applications = listOf("song", "score");
 
     UsernameNotFoundException ex=null;
@@ -231,7 +230,7 @@ public class TokenServiceTest {
     //
     // issueToken() should throw an InvalidScope exception
     val name = test.user2.getName();
-    val scopes = EntityGenerator.scopeNames("collab.upload:WRITE", "collab.download:WRITE");
+    val scopes = EntityGenerator.scopeNames("collab.WRITE", "song.WRITE");
     val applications = listOf();
 
     InvalidScopeException ex=null;
@@ -251,7 +250,7 @@ public class TokenServiceTest {
     // returns only the scopes listed in token
     val tokenString = "891044a1-3ffd-4164-a6a0-0e1e666b28dc";
 
-    val scopes = test.getScopes("collab.upload:READ","collab.download:READ");
+    val scopes = test.getScopes("collab.READ","id.READ");
     val applications = Collections.singleton(test.score);
     entityGenerator.setupToken(test.user1, tokenString,1000,scopes,applications);
 
@@ -260,7 +259,7 @@ public class TokenServiceTest {
     assertEquals(test.scoreId, result.getClient_id());
     assertTrue( result.getExp() > 900);
 
-    val expected = setOf("collab.upload:READ", "collab.download:READ");
+    val expected = setOf("collab.READ", "id.READ");
     Assert.assertEquals(test.user1.getName(), result.getUser_name());
     assertEquals(expected, result.getScope());
 
@@ -271,7 +270,7 @@ public class TokenServiceTest {
     //
     // issue_token() should return a token with values we set.
     val name = test.user1.getName();
-    val scopes = EntityGenerator.scopeNames("collab.upload:READ", "collab.download:READ");
+    val scopes = EntityGenerator.scopeNames("collab.READ");
     val applications = listOf();
 
     val token = tokenService.issueToken(name, scopes, applications);
@@ -292,12 +291,12 @@ public class TokenServiceTest {
 
   @Test
   public void issueTokenForInvalidScope() {
-    // Issue a token for a scope that does not exist ("collab.offload")
+    // Issue a token for a scope that does not exist ("invalid.WRITE")
     //
     // issue_token() should throw an exception
 
     val name = test.user1.getName();
-    val scopes = EntityGenerator.scopeNames("collab.download:READ", "collab.offload:WRITE");
+    val scopes = EntityGenerator.scopeNames("collab.READ", "invalid.WRITE");
     val applications = listOf();
 
     InvalidScopeException ex=null;
@@ -317,7 +316,7 @@ public class TokenServiceTest {
     // issue_token() should throw an exception
 
     val name = test.user1.getName();
-    val scopes = EntityGenerator.scopeNames("collab.download:READ");
+    val scopes = EntityGenerator.scopeNames("collab.READ");
     val applications = listOf("NotAnApplication");
 
     Exception ex=null;
@@ -335,11 +334,11 @@ public class TokenServiceTest {
 
   @Test
   public void testGetScope() {
-    val name = new ScopeName("collab.upload:READ");
+    val name = new ScopeName("collab.READ");
     val o = tokenService.getScope(name);
     assertNotNull(o.getPolicy());
     assertNotNull(o.getPolicy().getName());
-    assertEquals("collab.upload", o.getPolicy().getName());
+    assertEquals("collab", o.getPolicy().getName());
     assertSame(o.getPolicyMask(), AccessLevel.READ);
   }
 

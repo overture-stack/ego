@@ -117,7 +117,7 @@ public class TokenService {
   public Scope getScope(ScopeName name) {
     val policy = policyService.getByName(name.getName());
 
-    return new Scope(policy, name.getMask());
+    return new Scope(policy, name.getAccessLevel());
   }
 
   public Set<Scope> missingScopes(String userName, Set<ScopeName> scopeNames) {

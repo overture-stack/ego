@@ -19,7 +19,7 @@ public class Scope{
 
   @Override
   public String toString() {
-    return getPolicyName()+":"+ getMaskName();
+    return getPolicyName()+"."+ getMaskName();
   }
 
   public String getPolicyName() {

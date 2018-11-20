@@ -16,6 +16,6 @@ public class PolicyIdStringWithAccessLevel {
 
   @Override
   public String toString() {
-    return policyId + ":" + mask;
+    return policyId + "." + mask;
   }
 }

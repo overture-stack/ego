@@ -69,7 +69,7 @@ public class ScopeTest {
   public void testMissingSame() {
     // Test for missing exactly what we have.
     // It should return an empty set.
-    val have = getScopes("song.upload:WRITE", "song.download:READ");
+    val have = getScopes("song.WRITE", "collab.READ");
     val expected = new HashSet<Scope>();
     testMissing("Same set", have, have, expected);
   }
@@ -77,7 +77,7 @@ public class ScopeTest {
   @Test
   public void testEffectiveSame() {
     // Basic sanity check. If what we have and want are the same, that's what our effective scope should be.
-    val have = getScopes("song.upload:WRITE", "song.download:READ");
+    val have = getScopes("song.WRITE", "collab.READ");
     testEffective("Same set", have, have, have);
   }
 
@@ -88,17 +88,17 @@ public class ScopeTest {
     // (ie. permissions are otherwise identical).
 
     // We should get the set difference.
-    val have = getScopes("song.upload:WRITE", "song.download:READ");
-    val want = getScopes("song.upload:WRITE", "song.download:READ", "id.create:READ");
-    val expected = getScopes("id.create:READ");
+    val have = getScopes("song.WRITE", "collab.READ");
+    val want = getScopes("song.WRITE", "collab.READ", "id.READ");
+    val expected = getScopes("id.READ");
     testMissing("Subset", have, want, expected);
   }
   @Test
   public void testEffectiveSubset() {
     // When the permissions we have is a subset of what we want,
     // our effective permissions are limited to what we have.
-    val have = getScopes("song.upload:WRITE", "song.download:READ");
-    val want = getScopes("song.upload:WRITE", "song.download:READ", "id.create:READ");
+    val have = getScopes("song.WRITE", "collab.READ");
+    val want = getScopes("song.WRITE", "collab.READ", "id.READ");
     testEffective("Subset", have, want, have);
   }
 
@@ -106,8 +106,8 @@ public class ScopeTest {
   public void testMissingSuperset() {
     // Test to see what happens if what we have is a superset of what we want.
     // We should get an empty set (nothing missing).
-    val have = getScopes("song.upload:WRITE", "song.download:READ", "id.create:READ");
-    val want = getScopes("song.upload:WRITE", "song.download:READ");
+    val have = getScopes("song.WRITE", "collab.READ", "id.READ");
+    val want = getScopes("song.WRITE", "collab.READ");
     val expected = new HashSet<Scope>();
     testMissing("Superset", have, want, expected);
   }
@@ -116,8 +116,8 @@ public class ScopeTest {
   public void testEffectiveSuperset() {
     // When the permissions we have exceed those we want,
     // our effective permissions should be limited to those we want.
-    val have = getScopes("song.upload:WRITE", "song.download:READ", "id.create:READ");
-    val want = getScopes("song.upload:WRITE", "song.download:READ");
+    val have = getScopes("song.WRITE", "collab.READ", "id.READ");
+    val want = getScopes("song.WRITE", "collab.READ");
     testEffective("Superset", have, want, want);
   }
 
@@ -125,8 +125,8 @@ public class ScopeTest {
   public void testMissingExcessPermissions() {
     // Test what happens if we have more permissions that we want
     // We should have an empty set (nothing missing)
-    val have = getScopes("song.upload:WRITE");
-    val want = getScopes("song.upload:READ");
+    val have = getScopes("song.WRITE");
+    val want = getScopes("song.READ");
     val expected = new HashSet<Scope>();
     testMissing("Excess Permission", have, want, expected);
   }
@@ -135,8 +135,8 @@ public class ScopeTest {
   public void testEffectiveExcessPermissions() {
     // If we have more permissions that we want,
     // our effective permissions should be those we want.
-    val have = getScopes("song.upload:WRITE");
-    val want = getScopes("song.upload:READ");
+    val have = getScopes("song.WRITE");
+    val want = getScopes("song.READ");
     testEffective("Excess Permission", have, want, want);
   }
 
@@ -144,8 +144,8 @@ public class ScopeTest {
   public void testMissingInsufficientPermissions() {
     // Test what happens if we have fewer permissions that we want
     // We should get back the scope with the permission that isn't available)
-    val have = getScopes("song.upload:READ");
-    val want = getScopes("song.upload:WRITE");
+    val have = getScopes("song.READ");
+    val want = getScopes("song.WRITE");
     val expected = want;
     testMissing("Insufficient Permission", have, want, expected);
   }
@@ -154,8 +154,8 @@ public class ScopeTest {
   public void testEffectiveInsufficientPermissions() {
     // If we have lesser permissions than those we want,
     // our effective permission should be those we have.
-    val have = getScopes("song.upload:READ");
-    val want = getScopes("song.upload:WRITE");
+    val have = getScopes("song.READ");
+    val want = getScopes("song.WRITE");
     testEffective("Insufficient Permission", have, want, have);
   }
 
@@ -169,11 +169,11 @@ public class ScopeTest {
 
   @Test
   public void testEffective() {
-    val have = getScopes("song.upload:WRITE", "song.download:READ");
-    val want = getScopes("song.upload:READ");
+    val have = getScopes("song.WRITE", "collab.READ");
+    val want = getScopes("song.READ");
 
     val e = Scope.effectiveScopes(have, want);
-    val expected = getScopes("song.upload:READ");
+    val expected = getScopes("song.READ");
     assertTrue(e.equals(expected));
   }
 

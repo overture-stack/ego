@@ -14,8 +14,4 @@ public class TokenResponse {
   String accessToken;
   private Set<String> scope;
   private Long exp;
-
-  public String getTokenType() {
-    return "Bearer";
-  }
 }
