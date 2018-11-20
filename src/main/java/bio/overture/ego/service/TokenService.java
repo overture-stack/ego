@@ -43,7 +43,6 @@ import bio.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
@@ -55,6 +54,8 @@ import java.security.InvalidKeyException;
 import java.util.*;
 
 import static java.lang.String.format;
+import static bio.overture.ego.model.dto.Scope.effectiveScopes;
+import static bio.overture.ego.model.dto.Scope.explicitScopes;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 
 @Slf4j
@@ -295,7 +296,7 @@ public class TokenService {
     // is allowed to access at the time the token is checked -- we don't assume that they
     // have not changed since the token was issued.
     val owner = t.getOwner();
-    val scopes = Scope.explicitScopes(Scope.effectiveScopes(owner.getScopes(), t.scopes()));
+    val scopes = explicitScopes(effectiveScopes(owner.getScopes(), t.scopes()));
     val names = mapToSet(scopes, Scope::toString);
 
     return new TokenScopeResponse(owner.getName(), clientId,
