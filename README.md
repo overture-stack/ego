@@ -91,13 +91,13 @@ Database migrations and versioning is managed by [flyway](https://flywaydb.org/)
 Get current version information:
 
 ```bash
-./flyway -configFiles=<path_to_ego>/ego/src/main/resources/flyway/conf/flyway.conf -locations=filesystem:<path_to_ego>/ego/src/main/resources/flyway/sql info
+./fly
 ```
 
 Run outstanding migrations:
 
 ```bash
-./flyway -configFiles=<path_to_ego>/ego/src/main/resources/flyway/conf/flyway.conf -locations=filesystem:<path_to_ego>/ego/src/main/resources/flyway/sql migrate
+./fly migrate
 ```
 
 To see the migration naming convention, [click here.](https://flywaydb.org/documentation/migrations#naming)
@@ -163,7 +163,6 @@ An example ego JWT is mentioned below:
 ```
 
 #### Notes
-
 - "aud" field can contain one or more client IDs. This field indicates the client services that are authorized to use this JWT.
 - "groups" will differ based on the domain of client services - each domain of service should get list of groups from that domain's ego service.
 - "permissions" will differ based on domain of client service - each domain of service should get list of permissions from that domain's ego service.
