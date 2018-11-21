@@ -25,10 +25,10 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.collection.internal.PersistentBag;
-import org.hibernate.collection.internal.PersistentSet;
+import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.overture.ego.model.enums.PolicyMask;
 import org.overture.ego.model.enums.Fields;
+import org.overture.ego.utils.SessionUtils;
 import org.overture.ego.view.Views;
 
 import javax.persistence.*;
@@ -262,23 +262,17 @@ public class User implements PolicyOwner {
     // To clear wholeApplications, wholeGroups or userPermissions, use the dedicated services
     // for deleting associations or pass in an empty Set.
     if (other.wholeApplications != null) {
-      if (((PersistentSet) other.wholeApplications).getSession() != null) {
-        ((PersistentSet) other.wholeApplications).unsetSession(((PersistentSet) other.wholeApplications).getSession());
-      }
+      SessionUtils.unsetSession((AbstractPersistentCollection)other.wholeApplications);
       this.wholeApplications = other.wholeApplications;
     }
 
     if (other.wholeGroups != null) {
-      if (((PersistentSet) other.wholeGroups).getSession() != null) {
-        ((PersistentSet) other.wholeGroups).unsetSession(((PersistentSet) other.wholeGroups).getSession());
-      }
+      SessionUtils.unsetSession((AbstractPersistentCollection)other.wholeGroups);
       this.wholeGroups = other.wholeGroups;
     }
 
     if (other.userPermissions != null) {
-      if (((PersistentBag) other.userPermissions).getSession() != null) {
-        ((PersistentBag) other.userPermissions).unsetSession(((PersistentBag) other.userPermissions).getSession());
-      }
+      SessionUtils.unsetSession((AbstractPersistentCollection)other.userPermissions);
       this.userPermissions = other.userPermissions;
     }
   }
