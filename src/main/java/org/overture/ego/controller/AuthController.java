@@ -20,6 +20,7 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.overture.ego.provider.Okta.OktaTokenService;
 import org.overture.ego.provider.facebook.FacebookTokenService;
 import org.overture.ego.provider.google.GoogleTokenService;
 import org.overture.ego.token.TokenService;
@@ -42,6 +43,7 @@ public class AuthController {
   private TokenService tokenService;
   private GoogleTokenService googleTokenService;
   private FacebookTokenService facebookTokenService;
+  private OktaTokenService oktaTokenService;
   private TokenSigner tokenSigner;
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
@@ -70,6 +72,16 @@ public class AuthController {
     } else {
       throw new InvalidTokenException("Unable to generate auth token for this user");
     }
+  }
+
+  @RequestMapping(method = RequestMethod.GET, value = "/okta/token")
+  @ResponseStatus(value = HttpStatus.OK)
+  @SneakyThrows
+  public @ResponseBody
+  String exchangeOtkaTokenForAuth(
+          @RequestHeader(value = "token", required = true) final String idToken) {
+    val authInfo = oktaTokenService.verify(idToken);
+    return tokenService.generateUserToken(authInfo);
   }
 
   @RequestMapping(method = RequestMethod.GET, value = "/token/verify")

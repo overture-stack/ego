@@ -16,7 +16,7 @@ spring.datasource:
   url: jdbc:postgresql://localhost:5432/ego?stringtype=unspecified
 
   username: postgres
-  password:
+  password: password
   max-active: 10
   max-idle: 1
   min-idle: 1
@@ -45,6 +45,12 @@ facebook:
 google:
   client:
     Ids: 144611473365-k1aarg8qs6rlh67r3t7dssi1e34b6061.apps.googleusercontent.com
+
+okta:
+  clientId:
+  issuerUrl:
+  audience:
+
 
 # Logging settings.
 logging:

@@ -145,6 +145,13 @@
             <version>1.22.0</version>
         </dependency>
 
+        <!-- Okta Libraries and APIs -->
+        <dependency>
+            <groupId>com.okta.jwt</groupId>
+            <artifactId>okta-jwt-verifier</artifactId>
+            <version>0.3.2</version>
+        </dependency>
+
         <!-- Json Web Tokens -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
@@ -216,6 +223,26 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>5.1.4</version>
+                <configuration>
+                    <url>jdbc:postgresql://localhost:5432/ego?stringtype=unspecified</url>
+                    <user>postgres</user>
+                    <password>password</password>
+                    <locations>filesystem:src/main/resources/flyway/sql,classpath:db.migration</locations>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>42.1.4</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
