@@ -4,6 +4,7 @@ import bio.overture.ego.model.entity.User;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,6 +31,7 @@ public class LastloginTest {
     private EntityGenerator entityGenerator;
 
     @Test
+    @SneakyThrows
     public void testLastloginUpdate(){
         IDToken idToken = new IDToken();
         idToken.setFamily_name("foo");
@@ -41,7 +43,9 @@ public class LastloginTest {
                 userService.getByName(idToken.getEmail()).getLastLogin());
 
         tokenService.generateUserToken(idToken);
-        user = userService.getByName(idToken.getEmail());
+
+        //Another thread is setting user.lastlogin, make main thread wait until setting is complete.
+        Thread.sleep(200);
 
         assertNotNull("Verify after generatedUserToken, last login is not null.",
                 userService.getByName(idToken.getEmail()).getLastLogin());
