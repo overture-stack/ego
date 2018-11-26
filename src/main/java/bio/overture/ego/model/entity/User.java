@@ -27,14 +27,10 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.collection.internal.AbstractPersistentCollection;
 import bio.overture.ego.utils.SessionUtils;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.view.Views;
-import org.hibernate.collection.internal.PersistentBag;
-import org.hibernate.collection.internal.PersistentList;
-
 import javax.persistence.*;
 import java.util.*;
 import java.util.stream.Collectors;
