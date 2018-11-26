@@ -507,6 +507,7 @@ public class UserServiceTest {
       .isThrownBy(() -> userService.update(nonExistentEntity));
   }
 
+
   @Test
   public void testUpdateIdNotAllowed() {
     val user = userService.create(entityGenerator.createUser("First", "User"));
