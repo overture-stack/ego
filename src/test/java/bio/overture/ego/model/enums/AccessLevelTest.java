@@ -23,9 +23,9 @@ import static bio.overture.ego.model.enums.AccessLevel.DENY;
 public class AccessLevelTest {
   @Test
   public void testFromValue() {
-    assertThat(AccessLevel.fromValue("read")).isEqualByComparingTo(READ);
-    assertThat(AccessLevel.fromValue("write")).isEqualByComparingTo(WRITE);
-    assertThat(AccessLevel.fromValue("deny")).isEqualByComparingTo(DENY);
+    assertThat(AccessLevel.fromValue("read")).isEqualByComparingTo(AccessLevel.READ);
+    assertThat(AccessLevel.fromValue("write")).isEqualByComparingTo(AccessLevel.WRITE);
+    assertThat(AccessLevel.fromValue("deny")).isEqualByComparingTo(AccessLevel.DENY);
   }
 
   @Test

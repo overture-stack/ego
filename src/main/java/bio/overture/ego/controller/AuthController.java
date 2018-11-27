@@ -103,6 +103,7 @@ public class AuthController {
 
   @ExceptionHandler({ InvalidTokenException.class })
   public ResponseEntity<Object> handleInvalidTokenException(HttpServletRequest req, InvalidTokenException ex) {
+    log.error("InvalidTokenException: %s".format(ex.getMessage()));
     log.error("ID ScopedAccessToken not found.");
     return new ResponseEntity<Object>("Invalid ID ScopedAccessToken provided.", new HttpHeaders(),
       HttpStatus.BAD_REQUEST);

@@ -35,4 +35,9 @@ class TokenScope implements Serializable {
   @Type(type = "ego_access_level_enum")
   @Enumerated(EnumType.STRING)
   private AccessLevel accessLevel;
+
+  @Override
+  public String toString() {
+    return policy.getName() + "." + accessLevel.toString();
+  }
 }

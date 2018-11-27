@@ -108,7 +108,7 @@ public class TokenService {
 
   @SneakyThrows
   public String generateUserToken(User u) {
-    Set<String> permissionNames=mapToSet(u.getPermissionsList(), p->p.toString());
+    Set<String> permissionNames=mapToSet(u.getScopes(), p->p.toString());
     return generateUserToken(u, permissionNames);
   }
 
@@ -132,32 +132,46 @@ public class TokenService {
     return Scope.missingScopes(userScopes, requestedScopes);
   }
 
+  public String str(Object o) {
+    if (o == null) {
+      return "null";
+    } else {
+      return "'" + o.toString() + "'";
+    }
+  }
+  public String strList(Collection collection) {
+    if (collection == null) {
+      return "null";
+    }
+    val l = new ArrayList(collection);
+    return l.toString();
+  }
   @SneakyThrows
   public Token issueToken(String name, List<ScopeName> scopeNames, List<String> apps) {
-    log.info(format("Looking for user '%s'",name));
-    log.info(format("Scopes are '%s'", new ArrayList(scopeNames).toString()));
-    log.info(format("Apps are '%s'",new ArrayList(apps).toString()));
+    log.info(format("Looking for user '%s'", str(name)));
+    log.info(format("Scopes are '%s'", strList(scopeNames)));
+    log.info(format("Apps are '%s'",strList(apps)));
     User u = userService.getByName(name);
     if (u == null) {
       throw new UsernameNotFoundException(format("Can't find user '%s'",name));
     }
 
-    log.info(format("Got user with id '%s'",u.getId().toString()));
+    log.info(format("Got user with id '%s'",str(u.getId())));
     val userScopes = u.getScopes();
 
-    log.info(format("User's scopes are '%s'", userScopes));
+    log.info(format("User's scopes are '%s'", str(userScopes)));
 
     val requestedScopes = getScopes(new HashSet<>(scopeNames));
 
     val missingScopes = Scope.missingScopes(userScopes, requestedScopes);
     if (!missingScopes.isEmpty()) {
-      val msg = format("User %s has no access to scopes [%s]", name, missingScopes);
+      val msg = format("User %s has no access to scopes [%s]", str(name), str(missingScopes));
       log.info(msg);
       throw new InvalidScopeException(msg);
     }
 
     val tokenString = generateTokenString();
-    log.info(format("Generated token string '%s'",tokenString));
+    log.info(format("Generated token string '%s'",str(tokenString)));
 
     val token = new Token();
     token.setExpires(DURATION);
@@ -169,20 +183,22 @@ public class TokenService {
       token.addScope(requestedScope);
     }
 
-    log.info("Generating apps list");
-    for (val appName : apps) {
-      val app = applicationService.getByName(appName);
-      if (app == null) {
-        log.info(format("Can't issue token for non-existant application '%s'", appName));
-        throw new InvalidApplicationException(format("No such application %s",appName));
+    if (apps != null) {
+      log.info("Generating apps list");
+      for (val appName : apps) {
+        val app = applicationService.getByName(appName);
+        if (app == null) {
+          log.info(format("Can't issue token for non-existant application '%s'", str(appName)));
+          throw new InvalidApplicationException(format("No such application %s", str(appName)));
+        }
+        token.addApplication(app);
       }
-      token.addApplication(app);
     }
 
     log.info("Creating token in token store");
     tokenStoreService.create(token);
 
-    log.info("Returning '%s'", token);
+    log.info(format("Returning '%s'", str(token)));
 
     return token;
   }

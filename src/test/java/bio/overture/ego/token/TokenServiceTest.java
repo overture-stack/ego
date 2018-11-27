@@ -96,6 +96,11 @@ public class TokenServiceTest {
   }
 
   @Test
+  public void generateUserTokenWithPermissions() {
+
+  }
+
+  @Test
   public void checkTokenWithExcessiveScopes() {
     // Create a token for the situation where a user who issued the token having had the
     // full set of scopes for the token, but now no longer does.
