@@ -17,38 +17,18 @@
 package bio.overture.ego.repository.queryspecification;
 
 import bio.overture.ego.model.entity.*;
-import bio.overture.ego.utils.QueryUtils;
-import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.annotation.Nonnull;
 import javax.persistence.criteria.Join;
 import java.util.UUID;
 
-public class UserSpecification extends SpecificationBase<User> {
-
-  public static Specification<User> containsText(@Nonnull String text) {
-    val finalText = QueryUtils.prepareForQuery(text);
-    return (root, query, builder) -> builder.or(getQueryPredicates(builder, root, finalText,
-      "name", "email", "firstName", "lastName", "status")
-    );
-  }
-
-  public static Specification<User> inGroup(@Nonnull UUID groupId) {
+public class GroupPermissionSpecification extends SpecificationBase<Permission> {
+  public static Specification<GroupPermission> withPolicy(@Nonnull UUID policyId) {
     return (root, query, builder) ->
     {
-      Join<User, Group> groupJoin = root.join("wholeGroups");
-      return builder.equal(groupJoin.<Integer>get("id"), groupId);
+      Join<GroupPermission, Policy> applicationJoin = root.join("policy");
+      return builder.equal(applicationJoin.<Integer>get("id"), policyId);
     };
   }
-
-  public static Specification<User> ofApplication(@Nonnull UUID appId) {
-    return (root, query, builder) ->
-    {
-      Join<User, Application> applicationJoin = root.join("wholeApplications");
-      return builder.equal(applicationJoin.<Integer>get("id"), appId);
-    };
-  }
-
-
 }

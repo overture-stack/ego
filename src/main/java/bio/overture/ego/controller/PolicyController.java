@@ -1,8 +1,12 @@
 package bio.overture.ego.controller;
 
+import bio.overture.ego.model.dto.TokenScopeResponse;
+import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.service.PolicyService;
-import bio.overture.ego.service.UserService;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.entity.UserPermission;
+import bio.overture.ego.model.params.ScopeName;
+import bio.overture.ego.service.*;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -16,7 +20,6 @@ import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
-import bio.overture.ego.service.GroupService;
 import bio.overture.ego.view.Views;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -27,20 +30,27 @@ import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
 @RequestMapping("/policies")
+
 public class PolicyController {
   private final PolicyService policyService;
   private final GroupService groupService;
   private final UserService userService;
+  private final UserPermissionService userPermissionService;
+  private final GroupPermissionService groupPermissionService;
 
   @Autowired
-  public PolicyController(PolicyService policyService, GroupService groupService, UserService userService) {
+  public PolicyController(PolicyService policyService, GroupService groupService, UserService userService,
+      UserPermissionService userPermissionService, GroupPermissionService groupPermissionService) {
     this.policyService = policyService;
     this.groupService = groupService;
     this.userService = userService;
+    this.groupPermissionService = groupPermissionService;
+    this.userPermissionService = userPermissionService;
   }
 
   @AdminScoped
@@ -171,6 +181,36 @@ public class PolicyController {
     userService.addUserPermissions(userId, list);
 
     return "1 user permission successfully added to ACL '" + id + "'";
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
+  @ApiResponses(
+    value = {
+      @ApiResponse(code = 200, message = "Get list of user ids with given policy id", response = String.class)
+    }
+  )
+  public @ResponseBody
+  List<UUID> findUserIds(
+    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+    @PathVariable(value = "id", required = true) String id
+  ) {
+    return userPermissionService.findUserIdsByPolicy(id);
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
+  @ApiResponses(
+    value = {
+      @ApiResponse(code = 200, message = "Get list of user ids with given policy id", response = String.class)
+    }
+  )
+  public @ResponseBody
+  List<UUID> findGroupIds(
+    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+    @PathVariable(value = "id", required = true) String id
+    ) {
+    return groupPermissionService.findGroupIdsByPolicy(id);
   }
 
 }
