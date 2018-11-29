@@ -1,5 +1,6 @@
 package bio.overture.ego.controller;
 
+import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
@@ -191,11 +192,11 @@ public class PolicyController {
     }
   )
   public @ResponseBody
-  List<UUID> findUserIds(
+  List<PolicyResponse> findUserIds(
     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
     @PathVariable(value = "id", required = true) String id
   ) {
-    return userPermissionService.findUserIdsByPolicy(id);
+    return userPermissionService.findByPolicy(id);
   }
 
   @AdminScoped
@@ -206,11 +207,11 @@ public class PolicyController {
     }
   )
   public @ResponseBody
-  List<UUID> findGroupIds(
+  List<PolicyResponse> findGroupIds(
     @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
     @PathVariable(value = "id", required = true) String id
     ) {
-    return groupPermissionService.findGroupIdsByPolicy(id);
+    return groupPermissionService.findByPolicy(id);
   }
 
 }

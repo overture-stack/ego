@@ -1,6 +1,8 @@
 package bio.overture.ego.service;
 
+import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.GroupPermission;
+import bio.overture.ego.model.entity.Permission;
 import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.repository.queryspecification.GroupPermissionSpecification;
 import bio.overture.ego.repository.queryspecification.UserPermissionSpecification;
@@ -26,12 +28,15 @@ public class GroupPermissionService extends PermissionService<GroupPermission> {
       where(GroupPermissionSpecification.withPolicy(fromString(policyId))));
   }
 
-
-  public List<UUID> findGroupIdsByPolicy(@NonNull String policyId) {
+  public List<PolicyResponse> findByPolicy(@NonNull String policyId) {
     val permissions = findAllByPolicy(policyId);
-    if (permissions == null) {
-      return null;
-    }
-    return mapToList(permissions,p -> p.getOwner().getId());
+    return mapToList(permissions, this::getPolicyResponse);
+  }
+
+  public PolicyResponse getPolicyResponse(GroupPermission p) {
+    val name=p.getOwner().getName();
+    val id=p.getOwner().getId().toString();
+    val mask = p.getAccessLevel();
+    return new PolicyResponse(id, name, mask);
   }
 }

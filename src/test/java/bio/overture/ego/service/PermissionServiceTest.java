@@ -1,7 +1,9 @@
 package bio.overture.ego.service;
 
 import bio.overture.ego.controller.resolver.PageableResolver;
+import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.queryspecification.GroupPermissionSpecification;
@@ -31,6 +33,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.setMaxElementsForPrinting;
 
 @Slf4j
 @SpringBootTest
@@ -63,16 +66,22 @@ public class PermissionServiceTest {
     entityGenerator.setupTestPolicies();
 
     val policy = policyService.getByName("Study001");
-    val group1 = groupService.getByName("Group One");
-    val group2 = groupService.getByName("Group Three");
+
+    val name1 = "Group One";
+    val name2 = "Group Three";
+
+    val group1 = groupService.getByName(name1);
+    val group2 = groupService.getByName(name2);
 
     val permissions = asList(new PolicyIdStringWithAccessLevel(policy.getId().toString(), "READ"));
     groupService.addGroupPermissions(group1.getId().toString(), permissions);
     groupService.addGroupPermissions(group2.getId().toString(), permissions);
 
-    val expected = asList(group1.getId(), group2.getId());
+    val expected = asList(
+      new PolicyResponse(group1.getId().toString(), name1, AccessLevel.READ),
+      new PolicyResponse(group2.getId().toString(), name2, AccessLevel.READ));
 
-    val actual = groupPermissionService.findGroupIdsByPolicy(policy.getId().toString());
+    val actual = groupPermissionService.findByPolicy(policy.getId().toString());
 
     assertThat(actual).isEqualTo(expected);
   }
@@ -84,17 +93,21 @@ public class PermissionServiceTest {
     entityGenerator.setupTestPolicies();
 
     val policy = policyService.getByName("Study001");
-    val user1 = userService.getByName("FirstUser@domain.com");
-    val user2 = userService.getByName("SecondUser@domain.com");
+    val name1 = "FirstUser@domain.com";
+    val name2 = "SecondUser@domain.com";
+    val user1 = userService.getByName(name1);
+    val user2 = userService.getByName(name2);
 
     val permissions = asList(new PolicyIdStringWithAccessLevel(policy.getId().toString(), "READ"));
     userService.addUserPermissions(user1.getId().toString(), permissions);
     userService.addUserPermissions(user2.getId().toString(), permissions);
 
-    val expected = asList(user1.getId(), user2.getId());
+    val expected = asList(
+      new PolicyResponse(user1.getId().toString(), name1, AccessLevel.READ),
+      new PolicyResponse(user2.getId().toString(), name2, AccessLevel.READ));
 
-    val actual = userPermissionService.findUserIdsByPolicy(policy.getId().toString());
-
+    val actual = userPermissionService.findByPolicy(policy.getId().toString());;
+    System.out.printf("%s",actual.get(0).toString());
     assertThat(actual).isEqualTo(expected);
   }
 

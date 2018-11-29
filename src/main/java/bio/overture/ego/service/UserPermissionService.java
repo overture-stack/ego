@@ -1,5 +1,6 @@
 package bio.overture.ego.service;
 
+import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.repository.queryspecification.UserPermissionSpecification;
 import lombok.NonNull;
@@ -24,11 +25,15 @@ public class UserPermissionService extends PermissionService<UserPermission> {
       where(UserPermissionSpecification.withPolicy(fromString(policyId))));
   }
 
-  public List<UUID> findUserIdsByPolicy(@NonNull String policyId) {
-    val permissions = findAllByPolicy(policyId);
-    if (permissions == null) {
-      return null;
-    }
-    return mapToList(permissions,p -> p.getOwner().getId());
+  public List<PolicyResponse> findByPolicy(@NonNull String policyId) {
+    val userPermissions = findAllByPolicy(policyId);
+    return mapToList(userPermissions, this::getPolicyResponse);
+  }
+
+  public PolicyResponse getPolicyResponse(UserPermission userPermission) {
+    val name=userPermission.getOwner().getName();
+    val id=userPermission.getOwner().getId().toString();
+    val mask = userPermission.getAccessLevel();
+    return new PolicyResponse(id, name, mask);
   }
 }
