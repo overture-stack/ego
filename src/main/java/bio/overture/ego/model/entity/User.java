@@ -27,7 +27,6 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import bio.overture.ego.utils.SessionUtils;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.view.Views;
@@ -39,6 +38,7 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.HibernateSessions.*;
 
 @Slf4j
 @Entity
@@ -279,17 +279,17 @@ public class User implements PolicyOwner {
     // To clear wholeApplications, wholeGroups or userPermissions, use the dedicated services
     // for deleting associations or pass in an empty Set.
     if (other.wholeApplications != null) {
-      SessionUtils.unsetSession(other.getWholeApplications());
+      unsetSession(other.getWholeApplications());
       this.wholeApplications = other.getWholeApplications();
     }
 
     if (other.wholeGroups != null) {
-      SessionUtils.unsetSession(other.getWholeGroups());
+      unsetSession(other.getWholeGroups());
       this.wholeGroups = other.getWholeGroups();
     }
 
     if (other.userPermissions != null) {
-      SessionUtils.unsetSession(other.getUserPermissions());
+      unsetSession(other.getUserPermissions());
       this.userPermissions = other.getUserPermissions();
     }
   }

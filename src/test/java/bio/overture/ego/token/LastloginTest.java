@@ -6,6 +6,7 @@ import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,8 @@ public class LastloginTest {
     @Test
     @SneakyThrows
     public void testLastloginUpdate(){
-        IDToken idToken = new IDToken();
+
+        val idToken = new IDToken();
         idToken.setFamily_name("foo");
         idToken.setGiven_name("bar");
         idToken.setEmail("foobar@domain.com");
@@ -44,7 +46,7 @@ public class LastloginTest {
 
         tokenService.generateUserToken(idToken);
 
-        //Another thread is setting user.lastlogin, make main thread wait until setting is complete.
+        // Another thread is setting user.lastlogin, make main thread wait until setting is complete.
         Thread.sleep(200);
 
         assertNotNull("Verify after generatedUserToken, last login is not null.",
@@ -56,4 +58,5 @@ public class LastloginTest {
         // will cause exception.
         userService.delete(user.getId().toString());
     }
+
 }
