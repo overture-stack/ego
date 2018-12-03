@@ -77,8 +77,7 @@ public class GroupService extends BaseService<Group, UUID> {
 
   public Group update(@NonNull Group updatedGroupInfo) {
     Group group = getById(groupRepository, updatedGroupInfo.getId());
-    group.update(updatedGroupInfo);
-    return groupRepository.save(group);
+    return groupRepository.save(group.update(updatedGroupInfo));
   }
 
   public void delete(@NonNull String groupId) {

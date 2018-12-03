@@ -33,6 +33,7 @@ import javax.persistence.*;
 import java.util.*;
 
 @Data
+@Builder
 @ToString(exclude = { "wholeUsers", "wholeApplications", "groupPermissions" })
 @Table(name = "egogroup")
 @Entity
@@ -40,6 +41,7 @@ import java.util.*;
 @JsonInclude()
 @EqualsAndHashCode(of = { "id" })
 @NoArgsConstructor
+@AllArgsConstructor
 @RequiredArgsConstructor
 @JsonView(Views.REST.class)
 public class Group implements PolicyOwner {
@@ -62,12 +64,12 @@ public class Group implements PolicyOwner {
     strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "group_uuid")
   UUID id;
-  @Column(nullable = false, name = Fields.NAME, updatable = false)
+  @Column(nullable = false, name = Fields.NAME, updatable = true)
   @NonNull
   String name;
-  @Column(nullable = false, name = Fields.DESCRIPTION, updatable = false)
+  @Column(nullable = false, name = Fields.DESCRIPTION, updatable = true)
   String description;
-  @Column(nullable = false, name = Fields.STATUS, updatable = false)
+  @Column(nullable = false, name = Fields.STATUS, updatable = true)
   String status;
   @ManyToMany(targetEntity = Application.class)
   @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
@@ -126,21 +128,30 @@ public class Group implements PolicyOwner {
     }
   }
 
-  public void update(Group other) {
-    this.name = other.getName();
-    this.description = other.getDescription();
-    this.status = other.getStatus();
+  public Group update(Group other) {
+    val builder = Group.builder()
+      .id(other.getId())
+      .name(other.getName())
+      .description(other.getDescription())
+      .status(other.getStatus());
+
 
     // Do not update ID, that is programmatic.
 
     // Update Users and Applications only if provided (not null)
     if (other.wholeApplications != null) {
-      this.wholeApplications = other.getWholeApplications();
+      builder.wholeApplications(other.getWholeApplications());
+    } else {
+      builder.wholeApplications(this.getWholeApplications());
     }
 
     if (other.wholeUsers != null) {
-      this.wholeUsers = other.getWholeUsers();
+      builder.wholeUsers(other.getWholeUsers());
+    } else {
+      builder.wholeUsers(this.getWholeUsers());
     }
+
+    return builder.build();
   }
 
   private void initApplications() {
