@@ -30,7 +30,6 @@ import org.hibernate.annotations.LazyCollectionOption;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.view.Views;
-
 import javax.persistence.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,6 +38,7 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.HibernateSessions.*;
 
 @Slf4j
 @Entity
@@ -269,6 +269,7 @@ public class User implements PolicyOwner {
     this.role = other.getRole();
     this.status = other.getStatus();
     this.preferredLanguage = other.getPreferredLanguage();
+    this.lastLogin = other.getLastLogin();
 
     // Don't merge the ID, CreatedAt, or LastLogin date - those are procedural.
 
@@ -278,14 +279,17 @@ public class User implements PolicyOwner {
     // To clear wholeApplications, wholeGroups or userPermissions, use the dedicated services
     // for deleting associations or pass in an empty Set.
     if (other.wholeApplications != null) {
+      unsetSession(other.getWholeApplications());
       this.wholeApplications = other.getWholeApplications();
     }
 
     if (other.wholeGroups != null) {
+      unsetSession(other.getWholeGroups());
       this.wholeGroups = other.getWholeGroups();
     }
 
     if (other.userPermissions != null) {
+      unsetSession(other.getUserPermissions());
       this.userPermissions = other.getUserPermissions();
     }
   }
