@@ -197,6 +197,11 @@
             <version>1.0.8.RELEASE</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.scribejava</groupId>
+            <artifactId>scribejava-apis</artifactId>
+            <version>6.1.0</version>
+        </dependency>
     </dependencies>
 
     <build>
