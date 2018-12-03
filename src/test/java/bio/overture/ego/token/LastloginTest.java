@@ -13,6 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -49,14 +52,17 @@ public class LastloginTest {
         // Another thread is setting user.lastlogin, make main thread wait until setting is complete.
         Thread.sleep(200);
 
-        assertNotNull("Verify after generatedUserToken, last login is not null.",
-                userService.getByName(idToken.getEmail()).getLastLogin());
+        val lastLogin = userService.getByName(idToken.getEmail()).getLastLogin();
 
         // Must manually delete user. Using @Transactional will
         // trigger exception, as there are two
         // threads involved, new thread will try to find user in an empty repo which
-        // will cause exception.
+        // will cause exception. This is done even if lastLogin assertion fails
         userService.delete(user.getId().toString());
+
+        assertNotNull("Verify after generatedUserToken, last login is not null.", lastLogin);
     }
+
+
 
 }
