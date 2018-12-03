@@ -53,9 +53,6 @@ public class UserServiceTest {
   private PolicyService policyService;
 
   @Autowired
-  private UserPermissionService userPermissionService;
-
-  @Autowired
   private EntityGenerator entityGenerator;
 
   // Create
