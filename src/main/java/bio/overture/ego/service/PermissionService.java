@@ -3,11 +3,10 @@ package bio.overture.ego.service;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import bio.overture.ego.model.entity.Permission;
-import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.PermissionRepository;
-import bio.overture.ego.repository.queryspecification.PermissionSpecification;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -17,27 +16,26 @@ import static java.util.UUID.fromString;
 
 @Slf4j
 @Transactional
-public abstract class PermissionService extends BaseService<Permission, UUID> {
+public abstract class PermissionService<T extends Permission> extends BaseService<T, UUID> {
+  @Autowired
+  private PermissionRepository<T> repository;
 
-  private PermissionRepository<Permission> repository;
-
+  protected PermissionRepository<T> getRepository() {
+    return repository;
+  }
   // Create
-  public Permission create(@NonNull Permission entity) {
+  public T create(@NonNull T entity) {
     return repository.save(entity);
   }
 
   // Read
-  public Permission get(@NonNull String entityId) {
+  public T get(@NonNull String entityId) {
     return getById(repository, fromString(entityId));
   }
 
-  public Page<Permission> listAclEntities(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
-    return repository.findAll(PermissionSpecification.filterBy(filters), pageable);
-  }
-
   // Update
-  public Permission update(@NonNull Permission updatedEntity) {
-    Permission entity = getById(repository, updatedEntity.getId());
+  public T update(@NonNull T updatedEntity) {
+    val entity = getById(repository, updatedEntity.getId());
     entity.update(updatedEntity);
     repository.save(entity);
     return updatedEntity;

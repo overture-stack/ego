@@ -9,7 +9,6 @@ import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -989,3 +988,5 @@ public class UserServiceTest {
     assertThat(pagedUserPermissions.getTotalElements()).isEqualTo(3L);
   }
 }
+
+

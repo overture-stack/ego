@@ -16,6 +16,7 @@
 
 package bio.overture.ego.controller;
 
+import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.params.ScopeName;
@@ -36,9 +37,11 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Set;
 
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static java.lang.String.format;
 
 @Slf4j
@@ -57,8 +60,7 @@ public class TokenController {
     @RequestHeader(value = "Authorization") final String authToken,
     @RequestParam(value = "token") final String token) {
 
-    val t = tokenService.checkToken(authToken, token);
-    return t;
+    return tokenService.checkToken(authToken, token);
   }
 
   @RequestMapping(method = RequestMethod.POST, value = "/token")
@@ -66,13 +68,20 @@ public class TokenController {
   public @ResponseBody
   TokenResponse issueToken(
     @RequestHeader(value = "Authorization") final String authorization,
-    @RequestParam(value = "name")String name,
+    @RequestParam(value = "description")String description,
     @RequestParam(value = "scopes") ArrayList<String> scopes,
     @RequestParam(value = "applications", required = false) ArrayList<String> applications) {
-    val names = scopes.stream().map(s -> new ScopeName(s)).collect(Collectors.toList());
-    val t = tokenService.issueToken(name, names, applications);
-    TokenResponse response = new TokenResponse(t.getToken(), new HashSet<>(scopes), t.getSecondsUntilExpiry());
+    val names = mapToList(scopes, s -> new ScopeName(s));
+    val t = tokenService.issueToken(description, names, applications);
+    Set<String> issuedScopes=mapToSet(t.scopes(), x->x.toString());
+    TokenResponse response = new TokenResponse(t.getToken(), issuedScopes, t.getSecondsUntilExpiry());
     return response;
+  }
+
+
+  @ResponseBody
+  List<TokenResponse> listTokens(@RequestHeader(value = "Authorization") String authorization) {
+    return null;
   }
 
   @ExceptionHandler({ InvalidTokenException.class })

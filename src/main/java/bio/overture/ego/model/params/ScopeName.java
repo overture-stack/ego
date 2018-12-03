@@ -1,6 +1,7 @@
 package bio.overture.ego.model.params;
 
 import lombok.Data;
+import lombok.val;
 import bio.overture.ego.model.enums.AccessLevel;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import static java.lang.String.format;

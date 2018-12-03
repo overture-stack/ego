@@ -1,6 +1,8 @@
 package bio.overture.ego.service;
 
 import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.repository.GroupPermissionRepository;
+import bio.overture.ego.repository.UserPermissionRepository;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import bio.overture.ego.model.search.SearchFilter;
@@ -21,13 +23,8 @@ import static java.util.UUID.fromString;
 @Service
 @Transactional
 public class PolicyService extends BaseService<Policy, UUID> {
-
-  /*
-    Dependencies
-   */
   @Autowired
   private PolicyRepository policyRepository;
-
   // Create
   public Policy create(@NonNull Policy policy) {
     return policyRepository.save(policy);
