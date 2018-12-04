@@ -68,11 +68,11 @@ public class TokenController {
   public @ResponseBody
   TokenResponse issueToken(
     @RequestHeader(value = "Authorization") final String authorization,
-    @RequestParam(value = "description")String description,
+    @RequestParam(value = "name") String name,
     @RequestParam(value = "scopes") ArrayList<String> scopes,
     @RequestParam(value = "applications", required = false) ArrayList<String> applications) {
-    val names = mapToList(scopes, s -> new ScopeName(s));
-    val t = tokenService.issueToken(description, names, applications);
+    val scopeNames = mapToList(scopes, s -> new ScopeName(s));
+    val t = tokenService.issueToken(name, scopeNames, applications);
     Set<String> issuedScopes=mapToSet(t.scopes(), x->x.toString());
     TokenResponse response = new TokenResponse(t.getToken(), issuedScopes, t.getSecondsUntilExpiry());
     return response;
