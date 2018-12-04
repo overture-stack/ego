@@ -64,12 +64,12 @@ public class Group implements PolicyOwner {
     strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "group_uuid")
   UUID id;
-  @Column(nullable = false, name = Fields.NAME, updatable = true)
+  @Column(nullable = false, name = Fields.NAME)
   @NonNull
   String name;
-  @Column(nullable = false, name = Fields.DESCRIPTION, updatable = true)
+  @Column(nullable = false, name = Fields.DESCRIPTION)
   String description;
-  @Column(nullable = false, name = Fields.STATUS, updatable = true)
+  @Column(nullable = false, name = Fields.STATUS)
   String status;
   @ManyToMany(targetEntity = Application.class)
   @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
