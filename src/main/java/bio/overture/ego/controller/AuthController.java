@@ -18,11 +18,8 @@ package bio.overture.ego.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.github.scribejava.apis.LinkedInApi20;
-import com.github.scribejava.core.builder.ServiceBuilder;
-import com.github.scribejava.core.oauth.OAuth20Service;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +35,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.servlet.view.RedirectView;
 
 import bio.overture.ego.provider.facebook.FacebookTokenService;
@@ -54,20 +50,21 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/oauth")
 public class AuthController {
+
   @Autowired
   private TokenService tokenService;
+
   @Autowired
   private GoogleTokenService googleTokenService;
+
   @Autowired
   private FacebookTokenService facebookTokenService;
+
   @Autowired
   private TokenSigner tokenSigner;
+
   @Autowired
   private OAuthService oAuthService;
-
-  private static final String OAUTH20_SERVICE = "oAuth20Service";
-
-  private static final String OAUTH_REDIRECT_URI = "oauthRedirectUri";
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
   @ResponseStatus(value = HttpStatus.OK)
@@ -93,40 +90,14 @@ public class AuthController {
     }
   }
 
-  @RequestMapping(method = RequestMethod.GET, value = "/login")
+  @RequestMapping(method = RequestMethod.GET, value = "/linkedin-cb")
   @SneakyThrows
-  public RedirectView login(@RequestParam("provider") String provider, @RequestParam("redirect_uri") String redirectUri,
-      HttpServletRequest request) {
-    request.getSession().setAttribute(OAUTH_REDIRECT_URI, redirectUri);
-
-    String callback = ServletUriComponentsBuilder.fromCurrentRequest().replaceQuery("")
-        .replacePath("/oauth/linkedin-redirect").toUriString();
-
-    // TODO: create service based on provider
-    OAuth20Service linkedInService = new ServiceBuilder("77lcvdl8p350ib").apiSecret("C8dHnjqou1ScIKoA")
-        .scope("r_basicprofile r_emailaddress").callback(callback).build(LinkedInApi20.instance());
-    request.getSession().setAttribute(OAUTH20_SERVICE, linkedInService);
-
-    return new RedirectView(linkedInService.getAuthorizationUrl());
-  }
-
-  @RequestMapping(method = RequestMethod.GET, value = "/linkedin-redirect")
-  @SneakyThrows
-  public RedirectView callback(HttpServletRequest request, RedirectAttributes attributes,
-      @RequestParam("code") String code) {
-    Object oAuth20Service = request.getSession().getAttribute(OAUTH20_SERVICE);
-    if (!(oAuth20Service instanceof OAuth20Service)) {
-      throw new Exception("No auth20 service");
-    }
-
-    Object redirectUri = request.getSession().getAttribute(OAUTH_REDIRECT_URI);
-    if (!(redirectUri instanceof String)) {
-      throw new Exception("No redirect_uri");
-    }
-
+  public RedirectView callback(@RequestParam("code") String code, RedirectAttributes attributes,
+      @Value("${oauth.redirectUri}") final String redirectUri) {
     RedirectView redirectView = new RedirectView();
+
     redirectView.setUrl((String) redirectUri);
-    val authInfo = oAuthService.getAuthInfo(code, (OAuth20Service) oAuth20Service);
+    val authInfo = oAuthService.getAuthInfoFromLinkedIn(code);
     if (authInfo.isPresent()) {
       attributes.addAttribute("token", tokenService.generateUserToken(authInfo.get()));
       return redirectView;
