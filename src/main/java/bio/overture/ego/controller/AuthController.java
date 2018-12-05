@@ -42,6 +42,7 @@ import bio.overture.ego.provider.google.GoogleTokenService;
 import bio.overture.ego.service.OAuthService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.signer.TokenSigner;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -49,21 +50,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequestMapping("/oauth")
+@AllArgsConstructor(onConstructor = @__({ @Autowired }))
 public class AuthController {
-
-  @Autowired
   private TokenService tokenService;
-
-  @Autowired
   private GoogleTokenService googleTokenService;
-
-  @Autowired
   private FacebookTokenService facebookTokenService;
-
-  @Autowired
   private TokenSigner tokenSigner;
-
-  @Autowired
   private OAuthService oAuthService;
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
