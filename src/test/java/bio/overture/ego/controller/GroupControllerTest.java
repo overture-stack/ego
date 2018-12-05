@@ -6,15 +6,10 @@ import bio.overture.ego.service.GroupService;
 import bio.overture.ego.utils.EntityGenerator;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.skyscreamer.jsonassert.JSONAssert;
-import org.skyscreamer.jsonassert.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -23,12 +18,14 @@ import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.junit.Assert.assertEquals;
 
 @Slf4j
-@RunWith(SpringRunner.class)
 @ActiveProfiles("test")
+@RunWith(SpringRunner.class)
 @SpringBootTest(classes = AuthorizationServiceMain.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class GroupControllerTest {
 
@@ -36,18 +33,24 @@ public class GroupControllerTest {
   private TestRestTemplate restTemplate = new TestRestTemplate();
   private HttpHeaders headers = new HttpHeaders();
 
-  @Autowired private GroupService groupService;
+  private static boolean hasRunEntitySetup = false;
+
   @Autowired private EntityGenerator entityGenerator;
+  @Autowired private GroupService groupService;
 
   @Before
   public void Setup() {
+
+    // Initial setup of entities (run once
+    if (!hasRunEntitySetup) {
+      entityGenerator.setupTestUsers();
+      entityGenerator.setupTestApplications();
+      entityGenerator.setupTestGroups();
+      hasRunEntitySetup = true;
+    }
+
     headers.add("Authorization", "Bearer TestToken");
     headers.setContentType(MediaType.APPLICATION_JSON);
-
-    // Start Hibernate Session
-    SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-    Session session = sessionFactory.openSession();
-    Transaction tx = session.beginTransaction();
   }
 
   @Test
@@ -63,15 +66,14 @@ public class GroupControllerTest {
 
     HttpStatus responseStatus = response.getStatusCode();
 
-    // TODO: Proper response description and testing
     assertEquals(responseStatus, HttpStatus.OK);
   }
 
   @Test
   public void GetGroup() throws JSONException {
 
-    val group = groupService.create(entityGenerator.createGroup("Group Zero"));
-    val groupId = group.getId();
+    // Groups created in setup
+    val groupId = groupService.getByName("Group One").getId();
 
     HttpEntity<String> entity = new HttpEntity<String>(null, headers);
 
@@ -82,17 +84,14 @@ public class GroupControllerTest {
     HttpStatus responseStatus = response.getStatusCode();
     String responseBody = response.getBody();
 
-    String expected = String.format("{\"id\":\"%s\",\"name\":\"Group Zero\",\"description\":null,\"status\":null}", groupId);
+    String expected = String.format("{\"id\":\"%s\",\"name\":\"Group One\",\"description\":null,\"status\":null}", groupId);
 
-    // TODO: Proper response description and testing
     assertEquals(responseStatus, HttpStatus.OK);
-    JSONAssert.assertEquals(expected, responseBody, true);
+    assertThatJson(responseBody).isEqualTo(expected);
   }
 
   @Test
   public void ListGroups() throws JSONException {
-    entityGenerator.setupTestGroups();
-
     HttpEntity<String> entity = new HttpEntity<String>(null, headers);
 
     ResponseEntity<String> response = restTemplate.exchange(
@@ -100,13 +99,17 @@ public class GroupControllerTest {
         HttpMethod.GET, entity, String.class);
 
     HttpStatus responseStatus = response.getStatusCode();
-    val responseBody = JSONParser.parseJSON(response.getBody());
+    String responseBody = response.getBody();
 
-    String expected = "";
+    String expected = String.format(
+        "[{\"id\":\"%s\",\"name\":\"Group One\",\"description\":null,\"status\":null}, {\"id\":\"%s\",\"name\":\"Group Two\",\"description\":null,\"status\":null}, {\"id\":\"%s\",\"name\":\"Group Three\",\"description\":null,\"status\":null}]",
+        groupService.getByName("Group One").getId(),
+        groupService.getByName("Group Two").getId(),
+        groupService.getByName("Group Three").getId()
+    );
 
-    // TODO: Proper response description and testing
-    assertEquals(responseStatus, HttpStatus.OK);
-    JSONAssert.assertEquals(expected, responseBody, true);
+    assertEquals(HttpStatus.OK, responseStatus);
+    assertThatJson(responseBody).when(IGNORING_EXTRA_ARRAY_ITEMS, IGNORING_ARRAY_ORDER).node("resultSet").isEqualTo(expected);
   }
 
   private String createURLWithPort(String uri) {
