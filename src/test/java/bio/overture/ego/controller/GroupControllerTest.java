@@ -7,9 +7,12 @@ import bio.overture.ego.utils.EntityGenerator;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.skyscreamer.jsonassert.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -18,9 +21,13 @@ import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.persistence.EntityNotFoundException;
+import java.util.UUID;
+
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.Assert.assertEquals;
 
 @Slf4j
@@ -110,6 +117,73 @@ public class GroupControllerTest {
 
     assertEquals(HttpStatus.OK, responseStatus);
     assertThatJson(responseBody).when(IGNORING_EXTRA_ARRAY_ITEMS, IGNORING_ARRAY_ORDER).node("resultSet").isEqualTo(expected);
+  }
+
+  @Test
+  public void UpdateGroup() {
+
+    // Groups created in setup
+    val groupId = entityGenerator.setupGroup("Complete").getId();
+
+    Group update = new Group("Updated Complete");
+    update.setId(groupId);
+
+    HttpEntity<Group> entity = new HttpEntity<Group>(update, headers);
+
+    ResponseEntity<String> response = restTemplate.exchange(
+        createURLWithPort(String.format("/groups/%s", groupId)),
+        HttpMethod.PUT, entity, String.class);
+
+    String responseBody = response.getBody();
+
+    HttpStatus responseStatus = response.getStatusCode();
+    assertEquals(responseStatus, HttpStatus.OK);
+    assertThatJson(responseBody).node("id").isEqualTo(groupId);
+    assertThatJson(responseBody).node("name").isEqualTo("Updated Complete");
+  }
+
+  @Test
+  @Ignore
+  // TODO: Implement PATCH
+  public void PartialUpdateGroup() throws JSONException {
+
+    // Groups created in setup
+    val groupId = entityGenerator.setupGroup("Partial").getId();
+
+    val update = "{\"name\":\"Updated Partial\"}";
+    HttpEntity<String> entity = new HttpEntity<String>(update, headers);
+
+    ResponseEntity<String> response = restTemplate.exchange(
+        createURLWithPort(String.format("/groups/%s", groupId)),
+        HttpMethod.PATCH, entity, String.class);
+
+    String responseBody = response.getBody();
+
+    HttpStatus responseStatus = response.getStatusCode();
+    assertEquals(responseStatus, HttpStatus.OK);
+    assertThatJson(responseBody).node("id").isEqualTo(groupId);
+    assertThatJson(responseBody).node("name").isEqualTo("Updated Partial");
+  }
+
+  @Test
+  public void DeleteOne() throws JSONException {
+
+    // Groups created in setup
+    val groupId = entityGenerator.setupGroup("Temporary").getId();
+
+    HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+
+    ResponseEntity<String> response = restTemplate.exchange(
+        createURLWithPort(String.format("/groups/%s", groupId)),
+        HttpMethod.DELETE, entity, String.class);
+
+    HttpStatus responseStatus = response.getStatusCode();
+    String responseBody = response.getBody();
+
+    String expected = String.format("{\"id\":\"%s\",\"name\":\"Group One\",\"description\":null,\"status\":null}", groupId);
+
+    assertEquals(responseStatus, HttpStatus.OK);
+    assertEquals(null, groupService.getByName("Temporary"));
   }
 
   private String createURLWithPort(String uri) {
