@@ -24,6 +24,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -38,6 +39,7 @@ import java.util.Map;
 
 @Slf4j
 @Component
+@NoArgsConstructor
 public class GoogleTokenService {
 
   /*
