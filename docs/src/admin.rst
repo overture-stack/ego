@@ -1,12 +1,12 @@
-Ego for Administrators:
-=======================
+Ego for Administrators
+======================
 To administer Ego, the admin must:
+
 (1) Install Ego.
 
-(2) Inserts a new user with the admin's Oauth Id into the "egousers" table, 
-    with role ADMIN.
+(2) Inserts a new user with the admin's Oauth Id into the "egousers" table, with role ADMIN.
 
-(3) Whenever a developer creates a new Ego-aware application:
+(3) Whenever a developer creates a new Ego-aware application
       (a) create a new application in Ego with the client_id and password.
       (b) create new policies with the new policy names
       (c) assign permissions to users/groups to permit/deny them access to the

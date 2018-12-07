@@ -1,5 +1,5 @@
-Ego for Application Developers:
-===============================
+Ego for Application Developers
+==============================
 To create an Ego-aware application, a developer must:
 
 (1) Pick a unique policy name for each type of authorization that the 
