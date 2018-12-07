@@ -7,8 +7,16 @@
 Welcome to Ego's documentation!
 ===============================
 
-Ego is an OAuth2 based Authorization Provider microservice. It lets users log in using their existing logins from sites such as Google and Facebook.
+What is Ego?
+============
+Ego is an OAuth2 based Authentication and Authorization microservice. It lets users log in using their existing logins from sites such as Google and Facebook,
+manage authorization tokens, and use those tokens to grant permissions to
+Ego-aware third party applications.
 
+.. image:: ego-arch.png
+
+How does it work?
+===================
 Users, Groups, and Applications can be managed through Ego. Ego issues two 
 distinct types of tokens. 
 
@@ -43,8 +51,6 @@ service, and if so, performs the service on behalf of the user.
 Ego allows the configuration of all these users, permissions, and applications to be managed by special users called "administrators", which are ordinary users who have been assigned the role "ADMIN". Administrators can create or delete users, groups, or applications, assign individual users to groups, create new policies, assign users or groups specific permission settings, and so on; either
 directly through Ego's REST API, or using a web UI such as the one being developed at xxxxyyy. 
 
-.. image:: ego-arch.png
-
 .. toctree::
    :maxdepth: 2
 
@@ -70,11 +76,11 @@ Documentation
    :maxdepth: 4
   
    src/quickstart
+   src/glossary
+   src/overview
    src/technology
    src/administration
-   src/design
-   src/terms
-
+   src/users
 
 Indices and tables
 ==================
