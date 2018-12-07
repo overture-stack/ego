@@ -15,41 +15,22 @@ Ego-aware third party applications.
 
 .. image:: ego-arch.png
 
-How does it work?
-===================
-Users, Groups, and Applications can be managed through Ego. Ego issues two 
-distinct types of tokens. 
+How does Ego work?
+==================
 
-1) Authentication tokens, which are used to verify a user's identity. Authentication tokens are signed JSON Web Tokens (see http://jwt.io) that Ego issues when
-a user successfully logs into Ego using their Google or Facebook credentials. 
-
-An authentication token contains all of the information that ego has about a given user, including which groups they are a part of, which applications they are authorized to use , which permissions they have to use those appliactions.
-
-This data current as of the time the token is issued, and the token is 
-digitally signed by Ego with a publicly available signing key that applications
-have use to verify that an authentication token is valid. Most of Ego's 
-REST endpoints require an Ego authentication token to validate the user's
-identity before operating on their data. 
+1. Developers write Ego-aware applications that will grant a given individual access to a service based upon a given named permission or set of permissions. They configure their code to get those permissions from Ego, by calling Ego's "check_token" REST endpoint. 
 
 
-2) Authorization tokens, which a user can use selectively authorize 
-all or some of their Ego-authorized applications to perform activities 
-using a given set of their permissions.  Authorization are random numbers 
-that Ego associates with a given user, the list of permissions to grant, 
-and optionally, an allowed list of applications that may use those permission.
+2. An Ego admin user configures Ego with permission settings for these applications for users or groups of users.
 
-Using their authorization token, the user can then make a service request from
-an Ego-authorized application. The authorization token is a random number that
-reveals nothing about who it is from or what credentials it allows unless
-the application is authorized to communicate with Ego. If the application
-is authorized to communicate, and can send the client_id and password to 
-authenticate itself with ego, ego will return back the user id and allowed
-permissions to the appliacation. The application will then check to see if the
-user has the permissions that the application requires to perform the requested
-service, and if so, performs the service on behalf of the user.  
 
-Ego allows the configuration of all these users, permissions, and applications to be managed by special users called "administrators", which are ordinary users who have been assigned the role "ADMIN". Administrators can create or delete users, groups, or applications, assign individual users to groups, create new policies, assign users or groups specific permission settings, and so on; either
-directly through Ego's REST API, or using a web UI such as the one being developed at xxxxyyy. 
+3. An Ego user requests a user authorization token to grant some (or all) of their available permissions to one or more of their allowed Ego-aware applications.
+
+
+4. The Ego user uses the requests a service from one of their Ego-aware applications, and sends it the secret token as proof of who they are and what they're authorized to do.
+
+5. The application contacts Ego, which tells it the user and permissions associated with the token. If the user has the permissions that the service requires, the application knows it is authorized to perform the service on behalf of the user.
+
 
 .. toctree::
    :maxdepth: 2
@@ -77,10 +58,9 @@ Documentation
   
    src/quickstart
    src/glossary
-   src/overview
    src/technology
-   src/administration
-   src/users
+   src/audience
+   src/tokens
 
 Indices and tables
 ==================

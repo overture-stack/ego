@@ -1,24 +1,18 @@
-Ego Authorization Tokens 
-========================
+User Authorization Tokens
+=========================
+Authorization concerns what a user is *allowed to do*.
 
-1. Developers write Applications that grant a user access to a given service based upon a given permission or set of permissions (called a scope). 
+Ego's User Authorization tokens are random numbers that Ego issues to users
+so they can interact with Ego-aware applications with a chosen level of authority. 
 
-   They then configure their code to get those permissions from Ego (by calling it's "check_token" REST endpoint). 
+Each token is a unique secret password that is associated with a specific user, permissions, and optionally, an allowed set of applications.  
 
-2. An Ego admin configures Ego by setting up it's Applications, Users, Groups, Policies, and Permissions.
+Unlike passwords, Authorization tokens automatically expire, and they can be 
+revoked if the user suspects that they have been compromised. 
+ 
+The user can then use their token with Ego-authorized applications as proof
+of who they are and what they are allowed to do. Typically, the user will
+configure a client program (such as SING, the client program used with SONG, the ICGC Metadata management service) with their secret token, and the program
+will then operate with the associated level of authority. 
 
-   These settings specify: 
-   a) which Applications Ego will communicate with (and a password for each one) 
-   b) which users have access to which set of Applications and Permissions
-
-3. An Ego user can then use Ego to issue an secret authorization token granting some or all of their permissions to 
-   some or all of their Ego applications.
-
-4. Next, the Ego user requests a service from one of their Ego applications, and sends it the secret token as 
-   proof of who they are and what they're authorized to do.
-
-5. The application then contacts Ego, which tells it the user and permissions associated with the token.
-
-6. The application allows/denies access to the given service based upon those permissions.
-
-.. image:: EndUser.png 
+In more detail, when an Ego-aware application wants to know if it authorized to do something on behalf of a given user, it just sends their user authorization token to Ego, and gets back the associated information about who the user is (their user id), and what they are allowed to do (the permissions associated with their token).  If the permissions that the user have include the permission the application wants, the application know it is authorized to perform the requested service on behalf of the user.  
