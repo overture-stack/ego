@@ -35,13 +35,13 @@ public class LinkedInOAuthService {
 
   private RestTemplate restTemplate = new RestTemplate();
 
-  static final ObjectMapper objectMapper = new ObjectMapper();
+  private static final ObjectMapper objectMapper = new ObjectMapper();
 
   static final String TOKEN_ENDPOINT = "https://www.linkedin.com/oauth/v2/accessToken?grant_type={grant_type}&code={code}&redirect_uri={redirect_uri}&client_id={client_id}&client_secret={client_secret}";
 
   public Optional<IDToken> getAuthInfoFromLinkedIn(String code) {
     try {
-      final Optional<String> accessToken = getAccessTokenFromLinkedIn(code);
+      val accessToken = getAccessTokenFromLinkedIn(code);
       val headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_JSON);
       headers.set("Authorization", "Bearer " + accessToken.get());
@@ -62,7 +62,7 @@ public class LinkedInOAuthService {
 
   public Optional<String> getAccessTokenFromLinkedIn(String code) {
 
-    final ImmutableMap<String, String> uriVariables = ImmutableMap.of( //
+    val uriVariables = ImmutableMap.of( //
         "grant_type", "authorization_code", //
         "code", code, //
         "redirect_uri", "http://localhost:8081/oauth/linkedin-cb", //
@@ -72,7 +72,7 @@ public class LinkedInOAuthService {
 
     try {
       val response = restTemplate.getForEntity(TOKEN_ENDPOINT, String.class, uriVariables);
-      Map<String, String> jsonObject = objectMapper.readValue(response.getBody(),
+      val jsonObject = objectMapper.<Map<String, String>>readValue(response.getBody(),
           new TypeReference<Map<String, String>>() {
           });
       val accessToken = jsonObject.get("access_token");
@@ -86,8 +86,9 @@ public class LinkedInOAuthService {
 
   static private Optional<IDToken> parseIDToken(String idTokenJson) {
     try {
-      Map<String, String> jsonObject = objectMapper.readValue(idTokenJson, new TypeReference<Map<String, String>>() {
-      });
+      val jsonObject = objectMapper.<Map<String, String>>readValue(idTokenJson,
+          new TypeReference<Map<String, String>>() {
+          });
       IDToken idToken = IDToken.builder() //
           .email(jsonObject.get("emailAddress")) //
           .given_name(jsonObject.get("firstName")) //

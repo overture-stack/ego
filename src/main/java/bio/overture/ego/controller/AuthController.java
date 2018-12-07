@@ -86,7 +86,7 @@ public class AuthController {
   @SneakyThrows
   public RedirectView callback(@RequestParam("code") String code, RedirectAttributes attributes,
       @Value("${oauth.redirectUri}") final String redirectUri) {
-    RedirectView redirectView = new RedirectView();
+    val redirectView = new RedirectView();
 
     redirectView.setUrl((String) redirectUri);
     val authInfo = linkedInOAuthService.getAuthInfoFromLinkedIn(code);
