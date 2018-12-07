@@ -81,8 +81,11 @@ public class OAuthService {
       ObjectMapper mapper = new ObjectMapper();
       Map<String, String> jsonObject = mapper.readValue(idTokenJson, new TypeReference<Map<String, String>>() {
       });
-      IDToken idToken = IDToken.builder().email((String) jsonObject.get("emailAddress"))
-          .given_name((String) jsonObject.get("firstName")).family_name((String) jsonObject.get("lastName")).build();
+      IDToken idToken = IDToken.builder() //
+          .email(jsonObject.get("emailAddress")) //
+          .given_name(jsonObject.get("firstName")) //
+          .family_name(jsonObject.get("lastName")) //
+          .build();
       return Optional.of(idToken);
     } catch (IOException e) {
       return Optional.empty();
