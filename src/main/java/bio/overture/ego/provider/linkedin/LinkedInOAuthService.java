@@ -1,13 +1,13 @@
-package bio.overture.ego.service;
+package bio.overture.ego.provider.linkedin;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -20,25 +20,32 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import bio.overture.ego.token.IDToken;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
-public class OAuthService {
+public class LinkedInOAuthService {
 
-  @Value("${oauth.linkedIn.clientSecret}")
+  @Value("${linkedIn.clientSecret}")
   private String clientSecret;
 
-  @Value("${oauth.linkedIn.clientID}")
+  @Value("${linkedIn.clientID}")
   private String clientID;
 
-  RestTemplate restTemplate = new RestTemplate();
+  private RestTemplate restTemplate = new RestTemplate();
+
+  static final ObjectMapper objectMapper = new ObjectMapper();
+
+  static final String TOKEN_ENDPOINT = "https://www.linkedin.com/oauth/v2/accessToken?grant_type={grant_type}&code={code}&redirect_uri={redirect_uri}&client_id={client_id}&client_secret={client_secret}";
 
   public Optional<IDToken> getAuthInfoFromLinkedIn(String code) {
     try {
       final Optional<String> accessToken = getAccessTokenFromLinkedIn(code);
-      HttpHeaders headers = new HttpHeaders();
+      val headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_JSON);
       headers.set("Authorization", "Bearer " + accessToken.get());
-      HttpEntity<String> request = new HttpEntity<String>("", headers);
+      val request = new HttpEntity<String>("", headers);
 
       ResponseEntity<String> response = restTemplate.exchange(
           "https://api.linkedin.com/v1/people/~:(email-address,first-name,last-name)?format=json", HttpMethod.GET,
@@ -47,39 +54,39 @@ public class OAuthService {
       return parseIDToken(response.getBody());
 
     } catch (RestClientException | NoSuchElementException e) {
+      log.warn(e.getMessage(), e);
       return Optional.empty();
     }
 
   }
 
   public Optional<String> getAccessTokenFromLinkedIn(String code) {
-    String tokenEndpoint = "https://www.linkedin.com/oauth/v2/accessToken?grant_type={grant_type}&code={code}&redirect_uri={redirect_uri}&client_id={client_id}&client_secret={client_secret}";
 
-    Map<String, String> uriVariables = new HashMap<String, String>();
-    uriVariables.put("grant_type", "authorization_code");
-    uriVariables.put("code", code);
-    uriVariables.put("redirect_uri", "http://localhost:8081/oauth/linkedin-cb");
-    uriVariables.put("client_id", clientID);
-    uriVariables.put("client_secret", clientSecret);
+    final ImmutableMap<String, String> uriVariables = ImmutableMap.of( //
+        "grant_type", "authorization_code", //
+        "code", code, //
+        "redirect_uri", "http://localhost:8081/oauth/linkedin-cb", //
+        "client_id", clientID, //
+        "client_secret", clientSecret //
+    ); //
 
     try {
-      ResponseEntity<String> response = restTemplate.getForEntity(tokenEndpoint, String.class, uriVariables);
-      ObjectMapper mapper = new ObjectMapper();
-      Map<String, String> jsonObject = mapper.readValue(response.getBody(), new TypeReference<Map<String, String>>() {
-      });
-      String accessToken = jsonObject.get("access_token");
+      val response = restTemplate.getForEntity(TOKEN_ENDPOINT, String.class, uriVariables);
+      Map<String, String> jsonObject = objectMapper.readValue(response.getBody(),
+          new TypeReference<Map<String, String>>() {
+          });
+      val accessToken = jsonObject.get("access_token");
       return Optional.of(accessToken);
 
     } catch (RestClientException | IOException e) {
+      log.warn(e.getMessage(), e);
       return Optional.empty();
     }
-
   }
 
-  public Optional<IDToken> parseIDToken(String idTokenJson) {
+  static private Optional<IDToken> parseIDToken(String idTokenJson) {
     try {
-      ObjectMapper mapper = new ObjectMapper();
-      Map<String, String> jsonObject = mapper.readValue(idTokenJson, new TypeReference<Map<String, String>>() {
+      Map<String, String> jsonObject = objectMapper.readValue(idTokenJson, new TypeReference<Map<String, String>>() {
       });
       IDToken idToken = IDToken.builder() //
           .email(jsonObject.get("emailAddress")) //
@@ -88,6 +95,7 @@ public class OAuthService {
           .build();
       return Optional.of(idToken);
     } catch (IOException e) {
+      log.warn(e.getMessage(), e);
       return Optional.empty();
     }
   }

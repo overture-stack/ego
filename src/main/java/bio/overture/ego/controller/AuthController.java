@@ -39,7 +39,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import bio.overture.ego.provider.facebook.FacebookTokenService;
 import bio.overture.ego.provider.google.GoogleTokenService;
-import bio.overture.ego.service.OAuthService;
+import bio.overture.ego.provider.linkedin.LinkedInOAuthService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.signer.TokenSigner;
 import lombok.AllArgsConstructor;
@@ -56,7 +56,7 @@ public class AuthController {
   private GoogleTokenService googleTokenService;
   private FacebookTokenService facebookTokenService;
   private TokenSigner tokenSigner;
-  private OAuthService oAuthService;
+  private LinkedInOAuthService linkedInOAuthService;
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
   @ResponseStatus(value = HttpStatus.OK)
@@ -89,7 +89,7 @@ public class AuthController {
     RedirectView redirectView = new RedirectView();
 
     redirectView.setUrl((String) redirectUri);
-    val authInfo = oAuthService.getAuthInfoFromLinkedIn(code);
+    val authInfo = linkedInOAuthService.getAuthInfoFromLinkedIn(code);
     if (authInfo.isPresent()) {
       attributes.addAttribute("token", tokenService.generateUserToken(authInfo.get()));
       return redirectView;

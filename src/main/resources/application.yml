@@ -30,6 +30,14 @@ spring:
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
 spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
 
+oauth:
+  redirectUri: http://localhost:3501
+
+# LinkedIn Connection
+linkedIn:
+  clientID:
+  clientSecret:
+
 # Facebook Connection Details
 facebook:
   client:
