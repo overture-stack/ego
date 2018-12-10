@@ -17,6 +17,7 @@
 package bio.overture.ego.view;
 
 public interface Views {
-  interface JWTAccessToken{};
-  interface REST{};
+  interface JWTAccessToken {};
+
+  interface REST {};
 }

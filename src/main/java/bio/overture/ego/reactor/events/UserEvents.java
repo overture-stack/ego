@@ -12,14 +12,9 @@ public class UserEvents {
   // EVENT NAMES
   public static String UPDATE = UserEvents.class.getName() + ".UPDATE";
 
-  @Autowired
-  private EventBus eventBus;
+  @Autowired private EventBus eventBus;
 
   public void update(User user) {
-    eventBus.notify(
-      UserEvents.UPDATE,
-      Event.wrap(user)
-    );
+    eventBus.notify(UserEvents.UPDATE, Event.wrap(user));
   }
-
 }

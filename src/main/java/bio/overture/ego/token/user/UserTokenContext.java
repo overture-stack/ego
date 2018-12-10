@@ -21,12 +21,11 @@ import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
+import java.util.Set;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -37,5 +36,6 @@ public class UserTokenContext {
   @NonNull
   @JsonProperty("user")
   private User userInfo;
+
   private Set<String> Scope;
 }

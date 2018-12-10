@@ -18,6 +18,11 @@ package bio.overture.ego.security;
 
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.TokenService;
+import java.util.ArrayList;
+import java.util.Arrays;
+import javax.servlet.FilterChain;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -30,12 +35,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.util.StringUtils;
 
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Arrays;
-
 @Slf4j
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
@@ -44,10 +43,8 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
   @Value("${auth.token.prefix}")
   private String TOKEN_PREFIX;
 
-  @Autowired
-  private TokenService tokenService;
-  @Autowired
-  private ApplicationService applicationService;
+  @Autowired private TokenService tokenService;
+  @Autowired private ApplicationService applicationService;
 
   public JWTAuthorizationFilter(AuthenticationManager authManager, String[] publicEndpoints) {
     super(authManager);
@@ -56,9 +53,8 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
   @Override
   @SneakyThrows
-  public void doFilterInternal(HttpServletRequest request,
-    HttpServletResponse response,
-    FilterChain chain) {
+  public void doFilterInternal(
+      HttpServletRequest request, HttpServletResponse response, FilterChain chain) {
 
     if (isPublicEndpoint(request.getServletPath())) {
       chain.doFilter(request, response);
@@ -80,9 +76,11 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
       return;
     }
 
-    val authentication = new UsernamePasswordAuthenticationToken(
-      tokenService.getTokenUserInfo(removeTokenPrefix(tokenPayload)),
-      null, new ArrayList<>());
+    val authentication =
+        new UsernamePasswordAuthenticationToken(
+            tokenService.getTokenUserInfo(removeTokenPrefix(tokenPayload)),
+            null,
+            new ArrayList<>());
 
     SecurityContextHolder.getContext().setAuthentication(authentication);
   }
@@ -98,14 +96,14 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     }
 
     val authentication =
-      new UsernamePasswordAuthenticationToken(application, null, new ArrayList<>());
+        new UsernamePasswordAuthenticationToken(application, null, new ArrayList<>());
     SecurityContextHolder.getContext().setAuthentication(authentication);
   }
 
   private boolean isValidToken(String token) {
-    return !StringUtils.isEmpty(token) &&
-      token.contains(TOKEN_PREFIX) &&
-      tokenService.validateToken(removeTokenPrefix(token));
+    return !StringUtils.isEmpty(token)
+        && token.contains(TOKEN_PREFIX)
+        && tokenService.validateToken(removeTokenPrefix(token));
   }
 
   private String removeTokenPrefix(String token) {
@@ -115,8 +113,6 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
   private boolean isPublicEndpoint(String endpointPath) {
     if (this.publicEndpoints != null) {
       return Arrays.stream(this.publicEndpoints).anyMatch(item -> item.equals(endpointPath));
-    } else
-      return false;
+    } else return false;
   }
-
 }

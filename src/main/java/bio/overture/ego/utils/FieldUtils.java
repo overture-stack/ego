@@ -16,12 +16,11 @@
 
 package bio.overture.ego.utils;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class FieldUtils {
@@ -31,14 +30,18 @@ public class FieldUtils {
   }
 
   public static List<String> getStaticFieldValueList(Class c) {
-    return Arrays.stream(c.getDeclaredFields()).map(f -> getFieldValue(f)).collect(Collectors.toList());
+    return Arrays.stream(c.getDeclaredFields())
+        .map(f -> getFieldValue(f))
+        .collect(Collectors.toList());
   }
 
   public static String getFieldValue(Field field) {
     try {
       return field.get(null).toString();
     } catch (IllegalAccessException ex) {
-      log.warn("Illegal access exception. Variable: {} is either private or non-static", field.getName());
+      log.warn(
+          "Illegal access exception. Variable: {} is either private or non-static",
+          field.getName());
       return "";
     }
   }

@@ -24,7 +24,8 @@ import lombok.val;
 
 public class TypeUtils {
   @SneakyThrows
-  public static <T> T convertToAnotherType(Object fromObject, Class<T> tClass, Class<?> serializationView) {
+  public static <T> T convertToAnotherType(
+      Object fromObject, Class<T> tClass, Class<?> serializationView) {
     val mapper = new ObjectMapper();
     mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
     mapper.configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false);

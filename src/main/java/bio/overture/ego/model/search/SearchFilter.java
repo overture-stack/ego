@@ -24,9 +24,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SearchFilter {
 
-  @NonNull
-  private String filterField;
-  @NonNull
-  private String filterValue;
-
+  @NonNull private String filterField;
+  @NonNull private String filterValue;
 }

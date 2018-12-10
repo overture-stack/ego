@@ -1,10 +1,18 @@
 package bio.overture.ego.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.assertj.core.api.Assertions;
@@ -19,35 +27,21 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Transactional
 public class GroupsServiceTest {
-  @Autowired
-  private ApplicationService applicationService;
+  @Autowired private ApplicationService applicationService;
 
-  @Autowired
-  private UserService userService;
+  @Autowired private UserService userService;
 
-  @Autowired
-  private GroupService groupService;
+  @Autowired private GroupService groupService;
 
-  @Autowired
-  private PolicyService policyService;
+  @Autowired private PolicyService policyService;
 
-  @Autowired
-  private EntityGenerator entityGenerator;
+  @Autowired private EntityGenerator entityGenerator;
 
   // Create
   @Test
@@ -59,10 +53,10 @@ public class GroupsServiceTest {
   @Test
   @Ignore
   public void testCreateUniqueName() {
-//    groupService.create(entityGenerator.createGroup("Group One"));
-//    groupService.create(entityGenerator.createGroup("Group Two"));
-//    assertThatExceptionOfType(DataIntegrityViolationException.class)
-//        .isThrownBy(() -> groupService.create(entityGenerator.createGroup("Group One")));
+    //    groupService.create(entityGenerator.createGroup("Group One"));
+    //    groupService.create(entityGenerator.createGroup("Group Two"));
+    //    assertThatExceptionOfType(DataIntegrityViolationException.class)
+    //        .isThrownBy(() -> groupService.create(entityGenerator.createGroup("Group One")));
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
@@ -77,7 +71,8 @@ public class GroupsServiceTest {
 
   @Test
   public void testGetEntityNotFoundException() {
-    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> groupService.get(UUID.randomUUID().toString()));
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> groupService.get(UUID.randomUUID().toString()));
   }
 
   @Test
@@ -106,15 +101,15 @@ public class GroupsServiceTest {
   @Test
   public void testListGroupsNoFilters() {
     entityGenerator.setupTestGroups();
-    val groups = groupService
-        .listGroups(Collections.emptyList(), new PageableResolver().getPageable());
+    val groups =
+        groupService.listGroups(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(groups.getTotalElements()).isEqualTo(3L);
   }
 
   @Test
   public void testListGroupsNoFiltersEmptyResult() {
-    val groups = groupService
-        .listGroups(Collections.emptyList(), new PageableResolver().getPageable());
+    val groups =
+        groupService.listGroups(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(groups.getTotalElements()).isEqualTo(0L);
   }
 
@@ -122,7 +117,9 @@ public class GroupsServiceTest {
   public void testListGroupsFiltered() {
     entityGenerator.setupTestGroups();
     val groupNameFilter = new SearchFilter("name", "Group One");
-    val groups = groupService.listGroups(Arrays.asList(groupNameFilter), new PageableResolver().getPageable());
+    val groups =
+        groupService.listGroups(
+            Arrays.asList(groupNameFilter), new PageableResolver().getPageable());
     assertThat(groups.getTotalElements()).isEqualTo(1L);
     assertThat(groups.getContent().get(0).getName()).isEqualTo("Group One");
   }
@@ -131,7 +128,9 @@ public class GroupsServiceTest {
   public void testListGroupsFilteredEmptyResult() {
     entityGenerator.setupTestGroups();
     val groupNameFilter = new SearchFilter("name", "Group Four");
-    val groups = groupService.listGroups(Arrays.asList(groupNameFilter), new PageableResolver().getPageable());
+    val groups =
+        groupService.listGroups(
+            Arrays.asList(groupNameFilter), new PageableResolver().getPageable());
     assertThat(groups.getTotalElements()).isEqualTo(0L);
   }
 
@@ -139,7 +138,9 @@ public class GroupsServiceTest {
   @Test
   public void testFindGroupsNoFilters() {
     entityGenerator.setupTestGroups();
-    val groups = groupService.findGroups("One", Collections.emptyList(), new PageableResolver().getPageable());
+    val groups =
+        groupService.findGroups(
+            "One", Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(groups.getTotalElements()).isEqualTo(1L);
     assertThat(groups.getContent().get(0).getName()).isEqualTo("Group One");
   }
@@ -148,8 +149,9 @@ public class GroupsServiceTest {
   public void testFindGroupsFiltered() {
     entityGenerator.setupTestGroups();
     val groupNameFilter = new SearchFilter("name", "Group One");
-    val groups = groupService
-        .findGroups("Two", Arrays.asList(groupNameFilter), new PageableResolver().getPageable());
+    val groups =
+        groupService.findGroups(
+            "Two", Arrays.asList(groupNameFilter), new PageableResolver().getPageable());
     // Expect empty list
     assertThat(groups.getTotalElements()).isEqualTo(0L);
   }
@@ -167,11 +169,9 @@ public class GroupsServiceTest {
     userService.addUserToGroups(userId, Arrays.asList(groupId));
     userService.addUserToGroups(userTwoId, Arrays.asList(groupId));
 
-    val groups = groupService.findUserGroups(
-        userId,
-        Collections.emptyList(),
-        new PageableResolver().getPageable()
-    );
+    val groups =
+        groupService.findUserGroups(
+            userId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(1L);
     assertThat(groups.getContent().get(0).getName()).isEqualTo("Group One");
@@ -184,11 +184,9 @@ public class GroupsServiceTest {
 
     val userId = userService.getByName("FirstUser@domain.com").getId().toString();
 
-    val groups = groupService.findUserGroups(
-        userId,
-        Collections.emptyList(),
-        new PageableResolver().getPageable()
-    );
+    val groups =
+        groupService.findUserGroups(
+            userId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(0L);
   }
@@ -197,7 +195,11 @@ public class GroupsServiceTest {
   public void testFindUsersGroupsNoQueryNoFiltersEmptyGroupString() {
     entityGenerator.setupTestGroups();
     entityGenerator.setupTestUsers();
-    assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> groupService.findUserGroups("", Collections.emptyList(), new PageableResolver().getPageable()));
+    assertThatExceptionOfType(IllegalArgumentException.class)
+        .isThrownBy(
+            () ->
+                groupService.findUserGroups(
+                    "", Collections.emptyList(), new PageableResolver().getPageable()));
   }
 
   @Test
@@ -213,11 +215,9 @@ public class GroupsServiceTest {
 
     val groupsFilters = new SearchFilter("name", "Group One");
 
-    val groups = groupService.findUserGroups(
-        userId,
-        Arrays.asList(groupsFilters),
-        new PageableResolver().getPageable()
-    );
+    val groups =
+        groupService.findUserGroups(
+            userId, Arrays.asList(groupsFilters), new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(1L);
     assertThat(groups.getContent().get(0).getName()).isEqualTo("Group One");
@@ -236,12 +236,9 @@ public class GroupsServiceTest {
 
     val groupsFilters = new SearchFilter("name", "Group One");
 
-    val groups = groupService.findUserGroups(
-        userId,
-        "Two",
-        Arrays.asList(groupsFilters),
-        new PageableResolver().getPageable()
-    );
+    val groups =
+        groupService.findUserGroups(
+            userId, "Two", Arrays.asList(groupsFilters), new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(0L);
   }
@@ -257,12 +254,9 @@ public class GroupsServiceTest {
 
     userService.addUserToGroups(userId, Arrays.asList(groupId, groupTwoId));
 
-    val groups = groupService.findUserGroups(
-        userId,
-        "Two",
-        Collections.emptyList(),
-        new PageableResolver().getPageable()
-    );
+    val groups =
+        groupService.findUserGroups(
+            userId, "Two", Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(1L);
     assertThat(groups.getContent().get(0).getName()).isEqualTo("Group Two");
@@ -282,11 +276,9 @@ public class GroupsServiceTest {
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
     groupService.addAppsToGroup(groupTwoId, Arrays.asList(applicationTwoId));
 
-    val groups = groupService.findApplicationGroups(
-        applicationId,
-        Collections.emptyList(),
-        new PageableResolver().getPageable()
-    );
+    val groups =
+        groupService.findApplicationGroups(
+            applicationId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(1L);
     assertThat(groups.getContent().get(0).getName()).isEqualTo("Group One");
@@ -299,7 +291,9 @@ public class GroupsServiceTest {
 
     val applicationId = applicationService.getByClientId("111111").getId().toString();
 
-    val groups = groupService.findApplicationGroups(applicationId, Collections.emptyList(), new PageableResolver().getPageable());
+    val groups =
+        groupService.findApplicationGroups(
+            applicationId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(0L);
   }
@@ -309,13 +303,10 @@ public class GroupsServiceTest {
     entityGenerator.setupTestGroups();
     entityGenerator.setupTestApplications();
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> groupService
-            .findApplicationGroups(
-                "",
-                Collections.emptyList(),
-                new PageableResolver().getPageable()
-            )
-        );
+        .isThrownBy(
+            () ->
+                groupService.findApplicationGroups(
+                    "", Collections.emptyList(), new PageableResolver().getPageable()));
   }
 
   @Test
@@ -332,7 +323,9 @@ public class GroupsServiceTest {
 
     val groupsFilters = new SearchFilter("name", "Group One");
 
-    val groups = groupService.findApplicationGroups(applicationId, Arrays.asList(groupsFilters), new PageableResolver().getPageable());
+    val groups =
+        groupService.findApplicationGroups(
+            applicationId, Arrays.asList(groupsFilters), new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(1L);
     assertThat(groups.getContent().get(0).getName()).isEqualTo("Group One");
@@ -352,7 +345,12 @@ public class GroupsServiceTest {
 
     val groupsFilters = new SearchFilter("name", "Group One");
 
-    val groups = groupService.findApplicationGroups(applicationId, "Two", Arrays.asList(groupsFilters), new PageableResolver().getPageable());
+    val groups =
+        groupService.findApplicationGroups(
+            applicationId,
+            "Two",
+            Arrays.asList(groupsFilters),
+            new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(0L);
   }
@@ -369,7 +367,12 @@ public class GroupsServiceTest {
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
     groupService.addAppsToGroup(groupTwoId, Arrays.asList(applicationId));
 
-    val groups = groupService.findApplicationGroups(applicationId, "Group One", Collections.emptyList(), new PageableResolver().getPageable());
+    val groups =
+        groupService.findApplicationGroups(
+            applicationId,
+            "Group One",
+            Collections.emptyList(),
+            new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(1L);
     assertThat(groups.getContent().get(0).getName()).isEqualTo("Group One");
@@ -395,7 +398,7 @@ public class GroupsServiceTest {
   @Test
   public void testUpdateIdNotAllowed() {
     val group = groupService.create(entityGenerator.createGroup("Group One"));
-    group.setId(new UUID(12312912931L,12312912931L));
+    group.setId(new UUID(12312912931L, 12312912931L));
     // New id means new non-existent policy or one that exists and is being overwritten
     assertThatExceptionOfType(EntityNotFoundException.class)
         .isThrownBy(() -> groupService.update(group));
@@ -404,10 +407,10 @@ public class GroupsServiceTest {
   @Test
   @Ignore
   public void testUpdateNameNotAllowed() {
-//    entityGenerator.setupTestGroups();
-//    val group = groupService.getByName("Group One");
-//    group.setName("New Name");
-//    val updated = groupService.update(group);
+    //    entityGenerator.setupTestGroups();
+    //    val group = groupService.getByName("Group One");
+    //    group.setName("New Name");
+    //    val updated = groupService.update(group);
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
@@ -415,10 +418,10 @@ public class GroupsServiceTest {
   @Test
   @Ignore
   public void testUpdateStatusNotInAllowedEnum() {
-//    entityGenerator.setupTestGroups();
-//    val group = groupService.getByName("Group One");
-//    group.setStatus("Junk");
-//    val updated = groupService.update(group);
+    //    entityGenerator.setupTestGroups();
+    //    val group = groupService.getByName("Group One");
+    //    group.setStatus("Junk");
+    //    val updated = groupService.update(group);
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
@@ -446,7 +449,10 @@ public class GroupsServiceTest {
     entityGenerator.setupTestApplications();
     val applicationId = applicationService.getByClientId("111111").getId().toString();
     assertThatExceptionOfType(EntityNotFoundException.class)
-        .isThrownBy(() -> groupService.addAppsToGroup(UUID.randomUUID().toString(), Arrays.asList(applicationId)));
+        .isThrownBy(
+            () ->
+                groupService.addAppsToGroup(
+                    UUID.randomUUID().toString(), Arrays.asList(applicationId)));
   }
 
   @Test
@@ -465,7 +471,9 @@ public class GroupsServiceTest {
 
     val groupId = groupService.getByName("Group One").getId().toString();
     assertThatExceptionOfType(EntityNotFoundException.class)
-        .isThrownBy(() -> groupService.addAppsToGroup(groupId, Arrays.asList(UUID.randomUUID().toString())));
+        .isThrownBy(
+            () ->
+                groupService.addAppsToGroup(groupId, Arrays.asList(UUID.randomUUID().toString())));
   }
 
   @Test
@@ -501,7 +509,8 @@ public class GroupsServiceTest {
 
     groupService.delete(group.getId().toString());
 
-    val groups = groupService.listGroups(Collections.emptyList(), new PageableResolver().getPageable());
+    val groups =
+        groupService.listGroups(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(groups.getTotalElements()).isEqualTo(2L);
     assertThat(groups.getContent()).doesNotContain(group);
   }
@@ -556,8 +565,10 @@ public class GroupsServiceTest {
     assertThat(group.getWholeApplications().size()).isEqualTo(1);
 
     assertThatExceptionOfType(EntityNotFoundException.class)
-        .isThrownBy(() -> groupService
-            .deleteAppsFromGroup(UUID.randomUUID().toString(), Arrays.asList(applicationId)));
+        .isThrownBy(
+            () ->
+                groupService.deleteAppsFromGroup(
+                    UUID.randomUUID().toString(), Arrays.asList(applicationId)));
   }
 
   @Test
@@ -596,9 +607,7 @@ public class GroupsServiceTest {
         .isThrownBy(() -> groupService.deleteAppsFromGroup(groupId, Arrays.asList("")));
   }
 
-  /**
-   * This test guards against bad cascades against users
-   */
+  /** This test guards against bad cascades against users */
   @Test
   public void testDeleteGroupWithUserRelations() {
     val user = entityGenerator.setupUser("foo bar");
@@ -611,9 +620,7 @@ public class GroupsServiceTest {
     Assertions.assertThat(userService.get(user.getId().toString())).isNotNull();
   }
 
-  /**
-   * This test guards against bad cascades against applications
-   */
+  /** This test guards against bad cascades against applications */
   @Test
   public void testDeleteGroupWithApplicationRelations() {
     val app = applicationService.create(entityGenerator.createApplication("foobar"));
@@ -629,9 +636,10 @@ public class GroupsServiceTest {
   @Test
   public void testAddGroupPermissions() {
     entityGenerator.setupTestGroups();
-    val groups = groupService
-        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
-        .getContent();
+    val groups =
+        groupService
+            .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
+            .getContent();
     entityGenerator.setupTestPolicies();
 
     val study001 = policyService.getByName("Study001");
@@ -643,30 +651,28 @@ public class GroupsServiceTest {
     val study003 = policyService.getByName("Study003");
     val study003id = study003.getId().toString();
 
-    val permissions = Arrays.asList(
-        new PolicyIdStringWithAccessLevel(study001id, "READ"),
-        new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-        new PolicyIdStringWithAccessLevel(study003id, "DENY")
-    );
+    val permissions =
+        Arrays.asList(
+            new PolicyIdStringWithAccessLevel(study001id, "READ"),
+            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
+            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
 
     val firstGroup = groups.get(0);
 
     groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);
 
-    Assertions.assertThat(PolicyPermissionUtils.extractPermissionStrings(firstGroup.getGroupPermissions()))
-        .containsExactlyInAnyOrder(
-            "Study001.READ",
-            "Study002.WRITE",
-            "Study003.DENY"
-        );
+    Assertions.assertThat(
+            PolicyPermissionUtils.extractPermissionStrings(firstGroup.getGroupPermissions()))
+        .containsExactlyInAnyOrder("Study001.READ", "Study002.WRITE", "Study003.DENY");
   }
 
   @Test
   public void testDeleteGroupPermissions() {
     entityGenerator.setupTestGroups();
-    val groups = groupService
-        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
-        .getContent();
+    val groups =
+        groupService
+            .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
+            .getContent();
     entityGenerator.setupTestPolicies();
 
     val firstGroup = groups.get(0);
@@ -680,34 +686,36 @@ public class GroupsServiceTest {
     val study003 = policyService.getByName("Study003");
     val study003id = study003.getId().toString();
 
-    val permissions = Arrays.asList(
-        new PolicyIdStringWithAccessLevel(study001id, "READ"),
-        new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-        new PolicyIdStringWithAccessLevel(study003id, "DENY")
-    );
+    val permissions =
+        Arrays.asList(
+            new PolicyIdStringWithAccessLevel(study001id, "READ"),
+            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
+            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
 
     groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);
 
-    val groupPermissionsToRemove = firstGroup.getGroupPermissions()
-        .stream()
-        .filter(p -> !p.getPolicy().getName().equals("Study001"))
-        .map(p -> p.getId().toString())
-        .collect(Collectors.toList());
+    val groupPermissionsToRemove =
+        firstGroup
+            .getGroupPermissions()
+            .stream()
+            .filter(p -> !p.getPolicy().getName().equals("Study001"))
+            .map(p -> p.getId().toString())
+            .collect(Collectors.toList());
 
     groupService.deleteGroupPermissions(firstGroup.getId().toString(), groupPermissionsToRemove);
 
-    Assertions.assertThat(PolicyPermissionUtils.extractPermissionStrings(firstGroup.getGroupPermissions()))
-        .containsExactlyInAnyOrder(
-            "Study001.READ"
-        );
+    Assertions.assertThat(
+            PolicyPermissionUtils.extractPermissionStrings(firstGroup.getGroupPermissions()))
+        .containsExactlyInAnyOrder("Study001.READ");
   }
 
   @Test
   public void testGetGroupPermissions() {
     entityGenerator.setupTestGroups();
-    val groups = groupService
-        .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
-        .getContent();
+    val groups =
+        groupService
+            .listGroups(Collections.emptyList(), new PageableResolver().getPageable())
+            .getContent();
     entityGenerator.setupTestPolicies();
 
     val firstGroup = groups.get(0);
@@ -721,15 +729,17 @@ public class GroupsServiceTest {
     val study003 = policyService.getByName("Study003");
     val study003id = study003.getId().toString();
 
-    val permissions = Arrays.asList(
-        new PolicyIdStringWithAccessLevel(study001id, "READ"),
-        new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-        new PolicyIdStringWithAccessLevel(study003id, "DENY")
-    );
+    val permissions =
+        Arrays.asList(
+            new PolicyIdStringWithAccessLevel(study001id, "READ"),
+            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
+            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
 
     groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);
 
-    val pagedGroupPermissions = groupService.getGroupPermissions(firstGroup.getId().toString(), new PageableResolver().getPageable());
+    val pagedGroupPermissions =
+        groupService.getGroupPermissions(
+            firstGroup.getId().toString(), new PageableResolver().getPageable());
 
     assertThat(pagedGroupPermissions.getTotalElements()).isEqualTo(3L);
   }

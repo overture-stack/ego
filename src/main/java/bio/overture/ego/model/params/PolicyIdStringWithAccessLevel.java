@@ -9,10 +9,8 @@ import lombok.RequiredArgsConstructor;
 @NoArgsConstructor
 @RequiredArgsConstructor
 public class PolicyIdStringWithAccessLevel {
-  @NonNull
-  private String policyId;
-  @NonNull
-  private String mask;
+  @NonNull private String policyId;
+  @NonNull private String mask;
 
   @Override
   public String toString() {

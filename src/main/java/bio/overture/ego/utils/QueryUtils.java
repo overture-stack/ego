@@ -32,5 +32,4 @@ public class QueryUtils {
     }
     return output.toLowerCase();
   }
-
 }

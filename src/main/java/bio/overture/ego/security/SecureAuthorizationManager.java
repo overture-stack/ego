@@ -43,8 +43,8 @@ public class SecureAuthorizationManager implements AuthorizationManager {
   }
 
   public boolean authorizeWithApplication(@NonNull Authentication authentication) {
-    //User user = (User)authentication.getPrincipal();
-    //return authorize(authentication) && user.getApplications().contains(appName);
+    // User user = (User)authentication.getPrincipal();
+    // return authorize(authentication) && user.getApplications().contains(appName);
     log.error("Trying to authorize as application");
     return true;
   }
@@ -52,5 +52,4 @@ public class SecureAuthorizationManager implements AuthorizationManager {
   public boolean isActiveUser(User user) {
     return "approved".equals(user.getStatus().toLowerCase());
   }
-
 }

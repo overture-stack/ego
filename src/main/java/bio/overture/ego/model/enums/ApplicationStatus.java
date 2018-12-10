@@ -27,8 +27,7 @@ public enum ApplicationStatus {
   REJECTED("Rejected"),
   ;
 
-  @NonNull
-  private final String value;
+  @NonNull private final String value;
 
   @Override
   public String toString() {

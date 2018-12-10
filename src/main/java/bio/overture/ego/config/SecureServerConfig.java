@@ -16,10 +16,10 @@
 
 package bio.overture.ego.config;
 
-import lombok.SneakyThrows;
 import bio.overture.ego.security.AuthorizationManager;
 import bio.overture.ego.security.JWTAuthorizationFilter;
 import bio.overture.ego.security.SecureAuthorizationManager;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,14 +37,18 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 public class SecureServerConfig extends WebSecurityConfigurerAdapter {
 
   /*
-    Constants
-   */
+   Constants
+  */
   private final String[] PUBLIC_ENDPOINTS =
-    new String[] { "/oauth/token", "/oauth/google/token", "/oauth/facebook/token", "/oauth/token/public_key",
-      "/oauth/token/verify" };
+      new String[] {
+        "/oauth/token",
+        "/oauth/google/token",
+        "/oauth/facebook/token",
+        "/oauth/token/public_key",
+        "/oauth/token/verify"
+      };
 
-  @Autowired
-  private AuthenticationManager authenticationManager;
+  @Autowired private AuthenticationManager authenticationManager;
 
   @Bean
   @SneakyThrows
@@ -59,14 +63,26 @@ public class SecureServerConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    http.csrf().disable()
-      .authorizeRequests()
-      .antMatchers("/", "/oauth/**", "/swagger**", "/swagger-resources/**", "/configuration/ui", "/configuration/**",
-        "/v2/api**", "/webjars/**").permitAll()
-      .anyRequest().authenticated().and().authorizeRequests()
-      .and()
-      .addFilterAfter(authorizationFilter(), BasicAuthenticationFilter.class)
-      .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    http.csrf()
+        .disable()
+        .authorizeRequests()
+        .antMatchers(
+            "/",
+            "/oauth/**",
+            "/swagger**",
+            "/swagger-resources/**",
+            "/configuration/ui",
+            "/configuration/**",
+            "/v2/api**",
+            "/webjars/**")
+        .permitAll()
+        .anyRequest()
+        .authenticated()
+        .and()
+        .authorizeRequests()
+        .and()
+        .addFilterAfter(authorizationFilter(), BasicAuthenticationFilter.class)
+        .sessionManagement()
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
   }
-
 }

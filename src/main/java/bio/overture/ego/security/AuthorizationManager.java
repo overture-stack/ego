@@ -26,4 +26,3 @@ public interface AuthorizationManager {
 
   boolean authorizeWithApplication(@NonNull Authentication authentication);
 }
-

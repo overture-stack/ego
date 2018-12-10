@@ -16,6 +16,13 @@
 
 package bio.overture.ego.token.signer;
 
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+import java.util.Optional;
+import javax.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -23,26 +30,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import java.security.*;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Base64;
-import java.util.Optional;
-
 @Slf4j
 @Service
 @Profile("!jks")
 public class DefaultTokenSigner implements TokenSigner {
 
   /*
-  Constants
- */
+   Constants
+  */
   private static final String KEYFACTORY_TYPE = "RSA";
   /*
-    Dependencies
-   */
+   Dependencies
+  */
   @Value("${token.private-key}")
   private String encodedPrivKey;
 
@@ -92,6 +91,5 @@ public class DefaultTokenSigner implements TokenSigner {
     } else {
       return Optional.empty();
     }
-
   }
 }
