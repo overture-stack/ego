@@ -17,7 +17,6 @@
 package bio.overture.ego.provider.google;
 
 import bio.overture.ego.token.IDToken;
-import bio.overture.ego.utils.TypeUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
@@ -34,8 +33,10 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
 import java.util.Map;
+
+import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
+import static java.util.Arrays.asList;
 
 @Slf4j
 @Component
@@ -66,7 +67,7 @@ public class GoogleTokenService {
 
   private GoogleIdTokenVerifier initVerifier() {
     checkState();
-    val targetAudience = Arrays.asList(clientIDs.split(","));
+    val targetAudience = asList(clientIDs.split(","));
     return new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new JacksonFactory())
         .setAudience(targetAudience)
         .build();
@@ -76,7 +77,7 @@ public class GoogleTokenService {
   public IDToken decode(String token) {
     val claims = JwtHelper.decode(token).getClaims();
     val authInfo = new ObjectMapper().readValue(claims, Map.class);
-    return TypeUtils.convertToAnotherType(authInfo, IDToken.class);
+    return convertToAnotherType(authInfo, IDToken.class);
   }
 
   private void checkState() {
