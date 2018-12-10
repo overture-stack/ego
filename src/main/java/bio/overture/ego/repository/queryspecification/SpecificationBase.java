@@ -18,36 +18,42 @@ package bio.overture.ego.repository.queryspecification;
 
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.QueryUtils;
-import lombok.NonNull;
-import lombok.val;
-import org.springframework.data.jpa.domain.Specification;
-
+import java.util.Arrays;
+import java.util.List;
 import javax.annotation.Nonnull;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import java.util.Arrays;
-import java.util.List;
+import lombok.NonNull;
+import lombok.val;
+import org.springframework.data.jpa.domain.Specification;
 
 public class SpecificationBase<T> {
-  protected static <T> Predicate[] getQueryPredicates(@NonNull CriteriaBuilder builder,
-    @NonNull Root<T> root,
-    String queryText,
-    @NonNull String... params) {
-    return Arrays.stream(params).map(p ->
-      filterByField(builder, root, p, queryText)).toArray(Predicate[]::new);
+  protected static <T> Predicate[] getQueryPredicates(
+      @NonNull CriteriaBuilder builder,
+      @NonNull Root<T> root,
+      String queryText,
+      @NonNull String... params) {
+    return Arrays.stream(params)
+        .map(p -> filterByField(builder, root, p, queryText))
+        .toArray(Predicate[]::new);
   }
 
-  public static <T> Predicate filterByField(@NonNull CriteriaBuilder builder, @NonNull Root<T> root,
-    @NonNull String fieldName, String fieldValue) {
+  public static <T> Predicate filterByField(
+      @NonNull CriteriaBuilder builder,
+      @NonNull Root<T> root,
+      @NonNull String fieldName,
+      String fieldValue) {
     val finalText = QueryUtils.prepareForQuery(fieldValue);
     return builder.like(builder.lower(root.get(fieldName)), finalText);
   }
 
   public static <T> Specification<T> filterBy(@Nonnull List<SearchFilter> filters) {
-    return (root, query, builder) -> builder.and(
-      filters.stream().map(f -> filterByField(builder, root,
-        f.getFilterField(), f.getFilterValue())).toArray(Predicate[]::new)
-    );
+    return (root, query, builder) ->
+        builder.and(
+            filters
+                .stream()
+                .map(f -> filterByField(builder, root, f.getFilterField(), f.getFilterValue()))
+                .toArray(Predicate[]::new));
   }
 }

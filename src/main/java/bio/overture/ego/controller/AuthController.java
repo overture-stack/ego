@@ -16,8 +16,16 @@
 
 package bio.overture.ego.controller;
 
+import bio.overture.ego.provider.facebook.FacebookTokenService;
+import bio.overture.ego.provider.google.GoogleTokenService;
+import bio.overture.ego.provider.linkedin.LinkedInOAuthService;
+import bio.overture.ego.service.TokenService;
+import bio.overture.ego.token.signer.TokenSigner;
 import javax.servlet.http.HttpServletRequest;
-
+import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -37,20 +45,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
 
-import bio.overture.ego.provider.facebook.FacebookTokenService;
-import bio.overture.ego.provider.google.GoogleTokenService;
-import bio.overture.ego.provider.linkedin.LinkedInOAuthService;
-import bio.overture.ego.service.TokenService;
-import bio.overture.ego.token.signer.TokenSigner;
-import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.val;
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 @RestController
 @RequestMapping("/oauth")
-@AllArgsConstructor(onConstructor = @__({ @Autowired }))
+@AllArgsConstructor(onConstructor = @__({@Autowired}))
 public class AuthController {
   private TokenService tokenService;
   private GoogleTokenService googleTokenService;
@@ -61,7 +59,8 @@ public class AuthController {
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
   @ResponseStatus(value = HttpStatus.OK)
   @SneakyThrows
-  public @ResponseBody String exchangeGoogleTokenForAuth(@RequestHeader(value = "token") final String idToken) {
+  public @ResponseBody String exchangeGoogleTokenForAuth(
+      @RequestHeader(value = "token") final String idToken) {
     if (!googleTokenService.validToken(idToken))
       throw new InvalidTokenException("Invalid user token:" + idToken);
     val authInfo = googleTokenService.decode(idToken);
@@ -71,7 +70,8 @@ public class AuthController {
   @RequestMapping(method = RequestMethod.GET, value = "/facebook/token")
   @ResponseStatus(value = HttpStatus.OK)
   @SneakyThrows
-  public @ResponseBody String exchangeFacebookTokenForAuth(@RequestHeader(value = "token") final String idToken) {
+  public @ResponseBody String exchangeFacebookTokenForAuth(
+      @RequestHeader(value = "token") final String idToken) {
     if (!facebookTokenService.validToken(idToken))
       throw new InvalidTokenException("Invalid user token:" + idToken);
     val authInfo = facebookTokenService.getAuthInfo(idToken);
@@ -84,7 +84,9 @@ public class AuthController {
 
   @RequestMapping(method = RequestMethod.GET, value = "/linkedin-cb")
   @SneakyThrows
-  public RedirectView callback(@RequestParam("code") String code, RedirectAttributes attributes,
+  public RedirectView callback(
+      @RequestParam("code") String code,
+      RedirectAttributes attributes,
       @Value("${oauth.redirectFrontendUri}") final String redirectFrontendUri) {
     val redirectView = new RedirectView();
 
@@ -123,16 +125,20 @@ public class AuthController {
     }
   }
 
-  @ExceptionHandler({ InvalidTokenException.class })
-  public ResponseEntity<Object> handleInvalidTokenException(HttpServletRequest req, InvalidTokenException ex) {
+  @ExceptionHandler({InvalidTokenException.class})
+  public ResponseEntity<Object> handleInvalidTokenException(
+      HttpServletRequest req, InvalidTokenException ex) {
+    log.error("InvalidTokenException: %s".format(ex.getMessage()));
     log.error("ID ScopedAccessToken not found.");
-    return new ResponseEntity<Object>("Invalid ID ScopedAccessToken provided.", new HttpHeaders(),
-        HttpStatus.BAD_REQUEST);
+    return new ResponseEntity<Object>(
+        "Invalid ID ScopedAccessToken provided.", new HttpHeaders(), HttpStatus.BAD_REQUEST);
   }
 
-  @ExceptionHandler({ InvalidScopeException.class })
-  public ResponseEntity<Object> handleInvalidScopeException(HttpServletRequest req, InvalidTokenException ex) {
+  @ExceptionHandler({InvalidScopeException.class})
+  public ResponseEntity<Object> handleInvalidScopeException(
+      HttpServletRequest req, InvalidTokenException ex) {
     log.error("Invalid ScopeName: %s".format(ex.getMessage()));
-    return new ResponseEntity<Object>("{\"error\": \"%s\"}".format(ex.getMessage()), HttpStatus.BAD_REQUEST);
+    return new ResponseEntity<Object>(
+        "{\"error\": \"%s\"}".format(ex.getMessage()), HttpStatus.BAD_REQUEST);
   }
 }

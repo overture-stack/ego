@@ -19,13 +19,12 @@ package bio.overture.ego.token.app;
 import bio.overture.ego.token.TokenClaims;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
+import java.util.Arrays;
+import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.springframework.util.StringUtils;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -33,15 +32,15 @@ import java.util.List;
 public class AppTokenClaims extends TokenClaims {
 
   /*
-  Constants
- */
-  public static final String[] AUTHORIZED_GRANTS =
-    { "authorization_code", "client_credentials", "password", "refresh_token" };
-  public static final String[] SCOPES = { "read", "write", "delete" };
+   Constants
+  */
+  public static final String[] AUTHORIZED_GRANTS = {
+    "authorization_code", "client_credentials", "password", "refresh_token"
+  };
+  public static final String[] SCOPES = {"read", "write", "delete"};
   public static final String ROLE = "ROLE_CLIENT";
 
-  @NonNull
-  private AppTokenContext context;
+  @NonNull private AppTokenContext context;
 
   public String getSub() {
     if (StringUtils.isEmpty(sub)) {
@@ -54,5 +53,4 @@ public class AppTokenClaims extends TokenClaims {
   public List<String> getAud() {
     return Arrays.asList(this.context.getAppInfo().getName());
   }
-
 }

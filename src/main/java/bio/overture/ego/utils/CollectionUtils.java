@@ -5,11 +5,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class CollectionUtils {
-  public static <T,U> Set<U> mapToSet(Collection<T> collection, Function<T,U> mapper) {
+  public static <T, U> Set<U> mapToSet(Collection<T> collection, Function<T, U> mapper) {
     return collection.stream().map(mapper).collect(Collectors.toSet());
   }
 
-  public static <T,U> List<U> mapToList(Collection<T> collection, Function<T,U> mapper) {
+  public static <T, U> List<U> mapToList(Collection<T> collection, Function<T, U> mapper) {
     return collection.stream().map(mapper).collect(Collectors.toList());
   }
 
@@ -18,5 +18,6 @@ public class CollectionUtils {
   }
 
   public static List<String> listOf(String... strings) {
-    return Arrays.asList(strings);}
+    return Arrays.asList(strings);
+  }
 }

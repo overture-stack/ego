@@ -16,39 +16,52 @@
 
 package bio.overture.ego.model.entity;
 
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.HibernateSessions.*;
+import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
+import static java.lang.String.format;
+
+import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.enums.Fields;
+import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.enums.Fields;
-import bio.overture.ego.view.Views;
-
-import javax.persistence.*;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static java.lang.String.format;
-import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 
 @Slf4j
 @Entity
 @Table(name = "egouser")
 @Data
-@ToString(exclude = { "wholeGroups", "wholeApplications", "userPermissions" })
-@JsonPropertyOrder({ "id", "name", "email", "role", "status", "wholeGroups",
-  "wholeApplications", "userPermissions", "firstName", "lastName", "createdAt", "lastLogin", "preferredLanguage" })
+@ToString(exclude = {"wholeGroups", "wholeApplications", "userPermissions"})
+@JsonPropertyOrder({
+  "id",
+  "name",
+  "email",
+  "role",
+  "status",
+  "wholeGroups",
+  "wholeApplications",
+  "userPermissions",
+  "firstName",
+  "lastName",
+  "createdAt",
+  "lastLogin",
+  "preferredLanguage"
+})
 @JsonInclude()
-@EqualsAndHashCode(of = { "id" })
+@EqualsAndHashCode(of = {"id"})
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -58,56 +71,70 @@ public class User implements PolicyOwner {
   @ManyToMany(targetEntity = Group.class)
   @Cascade(org.hibernate.annotations.CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(name = "usergroup", joinColumns = { @JoinColumn(name = Fields.USERID_JOIN) },
-    inverseJoinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) })
+  @JoinTable(
+      name = "usergroup",
+      joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)})
   @JsonIgnore
   protected Set<Group> wholeGroups;
+
   @ManyToMany(targetEntity = Application.class)
   @Cascade(org.hibernate.annotations.CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(name = "userapplication", joinColumns = { @JoinColumn(name = Fields.USERID_JOIN) },
-    inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
+  @JoinTable(
+      name = "userapplication",
+      joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
   @JsonIgnore
   protected Set<Application> wholeApplications;
+
   @OneToMany(cascade = CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name = Fields.USERID_JOIN)
   @JsonIgnore
   protected List<UserPermission> userPermissions;
+
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
-  @GenericGenerator(
-    name = "user_uuid",
-    strategy = "org.hibernate.id.UUIDGenerator")
+  @GenericGenerator(name = "user_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "user_uuid")
   UUID id;
-  @JsonView({ Views.JWTAccessToken.class, Views.REST.class })
+
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @NonNull
   @Column(nullable = false, name = Fields.NAME, unique = true)
   String name;
-  @JsonView({ Views.JWTAccessToken.class, Views.REST.class })
+
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @NonNull
   @Column(nullable = false, name = Fields.EMAIL, unique = true)
   String email;
+
   @NonNull
   @Column(nullable = false, name = Fields.ROLE)
   String role;
-  @JsonView({ Views.JWTAccessToken.class, Views.REST.class })
+
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.STATUS)
   String status;
-  @JsonView({ Views.JWTAccessToken.class, Views.REST.class })
+
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.FIRSTNAME)
   String firstName;
-  @JsonView({ Views.JWTAccessToken.class, Views.REST.class })
+
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.LASTNAME)
   String lastName;
-  @JsonView({ Views.JWTAccessToken.class, Views.REST.class })
+
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.CREATEDAT)
   Date createdAt;
-  @JsonView({ Views.JWTAccessToken.class, Views.REST.class })
+
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.LASTLOGIN)
   Date lastLogin;
-  @JsonView({ Views.JWTAccessToken.class, Views.REST.class })
+
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.PREFERREDLANGUAGE)
   String preferredLanguage;
 
@@ -123,22 +150,23 @@ public class User implements PolicyOwner {
   @JsonIgnore
   public List<Permission> getPermissionsList() {
     // Get user's individual permission (stream)
-    val userPermissions = Optional.ofNullable(this.getUserPermissions())
-      .orElse(new ArrayList<>())
-      .stream();
+    val userPermissions =
+        Optional.ofNullable(this.getUserPermissions()).orElse(new ArrayList<>()).stream();
 
     // Get permissions from the user's groups (stream)
-    val userGroupsPermissions = Optional.ofNullable(this.getWholeGroups())
-      .orElse(new HashSet<>())
-      .stream()
-      .map(Group::getGroupPermissions)
-      .flatMap(List::stream);
+    val userGroupsPermissions =
+        Optional.ofNullable(this.getWholeGroups())
+            .orElse(new HashSet<>())
+            .stream()
+            .map(Group::getGroupPermissions)
+            .flatMap(List::stream);
 
     // Combine individual user permissions and the user's
     // groups (if they have any) permissions
-    val combinedPermissions = Stream.concat(userPermissions, userGroupsPermissions)
-      //.collect(Collectors.groupingBy(p -> p.getPolicy()));
-      .collect(Collectors.groupingBy(this::getP));
+    val combinedPermissions =
+        Stream.concat(userPermissions, userGroupsPermissions)
+            // .collect(Collectors.groupingBy(p -> p.getPolicy()));
+            .collect(Collectors.groupingBy(this::getP));
     // If we have no permissions at all return an empty list
     if (combinedPermissions.values().size() == 0) {
       return new ArrayList<>();
@@ -149,10 +177,11 @@ public class User implements PolicyOwner {
     // permissions list
     List<Permission> finalPermissionsList = new ArrayList<>();
 
-    combinedPermissions.forEach((entity, permissions) -> {
-      permissions.sort(Comparator.comparing(Permission::getAccessLevel).reversed());
-      finalPermissionsList.add(permissions.get(0));
-    });
+    combinedPermissions.forEach(
+        (entity, permissions) -> {
+          permissions.sort(Comparator.comparing(Permission::getAccessLevel).reversed());
+          finalPermissionsList.add(permissions.get(0));
+        });
     return finalPermissionsList;
   }
 
@@ -165,10 +194,10 @@ public class User implements PolicyOwner {
   public Set<Scope> getScopes() {
     List<Permission> p;
     try {
-      p=this.getPermissionsList();
-    } catch(NullPointerException e) {
+      p = this.getPermissionsList();
+    } catch (NullPointerException e) {
       log.error(format("Can't get permissions for user '%s'", getName()));
-      p=Collections.emptyList();
+      p = Collections.emptyList();
     }
 
     return mapToSet(p, Permission::toScope);
@@ -196,14 +225,13 @@ public class User implements PolicyOwner {
   }
 
   /*
-    Roles is an array only in JWT but a String in Database.
-    This is done for future compatibility - at the moment ego only needs one Role but this may change
-     as project progresses.
-     Currently, using the only role by extracting first role in the array
-   */
+   Roles is an array only in JWT but a String in Database.
+   This is done for future compatibility - at the moment ego only needs one Role but this may change
+    as project progresses.
+    Currently, using the only role by extracting first role in the array
+  */
   public void setRoles(@NonNull List<String> roles) {
-    if (roles.size() > 0)
-      this.role = roles.get(0);
+    if (roles.size() > 0) this.role = roles.get(0);
   }
 
   public void addNewApplication(@NonNull Application app) {
@@ -218,29 +246,23 @@ public class User implements PolicyOwner {
 
   public void addNewPermission(@NonNull Policy policy, @NonNull AccessLevel accessLevel) {
     initPermissions();
-    val permission = UserPermission.builder()
-      .policy(policy)
-      .accessLevel(accessLevel)
-      .owner(this)
-      .build();
+    val permission =
+        UserPermission.builder().policy(policy).accessLevel(accessLevel).owner(this).build();
     this.userPermissions.add(permission);
   }
 
   public void removeApplication(@NonNull UUID appId) {
-    if (this.wholeApplications == null)
-      return;
+    if (this.wholeApplications == null) return;
     this.wholeApplications.removeIf(a -> a.id.equals(appId));
   }
 
   public void removeGroup(@NonNull UUID grpId) {
-    if (this.wholeGroups == null)
-      return;
+    if (this.wholeGroups == null) return;
     this.wholeGroups.removeIf(g -> g.id.equals(grpId));
   }
 
   public void removePermission(@NonNull UUID permissionId) {
-    if (this.userPermissions == null)
-      return;
+    if (this.userPermissions == null) return;
     this.userPermissions.removeIf(p -> p.id.equals(permissionId));
   }
 
@@ -269,6 +291,7 @@ public class User implements PolicyOwner {
     this.role = other.getRole();
     this.status = other.getStatus();
     this.preferredLanguage = other.getPreferredLanguage();
+    this.lastLogin = other.getLastLogin();
 
     // Don't merge the ID, CreatedAt, or LastLogin date - those are procedural.
 
@@ -278,16 +301,18 @@ public class User implements PolicyOwner {
     // To clear wholeApplications, wholeGroups or userPermissions, use the dedicated services
     // for deleting associations or pass in an empty Set.
     if (other.wholeApplications != null) {
+      unsetSession(other.getWholeApplications());
       this.wholeApplications = other.getWholeApplications();
     }
 
     if (other.wholeGroups != null) {
+      unsetSession(other.getWholeGroups());
       this.wholeGroups = other.getWholeGroups();
     }
 
     if (other.userPermissions != null) {
+      unsetSession(other.getUserPermissions());
       this.userPermissions = other.getUserPermissions();
     }
   }
-
 }

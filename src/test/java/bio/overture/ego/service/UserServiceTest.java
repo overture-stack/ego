@@ -1,5 +1,10 @@
 package bio.overture.ego.service;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
@@ -7,9 +12,12 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,16 +30,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.Collections;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -41,20 +39,15 @@ public class UserServiceTest {
 
   private static final String NON_EXISTENT_USER = "827fae28-7fb8-11e8-adc0-fa7ae01bbebc";
 
-  @Autowired
-  private ApplicationService applicationService;
+  @Autowired private ApplicationService applicationService;
 
-  @Autowired
-  private UserService userService;
+  @Autowired private UserService userService;
 
-  @Autowired
-  private GroupService groupService;
+  @Autowired private GroupService groupService;
 
-  @Autowired
-  private PolicyService policyService;
+  @Autowired private PolicyService policyService;
 
-  @Autowired
-  private EntityGenerator entityGenerator;
+  @Autowired private EntityGenerator entityGenerator;
 
   // Create
   @Test
@@ -69,16 +62,17 @@ public class UserServiceTest {
     userService.create(entityGenerator.createUser("User", "One"));
     userService.create(entityGenerator.createUser("User", "One"));
     assertThatExceptionOfType(DataIntegrityViolationException.class)
-      .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
+        .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
   }
 
   @Test
   public void testCreateFromIDToken() {
-    val idToken = IDToken.builder()
-      .email("UserOne@domain.com")
-      .given_name("User")
-      .family_name("User")
-      .build();
+    val idToken =
+        IDToken.builder()
+            .email("UserOne@domain.com")
+            .given_name("User")
+            .family_name("User")
+            .build();
 
     val idTokenUser = userService.createFromIDToken(idToken);
 
@@ -94,15 +88,12 @@ public class UserServiceTest {
   public void testCreateFromIDTokenUniqueNameAndEmail() {
     // Note: This test has one strike due to Hibernate Cache.
     userService.create(entityGenerator.createUser("User", "One"));
-    val idToken = IDToken.builder()
-      .email("UserOne@domain.com")
-      .given_name("User")
-      .family_name("One")
-      .build();
+    val idToken =
+        IDToken.builder().email("UserOne@domain.com").given_name("User").family_name("One").build();
     userService.createFromIDToken(idToken);
 
     assertThatExceptionOfType(DataIntegrityViolationException.class)
-      .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
+        .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
   }
 
   // Get
@@ -115,7 +106,8 @@ public class UserServiceTest {
 
   @Test
   public void testGetEntityNotFoundException() {
-    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> userService.get(NON_EXISTENT_USER));
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> userService.get(NON_EXISTENT_USER));
   }
 
   @Test
@@ -154,14 +146,15 @@ public class UserServiceTest {
   @Test
   public void testGetOrCreateDemoUserAlREADyExisting() {
     // This should force the demo user to have admin and approved status's
-    val demoUserObj = User.builder()
-      .name("Demo.User@example.com")
-      .email("Demo.User@example.com")
-      .firstName("Demo")
-      .lastName("User")
-      .status("Pending")
-      .role("USER")
-      .build();
+    val demoUserObj =
+        User.builder()
+            .name("Demo.User@example.com")
+            .email("Demo.User@example.com")
+            .firstName("Demo")
+            .lastName("User")
+            .status("Pending")
+            .role("USER")
+            .build();
 
     val user = userService.create(demoUserObj);
 
@@ -177,15 +170,15 @@ public class UserServiceTest {
   @Test
   public void testListUsersNoFilters() {
     entityGenerator.setupTestUsers();
-    val users = userService
-      .listUsers(Collections.emptyList(), new PageableResolver().getPageable());
+    val users =
+        userService.listUsers(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(users.getTotalElements()).isEqualTo(3L);
   }
 
   @Test
   public void testListUsersNoFiltersEmptyResult() {
-    val users = userService
-      .listUsers(Collections.emptyList(), new PageableResolver().getPageable());
+    val users =
+        userService.listUsers(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(users.getTotalElements()).isEqualTo(0L);
   }
 
@@ -193,8 +186,8 @@ public class UserServiceTest {
   public void testListUsersFiltered() {
     entityGenerator.setupTestUsers();
     val userFilter = new SearchFilter("email", "FirstUser@domain.com");
-    val users = userService
-      .listUsers(singletonList(userFilter), new PageableResolver().getPageable());
+    val users =
+        userService.listUsers(singletonList(userFilter), new PageableResolver().getPageable());
     assertThat(users.getTotalElements()).isEqualTo(1L);
   }
 
@@ -202,8 +195,8 @@ public class UserServiceTest {
   public void testListUsersFilteredEmptyResult() {
     entityGenerator.setupTestUsers();
     val userFilter = new SearchFilter("email", "FourthUser@domain.com");
-    val users = userService
-      .listUsers(singletonList(userFilter), new PageableResolver().getPageable());
+    val users =
+        userService.listUsers(singletonList(userFilter), new PageableResolver().getPageable());
     assertThat(users.getTotalElements()).isEqualTo(0L);
   }
 
@@ -211,8 +204,9 @@ public class UserServiceTest {
   @Test
   public void testFindUsersNoFilters() {
     entityGenerator.setupTestUsers();
-    val users = userService
-      .findUsers("First", Collections.emptyList(), new PageableResolver().getPageable());
+    val users =
+        userService.findUsers(
+            "First", Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(users.getTotalElements()).isEqualTo(1L);
     assertThat(users.getContent().get(0).getName()).isEqualTo("FirstUser@domain.com");
   }
@@ -221,8 +215,9 @@ public class UserServiceTest {
   public void testFindUsersFiltered() {
     entityGenerator.setupTestUsers();
     val userFilter = new SearchFilter("email", "FirstUser@domain.com");
-    val users = userService
-      .findUsers("Second", singletonList(userFilter), new PageableResolver().getPageable());
+    val users =
+        userService.findUsers(
+            "Second", singletonList(userFilter), new PageableResolver().getPageable());
     // Expect empty list
     assertThat(users.getTotalElements()).isEqualTo(0L);
   }
@@ -240,11 +235,9 @@ public class UserServiceTest {
     userService.addUserToGroups(user.getId().toString(), singletonList(groupId));
     userService.addUserToGroups(userTwo.getId().toString(), singletonList(groupId));
 
-    val users = userService.findGroupUsers(
-      groupId,
-      Collections.emptyList(),
-      new PageableResolver().getPageable()
-    );
+    val users =
+        userService.findGroupUsers(
+            groupId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(2L);
     assertThat(users.getContent()).contains(user, userTwo);
@@ -257,11 +250,9 @@ public class UserServiceTest {
 
     val groupId = groupService.getByName("Group One").getId().toString();
 
-    val users = userService.findGroupUsers(
-      groupId,
-      Collections.emptyList(),
-      new PageableResolver().getPageable()
-    );
+    val users =
+        userService.findGroupUsers(
+            groupId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(0L);
   }
@@ -271,10 +262,10 @@ public class UserServiceTest {
     entityGenerator.setupTestGroups();
     entityGenerator.setupTestUsers();
     assertThatExceptionOfType(IllegalArgumentException.class)
-      .isThrownBy(() -> userService.findGroupUsers("",
-        Collections.emptyList(),
-        new PageableResolver().getPageable())
-      );
+        .isThrownBy(
+            () ->
+                userService.findGroupUsers(
+                    "", Collections.emptyList(), new PageableResolver().getPageable()));
   }
 
   @Test
@@ -291,11 +282,9 @@ public class UserServiceTest {
 
     val userFilters = new SearchFilter("name", "First");
 
-    val users = userService.findGroupUsers(
-      groupId,
-      singletonList(userFilters),
-      new PageableResolver().getPageable()
-    );
+    val users =
+        userService.findGroupUsers(
+            groupId, singletonList(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
     assertThat(users.getContent()).contains(user);
@@ -315,12 +304,9 @@ public class UserServiceTest {
 
     val userFilters = new SearchFilter("name", "First");
 
-    val users = userService.findGroupUsers(
-      groupId,
-      "Second",
-      singletonList(userFilters),
-      new PageableResolver().getPageable()
-    );
+    val users =
+        userService.findGroupUsers(
+            groupId, "Second", singletonList(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(0L);
   }
@@ -337,13 +323,9 @@ public class UserServiceTest {
     userService.addUserToGroups(user.getId().toString(), singletonList(groupId));
     userService.addUserToGroups(userTwo.getId().toString(), singletonList(groupId));
 
-
-    val users = userService.findGroupUsers(
-      groupId,
-      "Second",
-      Collections.emptyList(),
-      new PageableResolver().getPageable()
-    );
+    val users =
+        userService.findGroupUsers(
+            groupId, "Second", Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
     assertThat(users.getContent()).contains(userTwo);
@@ -363,11 +345,9 @@ public class UserServiceTest {
     userService.addUserToApps(user.getId().toString(), singletonList(appId));
     userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
 
-    val users = userService.findAppUsers(
-      appId,
-      Collections.emptyList(),
-      new PageableResolver().getPageable()
-    );
+    val users =
+        userService.findAppUsers(
+            appId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(2L);
     assertThat(users.getContent()).contains(user, userTwo);
@@ -380,11 +360,9 @@ public class UserServiceTest {
 
     val appId = applicationService.getByClientId("111111").getId().toString();
 
-    val users = userService.findAppUsers(
-      appId,
-      Collections.emptyList(),
-      new PageableResolver().getPageable()
-    );
+    val users =
+        userService.findAppUsers(
+            appId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(0L);
   }
@@ -394,13 +372,10 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
     assertThatExceptionOfType(IllegalArgumentException.class)
-      .isThrownBy(() -> userService
-        .findAppUsers(
-          "",
-          Collections.emptyList(),
-          new PageableResolver().getPageable()
-        )
-      );
+        .isThrownBy(
+            () ->
+                userService.findAppUsers(
+                    "", Collections.emptyList(), new PageableResolver().getPageable()));
   }
 
   @Test
@@ -417,11 +392,9 @@ public class UserServiceTest {
 
     val userFilters = new SearchFilter("name", "First");
 
-    val users = userService.findAppUsers(
-      appId,
-      singletonList(userFilters),
-      new PageableResolver().getPageable()
-    );
+    val users =
+        userService.findAppUsers(
+            appId, singletonList(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
     assertThat(users.getContent()).contains(user);
@@ -441,12 +414,9 @@ public class UserServiceTest {
 
     val userFilters = new SearchFilter("name", "First");
 
-    val users = userService.findAppUsers(
-      appId,
-      "Second",
-      singletonList(userFilters),
-      new PageableResolver().getPageable()
-    );
+    val users =
+        userService.findAppUsers(
+            appId, "Second", singletonList(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(0L);
   }
@@ -463,12 +433,9 @@ public class UserServiceTest {
     userService.addUserToApps(user.getId().toString(), singletonList(appId));
     userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
 
-    val users = userService.findAppUsers(
-      appId,
-      "First",
-      Collections.emptyList(),
-      new PageableResolver().getPageable()
-    );
+    val users =
+        userService.findAppUsers(
+            appId, "First", Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
     assertThat(users.getContent()).contains(user);
@@ -504,7 +471,7 @@ public class UserServiceTest {
     userService.create(entityGenerator.createUser("First", "User"));
     val nonExistentEntity = entityGenerator.createUser("First", "User");
     assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
-      .isThrownBy(() -> userService.update(nonExistentEntity));
+        .isThrownBy(() -> userService.update(nonExistentEntity));
   }
 
   @Test
@@ -513,15 +480,15 @@ public class UserServiceTest {
     user.setId(UUID.fromString("0c1dc4b8-7fb8-11e8-adc0-fa7ae01bbebc"));
     // New id means new non-existent policy or one that exists and is being overwritten
     assertThatExceptionOfType(EntityNotFoundException.class)
-      .isThrownBy(() -> userService.update(user));
+        .isThrownBy(() -> userService.update(user));
   }
 
   @Test
   @Ignore
   public void testUpdateNameNotAllowed() {
-//    val user = userService.create(entityGenerator.createUser(Pair.of("First", "User")));
-//    user.setName("NewName");
-//    val updated = userService.update(user);
+    //    val user = userService.create(entityGenerator.createUser(Pair.of("First", "User")));
+    //    user.setName("NewName");
+    //    val updated = userService.update(user);
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
@@ -529,9 +496,9 @@ public class UserServiceTest {
   @Test
   @Ignore
   public void testUpdateEmailNotAllowed() {
-//    val user = userService.create(entityGenerator.createUser(Pair.of("First", "User")));
-//    user.setEmail("NewName@domain.com");
-//    val updated = userService.update(user);
+    //    val user = userService.create(entityGenerator.createUser(Pair.of("First", "User")));
+    //    user.setEmail("NewName@domain.com");
+    //    val updated = userService.update(user);
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
@@ -539,10 +506,10 @@ public class UserServiceTest {
   @Test
   @Ignore
   public void testUpdateStatusNotInAllowedEnum() {
-//    entityGenerator.setupTestUsers();
-//    val user = userService.getByName("FirstUser@domain.com");
-//    user.setStatus("Junk");
-//    val updated = userService.update(user);
+    //    entityGenerator.setupTestUsers();
+    //    val user = userService.getByName("FirstUser@domain.com");
+    //    user.setStatus("Junk");
+    //    val updated = userService.update(user);
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
@@ -550,10 +517,10 @@ public class UserServiceTest {
   @Test
   @Ignore
   public void testUpdateLanguageNotInAllowedEnum() {
-//    entityGenerator.setupTestUsers();
-//    val user = userService.getByName("FirstUser@domain.com");
-//    user.setPreferredLanguage("Klingon");
-//    val updated = userService.update(user);
+    //    entityGenerator.setupTestUsers();
+    //    val user = userService.getByName("FirstUser@domain.com");
+    //    user.setPreferredLanguage("Klingon");
+    //    val updated = userService.update(user);
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
@@ -573,11 +540,9 @@ public class UserServiceTest {
 
     userService.addUserToGroups(userId, asList(groupId, groupTwoId));
 
-    val groups = groupService.findUserGroups(
-      userId,
-      Collections.emptyList(),
-      new PageableResolver().getPageable()
-    );
+    val groups =
+        groupService.findUserGroups(
+            userId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(groups.getContent()).contains(group, groupTwo);
   }
@@ -591,7 +556,7 @@ public class UserServiceTest {
     val groupId = group.getId().toString();
 
     assertThatExceptionOfType(EntityNotFoundException.class)
-      .isThrownBy(() -> userService.addUserToGroups(NON_EXISTENT_USER, singletonList(groupId)));
+        .isThrownBy(() -> userService.addUserToGroups(NON_EXISTENT_USER, singletonList(groupId)));
   }
 
   @Test
@@ -603,7 +568,7 @@ public class UserServiceTest {
     val groupId = group.getId().toString();
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-      .isThrownBy(() -> userService.addUserToGroups("", singletonList(groupId)));
+        .isThrownBy(() -> userService.addUserToGroups("", singletonList(groupId)));
   }
 
   @Test
@@ -615,7 +580,7 @@ public class UserServiceTest {
     val userId = user.getId().toString();
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-      .isThrownBy(() -> userService.addUserToGroups(userId, singletonList("")));
+        .isThrownBy(() -> userService.addUserToGroups(userId, singletonList("")));
   }
 
   @Test
@@ -647,11 +612,9 @@ public class UserServiceTest {
 
     userService.addUserToApps(userId, asList(appId, appTwoId));
 
-    val apps = applicationService.findUserApps(
-      userId,
-      Collections.emptyList(),
-      new PageableResolver().getPageable()
-    );
+    val apps =
+        applicationService.findUserApps(
+            userId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(apps.getContent()).contains(app, appTwo);
   }
@@ -665,7 +628,7 @@ public class UserServiceTest {
     val appId = app.getId().toString();
 
     assertThatExceptionOfType(EntityNotFoundException.class)
-      .isThrownBy(() -> userService.addUserToApps(NON_EXISTENT_USER, singletonList(appId)));
+        .isThrownBy(() -> userService.addUserToApps(NON_EXISTENT_USER, singletonList(appId)));
   }
 
   @Test
@@ -677,7 +640,7 @@ public class UserServiceTest {
     val userId = user.getId().toString();
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-      .isThrownBy(() -> userService.addUserToApps(userId, singletonList("")));
+        .isThrownBy(() -> userService.addUserToApps(userId, singletonList("")));
   }
 
   @Test
@@ -703,7 +666,8 @@ public class UserServiceTest {
 
     userService.delete(user.getId().toString());
 
-    val users = userService.listUsers(Collections.emptyList(), new PageableResolver().getPageable());
+    val users =
+        userService.listUsers(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(users.getTotalElements()).isEqualTo(2L);
     assertThat(users.getContent()).doesNotContain(user);
   }
@@ -712,14 +676,14 @@ public class UserServiceTest {
   public void testDeleteNonExisting() {
     entityGenerator.setupTestUsers();
     assertThatExceptionOfType(EmptyResultDataAccessException.class)
-      .isThrownBy(() -> userService.delete(NON_EXISTENT_USER));
+        .isThrownBy(() -> userService.delete(NON_EXISTENT_USER));
   }
 
   @Test
   public void testDeleteEmptyIdString() {
     entityGenerator.setupTestGroups();
     assertThatExceptionOfType(IllegalArgumentException.class)
-      .isThrownBy(() -> userService.delete(""));
+        .isThrownBy(() -> userService.delete(""));
   }
 
   // Delete User from Group
@@ -739,11 +703,9 @@ public class UserServiceTest {
 
     userService.deleteUserFromGroups(userId, singletonList(groupId));
 
-    val groupWithoutUser = groupService.findUserGroups(
-      userId,
-      Collections.emptyList(),
-      new PageableResolver().getPageable()
-    );
+    val groupWithoutUser =
+        groupService.findUserGroups(
+            userId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(groupWithoutUser.getContent()).containsOnly(groupTwo);
   }
@@ -763,8 +725,8 @@ public class UserServiceTest {
     userService.addUserToGroups(userId, asList(groupId, groupTwoId));
 
     assertThatExceptionOfType(EntityNotFoundException.class)
-      .isThrownBy(() -> userService
-        .deleteUserFromGroups(NON_EXISTENT_USER, singletonList(groupId)));
+        .isThrownBy(
+            () -> userService.deleteUserFromGroups(NON_EXISTENT_USER, singletonList(groupId)));
   }
 
   @Test
@@ -782,8 +744,7 @@ public class UserServiceTest {
     userService.addUserToGroups(userId, asList(groupId, groupTwoId));
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-      .isThrownBy(() -> userService
-        .deleteUserFromGroups("", singletonList(groupId)));
+        .isThrownBy(() -> userService.deleteUserFromGroups("", singletonList(groupId)));
   }
 
   @Test
@@ -800,8 +761,7 @@ public class UserServiceTest {
     assertThat(user.getWholeGroups().size()).isEqualTo(1);
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-      .isThrownBy(() -> userService
-        .deleteUserFromGroups(userId, singletonList("")));
+        .isThrownBy(() -> userService.deleteUserFromGroups(userId, singletonList("")));
   }
 
   // Delete User from App
@@ -821,11 +781,9 @@ public class UserServiceTest {
 
     userService.deleteUserFromApps(userId, singletonList(appId));
 
-    val groupWithoutUser = applicationService.findUserApps(
-      userId,
-      Collections.emptyList(),
-      new PageableResolver().getPageable()
-    );
+    val groupWithoutUser =
+        applicationService.findUserApps(
+            userId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(groupWithoutUser.getContent()).containsOnly(appTwo);
   }
@@ -845,8 +803,7 @@ public class UserServiceTest {
     userService.addUserToApps(userId, asList(appId, appTwoId));
 
     assertThatExceptionOfType(EntityNotFoundException.class)
-      .isThrownBy(() -> userService
-        .deleteUserFromApps(NON_EXISTENT_USER, singletonList(appId)));
+        .isThrownBy(() -> userService.deleteUserFromApps(NON_EXISTENT_USER, singletonList(appId)));
   }
 
   @Test
@@ -864,8 +821,7 @@ public class UserServiceTest {
     userService.addUserToApps(userId, asList(appId, appTwoId));
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-      .isThrownBy(() -> userService
-        .deleteUserFromApps("", singletonList(appId)));
+        .isThrownBy(() -> userService.deleteUserFromApps("", singletonList(appId)));
   }
 
   @Test
@@ -883,8 +839,7 @@ public class UserServiceTest {
     userService.addUserToApps(userId, asList(appId, appTwoId));
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-      .isThrownBy(() -> userService
-        .deleteUserFromApps(userId, singletonList("")));
+        .isThrownBy(() -> userService.deleteUserFromApps(userId, singletonList("")));
   }
 
   @Test
@@ -904,20 +859,16 @@ public class UserServiceTest {
     val study003 = policyService.getByName("Study003");
     val study003id = study003.getId().toString();
 
-    val permissions = asList(
-        new PolicyIdStringWithAccessLevel(study001id, "READ"),
-        new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-        new PolicyIdStringWithAccessLevel(study003id, "DENY")
-    );
+    val permissions =
+        asList(
+            new PolicyIdStringWithAccessLevel(study001id, "READ"),
+            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
+            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
 
     userService.addUserPermissions(user.getId().toString(), permissions);
 
     assertThat(PolicyPermissionUtils.extractPermissionStrings(user.getUserPermissions()))
-        .containsExactlyInAnyOrder(
-            "Study001.READ",
-            "Study002.WRITE",
-            "Study003.DENY"
-        );
+        .containsExactlyInAnyOrder("Study001.READ", "Study002.WRITE", "Study003.DENY");
   }
 
   @Test
@@ -937,26 +888,25 @@ public class UserServiceTest {
     val study003 = policyService.getByName("Study003");
     val study003id = study003.getId().toString();
 
-    val permissions = asList(
-        new PolicyIdStringWithAccessLevel(study001id, "READ"),
-        new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-        new PolicyIdStringWithAccessLevel(study003id, "DENY")
-    );
+    val permissions =
+        asList(
+            new PolicyIdStringWithAccessLevel(study001id, "READ"),
+            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
+            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
 
     userService.addUserPermissions(user.getId().toString(), permissions);
 
-    val userPermissionsToRemove = user.getUserPermissions()
-        .stream()
-        .filter(p -> !p.getPolicy().getName().equals("Study001"))
-        .map(p -> p.getId().toString())
-        .collect(Collectors.toList());
+    val userPermissionsToRemove =
+        user.getUserPermissions()
+            .stream()
+            .filter(p -> !p.getPolicy().getName().equals("Study001"))
+            .map(p -> p.getId().toString())
+            .collect(Collectors.toList());
 
     userService.deleteUserPermissions(user.getId().toString(), userPermissionsToRemove);
 
     assertThat(PolicyPermissionUtils.extractPermissionStrings(user.getUserPermissions()))
-        .containsExactlyInAnyOrder(
-            "Study001.READ"
-        );
+        .containsExactlyInAnyOrder("Study001.READ");
   }
 
   @Test
@@ -976,15 +926,17 @@ public class UserServiceTest {
     val study003 = policyService.getByName("Study003");
     val study003id = study003.getId().toString();
 
-    val permissions = asList(
-        new PolicyIdStringWithAccessLevel(study001id, "READ"),
-        new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-        new PolicyIdStringWithAccessLevel(study003id, "DENY")
-    );
+    val permissions =
+        asList(
+            new PolicyIdStringWithAccessLevel(study001id, "READ"),
+            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
+            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
 
     userService.addUserPermissions(user.getId().toString(), permissions);
 
-    val pagedUserPermissions = userService.getUserPermissions(user.getId().toString(), new PageableResolver().getPageable());
+    val pagedUserPermissions =
+        userService.getUserPermissions(
+            user.getId().toString(), new PageableResolver().getPageable());
 
     assertThat(pagedUserPermissions.getTotalElements()).isEqualTo(3L);
   }

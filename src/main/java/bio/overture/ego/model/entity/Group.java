@@ -17,29 +17,30 @@
 package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
+import java.util.*;
+import javax.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import bio.overture.ego.model.enums.Fields;
-
-import javax.persistence.*;
-import java.util.*;
 
 @Data
-@ToString(exclude = { "wholeUsers", "wholeApplications", "groupPermissions" })
+@Builder
+@ToString(exclude = {"wholeUsers", "wholeApplications", "groupPermissions"})
 @Table(name = "egogroup")
 @Entity
-@JsonPropertyOrder({ "id", "name", "description", "status", "wholeApplications", "groupPermissions" })
+@JsonPropertyOrder({"id", "name", "description", "status", "wholeApplications", "groupPermissions"})
 @JsonInclude()
-@EqualsAndHashCode(of = { "id" })
+@EqualsAndHashCode(of = {"id"})
 @NoArgsConstructor
+@AllArgsConstructor
 @RequiredArgsConstructor
 @JsonView(Views.REST.class)
 public class Group implements PolicyOwner {
@@ -57,30 +58,37 @@ public class Group implements PolicyOwner {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
-  @GenericGenerator(
-    name = "group_uuid",
-    strategy = "org.hibernate.id.UUIDGenerator")
+  @GenericGenerator(name = "group_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "group_uuid")
   UUID id;
-  @Column(nullable = false, name = Fields.NAME, updatable = false)
+
+  @Column(nullable = false, name = Fields.NAME)
   @NonNull
   String name;
-  @Column(nullable = false, name = Fields.DESCRIPTION, updatable = false)
+
+  @Column(nullable = false, name = Fields.DESCRIPTION)
   String description;
-  @Column(nullable = false, name = Fields.STATUS, updatable = false)
+
+  @Column(nullable = false, name = Fields.STATUS)
   String status;
+
   @ManyToMany(targetEntity = Application.class)
   @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(name = "groupapplication", joinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) },
-    inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
+  @JoinTable(
+      name = "groupapplication",
+      joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
   @JsonIgnore
   Set<Application> wholeApplications;
+
   @ManyToMany()
   @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(name = "usergroup", joinColumns = { @JoinColumn(name = Fields.GROUPID_JOIN) },
-    inverseJoinColumns = { @JoinColumn(name = Fields.USERID_JOIN) })
+  @JoinTable(
+      name = "usergroup",
+      joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
   @JsonIgnore
   Set<User> wholeUsers;
 
@@ -96,11 +104,7 @@ public class Group implements PolicyOwner {
 
   public void addNewPermission(@NonNull Policy policy, @NonNull AccessLevel mask) {
     initPermissions();
-    val permission = GroupPermission.builder()
-      .policy(policy)
-      .accessLevel(mask)
-      .owner(this)
-      .build();
+    val permission = GroupPermission.builder().policy(policy).accessLevel(mask).owner(this).build();
     this.groupPermissions.add(permission);
   }
 
@@ -109,14 +113,12 @@ public class Group implements PolicyOwner {
   }
 
   public void removeUser(@NonNull UUID userId) {
-    if (this.wholeUsers == null)
-      return;
+    if (this.wholeUsers == null) return;
     this.wholeUsers.removeIf(u -> u.id.equals(userId));
   }
 
   public void removePermission(@NonNull UUID permissionId) {
-    if (this.groupPermissions == null)
-      return;
+    if (this.groupPermissions == null) return;
     this.groupPermissions.removeIf(p -> p.id.equals(permissionId));
   }
 
@@ -126,21 +128,30 @@ public class Group implements PolicyOwner {
     }
   }
 
-  public void update(Group other) {
-    this.name = other.getName();
-    this.description = other.getDescription();
-    this.status = other.getStatus();
+  public Group update(Group other) {
+    val builder =
+        Group.builder()
+            .id(other.getId())
+            .name(other.getName())
+            .description(other.getDescription())
+            .status(other.getStatus());
 
     // Do not update ID, that is programmatic.
 
     // Update Users and Applications only if provided (not null)
     if (other.wholeApplications != null) {
-      this.wholeApplications = other.getWholeApplications();
+      builder.wholeApplications(other.getWholeApplications());
+    } else {
+      builder.wholeApplications(this.getWholeApplications());
     }
 
     if (other.wholeUsers != null) {
-      this.wholeUsers = other.getWholeUsers();
+      builder.wholeUsers(other.getWholeUsers());
+    } else {
+      builder.wholeUsers(this.getWholeUsers());
     }
+
+    return builder.build();
   }
 
   private void initApplications() {
@@ -154,6 +165,4 @@ public class Group implements PolicyOwner {
       this.wholeUsers = new HashSet<>();
     }
   }
-
 }
-

@@ -17,26 +17,25 @@
 
 package bio.overture.ego.model.entity;
 
+import static bio.overture.ego.utils.CollectionUtils.listOf;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static org.junit.Assert.*;
+
 import bio.overture.ego.model.dto.Scope;
+import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.TestData;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.TestData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.junit.Assert.*;
-import static bio.overture.ego.utils.CollectionUtils.listOf;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 
 @Slf4j
 @SpringBootTest
@@ -44,8 +43,7 @@ import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 @ActiveProfiles("test")
 @Transactional
 public class ScopeTest {
-  @Autowired
-  private EntityGenerator entityGenerator;
+  @Autowired private EntityGenerator entityGenerator;
   public static TestData test;
 
   @Before
@@ -76,7 +74,8 @@ public class ScopeTest {
 
   @Test
   public void testEffectiveSame() {
-    // Basic sanity check. If what we have and want are the same, that's what our effective scope should be.
+    // Basic sanity check. If what we have and want are the same, that's what our effective scope
+    // should be.
     val have = getScopes("song.WRITE", "collab.READ");
     testEffective("Same set", have, have, have);
   }
@@ -93,6 +92,7 @@ public class ScopeTest {
     val expected = getScopes("id.READ");
     testMissing("Subset", have, want, expected);
   }
+
   @Test
   public void testEffectiveSubset() {
     // When the permissions we have is a subset of what we want,
@@ -166,7 +166,6 @@ public class ScopeTest {
 
   }
 
-
   @Test
   public void testEffective() {
     val have = getScopes("song.WRITE", "collab.READ");
@@ -182,7 +181,7 @@ public class ScopeTest {
     val have = getScopes("song.READ", "collab.WRITE");
 
     val e = Scope.explicitScopes(have);
-    val expected = getScopes("song.READ","collab.READ", "collab.WRITE");
+    val expected = getScopes("song.READ", "collab.READ", "collab.WRITE");
     assertEquals(expected, e);
   }
 

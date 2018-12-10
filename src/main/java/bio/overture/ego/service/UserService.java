@@ -16,12 +16,11 @@
 
 package bio.overture.ego.service;
 
-import bio.overture.ego.model.entity.UserPermission;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
+import static java.util.UUID.fromString;
+import static org.springframework.data.jpa.domain.Specifications.where;
+
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.UserRole;
 import bio.overture.ego.model.enums.UserStatus;
@@ -30,6 +29,14 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.UserSpecification;
 import bio.overture.ego.token.IDToken;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -39,40 +46,33 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
-import static java.util.UUID.fromString;
-import static org.springframework.data.jpa.domain.Specifications.where;
-
 @Slf4j
 @Service
 @Transactional
-@RequiredArgsConstructor(onConstructor = @__({ @Autowired }))
+@RequiredArgsConstructor(onConstructor = @__({@Autowired}))
 public class UserService extends BaseService<User, UUID> {
   // DEMO USER
-  private final static String DEMO_USER_NAME = "Demo.User@example.com";
-  private final static String DEMO_USER_EMAIL = "Demo.User@example.com";
-  private final static String DEMO_FIRST_NAME = "Demo";
-  private final static String DEMO_LAST_NAME = "User";
-  private final static String DEMO_USER_ROLE = UserRole.ADMIN.toString();
-  private final static String DEMO_USER_STATUS = UserStatus.APPROVED.toString();
+  private static final String DEMO_USER_NAME = "Demo.User@example.com";
+  private static final String DEMO_USER_EMAIL = "Demo.User@example.com";
+  private static final String DEMO_FIRST_NAME = "Demo";
+  private static final String DEMO_LAST_NAME = "User";
+  private static final String DEMO_USER_ROLE = UserRole.ADMIN.toString();
+  private static final String DEMO_USER_STATUS = UserStatus.APPROVED.toString();
   /*
-    Dependencies
-   */
+   Dependencies
+  */
   private final UserRepository userRepository;
   private final GroupService groupService;
   private final ApplicationService applicationService;
   private final PolicyService policyService;
   private final SimpleDateFormat formatter;
   /*
-    Constants
-   */
+   Constants
+  */
   // DEFAULTS
   @Value("${default.user.role}")
   private String DEFAULT_USER_ROLE;
+
   @Value("${default.user.status}")
   private String DEFAULT_USER_STATUS;
 
@@ -90,8 +90,10 @@ public class UserService extends BaseService<User, UUID> {
     val userInfo = new User();
     userInfo.setName(idToken.getEmail());
     userInfo.setEmail(idToken.getEmail());
-    userInfo.setFirstName(StringUtils.isEmpty(idToken.getGiven_name()) ? "" : idToken.getGiven_name());
-    userInfo.setLastName(StringUtils.isEmpty(idToken.getFamily_name()) ? "" : idToken.getFamily_name());
+    userInfo.setFirstName(
+        StringUtils.isEmpty(idToken.getGiven_name()) ? "" : idToken.getGiven_name());
+    userInfo.setLastName(
+        StringUtils.isEmpty(idToken.getFamily_name()) ? "" : idToken.getFamily_name());
     userInfo.setStatus(DEFAULT_USER_STATUS);
     userInfo.setCreatedAt(new Date());
     userInfo.setLastLogin(null);
@@ -125,27 +127,33 @@ public class UserService extends BaseService<User, UUID> {
 
   public User addUserToGroups(@NonNull String userId, @NonNull List<String> groupIDs) {
     val user = getById(userRepository, fromString(userId));
-    groupIDs.forEach(grpId -> {
-      val group = groupService.get(grpId);
-      user.addNewGroup(group);
-    });
+    groupIDs.forEach(
+        grpId -> {
+          val group = groupService.get(grpId);
+          user.addNewGroup(group);
+        });
     return userRepository.save(user);
   }
 
   public User addUserToApps(@NonNull String userId, @NonNull List<String> appIDs) {
     val user = getById(userRepository, fromString(userId));
-    appIDs.forEach(appId -> {
-      val app = applicationService.get(appId);
-      user.addNewApplication(app);
-    });
+    appIDs.forEach(
+        appId -> {
+          val app = applicationService.get(appId);
+          user.addNewApplication(app);
+        });
     return userRepository.save(user);
   }
 
-  public User addUserPermissions(@NonNull String userId, @NonNull List<PolicyIdStringWithAccessLevel> permissions) {
+  public User addUserPermissions(
+      @NonNull String userId, @NonNull List<PolicyIdStringWithAccessLevel> permissions) {
     val user = getById(userRepository, fromString(userId));
-    permissions.forEach(permission -> {
-      user.addNewPermission(policyService.get(permission.getPolicyId()), AccessLevel.fromValue(permission.getMask()));
-    });
+    permissions.forEach(
+        permission -> {
+          user.addNewPermission(
+              policyService.get(permission.getPolicyId()),
+              AccessLevel.fromValue(permission.getMask()));
+        });
     return userRepository.save(user);
   }
 
@@ -175,74 +183,83 @@ public class UserService extends BaseService<User, UUID> {
     return userRepository.findAll(UserSpecification.filterBy(filters), pageable);
   }
 
-  public Page<User> findUsers(@NonNull String query, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+  public Page<User> findUsers(
+      @NonNull String query, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return userRepository.findAll(
-      where(UserSpecification.containsText(query))
-        .and(UserSpecification.filterBy(filters)), pageable);
+        where(UserSpecification.containsText(query)).and(UserSpecification.filterBy(filters)),
+        pageable);
   }
 
   public void deleteUserFromGroups(@NonNull String userId, @NonNull List<String> groupIDs) {
     val user = getById(userRepository, fromString(userId));
-    groupIDs.forEach(grpId -> {
-      user.removeGroup(fromString(grpId));
-    });
+    groupIDs.forEach(
+        grpId -> {
+          user.removeGroup(fromString(grpId));
+        });
     userRepository.save(user);
   }
 
   public void deleteUserFromApps(@NonNull String userId, @NonNull List<String> appIDs) {
     val user = getById(userRepository, fromString(userId));
-    appIDs.forEach(appId -> {
-      user.removeApplication(fromString(appId));
-    });
+    appIDs.forEach(
+        appId -> {
+          user.removeApplication(fromString(appId));
+        });
     userRepository.save(user);
   }
 
   public void deleteUserPermissions(@NonNull String userId, @NonNull List<String> permissionsIds) {
     val user = getById(userRepository, fromString(userId));
-    permissionsIds.forEach(permissionsId -> {
-      user.removePermission(fromString(permissionsId));
-    });
+    permissionsIds.forEach(
+        permissionsId -> {
+          user.removePermission(fromString(permissionsId));
+        });
     userRepository.save(user);
   }
 
-  public Page<User> findGroupUsers(@NonNull String groupId, @NonNull List<SearchFilter> filters,
-    @NonNull Pageable pageable) {
+  public Page<User> findGroupUsers(
+      @NonNull String groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return userRepository.findAll(
-      where(UserSpecification.inGroup(fromString(groupId)))
-        .and(UserSpecification.filterBy(filters)),
-      pageable);
+        where(UserSpecification.inGroup(fromString(groupId)))
+            .and(UserSpecification.filterBy(filters)),
+        pageable);
   }
 
-  public Page<User> findGroupUsers(@NonNull String groupId, @NonNull String query,
-    @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+  public Page<User> findGroupUsers(
+      @NonNull String groupId,
+      @NonNull String query,
+      @NonNull List<SearchFilter> filters,
+      @NonNull Pageable pageable) {
     return userRepository.findAll(
-      where(UserSpecification.inGroup(fromString(groupId)))
-        .and(UserSpecification.containsText(query))
-        .and(UserSpecification.filterBy(filters)),
-      pageable);
+        where(UserSpecification.inGroup(fromString(groupId)))
+            .and(UserSpecification.containsText(query))
+            .and(UserSpecification.filterBy(filters)),
+        pageable);
   }
 
-  public Page<User> findAppUsers(@NonNull String appId, @NonNull List<SearchFilter> filters,
-    @NonNull Pageable pageable) {
+  public Page<User> findAppUsers(
+      @NonNull String appId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return userRepository.findAll(
-      where(UserSpecification.ofApplication(fromString(appId)))
-        .and(UserSpecification.filterBy(filters)),
-      pageable);
+        where(UserSpecification.ofApplication(fromString(appId)))
+            .and(UserSpecification.filterBy(filters)),
+        pageable);
   }
 
-  public Page<User> findAppUsers(@NonNull String appId, @NonNull String query,
-    @NonNull List<SearchFilter> filters,
-    @NonNull Pageable pageable) {
+  public Page<User> findAppUsers(
+      @NonNull String appId,
+      @NonNull String query,
+      @NonNull List<SearchFilter> filters,
+      @NonNull Pageable pageable) {
     return userRepository.findAll(
-      where(UserSpecification.ofApplication(fromString(appId)))
-        .and(UserSpecification.containsText(query))
-        .and(UserSpecification.filterBy(filters)),
-      pageable);
+        where(UserSpecification.ofApplication(fromString(appId)))
+            .and(UserSpecification.containsText(query))
+            .and(UserSpecification.filterBy(filters)),
+        pageable);
   }
 
-  public Page<UserPermission> getUserPermissions(@NonNull String userId, @NonNull Pageable pageable) {
+  public Page<UserPermission> getUserPermissions(
+      @NonNull String userId, @NonNull Pageable pageable) {
     val userPermissions = getById(userRepository, fromString(userId)).getUserPermissions();
     return new PageImpl<>(userPermissions, pageable, userPermissions.size());
   }
-
 }

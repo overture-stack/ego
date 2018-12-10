@@ -10,13 +10,11 @@ public class ReactorConfig {
 
   @Bean
   public Environment env() {
-    return Environment.initializeIfEmpty()
-      .assignErrorJournal();
+    return Environment.initializeIfEmpty().assignErrorJournal();
   }
 
   @Bean
   public EventBus createEventBus(Environment env) {
     return EventBus.create(env, Environment.THREAD_POOL);
   }
-
 }

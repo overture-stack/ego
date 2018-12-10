@@ -33,6 +33,9 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -43,51 +46,57 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
-import javax.persistence.EntityNotFoundException;
-import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-
 @Slf4j
 @RestController
 @RequestMapping("/applications")
 public class ApplicationController {
 
-  @Autowired
-  private ApplicationService applicationService;
-  @Autowired
-  private GroupService groupService;
-  @Autowired
-  private UserService userService;
+  @Autowired private ApplicationService applicationService;
+  @Autowired private GroupService groupService;
+  @Autowired private UserService userService;
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiImplicitParams({
-    @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
-      value = "Number of results to retrieve"),
-    @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
-      value = "Index of first result to retrieve"),
-    @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
-      value = "Field to sort on"),
-    @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
-      value = "Sorting order: ASC|DESC. Default order: DESC"),
-    @ApiImplicitParam(name = "status", dataType = "string", paramType = "query",
-      value = "Filter by status. " +
-        "You could also specify filters on any field of the policy being queried as " +
-        "query parameters in this format: name=something")
-
+    @ApiImplicitParam(
+        name = "limit",
+        dataType = "string",
+        paramType = "query",
+        value = "Number of results to retrieve"),
+    @ApiImplicitParam(
+        name = "offset",
+        dataType = "string",
+        paramType = "query",
+        value = "Index of first result to retrieve"),
+    @ApiImplicitParam(
+        name = "sort",
+        dataType = "string",
+        paramType = "query",
+        value = "Field to sort on"),
+    @ApiImplicitParam(
+        name = "sortOrder",
+        dataType = "string",
+        paramType = "query",
+        value = "Sorting order: ASC|DESC. Default order: DESC"),
+    @ApiImplicitParam(
+        name = "status",
+        dataType = "string",
+        paramType = "query",
+        value =
+            "Filter by status. "
+                + "You could also specify filters on any field of the policy being queried as "
+                + "query parameters in this format: name=something")
   })
   @ApiResponses(
-    value = {
-      @ApiResponse(code = 200, message = "Page of Applications", response = PageDTO.class)
-    }
-  )
+      value = {
+        @ApiResponse(code = 200, message = "Page of Applications", response = PageDTO.class)
+      })
   @JsonView(Views.REST.class)
-  public @ResponseBody
-  PageDTO<Application> getApplicationsList(
-    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-    @RequestParam(value = "query", required = false) String query,
-    @ApiIgnore @Filters List<SearchFilter> filters,
-    Pageable pageable) {
+  public @ResponseBody PageDTO<Application> getApplicationsList(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestParam(value = "query", required = false) String query,
+      @ApiIgnore @Filters List<SearchFilter> filters,
+      Pageable pageable) {
     if (StringUtils.isEmpty(query)) {
       return new PageDTO<>(applicationService.listApps(filters, pageable));
     } else {
@@ -98,15 +107,16 @@ public class ApplicationController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.POST, value = "")
   @ApiResponses(
-    value = {
-      @ApiResponse(code = 200, message = "New Application", response = Application.class),
-      @ApiResponse(code = 400, message = PostWithIdentifierException.reason, response = Application.class)
-    }
-  )
-  public @ResponseBody
-  Application create(
-    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-    @RequestBody(required = true) Application applicationInfo) {
+      value = {
+        @ApiResponse(code = 200, message = "New Application", response = Application.class),
+        @ApiResponse(
+            code = 400,
+            message = PostWithIdentifierException.reason,
+            response = Application.class)
+      })
+  public @ResponseBody Application create(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestBody(required = true) Application applicationInfo) {
     if (applicationInfo.getId() != null) {
       throw new PostWithIdentifierException();
     }
@@ -117,29 +127,25 @@ public class ApplicationController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
   @ApiResponses(
-    value = {
-      @ApiResponse(code = 200, message = "Application Details", response = Application.class)
-    }
-  )
+      value = {
+        @ApiResponse(code = 200, message = "Application Details", response = Application.class)
+      })
   @JsonView(Views.REST.class)
-  public @ResponseBody
-  Application get(
-    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-    @PathVariable(value = "id", required = true) String applicationId) {
+  public @ResponseBody Application get(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @PathVariable(value = "id", required = true) String applicationId) {
     return applicationService.get(applicationId);
   }
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
   @ApiResponses(
-    value = {
-      @ApiResponse(code = 200, message = "Updated application info", response = Application.class)
-    }
-  )
-  public @ResponseBody
-  Application updateApplication(
-    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-    @RequestBody(required = true) Application updatedApplicationInfo) {
+      value = {
+        @ApiResponse(code = 200, message = "Updated application info", response = Application.class)
+      })
+  public @ResponseBody Application updateApplication(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestBody(required = true) Application updatedApplicationInfo) {
     return applicationService.update(updatedApplicationInfo);
   }
 
@@ -147,44 +153,57 @@ public class ApplicationController {
   @RequestMapping(method = RequestMethod.DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteApplication(
-    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-    @PathVariable(value = "id", required = true) String applicationId) {
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @PathVariable(value = "id", required = true) String applicationId) {
     applicationService.delete(applicationId);
   }
 
   /*
-   Users related endpoints
-    */
+  Users related endpoints
+   */
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
   @ApiImplicitParams({
-    @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
-      value = "Number of results to retrieve"),
-    @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
-      value = "Index of first result to retrieve"),
-    @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
-      value = "Field to sort on"),
-    @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
-      value = "Sorting order: ASC|DESC. Default order: DESC"),
-    @ApiImplicitParam(name = "status", dataType = "string", paramType = "query",
-      value = "Filter by status. " +
-        "You could also specify filters on any field of the policy being queried as " +
-        "query parameters in this format: name=something")
-
+    @ApiImplicitParam(
+        name = "limit",
+        dataType = "string",
+        paramType = "query",
+        value = "Number of results to retrieve"),
+    @ApiImplicitParam(
+        name = "offset",
+        dataType = "string",
+        paramType = "query",
+        value = "Index of first result to retrieve"),
+    @ApiImplicitParam(
+        name = "sort",
+        dataType = "string",
+        paramType = "query",
+        value = "Field to sort on"),
+    @ApiImplicitParam(
+        name = "sortOrder",
+        dataType = "string",
+        paramType = "query",
+        value = "Sorting order: ASC|DESC. Default order: DESC"),
+    @ApiImplicitParam(
+        name = "status",
+        dataType = "string",
+        paramType = "query",
+        value =
+            "Filter by status. "
+                + "You could also specify filters on any field of the policy being queried as "
+                + "query parameters in this format: name=something")
   })
   @ApiResponses(
-    value = {
-      @ApiResponse(code = 200, message = "Page of Users of group", response = PageDTO.class)
-    }
-  )
+      value = {
+        @ApiResponse(code = 200, message = "Page of Users of group", response = PageDTO.class)
+      })
   @JsonView(Views.REST.class)
-  public @ResponseBody
-  PageDTO<User> getApplicationUsers(
-    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-    @PathVariable(value = "id", required = true) String appId,
-    @RequestParam(value = "query", required = false) String query,
-    @ApiIgnore @Filters List<SearchFilter> filters,
-    Pageable pageable) {
+  public @ResponseBody PageDTO<User> getApplicationUsers(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @PathVariable(value = "id", required = true) String appId,
+      @RequestParam(value = "query", required = false) String query,
+      @ApiIgnore @Filters List<SearchFilter> filters,
+      Pageable pageable) {
     if (StringUtils.isEmpty(query)) {
       return new PageDTO<>(userService.findAppUsers(appId, filters, pageable));
     } else {
@@ -193,38 +212,54 @@ public class ApplicationController {
   }
 
   /*
-   Groups related endpoints
-    */
+  Groups related endpoints
+   */
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
   @ApiImplicitParams({
-    @ApiImplicitParam(name = "limit", dataType = "string", paramType = "query",
-      value = "Number of results to retrieve"),
-    @ApiImplicitParam(name = "offset", dataType = "string", paramType = "query",
-      value = "Index of first result to retrieve"),
-    @ApiImplicitParam(name = "sort", dataType = "string", paramType = "query",
-      value = "Field to sort on"),
-    @ApiImplicitParam(name = "sortOrder", dataType = "string", paramType = "query",
-      value = "Sorting order: ASC|DESC. Default order: DESC"),
-    @ApiImplicitParam(name = "status", dataType = "string", paramType = "query",
-      value = "Filter by status. " +
-        "You could also specify filters on any field of the policy being queried as " +
-        "query parameters in this format: name=something")
-
+    @ApiImplicitParam(
+        name = "limit",
+        dataType = "string",
+        paramType = "query",
+        value = "Number of results to retrieve"),
+    @ApiImplicitParam(
+        name = "offset",
+        dataType = "string",
+        paramType = "query",
+        value = "Index of first result to retrieve"),
+    @ApiImplicitParam(
+        name = "sort",
+        dataType = "string",
+        paramType = "query",
+        value = "Field to sort on"),
+    @ApiImplicitParam(
+        name = "sortOrder",
+        dataType = "string",
+        paramType = "query",
+        value = "Sorting order: ASC|DESC. Default order: DESC"),
+    @ApiImplicitParam(
+        name = "status",
+        dataType = "string",
+        paramType = "query",
+        value =
+            "Filter by status. "
+                + "You could also specify filters on any field of the policy being queried as "
+                + "query parameters in this format: name=something")
   })
   @ApiResponses(
-    value = {
-      @ApiResponse(code = 200, message = "Page of Applications of group", response = PageDTO.class)
-    }
-  )
+      value = {
+        @ApiResponse(
+            code = 200,
+            message = "Page of Applications of group",
+            response = PageDTO.class)
+      })
   @JsonView(Views.REST.class)
-  public @ResponseBody
-  PageDTO<Group> getApplicationsGroups(
-    @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-    @PathVariable(value = "id", required = true) String appId,
-    @RequestParam(value = "query", required = false) String query,
-    @ApiIgnore @Filters List<SearchFilter> filters,
-    Pageable pageable) {
+  public @ResponseBody PageDTO<Group> getApplicationsGroups(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @PathVariable(value = "id", required = true) String appId,
+      @RequestParam(value = "query", required = false) String query,
+      @ApiIgnore @Filters List<SearchFilter> filters,
+      Pageable pageable) {
     if (StringUtils.isEmpty(query)) {
       return new PageDTO<>(groupService.findApplicationGroups(appId, filters, pageable));
     } else {
@@ -232,11 +267,11 @@ public class ApplicationController {
     }
   }
 
-  @ExceptionHandler({ EntityNotFoundException.class })
-  public ResponseEntity<Object> handleEntityNotFoundException(HttpServletRequest req, EntityNotFoundException ex) {
+  @ExceptionHandler({EntityNotFoundException.class})
+  public ResponseEntity<Object> handleEntityNotFoundException(
+      HttpServletRequest req, EntityNotFoundException ex) {
     log.error("Application ID not found.");
-    return new ResponseEntity<Object>("Invalid Application ID provided.", new HttpHeaders(),
-      HttpStatus.BAD_REQUEST);
+    return new ResponseEntity<Object>(
+        "Invalid Application ID provided.", new HttpHeaders(), HttpStatus.BAD_REQUEST);
   }
-
 }

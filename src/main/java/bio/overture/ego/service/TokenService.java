@@ -16,18 +16,17 @@
 
 package bio.overture.ego.service;
 
-import bio.overture.ego.model.dto.TokenScopeResponse;
-import bio.overture.ego.model.entity.Token;
-import bio.overture.ego.model.params.ScopeName;
-
-import io.jsonwebtoken.*;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
+import static bio.overture.ego.model.dto.Scope.effectiveScopes;
+import static bio.overture.ego.model.dto.Scope.explicitScopes;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static java.lang.String.format;
 
 import bio.overture.ego.model.dto.Scope;
+import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.reactor.events.UserEvents;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.TokenClaims;
@@ -40,23 +39,19 @@ import bio.overture.ego.token.user.UserTokenClaims;
 import bio.overture.ego.token.user.UserTokenContext;
 import bio.overture.ego.utils.TypeUtils;
 import bio.overture.ego.view.Views;
+import io.jsonwebtoken.*;
+import java.security.InvalidKeyException;
+import java.util.*;
+import javax.management.InvalidApplicationException;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
-
-import javax.management.InvalidApplicationException;
-import java.security.InvalidKeyException;
-
-import java.util.*;
-
-import static java.lang.String.format;
-import static bio.overture.ego.model.dto.Scope.effectiveScopes;
-import static bio.overture.ego.model.dto.Scope.explicitScopes;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 
 @Slf4j
 @Service
@@ -65,22 +60,19 @@ public class TokenService {
     Constant
   */
   private static final String ISSUER_NAME = "ego";
-  @Autowired
-  TokenSigner tokenSigner;
+  @Autowired TokenSigner tokenSigner;
+
   @Value("${demo:false}")
   private boolean demo;
+
   @Value("${jwt.duration:86400000}")
   private int DURATION;
-  @Autowired
-  private UserService userService;
-  @Autowired
-  private ApplicationService applicationService;
-  @Autowired
-  private UserEvents userEvents;
-  @Autowired
-  private TokenStoreService tokenStoreService;
-  @Autowired
-  private PolicyService policyService;
+
+  @Autowired private UserService userService;
+  @Autowired private ApplicationService applicationService;
+  @Autowired private UserEvents userEvents;
+  @Autowired private TokenStoreService tokenStoreService;
+  @Autowired private PolicyService policyService;
 
   public String generateUserToken(IDToken idToken) {
     // If the demo flag is set, all tokens will be generated as the Demo User,
@@ -108,7 +100,7 @@ public class TokenService {
 
   @SneakyThrows
   public String generateUserToken(User u) {
-    Set<String> permissionNames=mapToSet(u.getPermissionsList(), p->p.toString());
+    Set<String> permissionNames = mapToSet(u.getScopes(), p -> p.toString());
     return generateUserToken(u, permissionNames);
   }
 
@@ -132,32 +124,48 @@ public class TokenService {
     return Scope.missingScopes(userScopes, requestedScopes);
   }
 
+  public String str(Object o) {
+    if (o == null) {
+      return "null";
+    } else {
+      return "'" + o.toString() + "'";
+    }
+  }
+
+  public String strList(Collection collection) {
+    if (collection == null) {
+      return "null";
+    }
+    val l = new ArrayList(collection);
+    return l.toString();
+  }
+
   @SneakyThrows
   public Token issueToken(String name, List<ScopeName> scopeNames, List<String> apps) {
-    log.info(format("Looking for user '%s'",name));
-    log.info(format("Scopes are '%s'", new ArrayList(scopeNames).toString()));
-    log.info(format("Apps are '%s'",new ArrayList(apps).toString()));
+    log.info(format("Looking for user '%s'", str(name)));
+    log.info(format("Scopes are '%s'", strList(scopeNames)));
+    log.info(format("Apps are '%s'", strList(apps)));
     User u = userService.getByName(name);
     if (u == null) {
-      throw new UsernameNotFoundException(format("Can't find user '%s'",name));
+      throw new UsernameNotFoundException(format("Can't find user '%s'", name));
     }
 
-    log.info(format("Got user with id '%s'",u.getId().toString()));
+    log.info(format("Got user with id '%s'", str(u.getId())));
     val userScopes = u.getScopes();
 
-    log.info(format("User's scopes are '%s'", userScopes));
+    log.info(format("User's scopes are '%s'", str(userScopes)));
 
     val requestedScopes = getScopes(new HashSet<>(scopeNames));
 
     val missingScopes = Scope.missingScopes(userScopes, requestedScopes);
     if (!missingScopes.isEmpty()) {
-      val msg = format("User %s has no access to scopes [%s]", name, missingScopes);
+      val msg = format("User %s has no access to scopes [%s]", str(name), str(missingScopes));
       log.info(msg);
       throw new InvalidScopeException(msg);
     }
 
     val tokenString = generateTokenString();
-    log.info(format("Generated token string '%s'",tokenString));
+    log.info(format("Generated token string '%s'", str(tokenString)));
 
     val token = new Token();
     token.setExpires(DURATION);
@@ -169,20 +177,22 @@ public class TokenService {
       token.addScope(requestedScope);
     }
 
-    log.info("Generating apps list");
-    for (val appName : apps) {
-      val app = applicationService.getByName(appName);
-      if (app == null) {
-        log.info(format("Can't issue token for non-existant application '%s'", appName));
-        throw new InvalidApplicationException(format("No such application %s",appName));
+    if (apps != null) {
+      log.info("Generating apps list");
+      for (val appName : apps) {
+        val app = applicationService.getByName(appName);
+        if (app == null) {
+          log.info(format("Can't issue token for non-existant application '%s'", str(appName)));
+          throw new InvalidApplicationException(format("No such application %s", str(appName)));
+        }
+        token.addApplication(app);
       }
-      token.addApplication(app);
     }
 
     log.info("Creating token in token store");
     tokenStoreService.create(token);
 
-    log.info("Returning '%s'", token);
+    log.info(format("Returning '%s'", str(token)));
 
     return token;
   }
@@ -219,9 +229,7 @@ public class TokenService {
   public boolean validateToken(String token) {
     Jws decodedToken = null;
     try {
-      decodedToken = Jwts.parser()
-        .setSigningKey(tokenSigner.getKey().get())
-        .parseClaimsJws(token);
+      decodedToken = Jwts.parser().setSigningKey(tokenSigner.getKey().get()).parseClaimsJws(token);
     } catch (Exception ex) {
       log.error("Error parsing JWT: {}", ex);
     }
@@ -231,7 +239,8 @@ public class TokenService {
   public User getTokenUserInfo(String token) {
     try {
       Claims body = getTokenClaims(token);
-      val tokenClaims = TypeUtils.convertToAnotherType(body, UserTokenClaims.class, Views.JWTAccessToken.class);
+      val tokenClaims =
+          TypeUtils.convertToAnotherType(body, UserTokenClaims.class, Views.JWTAccessToken.class);
       return userService.get(tokenClaims.getSub());
     } catch (JwtException | ClassCastException e) {
       return null;
@@ -242,9 +251,9 @@ public class TokenService {
   public Claims getTokenClaims(String token) {
     if (tokenSigner.getKey().isPresent()) {
       return Jwts.parser()
-        .setSigningKey(tokenSigner.getKey().get())
-        .parseClaimsJws(token)
-        .getBody();
+          .setSigningKey(tokenSigner.getKey().get())
+          .parseClaimsJws(token)
+          .getBody();
     } else {
       throw new InvalidKeyException("Invalid signing key for the token.");
     }
@@ -262,9 +271,9 @@ public class TokenService {
   private String getSignedToken(TokenClaims claims) {
     if (tokenSigner.getKey().isPresent()) {
       return Jwts.builder()
-        .setClaims(TypeUtils.convertToAnotherType(claims, Map.class, Views.JWTAccessToken.class))
-        .signWith(SignatureAlgorithm.RS256, tokenSigner.getKey().get())
-        .compact();
+          .setClaims(TypeUtils.convertToAnotherType(claims, Map.class, Views.JWTAccessToken.class))
+          .signWith(SignatureAlgorithm.RS256, tokenSigner.getKey().get())
+          .compact();
     } else {
       throw new InvalidKeyException("Invalid signing key for the token.");
     }
@@ -276,7 +285,7 @@ public class TokenService {
       throw new InvalidTokenException("No token field found in POST request");
     }
 
-    log.error(format("token='%s'",token));
+    log.error(format("token='%s'", token));
     val application = applicationService.findByBasicToken(authToken);
 
     val t = findByTokenString(token);
@@ -284,10 +293,10 @@ public class TokenService {
       throw new InvalidTokenException("Token not found");
     }
 
-   val clientId = application.getClientId();
+    val clientId = application.getClientId();
     val apps = t.getApplications();
-    log.info(format("Applications are %s",apps.toString()));
-    if (apps != null && !apps.isEmpty() ) {
+    log.info(format("Applications are %s", apps.toString()));
+    if (apps != null && !apps.isEmpty()) {
       if (!(apps.stream().anyMatch(app -> app.getClientId().equals(clientId)))) {
         throw new InvalidTokenException("Token not authorized for this client");
       }
@@ -299,7 +308,6 @@ public class TokenService {
     val scopes = explicitScopes(effectiveScopes(owner.getScopes(), t.scopes()));
     val names = mapToSet(scopes, Scope::toString);
 
-    return new TokenScopeResponse(owner.getName(), clientId,
-      t.getSecondsUntilExpiry(), names);
+    return new TokenScopeResponse(owner.getName(), clientId, t.getSecondsUntilExpiry(), names);
   }
 }

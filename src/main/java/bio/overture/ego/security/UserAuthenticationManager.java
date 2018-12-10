@@ -16,12 +16,14 @@
 
 package bio.overture.ego.security;
 
+import bio.overture.ego.provider.facebook.FacebookTokenService;
 import bio.overture.ego.provider.google.GoogleTokenService;
 import bio.overture.ego.service.TokenService;
+import java.util.ArrayList;
+import javax.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import bio.overture.ego.provider.facebook.FacebookTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,24 +34,19 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-
 @Slf4j
 @Component
 @Primary
 public class UserAuthenticationManager implements AuthenticationManager {
 
-  @Autowired
-  private GoogleTokenService googleTokenService;
-  @Autowired
-  private FacebookTokenService facebookTokenService;
-  @Autowired
-  private TokenService tokenService;
+  @Autowired private GoogleTokenService googleTokenService;
+  @Autowired private FacebookTokenService facebookTokenService;
+  @Autowired private TokenService tokenService;
 
   @Override
   public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-    HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+    HttpServletRequest request =
+        ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
 
     val provider = request.getParameter("provider");
     val idToken = request.getParameter("id_token");
@@ -58,12 +55,9 @@ public class UserAuthenticationManager implements AuthenticationManager {
       username = exchangeGoogleTokenForAuth(idToken);
     } else if ("facebook".equals(provider.toLowerCase())) {
       username = exchangeFacebookTokenForAuth(idToken);
-    } else
-      return null;
+    } else return null;
 
-    return new UsernamePasswordAuthenticationToken(
-      username,
-      null, new ArrayList<>());
+    return new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
   }
 
   @SneakyThrows
@@ -72,7 +66,6 @@ public class UserAuthenticationManager implements AuthenticationManager {
       throw new Exception("Invalid user token:" + idToken);
     val authInfo = googleTokenService.decode(idToken);
     return tokenService.generateUserToken(authInfo);
-
   }
 
   @SneakyThrows
@@ -86,5 +79,4 @@ public class UserAuthenticationManager implements AuthenticationManager {
       throw new Exception("Unable to generate auth token for this user");
     }
   }
-
 }
