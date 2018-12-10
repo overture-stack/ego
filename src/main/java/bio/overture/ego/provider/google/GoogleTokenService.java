@@ -17,16 +17,14 @@
 package bio.overture.ego.provider.google;
 
 import bio.overture.ego.token.IDToken;
-import bio.overture.ego.utils.TypeUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,62 +33,57 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
+
+import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
+import static java.util.Arrays.asList;
 
 @Slf4j
 @Component
+@NoArgsConstructor
 public class GoogleTokenService {
 
+  /*
+   * Dependencies
+   */
   @Value("${google.client.Ids}")
   private String clientIDs;
-  private HttpTransport transport;
-  private JsonFactory jsonFactory;
-  private GoogleIdTokenVerifier verifier;
 
-  public GoogleTokenService() {
-    transport = new NetHttpTransport();
-    jsonFactory = new JacksonFactory();
-  }
+  /*
+   * State
+   */
+  @Getter(lazy=true) private final GoogleIdTokenVerifier verifier = initVerifier();
 
   public boolean validToken(String token) {
-    if (verifier == null)
-      initVerifier();
+    val verifier = this.getVerifier();
     GoogleIdToken idToken = null;
     try {
       idToken = verifier.verify(token);
-    } catch (GeneralSecurityException gEX) {
+    } catch (GeneralSecurityException | IOException gEX) {
       log.error("Error while verifying google token: {}", gEX);
-    } catch (IOException ioEX) {
-      log.error("Error while verifying google token: {}", ioEX);
-    } catch (Exception ex) {
-      log.error("Error while verifying google token: {}", ex);
     }
-
     return (idToken != null);
   }
 
-  @Synchronized
-  private void initVerifier() {
-    List<String> targetAudience;
-    if (clientIDs.contains(","))
-      targetAudience = Arrays.asList(clientIDs.split(","));
-    else {
-      targetAudience = new ArrayList<String>();
-      targetAudience.add(clientIDs);
-    }
-    verifier =
-      new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
+  private GoogleIdTokenVerifier initVerifier() {
+    checkState();
+    val targetAudience = asList(clientIDs.split(","));
+    return new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new JacksonFactory())
         .setAudience(targetAudience)
         .build();
   }
 
   @SneakyThrows
   public IDToken decode(String token) {
-    val tokenDecoded = JwtHelper.decode(token);
-    val authInfo = new ObjectMapper().readValue(tokenDecoded.getClaims(), Map.class);
-    return TypeUtils.convertToAnotherType(authInfo, IDToken.class);
+    val claims = JwtHelper.decode(token).getClaims();
+    val authInfo = new ObjectMapper().readValue(claims, Map.class);
+    return convertToAnotherType(authInfo, IDToken.class);
   }
+
+  private void checkState() {
+    if (clientIDs == null) {
+      throw new IllegalStateException("No client Ids are configured for google. ");
+    }
+  }
+
 }
