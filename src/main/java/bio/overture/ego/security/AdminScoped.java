@@ -16,15 +16,11 @@
 
 package bio.overture.ego.security;
 
-import org.springframework.security.access.prepost.PreAuthorize;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import org.springframework.security.access.prepost.PreAuthorize;
 
-/**
- * Method Security Meta Annotation
- */
+/** Method Security Meta Annotation */
 @Retention(RetentionPolicy.RUNTIME)
 @PreAuthorize("@authorizationManager.authorizeWithAdminRole(authentication)")
-public @interface AdminScoped {
-}
+public @interface AdminScoped {}

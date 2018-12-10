@@ -17,5 +17,4 @@ public class RequestLoggingFilterConfig {
     filter.setIncludeClientInfo(true);
     return filter;
   }
-
 }

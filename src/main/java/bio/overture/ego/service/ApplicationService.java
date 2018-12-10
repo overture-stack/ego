@@ -16,15 +16,20 @@
 
 package bio.overture.ego.service;
 
+import static java.lang.String.format;
+import static java.util.UUID.fromString;
+import static org.springframework.data.jpa.domain.Specifications.where;
+
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.enums.ApplicationStatus;
 import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.repository.ApplicationRepository;
+import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
 import bio.overture.ego.token.app.AppTokenClaims;
+import java.util.*;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import bio.overture.ego.repository.ApplicationRepository;
-import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,24 +42,17 @@ import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-
-import static java.lang.String.format;
-import static java.util.UUID.fromString;
-import static org.springframework.data.jpa.domain.Specifications.where;
-
 @Service
 @Slf4j
-public class ApplicationService extends BaseService<Application, UUID> implements ClientDetailsService {
+public class ApplicationService extends BaseService<Application, UUID>
+    implements ClientDetailsService {
   public final String APP_TOKEN_PREFIX = "Basic ";
   /*
-    Dependencies
-   */
-  @Autowired
-  private ApplicationRepository applicationRepository;
+   Dependencies
+  */
+  @Autowired private ApplicationRepository applicationRepository;
 
-  @Autowired
-  private PasswordEncoder passwordEncoder;
+  @Autowired private PasswordEncoder passwordEncoder;
 
   public Application create(@NonNull Application applicationInfo) {
     return applicationRepository.save(applicationInfo);
@@ -75,49 +73,57 @@ public class ApplicationService extends BaseService<Application, UUID> implement
     applicationRepository.deleteById(fromString(applicationId));
   }
 
-  public Page<Application> listApps(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+  public Page<Application> listApps(
+      @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return applicationRepository.findAll(ApplicationSpecification.filterBy(filters), pageable);
   }
 
-  public Page<Application> findApps(@NonNull String query, @NonNull List<SearchFilter> filters,
-    @NonNull Pageable pageable) {
-    return applicationRepository.findAll(where(ApplicationSpecification.containsText(query))
-      .and(ApplicationSpecification.filterBy(filters)), pageable);
+  public Page<Application> findApps(
+      @NonNull String query, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+    return applicationRepository.findAll(
+        where(ApplicationSpecification.containsText(query))
+            .and(ApplicationSpecification.filterBy(filters)),
+        pageable);
   }
 
-  public Page<Application> findUserApps(@NonNull String userId, @NonNull List<SearchFilter> filters,
-    @NonNull Pageable pageable) {
+  public Page<Application> findUserApps(
+      @NonNull String userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return applicationRepository.findAll(
-      where(ApplicationSpecification.usedBy(fromString(userId)))
-        .and(ApplicationSpecification.filterBy(filters)),
-      pageable);
+        where(ApplicationSpecification.usedBy(fromString(userId)))
+            .and(ApplicationSpecification.filterBy(filters)),
+        pageable);
   }
 
-  public Page<Application> findUserApps(@NonNull String userId, @NonNull String query,
-    @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+  public Page<Application> findUserApps(
+      @NonNull String userId,
+      @NonNull String query,
+      @NonNull List<SearchFilter> filters,
+      @NonNull Pageable pageable) {
     return applicationRepository.findAll(
-      where(ApplicationSpecification.usedBy(fromString(userId)))
-        .and(ApplicationSpecification.containsText(query))
-        .and(ApplicationSpecification.filterBy(filters)),
-      pageable);
+        where(ApplicationSpecification.usedBy(fromString(userId)))
+            .and(ApplicationSpecification.containsText(query))
+            .and(ApplicationSpecification.filterBy(filters)),
+        pageable);
   }
 
-  public Page<Application> findGroupApplications(@NonNull String groupId, @NonNull List<SearchFilter> filters,
-    @NonNull Pageable pageable) {
+  public Page<Application> findGroupApplications(
+      @NonNull String groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return applicationRepository.findAll(
-      where(ApplicationSpecification.inGroup(fromString(groupId)))
-        .and(ApplicationSpecification.filterBy(filters)),
-      pageable);
+        where(ApplicationSpecification.inGroup(fromString(groupId)))
+            .and(ApplicationSpecification.filterBy(filters)),
+        pageable);
   }
 
-  public Page<Application> findGroupApplications(@NonNull String groupId, @NonNull String query,
-    @NonNull List<SearchFilter> filters,
-    @NonNull Pageable pageable) {
+  public Page<Application> findGroupApplications(
+      @NonNull String groupId,
+      @NonNull String query,
+      @NonNull List<SearchFilter> filters,
+      @NonNull Pageable pageable) {
     return applicationRepository.findAll(
-      where(ApplicationSpecification.inGroup(fromString(groupId)))
-        .and(ApplicationSpecification.containsText(query))
-        .and(ApplicationSpecification.filterBy(filters)),
-      pageable);
+        where(ApplicationSpecification.inGroup(fromString(groupId)))
+            .and(ApplicationSpecification.containsText(query))
+            .and(ApplicationSpecification.filterBy(filters)),
+        pageable);
   }
 
   public Application getByName(@NonNull String appName) {
@@ -147,7 +153,8 @@ public class ApplicationService extends BaseService<Application, UUID> implement
   }
 
   @Override
-  public ClientDetails loadClientByClientId(@NonNull String clientId) throws ClientRegistrationException {
+  public ClientDetails loadClientByClientId(@NonNull String clientId)
+      throws ClientRegistrationException {
     // find client using clientid
 
     val application = getByClientId(clientId);
@@ -157,8 +164,7 @@ public class ApplicationService extends BaseService<Application, UUID> implement
     }
 
     if (!application.getStatus().equals(ApplicationStatus.APPROVED.toString())) {
-      throw new ClientRegistrationException
-        ("Client Access is not approved.");
+      throw new ClientRegistrationException("Client Access is not approved.");
     }
 
     // transform application to client details
@@ -175,5 +181,4 @@ public class ApplicationService extends BaseService<Application, UUID> implement
     clientDetails.setAuthorities(authorities);
     return clientDetails;
   }
-
 }

@@ -33,5 +33,4 @@ public enum UserStatus {
   public String toString() {
     return value;
   }
-
 }

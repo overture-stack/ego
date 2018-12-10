@@ -1,24 +1,20 @@
 package bio.overture.ego.service;
 
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
+import static java.util.UUID.fromString;
+
 import bio.overture.ego.model.entity.Permission;
 import bio.overture.ego.repository.PermissionRepository;
+import java.util.UUID;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
-
-import static java.util.UUID.fromString;
 
 @Slf4j
 @Transactional
 public abstract class PermissionService<T extends Permission> extends BaseService<T, UUID> {
-  @Autowired
-  private PermissionRepository<T> repository;
+  @Autowired private PermissionRepository<T> repository;
 
   protected PermissionRepository<T> getRepository() {
     return repository;
@@ -45,5 +41,4 @@ public abstract class PermissionService<T extends Permission> extends BaseServic
   public void delete(@NonNull String entityId) {
     repository.deleteById(fromString(entityId));
   }
-
 }

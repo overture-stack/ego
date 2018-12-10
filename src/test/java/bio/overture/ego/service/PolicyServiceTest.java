@@ -1,9 +1,17 @@
 package bio.overture.ego.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.EntityGenerator;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
@@ -16,15 +24,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -32,11 +31,9 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 @Transactional
 public class PolicyServiceTest {
 
-  @Autowired
-  private PolicyService policyService;
+  @Autowired private PolicyService policyService;
 
-  @Autowired
-  private EntityGenerator entityGenerator;
+  @Autowired private EntityGenerator entityGenerator;
 
   private List<Group> groups;
 
@@ -55,10 +52,14 @@ public class PolicyServiceTest {
   @Test
   @Ignore
   public void testCreateUniqueName() {
-//    policyService.create(entityGenerator.createPolicy(Pair.of("Study001", groups.get(0).getId())));
-//    policyService.create(entityGenerator.createPolicy(Pair.of("Study002", groups.get(0).getId())));
-//    assertThatExceptionOfType(DataIntegrityViolationException.class)
-//        .isThrownBy(() -> policyService.create(entityGenerator.createPolicy(Pair.of("Study001", groups.get(0).getId()))));
+    //    policyService.create(entityGenerator.createPolicy(Pair.of("Study001",
+    // groups.get(0).getId())));
+    //    policyService.create(entityGenerator.createPolicy(Pair.of("Study002",
+    // groups.get(0).getId())));
+    //    assertThatExceptionOfType(DataIntegrityViolationException.class)
+    //        .isThrownBy(() ->
+    // policyService.create(entityGenerator.createPolicy(Pair.of("Study001",
+    // groups.get(0).getId()))));
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
@@ -66,14 +67,16 @@ public class PolicyServiceTest {
   // Read
   @Test
   public void testGet() {
-    val policy = policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
+    val policy =
+        policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
     val savedPolicy = policyService.get(policy.getId().toString());
     assertThat(savedPolicy.getName()).isEqualTo("Study001");
   }
 
   @Test
   public void testGetEntityNotFoundException() {
-    assertThatExceptionOfType(EntityNotFoundException.class).isThrownBy(() -> policyService.get(UUID.randomUUID().toString()));
+    assertThatExceptionOfType(EntityNotFoundException.class)
+        .isThrownBy(() -> policyService.get(UUID.randomUUID().toString()));
   }
 
   @Test
@@ -101,15 +104,15 @@ public class PolicyServiceTest {
   @Test
   public void testListUsersNoFilters() {
     entityGenerator.setupTestPolicies();
-    val aclEntities = policyService
-        .listPolicies(Collections.emptyList(), new PageableResolver().getPageable());
+    val aclEntities =
+        policyService.listPolicies(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(aclEntities.getTotalElements()).isEqualTo(3L);
   }
 
   @Test
   public void testListUsersNoFiltersEmptyResult() {
-    val aclEntities = policyService
-        .listPolicies(Collections.emptyList(), new PageableResolver().getPageable());
+    val aclEntities =
+        policyService.listPolicies(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(aclEntities.getTotalElements()).isEqualTo(0L);
   }
 
@@ -117,8 +120,8 @@ public class PolicyServiceTest {
   public void testListUsersFiltered() {
     entityGenerator.setupTestPolicies();
     val userFilter = new SearchFilter("name", "Study001");
-    val aclEntities = policyService
-        .listPolicies(Arrays.asList(userFilter), new PageableResolver().getPageable());
+    val aclEntities =
+        policyService.listPolicies(Arrays.asList(userFilter), new PageableResolver().getPageable());
     assertThat(aclEntities.getTotalElements()).isEqualTo(1L);
   }
 
@@ -126,16 +129,16 @@ public class PolicyServiceTest {
   public void testListUsersFilteredEmptyResult() {
     entityGenerator.setupTestPolicies();
     val userFilter = new SearchFilter("name", "Study004");
-    val aclEntities = policyService
-        .listPolicies(Arrays.asList(userFilter), new PageableResolver().getPageable());
+    val aclEntities =
+        policyService.listPolicies(Arrays.asList(userFilter), new PageableResolver().getPageable());
     assertThat(aclEntities.getTotalElements()).isEqualTo(0L);
   }
-
 
   // Update
   @Test
   public void testUpdate() {
-    val policy = policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
+    val policy =
+        policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
     policy.setName("StudyOne");
     val updated = policyService.update(policy);
     assertThat(updated.getName()).isEqualTo("StudyOne");
@@ -148,9 +151,9 @@ public class PolicyServiceTest {
     val policy = policyService.getByName("Study001");
     policyService.delete(policy.getId().toString());
 
-    val remainingAclEntities = policyService.listPolicies(Collections.emptyList(), new PageableResolver().getPageable());
+    val remainingAclEntities =
+        policyService.listPolicies(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(remainingAclEntities.getTotalElements()).isEqualTo(2L);
     assertThat(remainingAclEntities.getContent()).doesNotContain(policy);
   }
-
 }

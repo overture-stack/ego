@@ -20,9 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 
 /*
-  Default Authorization Manager allows working without actual auth headers.
-  Meant to be used for development environment.
- */
+ Default Authorization Manager allows working without actual auth headers.
+ Meant to be used for development environment.
+*/
 @Slf4j
 public class DefaultAuthorizationManager implements AuthorizationManager {
 
@@ -36,8 +36,8 @@ public class DefaultAuthorizationManager implements AuthorizationManager {
     return true;
   }
 
-  @Override public boolean authorizeWithApplication(Authentication authentication) {
+  @Override
+  public boolean authorizeWithApplication(Authentication authentication) {
     return true;
   }
-
 }

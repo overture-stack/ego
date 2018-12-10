@@ -18,6 +18,8 @@ package bio.overture.ego.controller.resolver;
 
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -27,14 +29,10 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Slf4j
 public class FilterResolver implements HandlerMethodArgumentResolver {
 
-  @NonNull
-  private List<String> fieldValues;
+  @NonNull private List<String> fieldValues;
 
   public FilterResolver(@NonNull List<String> fieldValues) {
     this.fieldValues = fieldValues;
@@ -46,18 +44,25 @@ public class FilterResolver implements HandlerMethodArgumentResolver {
   }
 
   @Override
-  public Object resolveArgument(MethodParameter methodParameter,
-    ModelAndViewContainer modelAndViewContainer,
-    NativeWebRequest nativeWebRequest,
-    WebDataBinderFactory webDataBinderFactory) throws Exception {
+  public Object resolveArgument(
+      MethodParameter methodParameter,
+      ModelAndViewContainer modelAndViewContainer,
+      NativeWebRequest nativeWebRequest,
+      WebDataBinderFactory webDataBinderFactory)
+      throws Exception {
 
     val filters = new ArrayList<SearchFilter>();
-    nativeWebRequest.getParameterNames().forEachRemaining(p -> {
-      val matchingField = fieldValues.stream().filter(f -> f.equalsIgnoreCase(p)).findFirst();
-      if (matchingField.isPresent()) {
-        filters.add(new SearchFilter(matchingField.get(), nativeWebRequest.getParameter(p)));
-      }
-    });
+    nativeWebRequest
+        .getParameterNames()
+        .forEachRemaining(
+            p -> {
+              val matchingField =
+                  fieldValues.stream().filter(f -> f.equalsIgnoreCase(p)).findFirst();
+              if (matchingField.isPresent()) {
+                filters.add(
+                    new SearchFilter(matchingField.get(), nativeWebRequest.getParameter(p)));
+              }
+            });
     return filters;
   }
 }

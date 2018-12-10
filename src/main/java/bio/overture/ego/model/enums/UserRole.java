@@ -30,5 +30,4 @@ public enum UserRole {
   public String toString() {
     return value;
   }
-
 }

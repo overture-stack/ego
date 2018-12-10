@@ -16,11 +16,10 @@
 
 package bio.overture.ego.model.enums;
 
+import java.util.Arrays;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-
-import java.util.Arrays;
 
 @RequiredArgsConstructor
 public enum AccessLevel {
@@ -28,8 +27,7 @@ public enum AccessLevel {
   WRITE("WRITE"),
   DENY("DENY");
 
-  @NonNull
-  private final String value;
+  @NonNull private final String value;
 
   public static AccessLevel fromValue(String value) {
     for (val policyMask : values()) {
@@ -38,11 +36,12 @@ public enum AccessLevel {
       }
     }
     throw new IllegalArgumentException(
-      "Unknown enum type " + value + ", Allowed values are " + Arrays.toString(values()));
+        "Unknown enum type " + value + ", Allowed values are " + Arrays.toString(values()));
   }
 
   /**
    * Determine if we are allowed access to what we want, based upon what we have.
+   *
    * @param have The PolicyMask we have.
    * @param want The PolicyMask we want.
    * @return true if we have access, false if not.

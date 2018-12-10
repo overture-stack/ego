@@ -19,21 +19,19 @@ package bio.overture.ego.token.user;
 import bio.overture.ego.token.TokenClaims;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
+import java.util.List;
+import java.util.Set;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.springframework.util.StringUtils;
-
-import java.util.List;
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
 @JsonView(Views.JWTAccessToken.class)
 public class UserTokenClaims extends TokenClaims {
 
-  @NonNull
-  private UserTokenContext context;
+  @NonNull private UserTokenContext context;
 
   public String getSub() {
     if (StringUtils.isEmpty(sub)) {
@@ -50,5 +48,4 @@ public class UserTokenClaims extends TokenClaims {
   public List<String> getAud() {
     return this.context.getUserInfo().getApplications();
   }
-
 }

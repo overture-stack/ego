@@ -1,26 +1,25 @@
 package bio.overture.ego.model.entity;
 
+import bio.overture.ego.model.enums.Fields;
+import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
+import java.util.Set;
+import java.util.UUID;
+import javax.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import bio.overture.ego.model.enums.Fields;
-import bio.overture.ego.view.Views;
-
-import javax.persistence.*;
-import java.util.Set;
-import java.util.UUID;
 
 @Entity
 @Table(name = "policy")
 @Data
-@JsonPropertyOrder({ "id", "owner", "name" })
+@JsonPropertyOrder({"id", "owner", "name"})
 @JsonInclude()
-@EqualsAndHashCode(of = { "id" })
+@EqualsAndHashCode(of = {"id"})
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -31,21 +30,23 @@ public class Policy {
   @JoinColumn(name = Fields.POLICYID_JOIN)
   @JsonIgnore
   protected Set<GroupPermission> groupPermissions;
+
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name = Fields.POLICYID_JOIN)
   @JsonIgnore
   protected Set<UserPermission> userPermissions;
+
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
-  @GenericGenerator(
-    name = "policy_uuid",
-    strategy = "org.hibernate.id.UUIDGenerator")
+  @GenericGenerator(name = "policy_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "policy_uuid")
   UUID id;
+
   @NonNull
   @Column(nullable = false, name = Fields.OWNER)
   UUID owner;
+
   @NonNull
   @Column(nullable = false, name = Fields.NAME, unique = true)
   String name;
@@ -69,5 +70,4 @@ public class Policy {
       this.userPermissions = other.userPermissions;
     }
   }
-
 }

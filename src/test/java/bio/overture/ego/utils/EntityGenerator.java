@@ -1,19 +1,18 @@
 package bio.overture.ego.utils;
 
+import static bio.overture.ego.utils.CollectionUtils.listOf;
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
+
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.*;
-import lombok.val;
 import bio.overture.ego.service.TokenService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.time.Instant;
 import java.util.*;
-
-import static bio.overture.ego.utils.CollectionUtils.listOf;
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Component
 /**

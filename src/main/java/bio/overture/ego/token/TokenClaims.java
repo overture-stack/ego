@@ -19,37 +19,29 @@ package bio.overture.ego.token;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
-import lombok.*;
-
 import java.util.List;
 import java.util.UUID;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
 @JsonView(Views.JWTAccessToken.class)
 public abstract class TokenClaims {
-  @NonNull
-  protected Integer iat;
+  @NonNull protected Integer iat;
 
-  @NonNull
-  protected Integer exp;
+  @NonNull protected Integer exp;
 
-  @NonNull
-  @JsonIgnore
-  protected Integer validDuration;
+  @NonNull @JsonIgnore protected Integer validDuration;
 
-  @Getter
-  protected String sub;
+  @Getter protected String sub;
 
-  @NonNull
-  protected String iss;
+  @NonNull protected String iss;
 
-  @Getter
-  protected List<String> aud;
+  @Getter protected List<String> aud;
 
   /*
-    Defaults
-   */
+   Defaults
+  */
   private String jti = UUID.randomUUID().toString();
 
   @Getter(AccessLevel.NONE)
@@ -64,5 +56,4 @@ public abstract class TokenClaims {
   public int getIat() {
     return (int) (this.initTime / 1000L);
   }
-
 }
