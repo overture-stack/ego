@@ -16,31 +16,24 @@ import static bio.overture.ego.utils.CollectionUtils.listOf;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 
 @Component
-/***
- * For this class, we follow the following naming conventions:
- * createEntity: returns a new object of type Entity.
- * setupEntity: Create an policy, saves it using Hibernate, & returns it.
- * setupEntities: Sets up multiple entities at once
- * setupTestEntities: Sets up specific entities used in our unit tests
+/**
+ * * For this class, we follow the following naming conventions: createEntity: returns a new object
+ * of type Entity. setupEntity: Create an policy, saves it using Hibernate, & returns it.
+ * setupEntities: Sets up multiple entities at once setupTestEntities: Sets up specific entities
+ * used in our unit tests
  */
 public class EntityGenerator {
-  @Autowired
-  private ApplicationService applicationService;
+  @Autowired private ApplicationService applicationService;
 
-  @Autowired
-  private UserService userService;
+  @Autowired private UserService userService;
 
-  @Autowired
-  private GroupService groupService;
+  @Autowired private GroupService groupService;
 
-  @Autowired
-  private PolicyService policyService;
+  @Autowired private PolicyService policyService;
 
-  @Autowired
-  private TokenService tokenService;
+  @Autowired private TokenService tokenService;
 
-  @Autowired
-  private TokenStoreService tokenStoreService;
+  @Autowired private TokenStoreService tokenStoreService;
 
   public Application createApplication(String clientId) {
     return new Application(appName(clientId), clientId, clientSecret(clientId));
@@ -77,8 +70,7 @@ public class EntityGenerator {
   }
 
   public User createUser(String firstName, String lastName) {
-    return User
-        .builder()
+    return User.builder()
         .email(String.format("%s%s@domain.com", firstName, lastName))
         .name(String.format("%s%s", firstName, lastName))
         .firstName(firstName)
@@ -91,9 +83,10 @@ public class EntityGenerator {
   }
 
   public User createUser(String name) {
-    val names= name.split(" ",2);
+    val names = name.split(" ", 2);
     return createUser(names[0], names[1]);
   }
+
   public User setupUser(String name) {
     val user = createUser(name);
     return userService.create(user);
@@ -125,10 +118,7 @@ public class EntityGenerator {
   }
 
   public Policy createPolicy(String name, UUID policyId) {
-    return Policy.builder()
-        .name(name)
-        .owner(policyId)
-        .build();
+    return Policy.builder().name(name).owner(policyId).build();
   }
 
   public Policy createPolicy(String name) {
@@ -145,12 +135,12 @@ public class EntityGenerator {
   }
 
   public Policy setupPolicy(String name, String groupName) {
-    val policy=createPolicy(name, groupName);
+    val policy = createPolicy(name, groupName);
     return policyService.create(policy);
   }
 
   public Policy setupPolicy(String name) {
-    val policy=createPolicy(name);
+    val policy = createPolicy(name);
     return policyService.create(policy);
   }
 
@@ -162,13 +152,15 @@ public class EntityGenerator {
     setupPolicies("Study001,Group One", "Study002,Group Two", "Study003,Group Three");
   }
 
-  public Token setupToken(User user, String token, long duration, Set<Scope> scopes,
-    Set<Application> applications) {
-    val tokenObject = Token.builder().
-      token(token).owner(user).
-      applications(applications == null ? new HashSet<>():applications).
-      expires(Date.from(Instant.now().plusSeconds(duration))).
-      build();
+  public Token setupToken(
+      User user, String token, long duration, Set<Scope> scopes, Set<Application> applications) {
+    val tokenObject =
+        Token.builder()
+            .token(token)
+            .owner(user)
+            .applications(applications == null ? new HashSet<>() : applications)
+            .expires(Date.from(Instant.now().plusSeconds(duration)))
+            .build();
 
     tokenObject.setScopes(scopes);
 
@@ -181,13 +173,13 @@ public class EntityGenerator {
   }
 
   public void addPermissions(User user, Set<Scope> scopes) {
-    for (val s: scopes) {
+    for (val s : scopes) {
       addPermission(user, s);
     }
     userService.update(user);
   }
 
-  public static List<ScopeName> scopeNames(String ... strings) {
+  public static List<ScopeName> scopeNames(String... strings) {
     return mapToList(listOf(strings), ScopeName::new);
   }
 
@@ -195,4 +187,3 @@ public class EntityGenerator {
     return tokenService.getScopes(new HashSet<>(scopeNames(scope)));
   }
 }
-
