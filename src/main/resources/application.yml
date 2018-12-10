@@ -31,12 +31,13 @@ spring:
 spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
 
 oauth:
-  redirectUri: http://localhost:3501
+  redirectFrontendUri: http://localhost:3501
 
 # LinkedIn Connection
 linkedIn:
   clientID:
   clientSecret:
+  redirectUri: http://localhost:8081/oauth/linkedin-cb
 
 # Facebook Connection Details
 facebook:

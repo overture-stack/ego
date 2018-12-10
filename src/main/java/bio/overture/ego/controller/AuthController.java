@@ -85,10 +85,10 @@ public class AuthController {
   @RequestMapping(method = RequestMethod.GET, value = "/linkedin-cb")
   @SneakyThrows
   public RedirectView callback(@RequestParam("code") String code, RedirectAttributes attributes,
-      @Value("${oauth.redirectUri}") final String redirectUri) {
+      @Value("${oauth.redirectFrontendUri}") final String redirectFrontendUri) {
     val redirectView = new RedirectView();
 
-    redirectView.setUrl((String) redirectUri);
+    redirectView.setUrl(redirectFrontendUri);
     val authInfo = linkedInOAuthService.getAuthInfoFromLinkedIn(code);
     if (authInfo.isPresent()) {
       attributes.addAttribute("token", tokenService.generateUserToken(authInfo.get()));

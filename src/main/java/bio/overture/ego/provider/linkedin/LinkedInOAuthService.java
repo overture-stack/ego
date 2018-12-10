@@ -33,6 +33,9 @@ public class LinkedInOAuthService {
   @Value("${linkedIn.clientID}")
   private String clientID;
 
+  @Value("${linkedIn.redirectUri}")
+  private String redirectUri;
+
   private RestTemplate restTemplate = new RestTemplate();
 
   private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -65,10 +68,10 @@ public class LinkedInOAuthService {
     val uriVariables = ImmutableMap.of( //
         "grant_type", "authorization_code", //
         "code", code, //
-        "redirect_uri", "http://localhost:8081/oauth/linkedin-cb", //
+        "redirect_uri", redirectUri, //
         "client_id", clientID, //
         "client_secret", clientSecret //
-    ); //
+    );
 
     try {
       val response = restTemplate.getForEntity(TOKEN_ENDPOINT, String.class, uriVariables);
