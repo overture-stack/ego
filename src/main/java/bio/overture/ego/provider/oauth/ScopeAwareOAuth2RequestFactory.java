@@ -17,27 +17,25 @@
  */
 package bio.overture.ego.provider.oauth;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.lang.String.format;
+import static org.springframework.security.oauth2.common.util.OAuth2Utils.SCOPE;
+
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.TokenService;
 import com.google.common.collect.Sets;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.TokenRequest;
 import org.springframework.security.oauth2.provider.request.DefaultOAuth2RequestFactory;
-
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Strings.isNullOrEmpty;
-import static java.lang.String.format;
-import static org.springframework.security.oauth2.common.util.OAuth2Utils.SCOPE;
 
 @Slf4j
 public class ScopeAwareOAuth2RequestFactory extends DefaultOAuth2RequestFactory {
@@ -45,27 +43,33 @@ public class ScopeAwareOAuth2RequestFactory extends DefaultOAuth2RequestFactory 
   private static final String USERNAME_REQUEST_PARAM = "username";
   private final TokenService tokenService;
 
-  public ScopeAwareOAuth2RequestFactory(@NonNull ClientDetailsService clientDetailsService,
-    @NonNull TokenService tokenService) {
+  public ScopeAwareOAuth2RequestFactory(
+      @NonNull ClientDetailsService clientDetailsService, @NonNull TokenService tokenService) {
     super(clientDetailsService);
     this.tokenService = tokenService;
   }
 
   private static Set<ScopeName> resolveRequestedScopes(Map<String, String> requestParameters) {
     val scope = requestParameters.get(SCOPE);
-    checkState(!isNullOrEmpty(scope), "Failed to resolve scope from request: %s", requestParameters);
-    return Sets.newHashSet(scope.split("/s+")).stream().map(s -> new ScopeName(s)).collect(Collectors.toSet());
+    checkState(
+        !isNullOrEmpty(scope), "Failed to resolve scope from request: %s", requestParameters);
+    return Sets.newHashSet(scope.split("/s+"))
+        .stream()
+        .map(s -> new ScopeName(s))
+        .collect(Collectors.toSet());
   }
 
   private static String resolveUserName(Map<String, String> requestParameters) {
     val userName = requestParameters.get(USERNAME_REQUEST_PARAM);
-    checkState(!isNullOrEmpty(userName), "Failed to resolve user from request: %s", requestParameters);
+    checkState(
+        !isNullOrEmpty(userName), "Failed to resolve user from request: %s", requestParameters);
 
     return userName;
   }
 
   @Override
-  public TokenRequest createTokenRequest(Map<String, String> requestParameters, ClientDetails authenticatedClient) {
+  public TokenRequest createTokenRequest(
+      Map<String, String> requestParameters, ClientDetails authenticatedClient) {
     validateScope(requestParameters);
 
     return super.createTokenRequest(requestParameters, authenticatedClient);
@@ -77,9 +81,8 @@ public class ScopeAwareOAuth2RequestFactory extends DefaultOAuth2RequestFactory 
 
     val missing = tokenService.missingScopes(userName, requestScope);
     if (!missing.isEmpty()) {
-      throw new AccessDeniedException(format("Invalid token scopes '%s' requested for user '%s'",
-        missing, userName));
+      throw new AccessDeniedException(
+          format("Invalid token scopes '%s' requested for user '%s'", missing, userName));
     }
   }
-
 }

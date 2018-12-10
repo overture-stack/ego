@@ -31,23 +31,21 @@ public class SwaggerConfig {
   @Bean
   public Docket productApi() {
     return new Docket(DocumentationType.SWAGGER_2)
-      .select()
-      .apis(RequestHandlerSelectors.basePackage("bio.overture.ego.controller"))
-      .build()
-      .apiInfo(metaInfo());
+        .select()
+        .apis(RequestHandlerSelectors.basePackage("bio.overture.ego.controller"))
+        .build()
+        .apiInfo(metaInfo());
   }
 
   private ApiInfo metaInfo() {
 
     return new ApiInfo(
-      "ego Service API",
-      "ego API Documentation",
-      "0.01",
-      "",
-      "",
-      "Apache License Version 2.0",
-      ""
-    );
+        "ego Service API",
+        "ego API Documentation",
+        "0.01",
+        "",
+        "",
+        "Apache License Version 2.0",
+        "");
   }
-
 }

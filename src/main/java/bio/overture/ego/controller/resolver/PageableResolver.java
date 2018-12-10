@@ -32,10 +32,12 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
   }
 
   @Override
-  public Object resolveArgument(MethodParameter methodParameter,
-    ModelAndViewContainer modelAndViewContainer,
-    NativeWebRequest nativeWebRequest,
-    WebDataBinderFactory webDataBinderFactory) throws Exception {
+  public Object resolveArgument(
+      MethodParameter methodParameter,
+      ModelAndViewContainer modelAndViewContainer,
+      NativeWebRequest nativeWebRequest,
+      WebDataBinderFactory webDataBinderFactory)
+      throws Exception {
     // get paging parameters
     String limit = nativeWebRequest.getParameter("limit");
     String offset = nativeWebRequest.getParameter("offset");
@@ -86,7 +88,8 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
           direction = Sort.Direction.ASC;
         }
         // TODO: this is a hack for now to provide default sort on id field
-        // ideally we should not be making assumption about field name as "id" - it will break if field doesn't exist
+        // ideally we should not be making assumption about field name as "id" - it will break if
+        // field doesn't exist
         return new Sort(direction, StringUtils.isEmpty(sort) ? "id" : sort);
       }
 

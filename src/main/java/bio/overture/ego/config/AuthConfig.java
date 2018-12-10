@@ -16,13 +16,16 @@
 
 package bio.overture.ego.config;
 
-import bio.overture.ego.service.TokenService;
-import bio.overture.ego.token.CustomTokenEnhancer;
-import bio.overture.ego.token.signer.TokenSigner;
-import lombok.extern.slf4j.Slf4j;
 import bio.overture.ego.provider.oauth.ScopeAwareOAuth2RequestFactory;
 import bio.overture.ego.security.CorsFilter;
 import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.TokenService;
+import bio.overture.ego.token.CustomTokenEnhancer;
+import bio.overture.ego.token.signer.TokenSigner;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.TimeZone;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,23 +48,15 @@ import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.TimeZone;
-
 @Slf4j
 @Configuration
 @EnableAuthorizationServer
 public class AuthConfig extends AuthorizationServerConfigurerAdapter {
 
-  @Autowired
-  TokenSigner tokenSigner;
-  @Autowired
-  TokenService tokenService;
-  @Autowired
-  private ApplicationService clientDetailsService;
-  @Autowired
-  private AuthenticationManager authenticationManager;
+  @Autowired TokenSigner tokenSigner;
+  @Autowired TokenService tokenService;
+  @Autowired private ApplicationService clientDetailsService;
+  @Autowired private AuthenticationManager authenticationManager;
 
   @Bean
   @Primary
@@ -71,8 +66,7 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
 
   @Bean
   public SimpleDateFormat formatter() {
-    SimpleDateFormat formatter =
-      new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
     formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
     return formatter;
   }
@@ -106,8 +100,7 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   }
 
   @Override
-  public void configure(ClientDetailsServiceConfigurer clients)
-    throws Exception {
+  public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
     clients.withClientDetails(clientDetailsService);
   }
 
@@ -130,12 +123,12 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   @Override
   public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
     TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
-    tokenEnhancerChain.setTokenEnhancers(
-      Arrays.asList(tokenEnhancer()));
+    tokenEnhancerChain.setTokenEnhancers(Arrays.asList(tokenEnhancer()));
 
-    endpoints.tokenStore(tokenStore())
-      .tokenEnhancer(tokenEnhancerChain)
-      .accessTokenConverter(accessTokenConverter());
+    endpoints
+        .tokenStore(tokenStore())
+        .tokenEnhancer(tokenEnhancerChain)
+        .accessTokenConverter(accessTokenConverter());
     endpoints.authenticationManager(this.authenticationManager);
     endpoints.requestFactory(oAuth2RequestFactory());
   }

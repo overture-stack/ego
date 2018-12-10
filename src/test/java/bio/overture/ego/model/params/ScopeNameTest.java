@@ -17,14 +17,11 @@
 
 package bio.overture.ego.model.params;
 
+import static org.junit.Assert.assertEquals;
+
 import bio.overture.ego.model.enums.AccessLevel;
 import lombok.val;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-
 
 public class ScopeNameTest {
   @Test

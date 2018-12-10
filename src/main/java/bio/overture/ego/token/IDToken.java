@@ -25,8 +25,7 @@ import lombok.*;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class IDToken {
-  @NonNull
-  private String email;
+  @NonNull private String email;
   private String given_name;
   private String family_name;
 }

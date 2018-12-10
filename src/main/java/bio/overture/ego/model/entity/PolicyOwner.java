@@ -1,4 +1,3 @@
 package bio.overture.ego.model.entity;
 
-public interface PolicyOwner {
-}
+public interface PolicyOwner {}

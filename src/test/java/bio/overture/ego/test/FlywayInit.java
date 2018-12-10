@@ -1,11 +1,10 @@
 package bio.overture.ego.test;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import lombok.extern.slf4j.Slf4j;
 import org.flywaydb.core.Flyway;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
-
-import java.sql.Connection;
-import java.sql.SQLException;
 
 @Slf4j
 public class FlywayInit {
@@ -18,5 +17,4 @@ public class FlywayInit {
     flyway.setDataSource(new SingleConnectionDataSource(connection, true));
     flyway.migrate();
   }
-
 }

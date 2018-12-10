@@ -16,6 +16,12 @@
 
 package bio.overture.ego.token.signer;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.*;
+import java.util.Base64;
+import java.util.Optional;
+import javax.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -23,25 +29,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.security.*;
-import java.util.Optional;
-import java.util.Base64;
-
 @Slf4j
 @Service
 @Profile("jks")
 public class JKSTokenSigner implements TokenSigner {
 
   /*
-    Constants
-   */
+   Constants
+  */
   private static final String KEYSTORE_TYPE = "JKS";
   /*
-    Dependencies
-   */
+   Dependencies
+  */
   @Value("${token.key-store}")
   private String keyStorePath;
 
@@ -108,5 +107,4 @@ public class JKSTokenSigner implements TokenSigner {
       return Optional.empty();
     }
   }
-
 }

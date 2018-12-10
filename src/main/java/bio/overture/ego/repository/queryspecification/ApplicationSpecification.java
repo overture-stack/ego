@@ -20,37 +20,39 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.utils.QueryUtils;
-import lombok.val;
-import org.springframework.data.jpa.domain.Specification;
-
+import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.persistence.criteria.Join;
-import java.util.UUID;
+import lombok.val;
+import org.springframework.data.jpa.domain.Specification;
 
 public class ApplicationSpecification extends SpecificationBase<Application> {
   public static Specification<Application> containsText(@Nonnull String text) {
     val finalText = QueryUtils.prepareForQuery(text);
     return (root, query, builder) ->
-      builder.or(getQueryPredicates(builder, root, finalText,
-        "name", "clientId", "clientSecret", "description", "status")
-      );
+        builder.or(
+            getQueryPredicates(
+                builder,
+                root,
+                finalText,
+                "name",
+                "clientId",
+                "clientSecret",
+                "description",
+                "status"));
   }
 
   public static Specification<Application> inGroup(@Nonnull UUID groupId) {
-    return (root, query, builder) ->
-    {
+    return (root, query, builder) -> {
       Join<Application, Group> groupJoin = root.join("wholeGroups");
       return builder.equal(groupJoin.<Integer>get("id"), groupId);
     };
-
   }
 
   public static Specification<Application> usedBy(@Nonnull UUID userId) {
-    return (root, query, builder) ->
-    {
+    return (root, query, builder) -> {
       Join<Application, User> applicationUserJoin = root.join("wholeUsers");
       return builder.equal(applicationUserJoin.<Integer>get("id"), userId);
     };
   }
-
 }

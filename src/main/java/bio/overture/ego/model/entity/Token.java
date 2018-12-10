@@ -1,36 +1,33 @@
 package bio.overture.ego.model.entity;
 
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+
+import bio.overture.ego.model.dto.Scope;
+import bio.overture.ego.model.enums.Fields;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+import javax.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.joda.time.DateTime;
-import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.enums.Fields;
-
-import javax.persistence.*;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 
 @Entity
 @Table(name = "token")
 @Data
-@EqualsAndHashCode(of = { "id" })
+@EqualsAndHashCode(of = {"id"})
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class Token {
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
-  @GenericGenerator(
-    name = "token_uuid",
-    strategy = "org.hibernate.id.UUIDGenerator")
+  @GenericGenerator(name = "token_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "token_uuid")
   UUID id;
 
@@ -44,16 +41,20 @@ public class Token {
   @JsonIgnore
   User owner;
 
-  @NonNull @ManyToMany()
+  @NonNull
+  @ManyToMany()
   @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(name = "tokenapplication", joinColumns = { @JoinColumn(name = Fields.TOKENID_JOIN) },
-    inverseJoinColumns = { @JoinColumn(name = Fields.APPID_JOIN) })
+  @JoinTable(
+      name = "tokenapplication",
+      joinColumns = {@JoinColumn(name = Fields.TOKENID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
   @JsonIgnore
   Set<Application> applications;
 
   @Column(nullable = false, name = Fields.ISSUEDATE, updatable = false)
   Date expires;
+
   @Column(nullable = false, name = Fields.ISREVOKED, updatable = false)
   boolean isRevoked;
 
@@ -62,6 +63,7 @@ public class Token {
   @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
   Set<TokenScope> scopes;
+
   public void setExpires(int seconds) {
     expires = DateTime.now().plusSeconds(seconds).toDate();
   }
@@ -80,8 +82,8 @@ public class Token {
   }
 
   @JsonIgnore
-  public  Set<Scope> scopes() {
-    return mapToSet(scopes, s -> new Scope(s.getPolicy(), s.getAccessLevel()) );
+  public Set<Scope> scopes() {
+    return mapToSet(scopes, s -> new Scope(s.getPolicy(), s.getAccessLevel()));
   }
 
   public void setScopes(Set<Scope> scopes) {

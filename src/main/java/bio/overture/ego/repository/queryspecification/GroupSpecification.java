@@ -20,35 +20,30 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.utils.QueryUtils;
-import lombok.val;
-import org.springframework.data.jpa.domain.Specification;
-
+import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.persistence.criteria.Join;
-import java.util.UUID;
+import lombok.val;
+import org.springframework.data.jpa.domain.Specification;
 
 public class GroupSpecification extends SpecificationBase<Group> {
   public static Specification<Group> containsText(@Nonnull String text) {
     val finalText = QueryUtils.prepareForQuery(text);
-    return (root, query, builder) -> builder.or(getQueryPredicates(builder, root, finalText,
-      "name", "description", "status")
-    );
+    return (root, query, builder) ->
+        builder.or(getQueryPredicates(builder, root, finalText, "name", "description", "status"));
   }
 
   public static Specification<Group> containsApplication(@Nonnull UUID appId) {
-    return (root, query, builder) ->
-    {
+    return (root, query, builder) -> {
       Join<Application, Group> groupJoin = root.join("wholeApplications");
       return builder.equal(groupJoin.<Integer>get("id"), appId);
     };
   }
 
   public static Specification<Group> containsUser(@Nonnull UUID userId) {
-    return (root, query, builder) ->
-    {
+    return (root, query, builder) -> {
       Join<User, Group> groupJoin = root.join("wholeUsers");
       return builder.equal(groupJoin.<Integer>get("id"), userId);
     };
   }
-
 }

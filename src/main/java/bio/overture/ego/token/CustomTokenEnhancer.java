@@ -16,13 +16,13 @@
 
 package bio.overture.ego.token;
 
+import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
-import lombok.val;
-import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.token.app.AppJWTAccessToken;
 import bio.overture.ego.token.app.AppTokenClaims;
 import bio.overture.ego.token.user.UserJWTAccessToken;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
@@ -30,24 +30,22 @@ import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 
 public class CustomTokenEnhancer implements TokenEnhancer {
 
-  @Autowired
-  private TokenService tokenService;
-  @Autowired
-  private UserService userService;
-  @Autowired
-  private ApplicationService applicationService;
+  @Autowired private TokenService tokenService;
+  @Autowired private UserService userService;
+  @Autowired private ApplicationService applicationService;
 
   @Override
-  public OAuth2AccessToken enhance(OAuth2AccessToken oAuth2AccessToken, OAuth2Authentication oAuth2Authentication) {
+  public OAuth2AccessToken enhance(
+      OAuth2AccessToken oAuth2AccessToken, OAuth2Authentication oAuth2Authentication) {
 
     // get user or application token
-    return
-      oAuth2Authentication.getAuthorities() != null
-        &&
-        oAuth2Authentication
-          .getAuthorities().stream().anyMatch(authority -> AppTokenClaims.ROLE.equals(authority.getAuthority())) ?
-        getApplicationAccessToken(oAuth2Authentication.getPrincipal().toString()) :
-        getUserAccessToken(oAuth2Authentication.getPrincipal().toString());
+    return oAuth2Authentication.getAuthorities() != null
+            && oAuth2Authentication
+                .getAuthorities()
+                .stream()
+                .anyMatch(authority -> AppTokenClaims.ROLE.equals(authority.getAuthority()))
+        ? getApplicationAccessToken(oAuth2Authentication.getPrincipal().toString())
+        : getUserAccessToken(oAuth2Authentication.getPrincipal().toString());
   }
 
   private UserJWTAccessToken getUserAccessToken(String userName) {
@@ -63,5 +61,4 @@ public class CustomTokenEnhancer implements TokenEnhancer {
 
     return tokenService.getAppAccessToken(token);
   }
-
 }

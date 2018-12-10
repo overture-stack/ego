@@ -33,8 +33,7 @@ import org.springframework.security.oauth2.provider.expression.OAuth2MethodSecur
 @Profile("auth")
 public class AuthorizationStrategyConfig extends GlobalMethodSecurityConfiguration {
 
-  @Autowired
-  private ApplicationContext context;
+  @Autowired private ApplicationContext context;
 
   @Override
   protected MethodSecurityExpressionHandler createExpressionHandler() {
@@ -42,5 +41,4 @@ public class AuthorizationStrategyConfig extends GlobalMethodSecurityConfigurati
     handler.setApplicationContext(context);
     return handler;
   }
-
 }
