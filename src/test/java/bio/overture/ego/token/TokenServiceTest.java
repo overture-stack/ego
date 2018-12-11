@@ -17,7 +17,6 @@
 
 package bio.overture.ego.token;
 
-import static bio.overture.ego.utils.CollectionUtils.listOf;
 import static bio.overture.ego.utils.CollectionUtils.setOf;
 import static org.junit.Assert.*;
 
@@ -33,9 +32,7 @@ import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.TestData;
 import com.google.common.collect.Sets;
 import java.util.*;
-import javax.management.InvalidApplicationException;
 import javax.persistence.EntityNotFoundException;
-
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Assert;
@@ -44,7 +41,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.test.context.ActiveProfiles;
