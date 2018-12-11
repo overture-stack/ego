@@ -31,7 +31,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 @Slf4j
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
-@Ignore("Restore when controller is fixed")
 @SpringBootTest(
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
