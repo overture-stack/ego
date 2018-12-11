@@ -17,6 +17,7 @@
 package bio.overture.ego.controller;
 
 import bio.overture.ego.provider.facebook.FacebookTokenService;
+import bio.overture.ego.provider.github.GithubOAuthService;
 import bio.overture.ego.provider.google.GoogleTokenService;
 import bio.overture.ego.provider.linkedin.LinkedInOAuthService;
 import bio.overture.ego.service.TokenService;
@@ -55,6 +56,7 @@ public class AuthController {
   private FacebookTokenService facebookTokenService;
   private TokenSigner tokenSigner;
   private LinkedInOAuthService linkedInOAuthService;
+  private GithubOAuthService githubOAuthService;
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
   @ResponseStatus(value = HttpStatus.OK)
@@ -84,14 +86,32 @@ public class AuthController {
 
   @RequestMapping(method = RequestMethod.GET, value = "/linkedin-cb")
   @SneakyThrows
-  public RedirectView callback(
+  public RedirectView linkedinCallback(
       @RequestParam("code") String code,
       RedirectAttributes attributes,
       @Value("${oauth.redirectFrontendUri}") final String redirectFrontendUri) {
     val redirectView = new RedirectView();
 
     redirectView.setUrl(redirectFrontendUri);
-    val authInfo = linkedInOAuthService.getAuthInfoFromLinkedIn(code);
+    val authInfo = linkedInOAuthService.getAuthInfo(code);
+    if (authInfo.isPresent()) {
+      attributes.addAttribute("token", tokenService.generateUserToken(authInfo.get()));
+      return redirectView;
+    } else {
+      throw new InvalidTokenException("Unable to generate auth token for this user");
+    }
+  }
+
+  @RequestMapping(method = RequestMethod.GET, value = "/github-cb")
+  @SneakyThrows
+  public RedirectView githubCallback(
+      @RequestParam("code") String code,
+      RedirectAttributes attributes,
+      @Value("${oauth.redirectFrontendUri}") final String redirectFrontendUri) {
+    val redirectView = new RedirectView();
+
+    redirectView.setUrl(redirectFrontendUri);
+    val authInfo = githubOAuthService.getAuthInfo(code);
     if (authInfo.isPresent()) {
       attributes.addAttribute("token", tokenService.generateUserToken(authInfo.get()));
       return redirectView;
