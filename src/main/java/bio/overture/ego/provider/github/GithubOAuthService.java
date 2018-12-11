@@ -79,7 +79,7 @@ public class GithubOAuthService {
                       response.getBody(), new TypeReference<Map<String, Object>>() {})
                   .get("name");
       return Optional.of(name);
-    } catch (RestClientException | IOException e) {
+    } catch (RestClientException | IOException | ClassCastException e) {
       log.warn(e.getMessage(), e);
       return Optional.empty();
     }
@@ -116,7 +116,7 @@ public class GithubOAuthService {
       val email =
           (String) Arrays.stream(emails).filter(isPrimaryEmail).findAny().get().get("email");
       return email == null ? Optional.empty() : Optional.of(email);
-    } catch (IOException | NoSuchElementException e) {
+    } catch (IOException | NoSuchElementException | ClassCastException e) {
       log.warn(e.getMessage(), e);
       return Optional.empty();
     }
