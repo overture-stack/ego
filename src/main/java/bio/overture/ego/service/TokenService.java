@@ -141,13 +141,13 @@ public class TokenService {
   }
 
   @SneakyThrows
-  public Token issueToken(String name, List<ScopeName> scopeNames, List<String> apps) {
-    log.info(format("Looking for user '%s'", str(name)));
+  public Token issueToken(UUID user_id, List<ScopeName> scopeNames, List<String> apps) {
+    log.info(format("Looking for user '%s'", str(user_id)));
     log.info(format("Scopes are '%s'", strList(scopeNames)));
     log.info(format("Apps are '%s'", strList(apps)));
-    User u = userService.getByName(name);
+    User u = userService.get(user_id.toString());
     if (u == null) {
-      throw new UsernameNotFoundException(format("Can't find user '%s'", name));
+      throw new UsernameNotFoundException(format("Can't find user '%s'", str(user_id)));
     }
 
     log.info(format("Got user with id '%s'", str(u.getId())));
@@ -159,7 +159,7 @@ public class TokenService {
 
     val missingScopes = Scope.missingScopes(userScopes, requestedScopes);
     if (!missingScopes.isEmpty()) {
-      val msg = format("User %s has no access to scopes [%s]", str(name), str(missingScopes));
+      val msg = format("User %s has no access to scopes [%s]", str(user_id), str(missingScopes));
       log.info(msg);
       throw new InvalidScopeException(msg);
     }
@@ -182,7 +182,7 @@ public class TokenService {
       for (val appName : apps) {
         val app = applicationService.getByName(appName);
         if (app == null) {
-          log.info(format("Can't issue token for non-existant application '%s'", str(appName)));
+          log.info(format("Can't issue token for non-existent application '%s'", str(appName)));
           throw new InvalidApplicationException(format("No such application %s", str(appName)));
         }
         token.addApplication(app);

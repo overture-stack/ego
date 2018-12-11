@@ -34,6 +34,8 @@ import bio.overture.ego.utils.TestData;
 import com.google.common.collect.Sets;
 import java.util.*;
 import javax.management.InvalidApplicationException;
+import javax.persistence.EntityNotFoundException;
+
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Assert;
@@ -201,14 +203,14 @@ public class TokenServiceTest {
   @Test
   public void issueTokenForInvalidUser() {
     // Try to issue a token for a user that does not exist
-    val name = "Invalid";
+    val uuid = UUID.randomUUID();
     val scopes = EntityGenerator.scopeNames("collab.READ", "id.READ");
     val applications = listOf("song", "score");
 
-    UsernameNotFoundException ex = null;
+    EntityNotFoundException ex = null;
     try {
-      tokenService.issueToken(name, scopes, applications);
-    } catch (UsernameNotFoundException e) {
+      tokenService.issueToken(uuid, scopes, applications);
+    } catch (EntityNotFoundException e) {
       ex = e;
     }
 
@@ -221,14 +223,14 @@ public class TokenServiceTest {
     // does not have access to.
     //
     // issueToken() should throw an InvalidScope exception
-    val name = test.user2.getName();
+    val uuid = test.user2.getId();
     val scopes = EntityGenerator.scopeNames("collab.WRITE", "song.WRITE");
     val applications = listOf();
 
     InvalidScopeException ex = null;
 
     try {
-      tokenService.issueToken(name, scopes, applications);
+      tokenService.issueToken(uuid, scopes, applications);
     } catch (InvalidScopeException e) {
       ex = e;
     }
@@ -260,14 +262,14 @@ public class TokenServiceTest {
     // Issue a token for a subset of the scopes the user has.
     //
     // issue_token() should return a token with values we set.
-    val name = test.user1.getName();
+    val uuid = test.user1.getId();
     val scopes = EntityGenerator.scopeNames("collab.READ");
     val applications = listOf();
 
-    val token = tokenService.issueToken(name, scopes, applications);
+    val token = tokenService.issueToken(uuid, scopes, applications);
 
     assertFalse(token.isRevoked());
-    Assert.assertEquals(token.getOwner().getId(), test.user1.getId());
+    Assert.assertEquals(token.getOwner().getId(), uuid);
 
     val s = CollectionUtils.mapToSet(token.scopes(), Scope::toString);
     val t = CollectionUtils.mapToSet(scopes, ScopeName::toString);
@@ -286,14 +288,14 @@ public class TokenServiceTest {
     //
     // issue_token() should throw an exception
 
-    val name = test.user1.getName();
+    val uuid = test.user1.getId();
     val scopes = EntityGenerator.scopeNames("collab.READ", "invalid.WRITE");
     val applications = listOf();
 
     InvalidScopeException ex = null;
 
     try {
-      tokenService.issueToken(name, scopes, applications);
+      tokenService.issueToken(uuid, scopes, applications);
     } catch (InvalidScopeException e) {
       ex = e;
     }
@@ -306,14 +308,14 @@ public class TokenServiceTest {
     //
     // issue_token() should throw an exception
 
-    val name = test.user1.getName();
+    val uuid = test.user1.getId();
     val scopes = EntityGenerator.scopeNames("collab.READ");
     val applications = listOf("NotAnApplication");
 
     Exception ex = null;
 
     try {
-      tokenService.issueToken(name, scopes, applications);
+      tokenService.issueToken(uuid, scopes, applications);
     } catch (Exception e) {
       ex = e;
     }

@@ -28,6 +28,7 @@ import bio.overture.ego.service.TokenService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
@@ -64,11 +65,11 @@ public class TokenController {
   @ResponseStatus(value = HttpStatus.OK)
   public @ResponseBody TokenResponse issueToken(
       @RequestHeader(value = "Authorization") final String authorization,
-      @RequestParam(value = "name") String name,
+      @RequestParam(value = "user_id") UUID user_id,
       @RequestParam(value = "scopes") ArrayList<String> scopes,
       @RequestParam(value = "applications", required = false) ArrayList<String> applications) {
     val scopeNames = mapToList(scopes, s -> new ScopeName(s));
-    val t = tokenService.issueToken(name, scopeNames, applications);
+    val t = tokenService.issueToken(user_id, scopeNames, applications);
     Set<String> issuedScopes = mapToSet(t.scopes(), x -> x.toString());
     TokenResponse response =
         new TokenResponse(t.getToken(), issuedScopes, t.getSecondsUntilExpiry());
