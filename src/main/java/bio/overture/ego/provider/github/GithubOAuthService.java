@@ -2,7 +2,6 @@ package bio.overture.ego.provider.github;
 
 import bio.overture.ego.token.IDToken;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -10,13 +9,13 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -37,16 +36,16 @@ public class GithubOAuthService {
 
   private RestTemplate restTemplate = new RestTemplate();
 
-  private static final ObjectMapper objectMapper =
-      new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  private static final ObjectMapper objectMapper = new ObjectMapper();
 
-  static final String TOKEN_ENDPOINT =
+  private static final String TOKEN_ENDPOINT =
       "https://github.com/login/oauth/access_token?code={code}&redirect_uri={redirect_uri}&client_id={client_id}&client_secret={client_secret}";
+
+  private static final String API_ENDPOINT = "https://api.github.com/";
 
   public Optional<IDToken> getAuthInfo(String code) {
     val accessToken = getAccessToken(code);
-    Optional<String> name;
-    Optional<String> email;
+    Optional<String> name, email;
     if (accessToken.isPresent()) {
       name = getName(accessToken.get());
       email = getEmail(accessToken.get());
@@ -68,14 +67,11 @@ public class GithubOAuthService {
 
   private Optional<String> getName(String accessToken) {
     val headers = new HttpHeaders();
-
-    headers.setContentType(MediaType.APPLICATION_JSON);
     headers.set("Authorization", "Bearer " + accessToken);
     val request = new HttpEntity<String>("", headers);
     try {
       ResponseEntity<String> response =
-          restTemplate.exchange(
-              "https://api.github.com/user", HttpMethod.GET, request, String.class);
+          restTemplate.exchange(API_ENDPOINT + "/user", HttpMethod.GET, request, String.class);
       val name =
           (String)
               objectMapper
@@ -91,43 +87,42 @@ public class GithubOAuthService {
 
   private Optional<String> getEmail(String accessToken) {
     val headers = new HttpHeaders();
-
-    headers.setContentType(MediaType.APPLICATION_JSON);
     headers.set("Authorization", "Bearer " + accessToken);
     val request = new HttpEntity<String>("", headers);
+    ResponseEntity<String> response;
     try {
-      ResponseEntity<String> response =
+      response =
           restTemplate.exchange(
-              "https://api.github.com/user/emails", HttpMethod.GET, request, String.class);
+              API_ENDPOINT + "/user/emails", HttpMethod.GET, request, String.class);
+    } catch (RestClientException e) {
+      log.warn(e.getMessage(), e);
+      return Optional.empty();
+    }
+
+    try {
       val emails =
           objectMapper.<Map<String, Object>[]>readValue(
               response.getBody(), new TypeReference<Map<String, Object>[]>() {});
-
+      Predicate<Map<String, Object>> isPrimaryEmail =
+          (emailObject) -> {
+            val primary = emailObject.get("primary");
+            val verified = emailObject.get("verified");
+            if (primary instanceof Boolean && verified instanceof Boolean) {
+              return ((Boolean) primary) && ((Boolean) verified);
+            } else {
+              return false;
+            }
+          };
       val email =
-          (String)
-              Arrays.stream(emails)
-                  .filter(
-                      emailObject -> {
-                        val primary = emailObject.get("primary");
-                        val verified = emailObject.get("verified");
-                        if (primary instanceof Boolean && verified instanceof Boolean) {
-                          return ((Boolean) primary) && ((Boolean) verified);
-                        } else {
-                          return false;
-                        }
-                      })
-                  .findAny()
-                  .get()
-                  .get("email");
-      return Optional.of(email);
-    } catch (RestClientException | IOException e) {
+          (String) Arrays.stream(emails).filter(isPrimaryEmail).findAny().get().get("email");
+      return email == null ? Optional.empty() : Optional.of(email);
+    } catch (IOException | NoSuchElementException e) {
       log.warn(e.getMessage(), e);
       return Optional.empty();
     }
   }
 
   public Optional<String> getAccessToken(String code) {
-
     val uriVariables =
         ImmutableMap.of( //
             "code", code, //
@@ -138,7 +133,6 @@ public class GithubOAuthService {
 
     try {
       val headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_JSON);
       headers.set("Accept", "application/json");
       val request = new HttpEntity<String>("", headers);
 
@@ -151,8 +145,7 @@ public class GithubOAuthService {
               response.getBody(), new TypeReference<Map<String, String>>() {});
       val accessToken = jsonObject.get("access_token");
       return Optional.of(accessToken);
-
-    } catch (RestClientException | IOException e) {
+    } catch (RestClientException | IOException | NullPointerException e) {
       log.warn(e.getMessage(), e);
       return Optional.empty();
     }

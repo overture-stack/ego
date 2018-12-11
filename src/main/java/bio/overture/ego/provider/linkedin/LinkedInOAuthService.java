@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -37,14 +36,13 @@ public class LinkedInOAuthService {
 
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
-  static final String TOKEN_ENDPOINT =
+  private static final String TOKEN_ENDPOINT =
       "https://www.linkedin.com/oauth/v2/accessToken?grant_type={grant_type}&code={code}&redirect_uri={redirect_uri}&client_id={client_id}&client_secret={client_secret}";
 
   public Optional<IDToken> getAuthInfo(String code) {
     try {
       val accessToken = getAccessToken(code);
       val headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_JSON);
       headers.set("Authorization", "Bearer " + accessToken.get());
       val request = new HttpEntity<String>("", headers);
 
@@ -82,7 +80,7 @@ public class LinkedInOAuthService {
       val accessToken = jsonObject.get("access_token");
       return Optional.of(accessToken);
 
-    } catch (RestClientException | IOException e) {
+    } catch (RestClientException | IOException | NullPointerException e) {
       log.warn(e.getMessage(), e);
       return Optional.empty();
     }
