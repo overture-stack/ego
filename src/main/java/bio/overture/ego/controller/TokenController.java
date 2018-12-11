@@ -67,7 +67,7 @@ public class TokenController {
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "user_id") UUID user_id,
       @RequestParam(value = "scopes") ArrayList<String> scopes,
-      @RequestParam(value = "applications", required = false) ArrayList<String> applications) {
+      @RequestParam(value = "applications", required = false) ArrayList<UUID> applications) {
     val scopeNames = mapToList(scopes, s -> new ScopeName(s));
     val t = tokenService.issueToken(user_id, scopeNames, applications);
     Set<String> issuedScopes = mapToSet(t.scopes(), x -> x.toString());

@@ -141,7 +141,7 @@ public class TokenService {
   }
 
   @SneakyThrows
-  public Token issueToken(UUID user_id, List<ScopeName> scopeNames, List<String> apps) {
+  public Token issueToken(UUID user_id, List<ScopeName> scopeNames, List<UUID> apps) {
     log.info(format("Looking for user '%s'", str(user_id)));
     log.info(format("Scopes are '%s'", strList(scopeNames)));
     log.info(format("Apps are '%s'", strList(apps)));
@@ -179,11 +179,11 @@ public class TokenService {
 
     if (apps != null) {
       log.info("Generating apps list");
-      for (val appName : apps) {
-        val app = applicationService.getByName(appName);
+      for (val appId : apps) {
+        val app = applicationService.get(appId.toString());
         if (app == null) {
-          log.info(format("Can't issue token for non-existent application '%s'", str(appName)));
-          throw new InvalidApplicationException(format("No such application %s", str(appName)));
+          log.info(format("Can't issue token for non-existent application '%s'", str(appId)));
+          throw new InvalidApplicationException(format("No such application %s", str(appId)));
         }
         token.addApplication(app);
       }

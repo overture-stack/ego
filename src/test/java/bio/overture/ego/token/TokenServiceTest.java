@@ -205,7 +205,7 @@ public class TokenServiceTest {
     // Try to issue a token for a user that does not exist
     val uuid = UUID.randomUUID();
     val scopes = EntityGenerator.scopeNames("collab.READ", "id.READ");
-    val applications = listOf("song", "score");
+    val applications = new ArrayList<UUID>();
 
     EntityNotFoundException ex = null;
     try {
@@ -225,7 +225,7 @@ public class TokenServiceTest {
     // issueToken() should throw an InvalidScope exception
     val uuid = test.user2.getId();
     val scopes = EntityGenerator.scopeNames("collab.WRITE", "song.WRITE");
-    val applications = listOf();
+    val applications = new ArrayList<UUID>();
 
     InvalidScopeException ex = null;
 
@@ -264,7 +264,7 @@ public class TokenServiceTest {
     // issue_token() should return a token with values we set.
     val uuid = test.user1.getId();
     val scopes = EntityGenerator.scopeNames("collab.READ");
-    val applications = listOf();
+    val applications = new ArrayList<UUID>();
 
     val token = tokenService.issueToken(uuid, scopes, applications);
 
@@ -290,7 +290,7 @@ public class TokenServiceTest {
 
     val uuid = test.user1.getId();
     val scopes = EntityGenerator.scopeNames("collab.READ", "invalid.WRITE");
-    val applications = listOf();
+    val applications = new ArrayList<UUID>();
 
     InvalidScopeException ex = null;
 
@@ -310,7 +310,8 @@ public class TokenServiceTest {
 
     val uuid = test.user1.getId();
     val scopes = EntityGenerator.scopeNames("collab.READ");
-    val applications = listOf("NotAnApplication");
+    val applications = new ArrayList<UUID>();
+    applications.add(UUID.randomUUID());
 
     Exception ex = null;
 
@@ -321,7 +322,7 @@ public class TokenServiceTest {
     }
     assertNotNull(ex);
     System.err.println(ex);
-    assert ex instanceof InvalidApplicationException;
+    assert ex instanceof EntityNotFoundException;
   }
 
   @Test
