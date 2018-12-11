@@ -32,7 +32,6 @@ Please note we have a code of conduct, please follow it in all your interactions
     </executions>
 </plugin>
 ```
-5. *Always use the ICGC JPA repository
 
 #### Service Layer
 1. Get * should always return Optional<T>
