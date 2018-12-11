@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017. The Ontario Institute for Cancer Research. All rights reserved.
+ * Copyright (c) 2018. The Ontario Institute for Cancer Research. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,38 +20,34 @@ import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import java.util.*;
 import javax.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Cascade;
+
+// TODO - Replace with base class UUID generator?
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
 @Data
-@Builder
-@ToString(exclude = {"wholeUsers", "wholeApplications", "groupPermissions"})
-@Table(name = "egogroup")
 @Entity
-@JsonPropertyOrder({"id", "name", "description", "status", "wholeApplications", "groupPermissions"})
-@JsonInclude()
-@EqualsAndHashCode(of = {"id"})
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @RequiredArgsConstructor
+@Table(name = "egogroup")
 @JsonView(Views.REST.class)
+@EqualsAndHashCode(of = {"id"})
+@ToString(exclude = {"wholeUsers", "wholeApplications", "groupPermissions"})
+@JsonPropertyOrder({"id", "name", "description", "status", "wholeApplications", "groupPermissions"})
 public class Group implements PolicyOwner {
+
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name = Fields.OWNER)
   @JsonIgnore
   protected Set<Policy> policies;
 
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @LazyCollection(LazyCollectionOption.FALSE)
   @JoinColumn(name = Fields.GROUPID_JOIN)
   @JsonIgnore
   protected List<GroupPermission> groupPermissions;
@@ -72,9 +68,11 @@ public class Group implements PolicyOwner {
   @Column(nullable = false, name = Fields.STATUS)
   String status;
 
-  @ManyToMany(targetEntity = Application.class)
-  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
-  @LazyCollection(LazyCollectionOption.FALSE)
+  @ManyToMany(fetch = FetchType.LAZY,
+      cascade = {
+          CascadeType.PERSIST,
+          CascadeType.MERGE
+      })
   @JoinTable(
       name = "groupapplication",
       joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
@@ -82,9 +80,11 @@ public class Group implements PolicyOwner {
   @JsonIgnore
   Set<Application> wholeApplications;
 
-  @ManyToMany()
-  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
-  @LazyCollection(LazyCollectionOption.FALSE)
+  @ManyToMany(fetch = FetchType.LAZY,
+      cascade = {
+          CascadeType.PERSIST,
+          CascadeType.MERGE
+      })
   @JoinTable(
       name = "usergroup",
       joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
