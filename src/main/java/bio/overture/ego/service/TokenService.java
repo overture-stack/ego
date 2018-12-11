@@ -227,12 +227,7 @@ public class TokenService {
   }
 
   public boolean validateToken(String token) {
-    Jws decodedToken = null;
-    try {
-      decodedToken = Jwts.parser().setSigningKey(tokenSigner.getKey().get()).parseClaimsJws(token);
-    } catch (Exception ex) {
-      log.error("Error parsing JWT: {}", ex);
-    }
+    val decodedToken = Jwts.parser().setSigningKey(tokenSigner.getKey().get()).parseClaimsJws(token);
     return (decodedToken != null);
   }
 
