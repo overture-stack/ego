@@ -18,6 +18,7 @@ package bio.overture.ego.controller;
 
 import bio.overture.ego.provider.facebook.FacebookTokenService;
 import bio.overture.ego.provider.google.GoogleTokenService;
+import bio.overture.ego.provider.linkedin.LinkedInOAuthService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.signer.TokenSigner;
 import javax.servlet.http.HttpServletRequest;
@@ -26,13 +27,23 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.view.RedirectView;
 
 @Slf4j
 @RestController
@@ -43,6 +54,7 @@ public class AuthController {
   private GoogleTokenService googleTokenService;
   private FacebookTokenService facebookTokenService;
   private TokenSigner tokenSigner;
+  private LinkedInOAuthService linkedInOAuthService;
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
   @ResponseStatus(value = HttpStatus.OK)
@@ -65,6 +77,24 @@ public class AuthController {
     val authInfo = facebookTokenService.getAuthInfo(idToken);
     if (authInfo.isPresent()) {
       return tokenService.generateUserToken(authInfo.get());
+    } else {
+      throw new InvalidTokenException("Unable to generate auth token for this user");
+    }
+  }
+
+  @RequestMapping(method = RequestMethod.GET, value = "/linkedin-cb")
+  @SneakyThrows
+  public RedirectView callback(
+      @RequestParam("code") String code,
+      RedirectAttributes attributes,
+      @Value("${oauth.redirectFrontendUri}") final String redirectFrontendUri) {
+    val redirectView = new RedirectView();
+
+    redirectView.setUrl(redirectFrontendUri);
+    val authInfo = linkedInOAuthService.getAuthInfoFromLinkedIn(code);
+    if (authInfo.isPresent()) {
+      attributes.addAttribute("token", tokenService.generateUserToken(authInfo.get()));
+      return redirectView;
     } else {
       throw new InvalidTokenException("Unable to generate auth token for this user");
     }
