@@ -44,14 +44,35 @@ public class GithubOAuthService {
       "https://github.com/login/oauth/access_token?code={code}&redirect_uri={redirect_uri}&client_id={client_id}&client_secret={client_secret}";
 
   public Optional<IDToken> getAuthInfo(String code) {
+    val accessToken = getAccessToken(code);
+    Optional<String> name;
+    Optional<String> email;
+    if (accessToken.isPresent()) {
+      name = getName(accessToken.get());
+      email = getEmail(accessToken.get());
+    } else {
+      return Optional.empty();
+    }
+
     try {
-      val accessToken = getAccessToken(code);
-      val headers = new HttpHeaders();
+      return Optional.of(
+          IDToken.builder() //
+              .email(email.get()) //
+              .given_name(name.get().split(" ")[0]) //
+              .family_name(name.get().split(" ")[1]) //
+              .build());
+    } catch (NoSuchElementException | ArrayIndexOutOfBoundsException e) {
+      return Optional.empty();
+    }
+  }
 
-      headers.setContentType(MediaType.APPLICATION_JSON);
-      headers.set("Authorization", "Bearer " + accessToken.get());
-      val request = new HttpEntity<String>("", headers);
+  private Optional<String> getName(String accessToken) {
+    val headers = new HttpHeaders();
 
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.set("Authorization", "Bearer " + accessToken);
+    val request = new HttpEntity<String>("", headers);
+    try {
       ResponseEntity<String> response =
           restTemplate.exchange(
               "https://api.github.com/user", HttpMethod.GET, request, String.class);
@@ -61,13 +82,27 @@ public class GithubOAuthService {
                   .<Map<String, Object>>readValue(
                       response.getBody(), new TypeReference<Map<String, Object>>() {})
                   .get("name");
+      return Optional.of(name);
+    } catch (RestClientException | IOException e) {
+      log.warn(e.getMessage(), e);
+      return Optional.empty();
+    }
+  }
 
-      response =
+  private Optional<String> getEmail(String accessToken) {
+    val headers = new HttpHeaders();
+
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.set("Authorization", "Bearer " + accessToken);
+    val request = new HttpEntity<String>("", headers);
+    try {
+      ResponseEntity<String> response =
           restTemplate.exchange(
               "https://api.github.com/user/emails", HttpMethod.GET, request, String.class);
       val emails =
           objectMapper.<Map<String, Object>[]>readValue(
               response.getBody(), new TypeReference<Map<String, Object>[]>() {});
+
       val email =
           (String)
               Arrays.stream(emails)
@@ -84,15 +119,8 @@ public class GithubOAuthService {
                   .findAny()
                   .get()
                   .get("email");
-
-      return Optional.of(
-          IDToken.builder() //
-              .email(email) //
-              .given_name(name.split(" ")[0]) //
-              .family_name(name.split(" ")[1]) //
-              .build());
-
-    } catch (RestClientException | NoSuchElementException | IOException | ClassCastException e) {
+      return Optional.of(email);
+    } catch (RestClientException | IOException e) {
       log.warn(e.getMessage(), e);
       return Optional.empty();
     }
