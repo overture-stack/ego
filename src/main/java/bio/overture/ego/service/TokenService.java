@@ -227,7 +227,8 @@ public class TokenService {
   }
 
   public boolean validateToken(String token) {
-    val decodedToken = Jwts.parser().setSigningKey(tokenSigner.getKey().get()).parseClaimsJws(token);
+    val decodedToken =
+        Jwts.parser().setSigningKey(tokenSigner.getKey().get()).parseClaimsJws(token);
     return (decodedToken != null);
   }
 
