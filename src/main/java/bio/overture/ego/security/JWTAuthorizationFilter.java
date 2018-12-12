@@ -103,7 +103,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
   private boolean isValidToken(String token) {
     return !StringUtils.isEmpty(token)
         && token.contains(TOKEN_PREFIX)
-        && tokenService.validateToken(removeTokenPrefix(token));
+        && tokenService.isValidToken(removeTokenPrefix(token));
   }
 
   private String removeTokenPrefix(String token) {

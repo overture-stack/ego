@@ -226,7 +226,7 @@ public class TokenService {
     return getSignedToken(tokenClaims);
   }
 
-  public boolean validateToken(String token) {
+  public boolean isValidToken(String token) {
     Jws<Claims> decodedToken = null;
     try {
       decodedToken = Jwts.parser().setSigningKey(tokenSigner.getKey().get()).parseClaimsJws(token);
