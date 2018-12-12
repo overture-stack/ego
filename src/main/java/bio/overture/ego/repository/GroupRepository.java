@@ -26,8 +26,5 @@ import java.util.UUID;
 
 public interface GroupRepository
     extends PagingAndSortingRepository<Group, UUID>, JpaSpecificationExecutor {
-
   Group findOneByNameIgnoreCase(String name);
-
-  Page<Group> findAllByStatusIgnoreCase(String status, Pageable pageable);
 }
