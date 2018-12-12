@@ -57,8 +57,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class TokenService {
   /*
-    Constant
-  */
+   * Constant
+   */
   private static final String ISSUER_NAME = "ego";
   @Autowired TokenSigner tokenSigner;
 
@@ -227,8 +227,12 @@ public class TokenService {
   }
 
   public boolean validateToken(String token) {
-    val decodedToken =
-        Jwts.parser().setSigningKey(tokenSigner.getKey().get()).parseClaimsJws(token);
+    Jws<Claims> decodedToken = null;
+    try {
+      decodedToken = Jwts.parser().setSigningKey(tokenSigner.getKey().get()).parseClaimsJws(token);
+    } catch (JwtException e) {
+      log.error("JWT token is invalid", e);
+    }
     return (decodedToken != null);
   }
 
@@ -297,9 +301,10 @@ public class TokenService {
         throw new InvalidTokenException("Token not authorized for this client");
       }
     }
-    /// We want to limit the scopes listed in the token to those scopes that the user
-    // is allowed to access at the time the token is checked -- we don't assume that they
-    // have not changed since the token was issued.
+
+    // We want to limit the scopes listed in the token to those scopes that the user
+    // is allowed to access at the time the token is checked -- we don't assume that
+    // they have not changed since the token was issued.
     val owner = t.getOwner();
     val scopes = explicitScopes(effectiveScopes(owner.getScopes(), t.scopes()));
     val names = mapToSet(scopes, Scope::toString);
