@@ -64,7 +64,7 @@ public class GroupControllerTest {
   @Test
   public void AddGroup() {
 
-    Group group = new Group("Wizards");
+    Group group = entityGenerator.createGroup("Wizards");
 
     HttpEntity<Group> entity = new HttpEntity<Group>(group, headers);
 
@@ -79,7 +79,7 @@ public class GroupControllerTest {
   public void AddUniqueGroup() {
 
     entityGenerator.setupGroup("SameSame");
-    Group group = new Group("SameSame");
+    Group group = entityGenerator.createGroup("SameSame");
 
     HttpEntity<Group> entity = new HttpEntity<Group>(group, headers);
 
@@ -110,7 +110,8 @@ public class GroupControllerTest {
 
     String expected =
         String.format(
-            "{\"id\":\"%s\",\"name\":\"Group One\",\"description\":null,\"status\":null}", groupId);
+            "{\"id\":\"%s\",\"name\":\"Group One\",\"description\":\"\",\"status\":\"Pending\"}",
+            groupId);
 
     assertEquals(HttpStatus.OK, responseStatus);
     assertThatJson(responseBody).isEqualTo(expected);
@@ -144,7 +145,7 @@ public class GroupControllerTest {
 
     String expected =
         String.format(
-            "[{\"id\":\"%s\",\"name\":\"Group One\",\"description\":null,\"status\":null}, {\"id\":\"%s\",\"name\":\"Group Two\",\"description\":null,\"status\":null}, {\"id\":\"%s\",\"name\":\"Group Three\",\"description\":null,\"status\":null}]",
+            "[{\"id\":\"%s\",\"name\":\"Group One\",\"description\":\"\",\"status\":\"Pending\"}, {\"id\":\"%s\",\"name\":\"Group Two\",\"description\":\"\",\"status\":\"Pending\"}, {\"id\":\"%s\",\"name\":\"Group Three\",\"description\":\"\",\"status\":\"Pending\"}]",
             groupService.getByName("Group One").getId(),
             groupService.getByName("Group Two").getId(),
             groupService.getByName("Group Three").getId());
@@ -164,7 +165,7 @@ public class GroupControllerTest {
     // Groups created in setup
     val groupId = entityGenerator.setupGroup("Complete").getId();
 
-    Group update = new Group("Updated Complete");
+    Group update = entityGenerator.createGroup("Updated Complete");
     update.setId(groupId);
 
     HttpEntity<Group> entity = new HttpEntity<Group>(update, headers);

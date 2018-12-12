@@ -440,7 +440,7 @@ public class GroupsServiceTest {
 
     val group = groupService.get(groupId);
 
-    assertThat(group.getWholeApplications()).contains(applicationService.getByClientId("111111"));
+    assertThat(group.getApplications()).contains(applicationService.getByClientId("111111"));
   }
 
   @Test
@@ -542,12 +542,12 @@ public class GroupsServiceTest {
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
 
     val group = groupService.get(groupId);
-    assertThat(group.getWholeApplications().size()).isEqualTo(1);
+    assertThat(group.getApplications().size()).isEqualTo(1);
 
     groupService.deleteAppsFromGroup(groupId, Arrays.asList(applicationId));
 
     val groupWithDeleteApp = groupService.get(groupId);
-    assertThat(groupWithDeleteApp.getWholeApplications().size()).isEqualTo(0);
+    assertThat(groupWithDeleteApp.getApplications().size()).isEqualTo(0);
   }
 
   @Test
@@ -562,7 +562,7 @@ public class GroupsServiceTest {
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
 
     val group = groupService.get(groupId);
-    assertThat(group.getWholeApplications().size()).isEqualTo(1);
+    assertThat(group.getApplications().size()).isEqualTo(1);
 
     assertThatExceptionOfType(EntityNotFoundException.class)
         .isThrownBy(
@@ -583,7 +583,7 @@ public class GroupsServiceTest {
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
 
     val group = groupService.get(groupId);
-    assertThat(group.getWholeApplications().size()).isEqualTo(1);
+    assertThat(group.getApplications().size()).isEqualTo(1);
 
     assertThatExceptionOfType(IllegalArgumentException.class)
         .isThrownBy(() -> groupService.deleteAppsFromGroup("", Arrays.asList(applicationId)));
@@ -601,7 +601,7 @@ public class GroupsServiceTest {
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
 
     val group = groupService.get(groupId);
-    assertThat(group.getWholeApplications().size()).isEqualTo(1);
+    assertThat(group.getApplications().size()).isEqualTo(1);
 
     assertThatExceptionOfType(IllegalArgumentException.class)
         .isThrownBy(() -> groupService.deleteAppsFromGroup(groupId, Arrays.asList("")));

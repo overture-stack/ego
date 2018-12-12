@@ -38,7 +38,6 @@ public class Fields {
   public static final String TOKENID_JOIN = "token_id";
   public static final String APPID_JOIN = "application_id";
   public static final String OWNER = "owner";
-  public static final String POLICY = "policy";
   public static final String ACCESS_LEVEL = "access_level";
   public static final String TOKEN = "token";
   public static final String ISSUEDATE = "issuedate";

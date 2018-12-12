@@ -53,7 +53,7 @@ public class GroupService extends BaseService<Group, UUID> {
     appIDs.forEach(
         appId -> {
           val app = applicationService.get(appId);
-          group.addApplication(app);
+          group.getApplications().add(app);
         });
     return groupRepository.save(group);
   }

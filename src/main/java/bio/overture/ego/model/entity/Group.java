@@ -18,15 +18,17 @@ package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.Fields;
+import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import java.util.*;
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+
 import lombok.*;
 
-// TODO - Replace with base class UUID generator?
 import org.hibernate.annotations.GenericGenerator;
 
 @Data
@@ -34,38 +36,38 @@ import org.hibernate.annotations.GenericGenerator;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@RequiredArgsConstructor
-@Table(name = "egogroup")
+@Table(name = Tables.GROUP)
 @JsonView(Views.REST.class)
 @EqualsAndHashCode(of = {"id"})
-@ToString(exclude = {"wholeUsers", "wholeApplications", "groupPermissions"})
-@JsonPropertyOrder({"id", "name", "description", "status", "wholeApplications", "groupPermissions"})
+@ToString(exclude = {"users", "applications", "groupPermissions"})
+@JsonPropertyOrder({"id", "name", "description", "status", "applications", "groupPermissions"})
 public class Group implements PolicyOwner {
 
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @JoinColumn(name = Fields.OWNER)
   @JsonIgnore
+  @JoinColumn(name = Fields.OWNER)
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   protected Set<Policy> policies;
 
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @JoinColumn(name = Fields.GROUPID_JOIN)
   @JsonIgnore
+  @JoinColumn(name = Fields.GROUPID_JOIN)
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   protected List<GroupPermission> groupPermissions;
 
   @Id
+  @GeneratedValue(generator = "group_uuid")
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(name = "group_uuid", strategy = "org.hibernate.id.UUIDGenerator")
-  @GeneratedValue(generator = "group_uuid")
   UUID id;
 
-  @Column(nullable = false, name = Fields.NAME)
-  @NonNull
+  @NotNull
+  @Column(name = Fields.NAME)
   String name;
 
-  @Column(nullable = false, name = Fields.DESCRIPTION)
+  @Column(name = Fields.DESCRIPTION)
   String description;
 
-  @Column(nullable = false, name = Fields.STATUS)
+  @NotNull
+  @Column(name = Fields.STATUS)
   String status;
 
   @ManyToMany(fetch = FetchType.LAZY,
@@ -74,11 +76,11 @@ public class Group implements PolicyOwner {
           CascadeType.MERGE
       })
   @JoinTable(
-      name = "groupapplication",
+      name = Tables.GROUP_APPLICATION,
       joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
   @JsonIgnore
-  Set<Application> wholeApplications;
+  Set<Application> applications;
 
   @ManyToMany(fetch = FetchType.LAZY,
       cascade = {
@@ -86,20 +88,15 @@ public class Group implements PolicyOwner {
           CascadeType.MERGE
       })
   @JoinTable(
-      name = "usergroup",
+      name = Tables.GROUP_USER,
       joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
   @JsonIgnore
-  Set<User> wholeUsers;
-
-  public void addApplication(@NonNull Application app) {
-    initApplications();
-    this.wholeApplications.add(app);
-  }
+  Set<User> users;
 
   public void addUser(@NonNull User u) {
     initUsers();
-    this.wholeUsers.add(u);
+    this.users.add(u);
   }
 
   public void addNewPermission(@NonNull Policy policy, @NonNull AccessLevel mask) {
@@ -109,12 +106,7 @@ public class Group implements PolicyOwner {
   }
 
   public void removeApplication(@NonNull UUID appId) {
-    this.wholeApplications.removeIf(a -> a.id.equals(appId));
-  }
-
-  public void removeUser(@NonNull UUID userId) {
-    if (this.wholeUsers == null) return;
-    this.wholeUsers.removeIf(u -> u.id.equals(userId));
+    this.applications.removeIf(a -> a.id.equals(appId));
   }
 
   public void removePermission(@NonNull UUID permissionId) {
@@ -139,30 +131,24 @@ public class Group implements PolicyOwner {
     // Do not update ID, that is programmatic.
 
     // Update Users and Applications only if provided (not null)
-    if (other.wholeApplications != null) {
-      builder.wholeApplications(other.getWholeApplications());
+    if (other.applications != null) {
+      builder.applications(other.getApplications());
     } else {
-      builder.wholeApplications(this.getWholeApplications());
+      builder.applications(this.getApplications());
     }
 
-    if (other.wholeUsers != null) {
-      builder.wholeUsers(other.getWholeUsers());
+    if (other.users != null) {
+      builder.users(other.getUsers());
     } else {
-      builder.wholeUsers(this.getWholeUsers());
+      builder.users(this.getUsers());
     }
 
     return builder.build();
   }
 
-  private void initApplications() {
-    if (this.wholeApplications == null) {
-      this.wholeApplications = new HashSet<>();
-    }
-  }
-
   private void initUsers() {
-    if (this.wholeUsers == null) {
-      this.wholeUsers = new HashSet<>();
+    if (this.users == null) {
+      this.users = new HashSet<>();
     }
   }
 }
