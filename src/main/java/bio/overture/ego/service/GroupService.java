@@ -22,11 +22,13 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -81,9 +83,37 @@ public class GroupService extends BaseService<Group, UUID> {
     return groupRepository.findOneByNameIgnoreCase(groupName);
   }
 
-  public Group update(@NonNull Group updatedGroupInfo) {
-    Group group = getById(groupRepository, updatedGroupInfo.getId());
-    return groupRepository.save(group.update(updatedGroupInfo));
+  public Group update(@NonNull Group other) {
+    return groupRepository.save(other);
+  }
+
+  // TODO - this was the original update - will use an improved version of this for the PATCH
+  public Group partialUpdate(@NonNull Group other) {
+
+    val existingGroup = getById(groupRepository, other.getId());
+
+    val builder =
+        Group.builder()
+            .id(other.getId())
+            .name(other.getName())
+            .description(other.getDescription())
+            .status(other.getStatus());
+
+    if (other.getApplications() != null) {
+      builder.applications(other.getApplications());
+    } else {
+      builder.applications(existingGroup.getApplications());
+    }
+
+    if (other.getUsers() != null) {
+      builder.users(other.getUsers());
+    } else {
+      builder.users(existingGroup.getUsers());
+    }
+
+    val updatedGroup =  builder.build();
+
+    return groupRepository.save(updatedGroup);
   }
 
   public void delete(@NonNull String groupId) {

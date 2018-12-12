@@ -92,30 +92,4 @@ public class Group implements PolicyOwner {
       inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
   @JsonIgnore
   Set<User> users;
-
-  public Group update(Group other) {
-    val builder =
-        Group.builder()
-            .id(other.getId())
-            .name(other.getName())
-            .description(other.getDescription())
-            .status(other.getStatus());
-
-    // Do not update ID, that is programmatic.
-
-    // Update Users and Applications only if provided (not null)
-    if (other.applications != null) {
-      builder.applications(other.getApplications());
-    } else {
-      builder.applications(this.getApplications());
-    }
-
-    if (other.users != null) {
-      builder.users(other.getUsers());
-    } else {
-      builder.users(this.getUsers());
-    }
-
-    return builder.build();
-  }
 }

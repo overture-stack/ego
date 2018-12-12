@@ -13,7 +13,10 @@ import java.time.Instant;
 import java.util.*;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Component;
+
+import javax.validation.constraints.NotNull;
 
 @Component
 /**
@@ -57,7 +60,9 @@ public class EntityGenerator {
   }
 
   public void setupTestApplications() {
-    setupApplications("111111", "222222", "333333", "444444", "555555");
+    if (Objects.isNull(applicationService.getByName("111111"))) {
+      setupApplications("111111", "222222", "333333", "444444", "555555");
+    }
   }
 
   public Application setupApplication(String clientId, String clientSecret) {
@@ -97,7 +102,9 @@ public class EntityGenerator {
   }
 
   public void setupTestUsers() {
-    setupUsers("First User", "Second User", "Third User");
+    if (Objects.isNull(userService.getByName("FirstUser@domain.com"))) {
+      setupUsers("First User", "Second User", "Third User");
+    }
   }
 
   public Group createGroup(String name) {
@@ -118,7 +125,9 @@ public class EntityGenerator {
   }
 
   public void setupTestGroups() {
-    setupGroups("Group One", "Group Two", "Group Three");
+    if (Objects.isNull(groupService.getByName("Group One"))) {
+      setupGroups("Group One", "Group Two", "Group Three");
+    }
   }
 
   public Policy createPolicy(String name, UUID policyId) {

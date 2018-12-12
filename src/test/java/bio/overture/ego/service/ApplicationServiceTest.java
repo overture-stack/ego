@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -52,11 +53,11 @@ public class ApplicationServiceTest {
   @Test
   @Ignore
   public void testCreateUniqueClientId() {
-    //    applicationService.create(entityGenerator.createApplication("111111"));
-    //    applicationService.create(entityGenerator.createApplication("222222"));
-    //    assertThatExceptionOfType(DataIntegrityViolationException.class)
-    //        .isThrownBy(() ->
-    // applicationService.create(entityGenerator.createApplication("111111")));
+        applicationService.create(entityGenerator.createApplication("111111"));
+        applicationService.create(entityGenerator.createApplication("222222"));
+        assertThatExceptionOfType(DataIntegrityViolationException.class)
+            .isThrownBy(() ->
+     applicationService.create(entityGenerator.createApplication("111111")));
     assertThat(1).isEqualTo(2);
     // TODO Check for uniqueness in application, currently only SQL
   }
@@ -116,6 +117,7 @@ public class ApplicationServiceTest {
   @Test
   public void testListAppsNoFilters() {
     entityGenerator.setupTestApplications();
+
     val applications =
         applicationService.listApps(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(applications.getTotalElements()).isEqualTo(5L);
