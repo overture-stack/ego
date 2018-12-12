@@ -139,15 +139,6 @@ public class User implements PolicyOwner {
   @Column(name = Fields.PREFERREDLANGUAGE)
   String preferredLanguage;
 
-  // Creates groups in JWTAccessToken::context::user
-  @JsonView(Views.JWTAccessToken.class)
-  public List<String> getGroups() {
-    if (this.groups == null) {
-      return new ArrayList<String>();
-    }
-    return this.groups.stream().map(g -> g.getName()).collect(Collectors.toList());
-  }
-
   @JsonIgnore
   public List<Permission> getPermissionsList() {
     // Get user's individual permission (stream)
@@ -159,7 +150,7 @@ public class User implements PolicyOwner {
         Optional.ofNullable(this.getGroups())
             .orElse(new HashSet<>())
             .stream()
-            .map(Group::getGroupPermissions)
+            .map(Group::getPermissions)
             .flatMap(List::stream);
 
     // Combine individual user permissions and the user's
@@ -210,29 +201,6 @@ public class User implements PolicyOwner {
     val finalPermissionsList = getPermissionsList();
     // Convert final permissions list for JSON output
     return extractPermissionStrings(finalPermissionsList);
-  }
-
-  @JsonIgnore
-  public List<String> getApplications() {
-    if (this.applications == null) {
-      return new ArrayList<>();
-    }
-    return this.applications.stream().map(a -> a.getName()).collect(Collectors.toList());
-  }
-
-  @JsonView(Views.JWTAccessToken.class)
-  public List<String> getRoles() {
-    return Arrays.asList(this.getRole());
-  }
-
-  /*
-   Roles is an array only in JWT but a String in Database.
-   This is done for future compatibility - at the moment ego only needs one Role but this may change
-    as project progresses.
-    Currently, using the only role by extracting first role in the array
-  */
-  public void setRoles(@NonNull List<String> roles) {
-    if (roles.size() > 0) this.role = roles.get(0);
   }
 
   public void addNewApplication(@NonNull Application app) {

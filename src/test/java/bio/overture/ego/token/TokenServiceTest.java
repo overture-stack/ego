@@ -76,7 +76,7 @@ public class TokenServiceTest {
     val group2 = entityGenerator.setupGroup("testGroup");
     val app2 = entityGenerator.setupApplication("foo");
 
-    group2.addUser(user);
+    group2.getUsers().add(user);
     groupService.update(group2);
 
     app2.setUsers(Sets.newHashSet(user));

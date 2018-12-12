@@ -16,7 +16,6 @@
 
 package bio.overture.ego.model.entity;
 
-import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
@@ -39,7 +38,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Table(name = Tables.GROUP)
 @JsonView(Views.REST.class)
 @EqualsAndHashCode(of = {"id"})
-@ToString(exclude = {"users", "applications", "groupPermissions"})
+@ToString(exclude = {"users", "applications", "permissions"})
 @JsonPropertyOrder({"id", "name", "description", "status", "applications", "groupPermissions"})
 public class Group implements PolicyOwner {
 
@@ -51,7 +50,7 @@ public class Group implements PolicyOwner {
   @JsonIgnore
   @JoinColumn(name = Fields.GROUPID_JOIN)
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  protected List<GroupPermission> groupPermissions;
+  protected List<GroupPermission> permissions;
 
   @Id
   @GeneratedValue(generator = "group_uuid")
@@ -94,32 +93,6 @@ public class Group implements PolicyOwner {
   @JsonIgnore
   Set<User> users;
 
-  public void addUser(@NonNull User u) {
-    initUsers();
-    this.users.add(u);
-  }
-
-  public void addNewPermission(@NonNull Policy policy, @NonNull AccessLevel mask) {
-    initPermissions();
-    val permission = GroupPermission.builder().policy(policy).accessLevel(mask).owner(this).build();
-    this.groupPermissions.add(permission);
-  }
-
-  public void removeApplication(@NonNull UUID appId) {
-    this.applications.removeIf(a -> a.id.equals(appId));
-  }
-
-  public void removePermission(@NonNull UUID permissionId) {
-    if (this.groupPermissions == null) return;
-    this.groupPermissions.removeIf(p -> p.id.equals(permissionId));
-  }
-
-  protected void initPermissions() {
-    if (this.groupPermissions == null) {
-      this.groupPermissions = new ArrayList<>();
-    }
-  }
-
   public Group update(Group other) {
     val builder =
         Group.builder()
@@ -144,11 +117,5 @@ public class Group implements PolicyOwner {
     }
 
     return builder.build();
-  }
-
-  private void initUsers() {
-    if (this.users == null) {
-      this.users = new HashSet<>();
-    }
   }
 }

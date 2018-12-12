@@ -613,7 +613,7 @@ public class GroupsServiceTest {
     val user = entityGenerator.setupUser("foo bar");
     val group = groupService.create(entityGenerator.createGroup("testGroup"));
 
-    group.addUser(user);
+    group.getUsers().add(user);
     val updatedGroup = groupService.update(group);
 
     groupService.delete(updatedGroup.getId().toString());
@@ -626,7 +626,7 @@ public class GroupsServiceTest {
     val app = applicationService.create(entityGenerator.createApplication("foobar"));
     val group = groupService.create(entityGenerator.createGroup("testGroup"));
 
-    group.addApplication(app);
+    group.getApplications().add(app);
     val updatedGroup = groupService.update(group);
 
     groupService.delete(updatedGroup.getId().toString());
@@ -662,7 +662,7 @@ public class GroupsServiceTest {
     groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);
 
     Assertions.assertThat(
-            PolicyPermissionUtils.extractPermissionStrings(firstGroup.getGroupPermissions()))
+            PolicyPermissionUtils.extractPermissionStrings(firstGroup.getPermissions()))
         .containsExactlyInAnyOrder("Study001.READ", "Study002.WRITE", "Study003.DENY");
   }
 
@@ -696,7 +696,7 @@ public class GroupsServiceTest {
 
     val groupPermissionsToRemove =
         firstGroup
-            .getGroupPermissions()
+            .getPermissions()
             .stream()
             .filter(p -> !p.getPolicy().getName().equals("Study001"))
             .map(p -> p.getId().toString())
@@ -705,7 +705,7 @@ public class GroupsServiceTest {
     groupService.deleteGroupPermissions(firstGroup.getId().toString(), groupPermissionsToRemove);
 
     Assertions.assertThat(
-            PolicyPermissionUtils.extractPermissionStrings(firstGroup.getGroupPermissions()))
+            PolicyPermissionUtils.extractPermissionStrings(firstGroup.getPermissions()))
         .containsExactlyInAnyOrder("Study001.READ");
   }
 

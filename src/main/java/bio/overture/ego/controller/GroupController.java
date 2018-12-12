@@ -56,7 +56,6 @@ import springfox.documentation.annotations.ApiIgnore;
 public class GroupController {
   /** Dependencies */
   private final GroupService groupService;
-
   private final ApplicationService applicationService;
   private final UserService userService;
 

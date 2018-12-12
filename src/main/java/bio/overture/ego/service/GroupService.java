@@ -43,6 +43,7 @@ public class GroupService extends BaseService<Group, UUID> {
   private final GroupRepository groupRepository;
   private final ApplicationService applicationService;
   private final PolicyService policyService;
+  private final GroupPermissionService permissionService;
 
   public Group create(@NonNull Group groupInfo) {
     return groupRepository.save(groupInfo);
@@ -63,9 +64,11 @@ public class GroupService extends BaseService<Group, UUID> {
     val group = getById(groupRepository, fromString(groupId));
     permissions.forEach(
         permission -> {
-          group.addNewPermission(
-              policyService.get(permission.getPolicyId()),
-              AccessLevel.fromValue(permission.getMask()));
+          val policy = policyService.get(permission.getPolicyId());
+          val mask = AccessLevel.fromValue(permission.getMask());
+          group
+              .getPermissions()
+              .add(GroupPermission.builder().policy(policy).accessLevel(mask).owner(group).build());
         });
     return groupRepository.save(group);
   }
@@ -93,7 +96,7 @@ public class GroupService extends BaseService<Group, UUID> {
 
   public Page<GroupPermission> getGroupPermissions(
       @NonNull String groupId, @NonNull Pageable pageable) {
-    val groupPermissions = getById(groupRepository, fromString(groupId)).getGroupPermissions();
+    val groupPermissions = getById(groupRepository, fromString(groupId)).getPermissions();
     return new PageImpl<>(groupPermissions, pageable, groupPermissions.size());
   }
 
@@ -146,10 +149,11 @@ public class GroupService extends BaseService<Group, UUID> {
 
   public void deleteAppsFromGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
     val group = getById(groupRepository, fromString(grpId));
+    // TODO - Properly handle invalid IDs here
     appIDs.forEach(
         appId -> {
           // TODO if app id not valid (does not exist) we need to throw EntityNotFoundException
-          group.removeApplication(fromString(appId));
+          group.getApplications().remove(applicationService.get(appId));
         });
     groupRepository.save(group);
   }
@@ -158,7 +162,7 @@ public class GroupService extends BaseService<Group, UUID> {
     val group = getById(groupRepository, fromString(userId));
     permissionsIds.forEach(
         permissionsId -> {
-          group.removePermission(fromString(permissionsId));
+          group.getPermissions().remove((GroupPermission) permissionService.get(permissionsId));
         });
     groupRepository.save(group);
   }
