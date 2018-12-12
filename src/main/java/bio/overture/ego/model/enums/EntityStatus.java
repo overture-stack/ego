@@ -20,7 +20,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public enum UserStatus {
+public enum EntityStatus {
   APPROVED("Approved"),
   DISABLED("Disabled"),
   PENDING("Pending"),

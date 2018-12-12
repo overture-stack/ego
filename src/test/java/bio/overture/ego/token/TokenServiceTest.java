@@ -79,7 +79,7 @@ public class TokenServiceTest {
     group2.addUser(user);
     groupService.update(group2);
 
-    app2.setWholeUsers(Sets.newHashSet(user));
+    app2.setUsers(Sets.newHashSet(user));
     applicationService.update(app2);
 
     val token = tokenService.generateUserToken(userService.get(user.getId().toString()));

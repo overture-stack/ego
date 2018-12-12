@@ -758,7 +758,7 @@ public class UserServiceTest {
     val groupId = group.getId().toString();
 
     userService.addUserToGroups(userId, singletonList(groupId));
-    assertThat(user.getWholeGroups().size()).isEqualTo(1);
+    assertThat(user.getGroups().size()).isEqualTo(1);
 
     assertThatExceptionOfType(IllegalArgumentException.class)
         .isThrownBy(() -> userService.deleteUserFromGroups(userId, singletonList("")));

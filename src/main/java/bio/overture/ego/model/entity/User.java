@@ -24,6 +24,7 @@ import static java.lang.String.format;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.Fields;
+import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -44,15 +45,15 @@ import org.hibernate.annotations.LazyCollectionOption;
 @Entity
 @Table(name = "egouser")
 @Data
-@ToString(exclude = {"wholeGroups", "wholeApplications", "userPermissions"})
+@ToString(exclude = {"groups", "applications", "userPermissions"})
 @JsonPropertyOrder({
   "id",
   "name",
   "email",
   "role",
   "status",
-  "wholeGroups",
-  "wholeApplications",
+  "groups",
+  "applications",
   "userPermissions",
   "firstName",
   "lastName",
@@ -72,11 +73,11 @@ public class User implements PolicyOwner {
   @Cascade(org.hibernate.annotations.CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(
-      name = "usergroup",
+      name = Tables.GROUP_USER,
       joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)})
   @JsonIgnore
-  protected Set<Group> wholeGroups;
+  protected Set<Group> groups;
 
   @ManyToMany(targetEntity = Application.class)
   @Cascade(org.hibernate.annotations.CascadeType.ALL)
@@ -86,7 +87,7 @@ public class User implements PolicyOwner {
       joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
   @JsonIgnore
-  protected Set<Application> wholeApplications;
+  protected Set<Application> applications;
 
   @OneToMany(cascade = CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
@@ -141,10 +142,10 @@ public class User implements PolicyOwner {
   // Creates groups in JWTAccessToken::context::user
   @JsonView(Views.JWTAccessToken.class)
   public List<String> getGroups() {
-    if (this.wholeGroups == null) {
+    if (this.groups == null) {
       return new ArrayList<String>();
     }
-    return this.wholeGroups.stream().map(g -> g.getName()).collect(Collectors.toList());
+    return this.groups.stream().map(g -> g.getName()).collect(Collectors.toList());
   }
 
   @JsonIgnore
@@ -155,7 +156,7 @@ public class User implements PolicyOwner {
 
     // Get permissions from the user's groups (stream)
     val userGroupsPermissions =
-        Optional.ofNullable(this.getWholeGroups())
+        Optional.ofNullable(this.getGroups())
             .orElse(new HashSet<>())
             .stream()
             .map(Group::getGroupPermissions)
@@ -213,10 +214,10 @@ public class User implements PolicyOwner {
 
   @JsonIgnore
   public List<String> getApplications() {
-    if (this.wholeApplications == null) {
+    if (this.applications == null) {
       return new ArrayList<>();
     }
-    return this.wholeApplications.stream().map(a -> a.getName()).collect(Collectors.toList());
+    return this.applications.stream().map(a -> a.getName()).collect(Collectors.toList());
   }
 
   @JsonView(Views.JWTAccessToken.class)
@@ -236,12 +237,12 @@ public class User implements PolicyOwner {
 
   public void addNewApplication(@NonNull Application app) {
     initApplications();
-    this.wholeApplications.add(app);
+    this.applications.add(app);
   }
 
   public void addNewGroup(@NonNull Group g) {
     initGroups();
-    this.wholeGroups.add(g);
+    this.groups.add(g);
   }
 
   public void addNewPermission(@NonNull Policy policy, @NonNull AccessLevel accessLevel) {
@@ -252,13 +253,13 @@ public class User implements PolicyOwner {
   }
 
   public void removeApplication(@NonNull UUID appId) {
-    if (this.wholeApplications == null) return;
-    this.wholeApplications.removeIf(a -> a.id.equals(appId));
+    if (this.applications == null) return;
+    this.applications.removeIf(a -> a.id.equals(appId));
   }
 
   public void removeGroup(@NonNull UUID grpId) {
-    if (this.wholeGroups == null) return;
-    this.wholeGroups.removeIf(g -> g.id.equals(grpId));
+    if (this.groups == null) return;
+    this.groups.removeIf(g -> g.id.equals(grpId));
   }
 
   public void removePermission(@NonNull UUID permissionId) {
@@ -267,14 +268,14 @@ public class User implements PolicyOwner {
   }
 
   protected void initApplications() {
-    if (this.wholeApplications == null) {
-      this.wholeApplications = new HashSet<>();
+    if (this.applications == null) {
+      this.applications = new HashSet<>();
     }
   }
 
   protected void initGroups() {
-    if (this.wholeGroups == null) {
-      this.wholeGroups = new HashSet<Group>();
+    if (this.groups == null) {
+      this.groups = new HashSet<Group>();
     }
   }
 
@@ -295,19 +296,19 @@ public class User implements PolicyOwner {
 
     // Don't merge the ID, CreatedAt, or LastLogin date - those are procedural.
 
-    // Don't merge wholeGroups, wholeApplications or userPermissions if not present in other
+    // Don't merge groups, applications or userPermissions if not present in other
     // This is because the PUT action for update usually does not include these fields
     // as a consequence of the GET option to retrieve a user not including these fields
-    // To clear wholeApplications, wholeGroups or userPermissions, use the dedicated services
+    // To clear applications, groups or userPermissions, use the dedicated services
     // for deleting associations or pass in an empty Set.
-    if (other.wholeApplications != null) {
-      unsetSession(other.getWholeApplications());
-      this.wholeApplications = other.getWholeApplications();
+    if (other.applications != null) {
+      unsetSession(other.getApplications());
+      this.applications = other.getApplications();
     }
 
-    if (other.wholeGroups != null) {
-      unsetSession(other.getWholeGroups());
-      this.wholeGroups = other.getWholeGroups();
+    if (other.groups != null) {
+      unsetSession(other.getGroups());
+      this.groups = other.getGroups();
     }
 
     if (other.userPermissions != null) {

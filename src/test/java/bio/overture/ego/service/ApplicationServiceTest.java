@@ -297,8 +297,8 @@ public class ApplicationServiceTest {
 
     val application = applicationService.getByClientId("111111");
 
-    group.addApplication(application);
-    groupTwo.addApplication(application);
+    group.getApplications().add(application);
+    groupTwo.getApplications().add(application);
 
     val applications =
         applicationService.findGroupApplications(
@@ -345,8 +345,8 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("222222");
     val applicationTwo = applicationService.getByClientId("333333");
 
-    group.addApplication(applicationOne);
-    group.addApplication(applicationTwo);
+    group.getApplications().add(applicationOne);
+    group.getApplications().add(applicationTwo);
 
     val clientIdFilter = new SearchFilter("clientId", "333333");
 
@@ -369,8 +369,8 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("333333");
     val applicationTwo = applicationService.getByClientId("444444");
 
-    group.addApplication(applicationOne);
-    group.addApplication(applicationTwo);
+    group.getApplications().add(applicationOne);
+    group.getApplications().add(applicationTwo);
 
     val clientIdFilter = new SearchFilter("clientId", "333333");
 
@@ -393,8 +393,8 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("444444");
     val applicationTwo = applicationService.getByClientId("555555");
 
-    group.addApplication(applicationOne);
-    group.addApplication(applicationTwo);
+    group.getApplications().add(applicationOne);
+    group.getApplications().add(applicationTwo);
 
     val applications =
         applicationService.findGroupApplications(

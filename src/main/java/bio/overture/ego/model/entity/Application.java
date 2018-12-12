@@ -17,6 +17,7 @@
 package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.enums.Fields;
+import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -34,7 +35,7 @@ import org.hibernate.annotations.LazyCollectionOption;
 @Entity
 @Table(name = "egoapplication")
 @Data
-@ToString(exclude = {"wholeGroups", "wholeUsers"})
+@ToString(exclude = {"groups", "users"})
 @JsonPropertyOrder({
   "id",
   "name",
@@ -87,11 +88,11 @@ public class Application {
   @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JoinTable(
-      name = "groupapplication",
+      name = Tables.GROUP_APPLICATION,
       joinColumns = {@JoinColumn(name = Fields.APPID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)})
   @JsonIgnore
-  Set<Group> wholeGroups;
+  Set<Group> groups;
 
   @ManyToMany()
   @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
@@ -101,7 +102,7 @@ public class Application {
       joinColumns = {@JoinColumn(name = Fields.APPID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
   @JsonIgnore
-  Set<User> wholeUsers;
+  Set<User> users;
 
   @JsonIgnore
   public HashSet<String> getURISet() {
@@ -112,10 +113,10 @@ public class Application {
 
   @JsonView(Views.JWTAccessToken.class)
   public List<String> getGroups() {
-    if (this.wholeGroups == null) {
+    if (this.groups == null) {
       return new ArrayList<String>();
     }
-    return this.wholeGroups.stream().map(g -> g.getName()).collect(Collectors.toList());
+    return this.groups.stream().map(g -> g.getName()).collect(Collectors.toList());
   }
 
   public void update(Application other) {
@@ -129,12 +130,12 @@ public class Application {
     // Do not update ID;
 
     // Update Users and Groups only if provided (not null)
-    if (other.wholeUsers != null) {
-      this.wholeUsers = other.wholeUsers;
+    if (other.users != null) {
+      this.users = other.users;
     }
 
-    if (other.wholeGroups != null) {
-      this.wholeGroups = other.wholeGroups;
+    if (other.groups != null) {
+      this.groups = other.groups;
     }
   }
 }

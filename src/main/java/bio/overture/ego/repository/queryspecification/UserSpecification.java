@@ -36,14 +36,14 @@ public class UserSpecification extends SpecificationBase<User> {
 
   public static Specification<User> inGroup(@Nonnull UUID groupId) {
     return (root, query, builder) -> {
-      Join<User, Group> groupJoin = root.join("wholeGroups");
+      Join<User, Group> groupJoin = root.join("groups");
       return builder.equal(groupJoin.<Integer>get("id"), groupId);
     };
   }
 
   public static Specification<User> ofApplication(@Nonnull UUID appId) {
     return (root, query, builder) -> {
-      Join<User, Application> applicationJoin = root.join("wholeApplications");
+      Join<User, Application> applicationJoin = root.join("applications");
       return builder.equal(applicationJoin.<Integer>get("id"), appId);
     };
   }

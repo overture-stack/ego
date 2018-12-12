@@ -5,6 +5,7 @@ import static bio.overture.ego.utils.CollectionUtils.mapToList;
 
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.*;
+import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.*;
 import bio.overture.ego.service.TokenService;
@@ -100,7 +101,11 @@ public class EntityGenerator {
   }
 
   public Group createGroup(String name) {
-    return new Group(name);
+    return Group.builder()
+        .name(name)
+        .status(EntityStatus.PENDING.toString())
+        .description("")
+        .build();
   }
 
   public Group setupGroup(String name) {

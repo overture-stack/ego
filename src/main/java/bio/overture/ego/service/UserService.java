@@ -22,8 +22,8 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.model.enums.UserRole;
-import bio.overture.ego.model.enums.UserStatus;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.UserRepository;
@@ -57,7 +57,7 @@ public class UserService extends BaseService<User, UUID> {
   private static final String DEMO_FIRST_NAME = "Demo";
   private static final String DEMO_LAST_NAME = "User";
   private static final String DEMO_USER_ROLE = UserRole.ADMIN.toString();
-  private static final String DEMO_USER_STATUS = UserStatus.APPROVED.toString();
+  private static final String DEMO_USER_STATUS = EntityStatus.APPROVED.toString();
   /*
    Dependencies
   */
@@ -115,7 +115,7 @@ public class UserService extends BaseService<User, UUID> {
       userInfo.setEmail(DEMO_USER_EMAIL);
       userInfo.setFirstName(DEMO_FIRST_NAME);
       userInfo.setLastName(DEMO_LAST_NAME);
-      userInfo.setStatus(UserStatus.APPROVED.toString());
+      userInfo.setStatus(EntityStatus.APPROVED.toString());
       userInfo.setCreatedAt(new Date());
       userInfo.setLastLogin(null);
       userInfo.setRole(UserRole.ADMIN.toString());
