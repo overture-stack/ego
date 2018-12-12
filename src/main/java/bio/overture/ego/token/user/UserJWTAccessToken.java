@@ -18,12 +18,13 @@ package bio.overture.ego.token.user;
 
 import bio.overture.ego.service.TokenService;
 import io.jsonwebtoken.Claims;
-import java.util.*;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
+
+import java.util.*;
 
 @Slf4j
 @Data

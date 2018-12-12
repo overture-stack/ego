@@ -1,16 +1,17 @@
 package bio.overture.ego.service;
 
-import static java.util.UUID.fromString;
-
 import bio.overture.ego.model.entity.Permission;
 import bio.overture.ego.repository.PermissionRepository;
-import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
+
+import static java.util.UUID.fromString;
 
 @Slf4j
 @Service

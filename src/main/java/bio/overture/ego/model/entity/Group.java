@@ -22,13 +22,14 @@ import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import java.util.*;
+import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-
-import lombok.*;
-
-import org.hibernate.annotations.GenericGenerator;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 @Data
 @Entity
@@ -69,11 +70,9 @@ public class Group implements PolicyOwner {
   @Column(name = Fields.STATUS)
   String status;
 
-  @ManyToMany(fetch = FetchType.LAZY,
-      cascade = {
-          CascadeType.PERSIST,
-          CascadeType.MERGE
-      })
+  @ManyToMany(
+      fetch = FetchType.LAZY,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinTable(
       name = Tables.GROUP_APPLICATION,
       joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
@@ -81,11 +80,9 @@ public class Group implements PolicyOwner {
   @JsonIgnore
   Set<Application> applications;
 
-  @ManyToMany(fetch = FetchType.LAZY,
-      cascade = {
-          CascadeType.PERSIST,
-          CascadeType.MERGE
-      })
+  @ManyToMany(
+      fetch = FetchType.LAZY,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinTable(
       name = Tables.GROUP_USER,
       joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},

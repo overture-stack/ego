@@ -1,8 +1,9 @@
 package bio.overture.ego.service;
 
-import java.util.Optional;
-import javax.persistence.EntityNotFoundException;
 import org.springframework.data.repository.PagingAndSortingRepository;
+
+import javax.persistence.EntityNotFoundException;
+import java.util.Optional;
 
 public abstract class BaseService<T, E> {
 

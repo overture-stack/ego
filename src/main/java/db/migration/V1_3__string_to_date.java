@@ -1,15 +1,16 @@
 package db.migration;
 
-import static org.junit.Assert.assertTrue;
-
 import bio.overture.ego.model.entity.User;
-import java.util.Date;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.flywaydb.core.api.migration.spring.SpringJdbcMigration;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+
+import java.util.Date;
+import java.util.UUID;
+
+import static org.junit.Assert.assertTrue;
 
 @Slf4j
 public class V1_3__string_to_date implements SpringJdbcMigration {

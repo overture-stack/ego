@@ -35,9 +35,6 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
-import javax.persistence.EntityNotFoundException;
-import javax.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +46,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
+import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/groups")
@@ -56,6 +57,7 @@ import springfox.documentation.annotations.ApiIgnore;
 public class GroupController {
   /** Dependencies */
   private final GroupService groupService;
+
   private final ApplicationService applicationService;
   private final UserService userService;
 

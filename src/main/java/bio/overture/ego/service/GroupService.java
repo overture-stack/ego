@@ -16,20 +16,13 @@
 
 package bio.overture.ego.service;
 
-import static java.util.UUID.fromString;
-import static org.springframework.data.jpa.domain.Specifications.where;
-
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.val;
@@ -38,6 +31,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.UUID;
+
+import static java.util.UUID.fromString;
+import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
 @AllArgsConstructor(onConstructor = @__({@Autowired}))
@@ -111,7 +110,7 @@ public class GroupService extends BaseService<Group, UUID> {
       builder.users(existingGroup.getUsers());
     }
 
-    val updatedGroup =  builder.build();
+    val updatedGroup = builder.build();
 
     return groupRepository.save(updatedGroup);
   }

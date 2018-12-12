@@ -1,9 +1,10 @@
 package bio.overture.ego.utils;
 
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
-
 import bio.overture.ego.model.entity.Permission;
+
 import java.util.List;
+
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
 
 public class PolicyPermissionUtils {
   public static String extractPermissionString(Permission permission) {

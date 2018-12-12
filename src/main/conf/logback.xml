@@ -19,9 +19,9 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 <configuration debug="false">
 
     <property name="log.dir" value="${log.path:-/tmp/ego/logs}"/>
-    <property name="log.name" value="ego" />
-    <property name="log.audit.name" value="ego.audit" />
-    <property name="pattern" value="%date{ISO8601} [%thread] %-5level %logger{20} - %msg%n" />
+    <property name="log.name" value="ego"/>
+    <property name="log.audit.name" value="ego.audit"/>
+    <property name="pattern" value="%date{ISO8601} [%thread] %-5level %logger{20} - %msg%n"/>
 
     <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
         <resetJUL>true</resetJUL>
@@ -54,18 +54,18 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
     </appender>
 
     <logger name="com.networknt.schema" level="ERROR" additivity="false">
-        <appender-ref ref="STDOUT" />
+        <appender-ref ref="STDOUT"/>
     </logger>
 
     <logger name="org.springframework.boot" level="INFO">
-        <appender-ref ref="STDOUT" />
+        <appender-ref ref="STDOUT"/>
     </logger>
 
     <logger name="org.springframework.security" level="ERROR">
-        <appender-ref ref="STDOUT" />
+        <appender-ref ref="STDOUT"/>
     </logger>
 
     <root level="info">
-        <appender-ref ref="STDOUT" />
+        <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

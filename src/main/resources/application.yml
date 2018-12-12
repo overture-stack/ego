@@ -61,7 +61,7 @@ google:
 logging:
   console:
     enabled: true
-    threshold: ALL 
+    threshold: ALL
   loggers:
     "org.skife.jdbi.v2": TRACE
   level:
@@ -136,7 +136,7 @@ spring.datasource:
   driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
   url: jdbc:tc:postgresql:9.5.13://localhost:5432/ego?TC_INITFUNCTION=bio.overture.ego.test.FlywayInit::initTestContainers
 
-  username: postgres 
+  username: postgres
   password:
   max-active: 1000
   max-idle: 10

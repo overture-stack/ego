@@ -16,13 +16,16 @@
 
 package bio.overture.ego.repository.queryspecification;
 
-import bio.overture.ego.model.entity.*;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
 import bio.overture.ego.utils.QueryUtils;
-import java.util.UUID;
-import javax.annotation.Nonnull;
-import javax.persistence.criteria.Join;
 import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
+
+import javax.annotation.Nonnull;
+import javax.persistence.criteria.Join;
+import java.util.UUID;
 
 public class UserSpecification extends SpecificationBase<User> {
 

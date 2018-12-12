@@ -1,10 +1,10 @@
 package bio.overture.ego.model.params;
 
-import static java.lang.String.format;
-
 import bio.overture.ego.model.enums.AccessLevel;
 import lombok.Data;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
+
+import static java.lang.String.format;
 
 @Data
 public class ScopeName {

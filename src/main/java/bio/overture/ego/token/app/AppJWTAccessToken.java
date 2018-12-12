@@ -18,10 +18,11 @@ package bio.overture.ego.token.app;
 
 import bio.overture.ego.service.TokenService;
 import io.jsonwebtoken.Claims;
-import java.util.*;
 import lombok.val;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
+
+import java.util.*;
 
 public class AppJWTAccessToken implements OAuth2AccessToken {
 

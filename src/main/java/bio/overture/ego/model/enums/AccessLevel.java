@@ -16,10 +16,11 @@
 
 package bio.overture.ego.model.enums;
 
-import java.util.Arrays;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+
+import java.util.Arrays;
 
 @RequiredArgsConstructor
 public enum AccessLevel {

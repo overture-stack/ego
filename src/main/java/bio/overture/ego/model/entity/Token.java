@@ -1,21 +1,22 @@
 package bio.overture.ego.model.entity;
 
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.Fields;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-import javax.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.joda.time.DateTime;
+
+import javax.persistence.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 
 @Entity
 @Table(name = "token")

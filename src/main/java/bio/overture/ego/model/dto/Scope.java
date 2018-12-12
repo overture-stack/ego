@@ -3,12 +3,13 @@ package bio.overture.ego.model.dto;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.params.ScopeName;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.val;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
