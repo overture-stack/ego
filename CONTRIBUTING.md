@@ -32,11 +32,23 @@ Please note we have a code of conduct, please follow it in all your interactions
     </executions>
 </plugin>
 ```
+5. Constants 
+- must be declared in a `@NoArgsConstructor(access=PRIVATE)` annotated class with a name representative of the type of constants. For example, the class `Tables` under the package `constants` would contain sql table names. 
+- Constant variable names should be consistent throughout code base. For example, the text `egoUserPermissions` should be defined by the variable `EGO_USER_PERMISSION`.  
 
 #### Service Layer
 1. Get * should always return Optional<T>
 2. Find * should always return a Collection<T>
 
+#### JPA
+1. Entity member declarations should take the following presidence:
+    1. @Id (identifier)    
+    2. Non-relationship @Column
+    3. @OneToOne
+    4. @OneToMany
+    5. @ManyToOne
+    6. @ManyToMany
+    
 ### Testing
 
 #### General

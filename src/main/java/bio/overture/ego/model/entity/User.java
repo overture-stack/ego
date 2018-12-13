@@ -25,15 +25,37 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.Cascade;
+import lombok.val;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
-import javax.persistence.*;
-import java.util.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,7 +66,7 @@ import static java.lang.String.format;
 
 @Slf4j
 @Entity
-@Table(name = "egouser")
+@Table(name = Tables.EGOUSER)
 @Data
 @ToString(exclude = {"groups", "applications", "userPermissions"})
 @JsonPropertyOrder({
@@ -70,75 +92,75 @@ import static java.lang.String.format;
 @JsonView(Views.REST.class)
 public class User implements PolicyOwner {
 
-  @ManyToMany(targetEntity = Group.class)
-  @Cascade(org.hibernate.annotations.CascadeType.ALL)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(
-      name = Tables.GROUP_USER,
-      joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)})
-  @JsonIgnore
-  protected Set<Group> groups;
-
-  @ManyToMany(targetEntity = Application.class)
-  @Cascade(org.hibernate.annotations.CascadeType.ALL)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(
-      name = "userapplication",
-      joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
-  @JsonIgnore
-  protected Set<Application> applications;
-
-  @OneToMany(cascade = CascadeType.ALL)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinColumn(name = Fields.USERID_JOIN)
-  @JsonIgnore
-  protected List<UserPermission> userPermissions;
-
+  //TODO: find JPA equivalent for GenericGenerator
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(name = "user_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "user_uuid")
-  UUID id;
+  private UUID id;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @NonNull
   @Column(nullable = false, name = Fields.NAME, unique = true)
-  String name;
+  private String name;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @NonNull
   @Column(nullable = false, name = Fields.EMAIL, unique = true)
-  String email;
+  private String email;
 
   @NonNull
   @Column(nullable = false, name = Fields.ROLE)
-  String role;
+  private String role;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.STATUS)
-  String status;
+  private String status;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.FIRSTNAME)
-  String firstName;
+  private String firstName;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.LASTNAME)
-  String lastName;
+  private String lastName;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.CREATEDAT)
-  Date createdAt;
+  private Date createdAt;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.LASTLOGIN)
-  Date lastLogin;
+  private Date lastLogin;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = Fields.PREFERREDLANGUAGE)
-  String preferredLanguage;
+  private String preferredLanguage;
+
+  @JsonIgnore
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @JoinColumn(name = Fields.USERID_JOIN)
+  protected List<UserPermission> userPermissions;
+
+  @JsonIgnore
+  @ManyToMany(
+      fetch = FetchType.LAZY,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+  @JoinTable(
+      name = Tables.GROUP_USER,
+      joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)})
+  protected Set<Group> groups;
+
+  @JsonIgnore
+  @ManyToMany(
+      fetch = FetchType.LAZY,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+  @JoinTable(
+      name = "userapplication",
+      joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
+  protected Set<Application> applications;
 
   @JsonIgnore
   public List<Permission> getPermissionsList() {
