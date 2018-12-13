@@ -1,6 +1,6 @@
 Ego for End Users
 =================
-.. image:: EndUser.png
+.. image:: users.png
 
 1) User uses a web service/other program to securely log into Ego using Oauth 2.0, using their Google/Facebook account.
 2) Google/Facebook confirm the user's identity, and send Ego a confirmation.

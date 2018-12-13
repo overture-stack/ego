@@ -1,5 +1,5 @@
-User Authorization Tokens
-=========================
+Authorization Tokens
+====================
 Authorization concerns what a user is *allowed to do*.
 
 Ego's User Authorization tokens are random numbers that Ego issues to users
@@ -16,3 +16,5 @@ configure a client program (such as SING, the client program used with SONG, the
 will then operate with the associated level of authority. 
 
 In more detail, when an Ego-aware application wants to know if it authorized to do something on behalf of a given user, it just sends their user authorization token to Ego, and gets back the associated information about who the user is (their user id), and what they are allowed to do (the permissions associated with their token).  If the permissions that the user have include the permission the application wants, the application know it is authorized to perform the requested service on behalf of the user.  
+
+.. image:: authorization.png

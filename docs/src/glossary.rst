@@ -1,6 +1,6 @@
 Terms Used In Ego
 =================
-.. image:: Terms1.png
-.. image:: Terms2.png
-.. image:: Terms3.png
+.. image:: terms.png
+.. image:: authentication.png
+.. image:: application.png
 

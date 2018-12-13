@@ -1,5 +1,5 @@
-User Authentication Tokens
-==========================
+Authentication Tokens
+=====================
 
 Authentication concerns who the user *is*. User Authentication tokens are used
 to verify a user's identity. 
@@ -16,7 +16,4 @@ have use to verify that an authentication token is valid. Most of Ego's
 REST endpoints require an Ego authentication token to validate the user's
 identity before operating on their data. 
 
-.. image:: Terms2.png
-
-
-
+.. image:: authentication.png
