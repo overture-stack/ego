@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import bio.overture.ego.controller.resolver.PageableResolver;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.EntityGenerator;
@@ -46,7 +48,7 @@ public class GroupsServiceTest {
   // Create
   @Test
   public void testCreate() {
-    val group = groupService.create(entityGenerator.createGroup("Group One"));
+    val group = entityGenerator.setupGroup("Group One");
     assertThat(group.getName()).isEqualTo("Group One");
   }
 
@@ -64,7 +66,7 @@ public class GroupsServiceTest {
   // Get
   @Test
   public void testGet() {
-    val group = groupService.create(entityGenerator.createGroup("Group One"));
+    val group = entityGenerator.setupGroup("Group One");
     val saveGroup = groupService.get(group.getId().toString());
     assertThat(saveGroup.getName()).isEqualTo("Group One");
   }
@@ -381,7 +383,7 @@ public class GroupsServiceTest {
   // Update
   @Test
   public void testUpdate() {
-    val group = groupService.create(entityGenerator.createGroup("Group One"));
+    val group = entityGenerator.setupGroup("Group One");
     group.setDescription("New Description");
     val updated = groupService.update(group);
     assertThat(updated.getDescription()).isEqualTo("New Description");
@@ -389,15 +391,19 @@ public class GroupsServiceTest {
 
   @Test
   public void testUpdateNonexistentEntity() {
-    groupService.create(entityGenerator.createGroup("Group One"));
-    val nonExistentEntity = entityGenerator.createGroup("Group Two");
+    val nonExistentEntity =
+        Group.builder()
+            .name("NonExistent")
+            .status(EntityStatus.PENDING.toString())
+            .description("")
+            .build();
     assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
         .isThrownBy(() -> groupService.update(nonExistentEntity));
   }
 
   @Test
   public void testUpdateIdNotAllowed() {
-    val group = groupService.create(entityGenerator.createGroup("Group One"));
+    val group = entityGenerator.setupGroup("Group One");
     group.setId(new UUID(12312912931L, 12312912931L));
     // New id means new non-existent policy or one that exists and is being overwritten
     assertThatExceptionOfType(EntityNotFoundException.class)

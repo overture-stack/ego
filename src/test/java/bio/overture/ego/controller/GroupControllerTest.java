@@ -63,7 +63,7 @@ public class GroupControllerTest {
   @Test
   public void AddGroup() {
 
-    Group group = entityGenerator.createGroup("Wizards");
+    Group group = entityGenerator.setupGroup("Wizards");
 
     HttpEntity<Group> entity = new HttpEntity<Group>(group, headers);
 
@@ -77,8 +77,7 @@ public class GroupControllerTest {
   @Test
   public void AddUniqueGroup() {
 
-    entityGenerator.setupGroup("SameSame");
-    Group group = entityGenerator.createGroup("SameSame");
+    Group group = entityGenerator.setupGroup("SameSame");
 
     HttpEntity<Group> entity = new HttpEntity<Group>(group, headers);
 
@@ -162,16 +161,15 @@ public class GroupControllerTest {
   public void UpdateGroup() {
 
     // Groups created in setup
-    val groupId = entityGenerator.setupGroup("Complete").getId();
+    val group = entityGenerator.setupGroup("Complete");
 
-    Group update = entityGenerator.createGroup("Updated Complete");
-    update.setId(groupId);
+    Group update = Group.builder().id(group.getId()).name("Updated Complete").status(group.getStatus()).description(group.getDescription()).build();
 
     HttpEntity<Group> entity = new HttpEntity<Group>(update, headers);
 
     ResponseEntity<String> response =
         restTemplate.exchange(
-            createURLWithPort(String.format("/groups/%s", groupId)),
+            createURLWithPort(String.format("/groups/%s", group.getId())),
             HttpMethod.PUT,
             entity,
             String.class);
@@ -180,7 +178,7 @@ public class GroupControllerTest {
 
     HttpStatus responseStatus = response.getStatusCode();
     assertEquals(HttpStatus.OK, responseStatus);
-    assertThatJson(responseBody).node("id").isEqualTo(groupId);
+    assertThatJson(responseBody).node("id").isEqualTo(group.getId());
     assertThatJson(responseBody).node("name").isEqualTo("Updated Complete");
   }
 

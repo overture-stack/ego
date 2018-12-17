@@ -34,6 +34,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
+@Builder
 @Table(name = "egoapplication")
 @Data
 @ToString(exclude = {"groups", "users"})
@@ -49,6 +50,7 @@ import java.util.stream.Collectors;
 @JsonInclude(JsonInclude.Include.CUSTOM)
 @EqualsAndHashCode(of = {"id"})
 @NoArgsConstructor
+@AllArgsConstructor
 @RequiredArgsConstructor
 @JsonView(Views.REST.class)
 public class Application {

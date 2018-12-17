@@ -52,17 +52,16 @@ public class UserServiceTest {
   // Create
   @Test
   public void testCreate() {
-    val user = userService.create(entityGenerator.createUser("Demo", "User"));
+    val user = entityGenerator.setupUser("Demo User");
     // UserName == UserEmail
     assertThat(user.getName()).isEqualTo("DemoUser@domain.com");
   }
 
   @Test
   public void testCreateUniqueNameAndEmail() {
-    userService.create(entityGenerator.createUser("User", "One"));
-    userService.create(entityGenerator.createUser("User", "One"));
+    val user = entityGenerator.setupUser("User One");
     assertThatExceptionOfType(DataIntegrityViolationException.class)
-        .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
+        .isThrownBy(() -> userService.create(user));
   }
 
   @Test
@@ -87,7 +86,7 @@ public class UserServiceTest {
   @Test
   public void testCreateFromIDTokenUniqueNameAndEmail() {
     // Note: This test has one strike due to Hibernate Cache.
-    userService.create(entityGenerator.createUser("User", "One"));
+    entityGenerator.setupUser("User One");
     val idToken =
         IDToken.builder().email("UserOne@domain.com").given_name("User").family_name("One").build();
     userService.createFromIDToken(idToken);
@@ -99,7 +98,7 @@ public class UserServiceTest {
   // Get
   @Test
   public void testGet() {
-    val user = userService.create(entityGenerator.createUser("User", "One"));
+    val user = entityGenerator.setupUser("User One");
     val savedUser = userService.get(user.getId().toString());
     assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
@@ -112,14 +111,14 @@ public class UserServiceTest {
 
   @Test
   public void testGetByName() {
-    userService.create(entityGenerator.createUser("User", "One"));
+    entityGenerator.setupUser("User One");
     val savedUser = userService.getByName("UserOne@domain.com");
     assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
 
   @Test
   public void testGetByNameAllCaps() {
-    userService.create(entityGenerator.createUser("User", "One"));
+    entityGenerator.setupUser("User One");
     val savedUser = userService.getByName("USERONE@DOMAIN.COM");
     assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
@@ -468,15 +467,24 @@ public class UserServiceTest {
 
   @Test
   public void testUpdateNonexistentEntity() {
-    userService.create(entityGenerator.createUser("First", "User"));
-    val nonExistentEntity = entityGenerator.createUser("First", "User");
+    val nonExistentEntity =
+        User.builder()
+            .firstName("Doesnot")
+            .lastName("Exist")
+            .name("DoesnotExist@domain.com")
+            .email("DoesnotExist@domain.com")
+            .status("Approved")
+            .preferredLanguage("English")
+            .lastLogin(null)
+            .role("ADMIN")
+            .build();
     assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
         .isThrownBy(() -> userService.update(nonExistentEntity));
   }
 
   @Test
   public void testUpdateIdNotAllowed() {
-    val user = userService.create(entityGenerator.createUser("First", "User"));
+    val user = entityGenerator.setupUser("First User");
     user.setId(UUID.fromString("0c1dc4b8-7fb8-11e8-adc0-fa7ae01bbebc"));
     // New id means new non-existent policy or one that exists and is being overwritten
     assertThatExceptionOfType(EntityNotFoundException.class)

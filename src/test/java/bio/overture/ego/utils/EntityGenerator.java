@@ -38,7 +38,7 @@ public class EntityGenerator {
 
   @Autowired private TokenStoreService tokenStoreService;
 
-  public Application createApplication(String clientId) {
+  private Application createApplication(String clientId) {
     return new Application(appName(clientId), clientId, clientSecret(clientId));
   }
 
@@ -84,7 +84,7 @@ public class EntityGenerator {
     }
   }
 
-  public User createUser(String firstName, String lastName) {
+  private User createUser(String firstName, String lastName) {
     return User.builder()
         .email(String.format("%s%s@domain.com", firstName, lastName))
         .name(String.format("%s%s", firstName, lastName))
@@ -97,7 +97,7 @@ public class EntityGenerator {
         .build();
   }
 
-  public User createUser(String name) {
+  private User createUser(String name) {
     val names = name.split(" ", 2);
     return createUser(names[0], names[1]);
   }
@@ -123,7 +123,7 @@ public class EntityGenerator {
     setupUsers("First User", "Second User", "Third User");
   }
 
-  public Group createGroup(String name) {
+  private Group createGroup(String name) {
     return Group.builder()
         .name(name)
         .status(EntityStatus.PENDING.toString())
@@ -150,16 +150,16 @@ public class EntityGenerator {
     setupGroups("Group One", "Group Two", "Group Three");
   }
 
-  public Policy createPolicy(String name, UUID policyId) {
+  private Policy createPolicy(String name, UUID policyId) {
     return Policy.builder().name(name).owner(policyId).build();
   }
 
-  public Policy createPolicy(String name) {
+  private Policy createPolicy(String name) {
     val args = name.split(",");
     return createPolicy(args[0], args[1]);
   }
 
-  public Policy createPolicy(String name, String groupName) {
+  private Policy createPolicy(String name, String groupName) {
     Group owner = groupService.getByName(groupName);
     if (owner == null) {
       owner = setupGroup(groupName);

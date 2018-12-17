@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import bio.overture.ego.controller.resolver.PageableResolver;
+import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.token.app.AppTokenClaims;
 import bio.overture.ego.utils.EntityGenerator;
@@ -46,26 +47,22 @@ public class ApplicationServiceTest {
   // Create
   @Test
   public void testCreate() {
-    val application = applicationService.create(entityGenerator.createApplication("123456"));
+    val application = entityGenerator.setupApplication("123456");
     assertThat(application.getClientId()).isEqualTo("123456");
   }
 
   @Test
-  @Ignore
   public void testCreateUniqueClientId() {
-        applicationService.create(entityGenerator.createApplication("111111"));
-        applicationService.create(entityGenerator.createApplication("222222"));
-        assertThatExceptionOfType(DataIntegrityViolationException.class)
-            .isThrownBy(() ->
-     applicationService.create(entityGenerator.createApplication("111111")));
-    assertThat(1).isEqualTo(2);
+    val one = entityGenerator.setupApplication("111111");
+    assertThatExceptionOfType(DataIntegrityViolationException.class)
+        .isThrownBy(() -> applicationService.create(one));
     // TODO Check for uniqueness in application, currently only SQL
   }
 
   // Get
   @Test
   public void testGet() {
-    val application = applicationService.create(entityGenerator.createApplication("123456"));
+    val application = entityGenerator.setupApplication("123456");
     val savedApplication = applicationService.get(application.getId().toString());
     assertThat(savedApplication.getClientId()).isEqualTo("123456");
   }
@@ -78,14 +75,14 @@ public class ApplicationServiceTest {
 
   @Test
   public void testGetByName() {
-    applicationService.create(entityGenerator.createApplication("123456"));
+    entityGenerator.setupApplication("123456");
     val savedApplication = applicationService.getByName("Application 123456");
     assertThat(savedApplication.getClientId()).isEqualTo("123456");
   }
 
   @Test
   public void testGetByNameAllCaps() {
-    applicationService.create(entityGenerator.createApplication("123456"));
+    entityGenerator.setupApplication("123456");
     val savedApplication = applicationService.getByName("APPLICATION 123456");
     assertThat(savedApplication.getClientId()).isEqualTo("123456");
   }
@@ -100,7 +97,7 @@ public class ApplicationServiceTest {
 
   @Test
   public void testGetByClientId() {
-    applicationService.create(entityGenerator.createApplication("123456"));
+    entityGenerator.setupApplication("123456");
     val savedApplication = applicationService.getByClientId("123456");
     assertThat(savedApplication.getClientId()).isEqualTo("123456");
   }
@@ -412,7 +409,7 @@ public class ApplicationServiceTest {
   // Update
   @Test
   public void testUpdate() {
-    val application = applicationService.create(entityGenerator.createApplication("123456"));
+    val application = entityGenerator.setupApplication("123456");
     application.setName("New Name");
     val updated = applicationService.update(application);
     assertThat(updated.getName()).isEqualTo("New Name");
@@ -420,15 +417,15 @@ public class ApplicationServiceTest {
 
   @Test
   public void testUpdateNonexistentEntity() {
-    applicationService.create(entityGenerator.createApplication("123456"));
-    val nonExistentEntity = entityGenerator.createApplication("654321");
+    entityGenerator.setupApplication("123456");
+    val nonExistentEntity = Application.builder().clientId("123456").name("DoesNotExist").clientSecret("654321").build();
     assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
         .isThrownBy(() -> applicationService.update(nonExistentEntity));
   }
 
   @Test
   public void testUpdateIdNotAllowed() {
-    val application = applicationService.create(entityGenerator.createApplication("123456"));
+    val application = entityGenerator.setupApplication("123456");
     application.setId(new UUID(12312912931L, 12312912931L));
     // New id means new non-existent policy or one that exists and is being overwritten
     assertThatExceptionOfType(EntityNotFoundException.class)
@@ -488,7 +485,7 @@ public class ApplicationServiceTest {
   // Special (LoadClient)
   @Test
   public void testLoadClientByClientId() {
-    val application = applicationService.create(entityGenerator.createApplication("123456"));
+    val application = entityGenerator.setupApplication("123456");
     application.setStatus("Approved");
     applicationService.update(application);
 
@@ -521,7 +518,7 @@ public class ApplicationServiceTest {
 
   @Test
   public void testLoadClientByClientIdNotApproved() {
-    val application = applicationService.create(entityGenerator.createApplication("123456"));
+    val application = entityGenerator.setupApplication("123456");
     application.setStatus("Pending");
     applicationService.update(application);
     assertThatExceptionOfType(ClientRegistrationException.class)

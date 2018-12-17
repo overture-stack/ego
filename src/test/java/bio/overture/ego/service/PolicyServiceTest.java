@@ -45,7 +45,7 @@ public class PolicyServiceTest {
   // Create
   @Test
   public void testCreate() {
-    val policy = policyService.create(entityGenerator.createPolicy("Study001,Group One"));
+    val policy = entityGenerator.setupPolicy("Study001,Group One");
     assertThat(policy.getName()).isEqualTo("Study001");
   }
 
@@ -67,8 +67,7 @@ public class PolicyServiceTest {
   // Read
   @Test
   public void testGet() {
-    val policy =
-        policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
+    val policy = entityGenerator.setupPolicy("Study001", groups.get(0).getName());
     val savedPolicy = policyService.get(policy.getId().toString());
     assertThat(savedPolicy.getName()).isEqualTo("Study001");
   }
@@ -81,14 +80,14 @@ public class PolicyServiceTest {
 
   @Test
   public void testGetByName() {
-    policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
+    entityGenerator.setupPolicy("Study001", groups.get(0).getName());
     val savedUser = policyService.getByName("Study001");
     assertThat(savedUser.getName()).isEqualTo("Study001");
   }
 
   @Test
   public void testGetByNameAllCaps() {
-    policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
+    entityGenerator.setupPolicy("Study001", groups.get(0).getName());
     val savedUser = policyService.getByName("STUDY001");
     assertThat(savedUser.getName()).isEqualTo("Study001");
   }
@@ -137,8 +136,7 @@ public class PolicyServiceTest {
   // Update
   @Test
   public void testUpdate() {
-    val policy =
-        policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
+    val policy = entityGenerator.setupPolicy("Study001", groups.get(0).getName());
     policy.setName("StudyOne");
     val updated = policyService.update(policy);
     assertThat(updated.getName()).isEqualTo("StudyOne");

@@ -37,7 +37,7 @@ public class LastloginTest {
     idToken.setFamily_name("foo");
     idToken.setGiven_name("bar");
     idToken.setEmail("foobar@domain.com");
-    User user = userService.create(entityGenerator.createUser("foo", "bar"));
+    User user = entityGenerator.setupUser("foo bar");
 
     assertNull(
         " Verify before generatedUserToken, last login after fetching the user should be null. ",
