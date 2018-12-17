@@ -228,7 +228,7 @@ public class User implements PolicyOwner {
 
   public void removeGroup(@NonNull UUID grpId) {
     if (this.groups == null) return;
-    this.groups.removeIf(g -> g.id.equals(grpId));
+    this.groups.removeIf(g -> g.getId().equals(grpId));
   }
 
   public void removePermission(@NonNull UUID permissionId) {

@@ -43,32 +43,22 @@ import java.util.UUID;
 @JsonPropertyOrder({"id", "name", "description", "status", "applications", "groupPermissions"})
 public class Group implements PolicyOwner {
 
-  @JsonIgnore
-  @JoinColumn(name = Fields.OWNER)
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  protected Set<Policy> policies;
-
-  @JsonIgnore
-  @JoinColumn(name = Fields.GROUPID_JOIN)
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  protected List<GroupPermission> permissions;
-
   @Id
   @GeneratedValue(generator = "group_uuid")
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(name = "group_uuid", strategy = "org.hibernate.id.UUIDGenerator")
-  UUID id;
+  private UUID id;
 
   @NotNull
   @Column(name = Fields.NAME)
-  String name;
+  private String name;
 
   @Column(name = Fields.DESCRIPTION)
-  String description;
+  private String description;
 
   @NotNull
   @Column(name = Fields.STATUS)
-  String status;
+  private String status;
 
   @ManyToMany(
       fetch = FetchType.LAZY,
@@ -89,4 +79,14 @@ public class Group implements PolicyOwner {
       inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
   @JsonIgnore
   Set<User> users;
+
+  @JsonIgnore
+  @JoinColumn(name = Fields.OWNER)
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  protected Set<Policy> policies;
+
+  @JsonIgnore
+  @JoinColumn(name = Fields.GROUPID_JOIN)
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  protected List<GroupPermission> permissions;
 }
