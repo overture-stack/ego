@@ -77,14 +77,14 @@ public class GroupsServiceTest {
 
   @Test
   public void testGetByName() {
-    groupService.create(entityGenerator.createGroup("Group One"));
+    entityGenerator.setupGroup("Group One");
     val saveGroup = groupService.getByName("Group One");
     assertThat(saveGroup.getName()).isEqualTo("Group One");
   }
 
   @Test
   public void testGetByNameAllCaps() {
-    groupService.create(entityGenerator.createGroup("Group One"));
+    entityGenerator.setupGroup("Group One");
     val saveGroup = groupService.getByName("GROUP ONE");
     assertThat(saveGroup.getName()).isEqualTo("Group One");
   }
@@ -611,7 +611,7 @@ public class GroupsServiceTest {
   @Test
   public void testDeleteGroupWithUserRelations() {
     val user = entityGenerator.setupUser("foo bar");
-    val group = groupService.create(entityGenerator.createGroup("testGroup"));
+    val group = entityGenerator.setupGroup("testGroup");
 
     group.getUsers().add(user);
     val updatedGroup = groupService.update(group);
@@ -623,8 +623,8 @@ public class GroupsServiceTest {
   /** This test guards against bad cascades against applications */
   @Test
   public void testDeleteGroupWithApplicationRelations() {
-    val app = applicationService.create(entityGenerator.createApplication("foobar"));
-    val group = groupService.create(entityGenerator.createGroup("testGroup"));
+    val app = entityGenerator.setupApplication("foobar");
+    val group = entityGenerator.setupGroup("testGroup");
 
     group.getApplications().add(app);
     val updatedGroup = groupService.update(group);

@@ -51,8 +51,14 @@ public class EntityGenerator {
   }
 
   public Application setupApplication(String clientId) {
-    val application = createApplication(clientId);
-    return applicationService.create(application);
+    val existing = applicationService.getByClientId(clientId);
+
+    if (Objects.nonNull(existing)) {
+      return existing;
+    } else {
+      val application = createApplication(clientId);
+      return applicationService.create(application);
+    }
   }
 
   public List<Application> setupApplications(String... clientIds) {
@@ -60,18 +66,22 @@ public class EntityGenerator {
   }
 
   public void setupTestApplications() {
-    if (Objects.isNull(applicationService.getByName("111111"))) {
-      setupApplications("111111", "222222", "333333", "444444", "555555");
-    }
+    setupApplications("111111", "222222", "333333", "444444", "555555");
   }
 
   public Application setupApplication(String clientId, String clientSecret) {
-    val app = new Application();
-    app.setClientId(clientId);
-    app.setClientSecret(clientSecret);
-    app.setName(clientId);
-    app.setStatus("Approved");
-    return applicationService.create(app);
+    val existing = applicationService.getByClientId(clientId);
+
+    if (Objects.nonNull(existing)) {
+      return existing;
+    } else {
+      val app = new Application();
+      app.setClientId(clientId);
+      app.setClientSecret(clientSecret);
+      app.setName(clientId);
+      app.setStatus("Approved");
+      return applicationService.create(app);
+    }
   }
 
   public User createUser(String firstName, String lastName) {
@@ -93,8 +103,16 @@ public class EntityGenerator {
   }
 
   public User setupUser(String name) {
-    val user = createUser(name);
-    return userService.create(user);
+    val names = name.split(" ", 2);
+    val userName = String.format("%s%s@domain.com", names[0], names[1]);
+    val existing = userService.getByName(userName);
+
+    if (Objects.nonNull(existing)) {
+      return existing;
+    } else {
+      val user = createUser(name);
+      return userService.create(user);
+    }
   }
 
   public List<User> setupUsers(String... users) {
@@ -102,9 +120,7 @@ public class EntityGenerator {
   }
 
   public void setupTestUsers() {
-    if (Objects.isNull(userService.getByName("FirstUser@domain.com"))) {
-      setupUsers("First User", "Second User", "Third User");
-    }
+    setupUsers("First User", "Second User", "Third User");
   }
 
   public Group createGroup(String name) {
@@ -116,8 +132,14 @@ public class EntityGenerator {
   }
 
   public Group setupGroup(String name) {
-    val group = createGroup(name);
-    return groupService.create(group);
+    val existing = groupService.getByName(name);
+
+    if (Objects.nonNull(existing)) {
+      return existing;
+    } else {
+      val group = createGroup(name);
+      return groupService.create(group);
+    }
   }
 
   public List<Group> setupGroups(String... groupNames) {
@@ -125,9 +147,7 @@ public class EntityGenerator {
   }
 
   public void setupTestGroups() {
-    if (Objects.isNull(groupService.getByName("Group One"))) {
-      setupGroups("Group One", "Group Two", "Group Three");
-    }
+    setupGroups("Group One", "Group Two", "Group Three");
   }
 
   public Policy createPolicy(String name, UUID policyId) {
@@ -148,13 +168,25 @@ public class EntityGenerator {
   }
 
   public Policy setupPolicy(String name, String groupName) {
-    val policy = createPolicy(name, groupName);
-    return policyService.create(policy);
+    val existing = policyService.getByName(name);
+
+    if (Objects.nonNull(existing)) {
+      return existing;
+    } else {
+      val policy = createPolicy(name, groupName);
+      return policyService.create(policy);
+    }
   }
 
   public Policy setupPolicy(String name) {
-    val policy = createPolicy(name);
-    return policyService.create(policy);
+    val existing = policyService.getByName(name);
+
+    if (Objects.nonNull(existing)) {
+      return existing;
+    } else {
+      val policy = createPolicy(name);
+      return policyService.create(policy);
+    }
   }
 
   public List<Policy> setupPolicies(String... names) {
