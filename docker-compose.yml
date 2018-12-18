@@ -25,8 +25,6 @@ services:
     environment:
       - POSTGRES_DB=ego
       - POSTGRES_PASSWORD=password
-    volumes:
-      - ./src/main/resources/schemas/01-psql-schema.sql:/docker-entrypoint-initdb.d/init.sql
     expose:
       - "5432"
     ports:
