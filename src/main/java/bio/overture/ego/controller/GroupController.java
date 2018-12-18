@@ -35,7 +35,8 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -51,15 +52,26 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @Slf4j
+@Builder
 @RestController
 @RequestMapping("/groups")
-@AllArgsConstructor(onConstructor = @__({@Autowired}))
 public class GroupController {
+
   /** Dependencies */
   private final GroupService groupService;
-
   private final ApplicationService applicationService;
   private final UserService userService;
+
+  @Autowired
+  public GroupController(
+      @NonNull GroupService groupService,
+      @NonNull ApplicationService applicationService,
+      @NonNull UserService userService
+  ) {
+    this.groupService = groupService;
+    this.applicationService = applicationService;
+    this.userService = userService;
+  }
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
@@ -119,8 +131,8 @@ public class GroupController {
             response = Group.class)
       })
   public @ResponseBody Group createGroup(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestBody(required = true) Group groupInfo) {
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION) final String accessToken,
+      @RequestBody Group groupInfo) {
     if (groupInfo.getId() != null) {
       throw new PostWithIdentifierException();
     }
@@ -133,8 +145,8 @@ public class GroupController {
       value = {@ApiResponse(code = 200, message = "Group Details", response = Group.class)})
   @JsonView(Views.REST.class)
   public @ResponseBody Group getGroup(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String groupId) {
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION) final String accessToken,
+      @PathVariable(value = "id") String groupId) {
     return groupService.get(groupId);
   }
 

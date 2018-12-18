@@ -204,7 +204,7 @@ public class GroupService extends BaseService<Group, UUID> {
     val group = getById(groupRepository, fromString(userId));
     permissionsIds.forEach(
         permissionsId -> {
-          group.getPermissions().remove((GroupPermission) permissionService.get(permissionsId));
+          group.getPermissions().remove(permissionService.get(permissionsId));
         });
     groupRepository.save(group);
   }

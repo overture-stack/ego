@@ -134,7 +134,7 @@ public class GroupControllerTest {
 
     HttpStatus responseStatus = response.getStatusCode();
 
-    assertEquals(HttpStatus.NOT_FOUND, responseStatus); // TODO
+    assertEquals(HttpStatus.NOT_FOUND, responseStatus);
   }
 
   @Test
