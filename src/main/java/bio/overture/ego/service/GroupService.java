@@ -24,6 +24,7 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,12 +40,24 @@ import static java.util.UUID.fromString;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
-@AllArgsConstructor(onConstructor = @__({@Autowired}))
+@Builder
 public class GroupService extends BaseService<Group, UUID> {
   private final GroupRepository groupRepository;
   private final ApplicationService applicationService;
   private final PolicyService policyService;
   private final GroupPermissionService permissionService;
+
+  @Autowired
+  public GroupService(
+      @NonNull GroupRepository groupRepository,
+      @NonNull ApplicationService applicationService,
+      @NonNull PolicyService policyService,
+      @NonNull GroupPermissionService permissionService) {
+    this.groupRepository = groupRepository;
+    this.applicationService = applicationService;
+    this.policyService = policyService;
+    this.permissionService = permissionService;
+  }
 
   public Group create(@NonNull Group groupInfo) {
     return groupRepository.save(groupInfo);

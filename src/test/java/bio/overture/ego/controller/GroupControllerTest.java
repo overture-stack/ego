@@ -9,6 +9,7 @@ import static org.junit.Assert.assertNotEquals;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
@@ -63,7 +64,12 @@ public class GroupControllerTest {
   @Test
   public void AddGroup() {
 
-    Group group = entityGenerator.setupGroup("Wizards");
+    Group group =
+        Group.builder()
+            .name("Wizards")
+            .status(EntityStatus.PENDING.toString())
+            .description("")
+            .build();
 
     HttpEntity<Group> entity = new HttpEntity<Group>(group, headers);
 
@@ -163,7 +169,13 @@ public class GroupControllerTest {
     // Groups created in setup
     val group = entityGenerator.setupGroup("Complete");
 
-    Group update = Group.builder().id(group.getId()).name("Updated Complete").status(group.getStatus()).description(group.getDescription()).build();
+    Group update =
+        Group.builder()
+            .id(group.getId())
+            .name("Updated Complete")
+            .status(group.getStatus())
+            .description(group.getDescription())
+            .build();
 
     HttpEntity<Group> entity = new HttpEntity<Group>(update, headers);
 

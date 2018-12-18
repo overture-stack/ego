@@ -10,14 +10,13 @@ Please note we have a code of conduct, please follow it in all your interactions
 #### General
 1. Do not use field injection (ie. `@Value`, `@Autowired`)
     - Instead use an `@Autowired` or `@Value` annotated constructor
+    - Provide a static builder (ie. Lombok `@Builder` annotation)
     - This helps to improves testability
     - Helps to decouple from Spring
     - If your constructor is feeling messy or too big - you are probably overloading the class you are working on
-2. If a class is dependent on more than 3 constructor arguments, a _single_ config class should encapsulate those arguments while
- implementing a builder pattern (ie. Lombok `@Builder` annotation)
-3. Do not use any implementation specific JPA code (ie. Hibernate-only annotations)
+2. Do not use any implementation specific JPA code (ie. Hibernate-only annotations)
     - Exception for when no alternative functionality exists (ie. Postgres JSON field search)
-4. All of our code is auto-formatted to Google Java Format using the [fmt-maven-plugin](https://mvnrepository.com/artifact/com.coveo/fmt-maven-plugin) on build:
+3. All of our code is auto-formatted to Google Java Format using the [fmt-maven-plugin](https://mvnrepository.com/artifact/com.coveo/fmt-maven-plugin) on build:
 ```xml
 <plugin>
     <groupId>com.coveo</groupId>
