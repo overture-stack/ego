@@ -34,9 +34,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import static java.util.UUID.fromString;
 import static org.springframework.data.jpa.domain.Specifications.where;
@@ -62,7 +60,7 @@ public class GroupService extends BaseService<Group, UUID> {
   }
 
   public Group create(@NonNull Group groupInfo) {
-    if ( Objects.nonNull(groupInfo.getId())) {
+    if (Objects.nonNull(groupInfo.getId())) {
       throw new PostWithIdentifierException();
     }
 
@@ -144,7 +142,7 @@ public class GroupService extends BaseService<Group, UUID> {
 
   public Page<GroupPermission> getGroupPermissions(
       @NonNull String groupId, @NonNull Pageable pageable) {
-    val groupPermissions = getById(groupRepository, fromString(groupId)).getPermissions();
+    val groupPermissions = new ArrayList<>(getById(groupRepository, fromString(groupId)).getPermissions());
     return new PageImpl<>(groupPermissions, pageable, groupPermissions.size());
   }
 

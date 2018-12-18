@@ -141,7 +141,7 @@ public class User implements PolicyOwner {
   String preferredLanguage;
 
   @JsonIgnore
-  public List<Permission> getPermissionsList() {
+  public HashSet<Permission> getPermissionsList() {
     // Get user's individual permission (stream)
     val userPermissions =
         Optional.ofNullable(this.getUserPermissions()).orElse(new ArrayList<>()).stream();
@@ -152,7 +152,7 @@ public class User implements PolicyOwner {
             .orElse(new HashSet<>())
             .stream()
             .map(Group::getPermissions)
-            .flatMap(List::stream);
+            .flatMap(Collection::stream);
 
     // Combine individual user permissions and the user's
     // groups (if they have any) permissions
@@ -162,13 +162,13 @@ public class User implements PolicyOwner {
             .collect(Collectors.groupingBy(this::getP));
     // If we have no permissions at all return an empty list
     if (combinedPermissions.values().size() == 0) {
-      return new ArrayList<>();
+      return new HashSet<>();
     }
 
     // If we do have permissions ... sort the grouped permissions (by PolicyIdStringWithMaskName)
     // on PolicyMask, extracting the first value of the sorted list into the final
     // permissions list
-    List<Permission> finalPermissionsList = new ArrayList<>();
+    HashSet<Permission> finalPermissionsList = new HashSet<>();
 
     combinedPermissions.forEach(
         (entity, permissions) -> {
@@ -185,12 +185,12 @@ public class User implements PolicyOwner {
 
   @JsonIgnore
   public Set<Scope> getScopes() {
-    List<Permission> p;
+    HashSet<Permission> p;
     try {
       p = this.getPermissionsList();
     } catch (NullPointerException e) {
       log.error(format("Can't get permissions for user '%s'", getName()));
-      p = Collections.emptyList();
+      p = new HashSet<>();
     }
 
     return mapToSet(p, Permission::toScope);

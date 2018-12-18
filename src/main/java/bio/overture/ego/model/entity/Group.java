@@ -27,7 +27,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -68,7 +68,7 @@ public class Group implements PolicyOwner {
       joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
   @JsonIgnore
-  Set<Application> applications;
+  private Set<Application> applications = new HashSet<>();
 
   @ManyToMany(
       fetch = FetchType.LAZY,
@@ -78,15 +78,15 @@ public class Group implements PolicyOwner {
       joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
   @JsonIgnore
-  Set<User> users;
+  private Set<User> users = new HashSet<>();
 
   @JsonIgnore
   @JoinColumn(name = Fields.OWNER)
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  protected Set<Policy> policies;
+  private Set<Policy> policies = new HashSet<>();
 
   @JsonIgnore
   @JoinColumn(name = Fields.GROUPID_JOIN)
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  protected List<GroupPermission> permissions;
+  private Set<GroupPermission> permissions = new HashSet<>();
 }
