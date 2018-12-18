@@ -133,9 +133,6 @@ public class GroupController {
   public @ResponseBody Group createGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION) final String accessToken,
       @RequestBody Group groupInfo) {
-    if (groupInfo.getId() != null) {
-      throw new PostWithIdentifierException();
-    }
     return groupService.create(groupInfo);
   }
 

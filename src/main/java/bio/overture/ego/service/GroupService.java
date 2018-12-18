@@ -19,6 +19,7 @@ package bio.overture.ego.service;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.exceptions.PostWithIdentifierException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.GroupRepository;
@@ -34,6 +35,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static java.util.UUID.fromString;
@@ -60,6 +62,10 @@ public class GroupService extends BaseService<Group, UUID> {
   }
 
   public Group create(@NonNull Group groupInfo) {
+    if ( Objects.nonNull(groupInfo.getId())) {
+      throw new PostWithIdentifierException();
+    }
+
     return groupRepository.save(groupInfo);
   }
 
