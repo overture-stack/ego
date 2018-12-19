@@ -13,4 +13,5 @@ public abstract class BaseService<T, E> {
     entity.orElseThrow(EntityNotFoundException::new);
     return entity.get();
   }
+
 }

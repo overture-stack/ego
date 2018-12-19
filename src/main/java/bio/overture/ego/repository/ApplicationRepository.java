@@ -23,6 +23,8 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public interface ApplicationRepository
@@ -38,4 +40,7 @@ public interface ApplicationRepository
   Application findOneByName(String name);
 
   Page<Application> findAllByStatusIgnoreCase(String status, Pageable pageable);
+
+  Set<Application> findAllByIdIn(List<UUID> ids);
+
 }

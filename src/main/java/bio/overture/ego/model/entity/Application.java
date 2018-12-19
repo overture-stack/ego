@@ -23,19 +23,41 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.Accessors;
+import lombok.val;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
-import javax.persistence.*;
-import java.util.*;
-import java.util.stream.Collectors;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import static bio.overture.ego.utils.Collectors.toImmutableList;
+import static bio.overture.ego.utils.Converters.nullToEmptySet;
 
 @Entity
 @Table(name = "egoapplication")
 @Data
+@Accessors(chain = true)
 @ToString(exclude = {"groups", "users"})
 @JsonPropertyOrder({
   "id",
@@ -95,14 +117,11 @@ public class Application {
   @JsonIgnore
   Set<Group> groups;
 
-  @ManyToMany()
-  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(
-      name = "userapplication",
-      joinColumns = {@JoinColumn(name = Fields.APPID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
   @JsonIgnore
+  @ManyToMany(
+      mappedBy = Fields.APPLICATIONS,
+      fetch = FetchType.LAZY,
+      cascade = { CascadeType.PERSIST, CascadeType.MERGE})
   Set<User> users;
 
   @JsonIgnore
@@ -113,11 +132,8 @@ public class Application {
   }
 
   @JsonView(Views.JWTAccessToken.class)
-  public List<String> getGroups() {
-    if (this.groups == null) {
-      return new ArrayList<String>();
-    }
-    return this.groups.stream().map(g -> g.getName()).collect(Collectors.toList());
+  public List<String> getGroupNames() {
+    return getGroups().stream().map(Group::getName).collect(toImmutableList());
   }
 
   public void update(Application other) {
@@ -139,4 +155,17 @@ public class Application {
       this.groups = other.groups;
     }
   }
+
+  @JsonIgnore
+  public Set<User> getUsers(){
+    users = nullToEmptySet(users);
+    return users;
+  }
+
+  @JsonIgnore
+  public Set<Group> getGroups(){
+    groups = nullToEmptySet(groups);
+    return groups;
+  }
+
 }

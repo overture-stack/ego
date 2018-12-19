@@ -47,5 +47,7 @@ public class Fields {
   public static final String TOKEN = "token";
   public static final String ISSUEDATE = "issuedate";
   public static final String ISREVOKED = "isrevoked";
+  public static final String APPLICATIONS = "applications";
+  public static final String GROUPS = "groups";
 
 }

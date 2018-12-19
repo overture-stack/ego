@@ -17,7 +17,6 @@
 package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
@@ -60,10 +59,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.Converters.nullToEmptySet;
 import static bio.overture.ego.utils.HibernateSessions.unsetSession;
 import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
 import static java.lang.String.format;
 
+//TODO: simplify annotations. Find common annotations for Ego entities, and put them all under a single annotation
 @Slf4j
 @Entity
 @Table(name = Tables.EGOUSER)
@@ -137,10 +138,13 @@ public class User implements PolicyOwner {
   @Column(name = Fields.PREFERREDLANGUAGE)
   private String preferredLanguage;
 
+
   @JsonIgnore
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @OneToMany(
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      fetch = FetchType.LAZY)
   @JoinColumn(name = Fields.USERID_JOIN)
-  protected List<UserPermission> userPermissions;
+  protected Set<UserPermission> userPermissions; //TODO: @rtisma test that this initialization is the same as the init method (that it does not cause isseus with hibernate)
 
   @JsonIgnore
   @ManyToMany(
@@ -152,21 +156,41 @@ public class User implements PolicyOwner {
       inverseJoinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)})
   protected Set<Group> groups;
 
+  //TODO @rtisma: test persist and merge cascade types for ManyToMany relationships. Must be able to step away from
+  // happy path
   @JsonIgnore
   @ManyToMany(
       fetch = FetchType.LAZY,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinTable(
-      name = "userapplication",
+      name = Tables.USER_APPLICATION,
       joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
   protected Set<Application> applications;
 
   @JsonIgnore
+  public Set<Group> getGroups(){
+    groups = nullToEmptySet(groups);
+    return groups;
+  }
+
+  @JsonIgnore
+  public Set<Application> getApplications(){
+    applications = nullToEmptySet(applications);
+    return applications;
+  }
+
+  @JsonIgnore
+  public Set<UserPermission> getUserPermissions(){
+    userPermissions = nullToEmptySet(userPermissions);
+    return userPermissions;
+  }
+
+  @JsonIgnore
   public List<Permission> getPermissionsList() {
     // Get user's individual permission (stream)
     val userPermissions =
-        Optional.ofNullable(this.getUserPermissions()).orElse(new ArrayList<>()).stream();
+        Optional.ofNullable(this.getUserPermissions()).orElse(new HashSet<>()).stream();
 
     // Get permissions from the user's groups (stream)
     val userGroupsPermissions =
@@ -226,54 +250,22 @@ public class User implements PolicyOwner {
     return extractPermissionStrings(finalPermissionsList);
   }
 
-  public void addNewApplication(@NonNull Application app) {
-    initApplications();
-    this.applications.add(app);
+  //TODO @rtisma: test this associateWithApplication
+  public void associateWithApplication(@NonNull Application app) {
+    getApplications().add(app);
+    app.getUsers().add(this);
   }
 
-  public void addNewGroup(@NonNull Group g) {
-    initGroups();
-    this.groups.add(g);
+  //TODO @rtisma: test this associateWithGroup
+  public void associateWithGroup(@NonNull Group g) {
+    getGroups().add(g);
+    g.getUsers().add(this);
   }
 
-  public void addNewPermission(@NonNull Policy policy, @NonNull AccessLevel accessLevel) {
-    initPermissions();
-    val permission =
-        UserPermission.builder().policy(policy).accessLevel(accessLevel).owner(this).build();
-    this.userPermissions.add(permission);
-  }
-
-  public void removeApplication(@NonNull UUID appId) {
-    if (this.applications == null) return;
-    this.applications.removeIf(a -> a.id.equals(appId));
-  }
-
-  public void removeGroup(@NonNull UUID grpId) {
-    if (this.groups == null) return;
-    this.groups.removeIf(g -> g.id.equals(grpId));
-  }
-
-  public void removePermission(@NonNull UUID permissionId) {
-    if (this.userPermissions == null) return;
-    this.userPermissions.removeIf(p -> p.id.equals(permissionId));
-  }
-
-  protected void initApplications() {
-    if (this.applications == null) {
-      this.applications = new HashSet<>();
-    }
-  }
-
-  protected void initGroups() {
-    if (this.groups == null) {
-      this.groups = new HashSet<Group>();
-    }
-  }
-
-  protected void initPermissions() {
-    if (this.userPermissions == null) {
-      this.userPermissions = new ArrayList<>();
-    }
+  //TODO @rtisma: test this associateWithPermission
+  public void associateWithPermission(@NonNull UserPermission permission){
+    getUserPermissions().add(permission);
+    permission.setOwner(this);
   }
 
   public void update(User other) {

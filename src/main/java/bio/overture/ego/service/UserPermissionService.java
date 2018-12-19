@@ -9,9 +9,15 @@ import lombok.val;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
+import static bio.overture.ego.model.exceptions.NotFoundException.checkExists;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Converters.convertToUUIDList;
+import static bio.overture.ego.utils.Joiners.COMMA;
 import static java.util.UUID.fromString;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
@@ -35,4 +41,17 @@ public class UserPermissionService extends PermissionService<UserPermission> {
     val mask = userPermission.getAccessLevel();
     return new PolicyResponse(id, name, mask);
   }
+
+  public Set<UserPermission> getMany(@NonNull Collection<String> permIds) {
+    val existingGroups = getRepository().findAllByIdIn(convertToUUIDList(permIds));
+    val nonExistingApps = existingGroups.stream()
+        .map(UserPermission::getId)
+        .filter(x -> !getRepository().existsById(x))
+        .collect(toImmutableSet());
+    checkExists(nonExistingApps.isEmpty(),
+        "The following user permission ids were not found: %s",
+        COMMA.join(nonExistingApps));
+    return existingGroups;
+  }
+
 }

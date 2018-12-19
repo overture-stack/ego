@@ -32,9 +32,15 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
+import static bio.overture.ego.model.exceptions.NotFoundException.checkExists;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Converters.convertToUUIDList;
+import static bio.overture.ego.utils.Joiners.COMMA;
 import static java.util.UUID.fromString;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
@@ -195,4 +201,17 @@ public class GroupService extends BaseService<Group, UUID> {
         });
     groupRepository.save(group);
   }
+
+  public Set<Group> getMany(@NonNull Collection<String> groupIds) {
+    val groups = groupRepository.findAllByIdIn(convertToUUIDList(groupIds));
+    val nonExistingApps = groups.stream()
+        .map(Group::getId)
+        .filter(x -> !groupRepository.existsById(x))
+        .collect(toImmutableSet());
+    checkExists(nonExistingApps.isEmpty(),
+        "The following group ids were not found: %s",
+        COMMA.join(nonExistingApps));
+    return groups;
+  }
+
 }

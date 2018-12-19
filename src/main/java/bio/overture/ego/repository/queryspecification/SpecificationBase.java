@@ -22,7 +22,6 @@ import lombok.NonNull;
 import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
 
-import javax.annotation.Nonnull;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -49,7 +48,7 @@ public class SpecificationBase<T> {
     return builder.like(builder.lower(root.get(fieldName)), finalText);
   }
 
-  public static <T> Specification<T> filterBy(@Nonnull List<SearchFilter> filters) {
+  public static <T> Specification<T> filterBy(@NonNull List<SearchFilter> filters) {
     return (root, query, builder) ->
         builder.and(
             filters

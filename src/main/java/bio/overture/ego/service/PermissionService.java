@@ -35,6 +35,7 @@ public abstract class PermissionService<T extends Permission> extends BaseServic
   // Update
   public T update(@NonNull T updatedEntity) {
     val entity = getById(repository, updatedEntity.getId());
+    //[rtisma] TODO: BUG: the update method's implementation is dependent on the supers private members and not the subclasses members
     entity.update(updatedEntity);
     repository.save(entity);
     return updatedEntity;

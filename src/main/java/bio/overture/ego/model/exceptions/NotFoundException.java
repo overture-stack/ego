@@ -20,6 +20,7 @@ package bio.overture.ego.model.exceptions;
 import lombok.NonNull;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @ResponseStatus(NOT_FOUND)
@@ -28,4 +29,11 @@ public class NotFoundException extends RuntimeException {
   public NotFoundException(@NonNull String message) {
     super(message);
   }
+
+  public static void checkExists(boolean expression, @NonNull String formattedMessage, @NonNull Object...args){
+    if (!expression){
+      throw new NotFoundException(format(formattedMessage, args));
+    }
+  }
+
 }

@@ -1,22 +1,34 @@
 package bio.overture.ego.utils;
 
-import static bio.overture.ego.utils.CollectionUtils.listOf;
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
-
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.entity.*;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.entity.Token;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.model.params.ScopeName;
-import bio.overture.ego.service.*;
+import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.GroupService;
+import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.service.TokenService;
-import java.time.Instant;
-import java.util.*;
+import bio.overture.ego.service.TokenStoreService;
+import bio.overture.ego.service.UserService;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Component;
 
-import javax.validation.constraints.NotNull;
+import java.time.Instant;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+
+import static bio.overture.ego.utils.CollectionUtils.listOf;
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
 
 @Component
 /**
@@ -182,7 +194,12 @@ public class EntityGenerator {
   }
 
   public void addPermission(User user, Scope scope) {
-    user.addNewPermission(scope.getPolicy(), scope.getAccessLevel());
+    val permission = UserPermission.builder()
+        .policy(scope.getPolicy())
+        .accessLevel(scope.getAccessLevel())
+        .owner(user)
+        .build();
+    user.associateWithPermission(permission);
   }
 
   public void addPermissions(User user, Set<Scope> scopes) {

@@ -14,5 +14,6 @@ public class Tables {
   public static final String GROUP_APPLICATION = "groupapplication";
   public static final String GROUP_USER = "usergroup";
   public static final String EGOUSER = "egouser";
+  public static final String USER_APPLICATION = "userapplication";
 
 }

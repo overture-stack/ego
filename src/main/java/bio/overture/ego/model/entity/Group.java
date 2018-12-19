@@ -22,14 +22,32 @@ import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
+import static bio.overture.ego.utils.Converters.nullToEmptyList;
+import static bio.overture.ego.utils.Converters.nullToEmptySet;
 
 @Data
 @Entity
@@ -80,13 +98,35 @@ public class Group implements PolicyOwner {
   @JsonIgnore
   Set<Application> applications;
 
+  @JsonIgnore
   @ManyToMany(
+      mappedBy = Fields.GROUPS,
       fetch = FetchType.LAZY,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-  @JoinTable(
-      name = Tables.GROUP_USER,
-      joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
-  @JsonIgnore
   Set<User> users;
+
+  @JsonIgnore
+  public Set<User> getUsers(){
+    users = nullToEmptySet(users);
+    return users;
+  }
+
+  @JsonIgnore
+  public Set<Application> getApplications(){
+    applications = nullToEmptySet(applications);
+    return applications;
+  }
+
+  @JsonIgnore
+  public List<GroupPermission> getPermissions(){
+    permissions = nullToEmptyList(permissions);
+    return permissions;
+  }
+
+  @JsonIgnore
+  public Set<Policy> getPolicies(){
+    policies = nullToEmptySet(policies);
+    return policies;
+  }
+
 }
