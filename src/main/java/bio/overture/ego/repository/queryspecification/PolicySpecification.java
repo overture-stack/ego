@@ -19,10 +19,9 @@ package bio.overture.ego.repository.queryspecification;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.utils.QueryUtils;
+import javax.annotation.Nonnull;
 import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
-
-import javax.annotation.Nonnull;
 
 public class PolicySpecification extends SpecificationBase<User> {
 

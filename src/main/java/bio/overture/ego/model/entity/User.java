@@ -16,6 +16,11 @@
 
 package bio.overture.ego.model.entity;
 
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.HibernateSessions.unsetSession;
+import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
+import static java.lang.String.format;
+
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.Fields;
@@ -25,22 +30,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-
-import javax.persistence.*;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static bio.overture.ego.utils.HibernateSessions.unsetSession;
-import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
-import static java.lang.String.format;
 
 @Slf4j
 @Entity

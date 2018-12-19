@@ -20,12 +20,11 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.utils.QueryUtils;
-import lombok.val;
-import org.springframework.data.jpa.domain.Specification;
-
+import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.persistence.criteria.Join;
-import java.util.UUID;
+import lombok.val;
+import org.springframework.data.jpa.domain.Specification;
 
 public class UserSpecification extends SpecificationBase<User> {
 

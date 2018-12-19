@@ -16,12 +16,18 @@
 
 package bio.overture.ego.provider.google;
 
+import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
+import static java.util.Arrays.asList;
+
 import bio.overture.ego.token.IDToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -30,13 +36,6 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.jwt.JwtHelper;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.Map;
-
-import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
-import static java.util.Arrays.asList;
 
 @Slf4j
 @Component

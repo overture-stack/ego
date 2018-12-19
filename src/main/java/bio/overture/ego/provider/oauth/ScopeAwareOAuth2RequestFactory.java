@@ -17,9 +17,17 @@
  */
 package bio.overture.ego.provider.oauth;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.lang.String.format;
+import static org.springframework.security.oauth2.common.util.OAuth2Utils.SCOPE;
+
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.TokenService;
 import com.google.common.collect.Sets;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -28,15 +36,6 @@ import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.TokenRequest;
 import org.springframework.security.oauth2.provider.request.DefaultOAuth2RequestFactory;
-
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Strings.isNullOrEmpty;
-import static java.lang.String.format;
-import static org.springframework.security.oauth2.common.util.OAuth2Utils.SCOPE;
 
 @Slf4j
 public class ScopeAwareOAuth2RequestFactory extends DefaultOAuth2RequestFactory {

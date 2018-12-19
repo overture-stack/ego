@@ -3,6 +3,7 @@ package bio.overture.ego.reactor.receiver;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.reactor.events.UserEvents;
 import bio.overture.ego.service.UserService;
+import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -10,8 +11,6 @@ import reactor.bus.Event;
 import reactor.bus.EventBus;
 import reactor.bus.selector.Selectors;
 import reactor.fn.Consumer;
-
-import javax.annotation.PostConstruct;
 
 @Component
 @Slf4j

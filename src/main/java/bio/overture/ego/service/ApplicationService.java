@@ -16,12 +16,17 @@
 
 package bio.overture.ego.service;
 
+import static java.lang.String.format;
+import static java.util.UUID.fromString;
+import static org.springframework.data.jpa.domain.Specifications.where;
+
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.enums.ApplicationStatus;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
 import bio.overture.ego.token.app.AppTokenClaims;
+import java.util.*;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -36,12 +41,6 @@ import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
-
-import static java.lang.String.format;
-import static java.util.UUID.fromString;
-import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
 @Slf4j

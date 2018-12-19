@@ -16,6 +16,11 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.dto.Scope.effectiveScopes;
+import static bio.overture.ego.model.dto.Scope.explicitScopes;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static java.lang.String.format;
+
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.entity.Application;
@@ -38,6 +43,9 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.security.InvalidKeyException;
+import java.util.*;
+import javax.management.InvalidApplicationException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -47,15 +55,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
-
-import javax.management.InvalidApplicationException;
-import java.security.InvalidKeyException;
-import java.util.*;
-
-import static bio.overture.ego.model.dto.Scope.effectiveScopes;
-import static bio.overture.ego.model.dto.Scope.explicitScopes;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static java.lang.String.format;
 
 @Slf4j
 @Service

@@ -38,3 +38,5 @@ _build/
 _source/
 _templates/
 .DS_Store
+
+classes/

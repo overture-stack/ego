@@ -418,7 +418,12 @@ public class ApplicationServiceTest {
   @Test
   public void testUpdateNonexistentEntity() {
     entityGenerator.setupApplication("123456");
-    val nonExistentEntity = Application.builder().clientId("123456").name("DoesNotExist").clientSecret("654321").build();
+    val nonExistentEntity =
+        Application.builder()
+            .clientId("123456")
+            .name("DoesNotExist")
+            .clientSecret("654321")
+            .build();
     assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
         .isThrownBy(() -> applicationService.update(nonExistentEntity));
   }

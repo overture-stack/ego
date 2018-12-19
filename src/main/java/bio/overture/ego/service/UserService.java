@@ -16,6 +16,9 @@
 
 package bio.overture.ego.service;
 
+import static java.util.UUID.fromString;
+import static org.springframework.data.jpa.domain.Specifications.where;
+
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.enums.AccessLevel;
@@ -26,6 +29,10 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.UserSpecification;
 import bio.overture.ego.token.IDToken;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,14 +45,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
-import static java.util.UUID.fromString;
-import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Slf4j
 @Service

@@ -16,6 +16,9 @@
 
 package bio.overture.ego.service;
 
+import static java.util.UUID.fromString;
+import static org.springframework.data.jpa.domain.Specifications.where;
+
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.enums.AccessLevel;
@@ -24,7 +27,7 @@ import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
-import lombok.AllArgsConstructor;
+import java.util.*;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.val;
@@ -33,11 +36,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
-
-import static java.util.UUID.fromString;
-import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
 @Builder
@@ -142,7 +140,8 @@ public class GroupService extends BaseService<Group, UUID> {
 
   public Page<GroupPermission> getGroupPermissions(
       @NonNull String groupId, @NonNull Pageable pageable) {
-    val groupPermissions = new ArrayList<>(getById(groupRepository, fromString(groupId)).getPermissions());
+    val groupPermissions =
+        new ArrayList<>(getById(groupRepository, fromString(groupId)).getPermissions());
     return new PageImpl<>(groupPermissions, pageable, groupPermissions.size());
   }
 

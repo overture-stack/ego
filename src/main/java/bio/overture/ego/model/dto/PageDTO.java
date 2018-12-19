@@ -18,11 +18,10 @@ package bio.overture.ego.model.dto;
 
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
+import java.util.List;
 import lombok.Getter;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
-
-import java.util.List;
 
 @Getter
 @JsonView(Views.REST.class)

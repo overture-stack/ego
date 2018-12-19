@@ -17,12 +17,11 @@
 package bio.overture.ego.repository;
 
 import bio.overture.ego.model.entity.User;
+import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
-
-import java.util.UUID;
 
 public interface UserRepository
     extends PagingAndSortingRepository<User, UUID>, JpaSpecificationExecutor {
