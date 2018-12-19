@@ -1,16 +1,17 @@
 package bio.overture.ego.service;
 
-import static java.util.UUID.fromString;
-
 import bio.overture.ego.model.entity.Permission;
 import bio.overture.ego.repository.PermissionRepository;
-import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
+
+import static java.util.UUID.fromString;
 
 @Slf4j
 @Service
@@ -34,6 +35,7 @@ public abstract class PermissionService<T extends Permission> extends BaseServic
   // Update
   public T update(@NonNull T updatedEntity) {
     val entity = getById(repository, updatedEntity.getId());
+    //[rtisma] TODO: BUG: the update method's implementation is dependent on the supers private members and not the subclasses members
     entity.update(updatedEntity);
     repository.save(entity);
     return updatedEntity;

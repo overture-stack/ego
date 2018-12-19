@@ -16,18 +16,19 @@
 
 package bio.overture.ego.token.signer;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.security.*;
-import java.util.Base64;
-import java.util.Optional;
-import javax.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.*;
+import java.util.Base64;
+import java.util.Optional;
 
 @Slf4j
 @Service

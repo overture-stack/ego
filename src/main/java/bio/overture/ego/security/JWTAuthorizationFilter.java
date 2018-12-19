@@ -18,11 +18,6 @@ package bio.overture.ego.security;
 
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.TokenService;
-import java.util.ArrayList;
-import java.util.Arrays;
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -34,6 +29,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.util.StringUtils;
+
+import javax.servlet.FilterChain;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 @Slf4j
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {

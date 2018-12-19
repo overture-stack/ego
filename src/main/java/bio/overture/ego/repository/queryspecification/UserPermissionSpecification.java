@@ -19,10 +19,11 @@ package bio.overture.ego.repository.queryspecification;
 import bio.overture.ego.model.entity.Permission;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.UserPermission;
-import java.util.UUID;
+import org.springframework.data.jpa.domain.Specification;
+
 import javax.annotation.Nonnull;
 import javax.persistence.criteria.Join;
-import org.springframework.data.jpa.domain.Specification;
+import java.util.UUID;
 
 public class UserPermissionSpecification extends SpecificationBase<Permission> {
   public static Specification<UserPermission> withPolicy(@Nonnull UUID policyId) {

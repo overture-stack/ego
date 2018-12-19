@@ -17,12 +17,15 @@
 package bio.overture.ego.repository;
 
 import bio.overture.ego.model.entity.Application;
-import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
+
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public interface ApplicationRepository
     extends PagingAndSortingRepository<Application, UUID>, JpaSpecificationExecutor {
@@ -37,4 +40,7 @@ public interface ApplicationRepository
   Application findOneByName(String name);
 
   Page<Application> findAllByStatusIgnoreCase(String status, Pageable pageable);
+
+  Set<Application> findAllByIdIn(List<UUID> ids);
+
 }

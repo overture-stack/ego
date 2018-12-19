@@ -16,17 +16,12 @@
 
 package bio.overture.ego.service;
 
-import static java.lang.String.format;
-import static java.util.UUID.fromString;
-import static org.springframework.data.jpa.domain.Specifications.where;
-
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.enums.ApplicationStatus;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
 import bio.overture.ego.token.app.AppTokenClaims;
-import java.util.*;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -41,6 +36,18 @@ import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 import org.springframework.stereotype.Service;
+
+import java.util.*;
+
+import static bio.overture.ego.model.exceptions.NotFoundException.checkExists;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Converters.convertToUUIDList;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static com.google.common.collect.Sets.newHashSet;
+import static java.lang.String.format;
+import static java.util.UUID.fromString;
+import static java.util.stream.Collectors.toSet;
+import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
 @Slf4j
@@ -62,11 +69,40 @@ public class ApplicationService extends BaseService<Application, UUID>
     return getById(applicationRepository, fromString(applicationId));
   }
 
+  public Set<Application> getMany(@NonNull Collection<String> applicationIds) {
+    val apps = applicationRepository.findAllByIdIn(convertToUUIDList(applicationIds));
+    val nonExistingApps = apps.stream()
+        .map(Application::getId)
+        .filter(x -> !applicationRepository.existsById(x))
+        .collect(toImmutableSet());
+    checkExists(nonExistingApps.isEmpty(),
+        "The following application ids were not found: %s",
+        COMMA.join(nonExistingApps));
+    return apps;
+  }
+
   public Application update(@NonNull Application updatedApplicationInfo) {
     Application app = getById(applicationRepository, updatedApplicationInfo.getId());
     app.update(updatedApplicationInfo);
     applicationRepository.save(app);
     return updatedApplicationInfo;
+  }
+
+  public boolean isExist(@NonNull String appId){
+    return applicationRepository.existsById(fromString(appId));
+  }
+
+  public void checkApplicationExists(@NonNull String appId){
+    checkApplicationsExist(newHashSet(appId));
+  }
+
+  public void checkApplicationsExist(@NonNull Collection<String> appIds){
+    val nonExistentIds = appIds.stream()
+        .filter(x -> !isExist(x))
+        .collect(toSet());
+    checkExists(nonExistentIds.isEmpty(),
+        "The following application ids were not found: %s",
+        COMMA.join(nonExistentIds));
   }
 
   public void delete(@NonNull String applicationId) {

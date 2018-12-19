@@ -211,7 +211,12 @@ public class EntityGenerator {
   }
 
   public void addPermission(User user, Scope scope) {
-    user.addNewPermission(scope.getPolicy(), scope.getAccessLevel());
+    val permission = UserPermission.builder()
+            .policy(scope.getPolicy())
+            .accessLevel(scope.getAccessLevel())
+            .owner(user)
+            .build();
+    user.associateWithPermission(permission);
   }
 
   public void addPermissions(User user, Set<Scope> scopes) {

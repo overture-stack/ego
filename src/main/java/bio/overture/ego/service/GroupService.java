@@ -16,9 +16,6 @@
 
 package bio.overture.ego.service;
 
-import static java.util.UUID.fromString;
-import static org.springframework.data.jpa.domain.Specifications.where;
-
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.enums.AccessLevel;
@@ -27,7 +24,6 @@ import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
-import java.util.*;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.val;
@@ -36,6 +32,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.*;
+
+import static bio.overture.ego.model.exceptions.NotFoundException.checkExists;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Converters.convertToUUIDList;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static java.util.UUID.fromString;
+import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
 @Builder
@@ -91,6 +96,21 @@ public class GroupService extends BaseService<Group, UUID> {
 
   public Group get(@NonNull String groupId) {
     return getById(groupRepository, fromString(groupId));
+  }
+
+  public Set<Group> getMany(@NonNull Collection<String> groupIds) {
+    val groups = groupRepository.findAllByIdIn(convertToUUIDList(groupIds));
+    val nonExistingApps =
+        groups
+            .stream()
+            .map(Group::getId)
+            .filter(x -> !groupRepository.existsById(x))
+            .collect(toImmutableSet());
+    checkExists(
+        nonExistingApps.isEmpty(),
+        "The following group ids were not found: %s",
+        COMMA.join(nonExistingApps));
+    return groups;
   }
 
   public Group getByName(@NonNull String groupName) {

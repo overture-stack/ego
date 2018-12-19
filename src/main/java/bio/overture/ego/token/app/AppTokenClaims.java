@@ -19,12 +19,13 @@ package bio.overture.ego.token.app;
 import bio.overture.ego.token.TokenClaims;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
-import java.util.Arrays;
-import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.springframework.util.StringUtils;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Data
 @NoArgsConstructor

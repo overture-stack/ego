@@ -17,9 +17,6 @@
 
 package bio.overture.ego.token;
 
-import static bio.overture.ego.utils.CollectionUtils.setOf;
-import static org.junit.Assert.*;
-
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.params.ScopeName;
@@ -31,8 +28,6 @@ import bio.overture.ego.utils.CollectionUtils;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.TestData;
 import com.google.common.collect.Sets;
-import java.util.*;
-import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Assert;
@@ -46,6 +41,18 @@ import org.springframework.security.oauth2.common.exceptions.InvalidTokenExcepti
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityNotFoundException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.UUID;
+
+import static bio.overture.ego.utils.CollectionUtils.setOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 @Slf4j
 @SpringBootTest

@@ -18,8 +18,6 @@ package bio.overture.ego.controller.resolver;
 
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -28,6 +26,9 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 public class FilterResolver implements HandlerMethodArgumentResolver {

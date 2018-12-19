@@ -1,18 +1,10 @@
 package bio.overture.ego.service;
 
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.token.app.AppTokenClaims;
 import bio.overture.ego.utils.EntityGenerator;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -28,6 +20,15 @@ import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityNotFoundException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -180,8 +181,8 @@ public class ApplicationServiceTest {
 
     val application = applicationService.getByClientId("444444");
 
-    user.addNewApplication(application);
-    userTwo.addNewApplication(application);
+    user.associateWithApplication(application);
+    userTwo.associateWithApplication(application);
 
     val applications =
         applicationService.findUserApps(
@@ -224,8 +225,8 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("111111");
     val applicationTwo = applicationService.getByClientId("555555");
 
-    user.addNewApplication(applicationOne);
-    user.addNewApplication(applicationTwo);
+    user.associateWithApplication(applicationOne);
+    user.associateWithApplication(applicationTwo);
 
     val clientIdFilter = new SearchFilter("clientId", "111111");
 
@@ -248,8 +249,8 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("333333");
     val applicationTwo = applicationService.getByClientId("444444");
 
-    user.addNewApplication(applicationOne);
-    user.addNewApplication(applicationTwo);
+    user.associateWithApplication(applicationOne);
+    user.associateWithApplication(applicationTwo);
 
     val clientIdFilter = new SearchFilter("clientId", "333333");
 
@@ -272,8 +273,8 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("222222");
     val applicationTwo = applicationService.getByClientId("444444");
 
-    user.addNewApplication(applicationOne);
-    user.addNewApplication(applicationTwo);
+    user.associateWithApplication(applicationOne);
+    user.associateWithApplication(applicationTwo);
 
     val applications =
         applicationService.findUserApps(

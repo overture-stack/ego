@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.enums.EntityStatus;
+import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.EntityGenerator;
@@ -73,7 +74,7 @@ public class GroupsServiceTest {
 
   @Test
   public void testGetEntityNotFoundException() {
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> groupService.get(UUID.randomUUID().toString()));
   }
 
@@ -454,7 +455,7 @@ public class GroupsServiceTest {
     entityGenerator.setupTestGroups();
     entityGenerator.setupTestApplications();
     val applicationId = applicationService.getByClientId("111111").getId().toString();
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
             () ->
                 groupService.addAppsToGroup(
@@ -476,7 +477,7 @@ public class GroupsServiceTest {
     entityGenerator.setupTestApplications();
 
     val groupId = groupService.getByName("Group One").getId().toString();
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
             () ->
                 groupService.addAppsToGroup(groupId, Arrays.asList(UUID.randomUUID().toString())));
@@ -570,7 +571,7 @@ public class GroupsServiceTest {
     val group = groupService.get(groupId);
     assertThat(group.getApplications().size()).isEqualTo(1);
 
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
             () ->
                 groupService.deleteAppsFromGroup(
