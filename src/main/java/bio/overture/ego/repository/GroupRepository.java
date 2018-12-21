@@ -17,6 +17,8 @@
 package bio.overture.ego.repository;
 
 import bio.overture.ego.model.entity.Group;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.EntityGraph.EntityGraphType;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
@@ -27,8 +29,8 @@ import java.util.UUID;
 public interface GroupRepository
     extends PagingAndSortingRepository<Group, UUID>, JpaSpecificationExecutor {
 
+  @EntityGraph(value = "group-entity-with-relationships", type = EntityGraphType.FETCH)
   Group findOneByNameIgnoreCase(String name);
 
   Set<Group> findAllByIdIn(List<UUID> groupIds);
-
 }

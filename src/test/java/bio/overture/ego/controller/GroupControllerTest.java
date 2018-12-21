@@ -8,14 +8,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.io.Serializable;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.json.JSONException;
@@ -31,6 +33,7 @@ import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.persistence.Entity;
 import javax.transaction.Transactional;
 
 @Slf4j
@@ -281,7 +284,7 @@ public class GroupControllerTest {
 
     // Check that Group is associated with Users
     val groupWithUsers = groupService.getByName("GroupWithUsers");
-    assertThat(groupWithUsers.getUsers()).containsExactlyInAnyOrder(userOne, userTwo);
+    assertThat(extractUserIds(groupWithUsers.getUsers())).contains(userOne.getId(), userTwo.getId());
 
     // Check that each user is associated with the group
     val userOneWithGroups = userService.getByName("FirstUser@domain.com");
@@ -295,5 +298,13 @@ public class GroupControllerTest {
 
   private String createURLWithPort(String uri) {
     return "http://localhost:" + port + uri;
+  }
+
+  private List<UUID> extractGroupIds(Set<Group> entities) {
+    return entities.stream().map(Group::getId).collect(Collectors.toList());
+  }
+
+  private List<UUID> extractUserIds(Set<User> entities) {
+    return entities.stream().map(User::getId).collect(Collectors.toList());
   }
 }

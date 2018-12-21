@@ -66,6 +66,25 @@ import static java.lang.String.format;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
+@NamedEntityGraph(
+        name = "user-entity-with-relationships",
+        attributeNodes = {
+                @NamedAttributeNode("id"),
+                @NamedAttributeNode("name"),
+                @NamedAttributeNode("email"),
+                @NamedAttributeNode("status"),
+                @NamedAttributeNode(value = "groups", subgraph = "users-subgraph"),
+                @NamedAttributeNode(value = "applications", subgraph = "relationship-subgraph"),
+        },
+        subgraphs = {
+                @NamedSubgraph(
+                        name = "relationship-subgraph",
+                        attributeNodes = {
+                                @NamedAttributeNode("id")
+                        }
+                )
+        }
+)
 public class User implements PolicyOwner {
 
   //TODO: find JPA equivalent for GenericGenerator
