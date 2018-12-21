@@ -19,10 +19,12 @@ package bio.overture.ego.service;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.PostWithIdentifierException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.GroupRepository;
+import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
 import lombok.Builder;
 import lombok.NonNull;
@@ -45,7 +47,9 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 @Service
 @Builder
 public class GroupService extends BaseService<Group, UUID> {
+
   private final GroupRepository groupRepository;
+  private final UserRepository userRepository;
   private final ApplicationService applicationService;
   private final PolicyService policyService;
   private final GroupPermissionService permissionService;
@@ -53,10 +57,12 @@ public class GroupService extends BaseService<Group, UUID> {
   @Autowired
   public GroupService(
       @NonNull GroupRepository groupRepository,
+      @NonNull UserRepository userRepository,
       @NonNull ApplicationService applicationService,
       @NonNull PolicyService policyService,
       @NonNull GroupPermissionService permissionService) {
     this.groupRepository = groupRepository;
+    this.userRepository = userRepository;
     this.applicationService = applicationService;
     this.policyService = policyService;
     this.permissionService = permissionService;
@@ -70,13 +76,24 @@ public class GroupService extends BaseService<Group, UUID> {
     return groupRepository.save(groupInfo);
   }
 
+  // TODO - User Application repository
   public Group addAppsToGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
     val group = getById(groupRepository, fromString(grpId));
     appIDs.forEach(
-        appId -> {
-          val app = applicationService.get(appId);
-          group.getApplications().add(app);
-        });
+            appId -> {
+              val app = applicationService.get(appId);
+              group.getApplications().add(app);
+            });
+    return groupRepository.save(group);
+  }
+
+  public Group addUsersToGroup(@NonNull String grpId, @NonNull List<String> userIds) {
+    val group = getById(groupRepository, fromString(grpId));
+    userIds.forEach(
+            userId -> {
+              val user = userRepository.findById(fromString(userId)).orElseThrow(() -> new NotFoundException(String.format("Could not find User with ID: %s", userId)));
+              group.getUsers().add(user);
+            });
     return groupRepository.save(group);
   }
 

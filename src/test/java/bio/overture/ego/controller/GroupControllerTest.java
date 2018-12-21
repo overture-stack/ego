@@ -4,8 +4,7 @@ import static bio.overture.ego.utils.CollectionUtils.listOf;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Group;
@@ -13,6 +12,9 @@ import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
+
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -28,6 +30,8 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import javax.transaction.Transactional;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -78,7 +82,7 @@ public class GroupControllerTest {
         restTemplate.exchange(createURLWithPort("/groups"), HttpMethod.POST, entity, String.class);
 
     HttpStatus responseStatus = response.getStatusCode();
-    assertEquals(HttpStatus.OK, responseStatus);
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
   }
 
   @Test
@@ -92,7 +96,7 @@ public class GroupControllerTest {
         restTemplate.exchange(createURLWithPort("/groups"), HttpMethod.POST, entity, String.class);
 
     HttpStatus responseStatus = response.getStatusCode();
-    assertEquals(HttpStatus.CONFLICT, responseStatus);
+    assertThat(responseStatus).isEqualTo(HttpStatus.CONFLICT);
   }
 
   @Test
@@ -118,7 +122,7 @@ public class GroupControllerTest {
             "{\"id\":\"%s\",\"name\":\"Group One\",\"description\":\"\",\"status\":\"Pending\"}",
             groupId);
 
-    assertEquals(HttpStatus.OK, responseStatus);
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
     assertThatJson(responseBody).isEqualTo(expected);
   }
 
@@ -135,7 +139,7 @@ public class GroupControllerTest {
 
     HttpStatus responseStatus = response.getStatusCode();
 
-    assertEquals(HttpStatus.NOT_FOUND, responseStatus);
+    assertThat(responseStatus).isEqualTo(HttpStatus.NOT_FOUND);
   }
 
   @Test
@@ -155,7 +159,7 @@ public class GroupControllerTest {
             groupService.getByName("Group Two").getId(),
             groupService.getByName("Group Three").getId());
 
-    assertEquals(HttpStatus.OK, responseStatus);
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
     assertThatJson(responseBody)
         .when(IGNORING_EXTRA_ARRAY_ITEMS, IGNORING_ARRAY_ORDER)
         .node("resultSet")
@@ -190,7 +194,7 @@ public class GroupControllerTest {
     String responseBody = response.getBody();
 
     HttpStatus responseStatus = response.getStatusCode();
-    assertEquals(HttpStatus.OK, responseStatus);
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
     assertThatJson(responseBody).node("id").isEqualTo(group.getId());
     assertThatJson(responseBody).node("name").isEqualTo("Updated Complete");
   }
@@ -218,7 +222,7 @@ public class GroupControllerTest {
     String responseBody = response.getBody();
 
     HttpStatus responseStatus = response.getStatusCode();
-    assertEquals(HttpStatus.OK, responseStatus);
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
     assertThatJson(responseBody).node("id").isEqualTo(groupId);
     assertThatJson(responseBody).node("name").isEqualTo("Updated Partial");
   }
@@ -248,13 +252,43 @@ public class GroupControllerTest {
     HttpStatus responseStatus = response.getStatusCode();
 
     // Check http response
-    assertEquals(HttpStatus.OK, responseStatus);
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
     // Check user-group relationship is also deleted
-    assertNotEquals(null, userService.getByName("FirstUser@domain.com"));
+    assertThat(userService.getByName("FirstUser@domain.com")).isNotNull();
 
     // Check group is deleted
-    assertEquals(null, groupService.getByName("Temporary"));
+    assertThat(groupService.getByName("Temporary")).isNull();
+  }
+
+  @Test
+  public void AddUsersToGroup() {
+
+    val group = entityGenerator.setupGroup("GroupWithUsers");
+
+    val userOne = userService.getByName("FirstUser@domain.com");
+    val userTwo = userService.getByName("SecondUser@domain.com");
+
+    val body = Arrays.asList(userOne.getId().toString(), userTwo.getId().toString());
+
+    HttpEntity<List> entity = new HttpEntity<>(body, headers);
+
+    ResponseEntity<String> response =
+        restTemplate.exchange(createURLWithPort(String.format("/groups/%s/users", group.getId())), HttpMethod.POST, entity, String.class);
+
+    HttpStatus responseStatus = response.getStatusCode();
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+
+    // Check that Group is associated with Users
+    val groupWithUsers = groupService.getByName("GroupWithUsers");
+    assertThat(groupWithUsers.getUsers()).containsExactlyInAnyOrder(userOne, userTwo);
+
+    // Check that each user is associated with the group
+    val userOneWithGroups = userService.getByName("FirstUser@domain.com");
+    val userTwoWithGroups = userService.getByName("SecondUser@domain.com");
+
+    assertThat(userOneWithGroups.getGroups()).contains(group);
+    assertThat(userTwoWithGroups.getGroups()).contains(group);
   }
 
   // TODO - ADD tests for adding user/apps to groups
