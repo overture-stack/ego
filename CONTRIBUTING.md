@@ -35,6 +35,7 @@ Please note we have a code of conduct, please follow it in all your interactions
 - must be declared in a `@NoArgsConstructor(access=PRIVATE)` annotated class with a name representative of the type of constants. For example, the class `Tables` under the package `constants` would contain sql table names. 
 - Constant variable names should be consistent throughout code base. For example, the text `egoUserPermissions` should be defined by the variable `EGO_USER_PERMISSION`.  
 6. If a method is not stateful and not an interface/abstract method, then it should be static
+7. Never allow a method to return `null`. Instead, it should return `Optiona<T>` or an empty container type (something that has `.isEmpty()`)
 
 #### Service Layer
 1. Get * should always return Optional<T>
