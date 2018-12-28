@@ -1,19 +1,34 @@
 package bio.overture.ego.utils;
 
-import static bio.overture.ego.utils.CollectionUtils.listOf;
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
-
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.entity.*;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.entity.Token;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.model.params.ScopeName;
-import bio.overture.ego.service.*;
+import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.GroupService;
+import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.service.TokenService;
-import java.time.Instant;
-import java.util.*;
+import bio.overture.ego.service.TokenStoreService;
+import bio.overture.ego.service.UserService;
+import com.google.common.collect.ImmutableSet;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.time.Instant;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import static bio.overture.ego.utils.CollectionUtils.listOf;
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
 
 @Component
 /**
@@ -23,6 +38,9 @@ import org.springframework.stereotype.Component;
  * used in our unit tests
  */
 public class EntityGenerator {
+
+  @Autowired private TokenService tokenService;
+
   @Autowired private ApplicationService applicationService;
 
   @Autowired private UserService userService;
@@ -30,8 +48,6 @@ public class EntityGenerator {
   @Autowired private GroupService groupService;
 
   @Autowired private PolicyService policyService;
-
-  @Autowired private TokenService tokenService;
 
   @Autowired private TokenStoreService tokenStoreService;
 
@@ -48,14 +64,12 @@ public class EntityGenerator {
   }
 
   public Application setupApplication(String clientId) {
-    val existing = applicationService.getByClientId(clientId);
-
-    if (Objects.nonNull(existing)) {
-      return existing;
-    } else {
-      val application = createApplication(clientId);
-      return applicationService.create(application);
-    }
+    return applicationService
+        .findApplicationByClientId(clientId)
+        .orElseGet( () -> {
+          val application = createApplication(clientId);
+          return applicationService.create(application);
+        });
   }
 
   public List<Application> setupApplications(String... clientIds) {
@@ -67,18 +81,16 @@ public class EntityGenerator {
   }
 
   public Application setupApplication(String clientId, String clientSecret) {
-    val existing = applicationService.getByClientId(clientId);
-
-    if (Objects.nonNull(existing)) {
-      return existing;
-    } else {
-      val app = new Application();
-      app.setClientId(clientId);
-      app.setClientSecret(clientSecret);
-      app.setName(clientId);
-      app.setStatus("Approved");
-      return applicationService.create(app);
-    }
+    return applicationService
+        .findApplicationByClientId(clientId)
+        .orElseGet(() -> {
+          val app = new Application();
+          app.setClientId(clientId);
+          app.setClientSecret(clientSecret);
+          app.setName(clientId);
+          app.setStatus("Approved");
+          return applicationService.create(app);
+        });
   }
 
   private User createUser(String firstName, String lastName) {
@@ -102,14 +114,13 @@ public class EntityGenerator {
   public User setupUser(String name) {
     val names = name.split(" ", 2);
     val userName = String.format("%s%s@domain.com", names[0], names[1]);
-    val existing = userService.getByName(userName);
-
-    if (Objects.nonNull(existing)) {
-      return existing;
-    } else {
-      val user = createUser(name);
-      return userService.create(user);
-    }
+    return userService
+        .findByName(userName)
+        .orElseGet(
+            () -> {
+              val user = createUser(name);
+              return userService.create(user);
+            });
   }
 
   public List<User> setupUsers(String... users) {
@@ -129,14 +140,12 @@ public class EntityGenerator {
   }
 
   public Group setupGroup(String name) {
-    val existing = groupService.getByName(name);
-
-    if (Objects.nonNull(existing)) {
-      return existing;
-    } else {
-      val group = createGroup(name);
-      return groupService.create(group);
-    }
+    return groupService
+        .findByName(name)
+        .orElseGet(() -> {
+          val group = createGroup(name);
+          return groupService.create(group);
+        });
   }
 
   public List<Group> setupGroups(String... groupNames) {
@@ -157,33 +166,28 @@ public class EntityGenerator {
   }
 
   private Policy createPolicy(String name, String groupName) {
-    Group owner = groupService.getByName(groupName);
-    if (owner == null) {
-      owner = setupGroup(groupName);
-    }
-    return createPolicy(name, owner.getId());
+    val group = groupService
+        .findByName(groupName)
+        .orElse(setupGroup(groupName));
+    return createPolicy(name, group.getId());
   }
 
   public Policy setupPolicy(String name, String groupName) {
-    val existing = policyService.getByName(name);
-
-    if (Objects.nonNull(existing)) {
-      return existing;
-    } else {
-      val policy = createPolicy(name, groupName);
-      return policyService.create(policy);
-    }
+    return policyService
+        .findByName(name)
+        .orElseGet(() -> {
+          val policy = createPolicy(name, groupName);
+          return policyService.create(policy);
+        });
   }
 
   public Policy setupPolicy(String name) {
-    val existing = policyService.getByName(name);
-
-    if (Objects.nonNull(existing)) {
-      return existing;
-    } else {
-      val policy = createPolicy(name);
-      return policyService.create(policy);
-    }
+    return policyService
+        .findByName(name)
+        .orElseGet( () -> {
+          val policy = createPolicy(name);
+          return policyService.create(policy);
+        });
   }
 
   public List<Policy> setupPolicies(String... names) {
@@ -211,7 +215,8 @@ public class EntityGenerator {
   }
 
   public void addPermission(User user, Scope scope) {
-    val permission = UserPermission.builder()
+    val permission =
+        UserPermission.builder()
             .policy(scope.getPolicy())
             .accessLevel(scope.getAccessLevel())
             .owner(user)
@@ -220,9 +225,7 @@ public class EntityGenerator {
   }
 
   public void addPermissions(User user, Set<Scope> scopes) {
-    for (val s : scopes) {
-      addPermission(user, s);
-    }
+    scopes.forEach(s -> addPermission(user, s));
     userService.update(user);
   }
 
@@ -231,6 +234,6 @@ public class EntityGenerator {
   }
 
   public Set<Scope> getScopes(String... scope) {
-    return tokenService.getScopes(new HashSet<>(scopeNames(scope)));
+    return tokenService.getScopes(ImmutableSet.copyOf(scopeNames(scope)));
   }
 }

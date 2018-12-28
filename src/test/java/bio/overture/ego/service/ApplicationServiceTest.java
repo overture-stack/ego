@@ -1,10 +1,18 @@
 package bio.overture.ego.service;
 
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.token.app.AppTokenClaims;
 import bio.overture.ego.utils.EntityGenerator;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -20,15 +28,6 @@ import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.EntityNotFoundException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -99,7 +98,7 @@ public class ApplicationServiceTest {
   @Test
   public void testGetByClientId() {
     entityGenerator.setupApplication("123456");
-    val savedApplication = applicationService.getByClientId("123456");
+    val savedApplication = applicationService.getApplicationByClientId("123456");
     assertThat(savedApplication.getClientId()).isEqualTo("123456");
   }
 
@@ -108,7 +107,7 @@ public class ApplicationServiceTest {
   public void testGetByClientIdNotFound() {
     // TODO Currently returning null, should throw exception (EntityNotFoundException?)
     assertThatExceptionOfType(EntityNotFoundException.class)
-        .isThrownBy(() -> applicationService.getByClientId("123456"));
+        .isThrownBy(() -> applicationService.getApplicationByClientId("123456"));
   }
 
   // List
@@ -179,7 +178,7 @@ public class ApplicationServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = userService.getByName("SecondUser@domain.com");
 
-    val application = applicationService.getByClientId("444444");
+    val application = applicationService.getApplicationByClientId("444444");
 
     user.associateWithApplication(application);
     userTwo.associateWithApplication(application);
@@ -222,8 +221,8 @@ public class ApplicationServiceTest {
     entityGenerator.setupTestUsers();
 
     val user = userService.getByName("FirstUser@domain.com");
-    val applicationOne = applicationService.getByClientId("111111");
-    val applicationTwo = applicationService.getByClientId("555555");
+    val applicationOne = applicationService.getApplicationByClientId("111111");
+    val applicationTwo = applicationService.getApplicationByClientId("555555");
 
     user.associateWithApplication(applicationOne);
     user.associateWithApplication(applicationTwo);
@@ -246,8 +245,8 @@ public class ApplicationServiceTest {
     entityGenerator.setupTestUsers();
 
     val user = userService.getByName("FirstUser@domain.com");
-    val applicationOne = applicationService.getByClientId("333333");
-    val applicationTwo = applicationService.getByClientId("444444");
+    val applicationOne = applicationService.getApplicationByClientId("333333");
+    val applicationTwo = applicationService.getApplicationByClientId("444444");
 
     user.associateWithApplication(applicationOne);
     user.associateWithApplication(applicationTwo);
@@ -270,8 +269,8 @@ public class ApplicationServiceTest {
     entityGenerator.setupTestUsers();
 
     val user = userService.getByName("FirstUser@domain.com");
-    val applicationOne = applicationService.getByClientId("222222");
-    val applicationTwo = applicationService.getByClientId("444444");
+    val applicationOne = applicationService.getApplicationByClientId("222222");
+    val applicationTwo = applicationService.getApplicationByClientId("444444");
 
     user.associateWithApplication(applicationOne);
     user.associateWithApplication(applicationTwo);
@@ -295,7 +294,7 @@ public class ApplicationServiceTest {
     val group = groupService.getByName("Group One");
     val groupTwo = groupService.getByName("Group Two");
 
-    val application = applicationService.getByClientId("111111");
+    val application = applicationService.getApplicationByClientId("111111");
 
     group.getApplications().add(application);
     groupTwo.getApplications().add(application);
@@ -342,8 +341,8 @@ public class ApplicationServiceTest {
     entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
-    val applicationOne = applicationService.getByClientId("222222");
-    val applicationTwo = applicationService.getByClientId("333333");
+    val applicationOne = applicationService.getApplicationByClientId("222222");
+    val applicationTwo = applicationService.getApplicationByClientId("333333");
 
     group.getApplications().add(applicationOne);
     group.getApplications().add(applicationTwo);
@@ -366,8 +365,8 @@ public class ApplicationServiceTest {
     entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group Three");
-    val applicationOne = applicationService.getByClientId("333333");
-    val applicationTwo = applicationService.getByClientId("444444");
+    val applicationOne = applicationService.getApplicationByClientId("333333");
+    val applicationTwo = applicationService.getApplicationByClientId("444444");
 
     group.getApplications().add(applicationOne);
     group.getApplications().add(applicationTwo);
@@ -390,8 +389,8 @@ public class ApplicationServiceTest {
     entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
-    val applicationOne = applicationService.getByClientId("444444");
-    val applicationTwo = applicationService.getByClientId("555555");
+    val applicationOne = applicationService.getApplicationByClientId("444444");
+    val applicationTwo = applicationService.getApplicationByClientId("555555");
 
     group.getApplications().add(applicationOne);
     group.getApplications().add(applicationTwo);
@@ -465,7 +464,7 @@ public class ApplicationServiceTest {
   public void testDelete() {
     entityGenerator.setupTestApplications();
 
-    val application = applicationService.getByClientId("222222");
+    val application = applicationService.getApplicationByClientId("222222");
     applicationService.delete(application.getId().toString());
 
     val applications =

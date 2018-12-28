@@ -5,13 +5,13 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.EntityGenerator;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
@@ -73,8 +73,8 @@ public class PolicyServiceTest {
   }
 
   @Test
-  public void testGetEntityNotFoundException() {
-    assertThatExceptionOfType(EntityNotFoundException.class)
+  public void testGetNotFoundException() {
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> policyService.get(UUID.randomUUID().toString()));
   }
 
@@ -95,8 +95,7 @@ public class PolicyServiceTest {
   @Test
   @Ignore
   public void testGetByNameNotFound() {
-    // TODO Currently returning null, should throw exception (EntityNotFoundException?)
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> policyService.getByName("Study000"));
   }
 

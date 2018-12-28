@@ -1,5 +1,6 @@
 package bio.overture.ego.model.entity;
 
-public class Identifiable {
+public interface Identifiable<ID> {
 
+  ID getId();
 }

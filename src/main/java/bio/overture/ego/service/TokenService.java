@@ -50,7 +50,15 @@ import org.springframework.stereotype.Service;
 
 import javax.management.InvalidApplicationException;
 import java.security.InvalidKeyException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 import static bio.overture.ego.model.dto.Scope.effectiveScopes;
 import static bio.overture.ego.model.dto.Scope.explicitScopes;
@@ -120,9 +128,6 @@ public class TokenService {
 
   public Set<Scope> missingScopes(String userName, Set<ScopeName> scopeNames) {
     val user = userService.getByName(userName);
-    if (user == null) {
-      throw new UsernameNotFoundException(format("Can't find user '%s'", userName));
-    }
     val userScopes = user.getScopes();
     val requestedScopes = getScopes(scopeNames);
     return Scope.missingScopes(userScopes, requestedScopes);
@@ -149,10 +154,11 @@ public class TokenService {
     log.info(format("Looking for user '%s'", str(user_id)));
     log.info(format("Scopes are '%s'", strList(scopeNames)));
     log.info(format("Apps are '%s'", strList(apps)));
-    User u = userService.get(user_id.toString());
-    if (u == null) {
-      throw new UsernameNotFoundException(format("Can't find user '%s'", str(user_id)));
-    }
+    val u =
+        userService
+            .findById(user_id.toString())
+            .orElseThrow(
+                () -> new UsernameNotFoundException(format("Can't find user '%s'", str(user_id))));
 
     log.info(format("Got user with id '%s'", str(u.getId())));
     val userScopes = u.getScopes();
@@ -184,11 +190,17 @@ public class TokenService {
     if (apps != null) {
       log.info("Generating apps list");
       for (val appId : apps) {
-        val app = applicationService.get(appId.toString());
-        if (app == null) {
-          log.info(format("Can't issue token for non-existent application '%s'", str(appId)));
-          throw new InvalidApplicationException(format("No such application %s", str(appId)));
-        }
+        val app =
+            applicationService
+                .findById(appId.toString())
+                .orElseThrow(
+                    () -> {
+                      log.info(
+                          format(
+                              "Can't issue token for non-existent application '%s'", str(appId)));
+                      return new InvalidApplicationException(
+                          format("No such application %s", str(appId)));
+                    });
         token.addApplication(app);
       }
     }
@@ -201,7 +213,7 @@ public class TokenService {
     return token;
   }
 
-  public Token findByTokenString(String token) {
+  public Optional<Token> findByTokenString(String token) {
     return tokenStoreService.findByTokenString(token);
   }
 
@@ -288,10 +300,8 @@ public class TokenService {
     log.error(format("token='%s'", token));
     val application = applicationService.findByBasicToken(authToken);
 
-    val t = findByTokenString(token);
-    if (t == null) {
-      throw new InvalidTokenException("Token not found");
-    }
+    val t =
+        findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found"));
 
     val clientId = application.getClientId();
     val apps = t.getApplications();

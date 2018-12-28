@@ -19,26 +19,31 @@ package bio.overture.ego.service;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.repository.TokenStoreRepository;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+import java.util.Optional;
 
 @Slf4j
 @Service
 @Transactional
-@RequiredArgsConstructor
-public class TokenStoreService extends BaseService<Token, UUID> {
-  @Autowired private final TokenStoreRepository tokenRepository;
+public class TokenStoreService extends BaseServiceImpl<Token> {
+
+  private final TokenStoreRepository tokenRepository;
+
+  @Autowired
+  public TokenStoreService(@NonNull TokenStoreRepository repository) {
+    super(Token.class, repository);
+    this.tokenRepository = repository;
+  }
 
   public Token create(@NonNull Token scopedAccessToken) {
     return tokenRepository.save(scopedAccessToken);
   }
 
-  public Token findByTokenString(String token) {
-    return tokenRepository.findOneByTokenIgnoreCase(token);
+  public Optional<Token> findByTokenString(String token) {
+    return tokenRepository.getTokenByTokenIgnoreCase(token);
   }
 }

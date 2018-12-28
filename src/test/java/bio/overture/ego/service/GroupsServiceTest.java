@@ -73,7 +73,7 @@ public class GroupsServiceTest {
   }
 
   @Test
-  public void testGetEntityNotFoundException() {
+  public void testGetNotFoundException() {
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> groupService.get(UUID.randomUUID().toString()));
   }
@@ -273,8 +273,8 @@ public class GroupsServiceTest {
 
     val groupId = groupService.getByName("Group One").getId().toString();
     val groupTwoId = groupService.getByName("Group Two").getId().toString();
-    val applicationId = applicationService.getByClientId("111111").getId().toString();
-    val applicationTwoId = applicationService.getByClientId("222222").getId().toString();
+    val applicationId = applicationService.getApplicationByClientId("111111").getId().toString();
+    val applicationTwoId = applicationService.getApplicationByClientId("222222").getId().toString();
 
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
     groupService.addAppsToGroup(groupTwoId, Arrays.asList(applicationTwoId));
@@ -292,7 +292,7 @@ public class GroupsServiceTest {
     entityGenerator.setupTestGroups();
     entityGenerator.setupTestApplications();
 
-    val applicationId = applicationService.getByClientId("111111").getId().toString();
+    val applicationId = applicationService.getApplicationByClientId("111111").getId().toString();
 
     val groups =
         groupService.findApplicationGroups(
@@ -319,7 +319,7 @@ public class GroupsServiceTest {
 
     val groupId = groupService.getByName("Group One").getId().toString();
     val groupTwoId = groupService.getByName("Group Two").getId().toString();
-    val applicationId = applicationService.getByClientId("111111").getId().toString();
+    val applicationId = applicationService.getApplicationByClientId("111111").getId().toString();
 
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
     groupService.addAppsToGroup(groupTwoId, Arrays.asList(applicationId));
@@ -341,7 +341,7 @@ public class GroupsServiceTest {
 
     val groupId = groupService.getByName("Group One").getId().toString();
     val groupTwoId = groupService.getByName("Group Two").getId().toString();
-    val applicationId = applicationService.getByClientId("111111").getId().toString();
+    val applicationId = applicationService.getApplicationByClientId("111111").getId().toString();
 
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
     groupService.addAppsToGroup(groupTwoId, Arrays.asList(applicationId));
@@ -365,7 +365,7 @@ public class GroupsServiceTest {
 
     val groupId = groupService.getByName("Group One").getId().toString();
     val groupTwoId = groupService.getByName("Group Two").getId().toString();
-    val applicationId = applicationService.getByClientId("111111").getId().toString();
+    val applicationId = applicationService.getApplicationByClientId("111111").getId().toString();
 
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
     groupService.addAppsToGroup(groupTwoId, Arrays.asList(applicationId));
@@ -440,21 +440,21 @@ public class GroupsServiceTest {
     entityGenerator.setupTestApplications();
 
     val groupId = groupService.getByName("Group One").getId().toString();
-    val application = applicationService.getByClientId("111111");
+    val application = applicationService.getApplicationByClientId("111111");
     val applicationId = application.getId().toString();
 
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
 
     val group = groupService.get(groupId);
 
-    assertThat(group.getApplications()).contains(applicationService.getByClientId("111111"));
+    assertThat(group.getApplications()).contains(applicationService.getApplicationByClientId("111111"));
   }
 
   @Test
   public void addAppsToGroupNoGroup() {
     entityGenerator.setupTestGroups();
     entityGenerator.setupTestApplications();
-    val applicationId = applicationService.getByClientId("111111").getId().toString();
+    val applicationId = applicationService.getApplicationByClientId("111111").getId().toString();
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
             () ->
@@ -466,7 +466,7 @@ public class GroupsServiceTest {
   public void addAppsToGroupEmptyGroupString() {
     entityGenerator.setupTestGroups();
     entityGenerator.setupTestApplications();
-    val applicationId = applicationService.getByClientId("111111").getId().toString();
+    val applicationId = applicationService.getApplicationByClientId("111111").getId().toString();
     assertThatExceptionOfType(IllegalArgumentException.class)
         .isThrownBy(() -> groupService.addAppsToGroup("", Arrays.asList(applicationId)));
   }
@@ -543,7 +543,7 @@ public class GroupsServiceTest {
     entityGenerator.setupTestApplications();
 
     val groupId = groupService.getByName("Group One").getId().toString();
-    val application = applicationService.getByClientId("111111");
+    val application = applicationService.getApplicationByClientId("111111");
     val applicationId = application.getId().toString();
 
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
@@ -563,7 +563,7 @@ public class GroupsServiceTest {
     entityGenerator.setupTestApplications();
 
     val groupId = groupService.getByName("Group One").getId().toString();
-    val application = applicationService.getByClientId("111111");
+    val application = applicationService.getApplicationByClientId("111111");
     val applicationId = application.getId().toString();
 
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
@@ -584,7 +584,7 @@ public class GroupsServiceTest {
     entityGenerator.setupTestApplications();
 
     val groupId = groupService.getByName("Group One").getId().toString();
-    val application = applicationService.getByClientId("111111");
+    val application = applicationService.getApplicationByClientId("111111");
     val applicationId = application.getId().toString();
 
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
@@ -602,7 +602,7 @@ public class GroupsServiceTest {
     entityGenerator.setupTestApplications();
 
     val groupId = groupService.getByName("Group One").getId().toString();
-    val application = applicationService.getByClientId("111111");
+    val application = applicationService.getApplicationByClientId("111111");
     val applicationId = application.getId().toString();
 
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));

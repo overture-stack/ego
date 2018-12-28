@@ -17,18 +17,15 @@
 package bio.overture.ego.repository;
 
 import bio.overture.ego.model.entity.Group;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.PagingAndSortingRepository;
-
-import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 import java.util.UUID;
 
-public interface GroupRepository
-    extends PagingAndSortingRepository<Group, UUID>, JpaSpecificationExecutor {
+public interface GroupRepository extends NamedRepository<Group, UUID> {
 
-  Group findOneByNameIgnoreCase(String name);
+  Optional<Group> getGroupByNameIgnoreCase(String name);
 
-  Set<Group> findAllByIdIn(List<UUID> groupIds);
-
+  @Override
+  default Optional<Group> findByName(String name) {
+    return getGroupByNameIgnoreCase(name);
+  }
 }

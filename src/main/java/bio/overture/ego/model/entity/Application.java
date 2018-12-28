@@ -16,6 +16,9 @@
 
 package bio.overture.ego.model.entity;
 
+import static bio.overture.ego.utils.Collectors.toImmutableList;
+import static bio.overture.ego.utils.Converters.nullToEmptySet;
+
 import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
@@ -23,21 +26,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.Accessors;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-
-import javax.persistence.*;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import static bio.overture.ego.utils.Collectors.toImmutableList;
-import static bio.overture.ego.utils.Converters.nullToEmptySet;
 
 @Entity
 @Builder
@@ -60,7 +59,7 @@ import static bio.overture.ego.utils.Converters.nullToEmptySet;
 @AllArgsConstructor
 @RequiredArgsConstructor
 @JsonView(Views.REST.class)
-public class Application {
+public class Application implements Identifiable<UUID> {
 
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
@@ -108,7 +107,7 @@ public class Application {
   @ManyToMany(
       mappedBy = Fields.APPLICATIONS,
       fetch = FetchType.LAZY,
-      cascade = { CascadeType.PERSIST, CascadeType.MERGE})
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   Set<User> users;
 
   @JsonIgnore
@@ -144,15 +143,14 @@ public class Application {
   }
 
   @JsonIgnore
-  public Set<User> getUsers(){
+  public Set<User> getUsers() {
     users = nullToEmptySet(users);
     return users;
   }
 
   @JsonIgnore
-  public Set<Group> getGroups(){
+  public Set<Group> getGroups() {
     groups = nullToEmptySet(groups);
     return groups;
   }
-
 }

@@ -37,76 +37,51 @@ import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 
 import static bio.overture.ego.model.exceptions.NotFoundException.checkExists;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Converters.convertToUUIDList;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.format;
 import static java.util.UUID.fromString;
-import static java.util.stream.Collectors.toSet;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
 @Slf4j
-public class ApplicationService extends BaseService<Application, UUID>
+public class ApplicationService extends AbstractNamedService<Application>
     implements ClientDetailsService {
+
   public final String APP_TOKEN_PREFIX = "Basic ";
   /*
    Dependencies
   */
-  @Autowired private ApplicationRepository applicationRepository;
+  private final ApplicationRepository applicationRepository;
+  private final PasswordEncoder passwordEncoder;
 
-  @Autowired private PasswordEncoder passwordEncoder;
+  @Autowired
+  public ApplicationService(
+      @NonNull ApplicationRepository applicationRepository,
+      @NonNull PasswordEncoder passwordEncoder) {
+    super(Application.class, applicationRepository);
+    this.applicationRepository = applicationRepository;
+    this.passwordEncoder = passwordEncoder;
+  }
 
   public Application create(@NonNull Application applicationInfo) {
     return applicationRepository.save(applicationInfo);
   }
 
   public Application get(@NonNull String applicationId) {
-    return getById(applicationRepository, fromString(applicationId));
-  }
-
-  public Set<Application> getMany(@NonNull Collection<String> applicationIds) {
-    val apps = applicationRepository.findAllByIdIn(convertToUUIDList(applicationIds));
-    val nonExistingApps = apps.stream()
-        .map(Application::getId)
-        .filter(x -> !applicationRepository.existsById(x))
-        .collect(toImmutableSet());
-    checkExists(nonExistingApps.isEmpty(),
-        "The following application ids were not found: %s",
-        COMMA.join(nonExistingApps));
-    return apps;
+    return getById(applicationId);
   }
 
   public Application update(@NonNull Application updatedApplicationInfo) {
-    Application app = getById(applicationRepository, updatedApplicationInfo.getId());
+    Application app = getById(updatedApplicationInfo.getId().toString());
     app.update(updatedApplicationInfo);
     applicationRepository.save(app);
     return updatedApplicationInfo;
-  }
-
-  public boolean isExist(@NonNull String appId){
-    return applicationRepository.existsById(fromString(appId));
-  }
-
-  public void checkApplicationExists(@NonNull String appId){
-    checkApplicationsExist(newHashSet(appId));
-  }
-
-  public void checkApplicationsExist(@NonNull Collection<String> appIds){
-    val nonExistentIds = appIds.stream()
-        .filter(x -> !isExist(x))
-        .collect(toSet());
-    checkExists(nonExistentIds.isEmpty(),
-        "The following application ids were not found: %s",
-        COMMA.join(nonExistentIds));
-  }
-
-  public void delete(@NonNull String applicationId) {
-    applicationRepository.deleteById(fromString(applicationId));
   }
 
   public Page<Application> listApps(
@@ -162,12 +137,18 @@ public class ApplicationService extends BaseService<Application, UUID>
         pageable);
   }
 
-  public Application getByName(@NonNull String appName) {
-    return applicationRepository.findOneByNameIgnoreCase(appName);
+  public Optional<Application> findApplicationByClientId(@NonNull String clientId){
+    return applicationRepository.getApplicationByClientIdIgnoreCase(clientId);
   }
 
-  public Application getByClientId(@NonNull String clientId) {
-    return applicationRepository.findOneByClientIdIgnoreCase(clientId);
+  public Application getApplicationByClientId(@NonNull String clientId) {
+    val result = findApplicationByClientId(clientId);
+    checkExists(
+        result.isPresent(),
+        "The '%s' entity with clientId '%s' was not found",
+        getClass().getSimpleName(),
+        clientId);
+    return result.get();
   }
 
   private String removeAppTokenPrefix(String token) {
@@ -185,7 +166,7 @@ public class ApplicationService extends BaseService<Application, UUID>
     val parts = contents.split(":");
     val clientId = parts[0];
     log.error(format("Extracted client id '%s'", clientId));
-    return applicationRepository.findOneByClientIdIgnoreCase(clientId);
+    return getApplicationByClientId(clientId);
   }
 
   @Override
@@ -193,7 +174,7 @@ public class ApplicationService extends BaseService<Application, UUID>
       throws ClientRegistrationException {
     // find client using clientid
 
-    val application = getByClientId(clientId);
+    val application = getApplicationByClientId(clientId);
 
     if (application == null) {
       throw new ClientRegistrationException("Client ID not found.");

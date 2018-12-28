@@ -1,22 +1,36 @@
 package bio.overture.ego.model.entity;
 
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.Fields;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.val;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.joda.time.DateTime;
-
-import javax.persistence.*;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 
 @Entity
 @Table(name = "token")
@@ -25,7 +39,7 @@ import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Token {
+public class Token implements Identifiable<UUID> {
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(name = "token_uuid", strategy = "org.hibernate.id.UUIDGenerator")

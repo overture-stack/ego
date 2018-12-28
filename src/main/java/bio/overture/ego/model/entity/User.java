@@ -16,6 +16,12 @@
 
 package bio.overture.ego.model.entity;
 
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.Converters.nullToEmptySet;
+import static bio.overture.ego.utils.HibernateSessions.unsetSession;
+import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
+import static java.lang.String.format;
+
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.enums.Tables;
@@ -24,22 +30,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.*;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static bio.overture.ego.utils.Converters.nullToEmptySet;
-import static bio.overture.ego.utils.HibernateSessions.unsetSession;
-import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
-import static java.lang.String.format;
-
-//TODO: simplify annotations. Find common annotations for Ego entities, and put them all under a single annotation
+// TODO: simplify annotations. Find common annotations for Ego entities, and put them all under a
+// single annotation
 @Slf4j
 @Entity
 @Table(name = Tables.EGOUSER)
@@ -66,9 +66,9 @@ import static java.lang.String.format;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
-public class User implements PolicyOwner {
+public class User implements PolicyOwner, Identifiable<UUID> {
 
-  //TODO: find JPA equivalent for GenericGenerator
+  // TODO: find JPA equivalent for GenericGenerator
   @Id
   @Column(nullable = false, name = Fields.ID, updatable = false)
   @GenericGenerator(name = "user_uuid", strategy = "org.hibernate.id.UUIDGenerator")
@@ -113,13 +113,14 @@ public class User implements PolicyOwner {
   @Column(name = Fields.PREFERREDLANGUAGE)
   private String preferredLanguage;
 
-
   @JsonIgnore
   @OneToMany(
       cascade = {CascadeType.PERSIST, CascadeType.MERGE},
       fetch = FetchType.LAZY)
   @JoinColumn(name = Fields.USERID_JOIN)
-  protected Set<UserPermission> userPermissions; //TODO: @rtisma test that this initialization is the same as the init method (that it does not cause isseus with hibernate)
+  protected Set<UserPermission>
+      userPermissions; // TODO: @rtisma test that this initialization is the same as the init method
+  // (that it does not cause isseus with hibernate)
 
   @JsonIgnore
   @ManyToMany(
@@ -131,7 +132,8 @@ public class User implements PolicyOwner {
       inverseJoinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)})
   protected Set<Group> groups;
 
-  //TODO @rtisma: test persist and merge cascade types for ManyToMany relationships. Must be able to step away from
+  // TODO @rtisma: test persist and merge cascade types for ManyToMany relationships. Must be able
+  // to step away from
   // happy path
   @JsonIgnore
   @ManyToMany(
@@ -144,19 +146,19 @@ public class User implements PolicyOwner {
   protected Set<Application> applications;
 
   @JsonIgnore
-  public Set<Group> getGroups(){
+  public Set<Group> getGroups() {
     groups = nullToEmptySet(groups);
     return groups;
   }
 
   @JsonIgnore
-  public Set<Application> getApplications(){
+  public Set<Application> getApplications() {
     applications = nullToEmptySet(applications);
     return applications;
   }
 
   @JsonIgnore
-  public Set<UserPermission> getUserPermissions(){
+  public Set<UserPermission> getUserPermissions() {
     userPermissions = nullToEmptySet(userPermissions);
     return userPermissions;
   }
@@ -225,20 +227,20 @@ public class User implements PolicyOwner {
     return extractPermissionStrings(finalPermissionsList);
   }
 
-  //TODO @rtisma: test this associateWithApplication
+  // TODO @rtisma: test this associateWithApplication
   public void associateWithApplication(@NonNull Application app) {
     getApplications().add(app);
     app.getUsers().add(this);
   }
 
-  //TODO @rtisma: test this associateWithGroup
+  // TODO @rtisma: test this associateWithGroup
   public void associateWithGroup(@NonNull Group g) {
     getGroups().add(g);
     g.getUsers().add(this);
   }
 
-  //TODO @rtisma: test this associateWithPermission
-  public void associateWithPermission(@NonNull UserPermission permission){
+  // TODO @rtisma: test this associateWithPermission
+  public void associateWithPermission(@NonNull UserPermission permission) {
     getUserPermissions().add(permission);
     permission.setOwner(this);
   }

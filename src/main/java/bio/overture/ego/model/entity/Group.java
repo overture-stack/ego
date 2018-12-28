@@ -22,14 +22,13 @@ import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
 
 @Data
 @Entity
@@ -41,7 +40,7 @@ import java.util.UUID;
 @EqualsAndHashCode(of = {"id"})
 @ToString(exclude = {"users", "applications", "permissions"})
 @JsonPropertyOrder({"id", "name", "description", "status", "applications", "groupPermissions"})
-public class Group implements PolicyOwner {
+public class Group implements PolicyOwner, Identifiable<UUID> {
 
   @Id
   @GeneratedValue(generator = "group_uuid")

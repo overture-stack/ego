@@ -1,12 +1,21 @@
 package bio.overture.ego.service;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -20,16 +29,6 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.EntityNotFoundException;
-import java.util.Collections;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -105,8 +104,8 @@ public class UserServiceTest {
   }
 
   @Test
-  public void testGetEntityNotFoundException() {
-    assertThatExceptionOfType(EntityNotFoundException.class)
+  public void testGetNotFoundException() {
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.get(NON_EXISTENT_USER));
   }
 
@@ -127,8 +126,7 @@ public class UserServiceTest {
   @Test
   @Ignore
   public void testGetByNameNotFound() {
-    // TODO Currently returning null, should throw exception (EntityNotFoundException?)
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
   }
 
@@ -340,7 +338,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = applicationService.getByClientId("111111").getId().toString();
+    val appId = applicationService.getApplicationByClientId("111111").getId().toString();
 
     userService.addUserToApps(user.getId().toString(), singletonList(appId));
     userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
@@ -358,7 +356,7 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
-    val appId = applicationService.getByClientId("111111").getId().toString();
+    val appId = applicationService.getApplicationByClientId("111111").getId().toString();
 
     val users =
         userService.findAppUsers(
@@ -385,7 +383,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = applicationService.getByClientId("111111").getId().toString();
+    val appId = applicationService.getApplicationByClientId("111111").getId().toString();
 
     userService.addUserToApps(user.getId().toString(), singletonList(appId));
     userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
@@ -407,7 +405,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = applicationService.getByClientId("111111").getId().toString();
+    val appId = applicationService.getApplicationByClientId("111111").getId().toString();
 
     userService.addUserToApps(user.getId().toString(), singletonList(appId));
     userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
@@ -428,7 +426,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = applicationService.getByClientId("111111").getId().toString();
+    val appId = applicationService.getApplicationByClientId("111111").getId().toString();
 
     userService.addUserToApps(user.getId().toString(), singletonList(appId));
     userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
@@ -488,8 +486,7 @@ public class UserServiceTest {
     val user = entityGenerator.setupUser("First User");
     user.setId(UUID.fromString("0c1dc4b8-7fb8-11e8-adc0-fa7ae01bbebc"));
     // New id means new non-existent policy or one that exists and is being overwritten
-    assertThatExceptionOfType(EntityNotFoundException.class)
-        .isThrownBy(() -> userService.update(user));
+    assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> userService.update(user));
   }
 
   @Test
@@ -564,7 +561,7 @@ public class UserServiceTest {
     val group = groupService.getByName("Group One");
     val groupId = group.getId().toString();
 
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.addUserToGroups(NON_EXISTENT_USER, singletonList(groupId)));
   }
 
@@ -612,9 +609,9 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
-    val app = applicationService.getByClientId("111111");
+    val app = applicationService.getApplicationByClientId("111111");
     val appId = app.getId().toString();
-    val appTwo = applicationService.getByClientId("222222");
+    val appTwo = applicationService.getApplicationByClientId("222222");
     val appTwoId = appTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
@@ -633,10 +630,10 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
-    val app = applicationService.getByClientId("111111");
+    val app = applicationService.getApplicationByClientId("111111");
     val appId = app.getId().toString();
 
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.addUserToApps(NON_EXISTENT_USER, singletonList(appId)));
   }
 
@@ -733,7 +730,7 @@ public class UserServiceTest {
 
     userService.addUserToGroups(userId, asList(groupId, groupTwoId));
 
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
             () -> userService.deleteUserFromGroups(NON_EXISTENT_USER, singletonList(groupId)));
   }
@@ -779,9 +776,9 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
-    val app = applicationService.getByClientId("111111");
+    val app = applicationService.getApplicationByClientId("111111");
     val appId = app.getId().toString();
-    val appTwo = applicationService.getByClientId("222222");
+    val appTwo = applicationService.getApplicationByClientId("222222");
     val appTwoId = appTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
@@ -802,16 +799,16 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
-    val app = applicationService.getByClientId("111111");
+    val app = applicationService.getApplicationByClientId("111111");
     val appId = app.getId().toString();
-    val appTwo = applicationService.getByClientId("222222");
+    val appTwo = applicationService.getApplicationByClientId("222222");
     val appTwoId = appTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
 
     userService.addUserToApps(userId, asList(appId, appTwoId));
 
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.deleteUserFromApps(NON_EXISTENT_USER, singletonList(appId)));
   }
 
@@ -820,9 +817,9 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
-    val app = applicationService.getByClientId("111111");
+    val app = applicationService.getApplicationByClientId("111111");
     val appId = app.getId().toString();
-    val appTwo = applicationService.getByClientId("222222");
+    val appTwo = applicationService.getApplicationByClientId("222222");
     val appTwoId = appTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
@@ -838,9 +835,9 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
-    val app = applicationService.getByClientId("111111");
+    val app = applicationService.getApplicationByClientId("111111");
     val appId = app.getId().toString();
-    val appTwo = applicationService.getByClientId("222222");
+    val appTwo = applicationService.getApplicationByClientId("222222");
     val appTwoId = appTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
@@ -949,5 +946,4 @@ public class UserServiceTest {
 
     assertThat(pagedUserPermissions.getTotalElements()).isEqualTo(3L);
   }
-
 }
