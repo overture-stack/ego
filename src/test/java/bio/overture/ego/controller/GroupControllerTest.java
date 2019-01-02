@@ -234,14 +234,28 @@ public class GroupControllerTest {
   public void DeleteOne() throws JSONException {
 
     // Groups created in setup
-    val groupId = entityGenerator.setupGroup("Temporary").getId();
+    val group = entityGenerator.setupGroup("Temporary");
+    val groupId = group.getId();
 
     // Add a user to this group
-    userService.addUserToGroups(
-        userService.getByName("FirstUser@domain.com").getId().toString(),
-        listOf(groupId.toString()));
+    val user = userService.getByName("FirstUser@domain.com");
+    group.getUsers().add(user);
+    user.getGroups().add(group);
 
-    // TODO - ADD application groups relationship
+    // Add an application to this group
+    val app = applicationService.getByClientId("111111");
+    group.getApplications().add(app);
+    app.getGroups().add(group);
+
+    groupService.update(group);
+
+    // Check user-group relationship is there
+    val userWithGroup = userService.getByName("FirstUser@domain.com");
+    assertThat(extractGroupIds(userWithGroup.getGroups())).contains(groupId);
+
+    // Check app-group relationship is there
+    val applicationWithGroup = applicationService.getByClientId("111111");
+    assertThat(extractGroupIds(applicationWithGroup.getGroups())).contains(groupId);
 
     HttpEntity<String> entity = new HttpEntity<String>(null, headers);
 
@@ -258,7 +272,14 @@ public class GroupControllerTest {
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
     // Check user-group relationship is also deleted
-    assertThat(userService.getByName("FirstUser@domain.com")).isNotNull();
+    val userWithoutGroup = userService.getByName("FirstUser@domain.com");
+    assertThat(userWithoutGroup).isNotNull();
+    assertThat(extractGroupIds(userWithoutGroup.getGroups())).doesNotContain(groupId);
+
+    // Check app-group relationship is also deleted
+    val applicationWithoutGroup = applicationService.getByClientId("111111");
+    assertThat(applicationWithoutGroup).isNotNull();
+    assertThat(extractGroupIds(applicationWithoutGroup.getGroups())).doesNotContain(groupId);
 
     // Check group is deleted
     assertThat(groupService.getByName("Temporary")).isNull();
