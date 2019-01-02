@@ -52,7 +52,6 @@ public class GroupService extends BaseService<Group, UUID> {
   private final GroupRepository groupRepository;
   private final UserRepository userRepository;
   private final ApplicationRepository applicationRepository;
-  private final ApplicationService applicationService;
   private final PolicyService policyService;
   private final GroupPermissionService permissionService;
 
@@ -61,13 +60,11 @@ public class GroupService extends BaseService<Group, UUID> {
       @NonNull GroupRepository groupRepository,
       @NonNull UserRepository userRepository,
       @NonNull ApplicationRepository applicationRepository,
-      @NonNull ApplicationService applicationService,
       @NonNull PolicyService policyService,
       @NonNull GroupPermissionService permissionService) {
     this.groupRepository = groupRepository;
     this.userRepository = userRepository;
     this.applicationRepository = applicationRepository;
-    this.applicationService = applicationService;
     this.policyService = policyService;
     this.permissionService = permissionService;
   }
@@ -239,8 +236,9 @@ public class GroupService extends BaseService<Group, UUID> {
     // TODO - Properly handle invalid IDs here
     appIDs.forEach(
         appId -> {
-          // TODO if app id not valid (does not exist) we need to throw EntityNotFoundException
-          group.getApplications().remove(applicationService.get(appId));
+          val app = applicationRepository.findById(fromString(appId)).orElseThrow(() -> new NotFoundException(String.format("Could not find Application with ID: %s", appId)));
+          group.getApplications().remove(app);
+          app.getGroups().remove(group);
         });
     groupRepository.save(group);
   }
