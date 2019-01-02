@@ -7,14 +7,15 @@ import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import bio.overture.ego.AuthorizationServiceMain;
+import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.EntityStatus;
+import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 
-import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,8 +34,6 @@ import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import javax.persistence.Entity;
-import javax.transaction.Transactional;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -53,6 +52,7 @@ public class GroupControllerTest {
   @Autowired private EntityGenerator entityGenerator;
   @Autowired private GroupService groupService;
   @Autowired private UserService userService;
+  @Autowired private ApplicationService applicationService;
 
   @Before
   public void Setup() {
@@ -294,7 +294,35 @@ public class GroupControllerTest {
     assertThat(userTwoWithGroups.getGroups()).contains(group);
   }
 
-  // TODO - ADD tests for adding user/apps to groups
+  @Test
+  public void AddAppsToGroup() {
+
+    val group = entityGenerator.setupGroup("GroupWithApps");
+
+    val appOne = applicationService.getByClientId("111111");
+    val appTwo = applicationService.getByClientId("222222");
+
+    val body = Arrays.asList(appOne.getId().toString(), appTwo.getId().toString());
+
+    HttpEntity<List> entity = new HttpEntity<>(body, headers);
+
+    ResponseEntity<String> response =
+        restTemplate.exchange(createURLWithPort(String.format("/groups/%s/applications", group.getId())), HttpMethod.POST, entity, String.class);
+
+    HttpStatus responseStatus = response.getStatusCode();
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+
+    // Check that Group is associated with Users
+    val groupWithApps = groupService.getByName("GroupWithApps");
+    assertThat(extractAppIds(groupWithApps.getApplications())).contains(appOne.getId(), appTwo.getId());
+
+    // Check that each user is associated with the group
+    val appOneWithGroups = applicationService.getByClientId("111111");
+    val appTwoWithGroups = applicationService.getByClientId("222222");
+
+    assertThat(appOneWithGroups.getGroups()).contains(group);
+    assertThat(appTwoWithGroups.getGroups()).contains(group);
+  }
 
   private String createURLWithPort(String uri) {
     return "http://localhost:" + port + uri;
@@ -306,5 +334,9 @@ public class GroupControllerTest {
 
   private List<UUID> extractUserIds(Set<User> entities) {
     return entities.stream().map(User::getId).collect(Collectors.toList());
+  }
+
+  private List<UUID> extractAppIds(Set<Application> entities) {
+    return entities.stream().map(Application::getId).collect(Collectors.toList());
   }
 }

@@ -23,6 +23,7 @@ import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.PostWithIdentifierException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
@@ -50,6 +51,7 @@ public class GroupService extends BaseService<Group, UUID> {
 
   private final GroupRepository groupRepository;
   private final UserRepository userRepository;
+  private final ApplicationRepository applicationRepository;
   private final ApplicationService applicationService;
   private final PolicyService policyService;
   private final GroupPermissionService permissionService;
@@ -58,11 +60,13 @@ public class GroupService extends BaseService<Group, UUID> {
   public GroupService(
       @NonNull GroupRepository groupRepository,
       @NonNull UserRepository userRepository,
+      @NonNull ApplicationRepository applicationRepository,
       @NonNull ApplicationService applicationService,
       @NonNull PolicyService policyService,
       @NonNull GroupPermissionService permissionService) {
     this.groupRepository = groupRepository;
     this.userRepository = userRepository;
+    this.applicationRepository = applicationRepository;
     this.applicationService = applicationService;
     this.policyService = policyService;
     this.permissionService = permissionService;
@@ -76,13 +80,13 @@ public class GroupService extends BaseService<Group, UUID> {
     return groupRepository.save(groupInfo);
   }
 
-  // TODO - User Application repository
   public Group addAppsToGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
     val group = getById(groupRepository, fromString(grpId));
     appIDs.forEach(
             appId -> {
-              val app = applicationService.get(appId);
+              val app = applicationRepository.findById(fromString(appId)).orElseThrow(() -> new NotFoundException(String.format("Could not find Application with ID: %s", appId)));
               group.getApplications().add(app);
+              app.getGroups().add(group);
             });
     return groupRepository.save(group);
   }
@@ -93,6 +97,7 @@ public class GroupService extends BaseService<Group, UUID> {
             userId -> {
               val user = userRepository.findById(fromString(userId)).orElseThrow(() -> new NotFoundException(String.format("Could not find User with ID: %s", userId)));
               group.getUsers().add(user);
+              user.getGroups().add(group);
             });
     return groupRepository.save(group);
   }
