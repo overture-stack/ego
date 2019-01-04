@@ -35,6 +35,19 @@ jobs:
             mvn test \
             -D spring.profiles.active=test
 
+  build-docker-image:
+    machine: true
+
+    steps:
+      - checkout
+
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+
+      - run: docker build -f Dockerfile.prod . -t overture/ego:$(git describe --always)-alpine
+
+      - run: docker push overture/ego:$(git describe --always)-alpine
+
+
   deploy:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -78,7 +91,6 @@ jobs:
           name: Deploy Script
           command: ./.circleci/deploy.sh
 
-
 workflows:
   version: 2
   test-deploy:
@@ -91,4 +103,4 @@ workflows:
             branches:
               only:
                 - develop
-                
+      - build-docker-image
