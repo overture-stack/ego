@@ -338,17 +338,17 @@ public class GroupsServiceTest {
 
   @Test
   public void testFindApplicationsGroupsQueryAndFilters() {
-    entityGenerator.setupTestGroups();
-    entityGenerator.setupTestApplications();
+    entityGenerator.setupTestGroups("testFindApplicationsGroupsQueryAndFilters");
+    entityGenerator.setupTestApplications("testFindApplicationsGroupsQueryAndFilters");
 
-    val groupId = groupService.getByName("Group One").getId().toString();
-    val groupTwoId = groupService.getByName("Group Two").getId().toString();
-    val applicationId = applicationService.getByClientId("111111").getId().toString();
+    val groupId = groupService.getByName("Group One_testFindApplicationsGroupsQueryAndFilters").getId().toString();
+    val groupTwoId = groupService.getByName("Group Two_testFindApplicationsGroupsQueryAndFilters").getId().toString();
+    val applicationId = applicationService.getByClientId("111111_testFindApplicationsGroupsQueryAndFilters").getId().toString();
 
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
     groupService.addAppsToGroup(groupTwoId, Arrays.asList(applicationId));
 
-    val groupsFilters = new SearchFilter("name", "Group One");
+    val groupsFilters = new SearchFilter("name", "Group One_testFindApplicationsGroupsQueryAndFilters");
 
     val groups =
         groupService.findApplicationGroups(
@@ -409,7 +409,7 @@ public class GroupsServiceTest {
     val group = entityGenerator.setupGroup("Group One");
     group.setId(new UUID(12312912931L, 12312912931L));
     // New id means new non-existent policy or one that exists and is being overwritten
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> groupService.update(group));
   }
 

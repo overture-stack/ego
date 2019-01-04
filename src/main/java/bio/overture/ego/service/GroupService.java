@@ -136,8 +136,21 @@ public class GroupService extends BaseService<Group, UUID> {
     return groupRepository.findOneByNameIgnoreCase(groupName);
   }
 
+  // TODO: Check that not allowing update of relationships this way is ok for end-user
   public Group update(@NonNull Group other) {
-    return groupRepository.save(other);
+    val existingGroup = getById(groupRepository, other.getId());
+
+    val updatedGroup =
+        Group.builder()
+            .id(other.getId())
+            .name(other.getName())
+            .description(other.getDescription())
+            .status(other.getStatus())
+            .applications(existingGroup.getApplications())
+            .users(existingGroup.getUsers())
+        .build();;
+
+    return groupRepository.save(updatedGroup);
   }
 
   // TODO - this was the original update - will use an improved version of this for the PATCH
