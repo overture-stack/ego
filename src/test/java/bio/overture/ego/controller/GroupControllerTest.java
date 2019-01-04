@@ -1,15 +1,13 @@
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.utils.CollectionUtils.listOf;
+import static bio.overture.ego.utils.EntityTools.*;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
@@ -17,7 +15,6 @@ import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -347,17 +344,5 @@ public class GroupControllerTest {
 
   private String createURLWithPort(String uri) {
     return "http://localhost:" + port + uri;
-  }
-
-  private List<UUID> extractGroupIds(Set<Group> entities) {
-    return entities.stream().map(Group::getId).collect(Collectors.toList());
-  }
-
-  private List<UUID> extractUserIds(Set<User> entities) {
-    return entities.stream().map(User::getId).collect(Collectors.toList());
-  }
-
-  private List<UUID> extractAppIds(Set<Application> entities) {
-    return entities.stream().map(Application::getId).collect(Collectors.toList());
   }
 }
