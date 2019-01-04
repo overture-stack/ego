@@ -62,6 +62,15 @@ public class EntityGenerator {
     return mapToList(listOf(clientIds), this::setupApplication);
   }
 
+  public void setupTestApplications(String postfix) {
+    setupApplications(
+        String.format("111111_%s", postfix),
+        String.format("222222_%s", postfix),
+        String.format("333333_%s", postfix),
+        String.format("444444_%s", postfix),
+        String.format("555555_%s", postfix));
+  }
+
   public void setupTestApplications() {
     setupApplications("111111", "222222", "333333", "444444", "555555");
   }
@@ -143,17 +152,16 @@ public class EntityGenerator {
     return mapToList(listOf(groupNames), this::setupGroup);
   }
 
+  public void setupTestGroups(String postfix) {
+    setupGroups(String.format("Group One_%s", postfix), String.format("Group Two_%s", postfix), String.format("Group Three_%s", postfix));
+  }
+
   public void setupTestGroups() {
     setupGroups("Group One", "Group Two", "Group Three");
   }
 
   private Policy createPolicy(String name, UUID policyId) {
     return Policy.builder().name(name).owner(policyId).build();
-  }
-
-  private Policy createPolicy(String name) {
-    val args = name.split(",");
-    return createPolicy(args[0], args[1]);
   }
 
   private Policy createPolicy(String name, String groupName) {
@@ -176,12 +184,13 @@ public class EntityGenerator {
   }
 
   public Policy setupPolicy(String name) {
-    val existing = policyService.getByName(name);
+    val args = name.split(",");
+    val existing = policyService.getByName(args[0]);
 
     if (Objects.nonNull(existing)) {
       return existing;
     } else {
-      val policy = createPolicy(name);
+      val policy = createPolicy(args[0], args[1]);
       return policyService.create(policy);
     }
   }
