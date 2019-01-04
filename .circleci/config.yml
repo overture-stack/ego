@@ -47,6 +47,25 @@ jobs:
 
       - run: docker push overture/ego:$(git describe --always)-alpine
 
+  deploy-staging:
+    machine: true
+
+    steps:
+      - checkout
+
+      - run: mkdir ~/.kube && echo $KUBE_CONFIG | base64 --decode > ~/.kube/config
+
+      - run: wget https://storage.googleapis.com/kubernetes-helm/helm-v2.12.1-linux-amd64.tar.gz
+
+      - run: tar -xvf helm-v2.12.1-linux-amd64.tar.gz
+
+      - run: linux-amd64/helm init --client-only
+
+      - run: linux-amd64/helm repo add overture https://overture-stack.github.io/charts/
+
+      - run: echo $HELM_SECRETS | base64 --decode > values.secrets.yaml
+
+      - run: linux-amd64/helm upgrade ego-staging overture/ego -f values.secrets.yaml --set image.tag=$(git describe --always)-alpine
 
   deploy:
     docker:
@@ -93,7 +112,7 @@ jobs:
 
 workflows:
   version: 2
-  test-deploy:
+  test-build-deploy:
     jobs:
       - test
       - deploy:
@@ -104,3 +123,6 @@ workflows:
               only:
                 - develop
       - build-docker-image
+      - deploy-staging:
+          requires:
+            - build-docker-image
