@@ -142,7 +142,7 @@ public class GroupService extends BaseService<Group, UUID> {
 
     val updatedGroup =
         Group.builder()
-            .id(other.getId())
+            .id(existingGroup.getId())
             .name(other.getName())
             .description(other.getDescription())
             .status(other.getStatus())

@@ -1,12 +1,15 @@
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.utils.CollectionUtils.listOf;
 import static bio.overture.ego.utils.EntityTools.*;
+import static java.util.Arrays.asList;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import bio.overture.ego.AuthorizationServiceMain;
+import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.service.ApplicationService;
@@ -230,28 +233,34 @@ public class GroupControllerTest {
   @Test
   public void DeleteOne() throws JSONException {
 
-    // Groups created in setup
-    val group = entityGenerator.setupGroup("Temporary");
+    val group = entityGenerator.setupGroup("DeleteOne");
     val groupId = group.getId();
 
-    // Add a user to this group
-    val user = userService.getByName("FirstUser@domain.com");
-    group.getUsers().add(user);
-    user.getGroups().add(group);
+    // Users for test
+    val userOne = entityGenerator.setupUser("TempGroup User");
 
-    // Add an application to this group
-    val app = applicationService.getByClientId("111111");
-    group.getApplications().add(app);
-    app.getGroups().add(group);
+    // Application for test
+    val appOne = entityGenerator.setupApplication("TempGroupApp");
 
-    groupService.update(group);
+    // REST to get users/app in group
+    val usersBody = asList(userOne.getId().toString());
+    val appsBody = asList(appOne.getId().toString());
+
+    HttpEntity<List> saveGroupUsers = new HttpEntity<>(usersBody, headers);
+    HttpEntity<List> saveGroupApps = new HttpEntity<>(appsBody, headers);
+
+    ResponseEntity<String> saveGroupUsersRes =
+        restTemplate.exchange(createURLWithPort(String.format("/groups/%s/users", group.getId())), HttpMethod.POST, saveGroupUsers, String.class);
+
+    ResponseEntity<String> saveGroupAppsRes =
+        restTemplate.exchange(createURLWithPort(String.format("/groups/%s/applications", group.getId())), HttpMethod.POST, saveGroupApps, String.class);
 
     // Check user-group relationship is there
-    val userWithGroup = userService.getByName("FirstUser@domain.com");
+    val userWithGroup = userService.getByName("TempGroupUser@domain.com");
     assertThat(extractGroupIds(userWithGroup.getGroups())).contains(groupId);
 
     // Check app-group relationship is there
-    val applicationWithGroup = applicationService.getByClientId("111111");
+    val applicationWithGroup = applicationService.getByClientId("TempGroupApp");
     assertThat(extractGroupIds(applicationWithGroup.getGroups())).contains(groupId);
 
     HttpEntity<String> entity = new HttpEntity<String>(null, headers);
@@ -269,17 +278,17 @@ public class GroupControllerTest {
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
     // Check user-group relationship is also deleted
-    val userWithoutGroup = userService.getByName("FirstUser@domain.com");
+    val userWithoutGroup = userService.getByName("TempGroupUser@domain.com");
     assertThat(userWithoutGroup).isNotNull();
     assertThat(extractGroupIds(userWithoutGroup.getGroups())).doesNotContain(groupId);
 
     // Check app-group relationship is also deleted
-    val applicationWithoutGroup = applicationService.getByClientId("111111");
+    val applicationWithoutGroup = applicationService.getByClientId("TempGroupApp");
     assertThat(applicationWithoutGroup).isNotNull();
     assertThat(extractGroupIds(applicationWithoutGroup.getGroups())).doesNotContain(groupId);
 
     // Check group is deleted
-    assertThat(groupService.getByName("Temporary")).isNull();
+    assertThat(groupService.getByName("DeleteOne")).isNull();
   }
 
   @Test
@@ -290,7 +299,7 @@ public class GroupControllerTest {
     val userOne = userService.getByName("FirstUser@domain.com");
     val userTwo = userService.getByName("SecondUser@domain.com");
 
-    val body = Arrays.asList(userOne.getId().toString(), userTwo.getId().toString());
+    val body = asList(userOne.getId().toString(), userTwo.getId().toString());
 
     HttpEntity<List> entity = new HttpEntity<>(body, headers);
 
@@ -320,7 +329,7 @@ public class GroupControllerTest {
     val appOne = applicationService.getByClientId("111111");
     val appTwo = applicationService.getByClientId("222222");
 
-    val body = Arrays.asList(appOne.getId().toString(), appTwo.getId().toString());
+    val body = asList(appOne.getId().toString(), appTwo.getId().toString());
 
     HttpEntity<List> entity = new HttpEntity<>(body, headers);
 
