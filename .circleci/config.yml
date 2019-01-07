@@ -122,7 +122,11 @@ workflows:
             branches:
               only:
                 - develop
-      - build-docker-image
+      - build-docker-image:
+          filters:
+            branches:
+              only:
+                - develop
       - deploy-staging:
           requires:
             - build-docker-image
