@@ -63,9 +63,7 @@ jobs:
 
       - run: linux-amd64/helm repo add overture https://overture-stack.github.io/charts/
 
-      - run: echo $HELM_SECRETS | base64 --decode > values.secrets.yaml
-
-      - run: linux-amd64/helm upgrade ego-staging overture/ego -f values.secrets.yaml --set image.tag=$(git describe --always)-alpine
+      - run: linux-amd64/helm upgrade ego-staging overture/ego --reuse-values --set image.tag=$(git describe --always)-alpine
 
   deploy:
     docker:
