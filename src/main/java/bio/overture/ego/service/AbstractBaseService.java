@@ -1,29 +1,34 @@
 package bio.overture.ego.service;
 
+import bio.overture.ego.model.entity.Identifiable;
+import bio.overture.ego.repository.BaseRepository;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.val;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
 import static bio.overture.ego.model.exceptions.NotFoundException.checkExists;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.convertToUUIDList;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static java.util.UUID.fromString;
 
-import bio.overture.ego.model.entity.Identifiable;
-import bio.overture.ego.repository.BaseRepository;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.val;
-
+/**
+ * Base implementation
+ * @param <T>
+ */
 @Builder
-public class BaseServiceImpl<T extends Identifiable<UUID>> implements BaseService<T, String> {
+public abstract class AbstractBaseService<T extends Identifiable<UUID>> implements BaseService<T, String> {
 
   @NonNull private final Class<T> entityType;
   @Getter @NonNull private final BaseRepository<T, UUID> repository;
 
-  public BaseServiceImpl(Class<T> entityType, BaseRepository<T, UUID> repository) {
+  public AbstractBaseService(Class<T> entityType, BaseRepository<T, UUID> repository) {
     this.entityType = entityType;
     this.repository = repository;
   }

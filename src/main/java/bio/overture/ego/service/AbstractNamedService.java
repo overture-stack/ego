@@ -9,7 +9,7 @@ import java.util.UUID;
 
 import static bio.overture.ego.model.exceptions.NotFoundException.checkExists;
 
-public abstract class AbstractNamedService<T extends Identifiable<UUID>> extends BaseServiceImpl<T>
+public abstract class AbstractNamedService<T extends Identifiable<UUID>> extends AbstractBaseService<T>
     implements NamedService<T> {
 
   private final NamedRepository<T, UUID> namedRepository;

@@ -3,16 +3,17 @@ package bio.overture.ego.service;
 import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.Permission;
 import bio.overture.ego.repository.BaseRepository;
-import java.util.List;
-import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.UUID;
+
 @Slf4j
 @Transactional
-public abstract class PermissionService<T extends Permission> extends BaseServiceImpl<T> {
+public abstract class PermissionService<T extends Permission> extends AbstractBaseService<T> {
 
   public PermissionService(Class<T> entityType, BaseRepository<T, UUID> repository) {
     super(entityType, repository);

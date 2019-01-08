@@ -29,7 +29,7 @@ import java.util.Optional;
 @Slf4j
 @Service
 @Transactional
-public class TokenStoreService extends BaseServiceImpl<Token> {
+public class TokenStoreService extends AbstractBaseService<Token> {
 
   private final TokenStoreRepository tokenRepository;
 
