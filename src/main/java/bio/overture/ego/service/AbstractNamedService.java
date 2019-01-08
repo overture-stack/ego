@@ -2,6 +2,7 @@ package bio.overture.ego.service;
 
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.repository.NamedRepository;
+import lombok.NonNull;
 import lombok.val;
 
 import java.util.Optional;
@@ -14,18 +15,18 @@ public abstract class AbstractNamedService<T extends Identifiable<ID>, ID>
 
   private final NamedRepository<T, ID> namedRepository;
 
-  public AbstractNamedService(Class<T> entityType, NamedRepository<T, ID> repository) {
+  public AbstractNamedService(@NonNull Class<T> entityType, @NonNull NamedRepository<T, ID> repository) {
     super(entityType, repository);
     this.namedRepository = repository;
   }
 
   @Override
-  public Optional<T> findByName(String name) {
+  public Optional<T> findByName(@NonNull String name) {
     return namedRepository.findByName(name);
   }
 
   @Override
-  public T getByName(String name) {
+  public T getByName(@NonNull String name) {
     val result = findByName(name);
     checkExists(
         result.isPresent(),
