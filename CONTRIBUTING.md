@@ -59,6 +59,8 @@ Please note we have a code of conduct, please follow it in all your interactions
 9. In ManyToMany relationships, the JoinTable should only be defined on the **owning** side , and on the inverse side the `mappedBy` ManyToMany annotation parameter should be defined, as described [here](https://www.baeldung.com/hibernate-many-to-many)
     
 ### Testing
+1. Test FEATURES not methods
+2. Test method names should follow this convention: `[the name of the tested feature]_[expected input / tested state]_[expected behavior]`.
 
 #### General
 1. DB via Test Containers - no in-memory DB or OS specific services
