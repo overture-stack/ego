@@ -156,7 +156,7 @@ public class TokenService {
     log.info(format("Apps are '%s'", strList(apps)));
     val u =
         userService
-            .findById(user_id.toString())
+            .findById(user_id)
             .orElseThrow(
                 () -> new UsernameNotFoundException(format("Can't find user '%s'", str(user_id))));
 
@@ -192,7 +192,7 @@ public class TokenService {
       for (val appId : apps) {
         val app =
             applicationService
-                .findById(appId.toString())
+                .findById(appId)
                 .orElseThrow(
                     () -> {
                       log.info(

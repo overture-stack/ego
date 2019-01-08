@@ -11,9 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+import static java.util.UUID.fromString;
+
 @Slf4j
 @Transactional
-public abstract class PermissionService<T extends Permission> extends AbstractBaseService<T> {
+public abstract class PermissionService<T extends Permission> extends AbstractBaseService<T, UUID> {
 
   public PermissionService(Class<T> entityType, BaseRepository<T, UUID> repository) {
     super(entityType, repository);
@@ -26,12 +28,12 @@ public abstract class PermissionService<T extends Permission> extends AbstractBa
 
   // Read
   public T get(@NonNull String entityId) {
-    return getById(entityId);
+    return getById(fromString(entityId));
   }
 
   // Update
   public T update(@NonNull T updatedEntity) {
-    val entity = getById(updatedEntity.getId().toString());
+    val entity = getById(updatedEntity.getId());
     // [rtisma] TODO: BUG: the update method's implementation is dependent on the supers private
     // members and not the subclasses members
     entity.update(updatedEntity);
@@ -41,7 +43,7 @@ public abstract class PermissionService<T extends Permission> extends AbstractBa
 
   // Delete
   public void delete(@NonNull String entityId) {
-    delete(entityId);
+    delete(fromString(entityId));
   }
 
   public abstract List<T> findAllByPolicy(String policyId);
@@ -49,4 +51,5 @@ public abstract class PermissionService<T extends Permission> extends AbstractBa
   public abstract List<PolicyResponse> findByPolicy(String policyId);
 
   public abstract PolicyResponse getPolicyResponse(T t);
+
 }

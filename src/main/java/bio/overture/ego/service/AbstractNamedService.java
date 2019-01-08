@@ -5,16 +5,16 @@ import bio.overture.ego.repository.NamedRepository;
 import lombok.val;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static bio.overture.ego.model.exceptions.NotFoundException.checkExists;
 
-public abstract class AbstractNamedService<T extends Identifiable<UUID>> extends AbstractBaseService<T>
-    implements NamedService<T> {
+public abstract class AbstractNamedService<T extends Identifiable<ID>, ID>
+    extends AbstractBaseService<T, ID>
+    implements NamedService<T, ID> {
 
-  private final NamedRepository<T, UUID> namedRepository;
+  private final NamedRepository<T, ID> namedRepository;
 
-  public AbstractNamedService(Class<T> entityType, NamedRepository<T, UUID> repository) {
+  public AbstractNamedService(Class<T> entityType, NamedRepository<T, ID> repository) {
     super(entityType, repository);
     this.namedRepository = repository;
   }

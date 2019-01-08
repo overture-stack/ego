@@ -13,11 +13,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
+
+import static java.util.UUID.fromString;
 
 @Slf4j
 @Service
 @Transactional
-public class PolicyService extends AbstractNamedService<Policy> {
+public class PolicyService extends AbstractNamedService<Policy, UUID> {
 
   private final PolicyRepository policyRepository;
 
@@ -34,7 +37,7 @@ public class PolicyService extends AbstractNamedService<Policy> {
 
   // Read
   public Policy get(@NonNull String policyId) {
-    return getById(policyId);
+    return getById(fromString(policyId));
   }
 
   public Page<Policy> listPolicies(
@@ -44,9 +47,14 @@ public class PolicyService extends AbstractNamedService<Policy> {
 
   // Update
   public Policy update(@NonNull Policy updatedPolicy) {
-    Policy policy = getById(updatedPolicy.getId().toString());
+    Policy policy = getById(updatedPolicy.getId());
     policy.update(updatedPolicy);
     policyRepository.save(policy);
     return updatedPolicy;
   }
+
+  public void delete(String id){
+    delete(fromString(id));
+  }
+
 }

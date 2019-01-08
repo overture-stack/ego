@@ -51,6 +51,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Converters.convertToUUIDList;
 import static bio.overture.ego.utils.Converters.convertToUUIDSet;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static java.lang.String.format;
@@ -61,7 +62,7 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 @Slf4j
 @Service
 @Transactional
-public class UserService extends AbstractNamedService<User> {
+public class UserService extends AbstractNamedService<User, UUID> {
 
   // DEMO USER
   private static final String DEMO_USER_NAME = "Demo.User@example.com";
@@ -155,8 +156,8 @@ public class UserService extends AbstractNamedService<User> {
   }
 
   public User addUserToGroups(@NonNull String userId, @NonNull List<String> groupIDs) {
-    val user = getById(userId);
-    val groups = groupService.getMany(groupIDs);
+    val user = getById(fromString(userId));
+    val groups = groupService.getMany(convertToUUIDList(groupIDs));
     groups.forEach(user::associateWithGroup);
     // TODO: @rtisma test setting groups even if there were existing groups before does not delete
     // the existing ones. Becuase the PERSIST and MERGE cascade type is used, this should work
@@ -165,8 +166,8 @@ public class UserService extends AbstractNamedService<User> {
   }
 
   public User addUserToApps(@NonNull String userId, @NonNull List<String> appIDs) {
-    val user = getById(userId);
-    val apps = applicationService.getMany(appIDs);
+    val user = getById(fromString(userId));
+    val apps = applicationService.getMany(convertToUUIDList(appIDs));
     apps.forEach(user::associateWithApplication);
     // TODO: @rtisma test setting apps even if there were existing apps before does not delete the
     // existing ones. Becuase the PERSIST and MERGE cascade type is used, this should work correctly
@@ -176,8 +177,8 @@ public class UserService extends AbstractNamedService<User> {
   public User addUserPermissions(
       @NonNull String userId, @NonNull List<PolicyIdStringWithAccessLevel> permissions) {
     val policyMap =
-        permissions.stream().collect(groupingBy(PolicyIdStringWithAccessLevel::getPolicyId));
-    val user = getById(userId);
+        permissions.stream().collect(groupingBy(x -> fromString(x.getPolicyId())));
+    val user = getById(fromString(userId));
     policyService
         .getMany(ImmutableList.copyOf(policyMap.keySet()))
         .stream()
@@ -188,11 +189,11 @@ public class UserService extends AbstractNamedService<User> {
   }
 
   public User get(@NonNull String userId) {
-    return getById(userId);
+    return getById(fromString(userId));
   }
 
   public User update(@NonNull User updatedUserInfo) {
-    val user = getById(updatedUserInfo.getId().toString());
+    val user = getById(updatedUserInfo.getId());
     if (UserRole.USER.toString().equals(updatedUserInfo.getRole().toUpperCase()))
       updatedUserInfo.setRole(UserRole.USER.toString());
     else if (UserRole.ADMIN.toString().equals(updatedUserInfo.getRole().toUpperCase()))
@@ -215,7 +216,7 @@ public class UserService extends AbstractNamedService<User> {
 
   // TODO @rtisma: add test for checking group exists for user
   public void deleteUserFromGroups(@NonNull String userId, @NonNull Collection<String> groupIds) {
-    val user = getById(userId);
+    val user = getById(fromString(userId));
     val groupUUIDs = convertToUUIDSet(groupIds);
     checkGroupsExistForUser(user, groupUUIDs);
     user.getGroups().removeIf(x -> groupUUIDs.contains(x.getId()));
@@ -227,7 +228,7 @@ public class UserService extends AbstractNamedService<User> {
   // TODO @rtisma: add test for checking user exists
   // TODO @rtisma: add test for checking application exists for a user
   public void deleteUserFromApps(@NonNull String userId, @NonNull Collection<String> appIDs) {
-    val user = getById(userId);
+    val user = getById(fromString(userId));
     val appUUIDs = convertToUUIDSet(appIDs);
     checkApplicationsExistForUser(user, appUUIDs);
     user.getApplications().removeIf(x -> appUUIDs.contains(x.getId()));
@@ -237,7 +238,7 @@ public class UserService extends AbstractNamedService<User> {
   // TODO @rtisma: add test for checking user permission exists for user
   public void deleteUserPermissions(
       @NonNull String userId, @NonNull Collection<String> permissionsIds) {
-    val user = getById(userId);
+    val user = getById(fromString(userId));
     val permUUIDs = convertToUUIDSet(permissionsIds);
     checkPermissionsExistForUser(user, permUUIDs);
     user.getUserPermissions().removeIf(x -> permUUIDs.contains(x.getId()));
@@ -290,8 +291,12 @@ public class UserService extends AbstractNamedService<User> {
 
   public Page<UserPermission> getUserPermissions(
       @NonNull String userId, @NonNull Pageable pageable) {
-    val userPermissions = ImmutableList.copyOf(getById(userId).getUserPermissions());
+    val userPermissions = ImmutableList.copyOf(getById(fromString(userId)).getUserPermissions());
     return new PageImpl<>(userPermissions, pageable, userPermissions.size());
+  }
+
+  public void delete(String id){
+    delete(fromString(id));
   }
 
   public static void checkGroupsExistForUser(
@@ -336,8 +341,8 @@ public class UserService extends AbstractNamedService<User> {
   }
 
   private static Stream<UserPermission> streamUserPermission(
-      User u, Map<String, List<PolicyIdStringWithAccessLevel>> policyMap, Policy p) {
-    val policyId = p.getId().toString();
+      User u, Map<UUID, List<PolicyIdStringWithAccessLevel>> policyMap, Policy p) {
+    val policyId = p.getId();
     return policyMap
         .get(policyId)
         .stream()

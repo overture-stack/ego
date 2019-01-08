@@ -42,6 +42,7 @@ import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static bio.overture.ego.model.exceptions.NotFoundException.checkExists;
 import static java.lang.String.format;
@@ -50,7 +51,7 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
 @Slf4j
-public class ApplicationService extends AbstractNamedService<Application>
+public class ApplicationService extends AbstractNamedService<Application, UUID>
     implements ClientDetailsService {
 
   public final String APP_TOKEN_PREFIX = "Basic ";
@@ -74,11 +75,11 @@ public class ApplicationService extends AbstractNamedService<Application>
   }
 
   public Application get(@NonNull String applicationId) {
-    return getById(applicationId);
+    return getById(fromString(applicationId));
   }
 
   public Application update(@NonNull Application updatedApplicationInfo) {
-    Application app = getById(updatedApplicationInfo.getId().toString());
+    Application app = getById(updatedApplicationInfo.getId());
     app.update(updatedApplicationInfo);
     applicationRepository.save(app);
     return updatedApplicationInfo;
@@ -197,5 +198,9 @@ public class ApplicationService extends AbstractNamedService<Application>
     authorities.add(new SimpleGrantedAuthority(AppTokenClaims.ROLE));
     clientDetails.setAuthorities(authorities);
     return clientDetails;
+  }
+
+  public void delete(String id){
+    delete(fromString(id));
   }
 }

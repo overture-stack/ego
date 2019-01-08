@@ -2,36 +2,29 @@ package bio.overture.ego.service;
 
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.repository.BaseRepository;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 import static bio.overture.ego.model.exceptions.NotFoundException.checkExists;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Converters.convertToUUIDList;
 import static bio.overture.ego.utils.Joiners.COMMA;
-import static java.util.UUID.fromString;
 
 /**
  * Base implementation
  * @param <T>
  */
-@Builder
-public abstract class AbstractBaseService<T extends Identifiable<UUID>> implements BaseService<T, String> {
+@RequiredArgsConstructor
+public abstract class AbstractBaseService<T extends Identifiable<ID>, ID>
+    implements BaseService<T, ID> {
 
   @NonNull private final Class<T> entityType;
-  @Getter @NonNull private final BaseRepository<T, UUID> repository;
-
-  public AbstractBaseService(Class<T> entityType, BaseRepository<T, UUID> repository) {
-    this.entityType = entityType;
-    this.repository = repository;
-  }
+  @Getter @NonNull private final BaseRepository<T, ID> repository;
 
   @Override
   public String getEntityTypeName() {
@@ -39,29 +32,28 @@ public abstract class AbstractBaseService<T extends Identifiable<UUID>> implemen
   }
 
   @Override
-  public Optional<T> findById(@NonNull String id) {
-    return getRepository().findById(fromString(id));
+  public Optional<T> findById(@NonNull ID id) {
+    return getRepository().findById(id);
   }
 
   @Override
-  public boolean isExist(String id) {
-    return getRepository().existsById(fromString(id));
+  public boolean isExist(@NonNull ID id) {
+    return getRepository().existsById(id);
   }
 
   @Override
-  public void delete(String id) {
+  public void delete(@NonNull ID id) {
     checkExistence(id);
-    getRepository().deleteById(fromString(id));
+    getRepository().deleteById(id);
   }
 
   @Override
-  public Set<T> getMany(List<String> ids) {
-    val entities = repository.findAllByIdIn(convertToUUIDList(ids));
+  public Set<T> getMany(@NonNull List<ID> ids) {
+    val entities = repository.findAllByIdIn(ids);
     val nonExistingEntities =
         entities
             .stream()
             .map(Identifiable::getId)
-            .map(UUID::toString)
             .filter(x -> !isExist(x))
             .collect(toImmutableSet());
     checkExists(
@@ -71,4 +63,5 @@ public abstract class AbstractBaseService<T extends Identifiable<UUID>> implemen
         COMMA.join(nonExistingEntities));
     return entities;
   }
+
 }

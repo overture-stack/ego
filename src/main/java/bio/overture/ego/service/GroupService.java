@@ -24,6 +24,7 @@ import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
+import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,15 +33,15 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import static java.util.UUID.fromString;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
-public class GroupService extends AbstractNamedService<Group> {
+public class GroupService extends AbstractNamedService<Group, UUID> {
 
   private final GroupRepository groupRepository;
   private final ApplicationService applicationService;
@@ -69,7 +70,7 @@ public class GroupService extends AbstractNamedService<Group> {
   }
 
   public Group addAppsToGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
-    val group = getById(grpId);
+    val group = getById(fromString(grpId));
     appIDs.forEach(
         appId -> {
           val app = applicationService.get(appId);
@@ -80,7 +81,7 @@ public class GroupService extends AbstractNamedService<Group> {
 
   public Group addGroupPermissions(
       @NonNull String groupId, @NonNull List<PolicyIdStringWithAccessLevel> permissions) {
-    val group = getById(groupId);
+    val group = getById(fromString(groupId));
     permissions.forEach(
         permission -> {
           val policy = policyService.get(permission.getPolicyId());
@@ -93,7 +94,7 @@ public class GroupService extends AbstractNamedService<Group> {
   }
 
   public Group get(@NonNull String groupId) {
-    return getById(groupId);
+    return getById(fromString(groupId));
   }
 
   public Group update(@NonNull Group other) {
@@ -102,7 +103,7 @@ public class GroupService extends AbstractNamedService<Group> {
 
   // TODO - this was the original update - will use an improved version of this for the PATCH
   public Group partialUpdate(@NonNull Group other) {
-    val existingGroup = getById(other.getId().toString());
+    val existingGroup = getById(other.getId());
 
     val builder =
         Group.builder()
@@ -134,7 +135,7 @@ public class GroupService extends AbstractNamedService<Group> {
 
   public Page<GroupPermission> getGroupPermissions(
       @NonNull String groupId, @NonNull Pageable pageable) {
-    val groupPermissions = new ArrayList<>(getById(groupId).getPermissions());
+    val groupPermissions = ImmutableList.copyOf(getById(fromString(groupId)).getPermissions());
     return new PageImpl<>(groupPermissions, pageable, groupPermissions.size());
   }
 
@@ -186,7 +187,7 @@ public class GroupService extends AbstractNamedService<Group> {
   }
 
   public void deleteAppsFromGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
-    val group = getById(grpId);
+    val group = getById(fromString(grpId));
     // TODO - Properly handle invalid IDs here
     appIDs.forEach(
         appId -> {
@@ -197,11 +198,15 @@ public class GroupService extends AbstractNamedService<Group> {
   }
 
   public void deleteGroupPermissions(@NonNull String userId, @NonNull List<String> permissionsIds) {
-    val group = getById(userId);
+    val group = getById(fromString(userId));
     permissionsIds.forEach(
         permissionsId -> {
           group.getPermissions().remove(permissionService.get(permissionsId));
         });
     groupRepository.save(group);
+  }
+
+  public void delete(String id){
+    delete(fromString(id));
   }
 }

@@ -25,11 +25,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
 @Transactional
-public class TokenStoreService extends AbstractBaseService<Token> {
+public class TokenStoreService extends AbstractBaseService<Token, UUID> {
 
   private final TokenStoreRepository tokenRepository;
 
