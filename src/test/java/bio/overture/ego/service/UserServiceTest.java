@@ -10,7 +10,6 @@ import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Transactional
-public class UserServiceTest extends AbstractNamedServiceTest<User, UUID, UserService>{
+public class UserServiceTest {
 
   private static final String NON_EXISTENT_USER = "827fae28-7fb8-11e8-adc0-fa7ae01bbebc";
 
@@ -46,11 +45,6 @@ public class UserServiceTest extends AbstractNamedServiceTest<User, UUID, UserSe
   @Autowired private GroupService groupService;
   @Autowired private PolicyService policyService;
   @Autowired private EntityGenerator entityGenerator;
-
-  @Before
-  public void beforeTest(){
-    this.setService(userService);
-  }
 
   // Create
   @Test
