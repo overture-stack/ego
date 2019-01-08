@@ -24,6 +24,7 @@ public abstract class AbstractNamedService<T extends Identifiable<ID>, ID>
     return namedRepository.findByName(name);
   }
 
+  @Override
   public T getByName(String name) {
     val result = findByName(name);
     checkExists(
