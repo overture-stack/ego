@@ -1,13 +1,13 @@
 package bio.overture.ego.service;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import org.junit.Ignore;
 import org.junit.Test;
 
-@RequiredArgsConstructor
-public abstract class AbstractBaseServiceTest<T, ID> {
+@Ignore
+public abstract class AbstractBaseServiceTest<T, ID, S extends BaseService<T, ID>> {
 
-  @NonNull private final BaseService<T, ID> service;
+  @Setter private S service;
 
   @Test
   public void entityDeletion_WhenExisting_SuccessfullyDeleted(){

@@ -1,10 +1,5 @@
 package bio.overture.ego.service;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.NotFoundException;
@@ -13,11 +8,9 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
-import java.util.Collections;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,24 +23,34 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Transactional
-public class UserServiceTest {
+public class UserServiceTest extends AbstractNamedServiceTest<User, UUID, UserService>{
 
   private static final String NON_EXISTENT_USER = "827fae28-7fb8-11e8-adc0-fa7ae01bbebc";
 
   @Autowired private ApplicationService applicationService;
-
   @Autowired private UserService userService;
-
   @Autowired private GroupService groupService;
-
   @Autowired private PolicyService policyService;
-
   @Autowired private EntityGenerator entityGenerator;
+
+  @Before
+  public void beforeTest(){
+    this.setService(userService);
+  }
 
   // Create
   @Test
