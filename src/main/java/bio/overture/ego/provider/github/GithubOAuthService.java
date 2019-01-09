@@ -45,7 +45,8 @@ public class GithubOAuthService {
 
   public Optional<IDToken> getAuthInfo(String code) {
     val accessToken = getAccessToken(code);
-    Optional<String> name, email;
+    Optional<String> name;
+    Optional<String> email;
     if (accessToken.isPresent()) {
       name = getName(accessToken.get());
       email = getEmail(accessToken.get());
