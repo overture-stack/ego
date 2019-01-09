@@ -54,6 +54,7 @@ import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.convertToUUIDList;
 import static bio.overture.ego.utils.Converters.convertToUUIDSet;
 import static bio.overture.ego.utils.Joiners.COMMA;
+import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.String.format;
 import static java.util.UUID.fromString;
 import static java.util.stream.Collectors.groupingBy;
@@ -158,20 +159,52 @@ public class UserService extends AbstractNamedService<User, UUID> {
   public User addUserToGroups(@NonNull String userId, @NonNull List<String> groupIDs) {
     val user = getById(fromString(userId));
     val groups = groupService.getMany(convertToUUIDList(groupIDs));
-    groups.forEach(user::associateWithGroup);
+    associateUserWithGroups(user, groups);
     // TODO: @rtisma test setting groups even if there were existing groups before does not delete
     // the existing ones. Becuase the PERSIST and MERGE cascade type is used, this should work
     // correctly
     return getRepository().save(user);
   }
 
+  public static void associateUserWithPermissions(User user, @NonNull Collection<UserPermission> permissions) {
+    permissions.forEach(p -> associateUserWithPermission(user, p));
+  }
+
+  public static void associateUserWithPermission(@NonNull User user, @NonNull UserPermission permission) {
+    user.getUserPermissions().add(permission);
+    permission.setOwner(user);
+  }
+
+  public static void associateUserWithGroups(User user, @NonNull Collection<Group> groups){
+    groups.forEach(g -> associateUserWithGroup(user, g));
+  }
+
+  public static void associateUserWithGroup(@NonNull User user, @NonNull Group group){
+    user.getGroups().add(group);
+    group.getUsers().add(user);
+  }
+
+  public static void associateUserWithApplications(User user, @NonNull Collection<Application> apps) {
+    apps.forEach(a -> associateUserWithApplication(user, a));
+  }
+
+  public static void associateUserWithApplication(@NonNull User user, @NonNull Application app) {
+    user.getApplications().add(app);
+    app.getUsers().add(user);
+  }
+
   public User addUserToApps(@NonNull String userId, @NonNull List<String> appIDs) {
     val user = getById(fromString(userId));
     val apps = applicationService.getMany(convertToUUIDList(appIDs));
-    apps.forEach(user::associateWithApplication);
+    associateUserWithApplications(user, apps);
     // TODO: @rtisma test setting apps even if there were existing apps before does not delete the
     // existing ones. Becuase the PERSIST and MERGE cascade type is used, this should work correctly
     return getRepository().save(user);
+  }
+
+  public User addUserPermission(
+      String userId, @NonNull PolicyIdStringWithAccessLevel policy) {
+    return addUserPermissions(userId, newArrayList(policy));
   }
 
   public User addUserPermissions(
@@ -184,7 +217,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
         .stream()
         .flatMap(p -> streamUserPermission(user, policyMap, p))
         .map(userPermissionService::create)
-        .forEach(user::associateWithPermission);
+        .forEach(p -> associateUserWithPermission(user, p));
     return getRepository().save(user);
   }
 

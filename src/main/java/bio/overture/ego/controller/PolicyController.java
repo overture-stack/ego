@@ -168,10 +168,7 @@ public class PolicyController {
       @PathVariable(value = "user_id", required = true) String userId,
       @RequestBody(required = true) String mask) {
     val permission = new PolicyIdStringWithAccessLevel(id, mask);
-    val list = new ArrayList<PolicyIdStringWithAccessLevel>();
-    list.add(permission);
-    userService.addUserPermissions(userId, list);
-
+    userService.addUserPermission(userId, permission);
     return "1 user permission successfully added to ACL '" + id + "'";
   }
 

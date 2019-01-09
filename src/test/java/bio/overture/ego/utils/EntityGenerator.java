@@ -27,8 +27,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static bio.overture.ego.service.UserService.associateUserWithPermissions;
 import static bio.overture.ego.utils.CollectionUtils.listOf;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
+import static java.util.stream.Collectors.toList;
 
 @Component
 /**
@@ -214,19 +216,17 @@ public class EntityGenerator {
     return tokenObject;
   }
 
-  public void addPermission(User user, Scope scope) {
-    val permission =
-        UserPermission.builder()
-            .policy(scope.getPolicy())
-            .accessLevel(scope.getAccessLevel())
-            .owner(user)
-            .build();
-    user.associateWithPermission(permission);
-  }
-
   public void addPermissions(User user, Set<Scope> scopes) {
-    scopes.forEach(s -> addPermission(user, s));
-    userService.update(user);
+    val userPermissions = scopes.stream()
+        .map(s ->
+            UserPermission.builder()
+                .policy(s.getPolicy())
+                .accessLevel(s.getAccessLevel())
+                .owner(user)
+                .build() )
+        .collect(toList());
+    associateUserWithPermissions(user, userPermissions);
+    userService.getRepository().save(user);
   }
 
   public static List<ScopeName> scopeNames(String... strings) {
