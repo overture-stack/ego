@@ -44,7 +44,7 @@ import org.springframework.web.client.RestTemplate;
 public class FacebookTokenService {
 
   /*
-  Constants
+   * Constants
    */
   private static final String USER_EMAIL = "email";
   private static final String USER_NAME = "name";
@@ -53,12 +53,12 @@ public class FacebookTokenService {
   private static final String IS_VALID = "is_valid";
   private static final String DATA = "data";
   /*
-   Dependencies
-  */
+   * Dependencies
+   */
   protected RestTemplate fbConnector;
   /*
-   Variables
-  */
+   * Variables
+   */
   @Value("${facebook.client.id}")
   private String clientId;
 
@@ -143,7 +143,7 @@ public class FacebookTokenService {
     }
   }
 
-  private Optional<Map> getJsonResponseAsMap(InputStream jsonResponse) {
+  private Optional<Map<Object, Object>> getJsonResponseAsMap(InputStream jsonResponse) {
 
     val objectMapper = new ObjectMapper();
     Map jsonObj = null;

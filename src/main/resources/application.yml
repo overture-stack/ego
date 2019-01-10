@@ -33,12 +33,6 @@ spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
 oauth:
   redirectFrontendUri: http://localhost:3501
 
-# LinkedIn Connection
-linkedIn:
-  clientID:
-  clientSecret:
-  redirectUri: http://localhost:8081/oauth/linkedin-cb
-
 # Facebook Connection Details
 facebook:
   client:
@@ -56,6 +50,18 @@ facebook:
 google:
   client:
     Ids: 144611473365-k1aarg8qs6rlh67r3t7dssi1e34b6061.apps.googleusercontent.com
+
+# LinkedIn Connection
+linkedIn:
+  clientID:
+  clientSecret:
+  redirectUri: http://localhost:8081/oauth/linkedin-cb
+
+# Github Connection
+github:
+  clientID:
+  clientSecret:
+  redirectUri: http://localhost:8081/oauth/github-cb
 
 # Logging settings.
 logging:
