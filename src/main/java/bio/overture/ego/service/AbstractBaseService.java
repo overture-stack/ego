@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static bio.overture.ego.model.exceptions.NotFoundException.checkExists;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Joiners.COMMA;
 
@@ -56,7 +56,7 @@ public abstract class AbstractBaseService<T extends Identifiable<ID>, ID>
             .map(Identifiable::getId)
             .filter(x -> !isExist(x))
             .collect(toImmutableSet());
-    checkExists(
+    checkNotFound(
         nonExistingEntities.isEmpty(),
         "Entities of type '%s' were not found for the following ids: %s",
         getEntityTypeName(),

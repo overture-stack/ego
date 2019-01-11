@@ -1,6 +1,7 @@
 package bio.overture.ego.service;
 
 import bio.overture.ego.controller.resolver.PageableResolver;
+import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
@@ -16,8 +17,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +25,7 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,13 +52,6 @@ public class UserServiceTest {
     val user = entityGenerator.setupUser("Demo User");
     // UserName == UserEmail
     assertThat(user.getName()).isEqualTo("DemoUser@domain.com");
-  }
-
-  @Test
-  public void testCreateUniqueNameAndEmail() {
-    val user = entityGenerator.setupUser("User One");
-    assertThatExceptionOfType(DataIntegrityViolationException.class)
-        .isThrownBy(() -> userService.create(user));
   }
 
   @Test
@@ -141,17 +134,15 @@ public class UserServiceTest {
   @Test
   public void testGetOrCreateDemoUserAlREADyExisting() {
     // This should force the demo user to have admin and approved status's
-    val demoUserObj =
-        User.builder()
-            .name("Demo.User@example.com")
-            .email("Demo.User@example.com")
-            .firstName("Demo")
-            .lastName("User")
-            .status("Pending")
-            .role("USER")
-            .build();
+    val createRequest = CreateUserRequest.builder()
+        .email("Demo.User@example.com")
+        .firstName("Demo")
+        .lastName("User")
+        .status("Pending")
+        .role("USER")
+        .build();
 
-    val user = userService.create(demoUserObj);
+    val user = userService.create(createRequest);
 
     assertThat(user.getStatus()).isEqualTo("Pending");
     assertThat(user.getRole()).isEqualTo("USER");
@@ -269,17 +260,17 @@ public class UserServiceTest {
     entityGenerator.setupTestGroups();
 
     val user = userService.getByName("FirstUser@domain.com");
-    val userTwo = (userService.getByName("SecondUser@domain.com"));
+    val userTwo = userService.getByName("SecondUser@domain.com");
     val groupId = groupService.getByName("Group One").getId().toString();
 
-    userService.addUserToGroups(user.getId().toString(), singletonList(groupId));
-    userService.addUserToGroups(userTwo.getId().toString(), singletonList(groupId));
+    userService.addUserToGroups(user.getId().toString(), newArrayList(groupId));
+    userService.addUserToGroups(userTwo.getId().toString(), newArrayList(groupId));
 
     val userFilters = new SearchFilter("name", "First");
 
     val users =
         userService.findGroupUsers(
-            groupId, singletonList(userFilters), new PageableResolver().getPageable());
+            groupId, newArrayList(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
     assertThat(users.getContent()).contains(user);
@@ -461,10 +452,19 @@ public class UserServiceTest {
     assertThat(updated.getRole()).isEqualTo("ADMIN");
   }
 
+  private UUID generateRandomUserUUID(){
+    UUID id = UUID.randomUUID();
+    while (userService.isExist(id)){
+      id = UUID.randomUUID();
+    }
+    return id;
+  }
+
   @Test
   public void testUpdateNonexistentEntity() {
     val nonExistentEntity =
         User.builder()
+            .id(generateRandomUserUUID())
             .firstName("Doesnot")
             .lastName("Exist")
             .name("DoesnotExist@domain.com")
@@ -474,7 +474,7 @@ public class UserServiceTest {
             .lastLogin(null)
             .role("ADMIN")
             .build();
-    assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.update(nonExistentEntity));
   }
 
@@ -678,7 +678,7 @@ public class UserServiceTest {
   @Test
   public void testDeleteNonExisting() {
     entityGenerator.setupTestUsers();
-    assertThatExceptionOfType(EmptyResultDataAccessException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.delete(NON_EXISTENT_USER));
   }
 

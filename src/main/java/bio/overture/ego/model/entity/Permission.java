@@ -2,8 +2,9 @@ package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.AccessLevel;
-import java.util.UUID;
 import lombok.Data;
+
+import java.util.UUID;
 
 @Data
 public abstract class Permission implements Identifiable<UUID> {
@@ -22,4 +23,5 @@ public abstract class Permission implements Identifiable<UUID> {
   public Scope toScope() {
     return new Scope(getPolicy(), getAccessLevel());
   }
+
 }

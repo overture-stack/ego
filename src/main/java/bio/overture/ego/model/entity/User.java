@@ -16,8 +16,9 @@
 
 package bio.overture.ego.model.entity;
 
-import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.enums.Fields;
+import bio.overture.ego.model.enums.JavaFields;
+import bio.overture.ego.model.enums.LombokFields;
+import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -32,7 +33,6 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.CascadeType;
@@ -46,22 +46,15 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.service.UserService.getPermissionsList;
 import static bio.overture.ego.utils.HibernateSessions.unsetSession;
 import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
 import static com.google.common.collect.Sets.newHashSet;
-import static java.lang.String.format;
 
 // TODO: simplify annotations. Find common annotations for Ego entities, and put them all under a
 // single annotation
@@ -69,24 +62,27 @@ import static java.lang.String.format;
 @Entity
 @Table(name = Tables.EGOUSER)
 @Data
-@ToString(exclude = {"groups", "applications", "userPermissions"})
+@ToString(exclude = {
+    JavaFields.GROUPS,
+    JavaFields.APPLICATIONS,
+    JavaFields.USERPERMISSIONS})
 @JsonPropertyOrder({
-  "id",
-  "name",
-  "email",
-  "role",
-  "status",
-  "groups",
-  "applications",
-  "userPermissions",
-  "firstName",
-  "lastName",
-  "createdAt",
-  "lastLogin",
-  "preferredLanguage"
+    JavaFields.ID,
+    JavaFields.NAME,
+    JavaFields.EMAIL,
+    JavaFields.ROLE,
+    JavaFields.STATUS,
+    JavaFields.GROUPS,
+    JavaFields.APPLICATIONS,
+    JavaFields.USERPERMISSIONS,
+    JavaFields.FIRSTNAME,
+    JavaFields.LASTNAME,
+    JavaFields.CREATEDAT,
+    JavaFields.LASTLOGIN,
+    JavaFields.PREFERREDLANGUAGE
 })
 @JsonInclude()
-@EqualsAndHashCode(of = {"id"})
+@EqualsAndHashCode(of = { LombokFields.id })
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -95,54 +91,54 @@ public class User implements PolicyOwner, Identifiable<UUID> {
 
   // TODO: find JPA equivalent for GenericGenerator
   @Id
-  @Column(nullable = false, name = Fields.ID, updatable = false)
+  @Column(nullable = false, name = SqlFields.ID, updatable = false)
   @GenericGenerator(name = "user_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "user_uuid")
   private UUID id;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @NonNull
-  @Column(nullable = false, name = Fields.NAME, unique = true)
+  @Column(nullable = false, name = SqlFields.NAME, unique = true)
   private String name;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @NonNull
-  @Column(nullable = false, name = Fields.EMAIL, unique = true)
+  @Column(nullable = false, name = SqlFields.EMAIL, unique = true)
   private String email;
 
   @NonNull
-  @Column(nullable = false, name = Fields.ROLE)
+  @Column(nullable = false, name = SqlFields.ROLE)
   private String role;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = Fields.STATUS)
+  @Column(name = SqlFields.STATUS)
   private String status;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = Fields.FIRSTNAME)
+  @Column(name = SqlFields.FIRSTNAME)
   private String firstName;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = Fields.LASTNAME)
+  @Column(name = SqlFields.LASTNAME)
   private String lastName;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = Fields.CREATEDAT)
+  @Column(name = SqlFields.CREATEDAT)
   private Date createdAt;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = Fields.LASTLOGIN)
+  @Column(name = SqlFields.LASTLOGIN)
   private Date lastLogin;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = Fields.PREFERREDLANGUAGE)
+  @Column(name = SqlFields.PREFERREDLANGUAGE)
   private String preferredLanguage;
 
   @JsonIgnore
   @OneToMany(
       cascade = {CascadeType.PERSIST, CascadeType.MERGE},
       fetch = FetchType.LAZY)
-  @JoinColumn(name = Fields.USERID_JOIN)
+  @JoinColumn(name = SqlFields.USERID_JOIN)
   @Builder.Default
   private Set<UserPermission> userPermissions = newHashSet(); // TODO: @rtisma test that this initialization is the same as the init method // (that it does not cause isseus with hibernate)
 
@@ -152,87 +148,30 @@ public class User implements PolicyOwner, Identifiable<UUID> {
       cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinTable(
       name = Tables.GROUP_USER,
-      joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)})
+      joinColumns = {@JoinColumn(name = SqlFields.USERID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = SqlFields.GROUPID_JOIN)})
   @Builder.Default
   private Set<Group> groups = newHashSet();
 
   // TODO @rtisma: test persist and merge cascade types for ManyToMany relationships. Must be able
-  // to step away from
-  // happy path
+  // to step away from // happy path
   @JsonIgnore
   @ManyToMany(
       fetch = FetchType.LAZY,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinTable(
       name = Tables.USER_APPLICATION,
-      joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
+      joinColumns = {@JoinColumn(name = SqlFields.USERID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = SqlFields.APPID_JOIN)})
+  //TODO: [rtisma] test that all collections have Builder.Default. assertThat(userService.get(myUserId).getApplications()).isNotNull() and is empty.
   @Builder.Default
   private Set<Application> applications = newHashSet();
 
-  @JsonIgnore
-  public HashSet<Permission> getPermissionsList() {
-    // Get user's individual permission (stream)
-    val userPermissions =
-        Optional.ofNullable(this.getUserPermissions()).orElse(new HashSet<>()).stream();
-
-    // Get permissions from the user's groups (stream)
-    val userGroupsPermissions =
-        Optional.ofNullable(this.getGroups())
-            .orElse(new HashSet<>())
-            .stream()
-            .map(Group::getPermissions)
-            .flatMap(Collection::stream);
-
-    // Combine individual user permissions and the user's
-    // groups (if they have any) permissions
-    val combinedPermissions =
-        Stream.concat(userPermissions, userGroupsPermissions)
-            // .collect(Collectors.groupingBy(p -> p.getPolicy()));
-            .collect(Collectors.groupingBy(this::getP));
-    // If we have no permissions at all return an empty list
-    if (combinedPermissions.values().size() == 0) {
-      return new HashSet<>();
-    }
-
-    // If we do have permissions ... sort the grouped permissions (by PolicyIdStringWithMaskName)
-    // on PolicyMask, extracting the first value of the sorted list into the final
-    // permissions list
-    HashSet<Permission> finalPermissionsList = new HashSet<>();
-
-    combinedPermissions.forEach(
-        (entity, permissions) -> {
-          permissions.sort(Comparator.comparing(Permission::getAccessLevel).reversed());
-          finalPermissionsList.add(permissions.get(0));
-        });
-    return finalPermissionsList;
-  }
-
-  private Policy getP(Permission permission) {
-    val p = permission.getPolicy();
-    return p;
-  }
-
-  @JsonIgnore
-  public Set<Scope> getScopes() {
-    HashSet<Permission> p;
-    try {
-      p = this.getPermissionsList();
-    } catch (NullPointerException e) {
-      log.error(format("Can't get permissions for user '%s'", getName()));
-      p = new HashSet<>();
-    }
-
-    return mapToSet(p, Permission::toScope);
-  }
-
+  //TODO: [rtisma] move getPermissions to UserService once DTO task is complete. JsonViews creates a dependency for this method. For now, using a UserService static method.
   // Creates permissions in JWTAccessToken::context::user
   @JsonView(Views.JWTAccessToken.class)
   public List<String> getPermissions() {
-    val finalPermissionsList = getPermissionsList();
-    // Convert final permissions list for JSON output
-    return extractPermissionStrings(finalPermissionsList);
+    return extractPermissionStrings(getPermissionsList(this));
   }
 
   public void update(User other) {
@@ -266,4 +205,5 @@ public class User implements PolicyOwner, Identifiable<UUID> {
       this.userPermissions = other.getUserPermissions();
     }
   }
+
 }

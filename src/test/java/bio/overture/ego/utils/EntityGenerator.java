@@ -1,5 +1,6 @@
 package bio.overture.ego.utils;
 
+import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
@@ -95,20 +96,18 @@ public class EntityGenerator {
         });
   }
 
-  private User createUser(String firstName, String lastName) {
-    return User.builder()
+  private CreateUserRequest createUser(String firstName, String lastName) {
+    return CreateUserRequest.builder()
         .email(String.format("%s%s@domain.com", firstName, lastName))
-        .name(String.format("%s%s", firstName, lastName))
         .firstName(firstName)
         .lastName(lastName)
         .status("Approved")
         .preferredLanguage("English")
-        .lastLogin(null)
         .role("ADMIN")
         .build();
   }
 
-  private User createUser(String name) {
+  private CreateUserRequest createUser(String name) {
     val names = name.split(" ", 2);
     return createUser(names[0], names[1]);
   }
@@ -120,8 +119,8 @@ public class EntityGenerator {
         .findByName(userName)
         .orElseGet(
             () -> {
-              val user = createUser(name);
-              return userService.create(user);
+              val createUserRequest = createUser(name);
+              return userService.create(createUserRequest);
             });
   }
 

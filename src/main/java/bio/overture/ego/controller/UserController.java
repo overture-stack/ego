@@ -16,6 +16,7 @@
 
 package bio.overture.ego.controller;
 
+import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
@@ -145,11 +146,8 @@ public class UserController {
       })
   public @ResponseBody User create(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestBody(required = true) User userInfo) {
-    if (userInfo.getId() != null) {
-      throw new PostWithIdentifierException();
-    }
-    return userService.create(userInfo);
+      @RequestBody(required = true) CreateUserRequest request) {
+    return userService.create(request);
   }
 
   @AdminScoped

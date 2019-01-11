@@ -7,7 +7,7 @@ import lombok.val;
 
 import java.util.Optional;
 
-import static bio.overture.ego.model.exceptions.NotFoundException.checkExists;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 
 public abstract class AbstractNamedService<T extends Identifiable<ID>, ID>
     extends AbstractBaseService<T, ID>
@@ -28,7 +28,7 @@ public abstract class AbstractNamedService<T extends Identifiable<ID>, ID>
   @Override
   public T getByName(@NonNull String name) {
     val result = findByName(name);
-    checkExists(
+    checkNotFound(
         result.isPresent(),
         "The '%s' entity with name '%s' was not found",
         getEntityTypeName(),

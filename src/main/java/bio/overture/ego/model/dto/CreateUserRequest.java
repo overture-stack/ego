@@ -14,19 +14,24 @@
  * limitations under the License.
  */
 
-package bio.overture.ego.repository;
+package bio.overture.ego.model.dto;
 
-import bio.overture.ego.model.entity.Group;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.util.Optional;
-import java.util.UUID;
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class CreateUserRequest {
 
-public interface GroupRepository extends NamedRepository<Group, UUID> {
+  private String email;
+  private String role;
+  private String status;
+  private String firstName;
+  private String lastName;
+  private String preferredLanguage;
 
-  Optional<Group> getGroupByNameIgnoreCase(String name);
-
-  @Override
-  default Optional<Group> findByName(String name) {
-    return getGroupByNameIgnoreCase(name);
-  }
 }

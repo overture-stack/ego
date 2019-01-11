@@ -29,7 +29,7 @@ public class NotFoundException extends RuntimeException {
     super(message);
   }
 
-  public static void checkExists(boolean expression, @NonNull String formattedMessage, @NonNull Object...args){
+  public static void checkNotFound(boolean expression, @NonNull String formattedMessage, @NonNull Object...args){
     if (!expression){
       throw new NotFoundException(format(formattedMessage, args));
     }

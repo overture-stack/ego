@@ -16,8 +16,11 @@
 
 package bio.overture.ego.service;
 
+import bio.overture.ego.model.dto.CreateUserRequest;
+import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.Permission;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
@@ -45,19 +48,26 @@ import org.springframework.util.StringUtils;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.convertToUUIDList;
 import static bio.overture.ego.utils.Converters.convertToUUIDSet;
 import static bio.overture.ego.utils.Joiners.COMMA;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.String.format;
+import static java.util.Comparator.comparing;
 import static java.util.UUID.fromString;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Stream.concat;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Slf4j
@@ -107,29 +117,21 @@ public class UserService extends AbstractNamedService<User, UUID> {
   @Value("${default.user.status}")
   private String DEFAULT_USER_STATUS;
 
-  public User create(@NonNull User userInfo) {
-    // Set Created At date to Now
-    userInfo.setCreatedAt(new Date());
-
-    // Set UserName to equal the email.
-    userInfo.setName(userInfo.getEmail());
-
-    return getRepository().save(userInfo);
+  public User create(@NonNull CreateUserRequest request) {
+    return getRepository().save(convertToUser(request));
   }
 
   public User createFromIDToken(IDToken idToken) {
-    val userInfo = new User();
-    userInfo.setName(idToken.getEmail());
-    userInfo.setEmail(idToken.getEmail());
-    userInfo.setFirstName(
-        StringUtils.isEmpty(idToken.getGiven_name()) ? "" : idToken.getGiven_name());
-    userInfo.setLastName(
-        StringUtils.isEmpty(idToken.getFamily_name()) ? "" : idToken.getFamily_name());
-    userInfo.setStatus(DEFAULT_USER_STATUS);
-    userInfo.setCreatedAt(new Date());
-    userInfo.setLastLogin(null);
-    userInfo.setRole(DEFAULT_USER_ROLE);
-    return this.create(userInfo);
+    return create(CreateUserRequest.builder()
+        .email(idToken.getEmail())
+        .firstName(
+            StringUtils.isEmpty(idToken.getGiven_name()) ? "" : idToken.getGiven_name() )
+        .lastName(
+            StringUtils.isEmpty(idToken.getFamily_name()) ? "" : idToken.getFamily_name())
+        .status(DEFAULT_USER_STATUS)
+        .role(DEFAULT_USER_ROLE)
+        .build()
+    );
   }
 
   public User getOrCreateDemoUser() {
@@ -144,14 +146,11 @@ public class UserService extends AbstractNamedService<User, UUID> {
         .orElseGet(
             () ->
                 create(
-                    User.builder()
-                        .name(DEMO_USER_NAME)
+                    CreateUserRequest.builder()
                         .email(DEMO_USER_EMAIL)
                         .firstName(DEMO_FIRST_NAME)
                         .lastName(DEMO_LAST_NAME)
                         .status(EntityStatus.APPROVED.toString())
-                        .createdAt(new Date())
-                        .lastLogin(null)
                         .role(UserRole.ADMIN.toString())
                         .build()));
   }
@@ -164,6 +163,10 @@ public class UserService extends AbstractNamedService<User, UUID> {
     // the existing ones. Becuase the PERSIST and MERGE cascade type is used, this should work
     // correctly
     return getRepository().save(user);
+  }
+
+  public static Set<Scope> extractScopes(@NonNull User user) {
+    return mapToSet(getPermissionsList(user), Permission::toScope);
   }
 
   public static void associateUserWithPermissions(User user, @NonNull Collection<UserPermission> permissions) {
@@ -200,6 +203,63 @@ public class UserService extends AbstractNamedService<User, UUID> {
     // TODO: @rtisma test setting apps even if there were existing apps before does not delete the
     // existing ones. Becuase the PERSIST and MERGE cascade type is used, this should work correctly
     return getRepository().save(user);
+  }
+
+  public static Set<Permission> getPermissionsList(User user) {
+    val upStream = user.getUserPermissions().stream();
+    val gpStream = user.getGroups().stream()
+        .map(Group::getPermissions)
+        .flatMap(Collection::stream);
+    val combinedPermissions = concat(upStream, gpStream)
+        .collect(groupingBy(Permission::getPolicy));
+
+    return combinedPermissions.values().stream()
+        .map(UserService::resolvePermissions)
+        .collect(toImmutableSet());
+  }
+
+  private static Permission resolvePermissions(List<Permission> permissions){
+    checkState(!permissions.isEmpty(), "Input permissions list cannot be empty");
+    permissions.sort(comparing(Permission::getAccessLevel).reversed());
+    return permissions.get(0);
+  }
+
+  //TODO: [rtisma] this is the old implementation. Ensure there is a test for this, and if there isnt,
+  // create one, and ensure the Old and new refactored method are correct
+  public static Set<Permission> getPermissionsListOld(User user) {
+    // Get user's individual permission (stream)
+    val userPermissions =
+        Optional.ofNullable(user.getUserPermissions()).orElse(new HashSet<>()).stream();
+
+    // Get permissions from the user's groups (stream)
+    val userGroupsPermissions =
+        Optional.ofNullable(user.getGroups())
+            .orElse(new HashSet<>())
+            .stream()
+            .map(Group::getPermissions)
+            .flatMap(Collection::stream);
+
+    // Combine individual user permissions and the user's
+    // groups (if they have any) permissions
+    val combinedPermissions =
+        concat(userPermissions, userGroupsPermissions)
+             .collect(groupingBy(Permission::getPolicy));
+    // If we have no permissions at all return an empty list
+    if (combinedPermissions.values().size() == 0) {
+      return new HashSet<>();
+    }
+
+    // If we do have permissions ... sort the grouped permissions (by PolicyIdStringWithMaskName)
+    // on PolicyMask, extracting the first value of the sorted list into the final
+    // permissions list
+    HashSet<Permission> finalPermissionsList = new HashSet<>();
+
+    combinedPermissions.forEach(
+        (entity, permissions) -> {
+          permissions.sort(comparing(Permission::getAccessLevel).reversed());
+          finalPermissionsList.add(permissions.get(0));
+        });
+    return finalPermissionsList;
   }
 
   public User addUserPermission(
@@ -383,4 +443,20 @@ public class UserService extends AbstractNamedService<User, UUID> {
         .map(AccessLevel::fromValue)
         .map(a -> UserPermission.builder().accessLevel(a).policy(p).owner(u).build());
   }
+
+  private static User convertToUser(CreateUserRequest request){
+    return User.builder()
+        .preferredLanguage(request.getPreferredLanguage())
+        .email(request.getEmail())
+        // Set UserName to equal the email.
+        .name(request.getEmail())
+        // Set Created At date to Now
+        .createdAt(new Date())
+        .firstName(request.getFirstName())
+        .lastName(request.getLastName())
+        .role(request.getRole())
+        .status(request.getStatus())
+        .build();
+  }
+
 }

@@ -62,6 +62,7 @@ import java.util.UUID;
 
 import static bio.overture.ego.model.dto.Scope.effectiveScopes;
 import static bio.overture.ego.model.dto.Scope.explicitScopes;
+import static bio.overture.ego.service.UserService.extractScopes;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static java.lang.String.format;
 
@@ -112,7 +113,7 @@ public class TokenService {
 
   @SneakyThrows
   public String generateUserToken(User u) {
-    Set<String> permissionNames = mapToSet(u.getScopes(), p -> p.toString());
+    Set<String> permissionNames = mapToSet(extractScopes(u), p -> p.toString());
     return generateUserToken(u, permissionNames);
   }
 
@@ -128,7 +129,7 @@ public class TokenService {
 
   public Set<Scope> missingScopes(String userName, Set<ScopeName> scopeNames) {
     val user = userService.getByName(userName);
-    val userScopes = user.getScopes();
+    val userScopes = extractScopes(user);
     val requestedScopes = getScopes(scopeNames);
     return Scope.missingScopes(userScopes, requestedScopes);
   }
@@ -161,7 +162,7 @@ public class TokenService {
                 () -> new UsernameNotFoundException(format("Can't find user '%s'", str(user_id))));
 
     log.info(format("Got user with id '%s'", str(u.getId())));
-    val userScopes = u.getScopes();
+    val userScopes = extractScopes(u);
 
     log.info(format("User's scopes are '%s'", str(userScopes)));
 
@@ -315,7 +316,7 @@ public class TokenService {
     // is allowed to access at the time the token is checked -- we don't assume that they
     // have not changed since the token was issued.
     val owner = t.getOwner();
-    val scopes = explicitScopes(effectiveScopes(owner.getScopes(), t.scopes()));
+    val scopes = explicitScopes(effectiveScopes(extractScopes(owner), t.scopes()));
     val names = mapToSet(scopes, Scope::toString);
 
     return new TokenScopeResponse(owner.getName(), clientId, t.getSecondsUntilExpiry(), names);

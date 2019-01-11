@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static bio.overture.ego.model.exceptions.NotFoundException.checkExists;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static java.lang.String.format;
 import static java.util.UUID.fromString;
 import static org.springframework.data.jpa.domain.Specifications.where;
@@ -144,7 +144,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
   public Application getApplicationByClientId(@NonNull String clientId) {
     val result = findApplicationByClientId(clientId);
-    checkExists(
+    checkNotFound(
         result.isPresent(),
         "The '%s' entity with clientId '%s' was not found",
         getClass().getSimpleName(),
