@@ -22,13 +22,29 @@ import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.hibernate.annotations.GenericGenerator;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
 
 @Data
 @Entity
@@ -67,6 +83,7 @@ public class Group implements PolicyOwner, Identifiable<UUID> {
       joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
   @JsonIgnore
+  @Builder.Default
   private Set<Application> applications = new HashSet<>();
 
   @ManyToMany(
@@ -77,15 +94,18 @@ public class Group implements PolicyOwner, Identifiable<UUID> {
       joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
   @JsonIgnore
+  @Builder.Default
   private Set<User> users = new HashSet<>();
 
   @JsonIgnore
   @JoinColumn(name = Fields.OWNER)
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @Builder.Default
   private Set<Policy> policies = new HashSet<>();
 
   @JsonIgnore
   @JoinColumn(name = Fields.GROUPID_JOIN)
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @Builder.Default
   private Set<GroupPermission> permissions = new HashSet<>();
 }
