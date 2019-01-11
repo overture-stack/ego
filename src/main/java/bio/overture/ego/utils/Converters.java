@@ -1,17 +1,20 @@
 package bio.overture.ego.utils;
 
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Consumer;
+
 import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Objects.isNull;
 import static lombok.AccessLevel.PRIVATE;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = PRIVATE)
 public class Converters {
@@ -47,4 +50,14 @@ public class Converters {
       return collection;
     }
   }
+
+  /**
+   * If {@param nullableValue} is non-null, then the {@param consumer} will accept it, otherwise, nothing.
+   */
+  public static <V> void nonNullAcceptor(V nullableValue, @NonNull Consumer<V> consumer){
+    if (!isNull(nullableValue)){
+      consumer.accept(nullableValue);
+    }
+  }
+
 }

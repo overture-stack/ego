@@ -18,6 +18,7 @@ package bio.overture.ego.service;
 
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.Scope;
+import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Permission;
@@ -56,10 +57,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import static bio.overture.ego.model.enums.UserRole.resolveUserRoleIgnoreCase;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.convertToUUIDList;
 import static bio.overture.ego.utils.Converters.convertToUUIDSet;
+import static bio.overture.ego.utils.Converters.nonNullAcceptor;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
@@ -285,13 +288,21 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getById(fromString(userId));
   }
 
-  public User update(@NonNull User updatedUserInfo) {
-    val user = getById(updatedUserInfo.getId());
-    if (UserRole.USER.toString().equals(updatedUserInfo.getRole().toUpperCase()))
-      updatedUserInfo.setRole(UserRole.USER.toString());
-    else if (UserRole.ADMIN.toString().equals(updatedUserInfo.getRole().toUpperCase()))
-      updatedUserInfo.setRole(UserRole.ADMIN.toString());
-    user.update(updatedUserInfo);
+  //TODO: [rtisma] remove this method once reactor is removed (EGO-209
+  @Deprecated
+  public User update(@NonNull User data) {
+    val user = getById(data.getId());
+    user.setRole(resolveUserRoleIgnoreCase(data.getRole()).toString());
+    return getRepository().save(user);
+  }
+
+  public User partialUpdate(@NonNull String id, UpdateUserRequest r) {
+    return partialUpdate(fromString(id), r);
+  }
+
+  public User partialUpdate(@NonNull UUID id, @NonNull UpdateUserRequest r) {
+    val user = getById(id);
+    partialUpdateUser(user, r);
     return getRepository().save(user);
   }
 
@@ -457,6 +468,21 @@ public class UserService extends AbstractNamedService<User, UUID> {
         .role(request.getRole())
         .status(request.getStatus())
         .build();
+  }
+
+  /**
+   * Partially updates the {@param user} using only non-null {@code UpdateUserRequest} object
+   * @param user updatee
+   * @param r updater
+   */
+  public static void partialUpdateUser(@NonNull User user, @NonNull UpdateUserRequest r){
+    nonNullAcceptor(r.getRole(), x -> user.setRole(resolveUserRoleIgnoreCase(x).toString()));
+    nonNullAcceptor(r.getFirstName(), user::setFirstName);
+    nonNullAcceptor(r.getLastLogin(), user::setLastLogin);
+    nonNullAcceptor(r.getLastName(), user::setLastName);
+    nonNullAcceptor(r.getEmail(), user::setEmail);
+    nonNullAcceptor(r.getPreferredLanguage(), user::setPreferredLanguage);
+    nonNullAcceptor(r.getStatus(), user::setStatus);
   }
 
 }
