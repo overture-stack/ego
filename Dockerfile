@@ -27,7 +27,8 @@ RUN mkdir -p /srv/ego/install \
 
 # setup required environment variables
 ENV EGO_INSTALL_PATH /srv/ego
+ENV CONFIG_FILE /usr/src/app/src/main/resources/flyway/conf/flyway.conf
 
 # start ego server
 WORKDIR $EGO_INSTALL_PATH
-CMD $EGO_INSTALL_PATH/exec/run.sh
+CMD cd /usr/src/app;mvn "flyway:migrate" -Dflyway.configFiles=$CONFIG_FILE -Dflyway.password=password -Dflyway.url=jdbc:postgresql://postgres:5432/ego?stringtype=unspecified;$EGO_INSTALL_PATH/exec/run.sh
