@@ -108,7 +108,7 @@ public class AuthController {
       throw new InvalidTokenException("ScopedAccessToken is empty");
     }
 
-    if (!tokenService.validateToken(token)) {
+    if (!tokenService.isValidToken(token)) {
       throw new InvalidTokenException("ScopedAccessToken failed validation");
     }
     return true;
