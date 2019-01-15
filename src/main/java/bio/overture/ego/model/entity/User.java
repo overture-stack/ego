@@ -52,7 +52,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import static bio.overture.ego.service.UserService.getPermissionsList;
-import static bio.overture.ego.utils.HibernateSessions.unsetSession;
 import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
 import static com.google.common.collect.Sets.newHashSet;
 
@@ -172,38 +171,6 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   @JsonView(Views.JWTAccessToken.class)
   public List<String> getPermissions() {
     return extractPermissionStrings(getPermissionsList(this));
-  }
-
-  public void update(User other) {
-    this.name = other.getName();
-    this.firstName = other.getFirstName();
-    this.lastName = other.getLastName();
-    this.role = other.getRole();
-    this.status = other.getStatus();
-    this.preferredLanguage = other.getPreferredLanguage();
-    this.lastLogin = other.getLastLogin();
-
-    // Don't merge the ID, CreatedAt, or LastLogin date - those are procedural.
-
-    // Don't merge groups, applications or userPermissions if not present in other
-    // This is because the PUT action for update usually does not include these fields
-    // as a consequence of the GET option to retrieve a user not including these fields
-    // To clear applications, groups or userPermissions, use the dedicated services
-    // for deleting associations or pass in an empty Set.
-    if (other.applications != null) {
-      unsetSession(other.getApplications());
-      this.applications = other.getApplications();
-    }
-
-    if (other.groups != null) {
-      unsetSession(other.getGroups());
-      this.groups = other.getGroups();
-    }
-
-    if (other.userPermissions != null) {
-      unsetSession(other.getUserPermissions());
-      this.userPermissions = other.getUserPermissions();
-    }
   }
 
 }
