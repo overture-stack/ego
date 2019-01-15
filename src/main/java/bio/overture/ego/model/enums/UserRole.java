@@ -19,6 +19,9 @@ package bio.overture.ego.model.enums;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+import static bio.overture.ego.utils.Streams.stream;
+import static java.lang.String.format;
+
 @RequiredArgsConstructor
 public enum UserRole {
   USER("USER"),
@@ -30,4 +33,12 @@ public enum UserRole {
   public String toString() {
     return value;
   }
+
+  public static UserRole resolveUserRoleIgnoreCase(@NonNull String userRole){
+    return stream(values())
+        .filter(x -> x.toString().equals(userRole.toUpperCase()))
+        .findFirst()
+        .orElseThrow(() -> new IllegalStateException(format("The user role '%s' cannot be resolved", userRole)));
+  }
+
 }

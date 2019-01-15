@@ -2,7 +2,7 @@ package bio.overture.ego.service;
 
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.CreateUserRequest;
-import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
@@ -431,24 +431,30 @@ public class UserServiceTest {
   @Test
   public void testUpdate() {
     val user = entityGenerator.setupUser("First User");
-    user.setFirstName("NotFirst");
-    val updated = userService.update(user);
+    val updated = userService.partialUpdate(user.getId(),
+        UpdateUserRequest.builder()
+            .firstName("NotFirst")
+            .build());
     assertThat(updated.getFirstName()).isEqualTo("NotFirst");
   }
 
   @Test
   public void testUpdateRoleUser() {
     val user = entityGenerator.setupUser("First User");
-    user.setRole("user");
-    val updated = userService.update(user);
+    val updated = userService.partialUpdate(user.getId(),
+        UpdateUserRequest.builder()
+            .role("user")
+            .build());
     assertThat(updated.getRole()).isEqualTo("USER");
   }
 
   @Test
   public void testUpdateRoleAdmin() {
     val user = entityGenerator.setupUser("First User");
-    user.setRole("admin");
-    val updated = userService.update(user);
+    val updated = userService.partialUpdate(user.getId(),
+        UpdateUserRequest.builder()
+            .role("admin")
+            .build());
     assertThat(updated.getRole()).isEqualTo("ADMIN");
   }
 
@@ -462,12 +468,11 @@ public class UserServiceTest {
 
   @Test
   public void testUpdateNonexistentEntity() {
-    val nonExistentEntity =
-        User.builder()
-            .id(generateRandomUserUUID())
+    val nonExistentId = generateRandomUserUUID();
+    val updateRequest =
+        UpdateUserRequest.builder()
             .firstName("Doesnot")
             .lastName("Exist")
-            .name("DoesnotExist@domain.com")
             .email("DoesnotExist@domain.com")
             .status("Approved")
             .preferredLanguage("English")
@@ -475,15 +480,18 @@ public class UserServiceTest {
             .role("ADMIN")
             .build();
     assertThatExceptionOfType(NotFoundException.class)
-        .isThrownBy(() -> userService.update(nonExistentEntity));
+        .isThrownBy(() -> userService.partialUpdate(generateRandomUserUUID(), updateRequest ));
   }
 
   @Test
+  @Ignore("This is ignored because an updateRequest object doesnt contain an id, therefore there is nothing to cause an UpdateID error in the first place")
+  @Deprecated
   public void testUpdateIdNotAllowed() {
     val user = entityGenerator.setupUser("First User");
     user.setId(UUID.fromString("0c1dc4b8-7fb8-11e8-adc0-fa7ae01bbebc"));
     // New id means new non-existent policy or one that exists and is being overwritten
-    assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> userService.update(user));
+    assertThatExceptionOfType(NotFoundException.class)
+        .isThrownBy(() -> userService.partialUpdate(generateRandomUserUUID(), UpdateUserRequest.builder().build()));
   }
 
   @Test

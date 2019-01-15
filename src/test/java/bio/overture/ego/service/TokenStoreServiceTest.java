@@ -61,6 +61,7 @@ public class TokenStoreServiceTest {
     assertThat(result.getToken()).isEqualTo(token);
 
     val found = tokenStoreService.findByTokenString(token);
-    assertThat(found).isEqualTo(result);
+    assertThat(found).isNotEmpty();
+    assertThat(found.get()).isEqualTo(result);
   }
 }

@@ -18,6 +18,7 @@ package bio.overture.ego.controller;
 
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.PageDTO;
+import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
@@ -163,11 +164,12 @@ public class UserController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
   @ApiResponses(
-      value = {@ApiResponse(code = 200, message = "Updated user info", response = User.class)})
+      value = {@ApiResponse(code = 200, message = "Partially update using non-null user info", response = User.class)})
   public @ResponseBody User updateUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestBody(required = true) User updatedUserInfo) {
-    return userService.update(updatedUserInfo);
+      @PathVariable(value = "id", required = true) String id,
+      @RequestBody(required = true) UpdateUserRequest updateUserRequest) {
+    return userService.partialUpdate(id, updateUserRequest);
   }
 
   @AdminScoped

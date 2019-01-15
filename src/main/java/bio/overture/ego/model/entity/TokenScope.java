@@ -2,13 +2,21 @@ package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.enums.AccessLevel;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
-import java.io.Serializable;
-import javax.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import java.io.Serializable;
 
 @NoArgsConstructor
 @AllArgsConstructor

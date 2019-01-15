@@ -219,8 +219,7 @@ public class EntityGenerator {
 
     tokenObject.setScopes(scopes);
 
-    tokenStoreService.create(tokenObject);
-    return tokenObject;
+    return tokenStoreService.create(tokenObject);
   }
 
   public void addPermissions(User user, Set<Scope> scopes) {

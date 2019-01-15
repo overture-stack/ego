@@ -34,6 +34,8 @@ public class JavaFields {
   public static final String LASTLOGIN = "lastLogin";
   public static final String PREFERREDLANGUAGE = "preferredLanguage";
   public static final String APPLICATIONS = "applications";
+  public static final String OWNER = "owner";
+  public static final String SCOPES = "scopes";
   public static final String GROUPS = "groups";
   public static final String USERPERMISSIONS = "userPermissions";
 
