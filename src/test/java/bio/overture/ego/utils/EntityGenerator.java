@@ -17,6 +17,7 @@ import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.TokenStoreService;
 import bio.overture.ego.service.UserService;
 import com.google.common.collect.ImmutableSet;
+import lombok.NonNull;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -27,7 +28,10 @@ import java.util.*;
 import static bio.overture.ego.service.UserService.associateUserWithPermissions;
 import static bio.overture.ego.utils.CollectionUtils.listOf;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
+import static bio.overture.ego.utils.Splitters.COMMA_SPLITTER;
+import static com.google.common.collect.Lists.newArrayList;
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Component
 /**
@@ -186,17 +190,12 @@ public class EntityGenerator {
         });
   }
 
-  // TODO - Make this sexy
-  public Policy setupPolicy(String name) {
-    val args = name.split(",");
-    val existing = policyService.getByName(args[0]);
-
-    if (Objects.nonNull(existing)) {
-      return existing;
-    } else {
-      val policy = createPolicy(args[0], args[1]);
-      return policyService.create(policy);
-    }
+  public Policy setupPolicy(@NonNull String csv) {
+    val args = newArrayList(COMMA_SPLITTER.split(csv));
+    assertThat(args).hasSize(2);
+    val name = args.get(0);
+    val groupName = args.get(1);
+    return setupPolicy(name, groupName);
   }
 
   public List<Policy> setupPolicies(String... names) {

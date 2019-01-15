@@ -269,7 +269,7 @@ public class TokenServiceTest {
     val scopes = EntityGenerator.scopeNames("collab.READ", "invalid.WRITE");
     val applications = new ArrayList<UUID>();
 
-    assertThatExceptionOfType(InvalidScopeException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> tokenService.issueToken(uuid, scopes, applications));
   }
 
@@ -284,7 +284,7 @@ public class TokenServiceTest {
     val applications = new ArrayList<UUID>();
     applications.add(UUID.randomUUID());
 
-    assertThatExceptionOfType(NotFoundException.class)
+    assertThatExceptionOfType(InvalidScopeException.class)
         .isThrownBy(() -> tokenService.issueToken(uuid, scopes, applications));
   }
 
