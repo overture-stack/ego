@@ -142,7 +142,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     return applicationRepository.getApplicationByClientIdIgnoreCase(clientId);
   }
 
-  public Application getApplicationByClientId(@NonNull String clientId) {
+  public Application getByClientId(@NonNull String clientId) {
     val result = findApplicationByClientId(clientId);
     checkNotFound(
         result.isPresent(),
@@ -167,7 +167,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     val parts = contents.split(":");
     val clientId = parts[0];
     log.error(format("Extracted client id '%s'", clientId));
-    return getApplicationByClientId(clientId);
+    return getByClientId(clientId);
   }
 
   @Override
@@ -175,7 +175,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
       throws ClientRegistrationException {
     // find client using clientid
 
-    val application = getApplicationByClientId(clientId);
+    val application = getByClientId(clientId);
 
     if (application == null) {
       throw new ClientRegistrationException("Client ID not found.");

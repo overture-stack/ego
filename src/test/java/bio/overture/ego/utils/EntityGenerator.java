@@ -22,11 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static bio.overture.ego.service.UserService.associateUserWithPermissions;
 import static bio.overture.ego.utils.CollectionUtils.listOf;
@@ -77,6 +73,15 @@ public class EntityGenerator {
 
   public List<Application> setupApplications(String... clientIds) {
     return mapToList(listOf(clientIds), this::setupApplication);
+  }
+
+  public void setupTestApplications(String postfix) {
+    setupApplications(
+        String.format("111111_%s", postfix),
+        String.format("222222_%s", postfix),
+        String.format("333333_%s", postfix),
+        String.format("444444_%s", postfix),
+        String.format("555555_%s", postfix));
   }
 
   public void setupTestApplications() {
@@ -153,17 +158,16 @@ public class EntityGenerator {
     return mapToList(listOf(groupNames), this::setupGroup);
   }
 
+  public void setupTestGroups(String postfix) {
+    setupGroups(String.format("Group One_%s", postfix), String.format("Group Two_%s", postfix), String.format("Group Three_%s", postfix));
+  }
+
   public void setupTestGroups() {
     setupGroups("Group One", "Group Two", "Group Three");
   }
 
   private Policy createPolicy(String name, UUID policyId) {
     return Policy.builder().name(name).owner(policyId).build();
-  }
-
-  private Policy createPolicy(String name) {
-    val args = name.split(",");
-    return createPolicy(args[0], args[1]);
   }
 
   private Policy createPolicy(String name, String groupName) {
@@ -182,13 +186,17 @@ public class EntityGenerator {
         });
   }
 
+  // TODO - Make this sexy
   public Policy setupPolicy(String name) {
-    return policyService
-        .findByName(name)
-        .orElseGet( () -> {
-          val policy = createPolicy(name);
-          return policyService.create(policy);
-        });
+    val args = name.split(",");
+    val existing = policyService.getByName(args[0]);
+
+    if (Objects.nonNull(existing)) {
+      return existing;
+    } else {
+      val policy = createPolicy(args[0], args[1]);
+      return policyService.create(policy);
+    }
   }
 
   public List<Policy> setupPolicies(String... names) {
