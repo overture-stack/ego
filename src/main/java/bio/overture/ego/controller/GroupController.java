@@ -57,9 +57,7 @@ import java.util.List;
 @RequestMapping("/groups")
 public class GroupController {
 
-  /** Dependencies */
   private final GroupService groupService;
-
   private final ApplicationService applicationService;
   private final UserService userService;
 
@@ -357,6 +355,17 @@ public class GroupController {
     } else {
       return new PageDTO<>(userService.findGroupUsers(groupId, query, filters, pageable));
     }
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.POST, value = "/{id}/users")
+  @ApiResponses(
+          value = {@ApiResponse(code = 200, message = "Add Users to Group", response = Group.class)})
+  public @ResponseBody Group addUsersToGroups(
+          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+          @PathVariable(value = "id", required = true) String grpId,
+          @RequestBody(required = true) List<String> users) {
+    return groupService.addUsersToGroup(grpId, users);
   }
 
   @ExceptionHandler({EntityNotFoundException.class})

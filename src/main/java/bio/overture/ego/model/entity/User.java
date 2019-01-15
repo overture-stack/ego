@@ -35,17 +35,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -87,6 +77,25 @@ import static com.google.common.collect.Sets.newHashSet;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
+@NamedEntityGraph(
+        name = "user-entity-with-relationships",
+        attributeNodes = {
+                @NamedAttributeNode("id"),
+                @NamedAttributeNode("name"),
+                @NamedAttributeNode("email"),
+                @NamedAttributeNode("status"),
+                @NamedAttributeNode(value = "groups", subgraph = "users-subgraph"),
+                @NamedAttributeNode(value = "applications", subgraph = "relationship-subgraph"),
+        },
+        subgraphs = {
+                @NamedSubgraph(
+                        name = "relationship-subgraph",
+                        attributeNodes = {
+                                @NamedAttributeNode("id")
+                        }
+                )
+        }
+)
 public class User implements PolicyOwner, Identifiable<UUID> {
 
   // TODO: find JPA equivalent for GenericGenerator

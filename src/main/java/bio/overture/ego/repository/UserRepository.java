@@ -17,12 +17,21 @@
 package bio.overture.ego.repository;
 
 import bio.overture.ego.model.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.repository.PagingAndSortingRepository;
+
 import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends NamedRepository<User, UUID> {
 
   Optional<User> getUserByNameIgnoreCase(String name);
+
+  @EntityGraph(value = "user-entity-with-relationships", type = EntityGraph.EntityGraphType.FETCH)
+  User findOneByNameIgnoreCase(String name);
 
   boolean existsUserByNameIgnoreCase(String name);
 

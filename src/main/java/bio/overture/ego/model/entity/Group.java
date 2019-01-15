@@ -40,6 +40,25 @@ import org.hibernate.annotations.GenericGenerator;
 @EqualsAndHashCode(of = {"id"})
 @ToString(exclude = {"users", "applications", "permissions"})
 @JsonPropertyOrder({"id", "name", "description", "status", "applications", "groupPermissions"})
+@NamedEntityGraph(
+        name = "group-entity-with-relationships",
+        attributeNodes = {
+                @NamedAttributeNode("id"),
+                @NamedAttributeNode("name"),
+                @NamedAttributeNode("description"),
+                @NamedAttributeNode("status"),
+                @NamedAttributeNode(value = "users", subgraph = "users-subgraph"),
+                @NamedAttributeNode(value = "applications", subgraph = "relationship-subgraph"),
+        },
+        subgraphs = {
+                @NamedSubgraph(
+                        name = "relationship-subgraph",
+                        attributeNodes = {
+                                @NamedAttributeNode("id")
+                        }
+                )
+        }
+)
 public class Group implements PolicyOwner, Identifiable<UUID> {
 
   @Id
@@ -67,6 +86,7 @@ public class Group implements PolicyOwner, Identifiable<UUID> {
       joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
   @JsonIgnore
+  @Builder.Default
   private Set<Application> applications = new HashSet<>();
 
   @ManyToMany(
@@ -77,14 +97,17 @@ public class Group implements PolicyOwner, Identifiable<UUID> {
       joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
   @JsonIgnore
+  @Builder.Default
   private Set<User> users = new HashSet<>();
 
   @JsonIgnore
+  @Builder.Default
   @JoinColumn(name = Fields.OWNER)
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   private Set<Policy> policies = new HashSet<>();
 
   @JsonIgnore
+  @Builder.Default
   @JoinColumn(name = Fields.GROUPID_JOIN)
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   private Set<GroupPermission> permissions = new HashSet<>();

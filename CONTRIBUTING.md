@@ -65,6 +65,7 @@ Please note we have a code of conduct, please follow it in all your interactions
 #### General
 1. DB via Test Containers - no in-memory DB or OS specific services
 2. No dependencies on any external services (ie. production micro-service)
+3. Tests **DO NOT** clear their data between runs, meaning that no test should rely on or expect a clean DB when running
 
 ##### Unit Testing
 

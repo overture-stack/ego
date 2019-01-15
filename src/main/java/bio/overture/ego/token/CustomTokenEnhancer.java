@@ -56,7 +56,7 @@ public class CustomTokenEnhancer implements TokenEnhancer {
   }
 
   private AppJWTAccessToken getApplicationAccessToken(String clientId) {
-    val app = applicationService.getApplicationByClientId(clientId);
+    val app = applicationService.getByClientId(clientId);
     val token = tokenService.generateAppToken(app);
 
     return tokenService.getAppAccessToken(token);

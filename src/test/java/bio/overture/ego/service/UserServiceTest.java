@@ -326,7 +326,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = applicationService.getApplicationByClientId("111111").getId().toString();
+    val appId = applicationService.getByClientId("111111").getId().toString();
 
     userService.addUserToApps(user.getId().toString(), singletonList(appId));
     userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
@@ -344,7 +344,7 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
-    val appId = applicationService.getApplicationByClientId("111111").getId().toString();
+    val appId = applicationService.getByClientId("111111").getId().toString();
 
     val users =
         userService.findAppUsers(
@@ -371,7 +371,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = applicationService.getApplicationByClientId("111111").getId().toString();
+    val appId = applicationService.getByClientId("111111").getId().toString();
 
     userService.addUserToApps(user.getId().toString(), singletonList(appId));
     userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
@@ -393,7 +393,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = applicationService.getApplicationByClientId("111111").getId().toString();
+    val appId = applicationService.getByClientId("111111").getId().toString();
 
     userService.addUserToApps(user.getId().toString(), singletonList(appId));
     userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
@@ -414,7 +414,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = applicationService.getApplicationByClientId("111111").getId().toString();
+    val appId = applicationService.getByClientId("111111").getId().toString();
 
     userService.addUserToApps(user.getId().toString(), singletonList(appId));
     userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
@@ -606,9 +606,9 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
-    val app = applicationService.getApplicationByClientId("111111");
+    val app = applicationService.getByClientId("111111");
     val appId = app.getId().toString();
-    val appTwo = applicationService.getApplicationByClientId("222222");
+    val appTwo = applicationService.getByClientId("222222");
     val appTwoId = appTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
@@ -627,7 +627,7 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
-    val app = applicationService.getApplicationByClientId("111111");
+    val app = applicationService.getByClientId("111111");
     val appId = app.getId().toString();
 
     assertThatExceptionOfType(NotFoundException.class)
@@ -773,9 +773,9 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
-    val app = applicationService.getApplicationByClientId("111111");
+    val app = applicationService.getByClientId("111111");
     val appId = app.getId().toString();
-    val appTwo = applicationService.getApplicationByClientId("222222");
+    val appTwo = applicationService.getByClientId("222222");
     val appTwoId = appTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
@@ -796,9 +796,9 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
-    val app = applicationService.getApplicationByClientId("111111");
+    val app = applicationService.getByClientId("111111");
     val appId = app.getId().toString();
-    val appTwo = applicationService.getApplicationByClientId("222222");
+    val appTwo = applicationService.getByClientId("222222");
     val appTwoId = appTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
@@ -814,9 +814,9 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
-    val app = applicationService.getApplicationByClientId("111111");
+    val app = applicationService.getByClientId("111111");
     val appId = app.getId().toString();
-    val appTwo = applicationService.getApplicationByClientId("222222");
+    val appTwo = applicationService.getByClientId("222222");
     val appTwoId = appTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
@@ -832,9 +832,9 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
-    val app = applicationService.getApplicationByClientId("111111");
+    val app = applicationService.getByClientId("111111");
     val appId = app.getId().toString();
-    val appTwo = applicationService.getApplicationByClientId("222222");
+    val appTwo = applicationService.getByClientId("222222");
     val appTwoId = appTwo.getId().toString();
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId().toString();
