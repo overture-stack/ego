@@ -1,22 +1,22 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Joiners.COMMA;
+
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.repository.BaseRepository;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Joiners.COMMA;
-
 /**
  * Base implementation
+ *
  * @param <T>
  */
 @RequiredArgsConstructor

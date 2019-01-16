@@ -30,6 +30,12 @@ public interface GroupRepository extends NamedRepository<Group, UUID> {
   @EntityGraph(value = "group-entity-with-relationships", type = EntityGraphType.FETCH)
   Group findOneByNameIgnoreCase(String name);
 
+
+  @EntityGraph(value = "group-entity-with-relationships", type = EntityGraphType.FETCH)
+  default Optional<Group> getGroupByNameIgnoreCaseWithUsers(String name){
+    return this.getGroupByNameIgnoreCase(name);
+  }
+
   Optional<Group> getGroupByNameIgnoreCase(String name);
 
   Set<Group> findAllByIdIn(List<UUID> groupIds);

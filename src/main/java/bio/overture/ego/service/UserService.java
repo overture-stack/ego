@@ -125,16 +125,14 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   public User createFromIDToken(IDToken idToken) {
-    return create(CreateUserRequest.builder()
-        .email(idToken.getEmail())
-        .firstName(
-            StringUtils.isEmpty(idToken.getGiven_name()) ? "" : idToken.getGiven_name() )
-        .lastName(
-            StringUtils.isEmpty(idToken.getFamily_name()) ? "" : idToken.getFamily_name())
-        .status(DEFAULT_USER_STATUS)
-        .role(DEFAULT_USER_ROLE)
-        .build()
-    );
+    return create(
+        CreateUserRequest.builder()
+            .email(idToken.getEmail())
+            .firstName(StringUtils.isEmpty(idToken.getGiven_name()) ? "" : idToken.getGiven_name())
+            .lastName(StringUtils.isEmpty(idToken.getFamily_name()) ? "" : idToken.getFamily_name())
+            .status(DEFAULT_USER_STATUS)
+            .role(DEFAULT_USER_ROLE)
+            .build());
   }
 
   public User getOrCreateDemoUser() {
@@ -172,25 +170,28 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return mapToSet(getPermissionsList(user), Permission::toScope);
   }
 
-  public static void associateUserWithPermissions(User user, @NonNull Collection<UserPermission> permissions) {
+  public static void associateUserWithPermissions(
+      User user, @NonNull Collection<UserPermission> permissions) {
     permissions.forEach(p -> associateUserWithPermission(user, p));
   }
 
-  public static void associateUserWithPermission(@NonNull User user, @NonNull UserPermission permission) {
+  public static void associateUserWithPermission(
+      @NonNull User user, @NonNull UserPermission permission) {
     user.getUserPermissions().add(permission);
     permission.setOwner(user);
   }
 
-  public static void associateUserWithGroups(User user, @NonNull Collection<Group> groups){
+  public static void associateUserWithGroups(User user, @NonNull Collection<Group> groups) {
     groups.forEach(g -> associateUserWithGroup(user, g));
   }
 
-  public static void associateUserWithGroup(@NonNull User user, @NonNull Group group){
+  public static void associateUserWithGroup(@NonNull User user, @NonNull Group group) {
     user.getGroups().add(group);
     group.getUsers().add(user);
   }
 
-  public static void associateUserWithApplications(User user, @NonNull Collection<Application> apps) {
+  public static void associateUserWithApplications(
+      User user, @NonNull Collection<Application> apps) {
     apps.forEach(a -> associateUserWithApplication(user, a));
   }
 
@@ -210,24 +211,24 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   public static Set<Permission> getPermissionsList(User user) {
     val upStream = user.getUserPermissions().stream();
-    val gpStream = user.getGroups().stream()
-        .map(Group::getPermissions)
-        .flatMap(Collection::stream);
-    val combinedPermissions = concat(upStream, gpStream)
-        .collect(groupingBy(Permission::getPolicy));
+    val gpStream = user.getGroups().stream().map(Group::getPermissions).flatMap(Collection::stream);
+    val combinedPermissions = concat(upStream, gpStream).collect(groupingBy(Permission::getPolicy));
 
-    return combinedPermissions.values().stream()
+    return combinedPermissions
+        .values()
+        .stream()
         .map(UserService::resolvePermissions)
         .collect(toImmutableSet());
   }
 
-  private static Permission resolvePermissions(List<Permission> permissions){
+  private static Permission resolvePermissions(List<Permission> permissions) {
     checkState(!permissions.isEmpty(), "Input permissions list cannot be empty");
     permissions.sort(comparing(Permission::getAccessLevel).reversed());
     return permissions.get(0);
   }
 
-  //TODO: [rtisma] this is the old implementation. Ensure there is a test for this, and if there isnt,
+  // TODO: [rtisma] this is the old implementation. Ensure there is a test for this, and if there
+  // isnt,
   // create one, and ensure the Old and new refactored method are correct
   public static Set<Permission> getPermissionsListOld(User user) {
     // Get user's individual permission (stream)
@@ -245,8 +246,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     // Combine individual user permissions and the user's
     // groups (if they have any) permissions
     val combinedPermissions =
-        concat(userPermissions, userGroupsPermissions)
-             .collect(groupingBy(Permission::getPolicy));
+        concat(userPermissions, userGroupsPermissions).collect(groupingBy(Permission::getPolicy));
     // If we have no permissions at all return an empty list
     if (combinedPermissions.values().size() == 0) {
       return new HashSet<>();
@@ -265,15 +265,13 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return finalPermissionsList;
   }
 
-  public User addUserPermission(
-      String userId, @NonNull PolicyIdStringWithAccessLevel policy) {
+  public User addUserPermission(String userId, @NonNull PolicyIdStringWithAccessLevel policy) {
     return addUserPermissions(userId, newArrayList(policy));
   }
 
   public User addUserPermissions(
       @NonNull String userId, @NonNull List<PolicyIdStringWithAccessLevel> permissions) {
-    val policyMap =
-        permissions.stream().collect(groupingBy(x -> fromString(x.getPolicyId())));
+    val policyMap = permissions.stream().collect(groupingBy(x -> fromString(x.getPolicyId())));
     val user = getById(fromString(userId));
     policyService
         .getMany(ImmutableList.copyOf(policyMap.keySet()))
@@ -288,7 +286,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getById(fromString(userId));
   }
 
-  //TODO: [rtisma] remove this method once reactor is removed (EGO-209
+  // TODO: [rtisma] remove this method once reactor is removed (EGO-209
   @Deprecated
   public User update(@NonNull User data) {
     val user = getById(data.getId());
@@ -399,7 +397,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return new PageImpl<>(userPermissions, pageable, userPermissions.size());
   }
 
-  public void delete(String id){
+  public void delete(String id) {
     delete(fromString(id));
   }
 
@@ -455,7 +453,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
         .map(a -> UserPermission.builder().accessLevel(a).policy(p).owner(u).build());
   }
 
-  private static User convertToUser(CreateUserRequest request){
+  private static User convertToUser(CreateUserRequest request) {
     return User.builder()
         .preferredLanguage(request.getPreferredLanguage())
         .email(request.getEmail())
@@ -472,10 +470,11 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   /**
    * Partially updates the {@param user} using only non-null {@code UpdateUserRequest} object
+   *
    * @param user updatee
    * @param r updater
    */
-  public static void partialUpdateUser(@NonNull User user, @NonNull UpdateUserRequest r){
+  public static void partialUpdateUser(@NonNull User user, @NonNull UpdateUserRequest r) {
     nonNullAcceptor(r.getRole(), x -> user.setRole(resolveUserRoleIgnoreCase(x).toString()));
     nonNullAcceptor(r.getFirstName(), user::setFirstName);
     nonNullAcceptor(r.getLastLogin(), user::setLastLogin);
@@ -484,5 +483,4 @@ public class UserService extends AbstractNamedService<User, UUID> {
     nonNullAcceptor(r.getPreferredLanguage(), user::setPreferredLanguage);
     nonNullAcceptor(r.getStatus(), user::setStatus);
   }
-
 }

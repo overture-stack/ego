@@ -28,6 +28,7 @@ import java.util.UUID;
 public class GroupPermissionSpecification extends SpecificationBase<Permission> {
   public static Specification<GroupPermission> withPolicy(@Nonnull UUID policyId) {
     return (root, query, builder) -> {
+      query.distinct(true);
       Join<GroupPermission, Policy> applicationJoin = root.join("policy");
       return builder.equal(applicationJoin.<Integer>get("id"), policyId);
     };

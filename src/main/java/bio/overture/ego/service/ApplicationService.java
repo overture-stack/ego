@@ -138,7 +138,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
         pageable);
   }
 
-  public Optional<Application> findApplicationByClientId(@NonNull String clientId){
+  public Optional<Application> findApplicationByClientId(@NonNull String clientId) {
     return applicationRepository.getApplicationByClientIdIgnoreCase(clientId);
   }
 
@@ -147,7 +147,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     checkNotFound(
         result.isPresent(),
         "The '%s' entity with clientId '%s' was not found",
-        getClass().getSimpleName(),
+        Application.class.getSimpleName(),
         clientId);
     return result.get();
   }
@@ -200,7 +200,8 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     return clientDetails;
   }
 
-  public void delete(String id){
+  public void delete(String id) {
     delete(fromString(id));
   }
+
 }

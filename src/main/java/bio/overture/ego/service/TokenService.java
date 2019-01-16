@@ -48,7 +48,6 @@ import org.springframework.security.oauth2.common.exceptions.InvalidScopeExcepti
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
 
-import javax.management.InvalidApplicationException;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -191,17 +190,7 @@ public class TokenService {
     if (apps != null) {
       log.info("Generating apps list");
       for (val appId : apps) {
-        val app =
-            applicationService
-                .findById(appId)
-                .orElseThrow(
-                    () -> {
-                      log.info(
-                          format(
-                              "Can't issue token for non-existent application '%s'", str(appId)));
-                      return new InvalidApplicationException(
-                          format("No such application %s", str(appId)));
-                    });
+        val app = applicationService.get(appId.toString());
         token.addApplication(app);
       }
     }

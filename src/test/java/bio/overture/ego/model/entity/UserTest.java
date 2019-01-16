@@ -1,11 +1,16 @@
 package bio.overture.ego.model.entity;
 
+import static bio.overture.ego.service.UserService.extractScopes;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
+import java.util.Arrays;
+import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Test;
@@ -15,12 +20,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Arrays;
-import java.util.Collections;
-
-import static bio.overture.ego.service.UserService.extractScopes;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @SpringBootTest

@@ -2,8 +2,10 @@ package bio.overture.ego.utils;
 
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.User;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -25,4 +27,9 @@ public class EntityTools {
   public static List<UUID> extractAppIds(Set<Application> entities) {
     return entities.stream().map(Application::getId).collect(Collectors.toList());
   }
+
+  public static <ID, I extends Identifiable<ID>> List<ID> extractIDs(Collection<I> entities) {
+    return entities.stream().map(Identifiable::getId).collect(Collectors.toList());
+  }
+
 }

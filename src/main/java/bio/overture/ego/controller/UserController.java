@@ -38,6 +38,9 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,10 +60,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
-
-import javax.persistence.EntityNotFoundException;
-import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -164,7 +163,12 @@ public class UserController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
   @ApiResponses(
-      value = {@ApiResponse(code = 200, message = "Partially update using non-null user info", response = User.class)})
+      value = {
+        @ApiResponse(
+            code = 200,
+            message = "Partially update using non-null user info",
+            response = User.class)
+      })
   public @ResponseBody User updateUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String id,

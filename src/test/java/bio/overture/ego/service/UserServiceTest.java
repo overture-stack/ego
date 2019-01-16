@@ -134,13 +134,14 @@ public class UserServiceTest {
   @Test
   public void testGetOrCreateDemoUserAlREADyExisting() {
     // This should force the demo user to have admin and approved status's
-    val createRequest = CreateUserRequest.builder()
-        .email("Demo.User@example.com")
-        .firstName("Demo")
-        .lastName("User")
-        .status("Pending")
-        .role("USER")
-        .build();
+    val createRequest =
+        CreateUserRequest.builder()
+            .email("Demo.User@example.com")
+            .firstName("Demo")
+            .lastName("User")
+            .status("Pending")
+            .role("USER")
+            .build();
 
     val user = userService.create(createRequest);
 
@@ -431,36 +432,31 @@ public class UserServiceTest {
   @Test
   public void testUpdate() {
     val user = entityGenerator.setupUser("First User");
-    val updated = userService.partialUpdate(user.getId(),
-        UpdateUserRequest.builder()
-            .firstName("NotFirst")
-            .build());
+    val updated =
+        userService.partialUpdate(
+            user.getId(), UpdateUserRequest.builder().firstName("NotFirst").build());
     assertThat(updated.getFirstName()).isEqualTo("NotFirst");
   }
 
   @Test
   public void testUpdateRoleUser() {
     val user = entityGenerator.setupUser("First User");
-    val updated = userService.partialUpdate(user.getId(),
-        UpdateUserRequest.builder()
-            .role("user")
-            .build());
+    val updated =
+        userService.partialUpdate(user.getId(), UpdateUserRequest.builder().role("user").build());
     assertThat(updated.getRole()).isEqualTo("USER");
   }
 
   @Test
   public void testUpdateRoleAdmin() {
     val user = entityGenerator.setupUser("First User");
-    val updated = userService.partialUpdate(user.getId(),
-        UpdateUserRequest.builder()
-            .role("admin")
-            .build());
+    val updated =
+        userService.partialUpdate(user.getId(), UpdateUserRequest.builder().role("admin").build());
     assertThat(updated.getRole()).isEqualTo("ADMIN");
   }
 
-  private UUID generateRandomUserUUID(){
+  private UUID generateRandomUserUUID() {
     UUID id = UUID.randomUUID();
-    while (userService.isExist(id)){
+    while (userService.isExist(id)) {
       id = UUID.randomUUID();
     }
     return id;
@@ -480,18 +476,22 @@ public class UserServiceTest {
             .role("ADMIN")
             .build();
     assertThatExceptionOfType(NotFoundException.class)
-        .isThrownBy(() -> userService.partialUpdate(generateRandomUserUUID(), updateRequest ));
+        .isThrownBy(() -> userService.partialUpdate(generateRandomUserUUID(), updateRequest));
   }
 
   @Test
-  @Ignore("This is ignored because an updateRequest object doesnt contain an id, therefore there is nothing to cause an UpdateID error in the first place")
+  @Ignore(
+      "This is ignored because an updateRequest object doesnt contain an id, therefore there is nothing to cause an UpdateID error in the first place")
   @Deprecated
   public void testUpdateIdNotAllowed() {
     val user = entityGenerator.setupUser("First User");
     user.setId(UUID.fromString("0c1dc4b8-7fb8-11e8-adc0-fa7ae01bbebc"));
     // New id means new non-existent policy or one that exists and is being overwritten
     assertThatExceptionOfType(NotFoundException.class)
-        .isThrownBy(() -> userService.partialUpdate(generateRandomUserUUID(), UpdateUserRequest.builder().build()));
+        .isThrownBy(
+            () ->
+                userService.partialUpdate(
+                    generateRandomUserUUID(), UpdateUserRequest.builder().build()));
   }
 
   @Test

@@ -31,14 +31,17 @@ public class UserSpecification extends SpecificationBase<User> {
 
   public static Specification<User> containsText(@Nonnull String text) {
     val finalText = QueryUtils.prepareForQuery(text);
-    return (root, query, builder) ->
-        builder.or(
-            getQueryPredicates(
-                builder, root, finalText, "name", "email", "firstName", "lastName", "status"));
+    return (root, query, builder) -> {
+      query.distinct(true);
+      return builder.or(
+          getQueryPredicates(
+              builder, root, finalText, "name", "email", "firstName", "lastName", "status"));
+    };
   }
 
   public static Specification<User> inGroup(@Nonnull UUID groupId) {
     return (root, query, builder) -> {
+      query.distinct(true);
       Join<User, Group> groupJoin = root.join("groups");
       return builder.equal(groupJoin.<Integer>get("id"), groupId);
     };
@@ -46,6 +49,7 @@ public class UserSpecification extends SpecificationBase<User> {
 
   public static Specification<User> ofApplication(@Nonnull UUID appId) {
     return (root, query, builder) -> {
+      query.distinct(true);
       Join<User, Application> applicationJoin = root.join("applications");
       return builder.equal(applicationJoin.<Integer>get("id"), appId);
     };

@@ -1,9 +1,13 @@
 package bio.overture.ego.service;
 
+import static java.util.UUID.fromString;
+
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.PolicyRepository;
 import bio.overture.ego.repository.queryspecification.PolicySpecification;
+import java.util.List;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,11 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
-
-import static java.util.UUID.fromString;
 
 @Slf4j
 @Service
@@ -53,7 +52,7 @@ public class PolicyService extends AbstractNamedService<Policy, UUID> {
     return updatedPolicy;
   }
 
-  public void delete(String id){
+  public void delete(String id) {
     delete(fromString(id));
   }
 

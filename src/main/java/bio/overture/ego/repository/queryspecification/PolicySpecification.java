@@ -28,7 +28,9 @@ public class PolicySpecification extends SpecificationBase<User> {
 
   public static Specification<Policy> containsText(@Nonnull String text) {
     val finalText = QueryUtils.prepareForQuery(text);
-    return (root, query, builder) ->
-        builder.or(getQueryPredicates(builder, root, finalText, "name"));
+    return (root, query, builder) -> {
+      query.distinct(true);
+      return builder.or(getQueryPredicates(builder, root, finalText, "name"));
+    };
   }
 }

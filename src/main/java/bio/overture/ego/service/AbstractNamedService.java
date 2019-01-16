@@ -10,12 +10,12 @@ import java.util.Optional;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 
 public abstract class AbstractNamedService<T extends Identifiable<ID>, ID>
-    extends AbstractBaseService<T, ID>
-    implements NamedService<T, ID> {
+    extends AbstractBaseService<T, ID> implements NamedService<T, ID> {
 
   private final NamedRepository<T, ID> namedRepository;
 
-  public AbstractNamedService(@NonNull Class<T> entityType, @NonNull NamedRepository<T, ID> repository) {
+  public AbstractNamedService(
+      @NonNull Class<T> entityType, @NonNull NamedRepository<T, ID> repository) {
     super(entityType, repository);
     this.namedRepository = repository;
   }

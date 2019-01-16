@@ -1,11 +1,10 @@
 package bio.overture.ego.utils;
 
 import com.google.common.collect.ImmutableList;
-import lombok.NonNull;
-
 import java.util.Iterator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import lombok.NonNull;
 
 public class Streams {
 

@@ -35,6 +35,9 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -44,12 +47,17 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
-
-import javax.persistence.EntityNotFoundException;
-import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 @Slf4j
 @Builder
@@ -360,11 +368,11 @@ public class GroupController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/users")
   @ApiResponses(
-          value = {@ApiResponse(code = 200, message = "Add Users to Group", response = Group.class)})
+      value = {@ApiResponse(code = 200, message = "Add Users to Group", response = Group.class)})
   public @ResponseBody Group addUsersToGroups(
-          @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-          @PathVariable(value = "id", required = true) String grpId,
-          @RequestBody(required = true) List<String> users) {
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @PathVariable(value = "id", required = true) String grpId,
+      @RequestBody(required = true) List<String> users) {
     return groupService.addUsersToGroup(grpId, users);
   }
 

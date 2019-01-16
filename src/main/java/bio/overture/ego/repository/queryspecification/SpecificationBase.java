@@ -49,11 +49,14 @@ public class SpecificationBase<T> {
   }
 
   public static <T> Specification<T> filterBy(@NonNull List<SearchFilter> filters) {
-    return (root, query, builder) ->
-        builder.and(
-            filters
-                .stream()
-                .map(f -> filterByField(builder, root, f.getFilterField(), f.getFilterValue()))
-                .toArray(Predicate[]::new));
+    return (root, query, builder) ->{
+      query.distinct(true);
+      return builder.and(
+          filters
+              .stream()
+              .map(f -> filterByField(builder, root, f.getFilterField(), f.getFilterValue()))
+              .toArray(Predicate[]::new));
+    };
   }
+
 }

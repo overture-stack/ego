@@ -2,6 +2,7 @@ package bio.overture.ego.service;
 
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.token.app.AppTokenClaims;
 import bio.overture.ego.utils.EntityGenerator;
@@ -13,7 +14,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.provider.ClientRegistrationException;
@@ -71,7 +71,7 @@ public class ApplicationServiceTest {
 
   @Test
   public void testGetEntityNotFoundException() {
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> applicationService.get(UUID.randomUUID().toString()));
   }
 
@@ -93,7 +93,7 @@ public class ApplicationServiceTest {
   @Ignore
   public void testGetByNameNotFound() {
     // TODO Currently returning null, should throw exception (EntityNotFoundException?)
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> applicationService.getByName("Application 123456"));
   }
 
@@ -182,8 +182,10 @@ public class ApplicationServiceTest {
 
     val application = applicationService.getByClientId("444444");
 
-    userService.addUserToApps(user.getId().toString(), newArrayList(application.getId().toString()));
-    userService.addUserToApps(userTwo.getId().toString(), newArrayList(application.getId().toString()));
+    userService.addUserToApps(
+        user.getId().toString(), newArrayList(application.getId().toString()));
+    userService.addUserToApps(
+        userTwo.getId().toString(), newArrayList(application.getId().toString()));
 
     val applications =
         applicationService.findUserApps(
@@ -226,9 +228,9 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("111111");
     val applicationTwo = applicationService.getByClientId("555555");
 
-    userService.addUserToApps(user.getId().toString(),
-        newArrayList(applicationOne.getId().toString(),
-            applicationTwo.getId().toString()));
+    userService.addUserToApps(
+        user.getId().toString(),
+        newArrayList(applicationOne.getId().toString(), applicationTwo.getId().toString()));
 
     val clientIdFilter = new SearchFilter("clientId", "111111");
 
@@ -251,9 +253,9 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("333333");
     val applicationTwo = applicationService.getByClientId("444444");
 
-    userService.addUserToApps(user.getId().toString(),
-        newArrayList(applicationOne.getId().toString(),
-            applicationTwo.getId().toString()));
+    userService.addUserToApps(
+        user.getId().toString(),
+        newArrayList(applicationOne.getId().toString(), applicationTwo.getId().toString()));
 
     val clientIdFilter = new SearchFilter("clientId", "333333");
 
@@ -276,9 +278,9 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("222222");
     val applicationTwo = applicationService.getByClientId("444444");
 
-    userService.addUserToApps(user.getId().toString(),
-        newArrayList(applicationOne.getId().toString(),
-            applicationTwo.getId().toString()));
+    userService.addUserToApps(
+        user.getId().toString(),
+        newArrayList(applicationOne.getId().toString(), applicationTwo.getId().toString()));
 
     val applications =
         applicationService.findUserApps(
@@ -438,7 +440,7 @@ public class ApplicationServiceTest {
     val application = entityGenerator.setupApplication("123456");
     application.setId(new UUID(12312912931L, 12312912931L));
     // New id means new non-existent policy or one that exists and is being overwritten
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> applicationService.update(application));
   }
 
@@ -481,7 +483,7 @@ public class ApplicationServiceTest {
   @Test
   public void testDeleteNonExisting() {
     entityGenerator.setupTestApplications();
-    assertThatExceptionOfType(EmptyResultDataAccessException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> applicationService.delete(UUID.randomUUID().toString()));
   }
 
@@ -514,14 +516,14 @@ public class ApplicationServiceTest {
 
   @Test
   public void testLoadClientByClientIdNotFound() {
-    assertThatExceptionOfType(ClientRegistrationException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> applicationService.loadClientByClientId("123456"))
         .withMessage("Client ID not found.");
   }
 
   @Test
   public void testLoadClientByClientIdEmptyString() {
-    assertThatExceptionOfType(ClientRegistrationException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> applicationService.loadClientByClientId(""))
         .withMessage("Client ID not found.");
   }

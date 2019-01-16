@@ -35,7 +35,20 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedSubgraph;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -52,49 +65,46 @@ import static com.google.common.collect.Sets.newHashSet;
 @Table(name = Tables.EGOUSER)
 @Data
 @ToString(exclude = {
-    JavaFields.GROUPS,
-    JavaFields.APPLICATIONS,
-    JavaFields.USERPERMISSIONS})
+    LombokFields.groups,
+    LombokFields.applications,
+    LombokFields.userPermissions
+})
 @JsonPropertyOrder({
-    JavaFields.ID,
-    JavaFields.NAME,
-    JavaFields.EMAIL,
-    JavaFields.ROLE,
-    JavaFields.STATUS,
-    JavaFields.GROUPS,
-    JavaFields.APPLICATIONS,
-    JavaFields.USERPERMISSIONS,
-    JavaFields.FIRSTNAME,
-    JavaFields.LASTNAME,
-    JavaFields.CREATEDAT,
-    JavaFields.LASTLOGIN,
-    JavaFields.PREFERREDLANGUAGE
+  JavaFields.ID,
+  JavaFields.NAME,
+  JavaFields.EMAIL,
+  JavaFields.ROLE,
+  JavaFields.STATUS,
+  JavaFields.GROUPS,
+  JavaFields.APPLICATIONS,
+  JavaFields.USERPERMISSIONS,
+  JavaFields.FIRSTNAME,
+  JavaFields.LASTNAME,
+  JavaFields.CREATEDAT,
+  JavaFields.LASTLOGIN,
+  JavaFields.PREFERREDLANGUAGE
 })
 @JsonInclude()
-@EqualsAndHashCode(of = { LombokFields.id })
+@EqualsAndHashCode(of = {LombokFields.id})
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
 @NamedEntityGraph(
-        name = "user-entity-with-relationships",
-        attributeNodes = {
-                @NamedAttributeNode("id"),
-                @NamedAttributeNode("name"),
-                @NamedAttributeNode("email"),
-                @NamedAttributeNode("status"),
-                @NamedAttributeNode(value = "groups", subgraph = "users-subgraph"),
-                @NamedAttributeNode(value = "applications", subgraph = "relationship-subgraph"),
-        },
-        subgraphs = {
-                @NamedSubgraph(
-                        name = "relationship-subgraph",
-                        attributeNodes = {
-                                @NamedAttributeNode("id")
-                        }
-                )
-        }
-)
+    name = "user-entity-with-relationships",
+    attributeNodes = {
+      @NamedAttributeNode("id"),
+      @NamedAttributeNode("name"),
+      @NamedAttributeNode("email"),
+      @NamedAttributeNode("status"),
+      @NamedAttributeNode(value = "groups", subgraph = "users-subgraph"),
+      @NamedAttributeNode(value = "applications", subgraph = "relationship-subgraph"),
+    },
+    subgraphs = {
+      @NamedSubgraph(
+          name = "relationship-subgraph",
+          attributeNodes = {@NamedAttributeNode("id")})
+    })
 public class User implements PolicyOwner, Identifiable<UUID> {
 
   // TODO: find JPA equivalent for GenericGenerator
@@ -148,7 +158,9 @@ public class User implements PolicyOwner, Identifiable<UUID> {
       fetch = FetchType.LAZY)
   @JoinColumn(name = SqlFields.USERID_JOIN)
   @Builder.Default
-  private Set<UserPermission> userPermissions = newHashSet(); // TODO: @rtisma test that this initialization is the same as the init method // (that it does not cause isseus with hibernate)
+  private Set<UserPermission> userPermissions =
+      newHashSet(); // TODO: @rtisma test that this initialization is the same as the init method //
+  // (that it does not cause isseus with hibernate)
 
   @JsonIgnore
   @ManyToMany(
@@ -171,15 +183,16 @@ public class User implements PolicyOwner, Identifiable<UUID> {
       name = Tables.USER_APPLICATION,
       joinColumns = {@JoinColumn(name = SqlFields.USERID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = SqlFields.APPID_JOIN)})
-  //TODO: [rtisma] test that all collections have Builder.Default. assertThat(userService.get(myUserId).getApplications()).isNotNull() and is empty.
+  // TODO: [rtisma] test that all collections have Builder.Default.
+  // assertThat(userService.get(myUserId).getApplications()).isNotNull() and is empty.
   @Builder.Default
   private Set<Application> applications = newHashSet();
 
-  //TODO: [rtisma] move getPermissions to UserService once DTO task is complete. JsonViews creates a dependency for this method. For now, using a UserService static method.
+  // TODO: [rtisma] move getPermissions to UserService once DTO task is complete. JsonViews creates
+  // a dependency for this method. For now, using a UserService static method.
   // Creates permissions in JWTAccessToken::context::user
   @JsonView(Views.JWTAccessToken.class)
   public List<String> getPermissions() {
     return extractPermissionStrings(getPermissionsList(this));
   }
-
 }

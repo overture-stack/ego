@@ -1,12 +1,5 @@
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.utils.EntityTools.*;
-import static java.util.Arrays.asList;
-import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
-import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.enums.EntityStatus;
@@ -14,9 +7,6 @@ import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
-
-import java.util.*;
-
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.json.JSONException;
@@ -37,6 +27,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.List;
+import java.util.UUID;
+
+import static bio.overture.ego.utils.EntityTools.extractAppIds;
+import static bio.overture.ego.utils.EntityTools.extractGroupIds;
+import static bio.overture.ego.utils.EntityTools.extractIDs;
+import static java.util.Arrays.asList;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -253,10 +254,18 @@ public class GroupControllerTest {
     HttpEntity<List> saveGroupApps = new HttpEntity<>(appsBody, headers);
 
     ResponseEntity<String> saveGroupUsersRes =
-        restTemplate.exchange(createURLWithPort(String.format("/groups/%s/users", group.getId())), HttpMethod.POST, saveGroupUsers, String.class);
+        restTemplate.exchange(
+            createURLWithPort(String.format("/groups/%s/users", group.getId())),
+            HttpMethod.POST,
+            saveGroupUsers,
+            String.class);
 
     ResponseEntity<String> saveGroupAppsRes =
-        restTemplate.exchange(createURLWithPort(String.format("/groups/%s/applications", group.getId())), HttpMethod.POST, saveGroupApps, String.class);
+        restTemplate.exchange(
+            createURLWithPort(String.format("/groups/%s/applications", group.getId())),
+            HttpMethod.POST,
+            saveGroupApps,
+            String.class);
 
     // Check user-group relationship is there
     val userWithGroup = userService.getByName("TempGroupUser@domain.com");
@@ -294,6 +303,7 @@ public class GroupControllerTest {
     assertThat(groupService.getByName("DeleteOne")).isNull();
   }
 
+  //TODO: [rtisma] will eventually be fixed when properly using query by Specification, which will allow for runtime base queries. This will allow us to define fetch strategy at run time
   @Test
   public void AddUsersToGroup() {
 
@@ -307,14 +317,18 @@ public class GroupControllerTest {
     HttpEntity<List> entity = new HttpEntity<>(body, headers);
 
     ResponseEntity<String> response =
-        restTemplate.exchange(createURLWithPort(String.format("/groups/%s/users", group.getId())), HttpMethod.POST, entity, String.class);
+        restTemplate.exchange(
+            createURLWithPort(String.format("/groups/%s/users", group.getId())),
+            HttpMethod.POST,
+            entity,
+            String.class);
 
     HttpStatus responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
     // Check that Group is associated with Users
     val groupWithUsers = groupService.getByName("GroupWithUsers");
-    assertThat(extractUserIds(groupWithUsers.getUsers())).contains(userOne.getId(), userTwo.getId());
+    assertThat(extractIDs(groupWithUsers.getUsers())).contains(userOne.getId(), userTwo.getId());
 
     // Check that each user is associated with the group
     val userOneWithGroups = userService.getByName("FirstUser@domain.com");
@@ -337,14 +351,19 @@ public class GroupControllerTest {
     HttpEntity<List> entity = new HttpEntity<>(body, headers);
 
     ResponseEntity<String> response =
-        restTemplate.exchange(createURLWithPort(String.format("/groups/%s/applications", group.getId())), HttpMethod.POST, entity, String.class);
+        restTemplate.exchange(
+            createURLWithPort(String.format("/groups/%s/applications", group.getId())),
+            HttpMethod.POST,
+            entity,
+            String.class);
 
     HttpStatus responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
     // Check that Group is associated with Users
     val groupWithApps = groupService.getByName("GroupWithApps");
-    assertThat(extractAppIds(groupWithApps.getApplications())).contains(appOne.getId(), appTwo.getId());
+    assertThat(extractAppIds(groupWithApps.getApplications()))
+        .contains(appOne.getId(), appTwo.getId());
 
     // Check that each user is associated with the group
     val appOneWithGroups = applicationService.getByClientId("111111");

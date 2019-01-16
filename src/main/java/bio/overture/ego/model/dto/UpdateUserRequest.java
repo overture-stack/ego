@@ -16,12 +16,11 @@
 
 package bio.overture.ego.model.dto;
 
+import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
 
 @Data
 @Builder
@@ -36,5 +35,4 @@ public class UpdateUserRequest {
   private String lastName;
   private String preferredLanguage;
   private Date lastLogin;
-
 }

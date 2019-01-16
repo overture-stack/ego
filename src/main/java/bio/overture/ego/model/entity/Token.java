@@ -2,7 +2,7 @@ package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.Fields;
-import bio.overture.ego.model.enums.JavaFields;
+import bio.overture.ego.model.enums.LombokFields;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,10 +38,10 @@ import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 @Entity
 @Table(name = "token")
 @Data
-@ToString(exclude = {
-    JavaFields.APPLICATIONS,
-    JavaFields.OWNER,
-    JavaFields.SCOPES,
+@ToString( exclude = {
+    LombokFields.applications,
+    LombokFields.owner,
+    LombokFields.scopes
 })
 @EqualsAndHashCode(of = {"id"})
 @Builder

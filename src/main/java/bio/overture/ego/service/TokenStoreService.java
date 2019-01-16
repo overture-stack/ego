@@ -18,14 +18,13 @@ package bio.overture.ego.service;
 
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.repository.TokenStoreRepository;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
-import java.util.UUID;
 
 @Slf4j
 @Service

@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static java.util.UUID.fromString;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
@@ -91,12 +92,24 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   public Group addUsersToGroup(@NonNull String grpId, @NonNull List<String> userIds) {
     val group = getById(fromString(grpId));
     userIds.forEach(
-            userId -> {
-              val user = userRepository.findById(fromString(userId)).orElseThrow(() -> new NotFoundException(String.format("Could not find User with ID: %s", userId)));
-              group.getUsers().add(user);
-              user.getGroups().add(group);
-            });
+        userId -> {
+          val user =
+              userRepository
+                  .findById(fromString(userId))
+                  .orElseThrow(
+                      () ->
+                          new NotFoundException(
+                              String.format("Could not find User with ID: %s", userId)));
+          group.getUsers().add(user);
+          user.getGroups().add(group);
+        });
     return groupRepository.save(group);
+  }
+
+  public Group getByNameWithUsers(@NonNull String name){
+    val result = groupRepository.getGroupByNameIgnoreCaseWithUsers(name);
+    checkNotFound(result.isPresent(), "The group name '%s' could not be found", name);
+    return result.get();
   }
 
   public Group addGroupPermissions(
@@ -128,7 +141,8 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
             .status(other.getStatus())
             .applications(existingGroup.getApplications())
             .users(existingGroup.getUsers())
-        .build();;
+            .build();
+    ;
 
     return groupRepository.save(updatedGroup);
   }
@@ -223,7 +237,13 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     // TODO - Properly handle invalid IDs here
     appIDs.forEach(
         appId -> {
-          val app = applicationRepository.findById(fromString(appId)).orElseThrow(() -> new NotFoundException(String.format("Could not find Application with ID: %s", appId)));
+          val app =
+              applicationRepository
+                  .findById(fromString(appId))
+                  .orElseThrow(
+                      () ->
+                          new NotFoundException(
+                              String.format("Could not find Application with ID: %s", appId)));
           group.getApplications().remove(app);
           app.getGroups().remove(group);
         });
@@ -239,7 +259,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     groupRepository.save(group);
   }
 
-  public void delete(String id){
+  public void delete(String id) {
     delete(fromString(id));
   }
 }

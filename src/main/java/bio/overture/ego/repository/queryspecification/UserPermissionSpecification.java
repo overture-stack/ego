@@ -28,6 +28,7 @@ import java.util.UUID;
 public class UserPermissionSpecification extends SpecificationBase<Permission> {
   public static Specification<UserPermission> withPolicy(@Nonnull UUID policyId) {
     return (root, query, builder) -> {
+      query.distinct(true);
       Join<UserPermission, Policy> applicationJoin = root.join("policy");
       return builder.equal(applicationJoin.<Integer>get("id"), policyId);
     };

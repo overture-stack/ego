@@ -30,8 +30,9 @@ import java.util.UUID;
 public class ApplicationSpecification extends SpecificationBase<Application> {
   public static Specification<Application> containsText(@Nonnull String text) {
     val finalText = QueryUtils.prepareForQuery(text);
-    return (root, query, builder) ->
-        builder.or(
+    return (root, query, builder) ->{
+        query.distinct(true);
+        return builder.or(
             getQueryPredicates(
                 builder,
                 root,
@@ -41,10 +42,12 @@ public class ApplicationSpecification extends SpecificationBase<Application> {
                 "clientSecret",
                 "description",
                 "status"));
+    };
   }
 
   public static Specification<Application> inGroup(@Nonnull UUID groupId) {
     return (root, query, builder) -> {
+      query.distinct(true);
       Join<Application, Group> groupJoin = root.join("groups");
       return builder.equal(groupJoin.<Integer>get("id"), groupId);
     };
@@ -52,6 +55,7 @@ public class ApplicationSpecification extends SpecificationBase<Application> {
 
   public static Specification<Application> usedBy(@Nonnull UUID userId) {
     return (root, query, builder) -> {
+      query.distinct(true);
       Join<Application, User> applicationUserJoin = root.join("users");
       return builder.equal(applicationUserJoin.<Integer>get("id"), userId);
     };
