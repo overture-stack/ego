@@ -166,39 +166,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
-  public static Set<Scope> extractScopes(@NonNull User user) {
-    return mapToSet(getPermissionsList(user), Permission::toScope);
-  }
-
-  public static void associateUserWithPermissions(
-      User user, @NonNull Collection<UserPermission> permissions) {
-    permissions.forEach(p -> associateUserWithPermission(user, p));
-  }
-
-  public static void associateUserWithPermission(
-      @NonNull User user, @NonNull UserPermission permission) {
-    user.getUserPermissions().add(permission);
-    permission.setOwner(user);
-  }
-
-  public static void associateUserWithGroups(User user, @NonNull Collection<Group> groups) {
-    groups.forEach(g -> associateUserWithGroup(user, g));
-  }
-
-  public static void associateUserWithGroup(@NonNull User user, @NonNull Group group) {
-    user.getGroups().add(group);
-    group.getUsers().add(user);
-  }
-
-  public static void associateUserWithApplications(
-      User user, @NonNull Collection<Application> apps) {
-    apps.forEach(a -> associateUserWithApplication(user, a));
-  }
-
-  public static void associateUserWithApplication(@NonNull User user, @NonNull Application app) {
-    user.getApplications().add(app);
-    app.getUsers().add(user);
-  }
 
   public User addUserToApps(@NonNull String userId, @NonNull List<String> appIDs) {
     val user = getById(fromString(userId));
@@ -207,62 +174,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
     // TODO: @rtisma test setting apps even if there were existing apps before does not delete the
     // existing ones. Becuase the PERSIST and MERGE cascade type is used, this should work correctly
     return getRepository().save(user);
-  }
-
-  public static Set<Permission> getPermissionsList(User user) {
-    val upStream = user.getUserPermissions().stream();
-    val gpStream = user.getGroups().stream().map(Group::getPermissions).flatMap(Collection::stream);
-    val combinedPermissions = concat(upStream, gpStream).collect(groupingBy(Permission::getPolicy));
-
-    return combinedPermissions
-        .values()
-        .stream()
-        .map(UserService::resolvePermissions)
-        .collect(toImmutableSet());
-  }
-
-  private static Permission resolvePermissions(List<Permission> permissions) {
-    checkState(!permissions.isEmpty(), "Input permissions list cannot be empty");
-    permissions.sort(comparing(Permission::getAccessLevel).reversed());
-    return permissions.get(0);
-  }
-
-  // TODO: [rtisma] this is the old implementation. Ensure there is a test for this, and if there
-  // isnt,
-  // create one, and ensure the Old and new refactored method are correct
-  public static Set<Permission> getPermissionsListOld(User user) {
-    // Get user's individual permission (stream)
-    val userPermissions =
-        Optional.ofNullable(user.getUserPermissions()).orElse(new HashSet<>()).stream();
-
-    // Get permissions from the user's groups (stream)
-    val userGroupsPermissions =
-        Optional.ofNullable(user.getGroups())
-            .orElse(new HashSet<>())
-            .stream()
-            .map(Group::getPermissions)
-            .flatMap(Collection::stream);
-
-    // Combine individual user permissions and the user's
-    // groups (if they have any) permissions
-    val combinedPermissions =
-        concat(userPermissions, userGroupsPermissions).collect(groupingBy(Permission::getPolicy));
-    // If we have no permissions at all return an empty list
-    if (combinedPermissions.values().size() == 0) {
-      return new HashSet<>();
-    }
-
-    // If we do have permissions ... sort the grouped permissions (by PolicyIdStringWithMaskName)
-    // on PolicyMask, extracting the first value of the sorted list into the final
-    // permissions list
-    HashSet<Permission> finalPermissionsList = new HashSet<>();
-
-    combinedPermissions.forEach(
-        (entity, permissions) -> {
-          permissions.sort(comparing(Permission::getAccessLevel).reversed());
-          finalPermissionsList.add(permissions.get(0));
-        });
-    return finalPermissionsList;
   }
 
   public User addUserPermission(String userId, @NonNull PolicyIdStringWithAccessLevel policy) {
@@ -282,6 +193,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
+  @Deprecated
   public User get(@NonNull String userId) {
     return getById(fromString(userId));
   }
@@ -401,6 +313,106 @@ public class UserService extends AbstractNamedService<User, UUID> {
     delete(fromString(id));
   }
 
+  public static Set<Permission> getPermissionsList(User user) {
+    val upStream = user.getUserPermissions().stream();
+    val gpStream = user.getGroups().stream().map(Group::getPermissions).flatMap(Collection::stream);
+    val combinedPermissions = concat(upStream, gpStream).collect(groupingBy(Permission::getPolicy));
+
+    return combinedPermissions
+        .values()
+        .stream()
+        .map(UserService::resolvePermissions)
+        .collect(toImmutableSet());
+  }
+
+  // TODO: [rtisma] this is the old implementation. Ensure there is a test for this, and if there
+  // isnt,
+  // create one, and ensure the Old and new refactored method are correct
+  public static Set<Permission> getPermissionsListOld(User user) {
+    // Get user's individual permission (stream)
+    val userPermissions =
+        Optional.ofNullable(user.getUserPermissions()).orElse(new HashSet<>()).stream();
+
+    // Get permissions from the user's groups (stream)
+    val userGroupsPermissions =
+        Optional.ofNullable(user.getGroups())
+            .orElse(new HashSet<>())
+            .stream()
+            .map(Group::getPermissions)
+            .flatMap(Collection::stream);
+
+    // Combine individual user permissions and the user's
+    // groups (if they have any) permissions
+    val combinedPermissions =
+        concat(userPermissions, userGroupsPermissions).collect(groupingBy(Permission::getPolicy));
+    // If we have no permissions at all return an empty list
+    if (combinedPermissions.values().size() == 0) {
+      return new HashSet<>();
+    }
+
+    // If we do have permissions ... sort the grouped permissions (by PolicyIdStringWithMaskName)
+    // on PolicyMask, extracting the first value of the sorted list into the final
+    // permissions list
+    HashSet<Permission> finalPermissionsList = new HashSet<>();
+
+    combinedPermissions.forEach(
+        (entity, permissions) -> {
+          permissions.sort(comparing(Permission::getAccessLevel).reversed());
+          finalPermissionsList.add(permissions.get(0));
+        });
+    return finalPermissionsList;
+  }
+
+  public static Set<Scope> extractScopes(@NonNull User user) {
+    return mapToSet(getPermissionsList(user), Permission::toScope);
+  }
+
+  public static void associateUserWithPermissions(
+      User user, @NonNull Collection<UserPermission> permissions) {
+    permissions.forEach(p -> associateUserWithPermission(user, p));
+  }
+
+  public static void associateUserWithPermission(
+      @NonNull User user, @NonNull UserPermission permission) {
+    user.getUserPermissions().add(permission);
+    permission.setOwner(user);
+  }
+
+  public static void associateUserWithGroups(User user, @NonNull Collection<Group> groups) {
+    groups.forEach(g -> associateUserWithGroup(user, g));
+  }
+
+  public static void associateUserWithGroup(@NonNull User user, @NonNull Group group) {
+    user.getGroups().add(group);
+    group.getUsers().add(user);
+  }
+
+  public static void associateUserWithApplications(
+      User user, @NonNull Collection<Application> apps) {
+    apps.forEach(a -> associateUserWithApplication(user, a));
+  }
+
+  public static void associateUserWithApplication(@NonNull User user, @NonNull Application app) {
+    user.getApplications().add(app);
+    app.getUsers().add(user);
+  }
+
+  /**
+   * Partially updates the {@param user} using only non-null {@code UpdateUserRequest} object
+   *
+   * @param user updatee
+   * @param r updater
+   */
+  public static void partialUpdateUser(@NonNull User user, @NonNull UpdateUserRequest r) {
+    nonNullAcceptor(r.getRole(), x -> user.setRole(resolveUserRoleIgnoreCase(x).toString()));
+    nonNullAcceptor(r.getFirstName(), user::setFirstName);
+    nonNullAcceptor(r.getLastLogin(), user::setLastLogin);
+    nonNullAcceptor(r.getLastName(), user::setLastName);
+    nonNullAcceptor(r.getEmail(), user::setEmail);
+    nonNullAcceptor(r.getPreferredLanguage(), user::setPreferredLanguage);
+    nonNullAcceptor(r.getStatus(), user::setStatus);
+  }
+
   public static void checkGroupsExistForUser(
       @NonNull User user, @NonNull Collection<UUID> groupIds) {
     val existingGroupIds = user.getGroups().stream().map(Group::getId).collect(toImmutableSet());
@@ -442,6 +454,12 @@ public class UserService extends AbstractNamedService<User, UUID> {
     }
   }
 
+  private static Permission resolvePermissions(List<Permission> permissions) {
+    checkState(!permissions.isEmpty(), "Input permissions list cannot be empty");
+    permissions.sort(comparing(Permission::getAccessLevel).reversed());
+    return permissions.get(0);
+  }
+
   private static Stream<UserPermission> streamUserPermission(
       User u, Map<UUID, List<PolicyIdStringWithAccessLevel>> policyMap, Policy p) {
     val policyId = p.getId();
@@ -468,19 +486,4 @@ public class UserService extends AbstractNamedService<User, UUID> {
         .build();
   }
 
-  /**
-   * Partially updates the {@param user} using only non-null {@code UpdateUserRequest} object
-   *
-   * @param user updatee
-   * @param r updater
-   */
-  public static void partialUpdateUser(@NonNull User user, @NonNull UpdateUserRequest r) {
-    nonNullAcceptor(r.getRole(), x -> user.setRole(resolveUserRoleIgnoreCase(x).toString()));
-    nonNullAcceptor(r.getFirstName(), user::setFirstName);
-    nonNullAcceptor(r.getLastLogin(), user::setLastLogin);
-    nonNullAcceptor(r.getLastName(), user::setLastName);
-    nonNullAcceptor(r.getEmail(), user::setEmail);
-    nonNullAcceptor(r.getPreferredLanguage(), user::setPreferredLanguage);
-    nonNullAcceptor(r.getStatus(), user::setStatus);
-  }
 }
