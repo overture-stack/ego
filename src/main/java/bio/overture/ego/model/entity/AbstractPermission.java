@@ -1,9 +1,9 @@
 package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LombokFields;
+import bio.overture.ego.model.enums.SqlFields;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -45,16 +45,17 @@ import static bio.overture.ego.model.enums.AccessLevel.EGO_ACCESS_LEVEL_ENUM;
 public abstract class AbstractPermission implements Identifiable<UUID> {
 
   @Id
-  @Column(nullable = false, name = Fields.ID, updatable = false)
+  @Column(nullable = false, name = SqlFields.ID, updatable = false)
   @GenericGenerator(name = "permission_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "permission_uuid")
   private UUID id;
 
+  @Column(nullable = false, name = SqlFields.POLICY)
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(nullable = false, name = Fields.POLICYID_JOIN)
+  @JoinColumn(nullable = false, name = SqlFields.POLICYID_JOIN)
   private Policy policy;
 
-  @Column(nullable = false, name = Fields.ACCESS_LEVEL)
+  @Column(nullable = false, name = SqlFields.ACCESS_LEVEL)
   @Enumerated(EnumType.STRING)
   @Type(type = EGO_ACCESS_LEVEL_ENUM)
   private AccessLevel accessLevel;

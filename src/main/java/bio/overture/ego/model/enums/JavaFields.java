@@ -42,5 +42,7 @@ public class JavaFields {
   public static final String USERPERMISSIONS = "userPermissions";
   public static final String USERPERMISSION = "userPermission";
   public static final String GROUPPERMISSION = "groupPermission";
+  public static final String GROUPPERMISSIONS = "groupPermissions";
+  public static final String DESCRIPTION = "description";
 
 }
