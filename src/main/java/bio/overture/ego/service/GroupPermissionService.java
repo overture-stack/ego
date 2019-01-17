@@ -20,7 +20,7 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 @Slf4j
 @Service
 @Transactional
-public class GroupPermissionService extends PermissionService<GroupPermission> {
+public class GroupPermissionService extends AbstractPermissionService<GroupPermission> {
 
   public GroupPermissionService(BaseRepository<GroupPermission, UUID> repository) {
     super(GroupPermission.class, repository);
@@ -36,10 +36,15 @@ public class GroupPermissionService extends PermissionService<GroupPermission> {
     return mapToList(permissions, this::getPolicyResponse);
   }
 
-  public PolicyResponse getPolicyResponse(GroupPermission p) {
+  public PolicyResponse getPolicyResponse(@NonNull GroupPermission p) {
     val name = p.getOwner().getName();
     val id = p.getOwner().getId().toString();
     val mask = p.getAccessLevel();
-    return new PolicyResponse(id, name, mask);
+    return PolicyResponse.builder()
+        .name(name)
+        .id(id)
+        .mask(mask)
+        .build();
   }
+
 }

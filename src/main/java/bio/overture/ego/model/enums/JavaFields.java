@@ -28,6 +28,8 @@ public class JavaFields {
   public static final String EMAIL = "email";
   public static final String ROLE = "role";
   public static final String STATUS = "status";
+  public static final String POLICY = "policy";
+  public static final String ACCESS_LEVEL = "accessLevel";
   public static final String FIRSTNAME = "firstName";
   public static final String LASTNAME = "lastName";
   public static final String CREATEDAT = "createdAt";
@@ -38,5 +40,7 @@ public class JavaFields {
   public static final String SCOPES = "scopes";
   public static final String GROUPS = "groups";
   public static final String USERPERMISSIONS = "userPermissions";
+  public static final String USERPERMISSION = "userPermission";
+  public static final String GROUPPERMISSION = "groupPermission";
 
 }

@@ -673,14 +673,18 @@ public class UserServiceTest {
   public void testDelete() {
     entityGenerator.setupTestUsers();
 
+    val usersBefore =
+        userService.listUsers(Collections.emptyList(), new PageableResolver().getPageable());
+
     val user = userService.getByName("FirstUser@domain.com");
 
     userService.delete(user.getId().toString());
 
-    val users =
+    val usersAfter =
         userService.listUsers(Collections.emptyList(), new PageableResolver().getPageable());
-    assertThat(users.getTotalElements()).isEqualTo(2L);
-    assertThat(users.getContent()).doesNotContain(user);
+
+    assertThat(usersBefore.getTotalElements()-usersAfter.getTotalElements()).isEqualTo(1L);
+    assertThat(usersAfter.getContent()).doesNotContain(user);
   }
 
   @Test

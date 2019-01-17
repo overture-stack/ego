@@ -1,9 +1,8 @@
 package bio.overture.ego.service;
 
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.model.dto.PolicyResponse;
+import bio.overture.ego.model.entity.GroupPermission;
+import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.utils.EntityGenerator;
@@ -16,6 +15,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @SpringBootTest
@@ -89,4 +91,42 @@ public class PermissionServiceTest {
     System.out.printf("%s", actual.get(0).toString());
     assertThat(actual).isEqualTo(expected);
   }
+
+  @Test
+  public void createGroupPerm_NotExisting_Success(){
+    // Setup dependencies
+    val group = entityGenerator.setupGroup("RoblexGroup");
+    val policy = entityGenerator.setupPolicy("myPol", group.getName());
+
+    // Create Request1
+    val request1 = new GroupPermission();
+    request1.setAccessLevel(AccessLevel.WRITE);
+    request1.setOwner(group);
+    request1.setPolicy(policy);
+
+    // Assert that Request1 created a new GroupPermission object successfully by reading it back
+    val expected1 = groupPermissionService.create(request1);
+    val actual1 = groupPermissionService.getById(expected1.getId());
+    assertThat(actual1).isEqualTo(expected1);
+  }
+
+  @Test
+  public void createUserPerm_NotExisting_Success(){
+    // Setup dependencies
+    val user = entityGenerator.setupUser("Roblex Lepisma");
+    val group = entityGenerator.setupGroup("AwesomeGroup");
+    val policy = entityGenerator.setupPolicy("myPol", group.getName());
+
+    // Create Request1
+    val request1 = new UserPermission();
+    request1.setAccessLevel(AccessLevel.WRITE);
+    request1.setOwner(user);
+    request1.setPolicy(policy);
+
+    // Assert that Request1 created a new UserPermission object successfully by reading it back
+    val expected1 = userPermissionService.create(request1);
+    val actual1 = userPermissionService.getById(expected1.getId());
+    assertThat(actual1).isEqualTo(expected1);
+  }
+
 }

@@ -74,6 +74,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     return applicationRepository.save(applicationInfo);
   }
 
+  @Deprecated
   public Application get(@NonNull String applicationId) {
     return getById(fromString(applicationId));
   }
@@ -138,12 +139,12 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
         pageable);
   }
 
-  public Optional<Application> findApplicationByClientId(@NonNull String clientId) {
+  public Optional<Application> findByClientId(@NonNull String clientId) {
     return applicationRepository.getApplicationByClientIdIgnoreCase(clientId);
   }
 
   public Application getByClientId(@NonNull String clientId) {
-    val result = findApplicationByClientId(clientId);
+    val result = findByClientId(clientId);
     checkNotFound(
         result.isPresent(),
         "The '%s' entity with clientId '%s' was not found",

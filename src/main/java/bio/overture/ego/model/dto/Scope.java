@@ -3,18 +3,23 @@ package bio.overture.ego.model.dto;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.params.ScopeName;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NonNull;
+import lombok.val;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.val;
+
+import static java.util.Objects.isNull;
 
 @Data
 @AllArgsConstructor
 public class Scope {
-  Policy policy;
-  AccessLevel accessLevel;
+
+  private Policy policy;
+  private AccessLevel accessLevel;
 
   @Override
   public String toString() {
@@ -22,17 +27,17 @@ public class Scope {
   }
 
   public String getPolicyName() {
-    if (policy == null) {
+    if (isNull(policy)) {
       return "Null policy";
     }
-    if (policy.getName() == null) {
+    if (isNull(policy.getName())) {
       return "Nameless policy";
     }
     return policy.getName();
   }
 
   public String getAccessLevelName() {
-    if (accessLevel == null) {
+    if (isNull(accessLevel)) {
       return "Null accessLevel";
     }
     return accessLevel.toString();
@@ -106,4 +111,9 @@ public class Scope {
     }
     return explicit;
   }
+
+  public static Scope createScope(@NonNull Policy policy, @NonNull AccessLevel accessLevel){
+    return new Scope(policy, accessLevel);
+  }
+
 }

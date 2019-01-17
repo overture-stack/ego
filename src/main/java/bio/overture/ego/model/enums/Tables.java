@@ -1,8 +1,8 @@
 package bio.overture.ego.model.enums;
 
-import static lombok.AccessLevel.PRIVATE;
-
 import lombok.NoArgsConstructor;
+
+import static lombok.AccessLevel.PRIVATE;
 
 @NoArgsConstructor(access = PRIVATE)
 public class Tables {
@@ -14,5 +14,7 @@ public class Tables {
   public static final String GROUP_USER = "usergroup";
   public static final String EGOUSER = "egouser";
   public static final String USER_APPLICATION = "userapplication";
+  public static final String USER_PERMISSION = "userpermission";
+  public static final String GROUP_PERMISSION = "grouppermission";
 
 }

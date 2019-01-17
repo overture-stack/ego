@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static java.util.UUID.fromString;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
@@ -106,12 +105,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     return groupRepository.save(group);
   }
 
-  public Group getByNameWithUsers(@NonNull String name){
-    val result = groupRepository.getGroupByNameIgnoreCaseWithUsers(name);
-    checkNotFound(result.isPresent(), "The group name '%s' could not be found", name);
-    return result.get();
-  }
-
   public Group addGroupPermissions(
       @NonNull String groupId, @NonNull List<PolicyIdStringWithAccessLevel> permissions) {
     val group = getById(fromString(groupId));
@@ -119,9 +112,12 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         permission -> {
           val policy = policyService.get(permission.getPolicyId());
           val mask = AccessLevel.fromValue(permission.getMask());
-          group
-              .getPermissions()
-              .add(GroupPermission.builder().policy(policy).accessLevel(mask).owner(group).build());
+          val gp = new GroupPermission();
+          gp.setPolicy(policy);
+          gp.setAccessLevel(mask);
+          gp.setOwner(group);
+          group.getPermissions()
+              .add(gp);
         });
     return getRepository().save(group);
   }
@@ -142,7 +138,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
             .applications(existingGroup.getApplications())
             .users(existingGroup.getUsers())
             .build();
-    ;
 
     return groupRepository.save(updatedGroup);
   }
