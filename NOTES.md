@@ -7,7 +7,7 @@ Notes
 In the entity `Policy`, the field `accessLevel` of type `AccessLevel` (which is an enum), the `@Type` annotation is used, which is a hibernate specific and not JPA annotation. The goal is to minimize or eliminate use of hibernate specific syntax, and just use JPA related code.
 
 #### Solutions
-The goal is to map the enum to the database
+The goal is to map the enum to the database. In the end, solution 3 was chosen.
 
 ##### 1. Middleware Level Enum Handling without Hibernate Annotations
 Set the type of the field in the database to a `VARCHAR` and only use the `@Enumerated` JPA annotation
@@ -34,4 +34,5 @@ Pros:
     - Almost no developer effort and minimizes developer mistakes
 Cons:
     - The `Policy` entity is using a hibernate annotation with a custom `PostgresSQLEnumType` processor to assist hibernate in supporting Postgres enum types. 
+
 
