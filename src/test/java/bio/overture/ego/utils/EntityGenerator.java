@@ -8,6 +8,7 @@ import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
+import bio.overture.ego.model.enums.ApplicationStatus;
 import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.ApplicationService;
@@ -59,15 +60,20 @@ public class EntityGenerator {
   @Autowired private TokenStoreService tokenStoreService;
 
   private Application createApplication(String clientId) {
-    return new Application(appName(clientId), clientId, clientSecret(clientId));
+    return Application.builder()
+        .name(createApplicationName(clientId))
+        .clientId(clientId)
+        .clientSecret(reverse(clientId))
+        .status(ApplicationStatus.PENDING.toString())
+        .build();
   }
 
-  private String appName(String clientId) {
+  private String createApplicationName(String clientId) {
     return String.format("Application %s", clientId);
   }
 
-  private String clientSecret(String clientId) {
-    return new StringBuilder(clientId).reverse().toString();
+  private String reverse(String value) {
+    return new StringBuilder(value).reverse().toString();
   }
 
   public Application setupApplication(String clientId) {

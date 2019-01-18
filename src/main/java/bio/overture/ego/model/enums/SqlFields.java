@@ -23,6 +23,7 @@ public class SqlFields {
   public static final String ACCESS_LEVEL = "access_level";
   public static final String POLICY = "policy";
   public static final String OWNER = "owner";
+  public static final String DESCRIPTION = "description";
   public static final String POLICYID_JOIN = "policy_id";
 
 }

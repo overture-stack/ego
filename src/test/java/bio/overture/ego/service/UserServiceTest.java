@@ -141,6 +141,7 @@ public class UserServiceTest {
             .lastName("User")
             .status("Pending")
             .role("USER")
+            .preferredLanguage("English")
             .build();
 
     val user = userService.create(createRequest);

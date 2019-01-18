@@ -30,7 +30,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.GenericGenerator;
@@ -49,6 +48,7 @@ import javax.persistence.NamedEntityGraph;
 import javax.persistence.NamedSubgraph;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -109,27 +109,29 @@ public class User implements PolicyOwner, Identifiable<UUID> {
 
   // TODO: find JPA equivalent for GenericGenerator
   @Id
-  @Column(nullable = false, name = SqlFields.ID, updatable = false)
+  @Column(name = SqlFields.ID, updatable = false, nullable = false)
   @GenericGenerator(name = "user_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "user_uuid")
   private UUID id;
 
+  @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @NonNull
-  @Column(nullable = false, name = SqlFields.NAME, unique = true)
+  @Column(name = SqlFields.NAME, unique = true, nullable = false)
   private String name;
 
+  @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @NonNull
-  @Column(nullable = false, name = SqlFields.EMAIL, unique = true)
+  @Column(name = SqlFields.EMAIL, unique = true, nullable = false)
   private String email;
 
-  @NonNull
-  @Column(nullable = false, name = SqlFields.ROLE)
+  @NotNull
+  @Column(name = SqlFields.ROLE, nullable = false)
   private String role;
 
+  //TODO: [rtisma] replace with Enum similar to AccessLevel
+  @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = SqlFields.STATUS)
+  @Column(name = SqlFields.STATUS, nullable = false)
   private String status;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
@@ -140,6 +142,7 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   @Column(name = SqlFields.LASTNAME)
   private String lastName;
 
+  @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.CREATEDAT)
   private Date createdAt;
@@ -148,6 +151,7 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   @Column(name = SqlFields.LASTLOGIN)
   private Date lastLogin;
 
+  //TODO: [rtisma] replace with Enum similar to AccessLevel
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.PREFERREDLANGUAGE)
   private String preferredLanguage;

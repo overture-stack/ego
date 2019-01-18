@@ -23,6 +23,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
+import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
 import static bio.overture.ego.model.enums.AccessLevel.EGO_ACCESS_LEVEL_ENUM;
@@ -45,17 +46,18 @@ import static bio.overture.ego.model.enums.AccessLevel.EGO_ACCESS_LEVEL_ENUM;
 public abstract class AbstractPermission implements Identifiable<UUID> {
 
   @Id
-  @Column(nullable = false, name = SqlFields.ID, updatable = false)
+  @Column(name = SqlFields.ID, updatable = false, nullable = false)
   @GenericGenerator(name = "permission_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "permission_uuid")
   private UUID id;
 
-  @Column(nullable = false, name = SqlFields.POLICY)
+  @NotNull
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(nullable = false, name = SqlFields.POLICYID_JOIN)
+  @JoinColumn(name = SqlFields.POLICYID_JOIN, nullable = false)
   private Policy policy;
 
-  @Column(nullable = false, name = SqlFields.ACCESS_LEVEL)
+  @NotNull
+  @Column(name = SqlFields.ACCESS_LEVEL, nullable = false)
   @Enumerated(EnumType.STRING)
   @Type(type = EGO_ACCESS_LEVEL_ENUM)
   private AccessLevel accessLevel;

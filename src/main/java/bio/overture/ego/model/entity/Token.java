@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.ToString;
 import lombok.val;
 import org.hibernate.annotations.Cascade;
@@ -28,6 +27,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -48,23 +48,25 @@ import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Token implements Identifiable<UUID> {
+
   @Id
-  @Column(nullable = false, name = Fields.ID, updatable = false)
+  @Column(name = Fields.ID, updatable = false, nullable = false)
   @GenericGenerator(name = "token_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "token_uuid")
   UUID id;
 
-  @Column(nullable = false, name = Fields.TOKEN)
-  @NonNull
+  @NotNull
+  @Column(name = Fields.TOKEN, nullable = false)
   String token;
 
+  @NotNull
   @OneToOne()
   @JoinColumn(name = Fields.OWNER)
   @LazyCollection(LazyCollectionOption.FALSE)
   @JsonIgnore
   User owner;
 
-  @NonNull
+  @NotNull
   @ManyToMany()
   @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   @LazyCollection(LazyCollectionOption.FALSE)
@@ -75,12 +77,15 @@ public class Token implements Identifiable<UUID> {
   @JsonIgnore
   Set<Application> applications;
 
-  @Column(nullable = false, name = Fields.ISSUEDATE, updatable = false)
+  @NotNull
+  @Column(name = Fields.ISSUEDATE, updatable = false, nullable = false)
   Date expires;
 
-  @Column(nullable = false, name = Fields.ISREVOKED, updatable = false)
+  @NotNull
+  @Column(name = Fields.ISREVOKED, updatable = false, nullable = false)
   boolean isRevoked;
 
+  @NotNull
   @OneToMany(mappedBy = "token")
   @Cascade(org.hibernate.annotations.CascadeType.ALL)
   @LazyCollection(LazyCollectionOption.FALSE)
@@ -91,7 +96,6 @@ public class Token implements Identifiable<UUID> {
     expires = DateTime.now().plusSeconds(seconds).toDate();
   }
 
-  @NonNull
   public Long getSecondsUntilExpiry() {
     val seconds = (expires.getTime() - DateTime.now().getMillis()) / 1000;
     return seconds > 0 ? seconds : 0;

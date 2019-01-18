@@ -16,9 +16,6 @@
 
 package bio.overture.ego.model.entity;
 
-import static bio.overture.ego.utils.Collectors.toImmutableList;
-import static bio.overture.ego.utils.Converters.nullToEmptySet;
-
 import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
@@ -26,24 +23,40 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import javax.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.Accessors;
+import lombok.val;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import static bio.overture.ego.utils.Collectors.toImmutableList;
+import static bio.overture.ego.utils.Converters.nullToEmptySet;
+
 @Entity
-@Builder
 @Table(name = "egoapplication")
-@Data
-@Accessors(chain = true)
-@ToString(exclude = {"groups", "users"})
 @JsonPropertyOrder({
   "id",
   "name",
@@ -54,31 +67,34 @@ import org.hibernate.annotations.LazyCollectionOption;
   "status"
 })
 @JsonInclude(JsonInclude.Include.CUSTOM)
-@EqualsAndHashCode(of = {"id"})
+@Data
+@Builder
+@Accessors(chain = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@RequiredArgsConstructor
+@EqualsAndHashCode(of = {"id"})
+@ToString(exclude = {"groups", "users"})
 @JsonView(Views.REST.class)
 public class Application implements Identifiable<UUID> {
 
   @Id
-  @Column(nullable = false, name = Fields.ID, updatable = false)
+  @Column(name = Fields.ID, updatable = false, nullable = false)
   @GenericGenerator(name = "application_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "application_uuid")
   UUID id;
 
+  @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @NonNull
-  @Column(nullable = false, name = Fields.NAME)
+  @Column(name = Fields.NAME, nullable = false)
   String name;
 
+  @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @NonNull
-  @Column(nullable = false, name = Fields.CLIENTID)
+  @Column(name = Fields.CLIENTID, nullable = false, unique = true)
   String clientId;
 
-  @NonNull
-  @Column(nullable = false, name = Fields.CLIENTSECRET)
+  @NotNull
+  @Column(name = Fields.CLIENTSECRET, nullable = false)
   String clientSecret;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
@@ -89,8 +105,10 @@ public class Application implements Identifiable<UUID> {
   @Column(name = Fields.DESCRIPTION)
   String description;
 
+  //TODO: [rtisma] replace with Enum similar to AccessLevel
+  @NotNull
   @JsonView(Views.JWTAccessToken.class)
-  @Column(name = Fields.STATUS)
+  @Column(name = Fields.STATUS, nullable = false)
   String status;
 
   @ManyToMany()

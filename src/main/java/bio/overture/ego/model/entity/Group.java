@@ -17,6 +17,9 @@
 package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.enums.Fields;
+import bio.overture.ego.model.enums.JavaFields;
+import bio.overture.ego.model.enums.LombokFields;
+import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -56,9 +59,20 @@ import java.util.UUID;
 @AllArgsConstructor
 @Table(name = Tables.GROUP)
 @JsonView(Views.REST.class)
-@EqualsAndHashCode(of = {"id"})
-@ToString(exclude = {"users", "applications", "permissions"})
-@JsonPropertyOrder({"id", "name", "description", "status", "applications", "groupPermissions"})
+@EqualsAndHashCode(of = { LombokFields.id })
+@ToString(exclude = {
+    LombokFields.users,
+    LombokFields.applications,
+    LombokFields.permissions
+})
+@JsonPropertyOrder({
+    JavaFields.ID,
+    JavaFields.NAME,
+    JavaFields.DESCRIPTION,
+    JavaFields.STATUS,
+    JavaFields.APPLICATIONS,
+    JavaFields.GROUPPERMISSIONS
+})
 @NamedEntityGraph(
     name = "group-entity-with-relationships",
     attributeNodes = {
@@ -78,19 +92,20 @@ public class Group implements PolicyOwner, Identifiable<UUID> {
 
   @Id
   @GeneratedValue(generator = "group_uuid")
-  @Column(nullable = false, name = Fields.ID, updatable = false)
+  @Column(name = Fields.ID, updatable = false, nullable = false)
   @GenericGenerator(name = "group_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   private UUID id;
 
   @NotNull
-  @Column(name = Fields.NAME)
+  @Column(name = SqlFields.NAME, nullable = false)
   private String name;
 
-  @Column(name = Fields.DESCRIPTION)
+  @Column(name = SqlFields.DESCRIPTION)
   private String description;
 
+  //TODO: [rtisma] replace with Enum similar to AccessLevel
   @NotNull
-  @Column(name = Fields.STATUS)
+  @Column(name = SqlFields.STATUS, nullable = false)
   private String status;
 
   @ManyToMany(
