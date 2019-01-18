@@ -21,22 +21,23 @@ Using  `Docker <https://www.docker.com/>`_:
 
 Ego should now be deployed locally with the Swagger UI at http://localhost:8080/swagger-ui.html
 
-Alternatively, see the development :ref:`installation instruction `. instructions.
+Alternatively, see the `Installation instructions <installation.html>`_.
+
 
 How Ego Works
 -------------------------------------------
-**1.       An Ego administrator configures Ego.**
+**1.  An Ego administrator configures Ego.**
     - Registers a unique client-id and application password for each application that will use Ego for Authorization.
     - Creates a policy for every authorization scope that an application will use.
     - Registers users and groups, and sets them up with appropriate permissions for policies and applications.
 
 
-**2.     Ego grants secret authorization tokens to individual users to represent their permissions**
+**2.  Ego grants secret authorization tokens to individual users to represent their permissions.**
     - Authorization tokens expire, and can be revoked if compromised.
     - Individuals can issue tokens for part or all of their authority, and can limit the authority to specific applications.
     - Users (and programs operating on their behalf) can then use these tokens to access services.
 
-**3.     Individual services make a REST call to EGO to determine the user and authority represented by a token.**
+**3.  Individual services make a REST call to EGO to determine the user and authority represented by a token.**
     - Makes a call to Ego's check_token endpoint and validates the user's authorization to access the requested services.
 
 

@@ -17,13 +17,13 @@ To administer Ego, the admin must:
 
    a. Admin creates a new application in Ego with the client_id and password.
    b. Admin creates new policies with new policy names
-   c. Admin Assign permissions to users/groups to permit/deny them access to the new application and policies
+   c. Admin assigns permissions to users/groups to permit/deny them access to the new application and policies
 
-**4. Admin creates or deletes groups, assigns user/group permissions, expire tokens, etc. as necessary.**
+**4. Admin creates or deletes groups, assigns user/group permissions, revoke tokens, etc. as necessary.**
 
    For example, an administrator might want to:
 
-      - Create a new group called “QA”, whose members are all the people in the “QA department”
+      - Create a new group called **“QA”**, whose members are all the people in the “QA department”
       - Create a group called “Access Denied” with access level “DENY” set for every policy in Ego
       - Grant another user administrative rights (role ADMIN)
       - Add a former employee to the group “AccessDenied”, and revoke all of their active tokens.
