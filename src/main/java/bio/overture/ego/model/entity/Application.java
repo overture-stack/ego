@@ -43,9 +43,6 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-import javax.persistence.NamedAttributeNode;
-import javax.persistence.NamedEntityGraph;
-import javax.persistence.NamedSubgraph;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.util.HashSet;
@@ -148,23 +145,4 @@ public class Application implements Identifiable<UUID> {
     return getGroups().stream().map(Group::getName).collect(toImmutableList());
   }
 
-  public void update(Application other) {
-    this.name = other.name;
-    this.clientId = other.clientId;
-    this.clientSecret = other.clientSecret;
-    this.redirectUri = other.redirectUri;
-    this.description = other.description;
-    this.status = other.status;
-
-    // Do not update ID;
-
-    // Update Users and Groups only if provided (not null)
-    if (other.users != null) {
-      this.users = other.users;
-    }
-
-    if (other.groups != null) {
-      this.groups = other.groups;
-    }
-  }
 }

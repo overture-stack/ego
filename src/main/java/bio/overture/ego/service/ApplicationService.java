@@ -228,9 +228,8 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
   @Deprecated
   public Application update(@NonNull Application updatedApplicationInfo) {
-    val app = getById(updatedApplicationInfo.getId());
-    app.update(updatedApplicationInfo);
-    getRepository().save(app);
+    checkExistence(updatedApplicationInfo.getId());
+    getRepository().save(updatedApplicationInfo);
     return updatedApplicationInfo;
   }
 
