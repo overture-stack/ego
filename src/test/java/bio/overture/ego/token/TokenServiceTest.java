@@ -28,7 +28,6 @@ import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.CollectionUtils;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.TestData;
-import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Assert;
@@ -49,6 +48,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static bio.overture.ego.utils.CollectionUtils.setOf;
+import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -85,11 +85,8 @@ public class TokenServiceTest {
     val group2 = entityGenerator.setupGroup("testGroup");
     val app2 = entityGenerator.setupApplication("foo");
 
-    group2.getUsers().add(user);
-    groupService.update(group2);
-
-    app2.setUsers(Sets.newHashSet(user));
-    applicationService.update(app2);
+    userService.addUserToGroups(user.getId().toString(), newArrayList(group2.getId().toString()));
+    userService.addUserToApps(user.getId().toString(), newArrayList(app2.getId().toString()));
 
     val token = tokenService.generateUserToken(userService.get(user.getId().toString()));
     assertNotNull(token);

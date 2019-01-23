@@ -3,6 +3,9 @@ package bio.overture.ego.service;
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.UpdateUserRequest;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.UserRole;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
@@ -22,12 +25,18 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import static bio.overture.ego.service.UserService.USER_CONVERTER;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -45,6 +54,81 @@ public class UserServiceTest {
   @Autowired private GroupService groupService;
   @Autowired private PolicyService policyService;
   @Autowired private EntityGenerator entityGenerator;
+
+  @Test
+  public void userConverter_UpdateUserRequest_User() {
+    val email = System.currentTimeMillis() + "@gmail.com";
+    val firstName = "John";
+    val lastName = "Doe";
+    val role = UserRole.ADMIN.toString();
+    val status = "Approved";
+    val preferredLanguage = "English";
+    val id = randomUUID();
+    val createdAt = new Date();
+
+    val applications =
+        IntStream.range(0, 3)
+            .boxed()
+            .map(x -> Application.builder().id(randomUUID()).build())
+            .collect(toImmutableSet());
+
+    val user =
+        User.builder()
+            .email(email)
+            .firstName(firstName)
+            .lastName(lastName)
+            .role(role)
+            .status(status)
+            .preferredLanguage(preferredLanguage)
+            .id(id)
+            .createdAt(createdAt)
+            .applications(applications)
+            .userPermissions(null)
+            .build();
+
+    val partialUserUpdateRequest =
+        UpdateUserRequest.builder().firstName("Rob").status(UserRole.USER.toString()).build();
+    USER_CONVERTER.updateUser(partialUserUpdateRequest, user);
+
+    assertThat(user.getPreferredLanguage()).isEqualTo(preferredLanguage);
+    assertThat(user.getCreatedAt()).isEqualTo(createdAt);
+    assertThat(user.getStatus()).isEqualTo(UserRole.USER.toString());
+    assertThat(user.getLastName()).isEqualTo(lastName);
+    assertThat(user.getName()).isEqualTo(email);
+    assertThat(user.getEmail()).isEqualTo(email);
+    assertThat(user.getFirstName()).isEqualTo("Rob");
+    assertThat(user.getRole()).isEqualTo(role);
+    assertThat(user.getId()).isEqualTo(id);
+    assertThat(user.getApplications()).containsExactlyInAnyOrderElementsOf(applications);
+    assertThat(user.getUserPermissions()).isNull();
+    assertThat(user.getGroups()).isEmpty();
+  }
+
+  @Test
+  public void userConversion_CreateUserRequest_User() {
+    val t = System.currentTimeMillis();
+    val request =
+        CreateUserRequest.builder()
+            .email(t + "@gmail.com")
+            .firstName("John")
+            .role(UserRole.ADMIN.toString())
+            .status("Approved")
+            .preferredLanguage("English")
+            .build();
+    val user = USER_CONVERTER.convertToUser(request);
+    assertThat(user.getEmail()).isEqualTo(request.getEmail());
+    assertThat(user.getName()).isEqualTo(user.getEmail());
+    assertThat(user.getCreatedAt()).isNotNull();
+    assertThat(user.getId()).isNull();
+    assertThat(user.getLastName()).isNull();
+    assertThat(user.getFirstName()).isEqualTo(request.getFirstName());
+    assertThat(user.getRole()).isEqualTo(request.getRole());
+    assertThat(user.getStatus()).isEqualTo(request.getStatus());
+    assertThat(user.getPreferredLanguage()).isEqualTo(request.getPreferredLanguage());
+    assertThat(user.getGroups()).isEmpty();
+    assertThat(user.getUserPermissions()).isEmpty();
+    assertThat(user.getApplications()).isEmpty();
+  }
 
   // Create
   @Test
@@ -455,17 +539,9 @@ public class UserServiceTest {
     assertThat(updated.getRole()).isEqualTo("ADMIN");
   }
 
-  private UUID generateRandomUserUUID() {
-    UUID id = UUID.randomUUID();
-    while (userService.isExist(id)) {
-      id = UUID.randomUUID();
-    }
-    return id;
-  }
-
   @Test
   public void testUpdateNonexistentEntity() {
-    val nonExistentId = generateRandomUserUUID();
+    val nonExistentId = generateNonExistentId(userService);
     val updateRequest =
         UpdateUserRequest.builder()
             .firstName("Doesnot")
@@ -477,7 +553,7 @@ public class UserServiceTest {
             .role("ADMIN")
             .build();
     assertThatExceptionOfType(NotFoundException.class)
-        .isThrownBy(() -> userService.partialUpdate(generateRandomUserUUID(), updateRequest));
+        .isThrownBy(() -> userService.partialUpdate(nonExistentId, updateRequest));
   }
 
   @Test
@@ -486,13 +562,11 @@ public class UserServiceTest {
   @Deprecated
   public void testUpdateIdNotAllowed() {
     val user = entityGenerator.setupUser("First User");
-    user.setId(UUID.fromString("0c1dc4b8-7fb8-11e8-adc0-fa7ae01bbebc"));
+    val nonExistingId = EntityGenerator.generateNonExistentId(userService);
+    user.setId(nonExistingId);
     // New id means new non-existent policy or one that exists and is being overwritten
     assertThatExceptionOfType(NotFoundException.class)
-        .isThrownBy(
-            () ->
-                userService.partialUpdate(
-                    generateRandomUserUUID(), UpdateUserRequest.builder().build()));
+        .isThrownBy( () -> userService.update(user));
   }
 
   @Test
@@ -684,7 +758,7 @@ public class UserServiceTest {
     val usersAfter =
         userService.listUsers(Collections.emptyList(), new PageableResolver().getPageable());
 
-    assertThat(usersBefore.getTotalElements()-usersAfter.getTotalElements()).isEqualTo(1L);
+    assertThat(usersBefore.getTotalElements() - usersAfter.getTotalElements()).isEqualTo(1L);
     assertThat(usersAfter.getContent()).doesNotContain(user);
   }
 

@@ -59,19 +59,15 @@ import java.util.UUID;
 @AllArgsConstructor
 @Table(name = Tables.GROUP)
 @JsonView(Views.REST.class)
-@EqualsAndHashCode(of = { LombokFields.id })
-@ToString(exclude = {
-    LombokFields.users,
-    LombokFields.applications,
-    LombokFields.permissions
-})
+@EqualsAndHashCode(of = {LombokFields.id})
+@ToString(exclude = {LombokFields.users, LombokFields.applications, LombokFields.permissions})
 @JsonPropertyOrder({
-    JavaFields.ID,
-    JavaFields.NAME,
-    JavaFields.DESCRIPTION,
-    JavaFields.STATUS,
-    JavaFields.APPLICATIONS,
-    JavaFields.GROUPPERMISSIONS
+  JavaFields.ID,
+  JavaFields.NAME,
+  JavaFields.DESCRIPTION,
+  JavaFields.STATUS,
+  JavaFields.APPLICATIONS,
+  JavaFields.GROUPPERMISSIONS
 })
 @NamedEntityGraph(
     name = "group-entity-with-relationships",
@@ -97,13 +93,13 @@ public class Group implements PolicyOwner, Identifiable<UUID> {
   private UUID id;
 
   @NotNull
-  @Column(name = SqlFields.NAME, nullable = false)
+  @Column(name = SqlFields.NAME, nullable = false, unique = true)
   private String name;
 
   @Column(name = SqlFields.DESCRIPTION)
   private String description;
 
-  //TODO: [rtisma] replace with Enum similar to AccessLevel
+  // TODO: [rtisma] replace with Enum similar to AccessLevel
   @NotNull
   @Column(name = SqlFields.STATUS, nullable = false)
   private String status;

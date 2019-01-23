@@ -27,5 +27,4 @@ public class Streams {
   private static <T> Stream<T> stream(Iterable<T> iterable, boolean inParallel) {
     return StreamSupport.stream(iterable.spliterator(), inParallel);
   }
-
 }

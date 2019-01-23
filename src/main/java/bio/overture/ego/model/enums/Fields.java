@@ -49,5 +49,4 @@ public class Fields {
   public static final String ISREVOKED = "isrevoked";
   public static final String APPLICATIONS = "applications";
   public static final String GROUPS = "groups";
-
 }

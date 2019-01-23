@@ -17,22 +17,20 @@
 package bio.overture.ego.repository;
 
 import bio.overture.ego.model.entity.Group;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.EntityGraph.EntityGraphType;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.EntityGraph.EntityGraphType;
 
 public interface GroupRepository extends NamedRepository<Group, UUID> {
 
   @EntityGraph(value = "group-entity-with-relationships", type = EntityGraphType.FETCH)
   Group findOneByNameIgnoreCase(String name);
 
-
   @EntityGraph(value = "group-entity-with-relationships", type = EntityGraphType.FETCH)
-  default Optional<Group> getGroupByNameIgnoreCaseWithUsers(String name){
+  default Optional<Group> getGroupByNameIgnoreCaseWithUsers(String name) {
     return this.getGroupByNameIgnoreCase(name);
   }
 

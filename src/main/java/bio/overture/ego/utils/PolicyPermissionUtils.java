@@ -1,12 +1,11 @@
 package bio.overture.ego.utils;
 
-import bio.overture.ego.model.entity.AbstractPermission;
-import lombok.NonNull;
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
 
+import bio.overture.ego.model.entity.AbstractPermission;
 import java.util.Collection;
 import java.util.List;
-
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
+import lombok.NonNull;
 
 public class PolicyPermissionUtils {
 
@@ -15,8 +14,8 @@ public class PolicyPermissionUtils {
         "%s.%s", permission.getPolicy().getName(), permission.getAccessLevel().toString());
   }
 
-  public static List<String> extractPermissionStrings(@NonNull Collection<? extends AbstractPermission> permissions) {
+  public static List<String> extractPermissionStrings(
+      @NonNull Collection<? extends AbstractPermission> permissions) {
     return mapToList(permissions, PolicyPermissionUtils::extractPermissionString);
   }
-
 }

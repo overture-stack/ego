@@ -38,6 +38,13 @@ import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValueCheckStrategy;
+import org.mapstruct.ReportingPolicy;
+import org.mapstruct.TargetType;
+import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -45,7 +52,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.Collection;
 import java.util.Date;
@@ -68,6 +74,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.String.format;
 import static java.util.Comparator.comparing;
+import static java.util.Objects.isNull;
 import static java.util.UUID.fromString;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.concat;
@@ -77,6 +84,8 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 @Service
 @Transactional
 public class UserService extends AbstractNamedService<User, UUID> {
+
+  public static final UserConverter USER_CONVERTER = Mappers.getMapper(UserConverter.class);
 
   // DEMO USER
   private static final String DEMO_USER_NAME = "Demo.User@example.com";
@@ -121,15 +130,16 @@ public class UserService extends AbstractNamedService<User, UUID> {
   private String DEFAULT_USER_STATUS;
 
   public User create(@NonNull CreateUserRequest request) {
-    return getRepository().save(convertToUser(request));
+    val user = USER_CONVERTER.convertToUser(request);
+    return getRepository().save(user);
   }
 
   public User createFromIDToken(IDToken idToken) {
     return create(
         CreateUserRequest.builder()
             .email(idToken.getEmail())
-            .firstName(StringUtils.isEmpty(idToken.getGiven_name()) ? "" : idToken.getGiven_name())
-            .lastName(StringUtils.isEmpty(idToken.getFamily_name()) ? "" : idToken.getFamily_name())
+            .firstName(idToken.getGiven_name())
+            .lastName(idToken.getFamily_name())
             .status(DEFAULT_USER_STATUS)
             .role(DEFAULT_USER_ROLE)
             .build());
@@ -165,7 +175,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
     // correctly
     return getRepository().save(user);
   }
-
 
   public User addUserToApps(@NonNull String userId, @NonNull List<String> appIDs) {
     val user = getById(fromString(userId));
@@ -212,7 +221,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   public User partialUpdate(@NonNull UUID id, @NonNull UpdateUserRequest r) {
     val user = getById(id);
-    partialUpdateUser(user, r);
+    partialUpdateUser(r, user);
     return getRepository().save(user);
   }
 
@@ -316,7 +325,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
   public static Set<AbstractPermission> getPermissionsList(User user) {
     val upStream = user.getUserPermissions().stream();
     val gpStream = user.getGroups().stream().map(Group::getPermissions).flatMap(Collection::stream);
-    val combinedPermissions = concat(upStream, gpStream).collect(groupingBy(AbstractPermission::getPolicy));
+    val combinedPermissions =
+        concat(upStream, gpStream).collect(groupingBy(AbstractPermission::getPolicy));
 
     return combinedPermissions
         .values()
@@ -344,7 +354,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
     // Combine individual user permissions and the user's
     // groups (if they have any) permissions
     val combinedPermissions =
-        concat(userPermissions, userGroupsPermissions).collect(groupingBy(AbstractPermission::getPolicy));
+        concat(userPermissions, userGroupsPermissions)
+            .collect(groupingBy(AbstractPermission::getPolicy));
     // If we have no permissions at all return an empty list
     if (combinedPermissions.values().size() == 0) {
       return new HashSet<>();
@@ -400,17 +411,14 @@ public class UserService extends AbstractNamedService<User, UUID> {
   /**
    * Partially updates the {@param user} using only non-null {@code UpdateUserRequest} object
    *
-   * @param user updatee
    * @param r updater
+   * @param user updatee
    */
-  public static void partialUpdateUser(@NonNull User user, @NonNull UpdateUserRequest r) {
+  public static void partialUpdateUser(@NonNull UpdateUserRequest r, @NonNull User user) {
+    USER_CONVERTER.updateUser(r, user);
+
+    // Ensure role is the right value. This should be removed once Enums are properly used
     nonNullAcceptor(r.getRole(), x -> user.setRole(resolveUserRoleIgnoreCase(x).toString()));
-    nonNullAcceptor(r.getFirstName(), user::setFirstName);
-    nonNullAcceptor(r.getLastLogin(), user::setLastLogin);
-    nonNullAcceptor(r.getLastName(), user::setLastName);
-    nonNullAcceptor(r.getEmail(), user::setEmail);
-    nonNullAcceptor(r.getPreferredLanguage(), user::setPreferredLanguage);
-    nonNullAcceptor(r.getStatus(), user::setStatus);
   }
 
   public static void checkGroupsExistForUser(
@@ -468,28 +476,46 @@ public class UserService extends AbstractNamedService<User, UUID> {
         .stream()
         .map(PolicyIdStringWithAccessLevel::getMask)
         .map(AccessLevel::fromValue)
-        .map(a -> {
-          val up = new UserPermission();
-          up.setAccessLevel(a);
-          up.setPolicy(p);
-          up.setOwner(u);
-          return up;
-        });
+        .map(
+            a -> {
+              val up = new UserPermission();
+              up.setAccessLevel(a);
+              up.setPolicy(p);
+              up.setOwner(u);
+              return up;
+            });
   }
 
-  private static User convertToUser(CreateUserRequest request) {
-    return User.builder()
-        .preferredLanguage(request.getPreferredLanguage())
-        .email(request.getEmail())
-        // Set UserName to equal the email.
-        .name(request.getEmail())
-        // Set Created At date to Now
-        .createdAt(new Date())
-        .firstName(request.getFirstName())
-        .lastName(request.getLastName())
-        .role(request.getRole())
-        .status(request.getStatus())
-        .build();
-  }
+  @Mapper(
+      nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
+      unmappedTargetPolicy = ReportingPolicy.WARN)
+  public abstract static class UserConverter {
 
+    public abstract User convertToUser(CreateUserRequest request);
+
+    public abstract void updateUser(User updatingUser, @MappingTarget User userToUpdate);
+
+    public abstract void updateUser(
+        UpdateUserRequest updateRequest, @MappingTarget User userToUpdate);
+
+    protected User initUserEntity(@TargetType Class<User> appClass) {
+      return User.builder().build();
+    }
+
+    @AfterMapping
+    protected void correctUserData(@MappingTarget User userToUpdate) {
+      // Ensure UserRole is a correct value
+      if (!isNull(userToUpdate.getRole())) {
+        userToUpdate.setRole(resolveUserRoleIgnoreCase(userToUpdate.getRole()).toString());
+      }
+
+      // Set UserName to equal the email.
+      userToUpdate.setName(userToUpdate.getEmail());
+
+      // Set Created At date to Now if not defined
+      if (isNull(userToUpdate.getCreatedAt())) {
+        userToUpdate.setCreatedAt(new Date());
+      }
+    }
+  }
 }

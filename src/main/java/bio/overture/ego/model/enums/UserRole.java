@@ -43,5 +43,4 @@ public enum UserRole {
                 new IllegalStateException(
                     format("The user role '%s' cannot be resolved", userRole)));
   }
-
 }

@@ -6,18 +6,17 @@ import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonView;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = Tables.GROUP_PERMISSION)
@@ -27,12 +26,13 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @JsonView(Views.REST.class)
 @ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true, of = { LombokFields.id })
+@EqualsAndHashCode(
+    callSuper = true,
+    of = {LombokFields.id})
 public class GroupPermission extends AbstractPermission {
 
   @NotNull
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = SqlFields.GROUPID_JOIN, nullable = false)
   private Group owner;
-
 }

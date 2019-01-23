@@ -64,11 +64,7 @@ import static com.google.common.collect.Sets.newHashSet;
 @Entity
 @Table(name = Tables.EGOUSER)
 @Data
-@ToString(exclude = {
-    LombokFields.groups,
-    LombokFields.applications,
-    LombokFields.userPermissions
-})
+@ToString(exclude = {LombokFields.groups, LombokFields.applications, LombokFields.userPermissions})
 @JsonPropertyOrder({
   JavaFields.ID,
   JavaFields.NAME,
@@ -128,7 +124,7 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   @Column(name = SqlFields.ROLE, nullable = false)
   private String role;
 
-  //TODO: [rtisma] replace with Enum similar to AccessLevel
+  // TODO: [rtisma] replace with Enum similar to AccessLevel
   @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.STATUS, nullable = false)
@@ -151,20 +147,19 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   @Column(name = SqlFields.LASTLOGIN)
   private Date lastLogin;
 
-  //TODO: [rtisma] replace with Enum similar to AccessLevel
+  // TODO: [rtisma] replace with Enum similar to AccessLevel
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.PREFERREDLANGUAGE)
   private String preferredLanguage;
 
+  // TODO: [rtisma] test that always initialized with empty set
   @JsonIgnore
   @OneToMany(
       cascade = {CascadeType.PERSIST, CascadeType.MERGE},
       fetch = FetchType.LAZY)
   @JoinColumn(name = SqlFields.USERID_JOIN)
   @Builder.Default
-  private Set<UserPermission> userPermissions =
-      newHashSet(); // TODO: @rtisma test that this initialization is the same as the init method //
-  // (that it does not cause isseus with hibernate)
+  private Set<UserPermission> userPermissions = newHashSet();
 
   @JsonIgnore
   @ManyToMany(
@@ -177,8 +172,6 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   @Builder.Default
   private Set<Group> groups = newHashSet();
 
-  // TODO @rtisma: test persist and merge cascade types for ManyToMany relationships. Must be able
-  // to step away from // happy path
   @JsonIgnore
   @ManyToMany(
       fetch = FetchType.LAZY,
@@ -187,8 +180,6 @@ public class User implements PolicyOwner, Identifiable<UUID> {
       name = Tables.USER_APPLICATION,
       joinColumns = {@JoinColumn(name = SqlFields.USERID_JOIN)},
       inverseJoinColumns = {@JoinColumn(name = SqlFields.APPID_JOIN)})
-  // TODO: [rtisma] test that all collections have Builder.Default.
-  // assertThat(userService.get(myUserId).getApplications()).isNotNull() and is empty.
   @Builder.Default
   private Set<Application> applications = newHashSet();
 

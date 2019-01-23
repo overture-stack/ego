@@ -116,8 +116,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
           gp.setPolicy(policy);
           gp.setAccessLevel(mask);
           gp.setOwner(group);
-          group.getPermissions()
-              .add(gp);
+          group.getPermissions().add(gp);
         });
     return getRepository().save(group);
   }

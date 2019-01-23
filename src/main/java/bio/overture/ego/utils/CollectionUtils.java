@@ -20,5 +20,4 @@ public class CollectionUtils {
   public static List<String> listOf(String... strings) {
     return Arrays.asList(strings);
   }
-
 }

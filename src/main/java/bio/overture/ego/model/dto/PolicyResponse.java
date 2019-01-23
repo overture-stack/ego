@@ -20,5 +20,4 @@ public class PolicyResponse {
   public String id;
   public String name;
   public AccessLevel mask;
-
 }

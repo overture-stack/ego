@@ -37,4 +37,5 @@ public interface BaseService<T, ID> {
     checkNotFound(
         isExist(id), "The '%s' entity with id '%s' does not exist", getEntityTypeName(), id);
   }
+
 }

@@ -39,10 +39,14 @@ public class JavaFields {
   public static final String OWNER = "owner";
   public static final String SCOPES = "scopes";
   public static final String GROUPS = "groups";
+  public static final String USERS = "users";
+  public static final String TOKENS = "tokens";
   public static final String USERPERMISSIONS = "userPermissions";
   public static final String USERPERMISSION = "userPermission";
   public static final String GROUPPERMISSION = "groupPermission";
   public static final String GROUPPERMISSIONS = "groupPermissions";
   public static final String DESCRIPTION = "description";
-
+  public static final String CLIENTID = "clientId";
+  public static final String CLIENTSECRET = "clientSecret";
+  public static final String REDIRECTURI = "redirectUri";
 }

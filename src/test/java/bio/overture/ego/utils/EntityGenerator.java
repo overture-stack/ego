@@ -1,5 +1,6 @@
 package bio.overture.ego.utils;
 
+import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.Application;
@@ -12,7 +13,9 @@ import bio.overture.ego.model.enums.ApplicationStatus;
 import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.BaseService;
 import bio.overture.ego.service.GroupService;
+import bio.overture.ego.service.NamedService;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.TokenStoreService;
@@ -27,6 +30,8 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -59,8 +64,8 @@ public class EntityGenerator {
 
   @Autowired private TokenStoreService tokenStoreService;
 
-  private Application createApplication(String clientId) {
-    return Application.builder()
+  private CreateApplicationRequest createApplicationCreateRequest(String clientId) {
+    return CreateApplicationRequest.builder()
         .name(createApplicationName(clientId))
         .clientId(clientId)
         .clientSecret(reverse(clientId))
@@ -81,8 +86,8 @@ public class EntityGenerator {
         .findByClientId(clientId)
         .orElseGet(
             () -> {
-              val application = createApplication(clientId);
-              return applicationService.create(application);
+              val request = createApplicationCreateRequest(clientId);
+              return applicationService.create(request);
             });
   }
 
@@ -108,12 +113,14 @@ public class EntityGenerator {
         .findByClientId(clientId)
         .orElseGet(
             () -> {
-              val app = new Application();
-              app.setClientId(clientId);
-              app.setClientSecret(clientSecret);
-              app.setName(clientId);
-              app.setStatus("Approved");
-              return applicationService.create(app);
+              val request =
+                  CreateApplicationRequest.builder()
+                      .name(clientId)
+                      .clientSecret(clientSecret)
+                      .clientId(clientId)
+                      .status(ApplicationStatus.APPROVED.toString())
+                      .build();
+              return applicationService.create(request);
             });
   }
 
@@ -255,6 +262,51 @@ public class EntityGenerator {
 
   public static List<ScopeName> scopeNames(String... strings) {
     return mapToList(listOf(strings), ScopeName::new);
+  }
+
+  public static <T> UUID generateNonExistentId(BaseService<T, UUID> baseService){
+    UUID id = UUID.randomUUID();
+    while(baseService.isExist(id)){
+      id = UUID.randomUUID();
+    }
+    return id;
+  }
+
+  private static String generateRandomName(Random r, int length){
+    val sb = new StringBuilder();
+    r.ints(length, 65, 90).forEach(sb::append);
+    return sb.toString();
+  }
+
+  private static String generateRandomUserName(Random r, int length){
+    val fn = generateRandomName(r, 5);
+    val ln = generateRandomName(r, 5);
+    return fn+" "+ln;
+
+  }
+  public String generateNonExistentUserName(){
+    val r = new Random();
+    String name;
+    Optional<User> result;
+
+    do{
+      name = generateRandomUserName(r, 5);
+      result = userService.findByName(name);
+    } while(result.isPresent());
+
+    return name;
+  }
+
+  public static <T> String generateNonExistentName(NamedService<T, UUID> namedService){
+    val r = new Random();
+    String name = generateRandomName(r, 15);
+    Optional<T> result = namedService.findByName(name);
+
+    while(result.isPresent()){
+      name = generateRandomName(r, 15);
+      result = namedService.findByName(name);
+    }
+    return name;
   }
 
   public Set<Scope> getScopes(String... scope) {

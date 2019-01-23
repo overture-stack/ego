@@ -17,7 +17,8 @@ import static java.util.UUID.fromString;
 
 @Slf4j
 @Transactional
-public abstract class AbstractPermissionService<T extends AbstractPermission> extends AbstractBaseService<T, UUID> {
+public abstract class AbstractPermissionService<T extends AbstractPermission>
+    extends AbstractBaseService<T, UUID> {
 
   public AbstractPermissionService(Class<T> entityType, BaseRepository<T, UUID> repository) {
     super(entityType, repository);
@@ -40,7 +41,7 @@ public abstract class AbstractPermissionService<T extends AbstractPermission> ex
     return updatedEntity;
   }
 
-  public static Scope buildScope(@NonNull AbstractPermission permission){
+  public static Scope buildScope(@NonNull AbstractPermission permission) {
     return createScope(permission.getPolicy(), permission.getAccessLevel());
   }
 
@@ -53,5 +54,4 @@ public abstract class AbstractPermissionService<T extends AbstractPermission> ex
   public abstract List<PolicyResponse> findByPolicy(String policyId);
 
   public abstract PolicyResponse getPolicyResponse(T t);
-
 }

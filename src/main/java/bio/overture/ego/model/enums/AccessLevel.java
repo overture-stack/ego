@@ -16,11 +16,10 @@
 
 package bio.overture.ego.model.enums;
 
+import java.util.Arrays;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-
-import java.util.Arrays;
 
 @RequiredArgsConstructor
 public enum AccessLevel {
@@ -28,7 +27,7 @@ public enum AccessLevel {
   WRITE("WRITE"),
   DENY("DENY");
 
-  public final static String EGO_ACCESS_LEVEL_ENUM = "ego_access_level_enum";
+  public static final String EGO_ACCESS_LEVEL_ENUM = "ego_access_level_enum";
 
   @NonNull private final String value;
 

@@ -38,11 +38,7 @@ import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 @Entity
 @Table(name = "token")
 @Data
-@ToString( exclude = {
-    LombokFields.applications,
-    LombokFields.owner,
-    LombokFields.scopes
-})
+@ToString(exclude = {LombokFields.applications, LombokFields.owner, LombokFields.scopes})
 @EqualsAndHashCode(of = {"id"})
 @Builder
 @AllArgsConstructor

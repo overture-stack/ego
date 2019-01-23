@@ -20,16 +20,16 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.utils.QueryUtils;
+import lombok.NonNull;
 import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
 
-import javax.annotation.Nonnull;
 import javax.persistence.criteria.Join;
 import java.util.UUID;
 
 public class UserSpecification extends SpecificationBase<User> {
 
-  public static Specification<User> containsText(@Nonnull String text) {
+  public static Specification<User> containsText(@NonNull String text) {
     val finalText = QueryUtils.prepareForQuery(text);
     return (root, query, builder) -> {
       query.distinct(true);
@@ -39,7 +39,7 @@ public class UserSpecification extends SpecificationBase<User> {
     };
   }
 
-  public static Specification<User> inGroup(@Nonnull UUID groupId) {
+  public static Specification<User> inGroup(@NonNull UUID groupId) {
     return (root, query, builder) -> {
       query.distinct(true);
       Join<User, Group> groupJoin = root.join("groups");
@@ -47,7 +47,7 @@ public class UserSpecification extends SpecificationBase<User> {
     };
   }
 
-  public static Specification<User> ofApplication(@Nonnull UUID appId) {
+  public static Specification<User> ofApplication(@NonNull UUID appId) {
     return (root, query, builder) -> {
       query.distinct(true);
       Join<User, Application> applicationJoin = root.join("applications");

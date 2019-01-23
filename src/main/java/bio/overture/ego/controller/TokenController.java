@@ -16,21 +16,12 @@
 
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static java.lang.String.format;
-
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.security.ApplicationScoped;
 import bio.overture.ego.service.TokenService;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import javax.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -41,14 +32,36 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static java.lang.String.format;
 
 @Slf4j
 @RestController
 @RequestMapping("/o")
-@AllArgsConstructor(onConstructor = @__({@Autowired}))
 public class TokenController {
-  private TokenService tokenService;
+
+  private final TokenService tokenService;
+
+  @Autowired
+  public TokenController(@NonNull TokenService tokenService) {
+    this.tokenService = tokenService;
+  }
 
   @ApplicationScoped()
   @RequestMapping(method = RequestMethod.POST, value = "/check_token")

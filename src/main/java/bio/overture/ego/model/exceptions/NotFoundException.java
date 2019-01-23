@@ -17,11 +17,11 @@
  */
 package bio.overture.ego.model.exceptions;
 
-import static java.lang.String.format;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-
 import lombok.NonNull;
 import org.springframework.web.bind.annotation.ResponseStatus;
+
+import static java.lang.String.format;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @ResponseStatus(NOT_FOUND)
 public class NotFoundException extends RuntimeException {
@@ -35,5 +35,4 @@ public class NotFoundException extends RuntimeException {
       throw new NotFoundException(format(formattedMessage, args));
     }
   }
-
 }

@@ -35,5 +35,4 @@ public interface UserRepository extends NamedRepository<User, UUID> {
   default Optional<User> findByName(String name) {
     return getUserByNameIgnoreCase(name);
   }
-
 }

@@ -49,7 +49,7 @@ public class SpecificationBase<T> {
   }
 
   public static <T> Specification<T> filterBy(@NonNull List<SearchFilter> filters) {
-    return (root, query, builder) ->{
+    return (root, query, builder) -> {
       query.distinct(true);
       return builder.and(
           filters
@@ -58,5 +58,4 @@ public class SpecificationBase<T> {
               .toArray(Predicate[]::new));
     };
   }
-
 }

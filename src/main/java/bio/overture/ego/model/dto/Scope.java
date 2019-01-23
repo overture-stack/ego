@@ -1,18 +1,17 @@
 package bio.overture.ego.model.dto;
 
+import static java.util.Objects.isNull;
+
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.params.ScopeName;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.val;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-
-import static java.util.Objects.isNull;
 
 @Data
 @AllArgsConstructor
@@ -112,8 +111,7 @@ public class Scope {
     return explicit;
   }
 
-  public static Scope createScope(@NonNull Policy policy, @NonNull AccessLevel accessLevel){
+  public static Scope createScope(@NonNull Policy policy, @NonNull AccessLevel accessLevel) {
     return new Scope(policy, accessLevel);
   }
-
 }

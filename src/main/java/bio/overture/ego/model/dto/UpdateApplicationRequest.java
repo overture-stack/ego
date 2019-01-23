@@ -23,14 +23,14 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class CreateUserRequest {
+@AllArgsConstructor
+public class UpdateApplicationRequest {
 
-  private String email;
-  private String role;
+  private String name;
+  private String clientId;
+  private String clientSecret;
+  private String redirectUri;
+  private String description;
   private String status;
-  private String firstName;
-  private String lastName;
-  private String preferredLanguage;
 }

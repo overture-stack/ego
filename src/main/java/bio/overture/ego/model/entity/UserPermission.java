@@ -27,12 +27,13 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @JsonView(Views.REST.class)
 @ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true, of = { LombokFields.id })
+@EqualsAndHashCode(
+    callSuper = true,
+    of = {LombokFields.id})
 public class UserPermission extends AbstractPermission {
 
   @NotNull
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(name = SqlFields.USERID_JOIN, nullable = false )
+  @JoinColumn(name = SqlFields.USERID_JOIN, nullable = false)
   private User owner;
-
 }
