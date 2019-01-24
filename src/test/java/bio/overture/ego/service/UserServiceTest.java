@@ -20,7 +20,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -162,12 +161,13 @@ public class UserServiceTest {
   public void testCreateFromIDTokenUniqueNameAndEmail() {
     // Note: This test has one strike due to Hibernate Cache.
     entityGenerator.setupUser("User One");
-    val idToken =
-        IDToken.builder().email("UserOne@domain.com").given_name("User").family_name("One").build();
-    userService.createFromIDToken(idToken);
-
-    assertThatExceptionOfType(DataIntegrityViolationException.class)
-        .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
+    val idToken = IDToken.builder()
+        .email("UserOne@domain.com")
+        .given_name("User")
+        .family_name("One")
+        .build();
+    assertThatExceptionOfType(UniqueViolationException.class)
+        .isThrownBy(() -> userService.createFromIDToken(idToken));
   }
 
   // Get

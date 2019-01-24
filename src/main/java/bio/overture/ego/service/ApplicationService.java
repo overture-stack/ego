@@ -50,11 +50,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static bio.overture.ego.model.enums.ApplicationStatus.APPROVED;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
 import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
 import static bio.overture.ego.token.app.AppTokenClaims.SCOPES;
+import static bio.overture.ego.utils.CollectionUtils.setOf;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
 import static java.lang.String.format;
@@ -213,7 +214,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     clientDetails.setClientSecret(passwordEncoder.encode(application.getClientSecret()));
     clientDetails.setAuthorizedGrantTypes(Arrays.asList(AUTHORIZED_GRANTS));
     clientDetails.setScope(approvedScopes);
-    clientDetails.setRegisteredRedirectUri(application.getURISet());
+    clientDetails.setRegisteredRedirectUri(setOf(application.getRedirectUri()));
     clientDetails.setAutoApproveScopes(approvedScopes);
     val authorities = new HashSet<GrantedAuthority>();
     authorities.add(new SimpleGrantedAuthority(ROLE));
@@ -238,8 +239,8 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   }
 
   private void checkClientIdUnique(String clientId){
-    val result = applicationRepository.getApplicationByClientIdIgnoreCase(clientId);
-    checkUnique(!result.isPresent(),"An application with the same clientId already exists");
+    checkUnique(!applicationRepository.existsByClientIdIgnoreCase(clientId),
+        "An application with the same clientId already exists");
   }
 
   private static String removeAppTokenPrefix(String token) {

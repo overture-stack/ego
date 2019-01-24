@@ -22,12 +22,14 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
+
 public interface UserRepository extends NamedRepository<User, UUID> {
 
-  @EntityGraph(value = "user-entity-with-relationships", type = EntityGraph.EntityGraphType.FETCH)
+  @EntityGraph(value = "user-entity-with-relationships", type = FETCH)
   Optional<User> getUserByNameIgnoreCase(String name);
 
-  Optional<User> getUserByEmailIgnoreCase(String email);
+  boolean existsByEmailIgnoreCase(String email);
 
   @Override
   default Optional<User> findByName(String name) {

@@ -1,87 +1,80 @@
 package bio.overture.ego.model.entity;
 
-import bio.overture.ego.model.enums.Fields;
+import bio.overture.ego.model.enums.JavaFields;
+import bio.overture.ego.model.enums.LombokFields;
+import bio.overture.ego.model.enums.SqlFields;
+import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import java.util.Set;
-import java.util.UUID;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import java.util.Set;
+import java.util.UUID;
+
+import static com.google.common.collect.Sets.newHashSet;
 
 @Entity
-@Table(name = "policy")
-@Data
-@JsonPropertyOrder({"id", "owner", "name"})
+@Table(name = Tables.POLICY)
 @JsonInclude()
-@EqualsAndHashCode(of = {"id"})
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@JsonPropertyOrder({
+    JavaFields.ID,
+    JavaFields.OWNER,
+    JavaFields.NAME
+})
 @JsonView(Views.REST.class)
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(of = { LombokFields.id })
+@NamedEntityGraph(
+    name = "policy-entity-with-relationships",
+    attributeNodes = {
+        @NamedAttributeNode(value = JavaFields.USERPERMISSIONS),
+        @NamedAttributeNode(value = JavaFields.GROUPPERMISSIONS),
+    } )
 public class Policy implements Identifiable<UUID> {
 
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinColumn(name = Fields.POLICYID_JOIN)
-  @JsonIgnore
-  protected Set<GroupPermission> groupPermissions;
-
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinColumn(name = Fields.POLICYID_JOIN)
-  @JsonIgnore
-  protected Set<UserPermission> userPermissions;
-
   @Id
-  @Column(name = Fields.ID, updatable = false, nullable = false)
+  @Column(name = SqlFields.ID, updatable = false, nullable = false)
   @GenericGenerator(name = "policy_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "policy_uuid")
-  UUID id;
+  private UUID id;
 
   @NotNull
-  @Column(name = Fields.OWNER, nullable = false)
-  UUID owner;
+  @Column(name = SqlFields.NAME, unique = true, nullable = false)
+  private String name;
 
-  @NotNull
-  @Column(name = Fields.NAME, unique = true, nullable = false)
-  String name;
+  @JsonIgnore
+  @Builder.Default
+  @OneToMany(mappedBy = JavaFields.OWNER,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      fetch = FetchType.LAZY)
+  private Set<GroupPermission> groupPermissions = newHashSet();
 
-  public void update(Policy other) {
-    this.owner = other.owner;
-    this.name = other.name;
-
-    // Don't merge the ID - that is procedural.
-
-    // Don't merge groupPermissions or userPermissions if not present in other.
-    // This is because the PUT action for update usually does not include these fields
-    // as a consequence of the GET option to retrieve a aclEntity not including these fields
-    // To clear groupPermissions and userPermissions, use the dedicated services for deleting
-    // associations or pass in an empty Set.
-    if (other.groupPermissions != null) {
-      this.groupPermissions = other.groupPermissions;
-    }
-
-    if (other.userPermissions != null) {
-      this.userPermissions = other.userPermissions;
-    }
-  }
+  @JsonIgnore
+  @Builder.Default
+  @OneToMany(mappedBy = JavaFields.OWNER,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      fetch = FetchType.LAZY)
+  private Set<UserPermission> userPermissions = newHashSet();
 }

@@ -89,17 +89,13 @@ import static com.google.common.collect.Sets.newHashSet;
 @NamedEntityGraph(
     name = "user-entity-with-relationships",
     attributeNodes = {
-      @NamedAttributeNode("id"),
-      @NamedAttributeNode("name"),
-      @NamedAttributeNode("email"),
-      @NamedAttributeNode("status"),
-      @NamedAttributeNode(value = "groups", subgraph = "users-subgraph"),
-      @NamedAttributeNode(value = "applications", subgraph = "relationship-subgraph"),
+        @NamedAttributeNode(value = JavaFields.GROUPS, subgraph = "groups-subgraph"),
+        @NamedAttributeNode(value = JavaFields.USERPERMISSIONS),
+        @NamedAttributeNode(value = JavaFields.APPLICATIONS, subgraph = "applications-subgraph"),
     },
     subgraphs = {
-      @NamedSubgraph(
-          name = "relationship-subgraph",
-          attributeNodes = {@NamedAttributeNode("id")})
+        @NamedSubgraph( name = "groups-subgraph", attributeNodes = {@NamedAttributeNode(JavaFields.USERS)}),
+        @NamedSubgraph( name = "applications-subgraph", attributeNodes = {@NamedAttributeNode(JavaFields.USERS)})
     })
 public class User implements PolicyOwner, Identifiable<UUID> {
 
@@ -155,9 +151,9 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   // TODO: [rtisma] test that always initialized with empty set
   @JsonIgnore
   @OneToMany(
+      mappedBy = JavaFields.OWNER,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE},
       fetch = FetchType.LAZY)
-  @JoinColumn(name = SqlFields.USERID_JOIN)
   @Builder.Default
   private Set<UserPermission> userPermissions = newHashSet();
 

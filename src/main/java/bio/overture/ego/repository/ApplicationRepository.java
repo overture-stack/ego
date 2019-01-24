@@ -20,12 +20,13 @@ import bio.overture.ego.model.entity.Application;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+
+import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
 
 public interface ApplicationRepository extends NamedRepository<Application, UUID> {
 
@@ -33,11 +34,10 @@ public interface ApplicationRepository extends NamedRepository<Application, UUID
 
   Optional<Application> getApplicationByNameIgnoreCase(String name);
 
-  @EntityGraph(value = "application-entity-with-relationships", type = EntityGraph.EntityGraphType.FETCH)
+  @EntityGraph(value = "application-entity-with-relationships", type = FETCH)
   Optional<Application> getApplicationByClientIdIgnoreCase(String clientId);
 
-  @Query("select id from Application where concat(clientId,clientSecret)=?1")
-  UUID findByBasicToken(String token);
+  boolean existsByClientIdIgnoreCase(String clientId);
 
   Application findOneByNameIgnoreCase(String name);
 

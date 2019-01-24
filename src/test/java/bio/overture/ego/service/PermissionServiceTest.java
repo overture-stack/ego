@@ -60,7 +60,7 @@ public class PermissionServiceTest {
 
     val actual = groupPermissionService.findByPolicy(policy.getId().toString());
 
-    assertThat(actual).isEqualTo(expected);
+    assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
   }
 
   @Test
@@ -87,7 +87,7 @@ public class PermissionServiceTest {
     val actual = userPermissionService.findByPolicy(policy.getId().toString());
     ;
     System.out.printf("%s", actual.get(0).toString());
-    assertThat(actual).isEqualTo(expected);
+    assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
   }
 
 }

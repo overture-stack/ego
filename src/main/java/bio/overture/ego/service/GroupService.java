@@ -224,8 +224,8 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   }
 
   private void checkNameUnique(String name){
-    val result = groupRepository.getGroupByNameIgnoreCase(name);
-    checkUnique(!result.isPresent(),"A group with same name already exists");
+    checkUnique(!groupRepository.existsByNameIgnoreCase(name),
+        "A group with same name already exists");
   }
 
   private GroupPermission resolveGroupPermission(PolicyIdStringWithAccessLevel permission){

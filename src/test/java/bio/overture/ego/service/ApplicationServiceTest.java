@@ -33,6 +33,7 @@ import java.util.UUID;
 import java.util.stream.IntStream;
 
 import static bio.overture.ego.service.ApplicationService.APPLICATION_CONVERTER;
+import static bio.overture.ego.utils.CollectionUtils.setOf;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static com.google.common.collect.Lists.newArrayList;
@@ -641,7 +642,7 @@ public class ApplicationServiceTest {
             .getAuthorizedGrantTypes()
             .containsAll(Arrays.asList(AppTokenClaims.AUTHORIZED_GRANTS)));
     assertThat(client.getScope().containsAll(Arrays.asList(AppTokenClaims.SCOPES)));
-    assertThat(client.getRegisteredRedirectUri()).isEqualTo(application.getURISet());
+    assertThat(client.getRegisteredRedirectUri()).isEqualTo(setOf(application.getRedirectUri()));
     assertThat(client.getAuthorities())
         .containsExactly(new SimpleGrantedAuthority(AppTokenClaims.ROLE));
   }

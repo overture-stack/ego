@@ -3,6 +3,7 @@ package bio.overture.ego.utils;
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.GroupRequest;
+import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
@@ -194,13 +195,8 @@ public class EntityGenerator {
     setupGroups("Group One", "Group Two", "Group Three");
   }
 
-  private Policy createPolicy(String name, UUID policyId) {
-    return Policy.builder().name(name).owner(policyId).build();
-  }
-
-  private Policy createPolicy(String name, String groupName) {
-    val group = groupService.findByName(groupName).orElse(setupGroup(groupName));
-    return createPolicy(name, group.getId());
+  private PolicyRequest createPolicyRequest(String name) {
+    return PolicyRequest.builder().name(name).build();
   }
 
   public Policy setupPolicy(String name, String groupName) {
@@ -208,8 +204,8 @@ public class EntityGenerator {
         .findByName(name)
         .orElseGet(
             () -> {
-              val policy = createPolicy(name, groupName);
-              return policyService.create(policy);
+              val createRequest = createPolicyRequest(name);
+              return policyService.create(createRequest);
             });
   }
 

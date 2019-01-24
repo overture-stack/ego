@@ -48,9 +48,10 @@ import javax.persistence.NamedSubgraph;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+
+import static com.google.common.collect.Sets.newHashSet;
 
 @Data
 @Entity
@@ -72,12 +73,13 @@ import java.util.UUID;
 @NamedEntityGraph(
     name = "group-entity-with-relationships",
     attributeNodes = {
-      @NamedAttributeNode(value = "users", subgraph = "users-subgraph"),
-      @NamedAttributeNode(value = "applications", subgraph = "applications-subgraph"),
+        @NamedAttributeNode(value = JavaFields.USERS, subgraph = "users-subgraph"),
+        @NamedAttributeNode(value = JavaFields.PERMISSIONS),
+        @NamedAttributeNode(value = JavaFields.APPLICATIONS, subgraph = "applications-subgraph")
     },
     subgraphs = {
-        @NamedSubgraph( name = "applications-subgraph", attributeNodes = {@NamedAttributeNode("groups")}),
-        @NamedSubgraph( name = "users-subgraph", attributeNodes = {@NamedAttributeNode("groups")})
+        @NamedSubgraph( name = "applications-subgraph", attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)}),
+        @NamedSubgraph( name = "users-subgraph", attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)})
     })
 public class Group implements PolicyOwner, Identifiable<UUID> {
 
@@ -99,6 +101,16 @@ public class Group implements PolicyOwner, Identifiable<UUID> {
   @Column(name = SqlFields.STATUS, nullable = false)
   private String status;
 
+  //TODO: [rtisma] rename this to groupPermissions.
+  // Ensure anything using JavaFields.PERMISSIONS is also replaced with JavaFields.GROUPPERMISSIONS
+  @JsonIgnore
+  @Builder.Default
+  @OneToMany(
+      mappedBy = JavaFields.OWNER,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      fetch = FetchType.LAZY)
+  private Set<GroupPermission> permissions = newHashSet();
+
   @ManyToMany(
       fetch = FetchType.LAZY,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE})
@@ -108,7 +120,7 @@ public class Group implements PolicyOwner, Identifiable<UUID> {
       inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
   @JsonIgnore
   @Builder.Default
-  private Set<Application> applications = new HashSet<>();
+  private Set<Application> applications = newHashSet();
 
   @ManyToMany(
       fetch = FetchType.LAZY,
@@ -119,17 +131,6 @@ public class Group implements PolicyOwner, Identifiable<UUID> {
       inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
   @JsonIgnore
   @Builder.Default
-  private Set<User> users = new HashSet<>();
+  private Set<User> users = newHashSet();
 
-  @JsonIgnore
-  @Builder.Default
-  @JoinColumn(name = Fields.OWNER)
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  private Set<Policy> policies = new HashSet<>();
-
-  @JsonIgnore
-  @Builder.Default
-  @JoinColumn(name = Fields.GROUPID_JOIN)
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  private Set<GroupPermission> permissions = new HashSet<>();
 }

@@ -33,7 +33,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.Accessors;
-import lombok.val;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.CascadeType;
@@ -48,7 +47,6 @@ import javax.persistence.NamedEntityGraph;
 import javax.persistence.NamedSubgraph;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -79,14 +77,14 @@ import static com.google.common.collect.Sets.newHashSet;
 @NamedEntityGraph(
     name = "application-entity-with-relationships",
     attributeNodes = {
-        @NamedAttributeNode(value = "users", subgraph = "users-subgraph"),
-        @NamedAttributeNode(value = "tokens", subgraph = "tokens-subgraph"),
-        @NamedAttributeNode(value = "groups", subgraph = "groups-subgraph")
+        @NamedAttributeNode(value = JavaFields.USERS, subgraph = "users-subgraph"),
+        @NamedAttributeNode(value = JavaFields.TOKENS, subgraph = "tokens-subgraph"),
+        @NamedAttributeNode(value = JavaFields.GROUPS, subgraph = "groups-subgraph")
     },
     subgraphs = {
-        @NamedSubgraph( name = "groups-subgraph", attributeNodes = {@NamedAttributeNode("applications")}),
-        @NamedSubgraph( name = "tokens-subgraph", attributeNodes = {@NamedAttributeNode("applications")}),
-        @NamedSubgraph( name = "users-subgraph", attributeNodes = {@NamedAttributeNode("applications")})
+        @NamedSubgraph( name = "groups-subgraph", attributeNodes = {@NamedAttributeNode(JavaFields.APPLICATIONS)}),
+        @NamedSubgraph( name = "tokens-subgraph", attributeNodes = {@NamedAttributeNode(JavaFields.APPLICATIONS)}),
+        @NamedSubgraph( name = "users-subgraph", attributeNodes  = {@NamedAttributeNode(JavaFields.APPLICATIONS)})
     })
 public class Application implements Identifiable<UUID> {
 
@@ -147,13 +145,6 @@ public class Application implements Identifiable<UUID> {
       fetch = FetchType.LAZY,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   private Set<Token> tokens = newHashSet();
-
-  @JsonIgnore
-  public HashSet<String> getURISet() {
-    val output = new HashSet<String>();
-    output.add(this.redirectUri);
-    return output;
-  }
 
   @JsonView(Views.JWTAccessToken.class)
   public List<String> getGroupNames() {

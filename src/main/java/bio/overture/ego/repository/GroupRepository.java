@@ -18,17 +18,20 @@ package bio.overture.ego.repository;
 
 import bio.overture.ego.model.entity.Group;
 import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.EntityGraph.EntityGraphType;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
+
 public interface GroupRepository extends NamedRepository<Group, UUID> {
 
-  @EntityGraph(value = "group-entity-with-relationships", type = EntityGraphType.FETCH)
+  @EntityGraph(value = "group-entity-with-relationships", type = FETCH)
   Optional<Group> getGroupByNameIgnoreCase(String name);
+
+  boolean existsByNameIgnoreCase(String name);
 
   Set<Group> findAllByIdIn(List<UUID> groupIds);
 

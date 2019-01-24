@@ -465,8 +465,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   private void checkEmailUnique(String email){
-    val result = userRepository.getUserByEmailIgnoreCase(email);
-    checkUnique(!result.isPresent(), "A user with same email already exists");
+    checkUnique(!userRepository.existsByEmailIgnoreCase(email),
+        "A user with same email already exists");
   }
 
   private static <T extends AbstractPermission> T resolvePermissions(List<T> permissions) {

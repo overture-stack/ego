@@ -21,9 +21,9 @@ import lombok.NonNull;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import static java.lang.String.format;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
 
-@ResponseStatus(BAD_REQUEST)
+@ResponseStatus(CONFLICT)
 public class UniqueViolationException extends RuntimeException {
   public UniqueViolationException(@NonNull String message) {
     super(message);

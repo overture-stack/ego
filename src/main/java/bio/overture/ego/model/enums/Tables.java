@@ -18,4 +18,5 @@ public class Tables {
   public static final String USER_PERMISSION = "userpermission";
   public static final String GROUP_PERMISSION = "grouppermission";
   public static final String TOKEN_APPLICATION = "tokenapplication";
+  public static final String POLICY = "policy";
 }
