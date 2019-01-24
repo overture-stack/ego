@@ -204,7 +204,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
-  @Deprecated
   public User get(@NonNull String userId) {
     return getById(fromString(userId));
   }

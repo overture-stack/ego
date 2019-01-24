@@ -142,34 +142,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     return groupRepository.save(updatedGroup);
   }
 
-  // TODO - this was the original update - will use an improved version of this for the PATCH
-  public Group partialUpdate(@NonNull Group other) {
-    val existingGroup = getById(other.getId());
-
-    val builder =
-        Group.builder()
-            .id(other.getId())
-            .name(other.getName())
-            .description(other.getDescription())
-            .status(other.getStatus());
-
-    if (other.getApplications() != null) {
-      builder.applications(other.getApplications());
-    } else {
-      builder.applications(existingGroup.getApplications());
-    }
-
-    if (other.getUsers() != null) {
-      builder.users(other.getUsers());
-    } else {
-      builder.users(existingGroup.getUsers());
-    }
-
-    val updatedGroup = builder.build();
-
-    return groupRepository.save(updatedGroup);
-  }
-
   public Page<Group> listGroups(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return groupRepository.findAll(GroupSpecification.filterBy(filters), pageable);
   }
@@ -238,9 +210,8 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
 
   public void deleteGroupPermissions(@NonNull String userId, @NonNull List<String> permissionsIds) {
     val group = getById(fromString(userId));
-    permissionsIds.stream()
-        .map(permissionService::get)
-        .forEach(x -> associateGroupPermission(group, x));
+    permissionService.getMany(convertToUUIDList(permissionsIds))
+        .forEach(gp-> associateGroupPermission(group, gp));
     groupRepository.save(group);
   }
 
@@ -267,6 +238,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   }
 
   private Application retrieveApplication(String appId){
+    // using applicationRepository since using applicationService causes cyclic dependency error
     return applicationRepository
         .findById(fromString(appId))
         .orElseThrow(() ->

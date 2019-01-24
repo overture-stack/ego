@@ -2,24 +2,20 @@ package bio.overture.ego.service;
 
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.GroupRequest;
-import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +26,9 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static bio.overture.ego.utils.EntityTools.extractGroupNames;
+import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -460,24 +458,26 @@ public class GroupsServiceTest {
   @Test
   public void testUpdate() {
     val group = entityGenerator.setupGroup("Group One");
-    group.setDescription("New Description");
-    val updated = groupService.update(group);
+    val updateRequest = GroupRequest.builder().description("New Description").build();
+    val updated = groupService.partialUpdate(group.getId().toString(), updateRequest);
     assertThat(updated.getDescription()).isEqualTo("New Description");
   }
 
   @Test
   public void testUpdateNonexistentEntity() {
+    val nonExistentId = generateNonExistentId(groupService).toString();
     val nonExistentEntity =
-        Group.builder()
+        GroupRequest.builder()
             .name("NonExistent")
             .status(EntityStatus.PENDING.toString())
             .description("")
             .build();
-    assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
-        .isThrownBy(() -> groupService.update(nonExistentEntity));
+    assertThatExceptionOfType(NotFoundException.class)
+        .isThrownBy(() -> groupService.partialUpdate(nonExistentId, nonExistentEntity));
   }
 
   @Test
+  @Ignore("not a valid test anymore since updateRequest does not have id field")
   public void testUpdateIdNotAllowed() {
     val group = entityGenerator.setupGroup("Group One");
     group.setId(new UUID(12312912931L, 12312912931L));
@@ -694,11 +694,10 @@ public class GroupsServiceTest {
     val user = entityGenerator.setupUser("foo bar");
     val group = entityGenerator.setupGroup("testGroup");
 
-    group.getUsers().add(user);
-    val updatedGroup = groupService.update(group);
+    val updatedGroup = groupService.addUsersToGroup(group.getId().toString(), newArrayList(user.getId().toString()));
 
     groupService.delete(updatedGroup.getId().toString());
-    Assertions.assertThat(userService.get(user.getId().toString())).isNotNull();
+    assertThat(userService.get(user.getId().toString())).isNotNull();
   }
 
   /** This test guards against bad cascades against applications */
@@ -707,8 +706,7 @@ public class GroupsServiceTest {
     val app = entityGenerator.setupApplication("foobar");
     val group = entityGenerator.setupGroup("testGroup");
 
-    group.getApplications().add(app);
-    val updatedGroup = groupService.update(group);
+    val updatedGroup = groupService.addAppsToGroup(group.getId().toString(), newArrayList(app.getId().toString()));
 
     groupService.delete(updatedGroup.getId().toString());
     assertThat(applicationService.get(app.getId().toString())).isNotNull();
@@ -742,7 +740,7 @@ public class GroupsServiceTest {
 
     groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);
 
-    Assertions.assertThat(
+    assertThat(
             PolicyPermissionUtils.extractPermissionStrings(firstGroup.getPermissions()))
         .containsExactlyInAnyOrder("Study001.READ", "Study002.WRITE", "Study003.DENY");
   }
@@ -785,7 +783,7 @@ public class GroupsServiceTest {
 
     groupService.deleteGroupPermissions(firstGroup.getId().toString(), groupPermissionsToRemove);
 
-    Assertions.assertThat(
+    assertThat(
             PolicyPermissionUtils.extractPermissionStrings(firstGroup.getPermissions()))
         .containsExactlyInAnyOrder("Study001.READ");
   }
