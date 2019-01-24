@@ -50,10 +50,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static bio.overture.ego.model.enums.ApplicationStatus.APPROVED;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
 import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
 import static bio.overture.ego.token.app.AppTokenClaims.SCOPES;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
 import static java.lang.String.format;
 import static java.util.UUID.fromString;
@@ -85,6 +87,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   }
 
   public Application create(@NonNull CreateApplicationRequest request) {
+    checkClientIdUnique(request.getClientId());
     val application = APPLICATION_CONVERTER.convertToApplication(request);
     return getRepository().save(application);
   }
@@ -93,12 +96,9 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     return getById(fromString(applicationId));
   }
 
-  public Application partialUpdate(@NonNull String id, UpdateApplicationRequest request) {
-    return partialUpdate(fromString(id), request);
-  }
-
-  public Application partialUpdate(@NonNull UUID id, @NonNull UpdateApplicationRequest request) {
-    val app = getById(id);
+  public Application partialUpdate(@NonNull String id, @NonNull UpdateApplicationRequest request) {
+    val app = getById(fromString(id));
+    validateUpdateRequest(app, request);
     APPLICATION_CONVERTER.updateApplication(request, app);
     return getRepository().save(app);
   }
@@ -231,6 +231,15 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     checkExistence(updatedApplicationInfo.getId());
     getRepository().save(updatedApplicationInfo);
     return updatedApplicationInfo;
+  }
+
+  private void validateUpdateRequest(Application originalApplication, UpdateApplicationRequest r){
+    onUpdateDetected(originalApplication.getClientId(), r.getClientId(), () -> checkClientIdUnique(r.getClientId()));
+  }
+
+  private void checkClientIdUnique(String clientId){
+    val result = applicationRepository.getApplicationByClientIdIgnoreCase(clientId);
+    checkUnique(!result.isPresent(),"An application with the same clientId already exists");
   }
 
   private static String removeAppTokenPrefix(String token) {

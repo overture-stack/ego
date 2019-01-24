@@ -7,6 +7,7 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.enums.ApplicationStatus;
 import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.token.app.AppTokenClaims;
@@ -495,13 +496,13 @@ public class ApplicationServiceTest {
     val updateRequest = UpdateApplicationRequest.builder()
         .name("New Name")
         .build();
-    val updated = applicationService.partialUpdate(application.getId(), updateRequest);
+    val updated = applicationService.partialUpdate(application.getId().toString(), updateRequest);
     assertThat(updated.getName()).isEqualTo("New Name");
   }
 
   @Test
   public void testUpdateNonexistentEntity() {
-    val nonExistentId = generateNonExistentId(applicationService);
+    val nonExistentId = generateNonExistentId(applicationService).toString();
     val updateRequest =
         UpdateApplicationRequest.builder()
             .clientId("123456")
@@ -510,6 +511,56 @@ public class ApplicationServiceTest {
             .build();
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> applicationService.partialUpdate(nonExistentId, updateRequest));
+  }
+
+  @Test
+  public void uniqueClientIdCheck_CreateApplication_ThrowsUniqueConstraintException(){
+    val r1 = CreateApplicationRequest.builder()
+        .clientId(UUID.randomUUID().toString())
+        .clientSecret(UUID.randomUUID().toString())
+        .name(UUID.randomUUID().toString())
+        .status("Pending")
+        .build();
+
+    val a1 = applicationService.create(r1);
+    assertThat(applicationService.isExist(a1.getId())).isTrue();
+
+    assertThat(a1.getClientId()).isEqualTo(r1.getClientId());
+    assertThatExceptionOfType(UniqueViolationException.class)
+        .isThrownBy(() -> applicationService.create(r1));
+  }
+
+  @Test
+  public void uniqueClientIdCheck_UpdateApplication_ThrowsUniqueConstraintException(){
+    val clientId1 = UUID.randomUUID().toString();
+    val clientId2 = UUID.randomUUID().toString();
+    val cr1 = CreateApplicationRequest.builder()
+        .clientId(clientId1)
+        .clientSecret(UUID.randomUUID().toString())
+        .name(UUID.randomUUID().toString())
+        .status("Pending")
+        .build();
+
+    val cr2 = CreateApplicationRequest.builder()
+        .clientId(clientId2)
+        .clientSecret(UUID.randomUUID().toString())
+        .name(UUID.randomUUID().toString())
+        .status("Approved")
+        .build();
+
+    val a1 = applicationService.create(cr1);
+    assertThat(applicationService.isExist(a1.getId())).isTrue();
+    val a2 = applicationService.create(cr2);
+    assertThat(applicationService.isExist(a2.getId())).isTrue();
+
+    val ur3 = UpdateApplicationRequest.builder()
+        .clientId(clientId1)
+        .build();
+
+    assertThat(a1.getClientId()).isEqualTo(ur3.getClientId());
+    assertThat(a2.getClientId()).isNotEqualTo(ur3.getClientId());
+    assertThatExceptionOfType(UniqueViolationException.class)
+        .isThrownBy(() -> applicationService.partialUpdate(a2.getId().toString(), ur3));
   }
 
   @Test
@@ -580,7 +631,7 @@ public class ApplicationServiceTest {
     val updateRequest = UpdateApplicationRequest.builder()
         .status(ApplicationStatus.APPROVED.toString())
         .build();
-    applicationService.partialUpdate(application.getId(), updateRequest);
+    applicationService.partialUpdate(application.getId().toString(), updateRequest);
 
     val client = applicationService.loadClientByClientId("123456");
 
@@ -615,19 +666,19 @@ public class ApplicationServiceTest {
     val updateRequest = UpdateApplicationRequest.builder()
         .status("Pending")
         .build();
-    applicationService.partialUpdate(application.getId(), updateRequest);
+    applicationService.partialUpdate(application.getId().toString(), updateRequest);
     assertThatExceptionOfType(ClientRegistrationException.class)
         .isThrownBy(() -> applicationService.loadClientByClientId("123456"))
         .withMessage("Client Access is not approved.");
 
     updateRequest.setStatus("Rejected");
-    applicationService.partialUpdate(application.getId(), updateRequest);
+    applicationService.partialUpdate(application.getId().toString(), updateRequest);
     assertThatExceptionOfType(ClientRegistrationException.class)
         .isThrownBy(() -> applicationService.loadClientByClientId("123456"))
         .withMessage("Client Access is not approved.");
 
     updateRequest.setStatus("Disabled");
-    applicationService.partialUpdate(application.getId(), updateRequest);
+    applicationService.partialUpdate(application.getId().toString(), updateRequest);
     assertThatExceptionOfType(ClientRegistrationException.class)
         .isThrownBy(() -> applicationService.loadClientByClientId("123456"))
         .withMessage("Client Access is not approved.");

@@ -7,6 +7,7 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.UserRole;
 import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.token.IDToken;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -518,7 +520,7 @@ public class UserServiceTest {
     val user = entityGenerator.setupUser("First User");
     val updated =
         userService.partialUpdate(
-            user.getId(), UpdateUserRequest.builder().firstName("NotFirst").build());
+            user.getId().toString(), UpdateUserRequest.builder().firstName("NotFirst").build());
     assertThat(updated.getFirstName()).isEqualTo("NotFirst");
   }
 
@@ -526,7 +528,7 @@ public class UserServiceTest {
   public void testUpdateRoleUser() {
     val user = entityGenerator.setupUser("First User");
     val updated =
-        userService.partialUpdate(user.getId(), UpdateUserRequest.builder().role("user").build());
+        userService.partialUpdate(user.getId().toString(), UpdateUserRequest.builder().role("user").build());
     assertThat(updated.getRole()).isEqualTo("USER");
   }
 
@@ -534,18 +536,69 @@ public class UserServiceTest {
   public void testUpdateRoleAdmin() {
     val user = entityGenerator.setupUser("First User");
     val updated =
-        userService.partialUpdate(user.getId(), UpdateUserRequest.builder().role("admin").build());
+        userService.partialUpdate(user.getId().toString(), UpdateUserRequest.builder().role("admin").build());
     assertThat(updated.getRole()).isEqualTo("ADMIN");
   }
 
   @Test
+  public void uniqueEmailCheck_CreateUser_ThrowsUniqueConstraintException(){
+    val r1 = CreateUserRequest.builder()
+        .preferredLanguage("English")
+        .role("ADMIN")
+        .status("Approved")
+        .email(UUID.randomUUID()+"@gmail.com")
+        .build();
+
+    val u1 = userService.create(r1);
+    assertThat(userService.isExist(u1.getId())).isTrue();
+    r1.setRole("USER");
+    r1.setStatus("Pending");
+
+    assertThat(u1.getEmail()).isEqualTo(r1.getEmail());
+    assertThatExceptionOfType(UniqueViolationException.class)
+        .isThrownBy(() -> userService.create(r1));
+  }
+
+  @Test
+  public void uniqueEmailCheck_UpdateUser_ThrowsUniqueConstraintException(){
+    val e1 = UUID.randomUUID().toString()+"@something.com";
+    val e2 = UUID.randomUUID().toString()+"@something.com";
+    val cr1 = CreateUserRequest.builder()
+        .preferredLanguage("English")
+        .role("ADMIN")
+        .status("Approved")
+        .email(e1)
+        .build();
+
+    val cr2 = CreateUserRequest.builder()
+        .preferredLanguage("English")
+        .role("USER")
+        .status("Pending")
+        .email(e2)
+        .build();
+
+    val u1 = userService.create(cr1);
+    assertThat(userService.isExist(u1.getId())).isTrue();
+    val u2 = userService.create(cr2);
+    assertThat(userService.isExist(u2.getId())).isTrue();
+
+    val ur3 = UpdateUserRequest.builder()
+        .email(e1)
+        .build();
+
+    assertThat(u1.getEmail()).isEqualTo(ur3.getEmail());
+    assertThat(u2.getEmail()).isNotEqualTo(ur3.getEmail());
+    assertThatExceptionOfType(UniqueViolationException.class)
+        .isThrownBy(() -> userService.partialUpdate(u2.getId().toString(), ur3));
+  }
+
+  @Test
   public void testUpdateNonexistentEntity() {
-    val nonExistentId = generateNonExistentId(userService);
+    val nonExistentId = generateNonExistentId(userService).toString();
     val updateRequest =
         UpdateUserRequest.builder()
             .firstName("Doesnot")
             .lastName("Exist")
-            .email("DoesnotExist@domain.com")
             .status("Approved")
             .preferredLanguage("English")
             .lastLogin(null)

@@ -2,6 +2,7 @@ package bio.overture.ego.utils;
 
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.CreateUserRequest;
+import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
@@ -160,8 +161,8 @@ public class EntityGenerator {
     setupUsers("First User", "Second User", "Third User");
   }
 
-  private Group createGroup(String name) {
-    return Group.builder()
+  private GroupRequest createGroupRequest(String name) {
+    return GroupRequest.builder()
         .name(name)
         .status(EntityStatus.PENDING.toString())
         .description("")
@@ -173,7 +174,7 @@ public class EntityGenerator {
         .findByName(name)
         .orElseGet(
             () -> {
-              val group = createGroup(name);
+              val group = createGroupRequest(name);
               return groupService.create(group);
             });
   }

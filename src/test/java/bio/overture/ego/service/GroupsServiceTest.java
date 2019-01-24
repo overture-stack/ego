@@ -1,11 +1,14 @@
 package bio.overture.ego.service;
 
 import bio.overture.ego.controller.resolver.PageableResolver;
+import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +55,50 @@ public class GroupsServiceTest {
   public void testCreate() {
     val group = entityGenerator.setupGroup("Group One");
     assertThat(group.getName()).isEqualTo("Group One");
+  }
+
+  @Test
+  public void uniqueNameCheck_CreateGroup_ThrowsUniqueConstraintException(){
+    val r1 = GroupRequest.builder()
+        .name(UUID.randomUUID().toString())
+        .status("Pending")
+        .build();
+
+    val g1 = groupService.create(r1);
+    assertThat(groupService.isExist(g1.getId())).isTrue();
+
+    assertThat(g1.getName()).isEqualTo(r1.getName());
+    assertThatExceptionOfType(UniqueViolationException.class)
+        .isThrownBy(() -> groupService.create(r1));
+  }
+
+  @Test
+  public void uniqueClientIdCheck_UpdateGroup_ThrowsUniqueConstraintException(){
+    val name1 = UUID.randomUUID().toString();
+    val name2 = UUID.randomUUID().toString();
+    val cr1 = GroupRequest.builder()
+        .name(name1)
+        .status("Pending")
+        .build();
+
+    val cr2 = GroupRequest.builder()
+        .name(name2)
+        .status("Approved")
+        .build();
+
+    val g1 = groupService.create(cr1);
+    assertThat(groupService.isExist(g1.getId())).isTrue();
+    val g2 = groupService.create(cr2);
+    assertThat(groupService.isExist(g2.getId())).isTrue();
+
+    val ur3 = GroupRequest.builder()
+        .name(name1)
+        .build();
+
+    assertThat(g1.getName()).isEqualTo(ur3.getName());
+    assertThat(g2.getName()).isNotEqualTo(ur3.getName());
+    assertThatExceptionOfType(UniqueViolationException.class)
+        .isThrownBy(() -> groupService.partialUpdate(g2.getId().toString(), ur3));
   }
 
   @Test

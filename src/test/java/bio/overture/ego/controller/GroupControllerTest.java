@@ -1,14 +1,5 @@
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.utils.EntityTools.extractAppIds;
-import static bio.overture.ego.utils.EntityTools.extractGroupIds;
-import static bio.overture.ego.utils.EntityTools.extractIDs;
-import static java.util.Arrays.asList;
-import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
-import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.enums.EntityStatus;
@@ -16,8 +7,6 @@ import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
-import java.util.List;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.json.JSONException;
@@ -37,6 +26,18 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.List;
+import java.util.UUID;
+
+import static bio.overture.ego.utils.EntityTools.extractAppIds;
+import static bio.overture.ego.utils.EntityTools.extractGroupIds;
+import static bio.overture.ego.utils.EntityTools.extractIDs;
+import static java.util.Arrays.asList;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -299,7 +300,7 @@ public class GroupControllerTest {
     assertThat(extractGroupIds(applicationWithoutGroup.getGroups())).doesNotContain(groupId);
 
     // Check group is deleted
-    assertThat(groupService.getByName("DeleteOne")).isNull();
+    assertThat(groupService.findByName("DeleteOne")).isEmpty();
   }
 
   // TODO: [rtisma] will eventually be fixed when properly using query by Specification, which will

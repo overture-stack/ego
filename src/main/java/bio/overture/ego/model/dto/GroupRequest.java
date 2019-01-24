@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateGroupRequest {
+public class GroupRequest {
 
   private String name;
   private String description;

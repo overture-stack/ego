@@ -64,11 +64,12 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import static bio.overture.ego.model.enums.UserRole.resolveUserRoleIgnoreCase;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.convertToUUIDList;
 import static bio.overture.ego.utils.Converters.convertToUUIDSet;
-import static bio.overture.ego.utils.Converters.nonNullAcceptor;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Lists.newArrayList;
@@ -130,6 +131,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
   private String DEFAULT_USER_STATUS;
 
   public User create(@NonNull CreateUserRequest request) {
+    checkEmailUnique(request.getEmail());
     val user = USER_CONVERTER.convertToUser(request);
     return getRepository().save(user);
   }
@@ -215,13 +217,17 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
-  public User partialUpdate(@NonNull String id, UpdateUserRequest r) {
-    return partialUpdate(fromString(id), r);
-  }
 
-  public User partialUpdate(@NonNull UUID id, @NonNull UpdateUserRequest r) {
-    val user = getById(id);
-    partialUpdateUser(r, user);
+  /**
+   * Partially updates a user using only non-null {@code UpdateUserRequest} {@param r} object
+   *
+   * @param r updater
+   * @param id updatee
+   */
+  public User partialUpdate(@NonNull String id, @NonNull UpdateUserRequest r) {
+    val user = getById(fromString(id));
+    validateUpdateRequest(user, r);
+    USER_CONVERTER.updateUser(r, user);
     return getRepository().save(user);
   }
 
@@ -408,17 +414,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
     app.getUsers().add(user);
   }
 
-  /**
-   * Partially updates the {@param user} using only non-null {@code UpdateUserRequest} object
-   *
-   * @param r updater
-   * @param user updatee
-   */
   public static void partialUpdateUser(@NonNull UpdateUserRequest r, @NonNull User user) {
-    USER_CONVERTER.updateUser(r, user);
 
-    // Ensure role is the right value. This should be removed once Enums are properly used
-    nonNullAcceptor(r.getRole(), x -> user.setRole(resolveUserRoleIgnoreCase(x).toString()));
   }
 
   public static void checkGroupsExistForUser(
@@ -462,6 +459,17 @@ public class UserService extends AbstractNamedService<User, UUID> {
     }
   }
 
+  private void validateUpdateRequest(User originalUser, UpdateUserRequest r){
+    onUpdateDetected(originalUser.getEmail(), r.getEmail(), () -> checkEmailUnique(r.getEmail()));
+    //Ensure role is the right value. This should be removed once Enums are properly used
+    onUpdateDetected(originalUser.getRole(), r.getRole(), () -> resolveUserRoleIgnoreCase(r.getRole()));
+  }
+
+  private void checkEmailUnique(String email){
+    val result = userRepository.getUserByEmailIgnoreCase(email);
+    checkUnique(!result.isPresent(), "A user with same email already exists");
+  }
+
   private static <T extends AbstractPermission> T resolvePermissions(List<T> permissions) {
     checkState(!permissions.isEmpty(), "Input permissions list cannot be empty");
     permissions.sort(comparing(AbstractPermission::getAccessLevel).reversed());
@@ -495,10 +503,9 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
     public abstract void updateUser(User updatingUser, @MappingTarget User userToUpdate);
 
-    public abstract void updateUser(
-        UpdateUserRequest updateRequest, @MappingTarget User userToUpdate);
+    public abstract void updateUser(UpdateUserRequest updateRequest, @MappingTarget User userToUpdate);
 
-    protected User initUserEntity(@TargetType Class<User> appClass) {
+    protected User initUserEntity(@TargetType Class<User> userClass) {
       return User.builder().build();
     }
 

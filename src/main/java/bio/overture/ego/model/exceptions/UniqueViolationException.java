@@ -21,23 +21,19 @@ import lombok.NonNull;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import static java.lang.String.format;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
-@ResponseStatus(NOT_FOUND)
-public class NotFoundException extends RuntimeException {
-  public NotFoundException(@NonNull String message) {
+@ResponseStatus(BAD_REQUEST)
+public class UniqueViolationException extends RuntimeException {
+  public UniqueViolationException(@NonNull String message) {
     super(message);
   }
 
-  public static void checkNotFound(
+  public static void checkUnique(
       boolean expression, @NonNull String formattedMessage, @NonNull Object... args) {
     if (!expression) {
-      throw new NotFoundException(format(formattedMessage, args));
+      throw new UniqueViolationException(format(formattedMessage, args));
     }
-  }
-
-  public static NotFoundException buildNotFoundException(@NonNull String formattedMessage, Object ...args){
-    return new NotFoundException(format(formattedMessage, args));
   }
 
 }

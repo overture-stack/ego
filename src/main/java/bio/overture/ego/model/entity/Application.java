@@ -43,6 +43,9 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedSubgraph;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.util.HashSet;
@@ -73,6 +76,18 @@ import static com.google.common.collect.Sets.newHashSet;
   JavaFields.STATUS
 })
 @JsonInclude(JsonInclude.Include.CUSTOM)
+@NamedEntityGraph(
+    name = "application-entity-with-relationships",
+    attributeNodes = {
+        @NamedAttributeNode(value = "users", subgraph = "users-subgraph"),
+        @NamedAttributeNode(value = "tokens", subgraph = "tokens-subgraph"),
+        @NamedAttributeNode(value = "groups", subgraph = "groups-subgraph")
+    },
+    subgraphs = {
+        @NamedSubgraph( name = "groups-subgraph", attributeNodes = {@NamedAttributeNode("applications")}),
+        @NamedSubgraph( name = "tokens-subgraph", attributeNodes = {@NamedAttributeNode("applications")}),
+        @NamedSubgraph( name = "users-subgraph", attributeNodes = {@NamedAttributeNode("applications")})
+    })
 public class Application implements Identifiable<UUID> {
 
   @Id

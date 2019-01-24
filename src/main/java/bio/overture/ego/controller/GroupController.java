@@ -16,6 +16,7 @@
 
 package bio.overture.ego.controller;
 
+import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
@@ -140,8 +141,8 @@ public class GroupController {
       })
   public @ResponseBody Group createGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION) final String accessToken,
-      @RequestBody Group groupInfo) {
-    return groupService.create(groupInfo);
+      @RequestBody GroupRequest createRequest) {
+    return groupService.create(createRequest);
   }
 
   @AdminScoped
@@ -161,8 +162,9 @@ public class GroupController {
       value = {@ApiResponse(code = 200, message = "Updated group info", response = Group.class)})
   public @ResponseBody Group updateGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestBody(required = true) Group updatedGroupInfo) {
-    return groupService.update(updatedGroupInfo);
+      @PathVariable(value = "id") String id,
+      @RequestBody(required = true) GroupRequest updateRequest) {
+    return groupService.partialUpdate(id, updateRequest);
   }
 
   @AdminScoped

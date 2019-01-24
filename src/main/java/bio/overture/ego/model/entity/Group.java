@@ -72,17 +72,12 @@ import java.util.UUID;
 @NamedEntityGraph(
     name = "group-entity-with-relationships",
     attributeNodes = {
-      @NamedAttributeNode("id"),
-      @NamedAttributeNode("name"),
-      @NamedAttributeNode("description"),
-      @NamedAttributeNode("status"),
       @NamedAttributeNode(value = "users", subgraph = "users-subgraph"),
-      @NamedAttributeNode(value = "applications", subgraph = "relationship-subgraph"),
+      @NamedAttributeNode(value = "applications", subgraph = "applications-subgraph"),
     },
     subgraphs = {
-      @NamedSubgraph(
-          name = "relationship-subgraph",
-          attributeNodes = {@NamedAttributeNode("id")})
+        @NamedSubgraph( name = "applications-subgraph", attributeNodes = {@NamedAttributeNode("groups")}),
+        @NamedSubgraph( name = "users-subgraph", attributeNodes = {@NamedAttributeNode("groups")})
     })
 public class Group implements PolicyOwner, Identifiable<UUID> {
 

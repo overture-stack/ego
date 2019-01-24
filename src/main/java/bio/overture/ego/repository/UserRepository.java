@@ -24,15 +24,14 @@ import java.util.UUID;
 
 public interface UserRepository extends NamedRepository<User, UUID> {
 
+  @EntityGraph(value = "user-entity-with-relationships", type = EntityGraph.EntityGraphType.FETCH)
   Optional<User> getUserByNameIgnoreCase(String name);
 
-  @EntityGraph(value = "user-entity-with-relationships", type = EntityGraph.EntityGraphType.FETCH)
-  User findOneByNameIgnoreCase(String name);
-
-  boolean existsUserByNameIgnoreCase(String name);
+  Optional<User> getUserByEmailIgnoreCase(String email);
 
   @Override
   default Optional<User> findByName(String name) {
     return getUserByNameIgnoreCase(name);
   }
+
 }

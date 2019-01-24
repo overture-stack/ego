@@ -16,11 +16,12 @@
 
 package bio.overture.ego.service;
 
+import bio.overture.ego.model.dto.GroupRequest;
+import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
+import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.model.exceptions.NotFoundException;
-import bio.overture.ego.model.exceptions.PostWithIdentifierException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
@@ -30,21 +31,34 @@ import bio.overture.ego.repository.queryspecification.GroupSpecification;
 import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
 import lombok.val;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValueCheckStrategy;
+import org.mapstruct.ReportingPolicy;
+import org.mapstruct.TargetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Converters.convertToUUIDList;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static java.util.UUID.fromString;
+import static org.mapstruct.factory.Mappers.getMapper;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
 public class GroupService extends AbstractNamedService<Group, UUID> {
+
+  private static final GroupConverter GROUP_CONVERTER = getMapper(GroupConverter.class);
 
   private final GroupRepository groupRepository;
   private final UserRepository userRepository;
@@ -70,54 +84,33 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     this.permissionService = permissionService;
   }
 
-  public Group create(@NonNull Group groupInfo) {
-    if (Objects.nonNull(groupInfo.getId())) {
-      throw new PostWithIdentifierException();
-    }
-
-    return getRepository().save(groupInfo);
+  public Group create(@NonNull GroupRequest request) {
+    checkNameUnique(request.getName());
+    val group = GROUP_CONVERTER.convertToGroup(request);
+    return getRepository().save(group);
   }
 
   public Group addAppsToGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
     val group = getById(fromString(grpId));
-    appIDs.forEach(
-        appId -> {
-          val app = applicationService.get(appId);
-          group.getApplications().add(app);
-        });
+    val apps = applicationService.getMany(convertToUUIDList(appIDs));
+    associateApplications(group, apps);
     return getRepository().save(group);
   }
 
+  //TODO: [rtisma] need to validate userIds all exist. Cannot use userService as it causes circular dependency
   public Group addUsersToGroup(@NonNull String grpId, @NonNull List<String> userIds) {
     val group = getById(fromString(grpId));
-    userIds.forEach(
-        userId -> {
-          val user =
-              userRepository
-                  .findById(fromString(userId))
-                  .orElseThrow(
-                      () ->
-                          new NotFoundException(
-                              String.format("Could not find User with ID: %s", userId)));
-          group.getUsers().add(user);
-          user.getGroups().add(group);
-        });
+    val users = userRepository.findAllByIdIn(convertToUUIDList(userIds));
+    associateUsers(group, users);
     return groupRepository.save(group);
   }
 
   public Group addGroupPermissions(
       @NonNull String groupId, @NonNull List<PolicyIdStringWithAccessLevel> permissions) {
     val group = getById(fromString(groupId));
-    permissions.forEach(
-        permission -> {
-          val policy = policyService.get(permission.getPolicyId());
-          val mask = AccessLevel.fromValue(permission.getMask());
-          val gp = new GroupPermission();
-          gp.setPolicy(policy);
-          gp.setAccessLevel(mask);
-          gp.setOwner(group);
-          group.getPermissions().add(gp);
-        });
+    permissions.stream()
+        .map(this::resolveGroupPermission)
+        .forEach(gp -> associateGroupPermission(group, gp));
     return getRepository().save(group);
   }
 
@@ -125,6 +118,14 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     return getById(fromString(groupId));
   }
 
+  public Group partialUpdate(@NonNull String id, @NonNull GroupRequest r) {
+    val group = getById(fromString(id));
+    validateUpdateRequest(group, r);
+    GROUP_CONVERTER.updateGroup(r, group);
+    return getRepository().save(group);
+  }
+
+  @Deprecated
   public Group update(@NonNull Group other) {
     val existingGroup = getById(other.getId());
 
@@ -228,32 +229,85 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
 
   public void deleteAppsFromGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
     val group = getById(fromString(grpId));
-    // TODO - Properly handle invalid IDs here
-    appIDs.forEach(
-        appId -> {
-          val app =
-              applicationRepository
-                  .findById(fromString(appId))
-                  .orElseThrow(
-                      () ->
-                          new NotFoundException(
-                              String.format("Could not find Application with ID: %s", appId)));
-          group.getApplications().remove(app);
-          app.getGroups().remove(group);
-        });
+    val apps = appIDs.stream()
+        .map(this::retrieveApplication)
+        .collect(toImmutableSet());
+    associateApplications(group, apps);
     groupRepository.save(group);
   }
 
   public void deleteGroupPermissions(@NonNull String userId, @NonNull List<String> permissionsIds) {
     val group = getById(fromString(userId));
-    permissionsIds.forEach(
-        permissionsId -> {
-          group.getPermissions().remove(permissionService.get(permissionsId));
-        });
+    permissionsIds.stream()
+        .map(permissionService::get)
+        .forEach(x -> associateGroupPermission(group, x));
     groupRepository.save(group);
   }
 
   public void delete(String id) {
     delete(fromString(id));
+  }
+
+  private void validateUpdateRequest(Group originalGroup, GroupRequest updateRequest){
+    onUpdateDetected(originalGroup.getName(), updateRequest.getName(), () -> checkNameUnique(updateRequest.getName()));
+  }
+
+  private void checkNameUnique(String name){
+    val result = groupRepository.getGroupByNameIgnoreCase(name);
+    checkUnique(!result.isPresent(),"A group with same name already exists");
+  }
+
+  private GroupPermission resolveGroupPermission(PolicyIdStringWithAccessLevel permission){
+    val policy = policyService.get(permission.getPolicyId());
+    val mask = AccessLevel.fromValue(permission.getMask());
+    val gp = new GroupPermission();
+    gp.setPolicy(policy);
+    gp.setAccessLevel(mask);
+    return gp;
+  }
+
+  private Application retrieveApplication(String appId){
+    return applicationRepository
+        .findById(fromString(appId))
+        .orElseThrow(() ->
+            buildNotFoundException("Could not find Application with ID: %s", appId));
+  }
+
+  private static void associateUsers(@NonNull Group group, @NonNull Collection<User> users){
+    group.getUsers().addAll(users);
+    users.stream().map(User::getGroups).forEach(groups -> groups.add(group));
+  }
+
+  private static void associateApplications(@NonNull Group group, @NonNull Collection<Application> applications){
+    group.getApplications().addAll(applications);
+    applications.stream().map(Application::getGroups).forEach(groups -> groups.add(group));
+  }
+
+  private static void associateGroupPermission(@NonNull Group group, @NonNull GroupPermission groupPermission){
+    group.getPermissions().add(groupPermission);
+    groupPermission.setOwner(group);
+  }
+
+  @Mapper(
+      nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
+      unmappedTargetPolicy = ReportingPolicy.WARN)
+  public abstract static class GroupConverter {
+
+    public abstract Group convertToGroup(GroupRequest request);
+
+    public abstract void updateGroup(Group updatingGroup, @MappingTarget Group groupToUpdate);
+
+    public Group copy(Group groupToCopy){
+      val newGroup = initGroupEntity(Group.class);
+      updateGroup(groupToCopy, newGroup );
+      return newGroup;
+    }
+
+    public abstract void updateGroup(GroupRequest request, @MappingTarget Group groupToUpdate);
+
+    protected Group initGroupEntity(@TargetType Class<Group> groupClass) {
+      return Group.builder().build();
+    }
+
   }
 }
