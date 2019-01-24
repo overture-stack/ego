@@ -16,6 +16,8 @@
 
 package bio.overture.ego.controller;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
@@ -36,6 +38,8 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,11 +58,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 @Slf4j
 @RestController
@@ -121,7 +120,7 @@ public class ApplicationController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    //TODO: [rtisma] create tests for this business logic. This logic should remain in controller.
+    // TODO: [rtisma] create tests for this business logic. This logic should remain in controller.
     if (isEmpty(query)) {
       return new PageDTO<>(applicationService.listApps(filters, pageable));
     } else {
@@ -226,7 +225,7 @@ public class ApplicationController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    //TODO: [rtisma] create tests for this business logic. This logic should remain in controller.
+    // TODO: [rtisma] create tests for this business logic. This logic should remain in controller.
     if (isEmpty(query)) {
       return new PageDTO<>(userService.findAppUsers(appId, filters, pageable));
     } else {
@@ -283,7 +282,7 @@ public class ApplicationController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    //TODO: [rtisma] create tests for this business logic. This logic should remain in controller.
+    // TODO: [rtisma] create tests for this business logic. This logic should remain in controller.
     if (isEmpty(query)) {
       return new PageDTO<>(groupService.findApplicationGroups(appId, filters, pageable));
     } else {
@@ -291,7 +290,7 @@ public class ApplicationController {
     }
   }
 
-  @ExceptionHandler({ NotFoundException.class})
+  @ExceptionHandler({NotFoundException.class})
   public ResponseEntity<Object> handleNotFoundException(
       HttpServletRequest req, NotFoundException ex) {
     log.error("Application ID not found.");

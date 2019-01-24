@@ -35,23 +35,19 @@ import static com.google.common.collect.Sets.newHashSet;
 @Entity
 @Table(name = Tables.POLICY)
 @JsonInclude()
-@JsonPropertyOrder({
-    JavaFields.ID,
-    JavaFields.OWNER,
-    JavaFields.NAME
-})
+@JsonPropertyOrder({JavaFields.ID, JavaFields.OWNER, JavaFields.NAME})
 @JsonView(Views.REST.class)
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of = { LombokFields.id })
+@EqualsAndHashCode(of = {LombokFields.id})
 @NamedEntityGraph(
     name = "policy-entity-with-relationships",
     attributeNodes = {
-        @NamedAttributeNode(value = JavaFields.USERPERMISSIONS),
-        @NamedAttributeNode(value = JavaFields.GROUPPERMISSIONS),
-    } )
+      @NamedAttributeNode(value = JavaFields.USERPERMISSIONS),
+      @NamedAttributeNode(value = JavaFields.GROUPPERMISSIONS),
+    })
 public class Policy implements Identifiable<UUID> {
 
   @Id
@@ -66,14 +62,16 @@ public class Policy implements Identifiable<UUID> {
 
   @JsonIgnore
   @Builder.Default
-  @OneToMany(mappedBy = JavaFields.OWNER,
+  @OneToMany(
+      mappedBy = JavaFields.OWNER,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE},
       fetch = FetchType.LAZY)
   private Set<GroupPermission> groupPermissions = newHashSet();
 
   @JsonIgnore
   @Builder.Default
-  @OneToMany(mappedBy = JavaFields.OWNER,
+  @OneToMany(
+      mappedBy = JavaFields.OWNER,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE},
       fetch = FetchType.LAZY)
   private Set<UserPermission> userPermissions = newHashSet();

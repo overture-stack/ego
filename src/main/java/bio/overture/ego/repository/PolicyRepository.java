@@ -1,12 +1,11 @@
 package bio.overture.ego.repository;
 
-import bio.overture.ego.model.entity.Policy;
-import org.springframework.data.jpa.repository.EntityGraph;
+import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
 
+import bio.overture.ego.model.entity.Policy;
 import java.util.Optional;
 import java.util.UUID;
-
-import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface PolicyRepository extends NamedRepository<Policy, UUID> {
 

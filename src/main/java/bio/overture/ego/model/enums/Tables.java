@@ -11,6 +11,7 @@ public class Tables {
   // A new convention can be, camelCaseText converts to the variable CAMEL_CASE_TEXT
   public static final String APPLICATION = "egoapplication";
   public static final String GROUP = "egogroup";
+  public static final String TOKEN = "token";
   public static final String GROUP_APPLICATION = "groupapplication";
   public static final String GROUP_USER = "usergroup";
   public static final String EGOUSER = "egouser";
@@ -19,4 +20,5 @@ public class Tables {
   public static final String GROUP_PERMISSION = "grouppermission";
   public static final String TOKEN_APPLICATION = "tokenapplication";
   public static final String POLICY = "policy";
+  public static final String TOKENSCOPE = "tokenscope";
 }

@@ -32,7 +32,7 @@ import javax.validation.constraints.NotNull;
     of = {LombokFields.id})
 public class GroupPermission extends AbstractPermission {
 
-  //Owning side
+  // Owning side
   @NotNull
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = SqlFields.GROUPID_JOIN, nullable = false)

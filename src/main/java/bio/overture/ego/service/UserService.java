@@ -16,6 +16,25 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.UserRole.resolveUserRoleIgnoreCase;
+import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Converters.convertToUUIDList;
+import static bio.overture.ego.utils.Converters.convertToUUIDSet;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.lang.String.format;
+import static java.util.Comparator.comparing;
+import static java.util.Objects.isNull;
+import static java.util.UUID.fromString;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Stream.concat;
+import static org.springframework.data.jpa.domain.Specifications.where;
+
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UpdateUserRequest;
@@ -35,6 +54,15 @@ import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.UserSpecification;
 import bio.overture.ego.token.IDToken;
 import com.google.common.collect.ImmutableList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -52,34 +80,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Stream;
-
-import static bio.overture.ego.model.enums.UserRole.resolveUserRoleIgnoreCase;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Converters.convertToUUIDList;
-import static bio.overture.ego.utils.Converters.convertToUUIDSet;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Lists.newArrayList;
-import static java.lang.String.format;
-import static java.util.Comparator.comparing;
-import static java.util.Objects.isNull;
-import static java.util.UUID.fromString;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Stream.concat;
-import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Slf4j
 @Service
@@ -191,6 +191,12 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return addUserPermissions(userId, newArrayList(policy));
   }
 
+  private User getUserWithRelationshipsById(@NonNull String id) {
+    return userRepository
+        .getUserById(fromString(id))
+        .orElseThrow(() -> buildNotFoundException("The user could not be found"));
+  }
+
   public User addUserPermissions(
       @NonNull String userId, @NonNull List<PolicyIdStringWithAccessLevel> permissions) {
     val policyMap = permissions.stream().collect(groupingBy(x -> fromString(x.getPolicyId())));
@@ -215,7 +221,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
     user.setRole(resolveUserRoleIgnoreCase(data.getRole()).toString());
     return getRepository().save(user);
   }
-
 
   /**
    * Partially updates a user using only non-null {@code UpdateUserRequest} {@param r} object
@@ -244,10 +249,15 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   // TODO @rtisma: add test for checking group exists for user
   public void deleteUserFromGroups(@NonNull String userId, @NonNull Collection<String> groupIds) {
-    val user = getById(fromString(userId));
-    val groupUUIDs = convertToUUIDSet(groupIds);
-    checkGroupsExistForUser(user, groupUUIDs);
-    user.getGroups().removeIf(x -> groupUUIDs.contains(x.getId()));
+    val user = getUserWithRelationshipsById(userId);
+    val groupIdsToDisassociate = convertToUUIDSet(groupIds);
+    checkGroupsExistForUser(user, groupIdsToDisassociate);
+    val groupsToDisassociate =
+        user.getGroups()
+            .stream()
+            .filter(g -> groupIdsToDisassociate.contains(g.getId()))
+            .collect(toImmutableSet());
+    disassociateUserFromGroups(user, groupsToDisassociate);
     getRepository().save(user);
   }
 
@@ -256,20 +266,30 @@ public class UserService extends AbstractNamedService<User, UUID> {
   // TODO @rtisma: add test for checking user exists
   // TODO @rtisma: add test for checking application exists for a user
   public void deleteUserFromApps(@NonNull String userId, @NonNull Collection<String> appIDs) {
-    val user = getById(fromString(userId));
-    val appUUIDs = convertToUUIDSet(appIDs);
-    checkApplicationsExistForUser(user, appUUIDs);
-    user.getApplications().removeIf(x -> appUUIDs.contains(x.getId()));
+    val user = getUserWithRelationshipsById(userId);
+    val appIdsToDisassociate = convertToUUIDSet(appIDs);
+    checkApplicationsExistForUser(user, appIdsToDisassociate);
+    val appsToDisassociate =
+        user.getApplications()
+            .stream()
+            .filter(a -> appIdsToDisassociate.contains(a.getId()))
+            .collect(toImmutableSet());
+    disassociateUserFromApplications(user, appsToDisassociate);
     getRepository().save(user);
   }
 
   // TODO @rtisma: add test for checking user permission exists for user
   public void deleteUserPermissions(
       @NonNull String userId, @NonNull Collection<String> permissionsIds) {
-    val user = getById(fromString(userId));
-    val permUUIDs = convertToUUIDSet(permissionsIds);
-    checkPermissionsExistForUser(user, permUUIDs);
-    user.getUserPermissions().removeIf(x -> permUUIDs.contains(x.getId()));
+    val user = getUserWithRelationshipsById(userId);
+    val permsIdsToDisassociate = convertToUUIDSet(permissionsIds);
+    checkPermissionsExistForUser(user, permsIdsToDisassociate);
+    val permsToDisassociate =
+        user.getUserPermissions()
+            .stream()
+            .filter(p -> permsIdsToDisassociate.contains(p.getId()))
+            .collect(toImmutableSet());
+    disassociateUserFromUserPermissions(user, permsToDisassociate);
     getRepository().save(user);
   }
 
@@ -403,6 +423,24 @@ public class UserService extends AbstractNamedService<User, UUID> {
     group.getUsers().add(user);
   }
 
+  public static void disassociateUserFromGroups(
+      @NonNull User user, @NonNull Collection<Group> groups) {
+    user.getGroups().removeAll(groups);
+    groups.forEach(x -> x.getUsers().remove(user));
+  }
+
+  public static void disassociateUserFromApplications(
+      @NonNull User user, @NonNull Collection<Application> applications) {
+    user.getApplications().removeAll(applications);
+    applications.forEach(x -> x.getUsers().remove(user));
+  }
+
+  public static void disassociateUserFromUserPermissions(
+      @NonNull User user, @NonNull Collection<UserPermission> userPermissions) {
+    user.getUserPermissions().removeAll(userPermissions);
+    userPermissions.forEach(x -> x.setOwner(null));
+  }
+
   public static void associateUserWithApplications(
       User user, @NonNull Collection<Application> apps) {
     apps.forEach(a -> associateUserWithApplication(user, a));
@@ -411,10 +449,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
   public static void associateUserWithApplication(@NonNull User user, @NonNull Application app) {
     user.getApplications().add(app);
     app.getUsers().add(user);
-  }
-
-  public static void partialUpdateUser(@NonNull UpdateUserRequest r, @NonNull User user) {
-
   }
 
   public static void checkGroupsExistForUser(
@@ -458,15 +492,16 @@ public class UserService extends AbstractNamedService<User, UUID> {
     }
   }
 
-  private void validateUpdateRequest(User originalUser, UpdateUserRequest r){
+  private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
     onUpdateDetected(originalUser.getEmail(), r.getEmail(), () -> checkEmailUnique(r.getEmail()));
-    //Ensure role is the right value. This should be removed once Enums are properly used
-    onUpdateDetected(originalUser.getRole(), r.getRole(), () -> resolveUserRoleIgnoreCase(r.getRole()));
+    // Ensure role is the right value. This should be removed once Enums are properly used
+    onUpdateDetected(
+        originalUser.getRole(), r.getRole(), () -> resolveUserRoleIgnoreCase(r.getRole()));
   }
 
-  private void checkEmailUnique(String email){
-    checkUnique(!userRepository.existsByEmailIgnoreCase(email),
-        "A user with same email already exists");
+  private void checkEmailUnique(String email) {
+    checkUnique(
+        !userRepository.existsByEmailIgnoreCase(email), "A user with same email already exists");
   }
 
   private static <T extends AbstractPermission> T resolvePermissions(List<T> permissions) {
@@ -502,7 +537,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
     public abstract void updateUser(User updatingUser, @MappingTarget User userToUpdate);
 
-    public abstract void updateUser(UpdateUserRequest updateRequest, @MappingTarget User userToUpdate);
+    public abstract void updateUser(
+        UpdateUserRequest updateRequest, @MappingTarget User userToUpdate);
 
     protected User initUserEntity(@TargetType Class<User> userClass) {
       return User.builder().build();

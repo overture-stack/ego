@@ -1,5 +1,15 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.service.UserService.USER_CONVERTER;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.UUID.randomUUID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.UpdateUserRequest;
@@ -13,6 +23,11 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
+import java.util.Collections;
+import java.util.Date;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -23,22 +38,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collections;
-import java.util.Date;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import static bio.overture.ego.service.UserService.USER_CONVERTER;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
-import static com.google.common.collect.Lists.newArrayList;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static java.util.UUID.randomUUID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -161,11 +160,8 @@ public class UserServiceTest {
   public void testCreateFromIDTokenUniqueNameAndEmail() {
     // Note: This test has one strike due to Hibernate Cache.
     entityGenerator.setupUser("User One");
-    val idToken = IDToken.builder()
-        .email("UserOne@domain.com")
-        .given_name("User")
-        .family_name("One")
-        .build();
+    val idToken =
+        IDToken.builder().email("UserOne@domain.com").given_name("User").family_name("One").build();
     assertThatExceptionOfType(UniqueViolationException.class)
         .isThrownBy(() -> userService.createFromIDToken(idToken));
   }
@@ -528,7 +524,8 @@ public class UserServiceTest {
   public void testUpdateRoleUser() {
     val user = entityGenerator.setupUser("First User");
     val updated =
-        userService.partialUpdate(user.getId().toString(), UpdateUserRequest.builder().role("user").build());
+        userService.partialUpdate(
+            user.getId().toString(), UpdateUserRequest.builder().role("user").build());
     assertThat(updated.getRole()).isEqualTo("USER");
   }
 
@@ -536,18 +533,20 @@ public class UserServiceTest {
   public void testUpdateRoleAdmin() {
     val user = entityGenerator.setupUser("First User");
     val updated =
-        userService.partialUpdate(user.getId().toString(), UpdateUserRequest.builder().role("admin").build());
+        userService.partialUpdate(
+            user.getId().toString(), UpdateUserRequest.builder().role("admin").build());
     assertThat(updated.getRole()).isEqualTo("ADMIN");
   }
 
   @Test
-  public void uniqueEmailCheck_CreateUser_ThrowsUniqueConstraintException(){
-    val r1 = CreateUserRequest.builder()
-        .preferredLanguage("English")
-        .role("ADMIN")
-        .status("Approved")
-        .email(UUID.randomUUID()+"@gmail.com")
-        .build();
+  public void uniqueEmailCheck_CreateUser_ThrowsUniqueConstraintException() {
+    val r1 =
+        CreateUserRequest.builder()
+            .preferredLanguage("English")
+            .role("ADMIN")
+            .status("Approved")
+            .email(UUID.randomUUID() + "@gmail.com")
+            .build();
 
     val u1 = userService.create(r1);
     assertThat(userService.isExist(u1.getId())).isTrue();
@@ -560,31 +559,31 @@ public class UserServiceTest {
   }
 
   @Test
-  public void uniqueEmailCheck_UpdateUser_ThrowsUniqueConstraintException(){
-    val e1 = UUID.randomUUID().toString()+"@something.com";
-    val e2 = UUID.randomUUID().toString()+"@something.com";
-    val cr1 = CreateUserRequest.builder()
-        .preferredLanguage("English")
-        .role("ADMIN")
-        .status("Approved")
-        .email(e1)
-        .build();
+  public void uniqueEmailCheck_UpdateUser_ThrowsUniqueConstraintException() {
+    val e1 = UUID.randomUUID().toString() + "@something.com";
+    val e2 = UUID.randomUUID().toString() + "@something.com";
+    val cr1 =
+        CreateUserRequest.builder()
+            .preferredLanguage("English")
+            .role("ADMIN")
+            .status("Approved")
+            .email(e1)
+            .build();
 
-    val cr2 = CreateUserRequest.builder()
-        .preferredLanguage("English")
-        .role("USER")
-        .status("Pending")
-        .email(e2)
-        .build();
+    val cr2 =
+        CreateUserRequest.builder()
+            .preferredLanguage("English")
+            .role("USER")
+            .status("Pending")
+            .email(e2)
+            .build();
 
     val u1 = userService.create(cr1);
     assertThat(userService.isExist(u1.getId())).isTrue();
     val u2 = userService.create(cr2);
     assertThat(userService.isExist(u2.getId())).isTrue();
 
-    val ur3 = UpdateUserRequest.builder()
-        .email(e1)
-        .build();
+    val ur3 = UpdateUserRequest.builder().email(e1).build();
 
     assertThat(u1.getEmail()).isEqualTo(ur3.getEmail());
     assertThat(u2.getEmail()).isNotEqualTo(ur3.getEmail());
@@ -617,8 +616,7 @@ public class UserServiceTest {
     val nonExistingId = EntityGenerator.generateNonExistentId(userService);
     user.setId(nonExistingId);
     // New id means new non-existent policy or one that exists and is being overwritten
-    assertThatExceptionOfType(NotFoundException.class)
-        .isThrownBy( () -> userService.update(user));
+    assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> userService.update(user));
   }
 
   @Test

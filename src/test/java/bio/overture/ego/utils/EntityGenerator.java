@@ -229,10 +229,10 @@ public class EntityGenerator {
       User user, String token, long duration, Set<Scope> scopes, Set<Application> applications) {
     val tokenObject =
         Token.builder()
-            .token(token)
+            .name(token)
             .owner(user)
             .applications(applications == null ? new HashSet<>() : applications)
-            .expires(Date.from(Instant.now().plusSeconds(duration)))
+            .issueDate(Date.from(Instant.now().plusSeconds(duration)))
             .build();
 
     tokenObject.setScopes(scopes);
@@ -261,45 +261,45 @@ public class EntityGenerator {
     return mapToList(listOf(strings), ScopeName::new);
   }
 
-  public static <T> UUID generateNonExistentId(BaseService<T, UUID> baseService){
+  public static <T> UUID generateNonExistentId(BaseService<T, UUID> baseService) {
     UUID id = UUID.randomUUID();
-    while(baseService.isExist(id)){
+    while (baseService.isExist(id)) {
       id = UUID.randomUUID();
     }
     return id;
   }
 
-  private static String generateRandomName(Random r, int length){
+  private static String generateRandomName(Random r, int length) {
     val sb = new StringBuilder();
     r.ints(length, 65, 90).forEach(sb::append);
     return sb.toString();
   }
 
-  private static String generateRandomUserName(Random r, int length){
+  private static String generateRandomUserName(Random r, int length) {
     val fn = generateRandomName(r, 5);
     val ln = generateRandomName(r, 5);
-    return fn+" "+ln;
-
+    return fn + " " + ln;
   }
-  public String generateNonExistentUserName(){
+
+  public String generateNonExistentUserName() {
     val r = new Random();
     String name;
     Optional<User> result;
 
-    do{
+    do {
       name = generateRandomUserName(r, 5);
       result = userService.findByName(name);
-    } while(result.isPresent());
+    } while (result.isPresent());
 
     return name;
   }
 
-  public static <T> String generateNonExistentName(NamedService<T, UUID> namedService){
+  public static <T> String generateNonExistentName(NamedService<T, UUID> namedService) {
     val r = new Random();
     String name = generateRandomName(r, 15);
     Optional<T> result = namedService.findByName(name);
 
-    while(result.isPresent()){
+    while (result.isPresent()) {
       name = generateRandomName(r, 15);
       result = namedService.findByName(name);
     }

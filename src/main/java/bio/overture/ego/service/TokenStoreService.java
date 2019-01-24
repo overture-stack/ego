@@ -16,20 +16,23 @@
 
 package bio.overture.ego.service;
 
+import bio.overture.ego.model.dto.CreateTokenRequest;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.repository.TokenStoreRepository;
-import java.util.Optional;
-import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+import java.util.UUID;
+
 @Slf4j
 @Service
 @Transactional
-public class TokenStoreService extends AbstractBaseService<Token, UUID> {
+public class TokenStoreService extends AbstractNamedService<Token, UUID> {
 
   private final TokenStoreRepository tokenRepository;
 
@@ -39,11 +42,17 @@ public class TokenStoreService extends AbstractBaseService<Token, UUID> {
     this.tokenRepository = repository;
   }
 
+  public Token create(@NonNull CreateTokenRequest createTokenRequest) {
+    throw new NotImplementedException();
+  }
+
+  @Deprecated
   public Token create(@NonNull Token scopedAccessToken) {
     return tokenRepository.save(scopedAccessToken);
   }
 
-  public Optional<Token> findByTokenString(String token) {
-    return tokenRepository.getTokenByTokenIgnoreCase(token);
+  public Optional<Token> findByTokenName(String tokenName) {
+    return tokenRepository.findByName(tokenName);
   }
+
 }

@@ -16,17 +16,16 @@
 
 package bio.overture.ego.repository;
 
-import bio.overture.ego.model.entity.Application;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
+import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
 
+import bio.overture.ego.model.entity.Application;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
-import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface ApplicationRepository extends NamedRepository<Application, UUID> {
 

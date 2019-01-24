@@ -16,12 +16,32 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.ApplicationStatus.APPROVED;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
+import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
+import static bio.overture.ego.token.app.AppTokenClaims.SCOPES;
+import static bio.overture.ego.utils.CollectionUtils.setOf;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
+import static java.lang.String.format;
+import static java.util.UUID.fromString;
+import static org.mapstruct.factory.Mappers.getMapper;
+import static org.springframework.data.jpa.domain.Specifications.where;
+
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -41,27 +61,6 @@ import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 import org.springframework.stereotype.Service;
-
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static bio.overture.ego.model.enums.ApplicationStatus.APPROVED;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
-import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
-import static bio.overture.ego.token.app.AppTokenClaims.SCOPES;
-import static bio.overture.ego.utils.CollectionUtils.setOf;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
-import static java.lang.String.format;
-import static java.util.UUID.fromString;
-import static org.mapstruct.factory.Mappers.getMapper;
-import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
 @Slf4j
@@ -190,7 +189,10 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     return getByClientId(clientId);
   }
 
-  //TODO: [rtisma] will not work, because if Application has associated users, the foreign key contraint on the userapplication table will prevent the application record from being deleted. First the appropriate rows of the userapplication join table have to be deleted (i.e disassociation of users from an application), and then the application record can be deleted
+  // TODO: [rtisma] will not work, because if Application has associated users, the foreign key
+  // contraint on the userapplication table will prevent the application record from being deleted.
+  // First the appropriate rows of the userapplication join table have to be deleted (i.e
+  // disassociation of users from an application), and then the application record can be deleted
   // http://docs.jboss.org/hibernate/orm/5.4/userguide/html_single/Hibernate_User_Guide.html#associations-many-to-many
   public void delete(String id) {
     delete(fromString(id));
@@ -234,12 +236,16 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     return updatedApplicationInfo;
   }
 
-  private void validateUpdateRequest(Application originalApplication, UpdateApplicationRequest r){
-    onUpdateDetected(originalApplication.getClientId(), r.getClientId(), () -> checkClientIdUnique(r.getClientId()));
+  private void validateUpdateRequest(Application originalApplication, UpdateApplicationRequest r) {
+    onUpdateDetected(
+        originalApplication.getClientId(),
+        r.getClientId(),
+        () -> checkClientIdUnique(r.getClientId()));
   }
 
-  private void checkClientIdUnique(String clientId){
-    checkUnique(!applicationRepository.existsByClientIdIgnoreCase(clientId),
+  private void checkClientIdUnique(String clientId) {
+    checkUnique(
+        !applicationRepository.existsByClientIdIgnoreCase(clientId),
         "An application with the same clientId already exists");
   }
 

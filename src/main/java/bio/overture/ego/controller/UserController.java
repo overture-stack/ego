@@ -16,6 +16,8 @@
 
 package bio.overture.ego.controller;
 
+import static org.springframework.util.StringUtils.isEmpty;
+
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.dto.UpdateUserRequest;
@@ -38,6 +40,9 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,12 +61,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
-
-import javax.persistence.EntityNotFoundException;
-import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-
-import static org.springframework.util.StringUtils.isEmpty;
 
 @Slf4j
 @RestController
@@ -129,7 +128,8 @@ public class UserController {
           String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    //TODO: [rtisma] create tests for this controller logic. This logic should remain in controller.
+    // TODO: [rtisma] create tests for this controller logic. This logic should remain in
+    // controller.
     if (isEmpty(query)) {
       return new PageDTO<>(userService.listUsers(filters, pageable));
     } else {
@@ -295,7 +295,8 @@ public class UserController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    //TODO: [rtisma] create tests for this controller logic. This logic should remain in controller.
+    // TODO: [rtisma] create tests for this controller logic. This logic should remain in
+    // controller.
     if (isEmpty(query)) {
       return new PageDTO<>(groupService.findUserGroups(userId, filters, pageable));
     } else {
@@ -372,7 +373,8 @@ public class UserController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    //TODO: [rtisma] create tests for this controller logic. This logic should remain in controller.
+    // TODO: [rtisma] create tests for this controller logic. This logic should remain in
+    // controller.
     if (isEmpty(query)) {
       return new PageDTO<>(applicationService.findUserApps(userId, filters, pageable));
     } else {

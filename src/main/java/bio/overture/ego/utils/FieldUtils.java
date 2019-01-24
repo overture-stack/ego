@@ -16,15 +16,14 @@
 
 package bio.overture.ego.utils;
 
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
+import static java.util.Objects.isNull;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static java.util.Objects.isNull;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class FieldUtils {
@@ -51,15 +50,16 @@ public class FieldUtils {
   }
 
   /**
-   * returns true if the updated value is different than the original value, otherwise false.
-   * If the updated value is null, then it returns false
+   * returns true if the updated value is different than the original value, otherwise false. If the
+   * updated value is null, then it returns false
    */
-  public static <T> boolean isUpdated(T originalValue, T updatedValue){
+  public static <T> boolean isUpdated(T originalValue, T updatedValue) {
     return !isNull(updatedValue) && !updatedValue.equals(originalValue);
   }
 
-  public static <T> void onUpdateDetected(T originalValue, T updatedValue, @NonNull Runnable callback){
-    if (isUpdated(originalValue, updatedValue)){
+  public static <T> void onUpdateDetected(
+      T originalValue, T updatedValue, @NonNull Runnable callback) {
+    if (isUpdated(originalValue, updatedValue)) {
       callback.run();
     }
   }

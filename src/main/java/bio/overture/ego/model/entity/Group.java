@@ -16,7 +16,6 @@
 
 package bio.overture.ego.model.entity;
 
-import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
@@ -73,19 +72,23 @@ import static com.google.common.collect.Sets.newHashSet;
 @NamedEntityGraph(
     name = "group-entity-with-relationships",
     attributeNodes = {
-        @NamedAttributeNode(value = JavaFields.USERS, subgraph = "users-subgraph"),
-        @NamedAttributeNode(value = JavaFields.PERMISSIONS),
-        @NamedAttributeNode(value = JavaFields.APPLICATIONS, subgraph = "applications-subgraph")
+      @NamedAttributeNode(value = JavaFields.USERS, subgraph = "users-subgraph"),
+      @NamedAttributeNode(value = JavaFields.PERMISSIONS),
+      @NamedAttributeNode(value = JavaFields.APPLICATIONS, subgraph = "applications-subgraph")
     },
     subgraphs = {
-        @NamedSubgraph( name = "applications-subgraph", attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)}),
-        @NamedSubgraph( name = "users-subgraph", attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)})
+      @NamedSubgraph(
+          name = "applications-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)}),
+      @NamedSubgraph(
+          name = "users-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)})
     })
 public class Group implements PolicyOwner, Identifiable<UUID> {
 
   @Id
   @GeneratedValue(generator = "group_uuid")
-  @Column(name = Fields.ID, updatable = false, nullable = false)
+  @Column(name = SqlFields.ID, updatable = false, nullable = false)
   @GenericGenerator(name = "group_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   private UUID id;
 
@@ -101,7 +104,7 @@ public class Group implements PolicyOwner, Identifiable<UUID> {
   @Column(name = SqlFields.STATUS, nullable = false)
   private String status;
 
-  //TODO: [rtisma] rename this to groupPermissions.
+  // TODO: [rtisma] rename this to groupPermissions.
   // Ensure anything using JavaFields.PERMISSIONS is also replaced with JavaFields.GROUPPERMISSIONS
   @JsonIgnore
   @Builder.Default
@@ -116,8 +119,8 @@ public class Group implements PolicyOwner, Identifiable<UUID> {
       cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinTable(
       name = Tables.GROUP_APPLICATION,
-      joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
+      joinColumns = {@JoinColumn(name = SqlFields.GROUPID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = SqlFields.APPID_JOIN)})
   @JsonIgnore
   @Builder.Default
   private Set<Application> applications = newHashSet();
@@ -127,10 +130,9 @@ public class Group implements PolicyOwner, Identifiable<UUID> {
       cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinTable(
       name = Tables.GROUP_USER,
-      joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
+      joinColumns = {@JoinColumn(name = SqlFields.GROUPID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = SqlFields.USERID_JOIN)})
   @JsonIgnore
   @Builder.Default
   private Set<User> users = newHashSet();
-
 }

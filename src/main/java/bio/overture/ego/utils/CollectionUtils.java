@@ -1,14 +1,14 @@
 package bio.overture.ego.utils;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
 
 public class CollectionUtils {
 

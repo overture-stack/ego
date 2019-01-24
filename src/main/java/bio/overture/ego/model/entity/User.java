@@ -89,13 +89,17 @@ import static com.google.common.collect.Sets.newHashSet;
 @NamedEntityGraph(
     name = "user-entity-with-relationships",
     attributeNodes = {
-        @NamedAttributeNode(value = JavaFields.GROUPS, subgraph = "groups-subgraph"),
-        @NamedAttributeNode(value = JavaFields.USERPERMISSIONS),
-        @NamedAttributeNode(value = JavaFields.APPLICATIONS, subgraph = "applications-subgraph"),
+      @NamedAttributeNode(value = JavaFields.GROUPS, subgraph = "groups-subgraph"),
+      @NamedAttributeNode(value = JavaFields.USERPERMISSIONS),
+      @NamedAttributeNode(value = JavaFields.APPLICATIONS, subgraph = "applications-subgraph"),
     },
     subgraphs = {
-        @NamedSubgraph( name = "groups-subgraph", attributeNodes = {@NamedAttributeNode(JavaFields.USERS)}),
-        @NamedSubgraph( name = "applications-subgraph", attributeNodes = {@NamedAttributeNode(JavaFields.USERS)})
+      @NamedSubgraph(
+          name = "groups-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.USERS)}),
+      @NamedSubgraph(
+          name = "applications-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.USERS)})
     })
 public class User implements PolicyOwner, Identifiable<UUID> {
 
@@ -156,6 +160,14 @@ public class User implements PolicyOwner, Identifiable<UUID> {
       fetch = FetchType.LAZY)
   @Builder.Default
   private Set<UserPermission> userPermissions = newHashSet();
+
+  @JsonIgnore
+  @Builder.Default
+  @OneToMany(
+      mappedBy = JavaFields.OWNER,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      fetch = FetchType.LAZY)
+  private Set<Token> tokens = newHashSet();
 
   @JsonIgnore
   @ManyToMany(

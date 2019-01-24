@@ -1,5 +1,6 @@
 package bio.overture.ego.model.dto;
 
+import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -7,9 +8,11 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class PolicyRequest {
+@AllArgsConstructor
+public class CreateTokenRequest {
 
-  private String name;
+  private String token;
+  private Date expires;
+  private boolean isRevoked;
 }

@@ -1,5 +1,11 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
+import static bio.overture.ego.utils.EntityTools.extractGroupNames;
+import static com.google.common.collect.Lists.newArrayList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.enums.EntityStatus;
@@ -9,6 +15,11 @@ import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -19,18 +30,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.EntityNotFoundException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
-import static bio.overture.ego.utils.EntityTools.extractGroupNames;
-import static com.google.common.collect.Lists.newArrayList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -56,11 +55,8 @@ public class GroupsServiceTest {
   }
 
   @Test
-  public void uniqueNameCheck_CreateGroup_ThrowsUniqueConstraintException(){
-    val r1 = GroupRequest.builder()
-        .name(UUID.randomUUID().toString())
-        .status("Pending")
-        .build();
+  public void uniqueNameCheck_CreateGroup_ThrowsUniqueConstraintException() {
+    val r1 = GroupRequest.builder().name(UUID.randomUUID().toString()).status("Pending").build();
 
     val g1 = groupService.create(r1);
     assertThat(groupService.isExist(g1.getId())).isTrue();
@@ -71,27 +67,19 @@ public class GroupsServiceTest {
   }
 
   @Test
-  public void uniqueClientIdCheck_UpdateGroup_ThrowsUniqueConstraintException(){
+  public void uniqueClientIdCheck_UpdateGroup_ThrowsUniqueConstraintException() {
     val name1 = UUID.randomUUID().toString();
     val name2 = UUID.randomUUID().toString();
-    val cr1 = GroupRequest.builder()
-        .name(name1)
-        .status("Pending")
-        .build();
+    val cr1 = GroupRequest.builder().name(name1).status("Pending").build();
 
-    val cr2 = GroupRequest.builder()
-        .name(name2)
-        .status("Approved")
-        .build();
+    val cr2 = GroupRequest.builder().name(name2).status("Approved").build();
 
     val g1 = groupService.create(cr1);
     assertThat(groupService.isExist(g1.getId())).isTrue();
     val g2 = groupService.create(cr2);
     assertThat(groupService.isExist(g2.getId())).isTrue();
 
-    val ur3 = GroupRequest.builder()
-        .name(name1)
-        .build();
+    val ur3 = GroupRequest.builder().name(name1).build();
 
     assertThat(g1.getName()).isEqualTo(ur3.getName());
     assertThat(g2.getName()).isNotEqualTo(ur3.getName());
@@ -694,7 +682,9 @@ public class GroupsServiceTest {
     val user = entityGenerator.setupUser("foo bar");
     val group = entityGenerator.setupGroup("testGroup");
 
-    val updatedGroup = groupService.addUsersToGroup(group.getId().toString(), newArrayList(user.getId().toString()));
+    val updatedGroup =
+        groupService.addUsersToGroup(
+            group.getId().toString(), newArrayList(user.getId().toString()));
 
     groupService.delete(updatedGroup.getId().toString());
     assertThat(userService.get(user.getId().toString())).isNotNull();
@@ -706,7 +696,8 @@ public class GroupsServiceTest {
     val app = entityGenerator.setupApplication("foobar");
     val group = entityGenerator.setupGroup("testGroup");
 
-    val updatedGroup = groupService.addAppsToGroup(group.getId().toString(), newArrayList(app.getId().toString()));
+    val updatedGroup =
+        groupService.addAppsToGroup(group.getId().toString(), newArrayList(app.getId().toString()));
 
     groupService.delete(updatedGroup.getId().toString());
     assertThat(applicationService.get(app.getId().toString())).isNotNull();
@@ -740,8 +731,7 @@ public class GroupsServiceTest {
 
     groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);
 
-    assertThat(
-            PolicyPermissionUtils.extractPermissionStrings(firstGroup.getPermissions()))
+    assertThat(PolicyPermissionUtils.extractPermissionStrings(firstGroup.getPermissions()))
         .containsExactlyInAnyOrder("Study001.READ", "Study002.WRITE", "Study003.DENY");
   }
 
@@ -783,8 +773,7 @@ public class GroupsServiceTest {
 
     groupService.deleteGroupPermissions(firstGroup.getId().toString(), groupPermissionsToRemove);
 
-    assertThat(
-            PolicyPermissionUtils.extractPermissionStrings(firstGroup.getPermissions()))
+    assertThat(PolicyPermissionUtils.extractPermissionStrings(firstGroup.getPermissions()))
         .containsExactlyInAnyOrder("Study001.READ");
   }
 

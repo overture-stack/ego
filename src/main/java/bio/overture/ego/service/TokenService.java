@@ -180,7 +180,7 @@ public class TokenService {
     val token = new Token();
     token.setExpires(DURATION);
     token.setRevoked(false);
-    token.setToken(tokenString);
+    token.setName(tokenString);
     token.setOwner(u);
 
     for (Scope requestedScope : requestedScopes) {
@@ -204,7 +204,7 @@ public class TokenService {
   }
 
   public Optional<Token> findByTokenString(String token) {
-    return tokenStoreService.findByTokenString(token);
+    return tokenStoreService.findByTokenName(token);
   }
 
   public String generateTokenString() {

@@ -1,15 +1,14 @@
 package bio.overture.ego.service;
 
-import bio.overture.ego.model.exceptions.NotFoundException;
-import lombok.NonNull;
-import lombok.val;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static java.lang.String.format;
 
+import bio.overture.ego.model.exceptions.NotFoundException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static java.lang.String.format;
+import lombok.NonNull;
+import lombok.val;
 
 public interface BaseService<T, ID> {
 
@@ -37,5 +36,4 @@ public interface BaseService<T, ID> {
     checkNotFound(
         isExist(id), "The '%s' entity with id '%s' does not exist", getEntityTypeName(), id);
   }
-
 }

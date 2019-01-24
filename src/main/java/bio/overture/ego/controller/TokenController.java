@@ -85,7 +85,7 @@ public class TokenController {
     val t = tokenService.issueToken(user_id, scopeNames, applications);
     Set<String> issuedScopes = mapToSet(t.scopes(), x -> x.toString());
     TokenResponse response =
-        new TokenResponse(t.getToken(), issuedScopes, t.getSecondsUntilExpiry());
+        new TokenResponse(t.getName(), issuedScopes, t.getSecondsUntilExpiry());
     return response;
   }
 

@@ -1,13 +1,12 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.repository.NamedRepository;
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.val;
-
-import java.util.Optional;
-
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 
 public abstract class AbstractNamedService<T extends Identifiable<ID>, ID>
     extends AbstractBaseService<T, ID> implements NamedService<T, ID> {
@@ -35,5 +34,4 @@ public abstract class AbstractNamedService<T extends Identifiable<ID>, ID>
         name);
     return result.get();
   }
-
 }

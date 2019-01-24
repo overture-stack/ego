@@ -1,5 +1,8 @@
 package bio.overture.ego.service;
 
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
@@ -13,9 +16,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @SpringBootTest
@@ -89,5 +89,4 @@ public class PermissionServiceTest {
     System.out.printf("%s", actual.get(0).toString());
     assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
   }
-
 }

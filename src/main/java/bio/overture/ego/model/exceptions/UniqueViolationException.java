@@ -17,11 +17,11 @@
  */
 package bio.overture.ego.model.exceptions;
 
-import lombok.NonNull;
-import org.springframework.web.bind.annotation.ResponseStatus;
-
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.CONFLICT;
+
+import lombok.NonNull;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(CONFLICT)
 public class UniqueViolationException extends RuntimeException {
@@ -35,5 +35,4 @@ public class UniqueViolationException extends RuntimeException {
       throw new UniqueViolationException(format(formattedMessage, args));
     }
   }
-
 }

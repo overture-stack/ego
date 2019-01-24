@@ -1,5 +1,15 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.service.ApplicationService.APPLICATION_CONVERTER;
+import static bio.overture.ego.utils.CollectionUtils.setOf;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Collections.singletonList;
+import static java.util.UUID.randomUUID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
@@ -12,6 +22,11 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.token.app.AppTokenClaims;
 import bio.overture.ego.utils.EntityGenerator;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.stream.IntStream;
+import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -25,22 +40,6 @@ import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.EntityNotFoundException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-import java.util.stream.IntStream;
-
-import static bio.overture.ego.service.ApplicationService.APPLICATION_CONVERTER;
-import static bio.overture.ego.utils.CollectionUtils.setOf;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
-import static com.google.common.collect.Lists.newArrayList;
-import static java.util.Collections.singletonList;
-import static java.util.UUID.randomUUID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -203,7 +202,8 @@ public class ApplicationServiceTest {
     val actualApplicationsPage =
         applicationService.listApps(Collections.emptyList(), new PageableResolver().getPageable());
     assertThat(actualApplicationsPage.getTotalElements()).isEqualTo(expectedApplications.size());
-    assertThat(actualApplicationsPage.getContent()).containsExactlyInAnyOrderElementsOf(expectedApplications);
+    assertThat(actualApplicationsPage.getContent())
+        .containsExactlyInAnyOrderElementsOf(expectedApplications);
   }
 
   @Test
@@ -494,9 +494,7 @@ public class ApplicationServiceTest {
   @Test
   public void testUpdate() {
     val application = entityGenerator.setupApplication("123456");
-    val updateRequest = UpdateApplicationRequest.builder()
-        .name("New Name")
-        .build();
+    val updateRequest = UpdateApplicationRequest.builder().name("New Name").build();
     val updated = applicationService.partialUpdate(application.getId().toString(), updateRequest);
     assertThat(updated.getName()).isEqualTo("New Name");
   }
@@ -515,13 +513,14 @@ public class ApplicationServiceTest {
   }
 
   @Test
-  public void uniqueClientIdCheck_CreateApplication_ThrowsUniqueConstraintException(){
-    val r1 = CreateApplicationRequest.builder()
-        .clientId(UUID.randomUUID().toString())
-        .clientSecret(UUID.randomUUID().toString())
-        .name(UUID.randomUUID().toString())
-        .status("Pending")
-        .build();
+  public void uniqueClientIdCheck_CreateApplication_ThrowsUniqueConstraintException() {
+    val r1 =
+        CreateApplicationRequest.builder()
+            .clientId(UUID.randomUUID().toString())
+            .clientSecret(UUID.randomUUID().toString())
+            .name(UUID.randomUUID().toString())
+            .status("Pending")
+            .build();
 
     val a1 = applicationService.create(r1);
     assertThat(applicationService.isExist(a1.getId())).isTrue();
@@ -532,31 +531,31 @@ public class ApplicationServiceTest {
   }
 
   @Test
-  public void uniqueClientIdCheck_UpdateApplication_ThrowsUniqueConstraintException(){
+  public void uniqueClientIdCheck_UpdateApplication_ThrowsUniqueConstraintException() {
     val clientId1 = UUID.randomUUID().toString();
     val clientId2 = UUID.randomUUID().toString();
-    val cr1 = CreateApplicationRequest.builder()
-        .clientId(clientId1)
-        .clientSecret(UUID.randomUUID().toString())
-        .name(UUID.randomUUID().toString())
-        .status("Pending")
-        .build();
+    val cr1 =
+        CreateApplicationRequest.builder()
+            .clientId(clientId1)
+            .clientSecret(UUID.randomUUID().toString())
+            .name(UUID.randomUUID().toString())
+            .status("Pending")
+            .build();
 
-    val cr2 = CreateApplicationRequest.builder()
-        .clientId(clientId2)
-        .clientSecret(UUID.randomUUID().toString())
-        .name(UUID.randomUUID().toString())
-        .status("Approved")
-        .build();
+    val cr2 =
+        CreateApplicationRequest.builder()
+            .clientId(clientId2)
+            .clientSecret(UUID.randomUUID().toString())
+            .name(UUID.randomUUID().toString())
+            .status("Approved")
+            .build();
 
     val a1 = applicationService.create(cr1);
     assertThat(applicationService.isExist(a1.getId())).isTrue();
     val a2 = applicationService.create(cr2);
     assertThat(applicationService.isExist(a2.getId())).isTrue();
 
-    val ur3 = UpdateApplicationRequest.builder()
-        .clientId(clientId1)
-        .build();
+    val ur3 = UpdateApplicationRequest.builder().clientId(clientId1).build();
 
     assertThat(a1.getClientId()).isEqualTo(ur3.getClientId());
     assertThat(a2.getClientId()).isNotEqualTo(ur3.getClientId());
@@ -629,9 +628,8 @@ public class ApplicationServiceTest {
   @Test
   public void testLoadClientByClientId() {
     val application = entityGenerator.setupApplication("123456");
-    val updateRequest = UpdateApplicationRequest.builder()
-        .status(ApplicationStatus.APPROVED.toString())
-        .build();
+    val updateRequest =
+        UpdateApplicationRequest.builder().status(ApplicationStatus.APPROVED.toString()).build();
     applicationService.partialUpdate(application.getId().toString(), updateRequest);
 
     val client = applicationService.loadClientByClientId("123456");
@@ -664,9 +662,7 @@ public class ApplicationServiceTest {
   @Test
   public void testLoadClientByClientIdNotApproved() {
     val application = entityGenerator.setupApplication("123456");
-    val updateRequest = UpdateApplicationRequest.builder()
-        .status("Pending")
-        .build();
+    val updateRequest = UpdateApplicationRequest.builder().status("Pending").build();
     applicationService.partialUpdate(application.getId().toString(), updateRequest);
     assertThatExceptionOfType(ClientRegistrationException.class)
         .isThrownBy(() -> applicationService.loadClientByClientId("123456"))
@@ -684,5 +680,4 @@ public class ApplicationServiceTest {
         .isThrownBy(() -> applicationService.loadClientByClientId("123456"))
         .withMessage("Client Access is not approved.");
   }
-
 }

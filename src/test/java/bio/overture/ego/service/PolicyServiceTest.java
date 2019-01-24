@@ -1,5 +1,8 @@
 package bio.overture.ego.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.entity.Group;
@@ -7,6 +10,10 @@ import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.EntityGenerator;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
@@ -18,14 +25,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -127,10 +126,8 @@ public class PolicyServiceTest {
   }
 
   @Test
-  public void uniqueNameCheck_CreatePolicy_ThrowsUniqueConstraintException(){
-    val r1 = PolicyRequest.builder()
-        .name(UUID.randomUUID().toString())
-        .build();
+  public void uniqueNameCheck_CreatePolicy_ThrowsUniqueConstraintException() {
+    val r1 = PolicyRequest.builder().name(UUID.randomUUID().toString()).build();
 
     val p1 = policyService.create(r1);
     assertThat(policyService.isExist(p1.getId())).isTrue();
@@ -141,25 +138,19 @@ public class PolicyServiceTest {
   }
 
   @Test
-  public void uniqueNameCheck_UpdatePolicy_ThrowsUniqueConstraintException(){
+  public void uniqueNameCheck_UpdatePolicy_ThrowsUniqueConstraintException() {
     val name1 = UUID.randomUUID().toString();
     val name2 = UUID.randomUUID().toString();
-    val cr1 = PolicyRequest.builder()
-        .name(name1)
-        .build();
+    val cr1 = PolicyRequest.builder().name(name1).build();
 
-    val cr2 = PolicyRequest.builder()
-        .name(name2)
-        .build();
+    val cr2 = PolicyRequest.builder().name(name2).build();
 
     val p1 = policyService.create(cr1);
     assertThat(policyService.isExist(p1.getId())).isTrue();
     val p2 = policyService.create(cr2);
     assertThat(policyService.isExist(p2.getId())).isTrue();
 
-    val ur3 = PolicyRequest.builder()
-        .name(name1)
-        .build();
+    val ur3 = PolicyRequest.builder().name(name1).build();
 
     assertThat(p1.getName()).isEqualTo(ur3.getName());
     assertThat(p2.getName()).isNotEqualTo(ur3.getName());
@@ -180,9 +171,7 @@ public class PolicyServiceTest {
   @Test
   public void testUpdate() {
     val policy = entityGenerator.setupPolicy("Study001", groups.get(0).getName());
-    val updateRequest = PolicyRequest.builder()
-        .name("StudyOne")
-        .build();
+    val updateRequest = PolicyRequest.builder().name("StudyOne").build();
     val updated = policyService.partialUpdate(policy.getId().toString(), updateRequest);
     assertThat(updated.getName()).isEqualTo("StudyOne");
   }

@@ -16,6 +16,15 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Converters.convertToUUIDList;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static java.util.UUID.fromString;
+import static org.mapstruct.factory.Mappers.getMapper;
+import static org.springframework.data.jpa.domain.Specifications.where;
+
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
@@ -29,6 +38,9 @@ import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
 import com.google.common.collect.ImmutableList;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
 import org.mapstruct.Mapper;
@@ -41,19 +53,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Converters.convertToUUIDList;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static java.util.UUID.fromString;
-import static org.mapstruct.factory.Mappers.getMapper;
-import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
 public class GroupService extends AbstractNamedService<Group, UUID> {
@@ -97,7 +96,8 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     return getRepository().save(group);
   }
 
-  //TODO: [rtisma] need to validate userIds all exist. Cannot use userService as it causes circular dependency
+  // TODO: [rtisma] need to validate userIds all exist. Cannot use userService as it causes circular
+  // dependency
   public Group addUsersToGroup(@NonNull String grpId, @NonNull List<String> userIds) {
     val group = getById(fromString(grpId));
     val users = userRepository.findAllByIdIn(convertToUUIDList(userIds));
@@ -108,7 +108,8 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   public Group addGroupPermissions(
       @NonNull String groupId, @NonNull List<PolicyIdStringWithAccessLevel> permissions) {
     val group = getById(fromString(groupId));
-    permissions.stream()
+    permissions
+        .stream()
         .map(this::resolveGroupPermission)
         .forEach(gp -> associateGroupPermission(group, gp));
     return getRepository().save(group);
@@ -201,17 +202,16 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
 
   public void deleteAppsFromGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
     val group = getById(fromString(grpId));
-    val apps = appIDs.stream()
-        .map(this::retrieveApplication)
-        .collect(toImmutableSet());
+    val apps = appIDs.stream().map(this::retrieveApplication).collect(toImmutableSet());
     associateApplications(group, apps);
     groupRepository.save(group);
   }
 
   public void deleteGroupPermissions(@NonNull String userId, @NonNull List<String> permissionsIds) {
     val group = getById(fromString(userId));
-    permissionService.getMany(convertToUUIDList(permissionsIds))
-        .forEach(gp-> associateGroupPermission(group, gp));
+    permissionService
+        .getMany(convertToUUIDList(permissionsIds))
+        .forEach(gp -> associateGroupPermission(group, gp));
     groupRepository.save(group);
   }
 
@@ -219,16 +219,19 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     delete(fromString(id));
   }
 
-  private void validateUpdateRequest(Group originalGroup, GroupRequest updateRequest){
-    onUpdateDetected(originalGroup.getName(), updateRequest.getName(), () -> checkNameUnique(updateRequest.getName()));
+  private void validateUpdateRequest(Group originalGroup, GroupRequest updateRequest) {
+    onUpdateDetected(
+        originalGroup.getName(),
+        updateRequest.getName(),
+        () -> checkNameUnique(updateRequest.getName()));
   }
 
-  private void checkNameUnique(String name){
-    checkUnique(!groupRepository.existsByNameIgnoreCase(name),
-        "A group with same name already exists");
+  private void checkNameUnique(String name) {
+    checkUnique(
+        !groupRepository.existsByNameIgnoreCase(name), "A group with same name already exists");
   }
 
-  private GroupPermission resolveGroupPermission(PolicyIdStringWithAccessLevel permission){
+  private GroupPermission resolveGroupPermission(PolicyIdStringWithAccessLevel permission) {
     val policy = policyService.get(permission.getPolicyId());
     val mask = AccessLevel.fromValue(permission.getMask());
     val gp = new GroupPermission();
@@ -237,25 +240,26 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     return gp;
   }
 
-  private Application retrieveApplication(String appId){
+  private Application retrieveApplication(String appId) {
     // using applicationRepository since using applicationService causes cyclic dependency error
     return applicationRepository
         .findById(fromString(appId))
-        .orElseThrow(() ->
-            buildNotFoundException("Could not find Application with ID: %s", appId));
+        .orElseThrow(() -> buildNotFoundException("Could not find Application with ID: %s", appId));
   }
 
-  private static void associateUsers(@NonNull Group group, @NonNull Collection<User> users){
+  private static void associateUsers(@NonNull Group group, @NonNull Collection<User> users) {
     group.getUsers().addAll(users);
     users.stream().map(User::getGroups).forEach(groups -> groups.add(group));
   }
 
-  private static void associateApplications(@NonNull Group group, @NonNull Collection<Application> applications){
+  private static void associateApplications(
+      @NonNull Group group, @NonNull Collection<Application> applications) {
     group.getApplications().addAll(applications);
     applications.stream().map(Application::getGroups).forEach(groups -> groups.add(group));
   }
 
-  private static void associateGroupPermission(@NonNull Group group, @NonNull GroupPermission groupPermission){
+  private static void associateGroupPermission(
+      @NonNull Group group, @NonNull GroupPermission groupPermission) {
     group.getPermissions().add(groupPermission);
     groupPermission.setOwner(group);
   }
@@ -269,9 +273,9 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
 
     public abstract void updateGroup(Group updatingGroup, @MappingTarget Group groupToUpdate);
 
-    public Group copy(Group groupToCopy){
+    public Group copy(Group groupToCopy) {
       val newGroup = initGroupEntity(Group.class);
-      updateGroup(groupToCopy, newGroup );
+      updateGroup(groupToCopy, newGroup);
       return newGroup;
     }
 
@@ -280,6 +284,5 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     protected Group initGroupEntity(@TargetType Class<Group> groupClass) {
       return Group.builder().build();
     }
-
   }
 }

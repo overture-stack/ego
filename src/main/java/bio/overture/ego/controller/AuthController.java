@@ -21,6 +21,7 @@ import bio.overture.ego.provider.google.GoogleTokenService;
 import bio.overture.ego.provider.linkedin.LinkedInOAuthService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.signer.TokenSigner;
+import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -43,8 +44,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
-
-import javax.servlet.http.HttpServletRequest;
 
 @Slf4j
 @RestController

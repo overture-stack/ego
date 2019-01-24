@@ -16,7 +16,6 @@
 
 package bio.overture.ego.model.entity;
 
-import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
@@ -77,14 +76,20 @@ import static com.google.common.collect.Sets.newHashSet;
 @NamedEntityGraph(
     name = "application-entity-with-relationships",
     attributeNodes = {
-        @NamedAttributeNode(value = JavaFields.USERS, subgraph = "users-subgraph"),
-        @NamedAttributeNode(value = JavaFields.TOKENS, subgraph = "tokens-subgraph"),
-        @NamedAttributeNode(value = JavaFields.GROUPS, subgraph = "groups-subgraph")
+      @NamedAttributeNode(value = JavaFields.USERS, subgraph = "users-subgraph"),
+      @NamedAttributeNode(value = JavaFields.TOKENS, subgraph = "tokens-subgraph"),
+      @NamedAttributeNode(value = JavaFields.GROUPS, subgraph = "groups-subgraph")
     },
     subgraphs = {
-        @NamedSubgraph( name = "groups-subgraph", attributeNodes = {@NamedAttributeNode(JavaFields.APPLICATIONS)}),
-        @NamedSubgraph( name = "tokens-subgraph", attributeNodes = {@NamedAttributeNode(JavaFields.APPLICATIONS)}),
-        @NamedSubgraph( name = "users-subgraph", attributeNodes  = {@NamedAttributeNode(JavaFields.APPLICATIONS)})
+      @NamedSubgraph(
+          name = "groups-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.APPLICATIONS)}),
+      @NamedSubgraph(
+          name = "tokens-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.APPLICATIONS)}),
+      @NamedSubgraph(
+          name = "users-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.APPLICATIONS)})
     })
 public class Application implements Identifiable<UUID> {
 
@@ -125,7 +130,7 @@ public class Application implements Identifiable<UUID> {
   @JsonIgnore
   @Builder.Default
   @ManyToMany(
-      mappedBy = Fields.APPLICATIONS,
+      mappedBy = JavaFields.APPLICATIONS,
       fetch = FetchType.LAZY,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   private Set<Group> groups = newHashSet();
@@ -133,7 +138,7 @@ public class Application implements Identifiable<UUID> {
   @JsonIgnore
   @Builder.Default
   @ManyToMany(
-      mappedBy = Fields.APPLICATIONS,
+      mappedBy = JavaFields.APPLICATIONS,
       fetch = FetchType.LAZY,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   private Set<User> users = newHashSet();
@@ -141,7 +146,7 @@ public class Application implements Identifiable<UUID> {
   @JsonIgnore
   @Builder.Default
   @ManyToMany(
-      mappedBy = Fields.APPLICATIONS,
+      mappedBy = JavaFields.APPLICATIONS,
       fetch = FetchType.LAZY,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   private Set<Token> tokens = newHashSet();
@@ -150,5 +155,4 @@ public class Application implements Identifiable<UUID> {
   public List<String> getGroupNames() {
     return getGroups().stream().map(Group::getName).collect(toImmutableList());
   }
-
 }

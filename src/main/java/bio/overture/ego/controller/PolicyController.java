@@ -21,6 +21,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -35,8 +36,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
-
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -160,7 +159,8 @@ public class PolicyController {
       @PathVariable(value = "id", required = true) String id,
       @PathVariable(value = "group_id", required = true) String groupId,
       @RequestBody(required = true) String mask) {
-    groupService.addGroupPermissions(groupId, ImmutableList.of(new PolicyIdStringWithAccessLevel(id, mask)) );
+    groupService.addGroupPermissions(
+        groupId, ImmutableList.of(new PolicyIdStringWithAccessLevel(id, mask)));
     return "1 group permission added to ACL successfully";
   }
 
@@ -173,7 +173,7 @@ public class PolicyController {
       @PathVariable(value = "id", required = true) String id,
       @PathVariable(value = "user_id", required = true) String userId,
       @RequestBody(required = true) String mask) {
-    userService.addUserPermission(userId, new PolicyIdStringWithAccessLevel(id, mask) );
+    userService.addUserPermission(userId, new PolicyIdStringWithAccessLevel(id, mask));
     return "1 user permission successfully added to ACL '" + id + "'";
   }
 

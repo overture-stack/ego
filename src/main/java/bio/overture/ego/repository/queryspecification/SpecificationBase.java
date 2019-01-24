@@ -18,15 +18,14 @@ package bio.overture.ego.repository.queryspecification;
 
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.QueryUtils;
-import lombok.NonNull;
-import lombok.val;
-import org.springframework.data.jpa.domain.Specification;
-
+import java.util.Arrays;
+import java.util.List;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import java.util.Arrays;
-import java.util.List;
+import lombok.NonNull;
+import lombok.val;
+import org.springframework.data.jpa.domain.Specification;
 
 public class SpecificationBase<T> {
   protected static <T> Predicate[] getQueryPredicates(

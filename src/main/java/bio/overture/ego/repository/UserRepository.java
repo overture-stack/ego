@@ -16,24 +16,29 @@
 
 package bio.overture.ego.repository;
 
-import bio.overture.ego.model.entity.User;
-import org.springframework.data.jpa.repository.EntityGraph;
-
-import java.util.Optional;
-import java.util.UUID;
-
 import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
+
+import bio.overture.ego.model.entity.User;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface UserRepository extends NamedRepository<User, UUID> {
 
   @EntityGraph(value = "user-entity-with-relationships", type = FETCH)
   Optional<User> getUserByNameIgnoreCase(String name);
 
+  @EntityGraph(value = "user-entity-with-relationships", type = FETCH)
+  Optional<User> getUserById(UUID id);
+
   boolean existsByEmailIgnoreCase(String email);
+
+  Set<User> findAllByIdIn(List<UUID> userIds);
 
   @Override
   default Optional<User> findByName(String name) {
     return getUserByNameIgnoreCase(name);
   }
-
 }

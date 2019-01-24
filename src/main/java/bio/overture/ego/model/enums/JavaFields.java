@@ -40,7 +40,9 @@ public class JavaFields {
   public static final String SCOPES = "scopes";
   public static final String GROUPS = "groups";
   public static final String USERS = "users";
+  public static final String USER = "user";
   public static final String TOKENS = "tokens";
+  public static final String TOKEN = "token";
   public static final String USERPERMISSIONS = "userPermissions";
   public static final String PERMISSIONS = "permissions";
   public static final String USERPERMISSION = "userPermission";

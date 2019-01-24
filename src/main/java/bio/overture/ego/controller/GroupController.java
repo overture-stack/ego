@@ -36,6 +36,9 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -56,10 +59,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
-
-import javax.persistence.EntityNotFoundException;
-import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 @Slf4j
 @Builder
@@ -121,7 +120,8 @@ public class GroupController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    //TODO: [rtisma] create tests for this controller logic. This logic should remain in controller.
+    // TODO: [rtisma] create tests for this controller logic. This logic should remain in
+    // controller.
     if (StringUtils.isEmpty(query)) {
       return new PageDTO<>(groupService.listGroups(filters, pageable));
     } else {
