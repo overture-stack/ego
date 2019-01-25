@@ -13,6 +13,6 @@ import lombok.NoArgsConstructor;
 public class CreateTokenRequest {
 
   private String token;
-  private Date expires;
+  private Date issueDate;
   private boolean isRevoked;
 }
