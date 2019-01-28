@@ -20,7 +20,6 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.QueryUtils;
 import java.util.Arrays;
 import java.util.List;
-import javax.annotation.Nonnull;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -48,12 +47,14 @@ public class SpecificationBase<T> {
     return builder.like(builder.lower(root.get(fieldName)), finalText);
   }
 
-  public static <T> Specification<T> filterBy(@Nonnull List<SearchFilter> filters) {
-    return (root, query, builder) ->
-        builder.and(
-            filters
-                .stream()
-                .map(f -> filterByField(builder, root, f.getFilterField(), f.getFilterValue()))
-                .toArray(Predicate[]::new));
+  public static <T> Specification<T> filterBy(@NonNull List<SearchFilter> filters) {
+    return (root, query, builder) -> {
+      query.distinct(true);
+      return builder.and(
+          filters
+              .stream()
+              .map(f -> filterByField(builder, root, f.getFilterField(), f.getFilterValue()))
+              .toArray(Predicate[]::new));
+    };
   }
 }

@@ -16,125 +16,142 @@
 
 package bio.overture.ego.model.entity;
 
-import bio.overture.ego.model.enums.Fields;
+import static bio.overture.ego.utils.Collectors.toImmutableList;
+import static com.google.common.collect.Sets.newHashSet;
+
+import bio.overture.ego.model.enums.JavaFields;
+import bio.overture.ego.model.enums.LombokFields;
+import bio.overture.ego.model.enums.SqlFields;
+import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import java.util.*;
-import java.util.stream.Collectors;
-import javax.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.Cascade;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedSubgraph;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.Accessors;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
 @Entity
-@Table(name = "egoapplication")
+@Table(name = Tables.APPLICATION)
 @Data
-@ToString(exclude = {"wholeGroups", "wholeUsers"})
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Accessors(chain = true)
+@JsonView(Views.REST.class)
+@ToString(exclude = {LombokFields.groups, LombokFields.users})
+@EqualsAndHashCode(of = {LombokFields.id})
 @JsonPropertyOrder({
-  "id",
-  "name",
-  "clientId",
-  "clientSecret",
-  "redirectUri",
-  "description",
-  "status"
+  JavaFields.ID,
+  JavaFields.NAME,
+  JavaFields.CLIENTID,
+  JavaFields.CLIENTSECRET,
+  JavaFields.REDIRECTURI,
+  JavaFields.DESCRIPTION,
+  JavaFields.STATUS
 })
 @JsonInclude(JsonInclude.Include.CUSTOM)
-@EqualsAndHashCode(of = {"id"})
-@NoArgsConstructor
-@RequiredArgsConstructor
-@JsonView(Views.REST.class)
-public class Application {
+@NamedEntityGraph(
+    name = "application-entity-with-relationships",
+    attributeNodes = {
+      @NamedAttributeNode(value = JavaFields.USERS, subgraph = "users-subgraph"),
+      @NamedAttributeNode(value = JavaFields.TOKENS, subgraph = "tokens-subgraph"),
+      @NamedAttributeNode(value = JavaFields.GROUPS, subgraph = "groups-subgraph")
+    },
+    subgraphs = {
+      @NamedSubgraph(
+          name = "groups-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.APPLICATIONS)}),
+      @NamedSubgraph(
+          name = "tokens-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.APPLICATIONS)}),
+      @NamedSubgraph(
+          name = "users-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.APPLICATIONS)})
+    })
+public class Application implements Identifiable<UUID> {
 
   @Id
-  @Column(nullable = false, name = Fields.ID, updatable = false)
+  @Column(name = SqlFields.ID, updatable = false, nullable = false)
   @GenericGenerator(name = "application_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "application_uuid")
-  UUID id;
+  private UUID id;
+
+  @NotNull
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
+  @Column(name = SqlFields.NAME, nullable = false)
+  private String name;
+
+  @NotNull
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
+  @Column(name = SqlFields.CLIENTID, nullable = false, unique = true)
+  private String clientId;
+
+  @NotNull
+  @Column(name = SqlFields.CLIENTSECRET, nullable = false)
+  private String clientSecret;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @NonNull
-  @Column(nullable = false, name = Fields.NAME)
-  String name;
+  @Column(name = SqlFields.REDIRECTURI)
+  private String redirectUri;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @NonNull
-  @Column(nullable = false, name = Fields.CLIENTID)
-  String clientId;
+  @Column(name = SqlFields.DESCRIPTION)
+  private String description;
 
-  @NonNull
-  @Column(nullable = false, name = Fields.CLIENTSECRET)
-  String clientSecret;
+  // TODO: [rtisma] replace with Enum similar to AccessLevel
+  @NotNull
+  @JsonView(Views.JWTAccessToken.class)
+  @Column(name = SqlFields.STATUS, nullable = false)
+  private String status;
 
-  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = Fields.REDIRECTURI)
-  String redirectUri;
+  @JsonIgnore
+  @Builder.Default
+  @ManyToMany(
+      mappedBy = JavaFields.APPLICATIONS,
+      fetch = FetchType.LAZY,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+  private Set<Group> groups = newHashSet();
 
-  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = Fields.DESCRIPTION)
-  String description;
+  @JsonIgnore
+  @Builder.Default
+  @ManyToMany(
+      mappedBy = JavaFields.APPLICATIONS,
+      fetch = FetchType.LAZY,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+  private Set<User> users = newHashSet();
+
+  @JsonIgnore
+  @Builder.Default
+  @ManyToMany(
+      mappedBy = JavaFields.APPLICATIONS,
+      fetch = FetchType.LAZY,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+  private Set<Token> tokens = newHashSet();
 
   @JsonView(Views.JWTAccessToken.class)
-  @Column(name = Fields.STATUS)
-  String status;
-
-  @ManyToMany()
-  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(
-      name = "groupapplication",
-      joinColumns = {@JoinColumn(name = Fields.APPID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)})
-  @JsonIgnore
-  Set<Group> wholeGroups;
-
-  @ManyToMany()
-  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(
-      name = "userapplication",
-      joinColumns = {@JoinColumn(name = Fields.APPID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
-  @JsonIgnore
-  Set<User> wholeUsers;
-
-  @JsonIgnore
-  public HashSet<String> getURISet() {
-    val output = new HashSet<String>();
-    output.add(this.redirectUri);
-    return output;
-  }
-
-  @JsonView(Views.JWTAccessToken.class)
-  public List<String> getGroups() {
-    if (this.wholeGroups == null) {
-      return new ArrayList<String>();
-    }
-    return this.wholeGroups.stream().map(g -> g.getName()).collect(Collectors.toList());
-  }
-
-  public void update(Application other) {
-    this.name = other.name;
-    this.clientId = other.clientId;
-    this.clientSecret = other.clientSecret;
-    this.redirectUri = other.redirectUri;
-    this.description = other.description;
-    this.status = other.status;
-
-    // Do not update ID;
-
-    // Update Users and Groups only if provided (not null)
-    if (other.wholeUsers != null) {
-      this.wholeUsers = other.wholeUsers;
-    }
-
-    if (other.wholeGroups != null) {
-      this.wholeGroups = other.wholeGroups;
-    }
+  public List<String> getGroupNames() {
+    return getGroups().stream().map(Group::getName).collect(toImmutableList());
   }
 }

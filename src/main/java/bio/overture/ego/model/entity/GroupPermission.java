@@ -1,50 +1,39 @@
 package bio.overture.ego.model.entity;
 
-import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.model.enums.Fields;
+import bio.overture.ego.model.enums.LombokFields;
+import bio.overture.ego.model.enums.SqlFields;
+import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
-import java.util.UUID;
-import javax.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
-@Table(name = "grouppermission")
+@Table(name = Tables.GROUP_PERMISSION)
 @Data
-@JsonPropertyOrder({"id", "policy", "owner", "access_level"})
 @JsonInclude()
-@EqualsAndHashCode(of = {"id"})
-@TypeDef(name = "ego_access_level_enum", typeClass = PostgreSQLEnumType.class)
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
-public class GroupPermission extends Permission {
-  @Id
-  @Column(nullable = false, name = Fields.ID, updatable = false)
-  @GenericGenerator(name = "group_permission_uuid", strategy = "org.hibernate.id.UUIDGenerator")
-  @GeneratedValue(generator = "group_permission_uuid")
-  UUID id;
+@ToString(callSuper = true)
+@EqualsAndHashCode(
+    callSuper = true,
+    of = {LombokFields.id})
+public class GroupPermission extends AbstractPermission {
 
-  @NonNull
+  // Owning side
+  @NotNull
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(nullable = false, name = Fields.POLICYID_JOIN)
-  Policy policy;
-
-  @NonNull
-  @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(nullable = false, name = Fields.GROUPID_JOIN)
-  Group owner;
-
-  @NonNull
-  @Column(nullable = false, name = Fields.ACCESS_LEVEL)
-  @Enumerated(EnumType.STRING)
-  @Type(type = "ego_access_level_enum")
-  AccessLevel accessLevel;
+  @JoinColumn(name = SqlFields.GROUPID_JOIN, nullable = false)
+  private Group owner;
 }

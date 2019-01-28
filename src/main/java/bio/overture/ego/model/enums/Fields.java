@@ -16,6 +16,11 @@
 
 package bio.overture.ego.model.enums;
 
+import static lombok.AccessLevel.PRIVATE;
+
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(access = PRIVATE)
 public class Fields {
 
   public static final String ID = "id";
@@ -38,9 +43,10 @@ public class Fields {
   public static final String TOKENID_JOIN = "token_id";
   public static final String APPID_JOIN = "application_id";
   public static final String OWNER = "owner";
-  public static final String POLICY = "policy";
   public static final String ACCESS_LEVEL = "access_level";
   public static final String TOKEN = "token";
   public static final String ISSUEDATE = "issuedate";
   public static final String ISREVOKED = "isrevoked";
+  public static final String APPLICATIONS = "applications";
+  public static final String GROUPS = "groups";
 }

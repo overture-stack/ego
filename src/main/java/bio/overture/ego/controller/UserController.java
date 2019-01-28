@@ -16,7 +16,11 @@
 
 package bio.overture.ego.controller;
 
+import static org.springframework.util.StringUtils.isEmpty;
+
+import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.PageDTO;
+import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
@@ -31,31 +35,53 @@ import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
-import io.swagger.annotations.*;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.util.List;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
-@AllArgsConstructor(onConstructor = @__({@Autowired}))
 public class UserController {
+
   /** Dependencies */
   private final UserService userService;
 
   private final GroupService groupService;
   private final ApplicationService applicationService;
+
+  @Autowired
+  public UserController(
+      @NonNull UserService userService,
+      @NonNull GroupService groupService,
+      @NonNull ApplicationService applicationService) {
+    this.userService = userService;
+    this.groupService = groupService;
+    this.applicationService = applicationService;
+  }
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
@@ -102,7 +128,9 @@ public class UserController {
           String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    if (StringUtils.isEmpty(query)) {
+    // TODO: [rtisma] create tests for this controller logic. This logic should remain in
+    // controller.
+    if (isEmpty(query)) {
       return new PageDTO<>(userService.listUsers(filters, pageable));
     } else {
       return new PageDTO<>(userService.findUsers(query, filters, pageable));
@@ -121,11 +149,8 @@ public class UserController {
       })
   public @ResponseBody User create(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestBody(required = true) User userInfo) {
-    if (userInfo.getId() != null) {
-      throw new PostWithIdentifierException();
-    }
-    return userService.create(userInfo);
+      @RequestBody(required = true) CreateUserRequest request) {
+    return userService.create(request);
   }
 
   @AdminScoped
@@ -141,11 +166,17 @@ public class UserController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
   @ApiResponses(
-      value = {@ApiResponse(code = 200, message = "Updated user info", response = User.class)})
+      value = {
+        @ApiResponse(
+            code = 200,
+            message = "Partially update using non-null user info",
+            response = User.class)
+      })
   public @ResponseBody User updateUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestBody(required = true) User updatedUserInfo) {
-    return userService.update(updatedUserInfo);
+      @PathVariable(value = "id", required = true) String id,
+      @RequestBody(required = true) UpdateUserRequest updateUserRequest) {
+    return userService.partialUpdate(id, updateUserRequest);
   }
 
   @AdminScoped
@@ -264,7 +295,9 @@ public class UserController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    if (StringUtils.isEmpty(query)) {
+    // TODO: [rtisma] create tests for this controller logic. This logic should remain in
+    // controller.
+    if (isEmpty(query)) {
       return new PageDTO<>(groupService.findUserGroups(userId, filters, pageable));
     } else {
       return new PageDTO<>(groupService.findUserGroups(userId, query, filters, pageable));
@@ -340,7 +373,9 @@ public class UserController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    if (StringUtils.isEmpty(query)) {
+    // TODO: [rtisma] create tests for this controller logic. This logic should remain in
+    // controller.
+    if (isEmpty(query)) {
       return new PageDTO<>(applicationService.findUserApps(userId, filters, pageable));
     } else {
       return new PageDTO<>(applicationService.findUserApps(userId, query, filters, pageable));

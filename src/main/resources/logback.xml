@@ -17,9 +17,9 @@
   -->
 
 <configuration debug="false">
-    <property name="log.dir" value="target/logs" />
-    <property name="log.name" value="ego-importer" />
-    <property name="pattern" value="%date{ISO8601} [%thread] %-5level %logger{20} - %msg%n" />
+    <property name="log.dir" value="target/logs"/>
+    <property name="log.name" value="ego-importer"/>
+    <property name="pattern" value="%date{ISO8601} [%thread] %-5level %logger{20} - %msg%n"/>
     <timestamp key="bySecond" datePattern="yyyyMMdd_HHmmss"/>
 
     <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
@@ -40,6 +40,6 @@
     </appender>
 
     <root level="info">
-        <appender-ref ref="STDOUT" />
+        <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

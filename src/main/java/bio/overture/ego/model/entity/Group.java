@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017. The Ontario Institute for Cancer Research. All rights reserved.
+ * Copyright (c) 2018. The Ontario Institute for Cancer Research. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,153 +16,122 @@
 
 package bio.overture.ego.model.entity;
 
-import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.model.enums.Fields;
+import static com.google.common.collect.Sets.newHashSet;
+
+import bio.overture.ego.model.enums.JavaFields;
+import bio.overture.ego.model.enums.LombokFields;
+import bio.overture.ego.model.enums.SqlFields;
+import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import java.util.*;
-import javax.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.Cascade;
+import java.util.Set;
+import java.util.UUID;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedSubgraph;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
 @Data
-@Builder
-@ToString(exclude = {"wholeUsers", "wholeApplications", "groupPermissions"})
-@Table(name = "egogroup")
 @Entity
-@JsonPropertyOrder({"id", "name", "description", "status", "wholeApplications", "groupPermissions"})
-@JsonInclude()
-@EqualsAndHashCode(of = {"id"})
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@RequiredArgsConstructor
+@Table(name = Tables.GROUP)
 @JsonView(Views.REST.class)
-public class Group implements PolicyOwner {
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinColumn(name = Fields.OWNER)
-  @JsonIgnore
-  protected Set<Policy> policies;
-
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinColumn(name = Fields.GROUPID_JOIN)
-  @JsonIgnore
-  protected List<GroupPermission> groupPermissions;
+@EqualsAndHashCode(of = {LombokFields.id})
+@ToString(exclude = {LombokFields.users, LombokFields.applications, LombokFields.permissions})
+@JsonPropertyOrder({
+  JavaFields.ID,
+  JavaFields.NAME,
+  JavaFields.DESCRIPTION,
+  JavaFields.STATUS,
+  JavaFields.APPLICATIONS,
+  JavaFields.GROUPPERMISSIONS
+})
+@NamedEntityGraph(
+    name = "group-entity-with-relationships",
+    attributeNodes = {
+      @NamedAttributeNode(value = JavaFields.USERS, subgraph = "users-subgraph"),
+      @NamedAttributeNode(value = JavaFields.PERMISSIONS),
+      @NamedAttributeNode(value = JavaFields.APPLICATIONS, subgraph = "applications-subgraph")
+    },
+    subgraphs = {
+      @NamedSubgraph(
+          name = "applications-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)}),
+      @NamedSubgraph(
+          name = "users-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)})
+    })
+public class Group implements PolicyOwner, Identifiable<UUID> {
 
   @Id
-  @Column(nullable = false, name = Fields.ID, updatable = false)
-  @GenericGenerator(name = "group_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "group_uuid")
-  UUID id;
+  @Column(name = SqlFields.ID, updatable = false, nullable = false)
+  @GenericGenerator(name = "group_uuid", strategy = "org.hibernate.id.UUIDGenerator")
+  private UUID id;
 
-  @Column(nullable = false, name = Fields.NAME)
-  @NonNull
-  String name;
+  @NotNull
+  @Column(name = SqlFields.NAME, nullable = false, unique = true)
+  private String name;
 
-  @Column(nullable = false, name = Fields.DESCRIPTION)
-  String description;
+  @Column(name = SqlFields.DESCRIPTION)
+  private String description;
 
-  @Column(nullable = false, name = Fields.STATUS)
-  String status;
+  // TODO: [rtisma] replace with Enum similar to AccessLevel
+  @NotNull
+  @Column(name = SqlFields.STATUS, nullable = false)
+  private String status;
 
-  @ManyToMany(targetEntity = Application.class)
-  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(
-      name = "groupapplication",
-      joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
+  // TODO: [rtisma] rename this to groupPermissions.
+  // Ensure anything using JavaFields.PERMISSIONS is also replaced with JavaFields.GROUPPERMISSIONS
   @JsonIgnore
-  Set<Application> wholeApplications;
+  @Builder.Default
+  @OneToMany(
+      mappedBy = JavaFields.OWNER,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      fetch = FetchType.LAZY)
+  private Set<GroupPermission> permissions = newHashSet();
 
-  @ManyToMany()
-  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
-  @LazyCollection(LazyCollectionOption.FALSE)
+  @ManyToMany(
+      fetch = FetchType.LAZY,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinTable(
-      name = "usergroup",
-      joinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = Fields.USERID_JOIN)})
+      name = Tables.GROUP_APPLICATION,
+      joinColumns = {@JoinColumn(name = SqlFields.GROUPID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = SqlFields.APPID_JOIN)})
   @JsonIgnore
-  Set<User> wholeUsers;
+  @Builder.Default
+  private Set<Application> applications = newHashSet();
 
-  public void addApplication(@NonNull Application app) {
-    initApplications();
-    this.wholeApplications.add(app);
-  }
-
-  public void addUser(@NonNull User u) {
-    initUsers();
-    this.wholeUsers.add(u);
-  }
-
-  public void addNewPermission(@NonNull Policy policy, @NonNull AccessLevel mask) {
-    initPermissions();
-    val permission = GroupPermission.builder().policy(policy).accessLevel(mask).owner(this).build();
-    this.groupPermissions.add(permission);
-  }
-
-  public void removeApplication(@NonNull UUID appId) {
-    this.wholeApplications.removeIf(a -> a.id.equals(appId));
-  }
-
-  public void removeUser(@NonNull UUID userId) {
-    if (this.wholeUsers == null) return;
-    this.wholeUsers.removeIf(u -> u.id.equals(userId));
-  }
-
-  public void removePermission(@NonNull UUID permissionId) {
-    if (this.groupPermissions == null) return;
-    this.groupPermissions.removeIf(p -> p.id.equals(permissionId));
-  }
-
-  protected void initPermissions() {
-    if (this.groupPermissions == null) {
-      this.groupPermissions = new ArrayList<>();
-    }
-  }
-
-  public Group update(Group other) {
-    val builder =
-        Group.builder()
-            .id(other.getId())
-            .name(other.getName())
-            .description(other.getDescription())
-            .status(other.getStatus());
-
-    // Do not update ID, that is programmatic.
-
-    // Update Users and Applications only if provided (not null)
-    if (other.wholeApplications != null) {
-      builder.wholeApplications(other.getWholeApplications());
-    } else {
-      builder.wholeApplications(this.getWholeApplications());
-    }
-
-    if (other.wholeUsers != null) {
-      builder.wholeUsers(other.getWholeUsers());
-    } else {
-      builder.wholeUsers(this.getWholeUsers());
-    }
-
-    return builder.build();
-  }
-
-  private void initApplications() {
-    if (this.wholeApplications == null) {
-      this.wholeApplications = new HashSet<>();
-    }
-  }
-
-  private void initUsers() {
-    if (this.wholeUsers == null) {
-      this.wholeUsers = new HashSet<>();
-    }
-  }
+  @ManyToMany(
+      fetch = FetchType.LAZY,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+  @JoinTable(
+      name = Tables.GROUP_USER,
+      joinColumns = {@JoinColumn(name = SqlFields.GROUPID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = SqlFields.USERID_JOIN)})
+  @JsonIgnore
+  @Builder.Default
+  private Set<User> users = newHashSet();
 }

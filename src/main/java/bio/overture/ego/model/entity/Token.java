@@ -1,76 +1,103 @@
 package bio.overture.ego.model.entity;
 
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static com.google.common.collect.Sets.newHashSet;
 
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.enums.Fields;
+import bio.overture.ego.model.enums.JavaFields;
+import bio.overture.ego.model.enums.LombokFields;
+import bio.overture.ego.model.enums.SqlFields;
+import bio.overture.ego.model.enums.Tables;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import javax.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.Cascade;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.val;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 import org.joda.time.DateTime;
 
 @Entity
-@Table(name = "token")
+@Table(name = Tables.TOKEN)
 @Data
-@EqualsAndHashCode(of = {"id"})
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class Token {
+@AllArgsConstructor
+@ToString(exclude = {LombokFields.applications, LombokFields.owner, LombokFields.scopes})
+@EqualsAndHashCode(of = {LombokFields.id})
+public class Token implements Identifiable<UUID> {
+
   @Id
-  @Column(nullable = false, name = Fields.ID, updatable = false)
+  @Column(name = SqlFields.ID, updatable = false, nullable = false)
   @GenericGenerator(name = "token_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "token_uuid")
-  UUID id;
+  private UUID id;
 
-  @Column(nullable = false, name = Fields.TOKEN)
-  @NonNull
-  String token;
+  @NotNull
+  @Column(name = SqlFields.NAME, unique = true, nullable = false)
+  private String name;
 
-  @OneToOne()
-  @JoinColumn(name = Fields.OWNER)
-  @LazyCollection(LazyCollectionOption.FALSE)
+  @NotNull
+  @Column(name = SqlFields.ISSUEDATE, updatable = false, nullable = false)
+  private Date issueDate;
+
+  @NotNull
+  @Column(name = SqlFields.ISREVOKED, updatable = false, nullable = false)
+  private boolean isRevoked;
+
+  @Column(name = SqlFields.DESCRIPTION)
+  private String description;
+
+  @NotNull
   @JsonIgnore
-  User owner;
+  @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = SqlFields.OWNER, nullable = false)
+  private User owner;
 
-  @NonNull
-  @ManyToMany()
-  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
-  @LazyCollection(LazyCollectionOption.FALSE)
+  @JsonIgnore
+  @OneToMany(
+      mappedBy = JavaFields.TOKEN,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      fetch = FetchType.LAZY)
+  @Builder.Default
+  private Set<TokenScope> scopes = newHashSet();
+
+  @JsonIgnore
+  @ManyToMany(
+      fetch = FetchType.LAZY,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinTable(
-      name = "tokenapplication",
-      joinColumns = {@JoinColumn(name = Fields.TOKENID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
-  @JsonIgnore
-  Set<Application> applications;
-
-  @Column(nullable = false, name = Fields.ISSUEDATE, updatable = false)
-  Date expires;
-
-  @Column(nullable = false, name = Fields.ISREVOKED, updatable = false)
-  boolean isRevoked;
-
-  @OneToMany(mappedBy = "token")
-  @Cascade(org.hibernate.annotations.CascadeType.ALL)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JsonIgnore
-  Set<TokenScope> scopes;
+      name = Tables.TOKEN_APPLICATION,
+      joinColumns = {@JoinColumn(name = SqlFields.TOKENID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = SqlFields.APPID_JOIN)})
+  @Builder.Default
+  private Set<Application> applications = newHashSet();
 
   public void setExpires(int seconds) {
-    expires = DateTime.now().plusSeconds(seconds).toDate();
+    this.issueDate = DateTime.now().plusSeconds(seconds).toDate();
   }
 
-  @NonNull
   public Long getSecondsUntilExpiry() {
-    val seconds = (expires.getTime() - DateTime.now().getMillis()) / 1000;
+    val seconds = (issueDate.getTime() - DateTime.now().getMillis()) / 1000;
     return seconds > 0 ? seconds : 0;
   }
 

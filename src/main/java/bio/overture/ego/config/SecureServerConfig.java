@@ -35,7 +35,6 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 @EnableWebSecurity
 @Profile("auth")
 public class SecureServerConfig extends WebSecurityConfigurerAdapter {
-
   /*
    Constants
   */

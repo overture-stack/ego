@@ -21,37 +21,41 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.utils.QueryUtils;
 import java.util.UUID;
-import javax.annotation.Nonnull;
 import javax.persistence.criteria.Join;
+import lombok.NonNull;
 import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
 
 public class ApplicationSpecification extends SpecificationBase<Application> {
-  public static Specification<Application> containsText(@Nonnull String text) {
+  public static Specification<Application> containsText(@NonNull String text) {
     val finalText = QueryUtils.prepareForQuery(text);
-    return (root, query, builder) ->
-        builder.or(
-            getQueryPredicates(
-                builder,
-                root,
-                finalText,
-                "name",
-                "clientId",
-                "clientSecret",
-                "description",
-                "status"));
+    return (root, query, builder) -> {
+      query.distinct(true);
+      return builder.or(
+          getQueryPredicates(
+              builder,
+              root,
+              finalText,
+              "name",
+              "clientId",
+              "clientSecret",
+              "description",
+              "status"));
+    };
   }
 
-  public static Specification<Application> inGroup(@Nonnull UUID groupId) {
+  public static Specification<Application> inGroup(@NonNull UUID groupId) {
     return (root, query, builder) -> {
-      Join<Application, Group> groupJoin = root.join("wholeGroups");
+      query.distinct(true);
+      Join<Application, Group> groupJoin = root.join("groups");
       return builder.equal(groupJoin.<Integer>get("id"), groupId);
     };
   }
 
-  public static Specification<Application> usedBy(@Nonnull UUID userId) {
+  public static Specification<Application> usedBy(@NonNull UUID userId) {
     return (root, query, builder) -> {
-      Join<Application, User> applicationUserJoin = root.join("wholeUsers");
+      query.distinct(true);
+      Join<Application, User> applicationUserJoin = root.join("users");
       return builder.equal(applicationUserJoin.<Integer>get("id"), userId);
     };
   }

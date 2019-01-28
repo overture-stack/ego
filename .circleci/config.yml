@@ -35,6 +35,36 @@ jobs:
             mvn test \
             -D spring.profiles.active=test
 
+  build-docker-image:
+    machine: true
+
+    steps:
+      - checkout
+
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+
+      - run: docker build -f Dockerfile.prod . -t overture/ego:$(git describe --always)-alpine
+
+      - run: docker push overture/ego:$(git describe --always)-alpine
+
+  deploy-staging:
+    machine: true
+
+    steps:
+      - checkout
+
+      - run: mkdir ~/.kube && echo $KUBE_CONFIG | base64 --decode > ~/.kube/config
+
+      - run: wget https://storage.googleapis.com/kubernetes-helm/helm-v2.12.1-linux-amd64.tar.gz
+
+      - run: tar -xvf helm-v2.12.1-linux-amd64.tar.gz
+
+      - run: linux-amd64/helm init --client-only
+
+      - run: linux-amd64/helm repo add overture https://overture-stack.github.io/charts/
+
+      - run: linux-amd64/helm upgrade ego-staging overture/ego --reuse-values --set image.tag=$(git describe --always)-alpine
+
   deploy:
     docker:
       - image: circleci/openjdk:8-jdk
@@ -78,10 +108,9 @@ jobs:
           name: Deploy Script
           command: ./.circleci/deploy.sh
 
-
 workflows:
   version: 2
-  test-deploy:
+  test-build-deploy:
     jobs:
       - test
       - deploy:
@@ -91,4 +120,11 @@ workflows:
             branches:
               only:
                 - develop
-                
+      - build-docker-image:
+          filters:
+            branches:
+              only:
+                - develop
+      - deploy-staging:
+          requires:
+            - build-docker-image

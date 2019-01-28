@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-package bio.overture.ego.model.enums;
+package bio.overture.ego.model.dto;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@RequiredArgsConstructor
-public enum UserStatus {
-  APPROVED("Approved"),
-  DISABLED("Disabled"),
-  PENDING("Pending"),
-  REJECTED("Rejected"),
-  ;
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class CreateUserRequest {
 
-  @NonNull private final String value;
-
-  @Override
-  public String toString() {
-    return value;
-  }
+  private String email;
+  private String role;
+  private String status;
+  private String firstName;
+  private String lastName;
+  private String preferredLanguage;
 }

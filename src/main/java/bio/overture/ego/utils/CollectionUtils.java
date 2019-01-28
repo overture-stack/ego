@@ -1,23 +1,30 @@
 package bio.overture.ego.utils;
 
-import java.util.*;
+import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class CollectionUtils {
+
   public static <T, U> Set<U> mapToSet(Collection<T> collection, Function<T, U> mapper) {
-    return collection.stream().map(mapper).collect(Collectors.toSet());
+    return collection.stream().map(mapper).collect(toSet());
   }
 
   public static <T, U> List<U> mapToList(Collection<T> collection, Function<T, U> mapper) {
-    return collection.stream().map(mapper).collect(Collectors.toList());
+    return collection.stream().map(mapper).collect(toList());
   }
 
   public static Set<String> setOf(String... strings) {
-    return new HashSet<>(Arrays.asList(strings));
+    return stream(strings).collect(toSet());
   }
 
   public static List<String> listOf(String... strings) {
-    return Arrays.asList(strings);
+    return asList(strings);
   }
 }

@@ -18,6 +18,7 @@ package bio.overture.ego.service;
 
 import static bio.overture.ego.model.dto.Scope.effectiveScopes;
 import static bio.overture.ego.model.dto.Scope.explicitScopes;
+import static bio.overture.ego.service.UserService.extractScopes;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static java.lang.String.format;
 
@@ -26,6 +27,7 @@ import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.reactor.events.UserEvents;
 import bio.overture.ego.token.IDToken;
@@ -39,10 +41,20 @@ import bio.overture.ego.token.user.UserTokenClaims;
 import bio.overture.ego.token.user.UserTokenContext;
 import bio.overture.ego.utils.TypeUtils;
 import bio.overture.ego.view.Views;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import java.security.InvalidKeyException;
-import java.util.*;
-import javax.management.InvalidApplicationException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -57,8 +69,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class TokenService {
   /*
-    Constant
-  */
+   * Constant
+   */
   private static final String ISSUER_NAME = "ego";
   @Autowired TokenSigner tokenSigner;
 
@@ -83,8 +95,10 @@ public class TokenService {
       user = userService.getOrCreateDemoUser();
     } else {
       val userName = idToken.getEmail();
-      user = userService.getByName(userName);
-      if (user == null) {
+      try { // TODO: Replace this with Optional for better control flow.
+        user = userService.getByName(userName);
+      } catch (NotFoundException e) {
+        log.info("User not found, creating.");
         user = userService.createFromIDToken(idToken);
       }
     }
@@ -100,7 +114,7 @@ public class TokenService {
 
   @SneakyThrows
   public String generateUserToken(User u) {
-    Set<String> permissionNames = mapToSet(u.getScopes(), p -> p.toString());
+    Set<String> permissionNames = mapToSet(extractScopes(u), p -> p.toString());
     return generateUserToken(u, permissionNames);
   }
 
@@ -116,10 +130,7 @@ public class TokenService {
 
   public Set<Scope> missingScopes(String userName, Set<ScopeName> scopeNames) {
     val user = userService.getByName(userName);
-    if (user == null) {
-      throw new UsernameNotFoundException(format("Can't find user '%s'", userName));
-    }
-    val userScopes = user.getScopes();
+    val userScopes = extractScopes(user);
     val requestedScopes = getScopes(scopeNames);
     return Scope.missingScopes(userScopes, requestedScopes);
   }
@@ -145,13 +156,14 @@ public class TokenService {
     log.info(format("Looking for user '%s'", str(user_id)));
     log.info(format("Scopes are '%s'", strList(scopeNames)));
     log.info(format("Apps are '%s'", strList(apps)));
-    User u = userService.get(user_id.toString());
-    if (u == null) {
-      throw new UsernameNotFoundException(format("Can't find user '%s'", str(user_id)));
-    }
+    val u =
+        userService
+            .findById(user_id)
+            .orElseThrow(
+                () -> new UsernameNotFoundException(format("Can't find user '%s'", str(user_id))));
 
     log.info(format("Got user with id '%s'", str(u.getId())));
-    val userScopes = u.getScopes();
+    val userScopes = extractScopes(u);
 
     log.info(format("User's scopes are '%s'", str(userScopes)));
 
@@ -170,7 +182,7 @@ public class TokenService {
     val token = new Token();
     token.setExpires(DURATION);
     token.setRevoked(false);
-    token.setToken(tokenString);
+    token.setName(tokenString);
     token.setOwner(u);
 
     for (Scope requestedScope : requestedScopes) {
@@ -181,10 +193,6 @@ public class TokenService {
       log.info("Generating apps list");
       for (val appId : apps) {
         val app = applicationService.get(appId.toString());
-        if (app == null) {
-          log.info(format("Can't issue token for non-existent application '%s'", str(appId)));
-          throw new InvalidApplicationException(format("No such application %s", str(appId)));
-        }
         token.addApplication(app);
       }
     }
@@ -197,8 +205,8 @@ public class TokenService {
     return token;
   }
 
-  public Token findByTokenString(String token) {
-    return tokenStoreService.findByTokenString(token);
+  public Optional<Token> findByTokenString(String token) {
+    return tokenStoreService.findByTokenName(token);
   }
 
   public String generateTokenString() {
@@ -226,9 +234,13 @@ public class TokenService {
     return getSignedToken(tokenClaims);
   }
 
-  public boolean validateToken(String token) {
-    val decodedToken =
-        Jwts.parser().setSigningKey(tokenSigner.getKey().get()).parseClaimsJws(token);
+  public boolean isValidToken(String token) {
+    Jws<Claims> decodedToken = null;
+    try {
+      decodedToken = Jwts.parser().setSigningKey(tokenSigner.getKey().get()).parseClaimsJws(token);
+    } catch (JwtException e) {
+      log.error("JWT token is invalid", e);
+    }
     return (decodedToken != null);
   }
 
@@ -284,10 +296,8 @@ public class TokenService {
     log.error(format("token='%s'", token));
     val application = applicationService.findByBasicToken(authToken);
 
-    val t = findByTokenString(token);
-    if (t == null) {
-      throw new InvalidTokenException("Token not found");
-    }
+    val t =
+        findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found"));
 
     val clientId = application.getClientId();
     val apps = t.getApplications();
@@ -297,11 +307,12 @@ public class TokenService {
         throw new InvalidTokenException("Token not authorized for this client");
       }
     }
-    /// We want to limit the scopes listed in the token to those scopes that the user
-    // is allowed to access at the time the token is checked -- we don't assume that they
-    // have not changed since the token was issued.
+
+    // We want to limit the scopes listed in the token to those scopes that the user
+    // is allowed to access at the time the token is checked -- we don't assume that
+    // they have not changed since the token was issued.
     val owner = t.getOwner();
-    val scopes = explicitScopes(effectiveScopes(owner.getScopes(), t.scopes()));
+    val scopes = explicitScopes(effectiveScopes(extractScopes(owner), t.scopes()));
     val names = mapToSet(scopes, Scope::toString);
 
     return new TokenScopeResponse(owner.getName(), clientId, t.getSecondsUntilExpiry(), names);
