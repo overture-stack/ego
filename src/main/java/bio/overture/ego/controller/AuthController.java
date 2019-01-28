@@ -35,8 +35,6 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-
 @Slf4j
 @RestController
 @RequestMapping("/oauth")
@@ -103,32 +101,28 @@ public class AuthController {
   @ResponseStatus(value = HttpStatus.OK)
   public @ResponseBody String getPublicKey() {
     val pubKey = tokenSigner.getEncodedPublicKey();
-    if (pubKey.isPresent()) {
-      return pubKey.get();
-    } else {
-      return "";
-    }
+    return pubKey.orElse("");
   }
 
-  @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST }, value= "/ego-token")
+  @RequestMapping(method = { RequestMethod.GET, RequestMethod.POST }, value= "/ego-token")
+  @SneakyThrows
   public ResponseEntity<String> user(OAuth2Authentication authentication) {
-    return new ResponseEntity<>(tokenService.generateUserToken((IDToken) authentication.getPrincipal()), HttpStatus.OK);
+    String token = tokenService.generateUserToken((IDToken) authentication.getPrincipal());
+    return new ResponseEntity<>(token, HttpStatus.OK);
   }
 
   @ExceptionHandler({InvalidTokenException.class})
-  public ResponseEntity<Object> handleInvalidTokenException(
-      HttpServletRequest req, InvalidTokenException ex) {
-    log.error("InvalidTokenException: %s".format(ex.getMessage()));
+  public ResponseEntity<Object> handleInvalidTokenException(InvalidTokenException ex) {
+    log.error(String.format("InvalidTokenException: %s", ex.getMessage()));
     log.error("ID ScopedAccessToken not found.");
-    return new ResponseEntity<Object>(
-        "Invalid ID ScopedAccessToken provided.", new HttpHeaders(), HttpStatus.BAD_REQUEST);
+    return new ResponseEntity<>(
+            "Invalid ID ScopedAccessToken provided.", new HttpHeaders(), HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler({InvalidScopeException.class})
-  public ResponseEntity<Object> handleInvalidScopeException(
-      HttpServletRequest req, InvalidTokenException ex) {
-    log.error("Invalid ScopeName: %s".format(ex.getMessage()));
-    return new ResponseEntity<Object>(
-        "{\"error\": \"%s\"}".format(ex.getMessage()), HttpStatus.BAD_REQUEST);
+  public ResponseEntity<Object> handleInvalidScopeException(InvalidTokenException ex) {
+    log.error(String.format("Invalid ScopeName: %s", ex.getMessage()));
+    return new ResponseEntity<>(
+            String.format("{\"error\": \"%s\"}", ex.getMessage()), HttpStatus.BAD_REQUEST);
   }
 }

@@ -49,8 +49,9 @@ public class OAuth2UserInfoTokenServices implements ResourceServerTokenServices 
       return null;
     }
 
-    givenName = (String) map.getOrDefault("given_name", "");
-    familyName = (String) map.getOrDefault("family_name", "");
+    givenName = (String) map.getOrDefault("given_name", map.getOrDefault("firstName", ""));
+    familyName = (String) map.getOrDefault("family_name", map.getOrDefault("lastName", ""));
+
     return new IDToken(email, givenName , familyName);
   }
 

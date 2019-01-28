@@ -60,41 +60,61 @@ public class OAuth2SsoFilter extends CompositeFilter {
   private Filter childSsoFilter(OAuth2ClientResources client, String path) {
     // Currently not checking if client_id is valid
     OAuth2ClientAuthenticationProcessingFilter filter =
-            new OAuth2ClientAuthenticationProcessingFilter(path);
+            new OAuth2ClientAuthenticationProcessingFilter(path) {
+              @Override
+              public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+                // Don't use the existing access token, otherwise, it would attempt to get github user info with linkedin access token
+                this.restTemplate.getOAuth2ClientContext().setAccessToken(null);
+                return super.attemptAuthentication(request, response);
+              }
+            };
     OAuth2RestTemplate template = new OAuth2RestTemplate(client.getClient(), oauth2ClientContext);
 
     filter.setAuthenticationSuccessHandler(simpleUrlAuthenticationSuccessHandler);
     filter.setRestTemplate(template);
 
     OAuth2UserInfoTokenServices tokenServices =
-      new OAuth2UserInfoTokenServices(
-              client.getResource().getUserInfoUri(), client.getClient().getClientId(), template) {
-        @Override
-        @SuppressWarnings("unchecked")
-        protected Map<String, Object> ensureEmail(Map<String, Object> map, String accessToken) {
-          if (map.get("email") != null) {
-            return map;
-          }
-          // linkedin
-          if (map.get("emailAddress") != null) {
-            map.put("email", map.get("emailAddress"));
-            return map;
-          }
-          // github
-          try {
-            OAuth2RestOperations restTemplate = getRestTemplate(accessToken);
-            List<Map<String, Object>> emails = restTemplate.getForEntity("https://api.github.com/user/emails", List.class).getBody();
-            Map<String, Object> email = emails.stream()
-                    .filter(x -> x.get("verified").equals(true) && x.get("primary").equals(true))
-                    .findAny()
-                    .orElse(null);
-            map.put("email", email.get("email"));
-            return map;
-          } catch (RestClientException|NullPointerException ex) {
-            return Collections.singletonMap("error", "Could not fetch user details");
-          }
-        }
-      };
+            new OAuth2UserInfoTokenServices(
+                    client.getResource().getUserInfoUri(), client.getClient().getClientId(), template) {
+              @Override
+              @SuppressWarnings("unchecked")
+              protected Map<String, Object> ensureEmail(Map<String, Object> map, String accessToken) {
+                if (map.containsKey("error") || map.get("email") != null) {
+                  return map;
+                }
+                // linkedin
+                if (map.get("emailAddress") != null) {
+                  map.put("email", map.get("emailAddress"));
+                  return map;
+                }
+
+                // github
+                OAuth2RestOperations restTemplate = getRestTemplate(accessToken);
+                List<Map<String, Object>> emails ;
+
+                try {
+                  emails = restTemplate.getForEntity("https://api.github.com/user/emails", List.class).getBody();
+                } catch (RestClientException ex) {
+                  return Collections.singletonMap("error", "Could not fetch user details");
+                }
+
+                Map<String, Object> email;
+                if (emails != null) {
+                  email = emails.stream()
+                          .filter(x -> x.get("verified").equals(true) && x.get("primary").equals(true))
+                          .findAny()
+                          .orElse(null);
+                } else {
+                  return Collections.singletonMap("error", "Could not fetch user details");
+                }
+                if (email != null) {
+                  map.put("email", email.get("email"));
+                } else {
+                  return Collections.singletonMap("error", "Could not fetch user details");
+                }
+                return map;
+              }
+            };
 
     filter.setTokenServices(tokenServices);
     return filter;
