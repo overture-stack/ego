@@ -1,6 +1,7 @@
 package bio.overture.ego.controller;
 
 import bio.overture.ego.model.dto.PageDTO;
+import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.exceptions.PostWithIdentifierException;
@@ -8,22 +9,32 @@ import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
-import bio.overture.ego.service.*;
+import bio.overture.ego.service.GroupPermissionService;
+import bio.overture.ego.service.GroupService;
+import bio.overture.ego.service.PolicyService;
+import bio.overture.ego.service.UserPermissionService;
+import bio.overture.ego.service.UserService;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.google.common.collect.ImmutableList;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
 @Slf4j
@@ -115,11 +126,8 @@ public class PolicyController {
       })
   public @ResponseBody Policy create(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestBody(required = true) Policy policy) {
-    if (policy.getId() != null) {
-      throw new PostWithIdentifierException();
-    }
-    return policyService.create(policy);
+      @RequestBody(required = true) PolicyRequest createRequest) {
+    return policyService.create(createRequest);
   }
 
   @AdminScoped
@@ -128,8 +136,9 @@ public class PolicyController {
       value = {@ApiResponse(code = 200, message = "Updated Policy", response = Policy.class)})
   public @ResponseBody Policy update(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestBody(required = true) Policy updatedPolicy) {
-    return policyService.update(updatedPolicy);
+      @PathVariable(value = "id") String id,
+      @RequestBody(required = true) PolicyRequest updatedRequst) {
+    return policyService.partialUpdate(id, updatedRequst);
   }
 
   @AdminScoped
@@ -150,10 +159,8 @@ public class PolicyController {
       @PathVariable(value = "id", required = true) String id,
       @PathVariable(value = "group_id", required = true) String groupId,
       @RequestBody(required = true) String mask) {
-    val permission = new PolicyIdStringWithAccessLevel(id, mask);
-    val list = new ArrayList<PolicyIdStringWithAccessLevel>();
-    list.add(permission);
-    groupService.addGroupPermissions(groupId, list);
+    groupService.addGroupPermissions(
+        groupId, ImmutableList.of(new PolicyIdStringWithAccessLevel(id, mask)));
     return "1 group permission added to ACL successfully";
   }
 
@@ -166,11 +173,7 @@ public class PolicyController {
       @PathVariable(value = "id", required = true) String id,
       @PathVariable(value = "user_id", required = true) String userId,
       @RequestBody(required = true) String mask) {
-    val permission = new PolicyIdStringWithAccessLevel(id, mask);
-    val list = new ArrayList<PolicyIdStringWithAccessLevel>();
-    list.add(permission);
-    userService.addUserPermissions(userId, list);
-
+    userService.addUserPermission(userId, new PolicyIdStringWithAccessLevel(id, mask));
     return "1 user permission successfully added to ACL '" + id + "'";
   }
 

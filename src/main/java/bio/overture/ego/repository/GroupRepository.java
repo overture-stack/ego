@@ -16,17 +16,26 @@
 
 package bio.overture.ego.repository;
 
+import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
+
 import bio.overture.ego.model.entity.Group;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 
-public interface GroupRepository
-    extends PagingAndSortingRepository<Group, UUID>, JpaSpecificationExecutor {
+public interface GroupRepository extends NamedRepository<Group, UUID> {
 
-  Group findOneByNameIgnoreCase(String name);
+  @EntityGraph(value = "group-entity-with-relationships", type = FETCH)
+  Optional<Group> getGroupByNameIgnoreCase(String name);
 
-  Page<Group> findAllByStatusIgnoreCase(String status, Pageable pageable);
+  boolean existsByNameIgnoreCase(String name);
+
+  Set<Group> findAllByIdIn(List<UUID> groupIds);
+
+  @Override
+  default Optional<Group> findByName(String name) {
+    return getGroupByNameIgnoreCase(name);
+  }
 }

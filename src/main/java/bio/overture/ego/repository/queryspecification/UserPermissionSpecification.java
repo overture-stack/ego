@@ -16,17 +16,18 @@
 
 package bio.overture.ego.repository.queryspecification;
 
-import bio.overture.ego.model.entity.Permission;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.UserPermission;
 import java.util.UUID;
-import javax.annotation.Nonnull;
 import javax.persistence.criteria.Join;
+import lombok.NonNull;
 import org.springframework.data.jpa.domain.Specification;
 
-public class UserPermissionSpecification extends SpecificationBase<Permission> {
-  public static Specification<UserPermission> withPolicy(@Nonnull UUID policyId) {
+public class UserPermissionSpecification extends SpecificationBase<UserPermission> {
+
+  public static Specification<UserPermission> withPolicy(@NonNull UUID policyId) {
     return (root, query, builder) -> {
+      query.distinct(true);
       Join<UserPermission, Policy> applicationJoin = root.join("policy");
       return builder.equal(applicationJoin.<Integer>get("id"), policyId);
     };

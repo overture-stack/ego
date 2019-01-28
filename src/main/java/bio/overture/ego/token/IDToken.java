@@ -20,12 +20,14 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class IDToken {
+
   @NonNull private String email;
+  // TODO: [rtisma] why is this snake case? is there a client that sends payloads like this?
   private String given_name;
   private String family_name;
 }

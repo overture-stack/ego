@@ -8,7 +8,10 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.params.ScopeName;
-import java.util.*;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import lombok.val;
 
 public class TestData {

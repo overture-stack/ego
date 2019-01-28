@@ -27,6 +27,8 @@ public enum AccessLevel {
   WRITE("WRITE"),
   DENY("DENY");
 
+  public static final String EGO_ACCESS_LEVEL_ENUM = "ego_access_level_enum";
+
   @NonNull private final String value;
 
   public static AccessLevel fromValue(String value) {

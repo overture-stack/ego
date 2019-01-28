@@ -16,303 +16,189 @@
 
 package bio.overture.ego.model.entity;
 
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static bio.overture.ego.utils.HibernateSessions.*;
+import static bio.overture.ego.service.UserService.getPermissionsList;
 import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
-import static java.lang.String.format;
+import static com.google.common.collect.Sets.newHashSet;
 
-import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.model.enums.Fields;
+import bio.overture.ego.model.enums.JavaFields;
+import bio.overture.ego.model.enums.LombokFields;
+import bio.overture.ego.model.enums.SqlFields;
+import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import javax.persistence.*;
-import lombok.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedSubgraph;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
+// TODO: simplify annotations. Find common annotations for Ego entities, and put them all under a
+// single annotation
 @Slf4j
 @Entity
-@Table(name = "egouser")
+@Table(name = Tables.EGOUSER)
 @Data
-@ToString(exclude = {"wholeGroups", "wholeApplications", "userPermissions"})
+@ToString(
+    exclude = {
+      LombokFields.groups,
+      LombokFields.applications,
+      LombokFields.userPermissions,
+      LombokFields.tokens
+    })
 @JsonPropertyOrder({
-  "id",
-  "name",
-  "email",
-  "role",
-  "status",
-  "wholeGroups",
-  "wholeApplications",
-  "userPermissions",
-  "firstName",
-  "lastName",
-  "createdAt",
-  "lastLogin",
-  "preferredLanguage"
+  JavaFields.ID,
+  JavaFields.NAME,
+  JavaFields.EMAIL,
+  JavaFields.ROLE,
+  JavaFields.STATUS,
+  JavaFields.GROUPS,
+  JavaFields.APPLICATIONS,
+  JavaFields.USERPERMISSIONS,
+  JavaFields.FIRSTNAME,
+  JavaFields.LASTNAME,
+  JavaFields.CREATEDAT,
+  JavaFields.LASTLOGIN,
+  JavaFields.PREFERREDLANGUAGE
 })
 @JsonInclude()
-@EqualsAndHashCode(of = {"id"})
+@EqualsAndHashCode(of = {LombokFields.id})
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
-public class User implements PolicyOwner {
+@NamedEntityGraph(
+    name = "user-entity-with-relationships",
+    attributeNodes = {
+      @NamedAttributeNode(value = JavaFields.GROUPS, subgraph = "groups-subgraph"),
+      @NamedAttributeNode(value = JavaFields.USERPERMISSIONS),
+      @NamedAttributeNode(value = JavaFields.APPLICATIONS, subgraph = "applications-subgraph"),
+    },
+    subgraphs = {
+      @NamedSubgraph(
+          name = "groups-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.USERS)}),
+      @NamedSubgraph(
+          name = "applications-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.USERS)})
+    })
+public class User implements PolicyOwner, Identifiable<UUID> {
 
-  @ManyToMany(targetEntity = Group.class)
-  @Cascade(org.hibernate.annotations.CascadeType.ALL)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(
-      name = "usergroup",
-      joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = Fields.GROUPID_JOIN)})
-  @JsonIgnore
-  protected Set<Group> wholeGroups;
-
-  @ManyToMany(targetEntity = Application.class)
-  @Cascade(org.hibernate.annotations.CascadeType.ALL)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinTable(
-      name = "userapplication",
-      joinColumns = {@JoinColumn(name = Fields.USERID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = Fields.APPID_JOIN)})
-  @JsonIgnore
-  protected Set<Application> wholeApplications;
-
-  @OneToMany(cascade = CascadeType.ALL)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @JoinColumn(name = Fields.USERID_JOIN)
-  @JsonIgnore
-  protected List<UserPermission> userPermissions;
-
+  // TODO: find JPA equivalent for GenericGenerator
   @Id
-  @Column(nullable = false, name = Fields.ID, updatable = false)
+  @Column(name = SqlFields.ID, updatable = false, nullable = false)
   @GenericGenerator(name = "user_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "user_uuid")
-  UUID id;
+  private UUID id;
+
+  @NotNull
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
+  @Column(name = SqlFields.NAME, unique = true, nullable = false)
+  private String name;
+
+  @NotNull
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
+  @Column(name = SqlFields.EMAIL, unique = true, nullable = false)
+  private String email;
+
+  @NotNull
+  @Column(name = SqlFields.ROLE, nullable = false)
+  @JsonView({Views.JWTAccessToken.class})
+  private String role;
+
+  // TODO: [rtisma] replace with Enum similar to AccessLevel
+  @NotNull
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
+  @Column(name = SqlFields.STATUS, nullable = false)
+  private String status;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @NonNull
-  @Column(nullable = false, name = Fields.NAME, unique = true)
-  String name;
+  @Column(name = SqlFields.FIRSTNAME)
+  private String firstName;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @NonNull
-  @Column(nullable = false, name = Fields.EMAIL, unique = true)
-  String email;
+  @Column(name = SqlFields.LASTNAME)
+  private String lastName;
 
-  @NonNull
-  @Column(nullable = false, name = Fields.ROLE)
-  String role;
+  @NotNull
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
+  @Column(name = SqlFields.CREATEDAT)
+  private Date createdAt;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = Fields.STATUS)
-  String status;
+  @Column(name = SqlFields.LASTLOGIN)
+  private Date lastLogin;
 
+  // TODO: [rtisma] replace with Enum similar to AccessLevel
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = Fields.FIRSTNAME)
-  String firstName;
+  @Column(name = SqlFields.PREFERREDLANGUAGE)
+  private String preferredLanguage;
 
-  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = Fields.LASTNAME)
-  String lastName;
-
-  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = Fields.CREATEDAT)
-  Date createdAt;
-
-  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = Fields.LASTLOGIN)
-  Date lastLogin;
-
-  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = Fields.PREFERREDLANGUAGE)
-  String preferredLanguage;
-
-  // Creates groups in JWTAccessToken::context::user
-  @JsonView(Views.JWTAccessToken.class)
-  public List<String> getGroups() {
-    if (this.wholeGroups == null) {
-      return new ArrayList<String>();
-    }
-    return this.wholeGroups.stream().map(g -> g.getName()).collect(Collectors.toList());
-  }
+  // TODO: [rtisma] test that always initialized with empty set
+  @JsonIgnore
+  @OneToMany(
+      mappedBy = JavaFields.OWNER,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      fetch = FetchType.LAZY)
+  @Builder.Default
+  private Set<UserPermission> userPermissions = newHashSet();
 
   @JsonIgnore
-  public List<Permission> getPermissionsList() {
-    // Get user's individual permission (stream)
-    val userPermissions =
-        Optional.ofNullable(this.getUserPermissions()).orElse(new ArrayList<>()).stream();
-
-    // Get permissions from the user's groups (stream)
-    val userGroupsPermissions =
-        Optional.ofNullable(this.getWholeGroups())
-            .orElse(new HashSet<>())
-            .stream()
-            .map(Group::getGroupPermissions)
-            .flatMap(List::stream);
-
-    // Combine individual user permissions and the user's
-    // groups (if they have any) permissions
-    val combinedPermissions =
-        Stream.concat(userPermissions, userGroupsPermissions)
-            // .collect(Collectors.groupingBy(p -> p.getPolicy()));
-            .collect(Collectors.groupingBy(this::getP));
-    // If we have no permissions at all return an empty list
-    if (combinedPermissions.values().size() == 0) {
-      return new ArrayList<>();
-    }
-
-    // If we do have permissions ... sort the grouped permissions (by PolicyIdStringWithMaskName)
-    // on PolicyMask, extracting the first value of the sorted list into the final
-    // permissions list
-    List<Permission> finalPermissionsList = new ArrayList<>();
-
-    combinedPermissions.forEach(
-        (entity, permissions) -> {
-          permissions.sort(Comparator.comparing(Permission::getAccessLevel).reversed());
-          finalPermissionsList.add(permissions.get(0));
-        });
-    return finalPermissionsList;
-  }
-
-  private Policy getP(Permission permission) {
-    val p = permission.getPolicy();
-    return p;
-  }
+  @Builder.Default
+  @OneToMany(
+      mappedBy = JavaFields.OWNER,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      fetch = FetchType.LAZY)
+  private Set<Token> tokens = newHashSet();
 
   @JsonIgnore
-  public Set<Scope> getScopes() {
-    List<Permission> p;
-    try {
-      p = this.getPermissionsList();
-    } catch (NullPointerException e) {
-      log.error(format("Can't get permissions for user '%s'", getName()));
-      p = Collections.emptyList();
-    }
+  @ManyToMany(
+      fetch = FetchType.LAZY,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+  @JoinTable(
+      name = Tables.GROUP_USER,
+      joinColumns = {@JoinColumn(name = SqlFields.USERID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = SqlFields.GROUPID_JOIN)})
+  @Builder.Default
+  private Set<Group> groups = newHashSet();
 
-    return mapToSet(p, Permission::toScope);
-  }
+  @JsonIgnore
+  @ManyToMany(
+      fetch = FetchType.LAZY,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+  @JoinTable(
+      name = Tables.USER_APPLICATION,
+      joinColumns = {@JoinColumn(name = SqlFields.USERID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = SqlFields.APPID_JOIN)})
+  @Builder.Default
+  private Set<Application> applications = newHashSet();
 
+  // TODO: [rtisma] move getPermissions to UserService once DTO task is complete. JsonViews creates
+  // a dependency for this method. For now, using a UserService static method.
   // Creates permissions in JWTAccessToken::context::user
   @JsonView(Views.JWTAccessToken.class)
   public List<String> getPermissions() {
-    val finalPermissionsList = getPermissionsList();
-    // Convert final permissions list for JSON output
-    return extractPermissionStrings(finalPermissionsList);
-  }
-
-  @JsonIgnore
-  public List<String> getApplications() {
-    if (this.wholeApplications == null) {
-      return new ArrayList<>();
-    }
-    return this.wholeApplications.stream().map(a -> a.getName()).collect(Collectors.toList());
-  }
-
-  @JsonView(Views.JWTAccessToken.class)
-  public List<String> getRoles() {
-    return Arrays.asList(this.getRole());
-  }
-
-  /*
-   Roles is an array only in JWT but a String in Database.
-   This is done for future compatibility - at the moment ego only needs one Role but this may change
-    as project progresses.
-    Currently, using the only role by extracting first role in the array
-  */
-  public void setRoles(@NonNull List<String> roles) {
-    if (roles.size() > 0) this.role = roles.get(0);
-  }
-
-  public void addNewApplication(@NonNull Application app) {
-    initApplications();
-    this.wholeApplications.add(app);
-  }
-
-  public void addNewGroup(@NonNull Group g) {
-    initGroups();
-    this.wholeGroups.add(g);
-  }
-
-  public void addNewPermission(@NonNull Policy policy, @NonNull AccessLevel accessLevel) {
-    initPermissions();
-    val permission =
-        UserPermission.builder().policy(policy).accessLevel(accessLevel).owner(this).build();
-    this.userPermissions.add(permission);
-  }
-
-  public void removeApplication(@NonNull UUID appId) {
-    if (this.wholeApplications == null) return;
-    this.wholeApplications.removeIf(a -> a.id.equals(appId));
-  }
-
-  public void removeGroup(@NonNull UUID grpId) {
-    if (this.wholeGroups == null) return;
-    this.wholeGroups.removeIf(g -> g.id.equals(grpId));
-  }
-
-  public void removePermission(@NonNull UUID permissionId) {
-    if (this.userPermissions == null) return;
-    this.userPermissions.removeIf(p -> p.id.equals(permissionId));
-  }
-
-  protected void initApplications() {
-    if (this.wholeApplications == null) {
-      this.wholeApplications = new HashSet<>();
-    }
-  }
-
-  protected void initGroups() {
-    if (this.wholeGroups == null) {
-      this.wholeGroups = new HashSet<Group>();
-    }
-  }
-
-  protected void initPermissions() {
-    if (this.userPermissions == null) {
-      this.userPermissions = new ArrayList<>();
-    }
-  }
-
-  public void update(User other) {
-    this.name = other.getName();
-    this.firstName = other.getFirstName();
-    this.lastName = other.getLastName();
-    this.role = other.getRole();
-    this.status = other.getStatus();
-    this.preferredLanguage = other.getPreferredLanguage();
-    this.lastLogin = other.getLastLogin();
-
-    // Don't merge the ID, CreatedAt, or LastLogin date - those are procedural.
-
-    // Don't merge wholeGroups, wholeApplications or userPermissions if not present in other
-    // This is because the PUT action for update usually does not include these fields
-    // as a consequence of the GET option to retrieve a user not including these fields
-    // To clear wholeApplications, wholeGroups or userPermissions, use the dedicated services
-    // for deleting associations or pass in an empty Set.
-    if (other.wholeApplications != null) {
-      unsetSession(other.getWholeApplications());
-      this.wholeApplications = other.getWholeApplications();
-    }
-
-    if (other.wholeGroups != null) {
-      unsetSession(other.getWholeGroups());
-      this.wholeGroups = other.getWholeGroups();
-    }
-
-    if (other.userPermissions != null) {
-      unsetSession(other.getUserPermissions());
-      this.userPermissions = other.getUserPermissions();
-    }
+    return extractPermissionStrings(getPermissionsList(this));
   }
 }

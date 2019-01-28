@@ -16,6 +16,7 @@
 
 package bio.overture.ego.controller;
 
+import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
@@ -38,7 +39,8 @@ import io.swagger.annotations.ApiResponses;
 import java.util.List;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -46,19 +48,37 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
 @Slf4j
+@Builder
 @RestController
 @RequestMapping("/groups")
-@AllArgsConstructor(onConstructor = @__({@Autowired}))
 public class GroupController {
-  /** Dependencies */
-  private final GroupService groupService;
 
+  private final GroupService groupService;
   private final ApplicationService applicationService;
   private final UserService userService;
+
+  @Autowired
+  public GroupController(
+      @NonNull GroupService groupService,
+      @NonNull ApplicationService applicationService,
+      @NonNull UserService userService) {
+    this.groupService = groupService;
+    this.applicationService = applicationService;
+    this.userService = userService;
+  }
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
@@ -100,6 +120,8 @@ public class GroupController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
+    // TODO: [rtisma] create tests for this controller logic. This logic should remain in
+    // controller.
     if (StringUtils.isEmpty(query)) {
       return new PageDTO<>(groupService.listGroups(filters, pageable));
     } else {
@@ -118,12 +140,9 @@ public class GroupController {
             response = Group.class)
       })
   public @ResponseBody Group createGroup(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestBody(required = true) Group groupInfo) {
-    if (groupInfo.getId() != null) {
-      throw new PostWithIdentifierException();
-    }
-    return groupService.create(groupInfo);
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION) final String accessToken,
+      @RequestBody GroupRequest createRequest) {
+    return groupService.create(createRequest);
   }
 
   @AdminScoped
@@ -132,8 +151,8 @@ public class GroupController {
       value = {@ApiResponse(code = 200, message = "Group Details", response = Group.class)})
   @JsonView(Views.REST.class)
   public @ResponseBody Group getGroup(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String groupId) {
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION) final String accessToken,
+      @PathVariable(value = "id") String groupId) {
     return groupService.get(groupId);
   }
 
@@ -143,8 +162,9 @@ public class GroupController {
       value = {@ApiResponse(code = 200, message = "Updated group info", response = Group.class)})
   public @ResponseBody Group updateGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestBody(required = true) Group updatedGroupInfo) {
-    return groupService.update(updatedGroupInfo);
+      @PathVariable(value = "id") String id,
+      @RequestBody(required = true) GroupRequest updateRequest) {
+    return groupService.partialUpdate(id, updateRequest);
   }
 
   @AdminScoped
@@ -347,6 +367,17 @@ public class GroupController {
     } else {
       return new PageDTO<>(userService.findGroupUsers(groupId, query, filters, pageable));
     }
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.POST, value = "/{id}/users")
+  @ApiResponses(
+      value = {@ApiResponse(code = 200, message = "Add Users to Group", response = Group.class)})
+  public @ResponseBody Group addUsersToGroups(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @PathVariable(value = "id", required = true) String grpId,
+      @RequestBody(required = true) List<String> users) {
+    return groupService.addUsersToGroup(grpId, users);
   }
 
   @ExceptionHandler({EntityNotFoundException.class})

@@ -1,21 +1,33 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.service.UserService.USER_CONVERTER;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
+import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import bio.overture.ego.controller.resolver.PageableResolver;
+import bio.overture.ego.model.dto.CreateUserRequest;
+import bio.overture.ego.model.dto.UpdateUserRequest;
+import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.UserRole;
+import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
 import java.util.Collections;
+import java.util.Date;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import javax.persistence.EntityNotFoundException;
+import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -23,9 +35,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,34 +44,98 @@ import org.springframework.transaction.annotation.Transactional;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Transactional
+@Ignore("replace with controller tests.")
 public class UserServiceTest {
 
   private static final String NON_EXISTENT_USER = "827fae28-7fb8-11e8-adc0-fa7ae01bbebc";
 
   @Autowired private ApplicationService applicationService;
-
   @Autowired private UserService userService;
-
   @Autowired private GroupService groupService;
-
   @Autowired private PolicyService policyService;
-
   @Autowired private EntityGenerator entityGenerator;
+
+  @Test
+  public void userConverter_UpdateUserRequest_User() {
+    val email = System.currentTimeMillis() + "@gmail.com";
+    val firstName = "John";
+    val lastName = "Doe";
+    val role = UserRole.ADMIN.toString();
+    val status = "Approved";
+    val preferredLanguage = "English";
+    val id = randomUUID();
+    val createdAt = new Date();
+
+    val applications =
+        IntStream.range(0, 3)
+            .boxed()
+            .map(x -> Application.builder().id(randomUUID()).build())
+            .collect(toImmutableSet());
+
+    val user =
+        User.builder()
+            .email(email)
+            .firstName(firstName)
+            .lastName(lastName)
+            .role(role)
+            .status(status)
+            .preferredLanguage(preferredLanguage)
+            .id(id)
+            .createdAt(createdAt)
+            .applications(applications)
+            .userPermissions(null)
+            .build();
+
+    val partialUserUpdateRequest =
+        UpdateUserRequest.builder().firstName("Rob").status(UserRole.USER.toString()).build();
+    USER_CONVERTER.updateUser(partialUserUpdateRequest, user);
+
+    assertThat(user.getPreferredLanguage()).isEqualTo(preferredLanguage);
+    assertThat(user.getCreatedAt()).isEqualTo(createdAt);
+    assertThat(user.getStatus()).isEqualTo(UserRole.USER.toString());
+    assertThat(user.getLastName()).isEqualTo(lastName);
+    assertThat(user.getName()).isEqualTo(email);
+    assertThat(user.getEmail()).isEqualTo(email);
+    assertThat(user.getFirstName()).isEqualTo("Rob");
+    assertThat(user.getRole()).isEqualTo(role);
+    assertThat(user.getId()).isEqualTo(id);
+    assertThat(user.getApplications()).containsExactlyInAnyOrderElementsOf(applications);
+    assertThat(user.getUserPermissions()).isNull();
+    assertThat(user.getGroups()).isEmpty();
+  }
+
+  @Test
+  public void userConversion_CreateUserRequest_User() {
+    val t = System.currentTimeMillis();
+    val request =
+        CreateUserRequest.builder()
+            .email(t + "@gmail.com")
+            .firstName("John")
+            .role(UserRole.ADMIN.toString())
+            .status("Approved")
+            .preferredLanguage("English")
+            .build();
+    val user = USER_CONVERTER.convertToUser(request);
+    assertThat(user.getEmail()).isEqualTo(request.getEmail());
+    assertThat(user.getName()).isEqualTo(user.getEmail());
+    assertThat(user.getCreatedAt()).isNotNull();
+    assertThat(user.getId()).isNull();
+    assertThat(user.getLastName()).isNull();
+    assertThat(user.getFirstName()).isEqualTo(request.getFirstName());
+    assertThat(user.getRole()).isEqualTo(request.getRole());
+    assertThat(user.getStatus()).isEqualTo(request.getStatus());
+    assertThat(user.getPreferredLanguage()).isEqualTo(request.getPreferredLanguage());
+    assertThat(user.getGroups()).isEmpty();
+    assertThat(user.getUserPermissions()).isEmpty();
+    assertThat(user.getApplications()).isEmpty();
+  }
 
   // Create
   @Test
   public void testCreate() {
-    val user = userService.create(entityGenerator.createUser("Demo", "User"));
+    val user = entityGenerator.setupUser("Demo User");
     // UserName == UserEmail
     assertThat(user.getName()).isEqualTo("DemoUser@domain.com");
-  }
-
-  @Test
-  public void testCreateUniqueNameAndEmail() {
-    userService.create(entityGenerator.createUser("User", "One"));
-    userService.create(entityGenerator.createUser("User", "One"));
-    assertThatExceptionOfType(DataIntegrityViolationException.class)
-        .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
   }
 
   @Test
@@ -87,39 +160,37 @@ public class UserServiceTest {
   @Test
   public void testCreateFromIDTokenUniqueNameAndEmail() {
     // Note: This test has one strike due to Hibernate Cache.
-    userService.create(entityGenerator.createUser("User", "One"));
+    entityGenerator.setupUser("User One");
     val idToken =
         IDToken.builder().email("UserOne@domain.com").given_name("User").family_name("One").build();
-    userService.createFromIDToken(idToken);
-
-    assertThatExceptionOfType(DataIntegrityViolationException.class)
-        .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
+    assertThatExceptionOfType(UniqueViolationException.class)
+        .isThrownBy(() -> userService.createFromIDToken(idToken));
   }
 
   // Get
   @Test
   public void testGet() {
-    val user = userService.create(entityGenerator.createUser("User", "One"));
+    val user = entityGenerator.setupUser("User One");
     val savedUser = userService.get(user.getId().toString());
     assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
 
   @Test
-  public void testGetEntityNotFoundException() {
-    assertThatExceptionOfType(EntityNotFoundException.class)
+  public void testGetNotFoundException() {
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.get(NON_EXISTENT_USER));
   }
 
   @Test
   public void testGetByName() {
-    userService.create(entityGenerator.createUser("User", "One"));
+    entityGenerator.setupUser("User One");
     val savedUser = userService.getByName("UserOne@domain.com");
     assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
 
   @Test
   public void testGetByNameAllCaps() {
-    userService.create(entityGenerator.createUser("User", "One"));
+    entityGenerator.setupUser("User One");
     val savedUser = userService.getByName("USERONE@DOMAIN.COM");
     assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
@@ -127,8 +198,7 @@ public class UserServiceTest {
   @Test
   @Ignore
   public void testGetByNameNotFound() {
-    // TODO Currently returning null, should throw exception (EntityNotFoundException?)
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
   }
 
@@ -146,17 +216,17 @@ public class UserServiceTest {
   @Test
   public void testGetOrCreateDemoUserAlREADyExisting() {
     // This should force the demo user to have admin and approved status's
-    val demoUserObj =
-        User.builder()
-            .name("Demo.User@example.com")
+    val createRequest =
+        CreateUserRequest.builder()
             .email("Demo.User@example.com")
             .firstName("Demo")
             .lastName("User")
             .status("Pending")
             .role("USER")
+            .preferredLanguage("English")
             .build();
 
-    val user = userService.create(demoUserObj);
+    val user = userService.create(createRequest);
 
     assertThat(user.getStatus()).isEqualTo("Pending");
     assertThat(user.getRole()).isEqualTo("USER");
@@ -274,17 +344,17 @@ public class UserServiceTest {
     entityGenerator.setupTestGroups();
 
     val user = userService.getByName("FirstUser@domain.com");
-    val userTwo = (userService.getByName("SecondUser@domain.com"));
+    val userTwo = userService.getByName("SecondUser@domain.com");
     val groupId = groupService.getByName("Group One").getId().toString();
 
-    userService.addUserToGroups(user.getId().toString(), singletonList(groupId));
-    userService.addUserToGroups(userTwo.getId().toString(), singletonList(groupId));
+    userService.addUserToGroups(user.getId().toString(), newArrayList(groupId));
+    userService.addUserToGroups(userTwo.getId().toString(), newArrayList(groupId));
 
     val userFilters = new SearchFilter("name", "First");
 
     val users =
         userService.findGroupUsers(
-            groupId, singletonList(userFilters), new PageableResolver().getPageable());
+            groupId, newArrayList(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
     assertThat(users.getContent()).contains(user);
@@ -445,42 +515,109 @@ public class UserServiceTest {
   @Test
   public void testUpdate() {
     val user = entityGenerator.setupUser("First User");
-    user.setFirstName("NotFirst");
-    val updated = userService.update(user);
+    val updated =
+        userService.partialUpdate(
+            user.getId().toString(), UpdateUserRequest.builder().firstName("NotFirst").build());
     assertThat(updated.getFirstName()).isEqualTo("NotFirst");
   }
 
   @Test
   public void testUpdateRoleUser() {
     val user = entityGenerator.setupUser("First User");
-    user.setRole("user");
-    val updated = userService.update(user);
+    val updated =
+        userService.partialUpdate(
+            user.getId().toString(), UpdateUserRequest.builder().role("user").build());
     assertThat(updated.getRole()).isEqualTo("USER");
   }
 
   @Test
   public void testUpdateRoleAdmin() {
     val user = entityGenerator.setupUser("First User");
-    user.setRole("admin");
-    val updated = userService.update(user);
+    val updated =
+        userService.partialUpdate(
+            user.getId().toString(), UpdateUserRequest.builder().role("admin").build());
     assertThat(updated.getRole()).isEqualTo("ADMIN");
   }
 
   @Test
-  public void testUpdateNonexistentEntity() {
-    userService.create(entityGenerator.createUser("First", "User"));
-    val nonExistentEntity = entityGenerator.createUser("First", "User");
-    assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
-        .isThrownBy(() -> userService.update(nonExistentEntity));
+  public void uniqueEmailCheck_CreateUser_ThrowsUniqueConstraintException() {
+    val r1 =
+        CreateUserRequest.builder()
+            .preferredLanguage("English")
+            .role("ADMIN")
+            .status("Approved")
+            .email(UUID.randomUUID() + "@gmail.com")
+            .build();
+
+    val u1 = userService.create(r1);
+    assertThat(userService.isExist(u1.getId())).isTrue();
+    r1.setRole("USER");
+    r1.setStatus("Pending");
+
+    assertThat(u1.getEmail()).isEqualTo(r1.getEmail());
+    assertThatExceptionOfType(UniqueViolationException.class)
+        .isThrownBy(() -> userService.create(r1));
   }
 
   @Test
+  public void uniqueEmailCheck_UpdateUser_ThrowsUniqueConstraintException() {
+    val e1 = UUID.randomUUID().toString() + "@something.com";
+    val e2 = UUID.randomUUID().toString() + "@something.com";
+    val cr1 =
+        CreateUserRequest.builder()
+            .preferredLanguage("English")
+            .role("ADMIN")
+            .status("Approved")
+            .email(e1)
+            .build();
+
+    val cr2 =
+        CreateUserRequest.builder()
+            .preferredLanguage("English")
+            .role("USER")
+            .status("Pending")
+            .email(e2)
+            .build();
+
+    val u1 = userService.create(cr1);
+    assertThat(userService.isExist(u1.getId())).isTrue();
+    val u2 = userService.create(cr2);
+    assertThat(userService.isExist(u2.getId())).isTrue();
+
+    val ur3 = UpdateUserRequest.builder().email(e1).build();
+
+    assertThat(u1.getEmail()).isEqualTo(ur3.getEmail());
+    assertThat(u2.getEmail()).isNotEqualTo(ur3.getEmail());
+    assertThatExceptionOfType(UniqueViolationException.class)
+        .isThrownBy(() -> userService.partialUpdate(u2.getId().toString(), ur3));
+  }
+
+  @Test
+  public void testUpdateNonexistentEntity() {
+    val nonExistentId = generateNonExistentId(userService).toString();
+    val updateRequest =
+        UpdateUserRequest.builder()
+            .firstName("Doesnot")
+            .lastName("Exist")
+            .status("Approved")
+            .preferredLanguage("English")
+            .lastLogin(null)
+            .role("ADMIN")
+            .build();
+    assertThatExceptionOfType(NotFoundException.class)
+        .isThrownBy(() -> userService.partialUpdate(nonExistentId, updateRequest));
+  }
+
+  @Test
+  @Ignore(
+      "This is ignored because an updateRequest object doesnt contain an id, therefore there is nothing to cause an UpdateID error in the first place")
+  @Deprecated
   public void testUpdateIdNotAllowed() {
-    val user = userService.create(entityGenerator.createUser("First", "User"));
-    user.setId(UUID.fromString("0c1dc4b8-7fb8-11e8-adc0-fa7ae01bbebc"));
+    val user = entityGenerator.setupUser("First User");
+    val nonExistingId = EntityGenerator.generateNonExistentId(userService);
+    user.setId(nonExistingId);
     // New id means new non-existent policy or one that exists and is being overwritten
-    assertThatExceptionOfType(EntityNotFoundException.class)
-        .isThrownBy(() -> userService.update(user));
+    assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> userService.update(user));
   }
 
   @Test
@@ -555,7 +692,7 @@ public class UserServiceTest {
     val group = groupService.getByName("Group One");
     val groupId = group.getId().toString();
 
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.addUserToGroups(NON_EXISTENT_USER, singletonList(groupId)));
   }
 
@@ -627,7 +764,7 @@ public class UserServiceTest {
     val app = applicationService.getByClientId("111111");
     val appId = app.getId().toString();
 
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.addUserToApps(NON_EXISTENT_USER, singletonList(appId)));
   }
 
@@ -662,20 +799,24 @@ public class UserServiceTest {
   public void testDelete() {
     entityGenerator.setupTestUsers();
 
+    val usersBefore =
+        userService.listUsers(Collections.emptyList(), new PageableResolver().getPageable());
+
     val user = userService.getByName("FirstUser@domain.com");
 
     userService.delete(user.getId().toString());
 
-    val users =
+    val usersAfter =
         userService.listUsers(Collections.emptyList(), new PageableResolver().getPageable());
-    assertThat(users.getTotalElements()).isEqualTo(2L);
-    assertThat(users.getContent()).doesNotContain(user);
+
+    assertThat(usersBefore.getTotalElements() - usersAfter.getTotalElements()).isEqualTo(1L);
+    assertThat(usersAfter.getContent()).doesNotContain(user);
   }
 
   @Test
   public void testDeleteNonExisting() {
     entityGenerator.setupTestUsers();
-    assertThatExceptionOfType(EmptyResultDataAccessException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.delete(NON_EXISTENT_USER));
   }
 
@@ -724,7 +865,7 @@ public class UserServiceTest {
 
     userService.addUserToGroups(userId, asList(groupId, groupTwoId));
 
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
             () -> userService.deleteUserFromGroups(NON_EXISTENT_USER, singletonList(groupId)));
   }
@@ -758,7 +899,7 @@ public class UserServiceTest {
     val groupId = group.getId().toString();
 
     userService.addUserToGroups(userId, singletonList(groupId));
-    assertThat(user.getWholeGroups().size()).isEqualTo(1);
+    assertThat(user.getGroups().size()).isEqualTo(1);
 
     assertThatExceptionOfType(IllegalArgumentException.class)
         .isThrownBy(() -> userService.deleteUserFromGroups(userId, singletonList("")));
@@ -802,7 +943,7 @@ public class UserServiceTest {
 
     userService.addUserToApps(userId, asList(appId, appTwoId));
 
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.deleteUserFromApps(NON_EXISTENT_USER, singletonList(appId)));
   }
 

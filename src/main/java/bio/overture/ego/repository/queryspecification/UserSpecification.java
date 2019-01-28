@@ -16,34 +16,40 @@
 
 package bio.overture.ego.repository.queryspecification;
 
-import bio.overture.ego.model.entity.*;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
 import bio.overture.ego.utils.QueryUtils;
 import java.util.UUID;
-import javax.annotation.Nonnull;
 import javax.persistence.criteria.Join;
+import lombok.NonNull;
 import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
 
 public class UserSpecification extends SpecificationBase<User> {
 
-  public static Specification<User> containsText(@Nonnull String text) {
+  public static Specification<User> containsText(@NonNull String text) {
     val finalText = QueryUtils.prepareForQuery(text);
-    return (root, query, builder) ->
-        builder.or(
-            getQueryPredicates(
-                builder, root, finalText, "name", "email", "firstName", "lastName", "status"));
+    return (root, query, builder) -> {
+      query.distinct(true);
+      return builder.or(
+          getQueryPredicates(
+              builder, root, finalText, "name", "email", "firstName", "lastName", "status"));
+    };
   }
 
-  public static Specification<User> inGroup(@Nonnull UUID groupId) {
+  public static Specification<User> inGroup(@NonNull UUID groupId) {
     return (root, query, builder) -> {
-      Join<User, Group> groupJoin = root.join("wholeGroups");
+      query.distinct(true);
+      Join<User, Group> groupJoin = root.join("groups");
       return builder.equal(groupJoin.<Integer>get("id"), groupId);
     };
   }
 
-  public static Specification<User> ofApplication(@Nonnull UUID appId) {
+  public static Specification<User> ofApplication(@NonNull UUID appId) {
     return (root, query, builder) -> {
-      Join<User, Application> applicationJoin = root.join("wholeApplications");
+      query.distinct(true);
+      Join<User, Application> applicationJoin = root.join("applications");
       return builder.equal(applicationJoin.<Integer>get("id"), appId);
     };
   }

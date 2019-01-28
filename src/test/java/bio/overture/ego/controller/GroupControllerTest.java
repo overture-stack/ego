@@ -1,17 +1,22 @@
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.utils.CollectionUtils.listOf;
+import static bio.overture.ego.utils.EntityTools.extractAppIds;
+import static bio.overture.ego.utils.EntityTools.extractGroupIds;
+import static bio.overture.ego.utils.EntityTools.extractIDs;
+import static java.util.Arrays.asList;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.enums.EntityStatus;
+import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
+import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -24,14 +29,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 @Slf4j
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
-@Ignore("Restore when controller is fixed")
 @SpringBootTest(
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -46,6 +55,7 @@ public class GroupControllerTest {
   @Autowired private EntityGenerator entityGenerator;
   @Autowired private GroupService groupService;
   @Autowired private UserService userService;
+  @Autowired private ApplicationService applicationService;
 
   @Before
   public void Setup() {
@@ -65,7 +75,12 @@ public class GroupControllerTest {
   @Test
   public void AddGroup() {
 
-    Group group = new Group("Wizards");
+    Group group =
+        Group.builder()
+            .name("Wizards")
+            .status(EntityStatus.PENDING.toString())
+            .description("")
+            .build();
 
     HttpEntity<Group> entity = new HttpEntity<Group>(group, headers);
 
@@ -73,14 +88,13 @@ public class GroupControllerTest {
         restTemplate.exchange(createURLWithPort("/groups"), HttpMethod.POST, entity, String.class);
 
     HttpStatus responseStatus = response.getStatusCode();
-    assertEquals(HttpStatus.OK, responseStatus);
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
   }
 
   @Test
   public void AddUniqueGroup() {
 
-    entityGenerator.setupGroup("SameSame");
-    Group group = new Group("SameSame");
+    Group group = entityGenerator.setupGroup("SameSame");
 
     HttpEntity<Group> entity = new HttpEntity<Group>(group, headers);
 
@@ -88,7 +102,7 @@ public class GroupControllerTest {
         restTemplate.exchange(createURLWithPort("/groups"), HttpMethod.POST, entity, String.class);
 
     HttpStatus responseStatus = response.getStatusCode();
-    assertEquals(HttpStatus.CONFLICT, responseStatus); // TODO
+    assertThat(responseStatus).isEqualTo(HttpStatus.CONFLICT);
   }
 
   @Test
@@ -111,9 +125,10 @@ public class GroupControllerTest {
 
     String expected =
         String.format(
-            "{\"id\":\"%s\",\"name\":\"Group One\",\"description\":null,\"status\":null}", groupId);
+            "{\"id\":\"%s\",\"name\":\"Group One\",\"description\":\"\",\"status\":\"Pending\"}",
+            groupId);
 
-    assertEquals(HttpStatus.OK, responseStatus);
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
     assertThatJson(responseBody).isEqualTo(expected);
   }
 
@@ -130,7 +145,7 @@ public class GroupControllerTest {
 
     HttpStatus responseStatus = response.getStatusCode();
 
-    assertEquals(HttpStatus.NOT_FOUND, responseStatus); // TODO
+    assertThat(responseStatus).isEqualTo(HttpStatus.NOT_FOUND);
   }
 
   @Test
@@ -145,12 +160,12 @@ public class GroupControllerTest {
 
     String expected =
         String.format(
-            "[{\"id\":\"%s\",\"name\":\"Group One\",\"description\":null,\"status\":null}, {\"id\":\"%s\",\"name\":\"Group Two\",\"description\":null,\"status\":null}, {\"id\":\"%s\",\"name\":\"Group Three\",\"description\":null,\"status\":null}]",
+            "[{\"id\":\"%s\",\"name\":\"Group One\",\"description\":\"\",\"status\":\"Pending\"}, {\"id\":\"%s\",\"name\":\"Group Two\",\"description\":\"\",\"status\":\"Pending\"}, {\"id\":\"%s\",\"name\":\"Group Three\",\"description\":\"\",\"status\":\"Pending\"}]",
             groupService.getByName("Group One").getId(),
             groupService.getByName("Group Two").getId(),
             groupService.getByName("Group Three").getId());
 
-    assertEquals(HttpStatus.OK, responseStatus);
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
     assertThatJson(responseBody)
         .when(IGNORING_EXTRA_ARRAY_ITEMS, IGNORING_ARRAY_ORDER)
         .node("resultSet")
@@ -163,16 +178,21 @@ public class GroupControllerTest {
   public void UpdateGroup() {
 
     // Groups created in setup
-    val groupId = entityGenerator.setupGroup("Complete").getId();
+    val group = entityGenerator.setupGroup("Complete");
 
-    Group update = new Group("Updated Complete");
-    update.setId(groupId);
+    Group update =
+        Group.builder()
+            .id(group.getId())
+            .name("Updated Complete")
+            .status(group.getStatus())
+            .description(group.getDescription())
+            .build();
 
     HttpEntity<Group> entity = new HttpEntity<Group>(update, headers);
 
     ResponseEntity<String> response =
         restTemplate.exchange(
-            createURLWithPort(String.format("/groups/%s", groupId)),
+            createURLWithPort(String.format("/groups/%s", group.getId())),
             HttpMethod.PUT,
             entity,
             String.class);
@@ -180,14 +200,16 @@ public class GroupControllerTest {
     String responseBody = response.getBody();
 
     HttpStatus responseStatus = response.getStatusCode();
-    assertEquals(HttpStatus.OK, responseStatus);
-    assertThatJson(responseBody).node("id").isEqualTo(groupId);
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+    assertThatJson(responseBody).node("id").isEqualTo(group.getId());
     assertThatJson(responseBody).node("name").isEqualTo("Updated Complete");
   }
 
   // TODO - ADD Update non-existent entity
 
   @Test
+  @Ignore
+  // TODO - Implement Patch method
   public void PartialUpdateGroup() throws JSONException {
 
     // Groups created in setup
@@ -201,12 +223,12 @@ public class GroupControllerTest {
             createURLWithPort(String.format("/groups/%s", groupId)),
             HttpMethod.PATCH,
             entity,
-            String.class); // TODO - No Patch Method
+            String.class);
 
     String responseBody = response.getBody();
 
     HttpStatus responseStatus = response.getStatusCode();
-    assertEquals(HttpStatus.OK, responseStatus);
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
     assertThatJson(responseBody).node("id").isEqualTo(groupId);
     assertThatJson(responseBody).node("name").isEqualTo("Updated Partial");
   }
@@ -214,15 +236,43 @@ public class GroupControllerTest {
   @Test
   public void DeleteOne() throws JSONException {
 
-    // Groups created in setup
-    val groupId = entityGenerator.setupGroup("Temporary").getId();
+    val group = entityGenerator.setupGroup("DeleteOne");
+    val groupId = group.getId();
 
-    // Add a user to this group
-    userService.addUserToGroups(
-        userService.getByName("FirstUser@domain.com").getId().toString(),
-        listOf(groupId.toString()));
+    // Users for test
+    val userOne = entityGenerator.setupUser("TempGroup User");
 
-    // TODO - ADD application groups relationship
+    // Application for test
+    val appOne = entityGenerator.setupApplication("TempGroupApp");
+
+    // REST to get users/app in group
+    val usersBody = asList(userOne.getId().toString());
+    val appsBody = asList(appOne.getId().toString());
+
+    HttpEntity<List> saveGroupUsers = new HttpEntity<>(usersBody, headers);
+    HttpEntity<List> saveGroupApps = new HttpEntity<>(appsBody, headers);
+
+    ResponseEntity<String> saveGroupUsersRes =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/groups/%s/users", group.getId())),
+            HttpMethod.POST,
+            saveGroupUsers,
+            String.class);
+
+    ResponseEntity<String> saveGroupAppsRes =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/groups/%s/applications", group.getId())),
+            HttpMethod.POST,
+            saveGroupApps,
+            String.class);
+
+    // Check user-group relationship is there
+    val userWithGroup = userService.getByName("TempGroupUser@domain.com");
+    assertThat(extractGroupIds(userWithGroup.getGroups())).contains(groupId);
+
+    // Check app-group relationship is there
+    val applicationWithGroup = applicationService.getByClientId("TempGroupApp");
+    assertThat(extractGroupIds(applicationWithGroup.getGroups())).contains(groupId);
 
     HttpEntity<String> entity = new HttpEntity<String>(null, headers);
 
@@ -236,16 +286,92 @@ public class GroupControllerTest {
     HttpStatus responseStatus = response.getStatusCode();
 
     // Check http response
-    assertEquals(HttpStatus.OK, responseStatus);
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
     // Check user-group relationship is also deleted
-    assertNotEquals(null, userService.getByName("FirstUser@domain.com"));
+    val userWithoutGroup = userService.getByName("TempGroupUser@domain.com");
+    assertThat(userWithoutGroup).isNotNull();
+    assertThat(extractGroupIds(userWithoutGroup.getGroups())).doesNotContain(groupId);
+
+    // Check app-group relationship is also deleted
+    val applicationWithoutGroup = applicationService.getByClientId("TempGroupApp");
+    assertThat(applicationWithoutGroup).isNotNull();
+    assertThat(extractGroupIds(applicationWithoutGroup.getGroups())).doesNotContain(groupId);
 
     // Check group is deleted
-    assertEquals(null, groupService.getByName("Temporary"));
+    assertThat(groupService.findByName("DeleteOne")).isEmpty();
   }
 
-  // TODO - ADD tests for adding user/apps to groups
+  // TODO: [rtisma] will eventually be fixed when properly using query by Specification, which will
+  // allow for runtime base queries. This will allow us to define fetch strategy at run time
+  @Test
+  public void AddUsersToGroup() {
+
+    val group = entityGenerator.setupGroup("GroupWithUsers");
+
+    val userOne = userService.getByName("FirstUser@domain.com");
+    val userTwo = userService.getByName("SecondUser@domain.com");
+
+    val body = asList(userOne.getId().toString(), userTwo.getId().toString());
+
+    HttpEntity<List> entity = new HttpEntity<>(body, headers);
+
+    ResponseEntity<String> response =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/groups/%s/users", group.getId())),
+            HttpMethod.POST,
+            entity,
+            String.class);
+
+    HttpStatus responseStatus = response.getStatusCode();
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+
+    // Check that Group is associated with Users
+    val groupWithUsers = groupService.getByName("GroupWithUsers");
+    assertThat(extractIDs(groupWithUsers.getUsers())).contains(userOne.getId(), userTwo.getId());
+
+    // Check that each user is associated with the group
+    val userOneWithGroups = userService.getByName("FirstUser@domain.com");
+    val userTwoWithGroups = userService.getByName("SecondUser@domain.com");
+
+    assertThat(userOneWithGroups.getGroups()).contains(group);
+    assertThat(userTwoWithGroups.getGroups()).contains(group);
+  }
+
+  @Test
+  public void AddAppsToGroup() {
+
+    val group = entityGenerator.setupGroup("GroupWithApps");
+
+    val appOne = applicationService.getByClientId("111111");
+    val appTwo = applicationService.getByClientId("222222");
+
+    val body = asList(appOne.getId().toString(), appTwo.getId().toString());
+
+    HttpEntity<List> entity = new HttpEntity<>(body, headers);
+
+    ResponseEntity<String> response =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/groups/%s/applications", group.getId())),
+            HttpMethod.POST,
+            entity,
+            String.class);
+
+    HttpStatus responseStatus = response.getStatusCode();
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+
+    // Check that Group is associated with Users
+    val groupWithApps = groupService.getByName("GroupWithApps");
+    assertThat(extractAppIds(groupWithApps.getApplications()))
+        .contains(appOne.getId(), appTwo.getId());
+
+    // Check that each user is associated with the group
+    val appOneWithGroups = applicationService.getByClientId("111111");
+    val appTwoWithGroups = applicationService.getByClientId("222222");
+
+    assertThat(appOneWithGroups.getGroups()).contains(group);
+    assertThat(appTwoWithGroups.getGroups()).contains(group);
+  }
 
   private String createURLWithPort(String uri) {
     return "http://localhost:" + port + uri;

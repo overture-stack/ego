@@ -6,6 +6,7 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 
 import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.UserPermission;
+import bio.overture.ego.repository.UserPermissionRepository;
 import bio.overture.ego.repository.queryspecification.UserPermissionSpecification;
 import java.util.List;
 import lombok.NonNull;
@@ -17,7 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @Transactional
-public class UserPermissionService extends PermissionService<UserPermission> {
+public class UserPermissionService extends AbstractPermissionService<UserPermission> {
+
+  public UserPermissionService(UserPermissionRepository userPermissionRepository) {
+    super(UserPermission.class, userPermissionRepository);
+  }
+
   public List<UserPermission> findAllByPolicy(@NonNull String policyId) {
     return getRepository()
         .findAll(where(UserPermissionSpecification.withPolicy(fromString(policyId))));
@@ -28,10 +34,10 @@ public class UserPermissionService extends PermissionService<UserPermission> {
     return mapToList(userPermissions, this::getPolicyResponse);
   }
 
-  public PolicyResponse getPolicyResponse(UserPermission userPermission) {
+  public PolicyResponse getPolicyResponse(@NonNull UserPermission userPermission) {
     val name = userPermission.getOwner().getName();
     val id = userPermission.getOwner().getId().toString();
     val mask = userPermission.getAccessLevel();
-    return new PolicyResponse(id, name, mask);
+    return PolicyResponse.builder().name(name).id(id).mask(mask).build();
   }
 }

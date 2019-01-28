@@ -4,14 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import bio.overture.ego.controller.resolver.PageableResolver;
+import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.EntityGenerator;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
@@ -45,7 +47,7 @@ public class PolicyServiceTest {
   // Create
   @Test
   public void testCreate() {
-    val policy = policyService.create(entityGenerator.createPolicy("Study001,Group One"));
+    val policy = entityGenerator.setupPolicy("Study001,Group One");
     assertThat(policy.getName()).isEqualTo("Study001");
   }
 
@@ -67,28 +69,27 @@ public class PolicyServiceTest {
   // Read
   @Test
   public void testGet() {
-    val policy =
-        policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
+    val policy = entityGenerator.setupPolicy("Study001", groups.get(0).getName());
     val savedPolicy = policyService.get(policy.getId().toString());
     assertThat(savedPolicy.getName()).isEqualTo("Study001");
   }
 
   @Test
-  public void testGetEntityNotFoundException() {
-    assertThatExceptionOfType(EntityNotFoundException.class)
+  public void testGetNotFoundException() {
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> policyService.get(UUID.randomUUID().toString()));
   }
 
   @Test
   public void testGetByName() {
-    policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
+    entityGenerator.setupPolicy("Study001", groups.get(0).getName());
     val savedUser = policyService.getByName("Study001");
     assertThat(savedUser.getName()).isEqualTo("Study001");
   }
 
   @Test
   public void testGetByNameAllCaps() {
-    policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
+    entityGenerator.setupPolicy("Study001", groups.get(0).getName());
     val savedUser = policyService.getByName("STUDY001");
     assertThat(savedUser.getName()).isEqualTo("Study001");
   }
@@ -96,8 +97,7 @@ public class PolicyServiceTest {
   @Test
   @Ignore
   public void testGetByNameNotFound() {
-    // TODO Currently returning null, should throw exception (EntityNotFoundException?)
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> policyService.getByName("Study000"));
   }
 
@@ -126,6 +126,39 @@ public class PolicyServiceTest {
   }
 
   @Test
+  public void uniqueNameCheck_CreatePolicy_ThrowsUniqueConstraintException() {
+    val r1 = PolicyRequest.builder().name(UUID.randomUUID().toString()).build();
+
+    val p1 = policyService.create(r1);
+    assertThat(policyService.isExist(p1.getId())).isTrue();
+
+    assertThat(p1.getName()).isEqualTo(r1.getName());
+    assertThatExceptionOfType(UniqueViolationException.class)
+        .isThrownBy(() -> policyService.create(r1));
+  }
+
+  @Test
+  public void uniqueNameCheck_UpdatePolicy_ThrowsUniqueConstraintException() {
+    val name1 = UUID.randomUUID().toString();
+    val name2 = UUID.randomUUID().toString();
+    val cr1 = PolicyRequest.builder().name(name1).build();
+
+    val cr2 = PolicyRequest.builder().name(name2).build();
+
+    val p1 = policyService.create(cr1);
+    assertThat(policyService.isExist(p1.getId())).isTrue();
+    val p2 = policyService.create(cr2);
+    assertThat(policyService.isExist(p2.getId())).isTrue();
+
+    val ur3 = PolicyRequest.builder().name(name1).build();
+
+    assertThat(p1.getName()).isEqualTo(ur3.getName());
+    assertThat(p2.getName()).isNotEqualTo(ur3.getName());
+    assertThatExceptionOfType(UniqueViolationException.class)
+        .isThrownBy(() -> policyService.partialUpdate(p2.getId().toString(), ur3));
+  }
+
+  @Test
   public void testListUsersFilteredEmptyResult() {
     entityGenerator.setupTestPolicies();
     val userFilter = new SearchFilter("name", "Study004");
@@ -137,10 +170,9 @@ public class PolicyServiceTest {
   // Update
   @Test
   public void testUpdate() {
-    val policy =
-        policyService.create(entityGenerator.createPolicy("Study001", groups.get(0).getId()));
-    policy.setName("StudyOne");
-    val updated = policyService.update(policy);
+    val policy = entityGenerator.setupPolicy("Study001", groups.get(0).getName());
+    val updateRequest = PolicyRequest.builder().name("StudyOne").build();
+    val updated = policyService.partialUpdate(policy.getId().toString(), updateRequest);
     assertThat(updated.getName()).isEqualTo("StudyOne");
   }
 
