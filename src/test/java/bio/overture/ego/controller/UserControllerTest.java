@@ -20,6 +20,7 @@ package bio.overture.ego.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import bio.overture.ego.AuthorizationServiceMain;
+import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
@@ -91,6 +92,46 @@ public class UserControllerTest {
 
     HttpStatus responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+  }
+
+  @Test
+  public void AddUniqueUser() {
+    User user1 =
+      User.builder()
+        .firstName("unique")
+        .lastName("unique")
+        .email("unique@unique.com")
+        .preferredLanguage("English")
+        .role("USER")
+        .status("Approved")
+        .build();
+
+    User user2 =
+      User.builder()
+        .firstName("unique")
+        .lastName("unique")
+        .email("unique@unique.com")
+        .preferredLanguage("English")
+        .role("USER")
+        .status("Approved")
+        .build();
+
+    HttpEntity<User> entity1 = new HttpEntity<User>(user1, headers);
+
+    ResponseEntity<String> response1 =
+      restTemplate.exchange(createURLWithPort("/users"), HttpMethod.POST, entity1, String.class);
+
+    HttpStatus responseStatus1 = response1.getStatusCode();
+    assertThat(responseStatus1).isEqualTo(HttpStatus.OK);
+
+    HttpEntity<User> entity2 = new HttpEntity<User>(user2, headers);
+
+    ResponseEntity<String> response2 =
+      restTemplate.exchange(createURLWithPort("/users"), HttpMethod.POST, entity2, String.class);
+
+    // Return a 409 conflict because email already exists for a registered user.
+    HttpStatus responseStatus2 = response2.getStatusCode();
+    assertThat(responseStatus2).isEqualTo(HttpStatus.CONFLICT);
   }
 
   private String createURLWithPort(String uri) {
