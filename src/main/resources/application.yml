@@ -51,17 +51,26 @@ google:
   client:
     Ids: 144611473365-k1aarg8qs6rlh67r3t7dssi1e34b6061.apps.googleusercontent.com
 
-# LinkedIn Connection
 linkedIn:
-  clientID:
-  clientSecret:
-  redirectUri: http://localhost:8081/oauth/linkedin-cb
+  client:
+    clientID: 
+    clientSecret: 
+    accessTokenUri: https://www.linkedin.com/oauth/v2/accessToken
+    userAuthorizationUri: https://www.linkedin.com/oauth/v2/authorization
+    clientAuthenticationScheme: query
+  resource:
+    userInfoUri: https://api.linkedin.com/v1/people/~:(email-address,first-name,last-name)?format=json
 
-# Github Connection
 github:
-  clientID:
-  clientSecret:
-  redirectUri: http://localhost:8081/oauth/github-cb
+  client:
+    clientId: 
+    clientSecret: 
+    accessTokenUri: https://github.com/login/oauth/access_token
+    userAuthorizationUri: https://github.com/login/oauth/authorize
+    clientAuthenticationScheme: form
+    scope: "user:email"
+  resource:
+    userInfoUri: https://api.github.com/user
 
 # Logging settings.
 logging:
