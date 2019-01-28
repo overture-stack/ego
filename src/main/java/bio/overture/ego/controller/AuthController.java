@@ -18,24 +18,22 @@ package bio.overture.ego.controller;
 
 import bio.overture.ego.provider.facebook.FacebookTokenService;
 import bio.overture.ego.provider.google.GoogleTokenService;
-import bio.overture.ego.provider.linkedin.LinkedInOAuthService;
 import bio.overture.ego.service.TokenService;
+import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.signer.TokenSigner;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.servlet.view.RedirectView;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -48,20 +46,17 @@ public class AuthController {
   private final GoogleTokenService googleTokenService;
   private final FacebookTokenService facebookTokenService;
   private final TokenSigner tokenSigner;
-  private final LinkedInOAuthService linkedInOAuthService;
 
   @Autowired
   public AuthController(
       @NonNull TokenService tokenService,
       @NonNull GoogleTokenService googleTokenService,
       @NonNull FacebookTokenService facebookTokenService,
-      @NonNull TokenSigner tokenSigner,
-      @NonNull LinkedInOAuthService linkedInOAuthService) {
+      @NonNull TokenSigner tokenSigner) {
     this.tokenService = tokenService;
     this.googleTokenService = googleTokenService;
     this.facebookTokenService = facebookTokenService;
     this.tokenSigner = tokenSigner;
-    this.linkedInOAuthService = linkedInOAuthService;
   }
 
   @RequestMapping(method = RequestMethod.GET, value = "/google/token")
@@ -90,42 +85,6 @@ public class AuthController {
     }
   }
 
-  @RequestMapping(method = RequestMethod.GET, value = "/linkedin-cb")
-  @SneakyThrows
-  public RedirectView linkedinCallback(
-      @RequestParam("code") String code,
-      RedirectAttributes attributes,
-      @Value("${oauth.redirectFrontendUri}") final String redirectFrontendUri) {
-    val redirectView = new RedirectView();
-
-    redirectView.setUrl(redirectFrontendUri);
-    val authInfo = linkedInOAuthService.getAuthInfo(code);
-    if (authInfo.isPresent()) {
-      attributes.addAttribute("token", tokenService.generateUserToken(authInfo.get()));
-      return redirectView;
-    } else {
-      throw new InvalidTokenException("Unable to generate auth token for this user");
-    }
-  }
-
-  @RequestMapping(method = RequestMethod.GET, value = "/github-cb")
-  @SneakyThrows
-  public RedirectView githubCallback(
-      @RequestParam("code") String code,
-      RedirectAttributes attributes,
-      @Value("${oauth.redirectFrontendUri}") final String redirectFrontendUri) {
-    val redirectView = new RedirectView();
-
-    redirectView.setUrl(redirectFrontendUri);
-    val authInfo = githubOAuthService.getAuthInfo(code);
-    if (authInfo.isPresent()) {
-      attributes.addAttribute("token", tokenService.generateUserToken(authInfo.get()));
-      return redirectView;
-    } else {
-      throw new InvalidTokenException("Unable to generate auth token for this user");
-    }
-  }
-
   @RequestMapping(method = RequestMethod.GET, value = "/token/verify")
   @ResponseStatus(value = HttpStatus.OK)
   @SneakyThrows
@@ -149,6 +108,11 @@ public class AuthController {
     } else {
       return "";
     }
+  }
+
+  @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST }, value= "/ego-token")
+  public ResponseEntity<String> user(OAuth2Authentication authentication) {
+    return new ResponseEntity<>(tokenService.generateUserToken((IDToken) authentication.getPrincipal()), HttpStatus.OK);
   }
 
   @ExceptionHandler({InvalidTokenException.class})

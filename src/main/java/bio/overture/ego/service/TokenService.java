@@ -16,12 +16,6 @@
 
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.dto.Scope.effectiveScopes;
-import static bio.overture.ego.model.dto.Scope.explicitScopes;
-import static bio.overture.ego.service.UserService.extractScopes;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static java.lang.String.format;
-
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.entity.Application;
@@ -41,20 +35,7 @@ import bio.overture.ego.token.user.UserTokenClaims;
 import bio.overture.ego.token.user.UserTokenContext;
 import bio.overture.ego.utils.TypeUtils;
 import bio.overture.ego.view.Views;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import java.security.InvalidKeyException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import io.jsonwebtoken.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -64,6 +45,15 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
+
+import java.security.InvalidKeyException;
+import java.util.*;
+
+import static bio.overture.ego.model.dto.Scope.effectiveScopes;
+import static bio.overture.ego.model.dto.Scope.explicitScopes;
+import static bio.overture.ego.service.UserService.extractScopes;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static java.lang.String.format;
 
 @Slf4j
 @Service

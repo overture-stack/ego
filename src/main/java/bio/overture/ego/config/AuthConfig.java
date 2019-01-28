@@ -22,6 +22,9 @@ import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.CustomTokenEnhancer;
 import bio.overture.ego.token.signer.TokenSigner;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.TimeZone;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -42,10 +45,6 @@ import org.springframework.security.oauth2.provider.token.TokenEnhancerChain;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
-
-import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.TimeZone;
 
 @Slf4j
 @Configuration
@@ -115,7 +114,7 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   }
 
   @Override
-  public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
+  public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
     TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
     tokenEnhancerChain.setTokenEnhancers(Collections.singletonList(tokenEnhancer()));
 
@@ -128,7 +127,7 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   }
 
   @Override
-  public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
+  public void configure(AuthorizationServerSecurityConfigurer security) {
     security.allowFormAuthenticationForClients();
   }
 }
