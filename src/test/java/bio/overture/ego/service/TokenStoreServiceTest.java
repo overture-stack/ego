@@ -1,12 +1,18 @@
 package bio.overture.ego.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.utils.EntityGenerator;
+import java.time.Instant;
+import java.util.Date;
+import java.util.HashSet;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,17 +21,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.util.Date;
-import java.util.HashSet;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Transactional
+@Ignore("replace with controller tests.")
 public class TokenStoreServiceTest {
   @Autowired private EntityGenerator entityGenerator;
 

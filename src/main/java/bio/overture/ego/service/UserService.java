@@ -38,12 +38,7 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UpdateUserRequest;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.entity.UserPermission;
+import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.model.enums.UserRole;
@@ -348,10 +343,19 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   public static Set<AbstractPermission> getPermissionsList(User user) {
-    val upStream = user.getUserPermissions().stream();
-    val gpStream = user.getGroups().stream().map(Group::getPermissions).flatMap(Collection::stream);
+    val up = user.getUserPermissions();
+    val upStream = up == null ? Stream.<UserPermission>empty() : up.stream();
+
+    val gp = user.getGroups();
+    val gpStream =
+        gp == null
+            ? Stream.<GroupPermission>empty()
+            : gp.stream().map(Group::getPermissions).flatMap(Collection::stream);
+
     val combinedPermissions =
-        concat(upStream, gpStream).collect(groupingBy(AbstractPermission::getPolicy));
+        concat(upStream, gpStream)
+            .filter(a -> a.getPolicy() != null)
+            .collect(groupingBy(AbstractPermission::getPolicy));
 
     return combinedPermissions
         .values()

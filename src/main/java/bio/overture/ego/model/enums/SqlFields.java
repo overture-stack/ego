@@ -1,8 +1,8 @@
 package bio.overture.ego.model.enums;
 
-import lombok.NoArgsConstructor;
-
 import static lombok.AccessLevel.PRIVATE;
+
+import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = PRIVATE)
 public class SqlFields {

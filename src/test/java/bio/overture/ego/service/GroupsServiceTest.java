@@ -36,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Transactional
+@Ignore("replace with controller tests.")
 public class GroupsServiceTest {
   @Autowired private ApplicationService applicationService;
 

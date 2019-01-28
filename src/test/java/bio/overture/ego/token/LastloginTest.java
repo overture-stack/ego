@@ -10,6 +10,7 @@ import bio.overture.ego.utils.EntityGenerator;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
+@Ignore("replace with controller tests.")
 public class LastloginTest {
 
   @Autowired private TokenService tokenService;

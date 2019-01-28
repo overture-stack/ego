@@ -16,6 +16,10 @@
 
 package bio.overture.ego.model.entity;
 
+import static bio.overture.ego.service.UserService.getPermissionsList;
+import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
+import static com.google.common.collect.Sets.newHashSet;
+
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
@@ -25,15 +29,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.GenericGenerator;
-
+import java.util.*;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -49,14 +45,14 @@ import javax.persistence.NamedSubgraph;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import static bio.overture.ego.service.UserService.getPermissionsList;
-import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
-import static com.google.common.collect.Sets.newHashSet;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.GenericGenerator;
 
 // TODO: simplify annotations. Find common annotations for Ego entities, and put them all under a
 // single annotation
@@ -64,7 +60,13 @@ import static com.google.common.collect.Sets.newHashSet;
 @Entity
 @Table(name = Tables.EGOUSER)
 @Data
-@ToString(exclude = {LombokFields.groups, LombokFields.applications, LombokFields.userPermissions})
+@ToString(
+    exclude = {
+      LombokFields.groups,
+      LombokFields.applications,
+      LombokFields.userPermissions,
+      LombokFields.tokens
+    })
 @JsonPropertyOrder({
   JavaFields.ID,
   JavaFields.NAME,
@@ -122,6 +124,7 @@ public class User implements PolicyOwner, Identifiable<UUID> {
 
   @NotNull
   @Column(name = SqlFields.ROLE, nullable = false)
+  @JsonView({Views.JWTAccessToken.class})
   private String role;
 
   // TODO: [rtisma] replace with Enum similar to AccessLevel

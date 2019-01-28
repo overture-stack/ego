@@ -44,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Transactional
+@Ignore("replace with controller tests.")
 public class UserServiceTest {
 
   private static final String NON_EXISTENT_USER = "827fae28-7fb8-11e8-adc0-fa7ae01bbebc";

@@ -1,21 +1,18 @@
 package bio.overture.ego.model.entity;
 
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static com.google.common.collect.Sets.newHashSet;
+
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.val;
-import org.hibernate.annotations.GenericGenerator;
-import org.joda.time.DateTime;
-
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -29,13 +26,15 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static com.google.common.collect.Sets.newHashSet;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.val;
+import org.hibernate.annotations.GenericGenerator;
+import org.joda.time.DateTime;
 
 @Entity
 @Table(name = Tables.TOKEN)
