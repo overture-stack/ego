@@ -202,40 +202,6 @@ public class UserServiceTest {
         .isThrownBy(() -> userService.getByName("UserOne@domain.com"));
   }
 
-  @Test
-  public void testGetOrCreateDemoUser() {
-    val demoUser = userService.getOrCreateDemoUser();
-    assertThat(demoUser.getName()).isEqualTo("Demo.User@example.com");
-    assertThat(demoUser.getEmail()).isEqualTo("Demo.User@example.com");
-    assertThat(demoUser.getFirstName()).isEqualTo("Demo");
-    assertThat(demoUser.getLastName()).isEqualTo("User");
-    assertThat(demoUser.getStatus()).isEqualTo("Approved");
-    assertThat(demoUser.getRole()).isEqualTo("ADMIN");
-  }
-
-  @Test
-  public void testGetOrCreateDemoUserAlREADyExisting() {
-    // This should force the demo user to have admin and approved status's
-    val createRequest =
-        CreateUserRequest.builder()
-            .email("Demo.User@example.com")
-            .firstName("Demo")
-            .lastName("User")
-            .status("Pending")
-            .role("USER")
-            .preferredLanguage("English")
-            .build();
-
-    val user = userService.create(createRequest);
-
-    assertThat(user.getStatus()).isEqualTo("Pending");
-    assertThat(user.getRole()).isEqualTo("USER");
-
-    val demoUser = userService.getOrCreateDemoUser();
-    assertThat(demoUser.getStatus()).isEqualTo("Approved");
-    assertThat(demoUser.getRole()).isEqualTo("ADMIN");
-  }
-
   // List Users
   @Test
   public void testListUsersNoFilters() {

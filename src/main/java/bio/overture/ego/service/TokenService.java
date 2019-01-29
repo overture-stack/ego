@@ -71,9 +71,6 @@ public class TokenService {
   private static final String ISSUER_NAME = "ego";
   @Autowired TokenSigner tokenSigner;
 
-  @Value("${demo:false}")
-  private boolean demo;
-
   @Value("${jwt.duration:86400000}")
   private int DURATION;
 
@@ -84,20 +81,13 @@ public class TokenService {
   @Autowired private PolicyService policyService;
 
   public String generateUserToken(IDToken idToken) {
-    // If the demo flag is set, all tokens will be generated as the Demo User,
-    // otherwise, get the user associated with their idToken
     User user;
-
-    if (demo) {
-      user = userService.getOrCreateDemoUser();
-    } else {
-      val userName = idToken.getEmail();
-      try { // TODO: Replace this with Optional for better control flow.
-        user = userService.getByName(userName);
-      } catch (NotFoundException e) {
-        log.info("User not found, creating.");
-        user = userService.createFromIDToken(idToken);
-      }
+    val userName = idToken.getEmail();
+    try { // TODO: Replace this with Optional for better control flow.
+      user = userService.getByName(userName);
+    } catch (NotFoundException e) {
+      log.info("User not found, creating.");
+      user = userService.createFromIDToken(idToken);
     }
 
     // Update user.lastLogin in the DB
