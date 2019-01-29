@@ -55,6 +55,7 @@ import static bio.overture.ego.service.UserService.extractScopes;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static java.lang.String.format;
 
+
 @Slf4j
 @Service
 public class TokenService {
