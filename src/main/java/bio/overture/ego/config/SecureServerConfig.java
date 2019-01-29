@@ -96,6 +96,18 @@ public class SecureServerConfig {
   }
 
   @Bean
+  @ConfigurationProperties("google")
+  public OAuth2ClientResources google() {
+    return new OAuth2ClientResources();
+  }
+
+  @Bean
+  @ConfigurationProperties("facebook")
+  public OAuth2ClientResources facebook() {
+    return new OAuth2ClientResources();
+  }
+
+  @Bean
   @ConfigurationProperties("github")
   public OAuth2ClientResources github() {
     return new OAuth2ClientResources();

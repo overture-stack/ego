@@ -6,12 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
-import org.springframework.security.oauth2.client.OAuth2RestOperations;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.filter.OAuth2ClientAuthenticationProcessingFilter;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.filter.CompositeFilter;
 
 import javax.servlet.Filter;
@@ -20,9 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 @Component
 public class OAuth2SsoFilter extends CompositeFilter {
@@ -35,7 +31,7 @@ public class OAuth2SsoFilter extends CompositeFilter {
             HttpServletResponse response,
             Authentication authentication)
             throws IOException, ServletException {
-      Application application = applicationService.getByClientId(request.getParameter("client_id"));
+      Application application = applicationService.getByClientId((String) request.getSession().getAttribute("ego_client_id"));
       String redirectUri = application.getRedirectUri();
       this.setDefaultTargetUrl(redirectUri);
       super.onAuthenticationSuccess(request, response, authentication);
@@ -46,77 +42,78 @@ public class OAuth2SsoFilter extends CompositeFilter {
   public OAuth2SsoFilter(
           @Qualifier("oauth2ClientContext") OAuth2ClientContext oauth2ClientContext,
           ApplicationService applicationService,
+          OAuth2ClientResources google,
+          OAuth2ClientResources facebook,
           OAuth2ClientResources github,
           OAuth2ClientResources linkedin) {
-    super();
     this.oauth2ClientContext = oauth2ClientContext;
     this.applicationService = applicationService;
     List<Filter> filters = new ArrayList<>();
-    filters.add(childSsoFilter(github, "/oauth/login/github"));
-    filters.add(childSsoFilter(linkedin, "/oauth/login/linkedin"));
+
+    filters.add(new GoogleFilter(google));
+    filters.add(new FacebookFilter(facebook));
+    filters.add(new GithubFilter(github));
+    filters.add(new LinkedInFilter(linkedin));
     setFilters(filters);
   }
 
-  private Filter childSsoFilter(OAuth2ClientResources client, String path) {
-    // Currently not checking if client_id is valid
-    OAuth2ClientAuthenticationProcessingFilter filter =
-            new OAuth2ClientAuthenticationProcessingFilter(path) {
-              @Override
-              public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-                // Don't use the existing access token, otherwise, it would attempt to get github user info with linkedin access token
-                this.restTemplate.getOAuth2ClientContext().setAccessToken(null);
-                return super.attemptAuthentication(request, response);
-              }
-            };
-    OAuth2RestTemplate template = new OAuth2RestTemplate(client.getClient(), oauth2ClientContext);
+  class OAuth2SsoChildFilter extends OAuth2ClientAuthenticationProcessingFilter {
+    public OAuth2SsoChildFilter(String path, OAuth2ClientResources client) {
+      super(path);
+      OAuth2RestTemplate template = new OAuth2RestTemplate(client.getClient(), oauth2ClientContext);
+      super.setRestTemplate(template);
+      super.setAuthenticationSuccessHandler(simpleUrlAuthenticationSuccessHandler);
+    }
 
-    filter.setAuthenticationSuccessHandler(simpleUrlAuthenticationSuccessHandler);
-    filter.setRestTemplate(template);
+    @Override
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+      // Don't use the existing access token, otherwise, it would attempt to get github user info with linkedin access token
+      this.restTemplate.getOAuth2ClientContext().setAccessToken(null);
+      return super.attemptAuthentication(request, response);
+    }
+  }
 
-    OAuth2UserInfoTokenServices tokenServices =
-            new OAuth2UserInfoTokenServices(
-                    client.getResource().getUserInfoUri(), client.getClient().getClientId(), template) {
-              @Override
-              @SuppressWarnings("unchecked")
-              protected Map<String, Object> ensureEmail(Map<String, Object> map, String accessToken) {
-                if (map.containsKey("error") || map.get("email") != null) {
-                  return map;
-                }
-                // linkedin
-                if (map.get("emailAddress") != null) {
-                  map.put("email", map.get("emailAddress"));
-                  return map;
-                }
+  class GithubFilter extends OAuth2SsoChildFilter {
+    public GithubFilter(OAuth2ClientResources client) {
+      super("/oauth/login/github", client);
+      super.setTokenServices(new GithubUserInfoTokenServices(
+              client.getResource().getUserInfoUri(),
+              client.getClient().getClientId(),
+              super.restTemplate
+      ));
+    }
+  }
 
-                // github
-                OAuth2RestOperations restTemplate = getRestTemplate(accessToken);
-                List<Map<String, Object>> emails ;
+  class LinkedInFilter extends OAuth2SsoChildFilter {
+    public LinkedInFilter(OAuth2ClientResources client) {
+      super("/oauth/login/linkedin", client);
+      super.setTokenServices(new LinkedInUserInfoTokenServices(
+              client.getResource().getUserInfoUri(),
+              client.getClient().getClientId(),
+              super.restTemplate
+      ));
+    }
+  }
 
-                try {
-                  emails = restTemplate.getForEntity("https://api.github.com/user/emails", List.class).getBody();
-                } catch (RestClientException ex) {
-                  return Collections.singletonMap("error", "Could not fetch user details");
-                }
+  class GoogleFilter extends OAuth2SsoChildFilter {
+    public GoogleFilter(OAuth2ClientResources client) {
+      super("/oauth/login/google", client);
+      super.setTokenServices(new OAuth2UserInfoTokenServices(
+              client.getResource().getUserInfoUri(),
+              client.getClient().getClientId(),
+              super.restTemplate
+      ));
+    }
+  }
 
-                Map<String, Object> email;
-                if (emails != null) {
-                  email = emails.stream()
-                          .filter(x -> x.get("verified").equals(true) && x.get("primary").equals(true))
-                          .findAny()
-                          .orElse(null);
-                } else {
-                  return Collections.singletonMap("error", "Could not fetch user details");
-                }
-                if (email != null) {
-                  map.put("email", email.get("email"));
-                } else {
-                  return Collections.singletonMap("error", "Could not fetch user details");
-                }
-                return map;
-              }
-            };
-
-    filter.setTokenServices(tokenServices);
-    return filter;
+  class FacebookFilter extends OAuth2SsoChildFilter {
+    public FacebookFilter(OAuth2ClientResources client) {
+      super("/oauth/login/facebook", client);
+      super.setTokenServices(new OAuth2UserInfoTokenServices(
+              client.getResource().getUserInfoUri(),
+              client.getClient().getClientId(),
+              super.restTemplate
+      ));
+    }
   }
 }

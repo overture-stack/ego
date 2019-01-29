@@ -24,24 +24,26 @@ import java.util.NoSuchElementException;
 // This class make sure email is in the user info. User info endpoint of Github does not contain
 // private email.
 @Slf4j
-public class OAuth2UserInfoTokenServices implements ResourceServerTokenServices {
+public class OAuth2UserInfoTokenServices implements ResourceServerTokenServices, PrincipalExtractor {
 
   private final String userInfoEndpointUrl;
 
   private final String clientId;
 
-  private OAuth2RestOperations restTemplate;
-
-  private String tokenType = DefaultOAuth2AccessToken.BEARER_TYPE;
+  private final OAuth2RestOperations restTemplate;
 
   private AuthoritiesExtractor authoritiesExtractor = new FixedAuthoritiesExtractor();
 
-  private PrincipalExtractor principalExtractor = OAuth2UserInfoTokenServices::extractPrincipalFromMap;
+  public OAuth2UserInfoTokenServices(
+          String userInfoEndpointUrl, String clientId, OAuth2RestOperations restTemplate) {
+    this.userInfoEndpointUrl = userInfoEndpointUrl;
+    this.clientId = clientId;
+    this.restTemplate = restTemplate;
+  }
 
-  static public IDToken extractPrincipalFromMap(Map<String, Object> map) {
+
+  public IDToken extractPrincipal(Map<String, Object> map) {
     String email;
-    String givenName;
-    String familyName;
 
     if (map.get("email") instanceof String) {
       email = (String) map.get("email");
@@ -49,24 +51,17 @@ public class OAuth2UserInfoTokenServices implements ResourceServerTokenServices 
       return null;
     }
 
-    givenName = (String) map.getOrDefault("given_name", map.getOrDefault("firstName", ""));
-    familyName = (String) map.getOrDefault("family_name", map.getOrDefault("lastName", ""));
+    String givenName = (String) map.getOrDefault("given_name", map.getOrDefault("first_name", ""));
+    String familyName = (String) map.getOrDefault("family_name", map.getOrDefault("last_name", ""));
 
     return new IDToken(email, givenName , familyName);
-  }
-
-  public OAuth2UserInfoTokenServices(
-      String userInfoEndpointUrl, String clientId, OAuth2RestOperations restTemplate) {
-    this.userInfoEndpointUrl = userInfoEndpointUrl;
-    this.clientId = clientId;
-    this.restTemplate = restTemplate;
   }
 
   @Override
   public OAuth2Authentication loadAuthentication(String accessToken)
       throws AuthenticationException, InvalidTokenException {
     Map<String, Object> map = getMap(this.userInfoEndpointUrl, accessToken);
-    map = ensureEmail(map, accessToken);
+    map = transformMap(map, accessToken);
     if (map.containsKey("error")) {
       if (log.isDebugEnabled()) {
         log.debug("userinfo returned error: " + map.get("error"));
@@ -77,7 +72,7 @@ public class OAuth2UserInfoTokenServices implements ResourceServerTokenServices 
   }
 
   // Guarantee that email will be fetched
-  protected Map<String, Object> ensureEmail(Map<String, Object> map, String accessToken) throws NoSuchElementException {
+  protected Map<String, Object> transformMap(Map<String, Object> map, String accessToken) throws NoSuchElementException {
     if (map.get("email")==null) {
         return Collections.singletonMap("error", "Could not fetch user details");
     }
@@ -103,7 +98,7 @@ public class OAuth2UserInfoTokenServices implements ResourceServerTokenServices 
    * @return the principal or {@literal "unknown"}
    */
   protected Object getPrincipal(Map<String, Object> map) {
-    Object principal = this.principalExtractor.extractPrincipal(map);
+    Object principal = this.extractPrincipal(map);
     return (principal == null ? "unknown" : principal);
   }
 
@@ -116,7 +111,8 @@ public class OAuth2UserInfoTokenServices implements ResourceServerTokenServices 
     OAuth2AccessToken existingToken = restTemplate.getOAuth2ClientContext().getAccessToken();
     if (existingToken == null || !accessToken.equals(existingToken.getValue())) {
       DefaultOAuth2AccessToken token = new DefaultOAuth2AccessToken(accessToken);
-      token.setTokenType(this.tokenType);
+      String tokenType = DefaultOAuth2AccessToken.BEARER_TYPE;
+      token.setTokenType(tokenType);
       restTemplate.getOAuth2ClientContext().setAccessToken(token);
     }
     return restTemplate;

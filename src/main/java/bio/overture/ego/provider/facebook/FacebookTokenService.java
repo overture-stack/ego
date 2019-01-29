@@ -59,10 +59,10 @@ public class FacebookTokenService {
   /*
    * Variables
    */
-  @Value("${facebook.client.id}")
+  @Value("${facebook.client.clientId}")
   private String clientId;
 
-  @Value("${facebook.client.secret}")
+  @Value("${facebook.client.clientSecret}")
   private String clientSecret;
 
   @Value("${facebook.client.accessTokenUri}")

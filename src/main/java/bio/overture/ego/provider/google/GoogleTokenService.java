@@ -45,7 +45,7 @@ public class GoogleTokenService {
   /*
    * Dependencies
    */
-  @Value("${google.client.Ids}")
+  @Value("${google.client.clientId}")
   private String clientIDs;
 
   /*
