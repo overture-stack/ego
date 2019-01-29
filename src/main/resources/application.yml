@@ -125,9 +125,6 @@ logging:
 spring:
   profiles: demo
 
-# demo flag
-demo: false
-
 ---
 ###############################################################################
 # Profile - "test"

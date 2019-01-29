@@ -40,8 +40,6 @@ import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.model.enums.EntityStatus;
-import bio.overture.ego.model.enums.UserRole;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
@@ -81,20 +79,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class UserService extends AbstractNamedService<User, UUID> {
 
+  /** Constants */
   public static final UserConverter USER_CONVERTER = Mappers.getMapper(UserConverter.class);
 
-  // DEMO USER
-  private static final String DEMO_USER_NAME = "Demo.User@example.com";
-  private static final String DEMO_USER_EMAIL = "Demo.User@example.com";
-  private static final String DEMO_FIRST_NAME = "Demo";
-  private static final String DEMO_LAST_NAME = "User";
-  private static final String DEMO_USER_ROLE = UserRole.ADMIN.toString();
-  private static final String DEMO_USER_STATUS = EntityStatus.APPROVED.toString();
-
-  /*
-   Dependencies
-  */
+  /** Dependencies */
   private final GroupService groupService;
+
   private final ApplicationService applicationService;
   private final PolicyService policyService;
   private final UserPermissionService userPermissionService;
@@ -115,9 +105,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
     this.userPermissionService = userPermissionService;
   }
 
-  /*
-   Constants
-  */
   // DEFAULTS
   @Value("${default.user.role}")
   private String DEFAULT_USER_ROLE;
@@ -140,27 +127,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .status(DEFAULT_USER_STATUS)
             .role(DEFAULT_USER_ROLE)
             .build());
-  }
-
-  public User getOrCreateDemoUser() {
-    return userRepository
-        .getUserByNameIgnoreCase(DEMO_USER_NAME)
-        .map(
-            u -> {
-              u.setStatus(DEMO_USER_STATUS);
-              u.setRole(DEMO_USER_ROLE);
-              return getRepository().save(u);
-            })
-        .orElseGet(
-            () ->
-                create(
-                    CreateUserRequest.builder()
-                        .email(DEMO_USER_EMAIL)
-                        .firstName(DEMO_FIRST_NAME)
-                        .lastName(DEMO_LAST_NAME)
-                        .status(EntityStatus.APPROVED.toString())
-                        .role(UserRole.ADMIN.toString())
-                        .build()));
   }
 
   public User addUserToGroups(@NonNull String userId, @NonNull List<String> groupIDs) {
