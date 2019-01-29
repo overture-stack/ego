@@ -17,6 +17,8 @@
 
 package bio.overture.ego.controller;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,8 +31,7 @@ import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.StreamSupport;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -195,8 +196,7 @@ public class UserControllerTest {
     assertThat(responseJson.get("resultSet").isArray()).isTrue();
 
     // Verify that the returned Users are the ones from the setup.
-    Iterable<JsonNode> resultSetIterable =
-        () -> ((ArrayNode) responseJson.get("resultSet")).iterator();
+    Iterable<JsonNode> resultSetIterable = () -> responseJson.get("resultSet").iterator();
     val userNames =
         StreamSupport.stream(resultSetIterable.spliterator(), false)
             .map(j -> j.get("name").asText())
@@ -219,13 +219,12 @@ public class UserControllerTest {
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
     assertThat(responseJson.get("count").asInt()).isEqualTo(1);
     assertThat(responseJson.get("resultSet").isArray()).isTrue();
-    assertThat((responseJson.get("resultSet")).elements().next().get("name").asText())
+    assertThat(responseJson.get("resultSet").elements().next().get("name").asText())
         .isEqualTo("FirstUser@domain.com");
   }
 
   @Test
   public void updateUser() {
-    // Groups created in setup
     val user = entityGenerator.setupUser("update test");
     val update = User.builder().id(user.getId()).status("Rejected").build();
 
@@ -243,6 +242,89 @@ public class UserControllerTest {
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
     assertThatJson(responseBody).node("id").isEqualTo(user.getId());
     assertThatJson(responseBody).node("status").isEqualTo("Rejected");
+  }
+
+  @Test
+  @SneakyThrows
+  public void addGroupToUser() {
+    val userId = entityGenerator.setupUser("Group1 User").getId();
+    val groupId = entityGenerator.setupGroup("Addone Group").getId().toString();
+
+    val entity = new HttpEntity<>(singletonList(groupId), headers);
+    val response =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s/groups", userId)),
+            HttpMethod.POST,
+            entity,
+            String.class);
+
+    val responseStatus = response.getStatusCode();
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+
+    val groupResponse =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s/groups", userId)),
+            HttpMethod.GET,
+            entity,
+            String.class);
+
+    val groupResponseStatus = groupResponse.getStatusCode();
+    assertThat(groupResponseStatus).isEqualTo(HttpStatus.OK);
+
+    val groupResponseJson = MAPPER.readTree(groupResponse.getBody());
+    assertThat(groupResponseJson.get("count").asInt()).isEqualTo(1);
+    assertThat(groupResponseJson.get("resultSet").elements().next().get("id").asText())
+        .isEqualTo(groupId);
+  }
+
+  @Test
+  @SneakyThrows
+  public void deleteGroupFromUser() {
+    val userId = entityGenerator.setupUser("DeleteGroup User").getId();
+    val deleteGroup = entityGenerator.setupGroup("Delete One Group").getId().toString();
+    val remainGroup = entityGenerator.setupGroup("Don't Delete This One").getId().toString();
+
+    val entity = new HttpEntity<>(asList(deleteGroup, remainGroup), headers);
+    restTemplate.exchange(
+        createURLWithPort(String.format("/users/%s/groups", userId)),
+        HttpMethod.POST,
+        entity,
+        String.class);
+    val groupResponse =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s/groups", userId)),
+            HttpMethod.GET,
+            entity,
+            String.class);
+
+    val groupResponseStatus = groupResponse.getStatusCode();
+    assertThat(groupResponseStatus).isEqualTo(HttpStatus.OK);
+    val groupResponseJson = MAPPER.readTree(groupResponse.getBody());
+    assertThat(groupResponseJson.get("count").asInt()).isEqualTo(2);
+
+    val deleteEntity = new HttpEntity<String>(null, headers);
+    val deleteResponse =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s/groups/%s", userId, deleteGroup)),
+            HttpMethod.DELETE,
+            deleteEntity,
+            String.class);
+
+    val deleteResponseStatus = deleteResponse.getStatusCode();
+    assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
+
+    val secondGetResponse =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s/groups", userId)),
+            HttpMethod.GET,
+            entity,
+            String.class);
+    val secondGetResponseStatus = deleteResponse.getStatusCode();
+    assertThat(secondGetResponseStatus).isEqualTo(HttpStatus.OK);
+    val secondGetResponseJson = MAPPER.readTree(secondGetResponse.getBody());
+    assertThat(secondGetResponseJson.get("count").asInt()).isEqualTo(1);
+    assertThat(secondGetResponseJson.get("resultSet").elements().next().get("id").asText())
+        .isEqualTo(remainGroup);
   }
 
   private String createURLWithPort(String uri) {
