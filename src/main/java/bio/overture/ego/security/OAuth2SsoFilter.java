@@ -4,6 +4,7 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.service.ApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@Profile("auth")
 public class OAuth2SsoFilter extends CompositeFilter {
 
   private OAuth2ClientContext oauth2ClientContext;
