@@ -18,6 +18,7 @@
 package bio.overture.ego.controller;
 
 import static java.util.stream.Collectors.toList;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import bio.overture.ego.AuthorizationServiceMain;
@@ -29,6 +30,7 @@ import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import java.util.UUID;
 import java.util.stream.StreamSupport;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -165,6 +167,20 @@ public class UserControllerTest {
   }
 
   @Test
+  public void getUser404() {
+    val entity = new HttpEntity<String>(null, headers);
+    val response =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s", UUID.randomUUID().toString())),
+            HttpMethod.GET,
+            entity,
+            String.class);
+
+    val responseStatus = response.getStatusCode();
+    assertThat(responseStatus).isEqualTo(HttpStatus.NOT_FOUND);
+  }
+
+  @Test
   @SneakyThrows
   public void listUsersNoFilter() {
     val entity = new HttpEntity<String>(null, headers);
@@ -191,7 +207,43 @@ public class UserControllerTest {
 
   @Test
   @SneakyThrows
-  public void listUsersWithFilter() {}
+  public void listUsersWithQuery() {
+    val entity = new HttpEntity<String>(null, headers);
+    val response =
+        restTemplate.exchange(
+            createURLWithPort("/users?query=FirstUser"), HttpMethod.GET, entity, String.class);
+
+    val responseStatus = response.getStatusCode();
+    val responseJson = MAPPER.readTree(response.getBody());
+
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+    assertThat(responseJson.get("count").asInt()).isEqualTo(1);
+    assertThat(responseJson.get("resultSet").isArray()).isTrue();
+    assertThat((responseJson.get("resultSet")).elements().next().get("name").asText())
+        .isEqualTo("FirstUser@domain.com");
+  }
+
+  @Test
+  public void updateUser() {
+    // Groups created in setup
+    val user = entityGenerator.setupUser("update test");
+    val update = User.builder().id(user.getId()).status("Rejected").build();
+
+    val entity = new HttpEntity<User>(update, headers);
+    val response =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s", user.getId())),
+            HttpMethod.PUT,
+            entity,
+            String.class);
+
+    val responseBody = response.getBody();
+
+    HttpStatus responseStatus = response.getStatusCode();
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+    assertThatJson(responseBody).node("id").isEqualTo(user.getId());
+    assertThatJson(responseBody).node("status").isEqualTo("Rejected");
+  }
 
   private String createURLWithPort(String uri) {
     return "http://localhost:" + port + uri;
