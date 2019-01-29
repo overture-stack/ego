@@ -327,6 +327,84 @@ public class UserControllerTest {
         .isEqualTo(remainGroup);
   }
 
+  @Test
+  @SneakyThrows
+  public void addApplicationToUser() {
+    val userId = entityGenerator.setupUser("AddApp1 User").getId();
+    val appId = entityGenerator.setupApplication("app1").getId().toString();
+
+    val entity = new HttpEntity<>(singletonList(appId), headers);
+    val response =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s/applications", userId)),
+            HttpMethod.POST,
+            entity,
+            String.class);
+
+    val responseStatus = response.getStatusCode();
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+
+    val appResponse =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s/applications", userId)),
+            HttpMethod.GET,
+            entity,
+            String.class);
+
+    val appResponseStatus = appResponse.getStatusCode();
+    assertThat(appResponseStatus).isEqualTo(HttpStatus.OK);
+
+    val groupResponseJson = MAPPER.readTree(appResponse.getBody());
+    assertThat(groupResponseJson.get("count").asInt()).isEqualTo(1);
+    assertThat(groupResponseJson.get("resultSet").elements().next().get("id").asText())
+        .isEqualTo(appId);
+  }
+
+  @Test
+  @SneakyThrows
+  public void deleteApplicationFromUser() {
+    val userId = entityGenerator.setupUser("App2 User").getId();
+    val deleteApp = entityGenerator.setupApplication("deleteApp").getId().toString();
+    val remainApp = entityGenerator.setupApplication("remainApp").getId().toString();
+
+    val entity = new HttpEntity<>(asList(deleteApp, remainApp), headers);
+    val appResponse =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s/applications", userId)),
+            HttpMethod.POST,
+            entity,
+            String.class);
+
+    log.info(appResponse.getBody());
+
+    val appResponseStatus = appResponse.getStatusCode();
+    assertThat(appResponseStatus).isEqualTo(HttpStatus.OK);
+
+    val deleteEntity = new HttpEntity<String>(null, headers);
+    val deleteResponse =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s/applications/%s", userId, deleteApp)),
+            HttpMethod.DELETE,
+            deleteEntity,
+            String.class);
+
+    val deleteResponseStatus = deleteResponse.getStatusCode();
+    assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
+
+    val secondGetResponse =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s/applications", userId)),
+            HttpMethod.GET,
+            entity,
+            String.class);
+    val secondGetResponseStatus = deleteResponse.getStatusCode();
+    assertThat(secondGetResponseStatus).isEqualTo(HttpStatus.OK);
+    val secondGetResponseJson = MAPPER.readTree(secondGetResponse.getBody());
+    assertThat(secondGetResponseJson.get("count").asInt()).isEqualTo(1);
+    assertThat(secondGetResponseJson.get("resultSet").elements().next().get("id").asText())
+        .isEqualTo(remainApp);
+  }
+
   private String createURLWithPort(String uri) {
     return "http://localhost:" + port + uri;
   }
