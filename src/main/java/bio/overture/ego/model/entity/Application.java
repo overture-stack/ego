@@ -19,29 +19,17 @@ package bio.overture.ego.model.entity;
 import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static com.google.common.collect.Sets.newHashSet;
 
-import bio.overture.ego.model.enums.JavaFields;
-import bio.overture.ego.model.enums.LombokFields;
-import bio.overture.ego.model.enums.SqlFields;
-import bio.overture.ego.model.enums.Tables;
+import bio.overture.ego.model.enums.*;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.NamedAttributeNode;
-import javax.persistence.NamedEntityGraph;
-import javax.persistence.NamedSubgraph;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -51,6 +39,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
 
 @Entity
 @Table(name = Tables.APPLICATION)
@@ -71,6 +61,7 @@ import org.hibernate.annotations.GenericGenerator;
   JavaFields.DESCRIPTION,
   JavaFields.STATUS
 })
+@TypeDef(name = "ego_role_enum", typeClass = PostgreSQLEnumType.class)
 @JsonInclude(JsonInclude.Include.CUSTOM)
 @NamedEntityGraph(
     name = "application-entity-with-relationships",
@@ -102,6 +93,12 @@ public class Application implements Identifiable<UUID> {
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.NAME, nullable = false)
   private String name;
+
+  @NotNull
+  @Enumerated(EnumType.STRING)
+  @Type(type = "ego_role_enum")
+  @Column(name = SqlFields.ROLE, nullable = false)
+  private UserRole role;
 
   @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
