@@ -95,7 +95,7 @@ public class TokenController {
       @RequestParam(value = "user_id") UUID user_id,
       @RequestParam(value = "token") final String token) {
     tokenService.revokeToken(user_id, token);
-    return String.format("Token '%s' is successfully revoked!", token);
+    return format("Token '%s' is successfully revoked!", token);
   }
 
   @ResponseBody
