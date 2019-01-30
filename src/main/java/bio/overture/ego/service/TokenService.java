@@ -30,6 +30,7 @@ import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.reactor.events.UserEvents;
+import bio.overture.ego.repository.TokenStoreRepository;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.TokenClaims;
 import bio.overture.ego.token.app.AppJWTAccessToken;
@@ -52,33 +53,56 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class TokenService {
+public class TokenService extends AbstractNamedService<Token, UUID> {
   /*
    * Constant
    */
   private static final String ISSUER_NAME = "ego";
-  @Autowired TokenSigner tokenSigner;
 
   @Value("${jwt.duration:86400000}")
   private int DURATION;
 
-  @Autowired private UserService userService;
-  @Autowired private ApplicationService applicationService;
-  @Autowired private UserEvents userEvents;
-  @Autowired private TokenStoreService tokenStoreService;
-  @Autowired private PolicyService policyService;
+  /*
+   * Dependencies
+   */
+  private TokenSigner tokenSigner;
+  private UserService userService;
+  private ApplicationService applicationService;
+  private UserEvents userEvents;
+  private TokenStoreService tokenStoreService;
+  private PolicyService policyService;
+  private TokenStoreRepository tokenStoreRepository;
+
+  public TokenService(
+      @NonNull TokenSigner tokenSigner,
+      @NonNull UserService userService,
+      @NonNull ApplicationService applicationService,
+      @NonNull UserEvents userEvents,
+      @NonNull TokenStoreService tokenStoreService,
+      @NonNull PolicyService policyService,
+      @NonNull TokenStoreRepository tokenStoreRepository) {
+    super(Token.class, tokenStoreRepository);
+    this.tokenSigner = tokenSigner;
+    this.userService = userService;
+    this.applicationService = applicationService;
+    this.userEvents = userEvents;
+    this.tokenStoreService = tokenStoreService;
+    this.policyService = policyService;
+    this.tokenStoreRepository = tokenStoreRepository;
+  }
 
   public String generateUserToken(IDToken idToken) {
     User user;
@@ -304,4 +328,63 @@ public class TokenService {
 
     return new TokenScopeResponse(owner.getName(), clientId, t.getSecondsUntilExpiry(), names);
   }
+
+  public void revokeToken(UUID userId, @NonNull String tokenName) {
+    validateTokenName(tokenName);
+
+    log.info(format("Looking for user: '%s'. ", str(userId)));
+    val user =
+        userService
+            .findById(userId)
+            .orElseThrow(
+                () -> new UsernameNotFoundException(format("Can't find user '%s'", str(userId))));
+
+    log.info(format("validating if user '%s' has permission to revoke token.", str(userId)));
+    if (userService.isAdmin(user) && userService.isActiveUser(user)) {
+      revokeToken(tokenName);
+    } else {
+      // if it's a regular user, check if the token belongs to the user
+      verifyToken(tokenName, userId);
+      revokeToken(tokenName);
+    }
+  }
+
+  private void verifyToken(String token, UUID userId) {
+    val currentToken =
+        findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found."));
+
+    if (currentToken.getOwner().getId().equals(userId) == false) {
+      throw new InvalidTokenException("Users can only revoke tokens that belong to them.");
+    }
+  }
+
+  private void validateTokenName(@NonNull String tokenName) {
+    log.info(format("Validating token: '%s'.", tokenName));
+
+    if (tokenName.isEmpty()) {
+      throw new InvalidTokenException("Token cannot be empty.");
+    }
+
+    if (tokenName.length() > 2048) {
+      throw new InvalidRequestException("Invalid token, the maximum length for a token is 2048.");
+    }
+  }
+
+  private void revokeToken(String token) {
+    val currentToken =
+        findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found."));
+    if (currentToken.isRevoked()) {
+      throw new InvalidTokenException(format("Token '%s' is already revoked.", token));
+    }
+    currentToken.setRevoked(true);
+    getRepository().save(currentToken);
+  }
+
+  //  public boolean isActiveUser(User user) {
+  //    return "approved".equals(user.getStatus().toLowerCase());
+  //  }
+  //
+  //  public boolean isAdmin(User user) {
+  //    return "admin".equals((user.getRole().toLowerCase()));
+  //  }
 }

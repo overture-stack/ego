@@ -530,4 +530,12 @@ public class UserService extends AbstractNamedService<User, UUID> {
       }
     }
   }
+
+  public boolean isActiveUser(User user) {
+    return "approved".equals(user.getStatus().toLowerCase());
+  }
+
+  public boolean isAdmin(User user) {
+    return "admin".equals((user.getRole().toLowerCase()));
+  }
 }
