@@ -123,9 +123,9 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   private String email;
 
   @NotNull
-  @Column(name = SqlFields.ROLE, nullable = false)
+  @Column(name = SqlFields.TYPE, nullable = false)
   @JsonView({Views.JWTAccessToken.class})
-  private String role;
+  private String type;
 
   // TODO: [rtisma] replace with Enum similar to AccessLevel
   @NotNull

@@ -83,7 +83,7 @@ token:
 # Default values available for creation of entities
 default:
   user:
-    role: USER
+    type: USER
     status: Approved
 ---
 ###############################################################################

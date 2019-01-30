@@ -31,15 +31,9 @@ import java.util.Set;
 import java.util.UUID;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.Accessors;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
 @Entity
@@ -61,7 +55,7 @@ import org.hibernate.annotations.TypeDef;
   JavaFields.DESCRIPTION,
   JavaFields.STATUS
 })
-@TypeDef(name = "ego_role_enum", typeClass = PostgreSQLEnumType.class)
+@TypeDef(name = "ego_type_enum", typeClass = PostgreSQLEnumType.class)
 @JsonInclude(JsonInclude.Include.CUSTOM)
 @NamedEntityGraph(
     name = "application-entity-with-relationships",
@@ -96,9 +90,9 @@ public class Application implements Identifiable<UUID> {
 
   @NotNull
   @Enumerated(EnumType.STRING)
-  @Type(type = "ego_role_enum")
-  @Column(name = SqlFields.ROLE, nullable = false)
-  private UserRole role;
+  @org.hibernate.annotations.Type(type = "ego_type_enum")
+  @Column(name = SqlFields.TYPE, nullable = false)
+  private Type type;
 
   @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})

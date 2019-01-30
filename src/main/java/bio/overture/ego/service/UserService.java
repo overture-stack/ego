@@ -16,7 +16,7 @@
 
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.enums.UserRole.resolveUserRoleIgnoreCase;
+import static bio.overture.ego.model.enums.Type.resolveUserRoleIgnoreCase;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
@@ -106,8 +106,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   // DEFAULTS
-  @Value("${default.user.role}")
-  private String DEFAULT_USER_ROLE;
+  @Value("${default.user.type}")
+  private String DEFAULT_USER_TYPE;
 
   @Value("${default.user.status}")
   private String DEFAULT_USER_STATUS;
@@ -125,7 +125,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .firstName(idToken.getGiven_name())
             .lastName(idToken.getFamily_name())
             .status(DEFAULT_USER_STATUS)
-            .role(DEFAULT_USER_ROLE)
+            .type(DEFAULT_USER_TYPE)
             .build());
   }
 
@@ -179,7 +179,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
   @Deprecated
   public User update(@NonNull User data) {
     val user = getById(data.getId());
-    user.setRole(resolveUserRoleIgnoreCase(data.getRole()).toString());
+    user.setType(resolveUserRoleIgnoreCase(data.getType()).toString());
     return getRepository().save(user);
   }
 
@@ -464,9 +464,9 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
     onUpdateDetected(originalUser.getEmail(), r.getEmail(), () -> checkEmailUnique(r.getEmail()));
-    // Ensure role is the right value. This should be removed once Enums are properly used
+    // Ensure type is the right value. This should be removed once Enums are properly used
     onUpdateDetected(
-        originalUser.getRole(), r.getRole(), () -> resolveUserRoleIgnoreCase(r.getRole()));
+        originalUser.getType(), r.getType(), () -> resolveUserRoleIgnoreCase(r.getType()));
   }
 
   private void checkEmailUnique(String email) {
@@ -517,8 +517,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
     @AfterMapping
     protected void correctUserData(@MappingTarget User userToUpdate) {
       // Ensure UserRole is a correct value
-      if (!isNull(userToUpdate.getRole())) {
-        userToUpdate.setRole(resolveUserRoleIgnoreCase(userToUpdate.getRole()).toString());
+      if (!isNull(userToUpdate.getType())) {
+        userToUpdate.setType(resolveUserRoleIgnoreCase(userToUpdate.getType()).toString());
       }
 
       // Set UserName to equal the email.

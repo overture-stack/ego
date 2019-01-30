@@ -26,7 +26,7 @@ public class Fields {
   public static final String ID = "id";
   public static final String NAME = "name";
   public static final String EMAIL = "email";
-  public static final String ROLE = "role";
+  public static final String ROLE = "type";
   public static final String STATUS = "status";
   public static final String FIRSTNAME = "firstname";
   public static final String LASTNAME = "lastname";

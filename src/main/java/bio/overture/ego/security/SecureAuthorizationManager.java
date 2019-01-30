@@ -18,7 +18,7 @@ package bio.overture.ego.security;
 
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.UserRole;
+import bio.overture.ego.model.enums.Type;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -30,7 +30,7 @@ public class SecureAuthorizationManager implements AuthorizationManager {
   public boolean authorize(@NonNull Authentication authentication) {
     log.info("Trying to authorize as user");
     User user = (User) authentication.getPrincipal();
-    return "user".equals(user.getRole().toLowerCase()) && isActiveUser(user);
+    return "user".equals(user.getType().toLowerCase()) && isActiveUser(user);
   }
 
   public boolean authorizeWithAdminRole(@NonNull Authentication authentication) {
@@ -39,11 +39,11 @@ public class SecureAuthorizationManager implements AuthorizationManager {
     if (authentication.getPrincipal() instanceof User) {
       User user = (User) authentication.getPrincipal();
       log.info("Trying to authorize user '" + user.getName() + "' as admin");
-      status = "admin".equals(user.getRole().toLowerCase()) && isActiveUser(user);
+      status = "admin".equals(user.getType().toLowerCase()) && isActiveUser(user);
     } else if (authentication.getPrincipal() instanceof Application) {
       Application application = (Application) authentication.getPrincipal();
       log.info("Trying to authorize application '" + application.getName() + "' as admin");
-      status = application.getRole().equals(UserRole.ADMIN);
+      status = application.getType().equals(Type.ADMIN);
     } else {
       log.info("Unknown type of authentication passed to authorizeWithAdminRole");
     }

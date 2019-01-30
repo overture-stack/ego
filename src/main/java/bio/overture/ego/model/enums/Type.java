@@ -23,7 +23,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public enum UserRole {
+public enum Type {
   USER("USER"),
   ADMIN("ADMIN");
 
@@ -34,13 +34,13 @@ public enum UserRole {
     return value;
   }
 
-  public static UserRole resolveUserRoleIgnoreCase(@NonNull String userRole) {
+  public static Type resolveUserRoleIgnoreCase(@NonNull String userRole) {
     return stream(values())
         .filter(x -> x.toString().equals(userRole.toUpperCase()))
         .findFirst()
         .orElseThrow(
             () ->
                 new IllegalStateException(
-                    format("The user role '%s' cannot be resolved", userRole)));
+                    format("The user type '%s' cannot be resolved", userRole)));
   }
 }

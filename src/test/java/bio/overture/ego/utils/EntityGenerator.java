@@ -21,7 +21,7 @@ import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.enums.ApplicationStatus;
 import bio.overture.ego.model.enums.EntityStatus;
-import bio.overture.ego.model.enums.UserRole;
+import bio.overture.ego.model.enums.Type;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.BaseService;
@@ -69,7 +69,7 @@ public class EntityGenerator {
   private CreateApplicationRequest createApplicationCreateRequest(String clientId) {
     return CreateApplicationRequest.builder()
         .name(createApplicationName(clientId))
-        .role(UserRole.USER.toString())
+        .type(Type.USER.toString())
         .clientId(clientId)
         .clientSecret(reverse(clientId))
         .status(ApplicationStatus.PENDING.toString())
@@ -119,7 +119,7 @@ public class EntityGenerator {
               val request =
                   CreateApplicationRequest.builder()
                       .name(clientId)
-                      .role(role)
+                      .type(role)
                       .clientSecret(clientSecret)
                       .clientId(clientId)
                       .status(ApplicationStatus.APPROVED.toString())
@@ -135,7 +135,7 @@ public class EntityGenerator {
         .lastName(lastName)
         .status("Approved")
         .preferredLanguage("English")
-        .role("ADMIN")
+        .type("ADMIN")
         .build();
   }
 
