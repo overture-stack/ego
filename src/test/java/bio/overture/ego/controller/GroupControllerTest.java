@@ -18,7 +18,9 @@ import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.UUID;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
@@ -44,6 +46,9 @@ import org.springframework.test.context.junit4.SpringRunner;
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class GroupControllerTest {
+
+  /** Constants */
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   /** State */
   @LocalServerPort private int port;
@@ -307,6 +312,61 @@ public class GroupControllerTest {
 
     assertThat(userOneWithGroups.getGroups()).contains(group);
     assertThat(userTwoWithGroups.getGroups()).contains(group);
+  }
+
+  @Test
+  @SneakyThrows
+  public void deleteUserFromGroup() {
+    val groupId = entityGenerator.setupGroup("RemoveGroupUsers").getId().toString();
+    val deleteUser = entityGenerator.setupUser("Delete This").getId().toString();
+    val remainUser = entityGenerator.setupUser("Keep This").getId().toString();
+
+    val body = asList(deleteUser, remainUser);
+    val entity = new HttpEntity<>(body, headers);
+    val response =
+        restTemplate.exchange(
+            createURLWithPort(format("/groups/%s/users", groupId)),
+            HttpMethod.POST,
+            entity,
+            String.class);
+    val responseStatus = response.getStatusCode();
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+
+    val getResponse =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/groups/%s/users", groupId)),
+            HttpMethod.GET,
+            entity,
+            String.class);
+    val getResponseStatus = getResponse.getStatusCode();
+    assertThat(getResponseStatus).isEqualTo(HttpStatus.OK);
+    val getResponseJson = MAPPER.readTree(getResponse.getBody());
+    assertThat(getResponseJson.get("count").asInt()).isEqualTo(2);
+
+    val deleteEntity = new HttpEntity<String>(null, headers);
+    val deleteResponse =
+        restTemplate.exchange(
+            createURLWithPort(format("/groups/%s/users/%s", groupId, deleteUser)),
+            HttpMethod.DELETE,
+            deleteEntity,
+            String.class);
+
+    val deleteResponseStatus = deleteResponse.getStatusCode();
+    assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
+
+    val secondGetResponse =
+        restTemplate.exchange(
+            createURLWithPort(format("/groups/%s/users", groupId)),
+            HttpMethod.GET,
+            entity,
+            String.class);
+
+    val secondGetResponseStatus = deleteResponse.getStatusCode();
+    assertThat(secondGetResponseStatus).isEqualTo(HttpStatus.OK);
+    val secondGetResponseJson = MAPPER.readTree(secondGetResponse.getBody());
+    assertThat(secondGetResponseJson.get("count").asInt()).isEqualTo(1);
+    assertThat(secondGetResponseJson.get("resultSet").elements().next().get("id").asText())
+        .isEqualTo(remainUser);
   }
 
   @Test

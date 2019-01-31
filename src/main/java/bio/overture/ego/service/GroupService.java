@@ -20,7 +20,10 @@ import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundE
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.convertToUUIDList;
+import static bio.overture.ego.utils.Converters.convertToUUIDSet;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static java.lang.String.format;
 import static java.util.UUID.fromString;
 import static org.mapstruct.factory.Mappers.getMapper;
 import static org.springframework.data.jpa.domain.Specifications.where;
@@ -31,6 +34,7 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
@@ -207,6 +211,20 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     groupRepository.save(group);
   }
 
+  public void deleteUsersFromGroup(@NonNull String grpId, @NonNull List<String> userIDs) {
+    val group = getById(fromString(grpId));
+    val userIdsToDisassociate = convertToUUIDSet(userIDs);
+    checkUsersExistForGroup(group, userIdsToDisassociate);
+    val usersToDisassociate =
+        group
+            .getUsers()
+            .stream()
+            .filter(u -> userIdsToDisassociate.contains(u.getId()))
+            .collect(toImmutableSet());
+    disassociateGroupFromUsers(group, usersToDisassociate);
+    getRepository().save(group);
+  }
+
   public void deleteGroupPermissions(@NonNull String userId, @NonNull List<String> permissionsIds) {
     val group = getById(fromString(userId));
     permissionService
@@ -245,6 +263,32 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     return applicationRepository
         .findById(fromString(appId))
         .orElseThrow(() -> buildNotFoundException("Could not find Application with ID: %s", appId));
+  }
+
+  private User retrieveUser(String userId) {
+    // using applicationRepository since using applicationService causes cyclic dependency error
+    return userRepository
+        .findById(fromString(userId))
+        .orElseThrow(() -> buildNotFoundException("Could not find User with ID: %s", userId));
+  }
+
+  public static void checkUsersExistForGroup(
+      @NonNull Group group, @NonNull Collection<UUID> userIds) {
+    val existingUserIds = group.getUsers().stream().map(User::getId).collect(toImmutableSet());
+    val nonExistentUserIds =
+        userIds.stream().filter(x -> !existingUserIds.contains(x)).collect(toImmutableSet());
+    if (!nonExistentUserIds.isEmpty()) {
+      throw new NotFoundException(
+          format(
+              "The following users do not exist for group '%s': %s",
+              group.getId(), COMMA.join(nonExistentUserIds)));
+    }
+  }
+
+  public static void disassociateGroupFromUsers(
+      @NonNull Group group, @NonNull Collection<User> users) {
+    group.getUsers().removeAll(users);
+    users.forEach(x -> x.getGroups().remove(group));
   }
 
   private static void associateUsers(@NonNull Group group, @NonNull Collection<User> users) {
