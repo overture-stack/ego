@@ -209,11 +209,11 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     val appIdsToDisassociate = convertToUUIDSet(appIDs);
     checkAppsExistForGroup(group, appIdsToDisassociate);
     val appsToDisassociate =
-      group
-        .getApplications()
-        .stream()
-        .filter(a -> appIdsToDisassociate.contains(a.getId()))
-        .collect(toImmutableSet());
+        group
+            .getApplications()
+            .stream()
+            .filter(a -> appIdsToDisassociate.contains(a.getId()))
+            .collect(toImmutableSet());
     val apps = appIDs.stream().map(this::retrieveApplication).collect(toImmutableSet());
     disassociateGroupFromApps(group, appsToDisassociate);
     getRepository().save(group);
@@ -300,20 +300,21 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   }
 
   public static void checkAppsExistForGroup(
-    @NonNull Group group, @NonNull Collection<UUID> appIds) {
-    val existingAppIds = group.getApplications().stream().map(Application::getId).collect(toImmutableSet());
+      @NonNull Group group, @NonNull Collection<UUID> appIds) {
+    val existingAppIds =
+        group.getApplications().stream().map(Application::getId).collect(toImmutableSet());
     val nonExistentAppIds =
-      appIds.stream().filter(x -> !existingAppIds.contains(x)).collect(toImmutableSet());
+        appIds.stream().filter(x -> !existingAppIds.contains(x)).collect(toImmutableSet());
     if (!nonExistentAppIds.isEmpty()) {
       throw new NotFoundException(
-        format(
-          "The following apps do not exist for group '%s': %s",
-          group.getId(), COMMA.join(nonExistentAppIds)));
+          format(
+              "The following apps do not exist for group '%s': %s",
+              group.getId(), COMMA.join(nonExistentAppIds)));
     }
   }
 
   public static void disassociateGroupFromApps(
-    @NonNull Group group, @NonNull Collection<Application> apps) {
+      @NonNull Group group, @NonNull Collection<Application> apps) {
     group.getApplications().removeAll(apps);
     apps.forEach(x -> x.getGroups().remove(group));
   }

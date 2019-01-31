@@ -412,20 +412,20 @@ public class GroupControllerTest {
     val body = asList(deleteApp, remainApp);
     val entity = new HttpEntity<>(body, headers);
     val response =
-      restTemplate.exchange(
-        createURLWithPort(format("/groups/%s/applications", groupId)),
-        HttpMethod.POST,
-        entity,
-        String.class);
+        restTemplate.exchange(
+            createURLWithPort(format("/groups/%s/applications", groupId)),
+            HttpMethod.POST,
+            entity,
+            String.class);
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
     val getResponse =
-      restTemplate.exchange(
-        createURLWithPort(String.format("/groups/%s/applications", groupId)),
-        HttpMethod.GET,
-        entity,
-        String.class);
+        restTemplate.exchange(
+            createURLWithPort(String.format("/groups/%s/applications", groupId)),
+            HttpMethod.GET,
+            entity,
+            String.class);
     val getResponseStatus = getResponse.getStatusCode();
     assertThat(getResponseStatus).isEqualTo(HttpStatus.OK);
     val getResponseJson = MAPPER.readTree(getResponse.getBody());
@@ -433,28 +433,28 @@ public class GroupControllerTest {
 
     val deleteEntity = new HttpEntity<String>(null, headers);
     val deleteResponse =
-      restTemplate.exchange(
-        createURLWithPort(format("/groups/%s/applications/%s", groupId, deleteApp)),
-        HttpMethod.DELETE,
-        deleteEntity,
-        String.class);
+        restTemplate.exchange(
+            createURLWithPort(format("/groups/%s/applications/%s", groupId, deleteApp)),
+            HttpMethod.DELETE,
+            deleteEntity,
+            String.class);
 
     val deleteResponseStatus = deleteResponse.getStatusCode();
     assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
 
     val secondGetResponse =
-      restTemplate.exchange(
-        createURLWithPort(format("/groups/%s/applications", groupId)),
-        HttpMethod.GET,
-        entity,
-        String.class);
+        restTemplate.exchange(
+            createURLWithPort(format("/groups/%s/applications", groupId)),
+            HttpMethod.GET,
+            entity,
+            String.class);
 
     val secondGetResponseStatus = deleteResponse.getStatusCode();
     assertThat(secondGetResponseStatus).isEqualTo(HttpStatus.OK);
     val secondGetResponseJson = MAPPER.readTree(secondGetResponse.getBody());
     assertThat(secondGetResponseJson.get("count").asInt()).isEqualTo(1);
     assertThat(secondGetResponseJson.get("resultSet").elements().next().get("id").asText())
-      .isEqualTo(remainApp);
+        .isEqualTo(remainApp);
   }
 
   private String createURLWithPort(String uri) {
