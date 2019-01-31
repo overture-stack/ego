@@ -380,11 +380,4 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     getRepository().save(currentToken);
   }
 
-  //  public boolean isActiveUser(User user) {
-  //    return "approved".equals(user.getStatus().toLowerCase());
-  //  }
-  //
-  //  public boolean isAdmin(User user) {
-  //    return "admin".equals((user.getRole().toLowerCase()));
-  //  }
 }
