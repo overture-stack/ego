@@ -206,9 +206,17 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
 
   public void deleteAppsFromGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
     val group = getById(fromString(grpId));
+    val appIdsToDisassociate = convertToUUIDSet(appIDs);
+    checkAppsExistForGroup(group, appIdsToDisassociate);
+    val appsToDisassociate =
+      group
+        .getApplications()
+        .stream()
+        .filter(a -> appIdsToDisassociate.contains(a.getId()))
+        .collect(toImmutableSet());
     val apps = appIDs.stream().map(this::retrieveApplication).collect(toImmutableSet());
-    associateApplications(group, apps);
-    groupRepository.save(group);
+    disassociateGroupFromApps(group, appsToDisassociate);
+    getRepository().save(group);
   }
 
   public void deleteUsersFromGroup(@NonNull String grpId, @NonNull List<String> userIDs) {
@@ -289,6 +297,25 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
       @NonNull Group group, @NonNull Collection<User> users) {
     group.getUsers().removeAll(users);
     users.forEach(x -> x.getGroups().remove(group));
+  }
+
+  public static void checkAppsExistForGroup(
+    @NonNull Group group, @NonNull Collection<UUID> appIds) {
+    val existingAppIds = group.getApplications().stream().map(Application::getId).collect(toImmutableSet());
+    val nonExistentAppIds =
+      appIds.stream().filter(x -> !existingAppIds.contains(x)).collect(toImmutableSet());
+    if (!nonExistentAppIds.isEmpty()) {
+      throw new NotFoundException(
+        format(
+          "The following apps do not exist for group '%s': %s",
+          group.getId(), COMMA.join(nonExistentAppIds)));
+    }
+  }
+
+  public static void disassociateGroupFromApps(
+    @NonNull Group group, @NonNull Collection<Application> apps) {
+    group.getApplications().removeAll(apps);
+    apps.forEach(x -> x.getGroups().remove(group));
   }
 
   private static void associateUsers(@NonNull Group group, @NonNull Collection<User> users) {
