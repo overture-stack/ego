@@ -85,7 +85,6 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   private UserEvents userEvents;
   private TokenStoreService tokenStoreService;
   private PolicyService policyService;
-  private TokenStoreRepository tokenStoreRepository;
 
   public TokenService(
       @NonNull TokenSigner tokenSigner,
@@ -102,7 +101,6 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     this.userEvents = userEvents;
     this.tokenStoreService = tokenStoreService;
     this.policyService = policyService;
-    this.tokenStoreRepository = tokenStoreRepository;
   }
 
   public String generateUserToken(IDToken idToken) {
