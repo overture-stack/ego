@@ -16,6 +16,7 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.UserRole.ADMIN;
 import static bio.overture.ego.model.enums.UserRole.resolveUserRoleIgnoreCase;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
@@ -529,5 +530,13 @@ public class UserService extends AbstractNamedService<User, UUID> {
         userToUpdate.setCreatedAt(new Date());
       }
     }
+  }
+
+  public boolean isActiveUser(User user) {
+    return resolveUserRoleIgnoreCase(user.getRole()) == ADMIN;
+  }
+
+  public boolean isAdmin(User user) {
+    return "admin".equals((user.getRole().toLowerCase()));
   }
 }
