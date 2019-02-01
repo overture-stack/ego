@@ -67,6 +67,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class TokenService extends AbstractNamedService<Token, UUID> {
+
   /*
    * Constant
    */
@@ -353,7 +354,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     val currentToken =
         findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found."));
 
-    if (currentToken.getOwner().getId().equals(userId) == false) {
+    if (!currentToken.getOwner().getId().equals(userId)) {
       throw new InvalidTokenException("Users can only revoke tokens that belong to them.");
     }
   }

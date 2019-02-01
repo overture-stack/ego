@@ -38,16 +38,17 @@ public class RevokeTokenTest {
     test = new TestData(entityGenerator);
   }
 
+  @Rule public ExpectedException exception = ExpectedException.none();
+
   @Test
-  public void revokeToken_adminRevokeAnyToken_tokenRevoked() {
+  public void adminRevokeAnyToken() {
     // Admin users can revoke any tokens.
     val adminTokenString = "791044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.WRITE", "id.WRITE");
     val applications = new HashSet<Application>();
     applications.add(test.score);
 
-    val adminToken =
-        entityGenerator.setupToken(test.user1, adminTokenString, 1000, scopes, applications);
+    entityGenerator.setupToken(test.user1, adminTokenString, 1000, scopes, applications);
     test.user1.setRole("ADMIN");
     test.user1.setStatus("Approved");
 
@@ -64,7 +65,7 @@ public class RevokeTokenTest {
   }
 
   @Test
-  public void revokeToken_adminRevokeOwnToken_tokenRevoked() {
+  public void adminRevokeOwnToken() {
     // If an admin users tries to revoke her own token, the token should be revoked.
     val tokenString = "791044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.WRITE", "id.WRITE");
@@ -86,8 +87,8 @@ public class RevokeTokenTest {
   }
 
   @Test
-  public void revokeToken_userRevokeOwnToken_tokenRevoked() {
-    // If a user tries to revoke her own token, the token will be revoked.
+  public void userRevokeOwnToken() {
+    // If a non-admin user tries to revoke her own token, the token will be revoked.
     val tokenString = "791044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.WRITE", "id.WRITE");
     val applications = new HashSet<Application>();
@@ -103,19 +104,16 @@ public class RevokeTokenTest {
     assertTrue(userToken.isRevoked());
   }
 
-  @Rule public ExpectedException exception = ExpectedException.none();
-
   @Test
-  public void revokeToken_userRevokeAnyToken_tokenNotRevoked() {
-    // If a regular user tries to revoke a token that does not belong to her,
+  public void userRevokeAnyToken() {
+    // If a non-admin user tries to revoke a token that does not belong to her,
     // the token won't be revoked. Expect an InvalidTokenException.
     val tokenString = "791044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.WRITE", "id.WRITE");
     val applications = new HashSet<Application>();
     applications.add(test.score);
 
-    val userToken =
-        entityGenerator.setupToken(test.regularUser, tokenString, 1000, scopes, applications);
+    entityGenerator.setupToken(test.regularUser, tokenString, 1000, scopes, applications);
 
     val randomTokenString = "891044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val randomToken =

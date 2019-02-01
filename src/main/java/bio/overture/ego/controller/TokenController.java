@@ -73,7 +73,7 @@ public class TokenController {
     return tokenService.checkToken(authToken, token);
   }
 
-  @RequestMapping(method = RequestMethod.POST, value = "/issue_token")
+  @RequestMapping(method = RequestMethod.POST, value = "/token")
   @ResponseStatus(value = HttpStatus.OK)
   public @ResponseBody TokenResponse issueToken(
       @RequestHeader(value = "Authorization") final String authorization,
@@ -88,7 +88,7 @@ public class TokenController {
     return response;
   }
 
-  @RequestMapping(method = RequestMethod.POST, value = "/revoke_token")
+  @RequestMapping(method = RequestMethod.DELETE, value = "/token")
   @ResponseStatus(value = HttpStatus.OK)
   public @ResponseBody String revokeToken(
       @RequestHeader(value = "Authorization") final String authorization,
