@@ -29,6 +29,7 @@ public class UpdateApplicationRequest {
 
   private String name;
   private String clientId;
+  private String applicationType;
   private String clientSecret;
   private String redirectUri;
   private String description;

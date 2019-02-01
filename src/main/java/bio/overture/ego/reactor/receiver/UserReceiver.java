@@ -35,7 +35,7 @@ public class UserReceiver {
         User data = (User) updateEvent.getData();
         userService.update(data);
       } catch (ClassCastException e) {
-        log.error("Update event received incompatible data type.", e);
+        log.error("Update event received incompatible data applicationType.", e);
       }
     };
   }

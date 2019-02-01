@@ -49,13 +49,14 @@ import org.hibernate.annotations.TypeDef;
 @JsonPropertyOrder({
   JavaFields.ID,
   JavaFields.NAME,
+  JavaFields.APPLICATIONTYPE,
   JavaFields.CLIENTID,
   JavaFields.CLIENTSECRET,
   JavaFields.REDIRECTURI,
   JavaFields.DESCRIPTION,
   JavaFields.STATUS
 })
-@TypeDef(name = "ego_type_enum", typeClass = PostgreSQLEnumType.class)
+@TypeDef(name = "application_type_enum", typeClass = PostgreSQLEnumType.class)
 @JsonInclude(JsonInclude.Include.CUSTOM)
 @NamedEntityGraph(
     name = "application-entity-with-relationships",
@@ -90,9 +91,9 @@ public class Application implements Identifiable<UUID> {
 
   @NotNull
   @Enumerated(EnumType.STRING)
-  @org.hibernate.annotations.Type(type = "ego_type_enum")
-  @Column(name = SqlFields.TYPE, nullable = false)
-  private Type type;
+  @org.hibernate.annotations.Type(type = "application_type_enum")
+  @Column(name = SqlFields.APPLICATIONTYPE, nullable = false)
+  private ApplicationType applicationType;
 
   @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})

@@ -15,7 +15,7 @@ import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.Type;
+import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
@@ -60,7 +60,7 @@ public class UserServiceTest {
     val email = System.currentTimeMillis() + "@gmail.com";
     val firstName = "John";
     val lastName = "Doe";
-    val role = Type.ADMIN.toString();
+    val userType = UserType.ADMIN.toString();
     val status = "Approved";
     val preferredLanguage = "English";
     val id = randomUUID();
@@ -77,7 +77,7 @@ public class UserServiceTest {
             .email(email)
             .firstName(firstName)
             .lastName(lastName)
-            .type(role)
+            .userType(userType)
             .status(status)
             .preferredLanguage(preferredLanguage)
             .id(id)
@@ -87,17 +87,17 @@ public class UserServiceTest {
             .build();
 
     val partialUserUpdateRequest =
-        UpdateUserRequest.builder().firstName("Rob").status(Type.USER.toString()).build();
+        UpdateUserRequest.builder().firstName("Rob").status(UserType.USER.toString()).build();
     USER_CONVERTER.updateUser(partialUserUpdateRequest, user);
 
     assertThat(user.getPreferredLanguage()).isEqualTo(preferredLanguage);
     assertThat(user.getCreatedAt()).isEqualTo(createdAt);
-    assertThat(user.getStatus()).isEqualTo(Type.USER.toString());
+    assertThat(user.getStatus()).isEqualTo(UserType.USER.toString());
     assertThat(user.getLastName()).isEqualTo(lastName);
     assertThat(user.getName()).isEqualTo(email);
     assertThat(user.getEmail()).isEqualTo(email);
     assertThat(user.getFirstName()).isEqualTo("Rob");
-    assertThat(user.getType()).isEqualTo(role);
+    assertThat(user.getUserType()).isEqualTo(userType);
     assertThat(user.getId()).isEqualTo(id);
     assertThat(user.getApplications()).containsExactlyInAnyOrderElementsOf(applications);
     assertThat(user.getUserPermissions()).isNull();
@@ -111,7 +111,7 @@ public class UserServiceTest {
         CreateUserRequest.builder()
             .email(t + "@gmail.com")
             .firstName("John")
-            .type(Type.ADMIN.toString())
+            .userType(UserType.ADMIN.toString())
             .status("Approved")
             .preferredLanguage("English")
             .build();
@@ -122,7 +122,7 @@ public class UserServiceTest {
     assertThat(user.getId()).isNull();
     assertThat(user.getLastName()).isNull();
     assertThat(user.getFirstName()).isEqualTo(request.getFirstName());
-    assertThat(user.getType()).isEqualTo(request.getType());
+    assertThat(user.getUserType()).isEqualTo(request.getUserType());
     assertThat(user.getStatus()).isEqualTo(request.getStatus());
     assertThat(user.getPreferredLanguage()).isEqualTo(request.getPreferredLanguage());
     assertThat(user.getGroups()).isEmpty();
@@ -154,7 +154,7 @@ public class UserServiceTest {
     assertThat(idTokenUser.getFirstName()).isEqualTo("User");
     assertThat(idTokenUser.getLastName()).isEqualTo("User");
     assertThat(idTokenUser.getStatus()).isEqualTo("Approved");
-    assertThat(idTokenUser.getType()).isEqualTo("USER");
+    assertThat(idTokenUser.getUserType()).isEqualTo("USER");
   }
 
   @Test
@@ -492,17 +492,17 @@ public class UserServiceTest {
     val user = entityGenerator.setupUser("First User");
     val updated =
         userService.partialUpdate(
-            user.getId().toString(), UpdateUserRequest.builder().type("user").build());
-    assertThat(updated.getType()).isEqualTo("USER");
+            user.getId().toString(), UpdateUserRequest.builder().userType("user").build());
+    assertThat(updated.getUserType()).isEqualTo("USER");
   }
 
   @Test
-  public void testUpdateRoleAdmin() {
+  public void testUpdateUserTypeAdmin() {
     val user = entityGenerator.setupUser("First User");
     val updated =
         userService.partialUpdate(
-            user.getId().toString(), UpdateUserRequest.builder().type("admin").build());
-    assertThat(updated.getType()).isEqualTo("ADMIN");
+            user.getId().toString(), UpdateUserRequest.builder().userType("admin").build());
+    assertThat(updated.getUserType()).isEqualTo("ADMIN");
   }
 
   @Test
@@ -510,14 +510,14 @@ public class UserServiceTest {
     val r1 =
         CreateUserRequest.builder()
             .preferredLanguage("English")
-            .type("ADMIN")
+            .userType("ADMIN")
             .status("Approved")
             .email(UUID.randomUUID() + "@gmail.com")
             .build();
 
     val u1 = userService.create(r1);
     assertThat(userService.isExist(u1.getId())).isTrue();
-    r1.setType("USER");
+    r1.setUserType("USER");
     r1.setStatus("Pending");
 
     assertThat(u1.getEmail()).isEqualTo(r1.getEmail());
@@ -532,7 +532,7 @@ public class UserServiceTest {
     val cr1 =
         CreateUserRequest.builder()
             .preferredLanguage("English")
-            .type("ADMIN")
+            .userType("ADMIN")
             .status("Approved")
             .email(e1)
             .build();
@@ -540,7 +540,7 @@ public class UserServiceTest {
     val cr2 =
         CreateUserRequest.builder()
             .preferredLanguage("English")
-            .type("USER")
+            .userType("USER")
             .status("Pending")
             .email(e2)
             .build();
@@ -568,7 +568,7 @@ public class UserServiceTest {
             .status("Approved")
             .preferredLanguage("English")
             .lastLogin(null)
-            .type("ADMIN")
+            .userType("ADMIN")
             .build();
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.partialUpdate(nonExistentId, updateRequest));

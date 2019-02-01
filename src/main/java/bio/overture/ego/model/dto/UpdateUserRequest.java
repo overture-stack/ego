@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 public class UpdateUserRequest {
 
   private String email;
-  private String type;
+  private String userType;
   private String status;
   private String firstName;
   private String lastName;

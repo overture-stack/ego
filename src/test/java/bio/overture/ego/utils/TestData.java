@@ -32,13 +32,13 @@ public class TestData {
     val songSecret = "La la la!;";
     songAuth = authToken(songId, songSecret);
 
-    song = entityGenerator.setupApplication(songId, songSecret, "USER");
+    song = entityGenerator.setupApplication(songId, songSecret, "CLIENT");
 
     scoreId = "score";
     val scoreSecret = "She shoots! She scores!";
     scoreAuth = authToken(scoreId, scoreSecret);
 
-    score = entityGenerator.setupApplication(scoreId, scoreSecret, "USER");
+    score = entityGenerator.setupApplication(scoreId, scoreSecret, "CLIENT");
     val developers = entityGenerator.setupGroup("developers");
 
     val allPolicies = listOf("song", "id", "collab", "aws", "portal");

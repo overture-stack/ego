@@ -58,7 +58,7 @@ public abstract class AbstractBaseService<T extends Identifiable<ID>, ID>
             .collect(toImmutableSet());
     checkNotFound(
         nonExistingEntities.isEmpty(),
-        "Entities of type '%s' were not found for the following ids: %s",
+        "Entities of applicationType '%s' were not found for the following ids: %s",
         getEntityTypeName(),
         COMMA.join(nonExistingEntities));
     return entities;

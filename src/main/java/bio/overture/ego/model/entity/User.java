@@ -71,7 +71,7 @@ import org.hibernate.annotations.GenericGenerator;
   JavaFields.ID,
   JavaFields.NAME,
   JavaFields.EMAIL,
-  JavaFields.ROLE,
+  JavaFields.USERTYPE,
   JavaFields.STATUS,
   JavaFields.GROUPS,
   JavaFields.APPLICATIONS,
@@ -123,9 +123,9 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   private String email;
 
   @NotNull
-  @Column(name = SqlFields.TYPE, nullable = false)
+  @Column(name = SqlFields.USERTYPE, nullable = false)
   @JsonView({Views.JWTAccessToken.class})
-  private String type;
+  private String userType;
 
   // TODO: [rtisma] replace with Enum similar to AccessLevel
   @NotNull
