@@ -33,12 +33,12 @@ public class RevokeTokenTest {
   @Autowired private EntityGenerator entityGenerator;
   @Autowired private TokenService tokenService;
 
+  @Rule public ExpectedException exception = ExpectedException.none();
+
   @Before
   public void setUp() {
     test = new TestData(entityGenerator);
   }
-
-  @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
   public void adminRevokeAnyToken() {
