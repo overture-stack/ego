@@ -380,6 +380,17 @@ public class GroupController {
     return groupService.addUsersToGroup(grpId, users);
   }
 
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/users/{userIDs}")
+  @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete Users from Group")})
+  @ResponseStatus(value = HttpStatus.OK)
+  public void deleteUsersFromGroup(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @PathVariable(value = "id", required = true) String grpId,
+      @PathVariable(value = "userIDs", required = true) List<String> userIDs) {
+    groupService.deleteUsersFromGroup(grpId, userIDs);
+  }
+
   @ExceptionHandler({EntityNotFoundException.class})
   public ResponseEntity<Object> handleEntityNotFoundException(
       HttpServletRequest req, EntityNotFoundException ex) {

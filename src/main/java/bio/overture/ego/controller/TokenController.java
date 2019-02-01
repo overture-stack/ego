@@ -88,6 +88,16 @@ public class TokenController {
     return response;
   }
 
+  @RequestMapping(method = RequestMethod.DELETE, value = "/token")
+  @ResponseStatus(value = HttpStatus.OK)
+  public @ResponseBody String revokeToken(
+      @RequestHeader(value = "Authorization") final String authorization,
+      @RequestParam(value = "user_id") UUID user_id,
+      @RequestParam(value = "token") final String token) {
+    tokenService.revokeToken(user_id, token);
+    return format("Token '%s' is successfully revoked!", token);
+  }
+
   @ResponseBody
   List<TokenResponse> listTokens(@RequestHeader(value = "Authorization") String authorization) {
     return null;

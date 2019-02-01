@@ -25,8 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -55,18 +53,21 @@ import org.springframework.test.context.junit4.SpringRunner;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class UserControllerTest {
 
+  /** Constants */
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
+  /** State */
   @LocalServerPort private int port;
+
   private TestRestTemplate restTemplate = new TestRestTemplate();
   private HttpHeaders headers = new HttpHeaders();
 
   private static boolean hasRunEntitySetup = false;
 
+  /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
-  @Autowired private GroupService groupService;
+
   @Autowired private UserService userService;
-  @Autowired private ApplicationService applicationService;
 
   @Before
   public void setup() {

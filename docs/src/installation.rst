@@ -1,7 +1,7 @@
-Quick Start
-===========
+.. _installation:
 
-The goal of this quick start is to get a working application quickly up and running.
+Installation
+============================
 
 Step 1 - Setup Database
 -----------------------
@@ -9,6 +9,11 @@ Step 1 - Setup Database
 1. Install Postgres
 2. Create a Database: ego with user postgres and empty password
 3. Execute SQL Script to setup tables.
+
+Database Migrations with Flyway
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Database migrations and versioning is managed by `flyway  <https://flywaydb.org/>`_.
 
 Step 2 - Run
 ------------
@@ -23,7 +28,7 @@ Run using Maven. Maven can be used to prepare a runnable jar file, as well as th
 
 .. code-block:: bash
 
-  $ mvn clean package
+  $ mvn clean package ; ./fly migrate
 
 
 To run from command line with maven:
