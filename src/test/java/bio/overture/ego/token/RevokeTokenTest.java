@@ -49,7 +49,7 @@ public class RevokeTokenTest {
     applications.add(test.score);
 
     entityGenerator.setupToken(test.user1, adminTokenString, 1000, scopes, applications);
-    test.user1.setRole("ADMIN");
+    test.user1.setUserType("ADMIN");
     test.user1.setStatus("Approved");
 
     val randomTokenString = "891044a1-3ffd-4164-a6a0-0e1e666b28dc";
@@ -74,7 +74,7 @@ public class RevokeTokenTest {
 
     val adminToken =
         entityGenerator.setupToken(test.user1, tokenString, 1000, scopes, applications);
-    test.user1.setRole("ADMIN");
+    test.user1.setUserType("ADMIN");
     test.user1.setStatus("Approved");
 
     assertFalse(adminToken.isRevoked());

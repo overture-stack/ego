@@ -93,7 +93,7 @@ public class UserControllerTest {
             .lastName("bar")
             .email("foobar@foo.bar")
             .preferredLanguage("English")
-            .role("USER")
+            .userType("USER")
             .status("Approved")
             .build();
 
@@ -114,7 +114,7 @@ public class UserControllerTest {
             .lastName("unique")
             .email("unique@unique.com")
             .preferredLanguage("English")
-            .role("USER")
+            .userType("USER")
             .status("Approved")
             .build();
     val user2 =
@@ -123,7 +123,7 @@ public class UserControllerTest {
             .lastName("unique")
             .email("unique@unique.com")
             .preferredLanguage("English")
-            .role("USER")
+            .userType("USER")
             .status("Approved")
             .build();
 

@@ -26,9 +26,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateUserRequest {
-
   private String email;
-  private String role;
+  private String userType;
   private String status;
   private String firstName;
   private String lastName;

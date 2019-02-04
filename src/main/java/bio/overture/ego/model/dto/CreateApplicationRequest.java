@@ -26,8 +26,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateApplicationRequest {
-
   private String name;
+  private String applicationType;
   private String clientId;
   private String clientSecret;
   private String redirectUri;

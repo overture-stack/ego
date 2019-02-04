@@ -378,5 +378,4 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     currentToken.setRevoked(true);
     getRepository().save(currentToken);
   }
-
 }
