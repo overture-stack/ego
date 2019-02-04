@@ -23,6 +23,7 @@ import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static java.lang.String.format;
 
 import bio.overture.ego.model.dto.Scope;
+import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
@@ -377,5 +378,32 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     }
     currentToken.setRevoked(true);
     getRepository().save(currentToken);
+  }
+
+  public List<TokenResponse> listToken(@NonNull UUID userId) {
+    val user =
+        userService
+            .findById(userId)
+            .orElseThrow(
+                () -> new UsernameNotFoundException(format("Can't find user '%s'", str(userId))));
+
+    val tokens = user.getTokens();
+
+    if (tokens.isEmpty()) {
+      throw new NotFoundException("User is not associated with any token.");
+    }
+
+    List<TokenResponse> response = new ArrayList<>();
+    tokens.forEach(
+        token -> {
+          createTokenResponse(token, response);
+        });
+
+    return response;
+  }
+
+  private void createTokenResponse(@NonNull Token token, @NonNull List<TokenResponse> responses) {
+    Set<String> scopes = mapToSet(token.scopes(), scope -> scope.toString());
+    responses.add(new TokenResponse(token.getName(), scopes, token.getSecondsUntilExpiry()));
   }
 }
