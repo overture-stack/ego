@@ -1,5 +1,7 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.repository.queryspecification.GroupPermissionSpecification.withGroup;
+import static bio.overture.ego.repository.queryspecification.GroupPermissionSpecification.withPolicy;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static java.util.UUID.fromString;
 import static org.springframework.data.jpa.domain.Specifications.where;
@@ -7,10 +9,11 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.repository.BaseRepository;
-import bio.overture.ego.repository.queryspecification.GroupPermissionSpecification;
 import java.util.List;
 import java.util.UUID;
+import javax.persistence.EntityNotFoundException;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.stereotype.Service;
@@ -25,9 +28,27 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
     super(GroupPermission.class, repository);
   }
 
+  @SneakyThrows
+  public GroupPermission findByPolicyAndGroup(@NonNull String policyId, @NonNull String groupId) {
+    val opt =
+        getRepository()
+            .findOne(where(withPolicy(fromString(policyId)).and(withGroup(fromString(groupId)))));
+
+    return (GroupPermission)
+        opt.orElseThrow(() -> new EntityNotFoundException("Permission cannot be found."));
+  }
+
+  public void deleteByPolicyAndGroup(@NonNull String policyId, @NonNull String groupId) {
+    val perm = findByPolicyAndGroup(policyId, groupId);
+    delete(perm.getId());
+  }
+
+  public void delete(@NonNull String id) {
+    getRepository().deleteById(fromString(id));
+  }
+
   public List<GroupPermission> findAllByPolicy(@NonNull String policyId) {
-    return getRepository()
-        .findAll(where(GroupPermissionSpecification.withPolicy(fromString(policyId))));
+    return getRepository().findAll(where(withPolicy(fromString(policyId))));
   }
 
   public List<PolicyResponse> findByPolicy(@NonNull String policyId) {

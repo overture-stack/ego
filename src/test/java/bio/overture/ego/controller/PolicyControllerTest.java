@@ -24,6 +24,7 @@ import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -168,6 +169,48 @@ public class PolicyControllerTest {
     assertThat(getResponseStatus).isEqualTo(HttpStatus.OK);
     assertThat(groupPermissionJson.get("id").asText()).isEqualTo(groupId);
     assertThat(groupPermissionJson.get("mask").asText()).isEqualTo("WRITE");
+  }
+
+  @Test
+  @SneakyThrows
+  public void deleteGroupPermission() {
+    val policyId = entityGenerator.setupSinglePolicy("DeleteGroupPermission").getId().toString();
+    val groupId = entityGenerator.setupGroup("GroupPolicyDelete").getId().toString();
+
+    val entity = new HttpEntity<String>("WRITE", headers);
+    val response =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/policies/%s/permission/group/%s", policyId, groupId)),
+            HttpMethod.POST,
+            entity,
+            String.class);
+
+    val responseStatus = response.getStatusCode();
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+    // TODO: Fix it so that POST returns JSON, not just random string message
+
+    val deleteResponse =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/policies/%s/permission/group/%s", policyId, groupId)),
+            HttpMethod.DELETE,
+            new HttpEntity<String>(null, headers),
+            String.class);
+
+    val deleteResponseStatus = deleteResponse.getStatusCode();
+    assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
+
+    val getResponse =
+        restTemplate.exchange(
+            createURLWithPort(String.format("/policies/%s/groups", policyId)),
+            HttpMethod.GET,
+            new HttpEntity<String>(null, headers),
+            String.class);
+
+    val getResponseStatus = getResponse.getStatusCode();
+    val getResponseJson = (ArrayNode) MAPPER.readTree(getResponse.getBody());
+
+    assertThat(getResponseStatus).isEqualTo(HttpStatus.OK);
+    assertThat(getResponseJson.size()).isEqualTo(0);
   }
 
   private String createURLWithPort(String uri) {

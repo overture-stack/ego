@@ -16,6 +16,7 @@
 
 package bio.overture.ego.repository.queryspecification;
 
+import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
 import java.util.UUID;
@@ -30,6 +31,14 @@ public class GroupPermissionSpecification extends SpecificationBase<GroupPermiss
       query.distinct(true);
       Join<GroupPermission, Policy> applicationJoin = root.join("policy");
       return builder.equal(applicationJoin.<Integer>get("id"), policyId);
+    };
+  }
+
+  public static Specification<GroupPermission> withGroup(@NonNull UUID groupId) {
+    return (root, query, builder) -> {
+      query.distinct(true);
+      Join<GroupPermission, Group> groupJoin = root.join("owner");
+      return builder.equal(groupJoin.<Integer>get("id"), groupId);
     };
   }
 }

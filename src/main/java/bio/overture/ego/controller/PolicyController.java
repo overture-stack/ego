@@ -1,5 +1,6 @@
 package bio.overture.ego.controller;
 
+import bio.overture.ego.model.dto.GenericResponse;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
@@ -153,7 +154,7 @@ public class PolicyController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/permission/group/{group_id}")
   @ApiResponses(
-      value = {@ApiResponse(code = 200, message = "Add user permission", response = String.class)})
+      value = {@ApiResponse(code = 200, message = "Add group permission", response = String.class)})
   public @ResponseBody String createGroupPermission(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String id,
@@ -161,7 +162,25 @@ public class PolicyController {
       @RequestBody(required = true) String mask) {
     groupService.addGroupPermissions(
         groupId, ImmutableList.of(new PolicyIdStringWithAccessLevel(id, mask)));
-    return "1 group permission added to ACL successfully";
+    return "1 group permission added to ACL successfully"; // TODO, fix this response.
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/permission/group/{group_id}")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            code = 200,
+            message = "Delete group permission",
+            response = GenericResponse.class)
+      })
+  public @ResponseBody GenericResponse deleteGroupPermission(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @PathVariable(value = "id", required = true) String id,
+      @PathVariable(value = "group_id", required = true) String groupId) {
+
+    groupPermissionService.deleteByPolicyAndGroup(id, groupId);
+    return new GenericResponse("Deleted permission for group %s on policy %s");
   }
 
   @AdminScoped
