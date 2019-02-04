@@ -104,7 +104,9 @@ public class AuthController {
     return pubKey.orElse("");
   }
 
-  @RequestMapping(method = { RequestMethod.GET, RequestMethod.POST }, value= "/ego-token")
+  @RequestMapping(
+      method = {RequestMethod.GET, RequestMethod.POST},
+      value = "/ego-token")
   @SneakyThrows
   public ResponseEntity<String> user(OAuth2Authentication authentication) {
     String token = tokenService.generateUserToken((IDToken) authentication.getPrincipal());
@@ -116,13 +118,13 @@ public class AuthController {
     log.error(String.format("InvalidTokenException: %s", ex.getMessage()));
     log.error("ID ScopedAccessToken not found.");
     return new ResponseEntity<>(
-            "Invalid ID ScopedAccessToken provided.", new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        "Invalid ID ScopedAccessToken provided.", new HttpHeaders(), HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler({InvalidScopeException.class})
   public ResponseEntity<Object> handleInvalidScopeException(InvalidTokenException ex) {
     log.error(String.format("Invalid ScopeName: %s", ex.getMessage()));
     return new ResponseEntity<>(
-            String.format("{\"error\": \"%s\"}", ex.getMessage()), HttpStatus.BAD_REQUEST);
+        String.format("{\"error\": \"%s\"}", ex.getMessage()), HttpStatus.BAD_REQUEST);
   }
 }

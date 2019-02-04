@@ -16,36 +16,6 @@
 
 package bio.overture.ego.service;
 
-import bio.overture.ego.model.dto.CreateUserRequest;
-import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.dto.UpdateUserRequest;
-import bio.overture.ego.model.entity.*;
-import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.model.enums.EntityStatus;
-import bio.overture.ego.model.enums.UserRole;
-import bio.overture.ego.model.exceptions.NotFoundException;
-import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
-import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.repository.UserRepository;
-import bio.overture.ego.repository.queryspecification.UserSpecification;
-import bio.overture.ego.token.IDToken;
-import com.google.common.collect.ImmutableList;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.mapstruct.*;
-import org.mapstruct.factory.Mappers;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
-import java.util.stream.Stream;
-
 import static bio.overture.ego.model.enums.UserRole.resolveUserRoleIgnoreCase;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
@@ -64,6 +34,35 @@ import static java.util.UUID.fromString;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.concat;
 import static org.springframework.data.jpa.domain.Specifications.where;
+
+import bio.overture.ego.model.dto.CreateUserRequest;
+import bio.overture.ego.model.dto.Scope;
+import bio.overture.ego.model.dto.UpdateUserRequest;
+import bio.overture.ego.model.entity.*;
+import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.enums.EntityStatus;
+import bio.overture.ego.model.enums.UserRole;
+import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
+import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.repository.UserRepository;
+import bio.overture.ego.repository.queryspecification.UserSpecification;
+import bio.overture.ego.token.IDToken;
+import com.google.common.collect.ImmutableList;
+import java.util.*;
+import java.util.stream.Stream;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.mapstruct.*;
+import org.mapstruct.factory.Mappers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service

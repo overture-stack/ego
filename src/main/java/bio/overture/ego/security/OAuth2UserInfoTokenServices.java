@@ -1,6 +1,10 @@
 package bio.overture.ego.security;
 
 import bio.overture.ego.token.IDToken;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.AuthoritiesExtractor;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.FixedAuthoritiesExtractor;
@@ -16,15 +20,11 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.OAuth2Request;
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-
 // This class make sure email is in the user info. User info endpoint of Github does not contain
 // private email.
 @Slf4j
-public class OAuth2UserInfoTokenServices implements ResourceServerTokenServices, PrincipalExtractor {
+public class OAuth2UserInfoTokenServices
+    implements ResourceServerTokenServices, PrincipalExtractor {
 
   private final String userInfoEndpointUrl;
 
@@ -35,12 +35,11 @@ public class OAuth2UserInfoTokenServices implements ResourceServerTokenServices,
   private AuthoritiesExtractor authoritiesExtractor = new FixedAuthoritiesExtractor();
 
   public OAuth2UserInfoTokenServices(
-          String userInfoEndpointUrl, String clientId, OAuth2RestOperations restTemplate) {
+      String userInfoEndpointUrl, String clientId, OAuth2RestOperations restTemplate) {
     this.userInfoEndpointUrl = userInfoEndpointUrl;
     this.clientId = clientId;
     this.restTemplate = restTemplate;
   }
-
 
   public IDToken extractPrincipal(Map<String, Object> map) {
     String email;
@@ -54,7 +53,7 @@ public class OAuth2UserInfoTokenServices implements ResourceServerTokenServices,
     String givenName = (String) map.getOrDefault("given_name", map.getOrDefault("first_name", ""));
     String familyName = (String) map.getOrDefault("family_name", map.getOrDefault("last_name", ""));
 
-    return new IDToken(email, givenName , familyName);
+    return new IDToken(email, givenName, familyName);
   }
 
   @Override
@@ -72,9 +71,10 @@ public class OAuth2UserInfoTokenServices implements ResourceServerTokenServices,
   }
 
   // Guarantee that email will be fetched
-  protected Map<String, Object> transformMap(Map<String, Object> map, String accessToken) throws NoSuchElementException {
-    if (map.get("email")==null) {
-        return Collections.singletonMap("error", "Could not fetch user details");
+  protected Map<String, Object> transformMap(Map<String, Object> map, String accessToken)
+      throws NoSuchElementException {
+    if (map.get("email") == null) {
+      return Collections.singletonMap("error", "Could not fetch user details");
     }
     return map;
   }

@@ -24,7 +24,8 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-// The filter it's better to add to security chain, reference https://spring.io/guides/topicals/spring-security-architecture/
+// The filter it's better to add to security chain, reference
+// https://spring.io/guides/topicals/spring-security-architecture/
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CorsFilter implements Filter {

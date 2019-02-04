@@ -2,6 +2,13 @@ package bio.overture.ego.security;
 
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.service.ApplicationService;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.servlet.Filter;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
@@ -13,41 +20,34 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.CompositeFilter;
 
-import javax.servlet.Filter;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 @Component
 @Profile("auth")
 public class OAuth2SsoFilter extends CompositeFilter {
 
   private OAuth2ClientContext oauth2ClientContext;
   private ApplicationService applicationService;
-  private SimpleUrlAuthenticationSuccessHandler simpleUrlAuthenticationSuccessHandler = new SimpleUrlAuthenticationSuccessHandler() {
-    public void onAuthenticationSuccess(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Authentication authentication)
+  private SimpleUrlAuthenticationSuccessHandler simpleUrlAuthenticationSuccessHandler =
+      new SimpleUrlAuthenticationSuccessHandler() {
+        public void onAuthenticationSuccess(
+            HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException, ServletException {
-      Application application = applicationService.getByClientId((String) request.getSession().getAttribute("ego_client_id"));
-      String redirectUri = application.getRedirectUri();
-      this.setDefaultTargetUrl(redirectUri);
-      super.onAuthenticationSuccess(request, response, authentication);
-    }
-  };
+          Application application =
+              applicationService.getByClientId(
+                  (String) request.getSession().getAttribute("ego_client_id"));
+          String redirectUri = application.getRedirectUri();
+          this.setDefaultTargetUrl(redirectUri);
+          super.onAuthenticationSuccess(request, response, authentication);
+        }
+      };
 
   @Autowired
   public OAuth2SsoFilter(
-          @Qualifier("oauth2ClientContext") OAuth2ClientContext oauth2ClientContext,
-          ApplicationService applicationService,
-          OAuth2ClientResources google,
-          OAuth2ClientResources facebook,
-          OAuth2ClientResources github,
-          OAuth2ClientResources linkedin) {
+      @Qualifier("oauth2ClientContext") OAuth2ClientContext oauth2ClientContext,
+      ApplicationService applicationService,
+      OAuth2ClientResources google,
+      OAuth2ClientResources facebook,
+      OAuth2ClientResources github,
+      OAuth2ClientResources linkedin) {
     this.oauth2ClientContext = oauth2ClientContext;
     this.applicationService = applicationService;
     List<Filter> filters = new ArrayList<>();
@@ -68,8 +68,11 @@ public class OAuth2SsoFilter extends CompositeFilter {
     }
 
     @Override
-    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-      // Don't use the existing access token, otherwise, it would attempt to get github user info with linkedin access token
+    public Authentication attemptAuthentication(
+        HttpServletRequest request, HttpServletResponse response)
+        throws IOException, ServletException {
+      // Don't use the existing access token, otherwise, it would attempt to get github user info
+      // with linkedin access token
       this.restTemplate.getOAuth2ClientContext().setAccessToken(null);
       return super.attemptAuthentication(request, response);
     }
@@ -78,44 +81,44 @@ public class OAuth2SsoFilter extends CompositeFilter {
   class GithubFilter extends OAuth2SsoChildFilter {
     public GithubFilter(OAuth2ClientResources client) {
       super("/oauth/login/github", client);
-      super.setTokenServices(new GithubUserInfoTokenServices(
+      super.setTokenServices(
+          new GithubUserInfoTokenServices(
               client.getResource().getUserInfoUri(),
               client.getClient().getClientId(),
-              super.restTemplate
-      ));
+              super.restTemplate));
     }
   }
 
   class LinkedInFilter extends OAuth2SsoChildFilter {
     public LinkedInFilter(OAuth2ClientResources client) {
       super("/oauth/login/linkedin", client);
-      super.setTokenServices(new LinkedInUserInfoTokenServices(
+      super.setTokenServices(
+          new LinkedInUserInfoTokenServices(
               client.getResource().getUserInfoUri(),
               client.getClient().getClientId(),
-              super.restTemplate
-      ));
+              super.restTemplate));
     }
   }
 
   class GoogleFilter extends OAuth2SsoChildFilter {
     public GoogleFilter(OAuth2ClientResources client) {
       super("/oauth/login/google", client);
-      super.setTokenServices(new OAuth2UserInfoTokenServices(
+      super.setTokenServices(
+          new OAuth2UserInfoTokenServices(
               client.getResource().getUserInfoUri(),
               client.getClient().getClientId(),
-              super.restTemplate
-      ));
+              super.restTemplate));
     }
   }
 
   class FacebookFilter extends OAuth2SsoChildFilter {
     public FacebookFilter(OAuth2ClientResources client) {
       super("/oauth/login/facebook", client);
-      super.setTokenServices(new OAuth2UserInfoTokenServices(
+      super.setTokenServices(
+          new OAuth2UserInfoTokenServices(
               client.getResource().getUserInfoUri(),
               client.getClient().getClientId(),
-              super.restTemplate
-      ));
+              super.restTemplate));
     }
   }
 }

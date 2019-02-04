@@ -67,7 +67,7 @@ public class SecureServerConfig {
   @Bean
   public FilterRegistrationBean jwtAuthorizationFilterRegistration(JWTAuthorizationFilter filter) {
     FilterRegistrationBean registration = new FilterRegistrationBean<>(filter);
-	registration.setEnabled(false);
+    registration.setEnabled(false);
     return registration;
   }
 
@@ -126,13 +126,13 @@ public class SecureServerConfig {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
       http.antMatcher("/oauth/**")
-              .csrf()
-              .disable()
-              .authorizeRequests()
-              .anyRequest()
-              .permitAll()
-              .and()
-              .addFilterAfter(oAuth2SsoFilter, BasicAuthenticationFilter.class);
+          .csrf()
+          .disable()
+          .authorizeRequests()
+          .anyRequest()
+          .permitAll()
+          .and()
+          .addFilterAfter(oAuth2SsoFilter, BasicAuthenticationFilter.class);
     }
   }
 
@@ -142,24 +142,24 @@ public class SecureServerConfig {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
       http.csrf()
-              .disable()
-              .authorizeRequests()
-              .antMatchers(
-                      "/",
-                      "/favicon.ico",
-                      "/swagger**",
-                      "/swagger-resources/**",
-                      "/configuration/ui",
-                      "/configuration/**",
-                      "/v2/api**",
-                      "/webjars/**")
-              .permitAll()
-              .anyRequest()
-              .authenticated()
-            .and()
-            .addFilterBefore(authorizationFilter(), BasicAuthenticationFilter.class)
-            .sessionManagement()
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+          .disable()
+          .authorizeRequests()
+          .antMatchers(
+              "/",
+              "/favicon.ico",
+              "/swagger**",
+              "/swagger-resources/**",
+              "/configuration/ui",
+              "/configuration/**",
+              "/v2/api**",
+              "/webjars/**")
+          .permitAll()
+          .anyRequest()
+          .authenticated()
+          .and()
+          .addFilterBefore(authorizationFilter(), BasicAuthenticationFilter.class)
+          .sessionManagement()
+          .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
   }
 }
