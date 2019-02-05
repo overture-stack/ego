@@ -78,7 +78,7 @@ public class PolicyControllerTest {
 
   @Test
   @SneakyThrows
-  public void addPolicy() {
+  public void addpolicy_Success() {
     val policy = Policy.builder().name("AddPolicy").build();
 
     val entity = new HttpEntity<Policy>(policy, headers);
@@ -98,7 +98,7 @@ public class PolicyControllerTest {
 
   @Test
   @SneakyThrows
-  public void addUniquePolicy() {
+  public void addDuplicatePolicy_Conflict() {
     val policy1 = Policy.builder().name("PolicyUnique").build();
     val policy2 = Policy.builder().name("PolicyUnique").build();
 
@@ -120,7 +120,7 @@ public class PolicyControllerTest {
 
   @Test
   @SneakyThrows
-  public void getPolicy() {
+  public void getPolicy_Success() {
     val policyId = policyService.getByName("Study001").getId();
     val entity = new HttpEntity<String>(null, headers);
     val response =
@@ -139,7 +139,7 @@ public class PolicyControllerTest {
 
   @Test
   @SneakyThrows
-  public void addGroupPermission() {
+  public void associatePermissionsWithGroup_ExistingEntitiesButNonExistingRelationship_Success() {
     val policyId = entityGenerator.setupSinglePolicy("AddGroupPermission").getId().toString();
     val groupId = entityGenerator.setupGroup("GroupPolicyAdd").getId().toString();
 
@@ -173,7 +173,7 @@ public class PolicyControllerTest {
 
   @Test
   @SneakyThrows
-  public void deleteGroupPermission() {
+  public void disassociatePermissionsFromGroup_EntitiesAndRelationshipsExisting_Success() {
     val policyId = entityGenerator.setupSinglePolicy("DeleteGroupPermission").getId().toString();
     val groupId = entityGenerator.setupGroup("GroupPolicyDelete").getId().toString();
 
@@ -215,7 +215,7 @@ public class PolicyControllerTest {
 
   @Test
   @SneakyThrows
-  public void addUserPermission() {
+  public void associatePermissionsWithUser_ExistingEntitiesButNoRelationship_Success() {
     val policyId = entityGenerator.setupSinglePolicy("AddUserPermission").getId().toString();
     val userId = entityGenerator.setupUser("UserPolicy Add").getId().toString();
 
@@ -249,7 +249,7 @@ public class PolicyControllerTest {
 
   @Test
   @SneakyThrows
-  public void deleteUserPermission() {
+  public void disassociatePermissionsFromUser_ExistingEntitiesAndRelationships_Success() {
     val policyId = entityGenerator.setupSinglePolicy("DeleteGroupPermission").getId().toString();
     val userId = entityGenerator.setupUser("UserPolicy Delete").getId().toString();
 
