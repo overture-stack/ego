@@ -18,7 +18,6 @@ package bio.overture.ego.config;
 
 import bio.overture.ego.security.*;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -26,6 +25,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -34,6 +34,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.filter.OAuth2ClientContextFilter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableWebSecurity
@@ -41,9 +43,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 @Profile("auth")
 public class SecureServerConfig {
 
-  /*
-   Constants
-  */
+  /** Constants */
   private final String[] PUBLIC_ENDPOINTS =
       new String[] {
         "/oauth/token",
@@ -53,9 +53,21 @@ public class SecureServerConfig {
         "/oauth/token/verify"
       };
 
-  @Autowired private AuthenticationManager authenticationManager;
+  /** Dependencies */
+  private AuthenticationManager authenticationManager;
 
-  @Autowired OAuth2SsoFilter oAuth2SsoFilter;
+  private CorsProperties corsProperties;
+  private OAuth2SsoFilter oAuth2SsoFilter;
+
+  @SneakyThrows
+  public SecureServerConfig(
+      AuthenticationManager authenticationManager,
+      OAuth2SsoFilter oAuth2SsoFilter,
+      CorsProperties corsProperties) {
+    this.authenticationManager = authenticationManager;
+    this.oAuth2SsoFilter = oAuth2SsoFilter;
+    this.corsProperties = corsProperties;
+  }
 
   @Bean
   @SneakyThrows
@@ -119,6 +131,31 @@ public class SecureServerConfig {
     return new OAuth2ClientResources();
   }
 
+  @Bean
+  public WebMvcConfigurer corsConfigurer() {
+    return new WebMvcConfigurer() {
+      @Override
+      public void addCorsMappings(CorsRegistry registry) {
+        registry
+            .addMapping("/**")
+            .allowedOrigins(corsProperties.getAllowedOrigins().toArray(new String[0]))
+            .allowedMethods("GET", "POST", "DELETE", "PUT", "PATCH", "HEAD", "OPTIONS")
+            .allowedHeaders(
+                "Origin",
+                "Accept",
+                "X-Requested-With",
+                "Content-Type",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers",
+                "token",
+                "AUTHORIZATION")
+            .exposedHeaders("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials")
+            .allowCredentials(true)
+            .maxAge(10);
+      }
+    };
+  }
+
   //  int LOWEST_PRECEDENCE = Integer.MAX_VALUE;
   @Configuration
   @Order(SecurityProperties.BASIC_AUTH_ORDER + 10)
@@ -153,6 +190,8 @@ public class SecureServerConfig {
               "/configuration/**",
               "/v2/api**",
               "/webjars/**")
+          .permitAll()
+          .antMatchers(HttpMethod.OPTIONS, "/**")
           .permitAll()
           .anyRequest()
           .authenticated()
