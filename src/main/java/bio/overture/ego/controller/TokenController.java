@@ -23,6 +23,7 @@ import static java.lang.String.format;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.params.ScopeName;
+import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.security.ApplicationScoped;
 import bio.overture.ego.service.TokenService;
 import java.util.ArrayList;
@@ -98,9 +99,13 @@ public class TokenController {
     return format("Token '%s' is successfully revoked!", token);
   }
 
-  @ResponseBody
-  List<TokenResponse> listTokens(@RequestHeader(value = "Authorization") String authorization) {
-    return null;
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.GET, value = "/token")
+  @ResponseStatus(value = HttpStatus.OK)
+  public @ResponseBody List<TokenResponse> listToken(
+      @RequestHeader(value = "Authorization") final String authorization,
+      @RequestParam(value = "user_id") UUID user_id) {
+    return tokenService.listToken(user_id);
   }
 
   @ExceptionHandler({InvalidTokenException.class})
