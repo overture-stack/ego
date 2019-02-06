@@ -17,13 +17,12 @@
 package bio.overture.ego.config;
 
 import bio.overture.ego.provider.oauth.ScopeAwareOAuth2RequestFactory;
-import bio.overture.ego.security.CorsFilter;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.CustomTokenEnhancer;
 import bio.overture.ego.token.signer.TokenSigner;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.TimeZone;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,12 +54,6 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   @Autowired TokenService tokenService;
   @Autowired private ApplicationService clientDetailsService;
   @Autowired private AuthenticationManager authenticationManager;
-
-  @Bean
-  @Primary
-  public CorsFilter corsFilter() {
-    return new CorsFilter();
-  }
 
   @Bean
   public SimpleDateFormat formatter() {
@@ -114,9 +107,9 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   }
 
   @Override
-  public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
+  public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
     TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
-    tokenEnhancerChain.setTokenEnhancers(Arrays.asList(tokenEnhancer()));
+    tokenEnhancerChain.setTokenEnhancers(Collections.singletonList(tokenEnhancer()));
 
     endpoints
         .tokenStore(tokenStore())
@@ -127,7 +120,7 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   }
 
   @Override
-  public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
+  public void configure(AuthorizationServerSecurityConfigurer security) {
     security.allowFormAuthenticationForClients();
   }
 }

@@ -16,28 +16,34 @@
 
 package bio.overture.ego.config;
 
-import bio.overture.ego.security.AuthorizationManager;
-import bio.overture.ego.security.JWTAuthorizationFilter;
-import bio.overture.ego.security.SecureAuthorizationManager;
+import bio.overture.ego.security.*;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.filter.OAuth2ClientContextFilter;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableWebSecurity
+@EnableOAuth2Client
 @Profile("auth")
-public class SecureServerConfig extends WebSecurityConfigurerAdapter {
-  /*
-   Constants
-  */
+public class SecureServerConfig {
+
+  /** Constants */
   private final String[] PUBLIC_ENDPOINTS =
       new String[] {
         "/oauth/token",
@@ -47,7 +53,22 @@ public class SecureServerConfig extends WebSecurityConfigurerAdapter {
         "/oauth/token/verify"
       };
 
-  @Autowired private AuthenticationManager authenticationManager;
+  /** Dependencies */
+  private AuthenticationManager authenticationManager;
+
+  private CorsProperties corsProperties;
+  private OAuth2SsoFilter oAuth2SsoFilter;
+
+  @SneakyThrows
+  @Autowired
+  public SecureServerConfig(
+      AuthenticationManager authenticationManager,
+      OAuth2SsoFilter oAuth2SsoFilter,
+      CorsProperties corsProperties) {
+    this.authenticationManager = authenticationManager;
+    this.oAuth2SsoFilter = oAuth2SsoFilter;
+    this.corsProperties = corsProperties;
+  }
 
   @Bean
   @SneakyThrows
@@ -55,33 +76,106 @@ public class SecureServerConfig extends WebSecurityConfigurerAdapter {
     return new JWTAuthorizationFilter(authenticationManager, PUBLIC_ENDPOINTS);
   }
 
+  // Do not register JWTAuthorizationFilter in global scope
+  @Bean
+  public FilterRegistrationBean jwtAuthorizationFilterRegistration(JWTAuthorizationFilter filter) {
+    FilterRegistrationBean registration = new FilterRegistrationBean<>(filter);
+    registration.setEnabled(false);
+    return registration;
+  }
+
+  // Do not register OAuth2SsoFilter in global scope
+  @Bean
+  public FilterRegistrationBean oAuth2SsoFilterRegistration(OAuth2SsoFilter filter) {
+    FilterRegistrationBean registration = new FilterRegistrationBean<>(filter);
+    registration.setEnabled(false);
+    return registration;
+  }
+
   @Bean
   public AuthorizationManager authorizationManager() {
     return new SecureAuthorizationManager();
   }
 
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
-    http.csrf()
-        .disable()
-        .authorizeRequests()
-        .antMatchers(
-            "/",
-            "/oauth/**",
-            "/swagger**",
-            "/swagger-resources/**",
-            "/configuration/ui",
-            "/configuration/**",
-            "/v2/api**",
-            "/webjars/**")
-        .permitAll()
-        .anyRequest()
-        .authenticated()
-        .and()
-        .authorizeRequests()
-        .and()
-        .addFilterAfter(authorizationFilter(), BasicAuthenticationFilter.class)
-        .sessionManagement()
-        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+  // Register oauth2 filter earlier so it can handle redirects signaled by exceptions in
+  // authentication requests.
+  @Bean
+  public FilterRegistrationBean<OAuth2ClientContextFilter> oauth2ClientFilterRegistration(
+      OAuth2ClientContextFilter filter) {
+    FilterRegistrationBean<OAuth2ClientContextFilter> registration = new FilterRegistrationBean<>();
+    registration.setFilter(filter);
+    registration.setOrder(-100);
+    return registration;
+  }
+
+  @Bean
+  public WebMvcConfigurer corsConfigurer() {
+    return new WebMvcConfigurer() {
+      @Override
+      public void addCorsMappings(CorsRegistry registry) {
+        registry
+            .addMapping("/**")
+            .allowedOrigins(corsProperties.getAllowedOrigins().toArray(new String[0]))
+            .allowedMethods("GET", "POST", "DELETE", "PUT", "PATCH", "HEAD", "OPTIONS")
+            .allowedHeaders(
+                "Origin",
+                "Accept",
+                "X-Requested-With",
+                "Content-Type",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers",
+                "token",
+                "AUTHORIZATION")
+            .exposedHeaders("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials")
+            .allowCredentials(true)
+            .maxAge(10);
+      }
+    };
+  }
+
+  //  int LOWEST_PRECEDENCE = Integer.MAX_VALUE;
+  @Configuration
+  @Order(SecurityProperties.BASIC_AUTH_ORDER + 10)
+  public class OAuthConfigurerAdapter extends WebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+      http.antMatcher("/oauth/**")
+          .csrf()
+          .disable()
+          .authorizeRequests()
+          .anyRequest()
+          .permitAll()
+          .and()
+          .addFilterAfter(oAuth2SsoFilter, BasicAuthenticationFilter.class);
+    }
+  }
+
+  @Configuration
+  @Order(SecurityProperties.BASIC_AUTH_ORDER - 10)
+  public class AppConfigurerAdapter extends WebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+      http.csrf()
+          .disable()
+          .authorizeRequests()
+          .antMatchers(
+              "/",
+              "/favicon.ico",
+              "/swagger**",
+              "/swagger-resources/**",
+              "/configuration/ui",
+              "/configuration/**",
+              "/v2/api**",
+              "/webjars/**")
+          .permitAll()
+          .antMatchers(HttpMethod.OPTIONS, "/**")
+          .permitAll()
+          .anyRequest()
+          .authenticated()
+          .and()
+          .addFilterBefore(authorizationFilter(), BasicAuthenticationFilter.class)
+          .sessionManagement()
+          .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    }
   }
 }

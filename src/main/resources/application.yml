@@ -1,6 +1,11 @@
 server:
   port: 8081
 
+cors:
+  allowed-origins:
+    - http://localhost:8081
+    - http://localhost:3501
+
 jwt:
   secret: testsecretisalsoasecret
   duration: 86400000 #in milliseconds 86400000 = 1day, max = 2147483647
@@ -33,29 +38,51 @@ spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
 oauth:
   redirectFrontendUri: http://localhost:3501
 
-# LinkedIn Connection
-linkedIn:
-  clientID:
-  clientSecret:
-  redirectUri: http://localhost:8081/oauth/linkedin-cb
-
-# Facebook Connection Details
 facebook:
   client:
-    id: 140524976574963
-    secret: 2439abe7ae008bda7ab5cfdf706b4d66
+    clientId:
+    clientSecret:
     accessTokenUri: https://graph.facebook.com/oauth/access_token
     tokenValidateUri: https://graph.facebook.com/debug_token
+    clientAuthenticationScheme: query
     timeout:
       connect: 5000
       read: 5000
   resource:
-    userInfoUri: https://graph.facebook.com/me
+    userInfoUri: https://graph.facebook.com/me?fields=email,first_name,last_name
 
-# Google Connection Details
 google:
   client:
-    Ids: 144611473365-k1aarg8qs6rlh67r3t7dssi1e34b6061.apps.googleusercontent.com
+    clientId: 144611473365-k1aarg8qs6rlh67r3t7dssi1e34b6061.apps.googleusercontent.com
+    clientSecret:
+    accessTokenUri: https://www.googleapis.com/oauth2/v4/token
+    userAuthorizationUri: https://accounts.google.com/o/oauth2/v2/auth
+    clientAuthenticationScheme: form
+    scope:
+      - email
+  resource:
+    userInfoUri: https://www.googleapis.com/oauth2/v3/userinfo
+
+linkedIn:
+  client:
+    clientID: 
+    clientSecret: 
+    accessTokenUri: https://www.linkedin.com/oauth/v2/accessToken
+    userAuthorizationUri: https://www.linkedin.com/oauth/v2/authorization
+    clientAuthenticationScheme: query
+  resource:
+    userInfoUri: https://api.linkedin.com/v1/people/~:(email-address,first-name,last-name)?format=json
+
+github:
+  client:
+    clientId: 
+    clientSecret: 
+    accessTokenUri: https://github.com/login/oauth/access_token
+    userAuthorizationUri: https://github.com/login/oauth/authorize
+    clientAuthenticationScheme: form
+    scope: "user:email"
+  resource:
+    userInfoUri: https://api.github.com/user
 
 # Logging settings.
 logging:
