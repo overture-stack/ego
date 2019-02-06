@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.AuthoritiesExtractor;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.FixedAuthoritiesExtractor;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.PrincipalExtractor;
@@ -26,10 +27,10 @@ import org.springframework.security.oauth2.provider.token.ResourceServerTokenSer
 public class OAuth2UserInfoTokenServices
     implements ResourceServerTokenServices, PrincipalExtractor {
 
+  /** Dependencies */
   private final String userInfoEndpointUrl;
 
   private final String clientId;
-
   private final OAuth2RestOperations restTemplate;
 
   private AuthoritiesExtractor authoritiesExtractor = new FixedAuthoritiesExtractor();
@@ -50,8 +51,8 @@ public class OAuth2UserInfoTokenServices
       return null;
     }
 
-    String givenName = (String) map.getOrDefault("given_name", map.getOrDefault("first_name", ""));
-    String familyName = (String) map.getOrDefault("family_name", map.getOrDefault("last_name", ""));
+    val givenName = (String) map.getOrDefault("given_name", map.getOrDefault("first_name", ""));
+    val familyName = (String) map.getOrDefault("family_name", map.getOrDefault("last_name", ""));
 
     return new IDToken(email, givenName, familyName);
   }
@@ -82,10 +83,8 @@ public class OAuth2UserInfoTokenServices
   private OAuth2Authentication extractAuthentication(Map<String, Object> map) {
     Object principal = getPrincipal(map);
     List<GrantedAuthority> authorities = this.authoritiesExtractor.extractAuthorities(map);
-    OAuth2Request request =
-        new OAuth2Request(null, this.clientId, null, true, null, null, null, null, null);
-    UsernamePasswordAuthenticationToken token =
-        new UsernamePasswordAuthenticationToken(principal, "N/A", authorities);
+    val request = new OAuth2Request(null, this.clientId, null, true, null, null, null, null, null);
+    val token = new UsernamePasswordAuthenticationToken(principal, "N/A", authorities);
     token.setDetails(map);
     return new OAuth2Authentication(request, token);
   }
@@ -108,10 +107,10 @@ public class OAuth2UserInfoTokenServices
   }
 
   protected OAuth2RestOperations getRestTemplate(String accessToken) {
-    OAuth2AccessToken existingToken = restTemplate.getOAuth2ClientContext().getAccessToken();
+    val existingToken = restTemplate.getOAuth2ClientContext().getAccessToken();
     if (existingToken == null || !accessToken.equals(existingToken.getValue())) {
-      DefaultOAuth2AccessToken token = new DefaultOAuth2AccessToken(accessToken);
-      String tokenType = DefaultOAuth2AccessToken.BEARER_TYPE;
+      val token = new DefaultOAuth2AccessToken(accessToken);
+      val tokenType = DefaultOAuth2AccessToken.BEARER_TYPE;
       token.setTokenType(tokenType);
       restTemplate.getOAuth2ClientContext().setAccessToken(token);
     }
@@ -121,7 +120,7 @@ public class OAuth2UserInfoTokenServices
   @SuppressWarnings("unchecked")
   protected Map<String, Object> getMap(String path, String accessToken) {
     try {
-      OAuth2RestOperations restTemplate = getRestTemplate(accessToken);
+      val restTemplate = getRestTemplate(accessToken);
       return restTemplate.getForEntity(path, Map.class).getBody();
     } catch (Exception ex) {
       log.warn("Could not fetch user details: " + ex.getClass() + ", " + ex.getMessage());

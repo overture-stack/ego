@@ -1,14 +1,13 @@
 package bio.overture.ego.security;
 
-import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.service.ApplicationService;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import javax.servlet.Filter;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
@@ -31,11 +30,10 @@ public class OAuth2SsoFilter extends CompositeFilter {
         public void onAuthenticationSuccess(
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException, ServletException {
-          Application application =
+          val application =
               applicationService.getByClientId(
                   (String) request.getSession().getAttribute("ego_client_id"));
-          String redirectUri = application.getRedirectUri();
-          this.setDefaultTargetUrl(redirectUri);
+          this.setDefaultTargetUrl(application.getRedirectUri());
           super.onAuthenticationSuccess(request, response, authentication);
         }
       };
@@ -50,7 +48,7 @@ public class OAuth2SsoFilter extends CompositeFilter {
       OAuth2ClientResources linkedin) {
     this.oauth2ClientContext = oauth2ClientContext;
     this.applicationService = applicationService;
-    List<Filter> filters = new ArrayList<>();
+    val filters = new ArrayList<Filter>();
 
     filters.add(new GoogleFilter(google));
     filters.add(new FacebookFilter(facebook));

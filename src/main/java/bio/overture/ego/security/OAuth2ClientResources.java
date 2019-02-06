@@ -2,9 +2,8 @@ package bio.overture.ego.security;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.servlet.http.HttpSession;
+import lombok.val;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.ResourceServerProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.security.oauth2.client.token.AccessTokenRequest;
@@ -22,12 +21,11 @@ public class OAuth2ClientResources {
         @Override
         public String getRedirectUri(AccessTokenRequest request) {
           try {
-            URI uri = new URI(request.getCurrentUri());
-            ServletRequestAttributes attr =
-                (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
-            HttpSession session = attr.getRequest().getSession(true);
-            Pattern pattern = Pattern.compile("client_id=([^&]+)?");
-            Matcher matcher = pattern.matcher(uri.getQuery());
+            val uri = new URI(request.getCurrentUri());
+            val attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+            val session = attr.getRequest().getSession(true);
+            val pattern = Pattern.compile("client_id=([^&]+)?");
+            val matcher = pattern.matcher(uri.getQuery());
             if (matcher.find()) {
               session.setAttribute("ego_client_id", matcher.group(1));
             }
