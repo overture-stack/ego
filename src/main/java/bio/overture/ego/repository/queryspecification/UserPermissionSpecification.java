@@ -32,4 +32,12 @@ public class UserPermissionSpecification extends SpecificationBase<UserPermissio
       return builder.equal(applicationJoin.<Integer>get("id"), policyId);
     };
   }
+
+  public static Specification<UserPermission> withUser(@NonNull UUID userId) {
+    return (root, query, builder) -> {
+      query.distinct(true);
+      Join<UserPermission, Policy> applicationJoin = root.join("owner");
+      return builder.equal(applicationJoin.<Integer>get("id"), userId);
+    };
+  }
 }

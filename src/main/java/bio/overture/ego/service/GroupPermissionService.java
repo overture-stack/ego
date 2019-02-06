@@ -2,17 +2,18 @@ package bio.overture.ego.service;
 
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static java.util.UUID.fromString;
-import static org.springframework.data.jpa.domain.Specifications.where;
 
 import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.GroupPermission;
-import bio.overture.ego.repository.BaseRepository;
-import bio.overture.ego.repository.queryspecification.GroupPermissionSpecification;
+import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.repository.GroupPermissionRepository;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.UUID;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,13 +22,29 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class GroupPermissionService extends AbstractPermissionService<GroupPermission> {
 
-  public GroupPermissionService(BaseRepository<GroupPermission, UUID> repository) {
+  /** Dependencies */
+  private final GroupPermissionRepository repository;
+
+  @Autowired
+  public GroupPermissionService(@NonNull GroupPermissionRepository repository) {
     super(GroupPermission.class, repository);
+    this.repository = repository;
+  }
+
+  @SneakyThrows
+  public GroupPermission findByPolicyAndGroup(@NonNull String policyId, @NonNull String groupId) {
+    val opt = repository.findByPolicy_IdAndOwner_id(fromString(policyId), fromString(groupId));
+
+    return opt.orElseThrow(() -> new NotFoundException("Permission cannot be found."));
+  }
+
+  public void deleteByPolicyAndGroup(@NonNull String policyId, @NonNull String groupId) {
+    val perm = findByPolicyAndGroup(policyId, groupId);
+    delete(perm.getId());
   }
 
   public List<GroupPermission> findAllByPolicy(@NonNull String policyId) {
-    return getRepository()
-        .findAll(where(GroupPermissionSpecification.withPolicy(fromString(policyId))));
+    return ImmutableList.copyOf(repository.findAllByPolicy_Id(fromString(policyId)));
   }
 
   public List<PolicyResponse> findByPolicy(@NonNull String policyId) {

@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Transactional
+@Ignore("To be replaced with controller tests")
 public class PolicyServiceTest {
 
   @Autowired private PolicyService policyService;

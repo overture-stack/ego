@@ -202,6 +202,16 @@ public class EntityGenerator {
     return PolicyRequest.builder().name(name).build();
   }
 
+  public Policy setupSinglePolicy(String name) {
+    return policyService
+        .findByName(name)
+        .orElseGet(
+            () -> {
+              val createRequest = createPolicyRequest(name);
+              return policyService.create(createRequest);
+            });
+  }
+
   public Policy setupPolicy(String name, String groupName) {
     return policyService
         .findByName(name)
