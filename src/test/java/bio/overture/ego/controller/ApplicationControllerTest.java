@@ -17,11 +17,12 @@
 
 package bio.overture.ego.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
@@ -38,14 +39,12 @@ import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 @Slf4j
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 @SpringBootTest(
-  classes = AuthorizationServiceMain.class,
-  webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+    classes = AuthorizationServiceMain.class,
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ApplicationControllerTest {
 
   /** Constants */
@@ -53,12 +52,14 @@ public class ApplicationControllerTest {
 
   /** State */
   @LocalServerPort private int port;
+
   private TestRestTemplate restTemplate = new TestRestTemplate();
   private HttpHeaders headers = new HttpHeaders();
   private static boolean hasRunEntitySetup = false;
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
+
   @Autowired private ApplicationService applicationService;
 
   @Before
@@ -78,19 +79,20 @@ public class ApplicationControllerTest {
   @Test
   @SneakyThrows
   public void addApplication_Success() {
-    val app = Application.builder()
-      .name("addApplication_Success")
-      .clientId("addApplication_Success")
-      .clientSecret("addApplication_Success")
-      .redirectUri("http://example.com")
-      .status("Approved")
-      .applicationType(ApplicationType.CLIENT)
-      .build();
+    val app =
+        Application.builder()
+            .name("addApplication_Success")
+            .clientId("addApplication_Success")
+            .clientSecret("addApplication_Success")
+            .redirectUri("http://example.com")
+            .status("Approved")
+            .applicationType(ApplicationType.CLIENT)
+            .build();
 
     val entity = new HttpEntity<Application>(app, headers);
     val response =
-      restTemplate.exchange(
-        createURLWithPort("/applications"), HttpMethod.POST, entity, String.class);
+        restTemplate.exchange(
+            createURLWithPort("/applications"), HttpMethod.POST, entity, String.class);
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
@@ -101,36 +103,38 @@ public class ApplicationControllerTest {
   @Test
   @SneakyThrows
   public void addDuplicateApplication_Conflict() {
-    val app1 = Application.builder()
-      .name("addDuplicateApplication")
-      .clientId("addDuplicateApplication")
-      .clientSecret("addDuplicateApplication")
-      .redirectUri("http://example.com")
-      .status("Approved")
-      .applicationType(ApplicationType.CLIENT)
-      .build();
+    val app1 =
+        Application.builder()
+            .name("addDuplicateApplication")
+            .clientId("addDuplicateApplication")
+            .clientSecret("addDuplicateApplication")
+            .redirectUri("http://example.com")
+            .status("Approved")
+            .applicationType(ApplicationType.CLIENT)
+            .build();
 
-    val app2 = Application.builder()
-      .name("addDuplicateApplication")
-      .clientId("addDuplicateApplication")
-      .clientSecret("addDuplicateApplication")
-      .redirectUri("http://example.com")
-      .status("Approved")
-      .applicationType(ApplicationType.CLIENT)
-      .build();
+    val app2 =
+        Application.builder()
+            .name("addDuplicateApplication")
+            .clientId("addDuplicateApplication")
+            .clientSecret("addDuplicateApplication")
+            .redirectUri("http://example.com")
+            .status("Approved")
+            .applicationType(ApplicationType.CLIENT)
+            .build();
 
     val entity1 = new HttpEntity<Application>(app1, headers);
     val response1 =
-      restTemplate.exchange(
-        createURLWithPort("/applications"), HttpMethod.POST, entity1, String.class);
+        restTemplate.exchange(
+            createURLWithPort("/applications"), HttpMethod.POST, entity1, String.class);
 
     val responseStatus1 = response1.getStatusCode();
     assertThat(responseStatus1).isEqualTo(HttpStatus.OK);
 
     val entity2 = new HttpEntity<Application>(app2, headers);
     val response2 =
-      restTemplate.exchange(
-        createURLWithPort("/applications"), HttpMethod.POST, entity2, String.class);
+        restTemplate.exchange(
+            createURLWithPort("/applications"), HttpMethod.POST, entity2, String.class);
     val responseStatus2 = response2.getStatusCode();
     assertThat(responseStatus2).isEqualTo(HttpStatus.CONFLICT);
   }
@@ -141,17 +145,21 @@ public class ApplicationControllerTest {
     val applicationId = applicationService.getByClientId("111111").getId();
     val entity = new HttpEntity<String>(null, headers);
     val response =
-      restTemplate.exchange(
-        createURLWithPort(String.format("/applications/%s", applicationId)),
-        HttpMethod.GET,
-        entity,
-        String.class);
+        restTemplate.exchange(
+            createURLWithPort(String.format("/applications/%s", applicationId)),
+            HttpMethod.GET,
+            entity,
+            String.class);
 
     val responseStatus = response.getStatusCode();
     val responseJson = MAPPER.readTree(response.getBody());
 
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
     assertThat(responseJson.get("name").asText()).isEqualTo("Application 111111");
+  }
+
+  public void associateAppsWithUser_ExistingEntitiesButNonExistingRelationship_Success() {
+    val appId = entityGenerator.setupApplication("Add");
   }
 
   private String createURLWithPort(String uri) {
