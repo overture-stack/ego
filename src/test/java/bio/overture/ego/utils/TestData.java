@@ -25,20 +25,20 @@ public class TestData {
 
   private Map<String, Policy> policyMap;
 
-  public User user1, user2;
+  public User user1, user2, regularUser;
 
   public TestData(EntityGenerator entityGenerator) {
     songId = "song";
     val songSecret = "La la la!;";
     songAuth = authToken(songId, songSecret);
 
-    song = entityGenerator.setupApplication(songId, songSecret);
+    song = entityGenerator.setupApplication(songId, songSecret, "CLIENT");
 
     scoreId = "score";
     val scoreSecret = "She shoots! She scores!";
     scoreAuth = authToken(scoreId, scoreSecret);
 
-    score = entityGenerator.setupApplication(scoreId, scoreSecret);
+    score = entityGenerator.setupApplication(scoreId, scoreSecret, "CLIENT");
     val developers = entityGenerator.setupGroup("developers");
 
     val allPolicies = listOf("song", "id", "collab", "aws", "portal");
@@ -56,6 +56,11 @@ public class TestData {
 
     user2 = entityGenerator.setupUser("User Two");
     entityGenerator.addPermissions(user2, getScopes("song.READ", "collab.READ", "id.WRITE"));
+
+    regularUser = entityGenerator.setupUser("Regular User");
+    regularUser.setUserType("USER");
+    regularUser.setStatus("Approved");
+    entityGenerator.addPermissions(regularUser, getScopes("song.READ", "collab.READ"));
   }
 
   public Set<Scope> getScopes(String... scopeNames) {

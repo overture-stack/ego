@@ -16,31 +16,18 @@
 
 package bio.overture.ego.model.enums;
 
-import static bio.overture.ego.utils.Streams.stream;
-import static java.lang.String.format;
-
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
-public enum UserRole {
-  USER("USER"),
-  ADMIN("ADMIN");
-
-  @NonNull private final String value;
+public enum ApplicationType {
+  CLIENT,
+  ADMIN;
 
   @Override
   public String toString() {
-    return value;
+    return this.name();
   }
 
-  public static UserRole resolveUserRoleIgnoreCase(@NonNull String userRole) {
-    return stream(values())
-        .filter(x -> x.toString().equals(userRole.toUpperCase()))
-        .findFirst()
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    format("The user role '%s' cannot be resolved", userRole)));
+  public static ApplicationType resolveAdminTypeIgnoreCase(@NonNull String adminType) {
+    return valueOf(adminType.toUpperCase());
   }
 }

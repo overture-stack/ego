@@ -16,7 +16,8 @@
 
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.enums.UserRole.resolveUserRoleIgnoreCase;
+import static bio.overture.ego.model.enums.UserType.ADMIN;
+import static bio.overture.ego.model.enums.UserType.resolveUserTypeIgnoreCase;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
@@ -40,8 +41,6 @@ import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.model.enums.EntityStatus;
-import bio.overture.ego.model.enums.UserRole;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
@@ -69,20 +68,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class UserService extends AbstractNamedService<User, UUID> {
 
+  /** Constants */
   public static final UserConverter USER_CONVERTER = Mappers.getMapper(UserConverter.class);
 
-  // DEMO USER
-  private static final String DEMO_USER_NAME = "Demo.User@example.com";
-  private static final String DEMO_USER_EMAIL = "Demo.User@example.com";
-  private static final String DEMO_FIRST_NAME = "Demo";
-  private static final String DEMO_LAST_NAME = "User";
-  private static final String DEMO_USER_ROLE = UserRole.ADMIN.toString();
-  private static final String DEMO_USER_STATUS = EntityStatus.APPROVED.toString();
-
-  /*
-   Dependencies
-  */
+  /** Dependencies */
   private final GroupService groupService;
+
   private final ApplicationService applicationService;
   private final PolicyService policyService;
   private final UserPermissionService userPermissionService;
@@ -103,12 +94,9 @@ public class UserService extends AbstractNamedService<User, UUID> {
     this.userPermissionService = userPermissionService;
   }
 
-  /*
-   Constants
-  */
   // DEFAULTS
-  @Value("${default.user.role}")
-  private String DEFAULT_USER_ROLE;
+  @Value("${default.user.type}")
+  private String DEFAULT_USER_TYPE;
 
   @Value("${default.user.status}")
   private String DEFAULT_USER_STATUS;
@@ -126,29 +114,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .firstName(idToken.getGiven_name())
             .lastName(idToken.getFamily_name())
             .status(DEFAULT_USER_STATUS)
-            .role(DEFAULT_USER_ROLE)
+            .userType(DEFAULT_USER_TYPE)
             .build());
-  }
-
-  public User getOrCreateDemoUser() {
-    return userRepository
-        .getUserByNameIgnoreCase(DEMO_USER_NAME)
-        .map(
-            u -> {
-              u.setStatus(DEMO_USER_STATUS);
-              u.setRole(DEMO_USER_ROLE);
-              return getRepository().save(u);
-            })
-        .orElseGet(
-            () ->
-                create(
-                    CreateUserRequest.builder()
-                        .email(DEMO_USER_EMAIL)
-                        .firstName(DEMO_FIRST_NAME)
-                        .lastName(DEMO_LAST_NAME)
-                        .status(EntityStatus.APPROVED.toString())
-                        .role(UserRole.ADMIN.toString())
-                        .build()));
   }
 
   public User addUserToGroups(@NonNull String userId, @NonNull List<String> groupIDs) {
@@ -156,7 +123,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
     val groups = groupService.getMany(convertToUUIDList(groupIDs));
     associateUserWithGroups(user, groups);
     // TODO: @rtisma test setting groups even if there were existing groups before does not delete
-    // the existing ones. Becuase the PERSIST and MERGE cascade type is used, this should work
+    // the existing ones. Becuase the PERSIST and MERGE cascade type is used, this should
+    // work
     // correctly
     return getRepository().save(user);
   }
@@ -166,7 +134,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
     val apps = applicationService.getMany(convertToUUIDList(appIDs));
     associateUserWithApplications(user, apps);
     // TODO: @rtisma test setting apps even if there were existing apps before does not delete the
-    // existing ones. Becuase the PERSIST and MERGE cascade type is used, this should work correctly
+    // existing ones. Becuase the PERSIST and MERGE cascade applicationType is used, this should
+    // work correctly
     return getRepository().save(user);
   }
 
@@ -201,7 +170,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
   @Deprecated
   public User update(@NonNull User data) {
     val user = getById(data.getId());
-    user.setRole(resolveUserRoleIgnoreCase(data.getRole()).toString());
+    user.setUserType(resolveUserTypeIgnoreCase(data.getUserType()).toString());
     return getRepository().save(user);
   }
 
@@ -486,9 +455,12 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
     onUpdateDetected(originalUser.getEmail(), r.getEmail(), () -> checkEmailUnique(r.getEmail()));
-    // Ensure role is the right value. This should be removed once Enums are properly used
+    // Ensure type is the right value. This should be removed once Enums are properly
+    // used
     onUpdateDetected(
-        originalUser.getRole(), r.getRole(), () -> resolveUserRoleIgnoreCase(r.getRole()));
+        originalUser.getUserType(),
+        r.getUserType(),
+        () -> resolveUserTypeIgnoreCase(r.getUserType()));
   }
 
   private void checkEmailUnique(String email) {
@@ -538,9 +510,9 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
     @AfterMapping
     protected void correctUserData(@MappingTarget User userToUpdate) {
-      // Ensure UserRole is a correct value
-      if (!isNull(userToUpdate.getRole())) {
-        userToUpdate.setRole(resolveUserRoleIgnoreCase(userToUpdate.getRole()).toString());
+      // Ensure UserType is a correct value
+      if (!isNull(userToUpdate.getUserType())) {
+        userToUpdate.setUserType(resolveUserTypeIgnoreCase(userToUpdate.getUserType()).toString());
       }
 
       // Set UserName to equal the email.
@@ -551,5 +523,13 @@ public class UserService extends AbstractNamedService<User, UUID> {
         userToUpdate.setCreatedAt(new Date());
       }
     }
+  }
+
+  public boolean isActiveUser(User user) {
+    return resolveUserTypeIgnoreCase(user.getUserType()) == ADMIN;
+  }
+
+  public boolean isAdmin(User user) {
+    return "admin".equals((user.getUserType().toLowerCase()));
   }
 }

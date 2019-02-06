@@ -45,7 +45,7 @@ public class TokenStoreServiceTest {
     scopes.add(new Scope(p2, AccessLevel.WRITE));
 
     val applications = new HashSet<Application>();
-    val a1 = entityGenerator.setupApplication("id123", "Shhh! Don't tell!");
+    val a1 = entityGenerator.setupApplication("id123", "Shhh! Don't tell!", "USER");
     applications.add(a1);
 
     val tokenObject =

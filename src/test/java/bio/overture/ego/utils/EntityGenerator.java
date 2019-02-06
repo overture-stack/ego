@@ -20,6 +20,7 @@ import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.enums.ApplicationStatus;
+import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.ApplicationService;
@@ -47,7 +48,7 @@ import org.springframework.stereotype.Component;
 @Component
 /**
  * * For this class, we follow the following naming conventions: createEntity: returns a new object
- * of type Entity. setupEntity: Create an policy, saves it using Hibernate, & returns it.
+ * of applicationType Entity. setupEntity: Create an policy, saves it using Hibernate, & returns it.
  * setupEntities: Sets up multiple entities at once setupTestEntities: Sets up specific entities
  * used in our unit tests
  */
@@ -68,6 +69,7 @@ public class EntityGenerator {
   private CreateApplicationRequest createApplicationCreateRequest(String clientId) {
     return CreateApplicationRequest.builder()
         .name(createApplicationName(clientId))
+        .applicationType(ApplicationType.CLIENT.toString())
         .clientId(clientId)
         .clientSecret(reverse(clientId))
         .status(ApplicationStatus.PENDING.toString())
@@ -109,7 +111,8 @@ public class EntityGenerator {
     setupApplications("111111", "222222", "333333", "444444", "555555");
   }
 
-  public Application setupApplication(String clientId, String clientSecret) {
+  public Application setupApplication(
+      String clientId, String clientSecret, String applicationType) {
     return applicationService
         .findByClientId(clientId)
         .orElseGet(
@@ -117,6 +120,7 @@ public class EntityGenerator {
               val request =
                   CreateApplicationRequest.builder()
                       .name(clientId)
+                      .applicationType(applicationType)
                       .clientSecret(clientSecret)
                       .clientId(clientId)
                       .status(ApplicationStatus.APPROVED.toString())
@@ -132,7 +136,7 @@ public class EntityGenerator {
         .lastName(lastName)
         .status("Approved")
         .preferredLanguage("English")
-        .role("ADMIN")
+        .userType("ADMIN")
         .build();
   }
 
