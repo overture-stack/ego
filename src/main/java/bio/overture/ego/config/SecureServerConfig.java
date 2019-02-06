@@ -18,8 +18,8 @@ package bio.overture.ego.config;
 
 import bio.overture.ego.security.*;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -60,6 +60,7 @@ public class SecureServerConfig {
   private OAuth2SsoFilter oAuth2SsoFilter;
 
   @SneakyThrows
+  @Autowired
   public SecureServerConfig(
       AuthenticationManager authenticationManager,
       OAuth2SsoFilter oAuth2SsoFilter,
@@ -105,30 +106,6 @@ public class SecureServerConfig {
     registration.setFilter(filter);
     registration.setOrder(-100);
     return registration;
-  }
-
-  @Bean
-  @ConfigurationProperties("google")
-  public OAuth2ClientResources google() {
-    return new OAuth2ClientResources();
-  }
-
-  @Bean
-  @ConfigurationProperties("facebook")
-  public OAuth2ClientResources facebook() {
-    return new OAuth2ClientResources();
-  }
-
-  @Bean
-  @ConfigurationProperties("github")
-  public OAuth2ClientResources github() {
-    return new OAuth2ClientResources();
-  }
-
-  @Bean
-  @ConfigurationProperties("linkedin")
-  public OAuth2ClientResources linkedin() {
-    return new OAuth2ClientResources();
   }
 
   @Bean

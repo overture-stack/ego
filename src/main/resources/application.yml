@@ -1,6 +1,11 @@
 server:
   port: 8081
 
+cors:
+  allowed-origins:
+    - http://localhost:8081
+    - http://localhost:3501
+
 jwt:
   secret: testsecretisalsoasecret
   duration: 86400000 #in milliseconds 86400000 = 1day, max = 2147483647
