@@ -13,6 +13,7 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ public class UserPermissionService extends AbstractPermissionService<UserPermiss
 
   private final UserPermissionRepository repository;
 
+  @Autowired
   public UserPermissionService(UserPermissionRepository repository) {
     super(UserPermission.class, repository);
     this.repository = repository;
