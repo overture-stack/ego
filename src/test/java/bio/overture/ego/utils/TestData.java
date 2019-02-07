@@ -7,6 +7,7 @@ import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.model.params.ScopeName;
 import java.util.Base64;
 import java.util.HashMap;
@@ -32,13 +33,13 @@ public class TestData {
     val songSecret = "La la la!;";
     songAuth = authToken(songId, songSecret);
 
-    song = entityGenerator.setupApplication(songId, songSecret, "CLIENT");
+    song = entityGenerator.setupApplication(songId, songSecret, ApplicationType.CLIENT);
 
     scoreId = "score";
     val scoreSecret = "She shoots! She scores!";
     scoreAuth = authToken(scoreId, scoreSecret);
 
-    score = entityGenerator.setupApplication(scoreId, scoreSecret, "CLIENT");
+    score = entityGenerator.setupApplication(scoreId, scoreSecret, ApplicationType.CLIENT);
     val developers = entityGenerator.setupGroup("developers");
 
     val allPolicies = listOf("song", "id", "collab", "aws", "portal");
