@@ -6,6 +6,7 @@ import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.utils.EntityGenerator;
 import java.time.Instant;
 import java.util.Date;
@@ -45,7 +46,7 @@ public class TokenStoreServiceTest {
     scopes.add(new Scope(p2, AccessLevel.WRITE));
 
     val applications = new HashSet<Application>();
-    val a1 = entityGenerator.setupApplication("id123", "Shhh! Don't tell!", "USER");
+    val a1 = entityGenerator.setupApplication("id123", "Shhh! Don't tell!", ApplicationType.CLIENT);
     applications.add(a1);
 
     val tokenObject =

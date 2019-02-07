@@ -69,7 +69,7 @@ public class EntityGenerator {
   private CreateApplicationRequest createApplicationCreateRequest(String clientId) {
     return CreateApplicationRequest.builder()
         .name(createApplicationName(clientId))
-        .applicationType(ApplicationType.CLIENT.toString())
+        .applicationType(ApplicationType.CLIENT)
         .clientId(clientId)
         .clientSecret(reverse(clientId))
         .status(ApplicationStatus.PENDING.toString())
@@ -112,7 +112,7 @@ public class EntityGenerator {
   }
 
   public Application setupApplication(
-      String clientId, String clientSecret, String applicationType) {
+      String clientId, String clientSecret, ApplicationType applicationType) {
     return applicationService
         .findByClientId(clientId)
         .orElseGet(
