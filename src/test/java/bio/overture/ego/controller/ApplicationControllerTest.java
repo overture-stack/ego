@@ -156,10 +156,7 @@ public class ApplicationControllerTest {
 
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
     assertThat(responseJson.get("name").asText()).isEqualTo("Application 111111");
-  }
-
-  public void associateAppsWithUser_ExistingEntitiesButNonExistingRelationship_Success() {
-    val appId = entityGenerator.setupApplication("Add");
+    assertThat(responseJson.get("applicationType").asText()).isEqualTo("CLIENT");
   }
 
   private String createURLWithPort(String uri) {
