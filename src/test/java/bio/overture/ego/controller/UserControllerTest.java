@@ -17,6 +17,7 @@
 
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.utils.EntityTools.extractUserIds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -25,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.service.UserService;
+import bio.overture.ego.service.*;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -68,6 +69,10 @@ public class UserControllerTest {
   @Autowired private EntityGenerator entityGenerator;
 
   @Autowired private UserService userService;
+
+  @Autowired private ApplicationService applicationService;
+
+  @Autowired private GroupService groupService;
 
   @Before
   public void setup() {
@@ -405,6 +410,76 @@ public class UserControllerTest {
     assertThat(secondGetResponseJson.get("resultSet").elements().next().get("id").asText())
         .isEqualTo(remainApp);
   }
+
+  @Test
+  @SneakyThrows
+  public void deleteUser(){
+    val userId = entityGenerator.setupUser("User ToDelete").getId();
+    val entity = new HttpEntity<String>(null, headers);
+
+    // Add application to user
+    val appOne = entityGenerator.setupApplication("TempGroupApp");
+    val appBody = singletonList(appOne.getId().toString());
+    val appEntity = new HttpEntity<>(appBody, headers);
+    val addAppToUserResponse =
+            restTemplate.exchange(
+                  createURLWithPort(String.format("/users/%s/applications", userId)),
+                  HttpMethod.POST,
+                  appEntity,
+                  String.class);
+    val addAppToUserResponseStatus = addAppToUserResponse.getStatusCode();
+    assertThat(addAppToUserResponseStatus).isEqualTo(HttpStatus.OK);
+
+    // Make sure user-application relationship is there
+    val appWithUser = applicationService.getByClientId("TempGroupApp");
+    assertThat(extractUserIds(appWithUser.getUsers())).contains(userId);
+
+    // Add group to user
+    val groupOne = entityGenerator.setupGroup("GroupOne");
+    val groupBody = singletonList(groupOne.getId().toString());
+    val groupEntity = new HttpEntity<>(groupBody, headers);
+    val addGroupToUserResponse =
+            restTemplate.exchange(
+                    createURLWithPort(String.format("/users/%s/groups", userId)),
+                    HttpMethod.POST,
+                    groupEntity,
+                    String.class);
+    val addGroupToUserResponseStatus = addGroupToUserResponse.getStatusCode();
+    assertThat(addGroupToUserResponseStatus).isEqualTo(HttpStatus.OK);
+    // Make sure user-group relationship is there
+    assertThat(extractUserIds(groupService.getByName("GroupOne").getUsers())).contains(userId);
+
+    // delete user
+    val deleteResponse =
+            restTemplate.exchange(
+                    createURLWithPort(String.format("/users/%s", userId)),
+                    HttpMethod.DELETE,
+                    entity,
+                    String.class);
+    val deleteResponseStatus = deleteResponse.getStatusCode();
+    assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
+
+    // verify if user is deleted
+    val getUserResponse =
+            restTemplate.exchange(
+                    createURLWithPort(String.format("/users/%s", userId)),
+                    HttpMethod.GET,
+                    entity,
+                    String.class);
+    val getUserResponseStatus = getUserResponse.getStatusCode();
+    assertThat(getUserResponseStatus).isEqualTo(HttpStatus.NOT_FOUND);
+    val jsonResponse = MAPPER.readTree(getUserResponse.getBody());
+    assertThat(jsonResponse.get("error").asText()).isEqualTo(HttpStatus.NOT_FOUND.getReasonPhrase());
+
+    //check if user - group is deleted
+    val groupWithoutUser = groupService.getByName("GroupOne");
+    assertThat(groupWithoutUser.getUsers()).isEmpty();
+
+    // make sure user - application is deleted
+    val appWithoutUser = applicationService.getByClientId("TempGroupApp");
+    assertThat(appWithoutUser.getUsers()).isEmpty();
+  }
+
 
   private String createURLWithPort(String uri) {
     return "http://localhost:" + port + uri;
