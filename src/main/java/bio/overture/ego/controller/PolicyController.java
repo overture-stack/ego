@@ -4,6 +4,7 @@ import bio.overture.ego.model.dto.GenericResponse;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
+import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.exceptions.PostWithIdentifierException;
 import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
@@ -155,14 +156,15 @@ public class PolicyController {
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/permission/group/{group_id}")
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Add group permission", response = String.class)})
-  public @ResponseBody String createGroupPermission(
+  @JsonView(Views.REST.class)
+  public @ResponseBody
+  Group createGroupPermission(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
+      @PathVariable(value = "id", required = true) String policyId,
       @PathVariable(value = "group_id", required = true) String groupId,
       @RequestBody(required = true) String mask) {
-    groupService.addGroupPermissions(
-        groupId, ImmutableList.of(new PolicyIdStringWithAccessLevel(id, mask)));
-    return "1 group permission added to ACL successfully"; // TODO, fix this response.
+    return groupService.addGroupPermissions(
+        groupId, ImmutableList.of(new PolicyIdStringWithAccessLevel(policyId, mask)));
   }
 
   @AdminScoped
@@ -235,7 +237,7 @@ public class PolicyController {
       value = {
         @ApiResponse(
             code = 200,
-            message = "Get list of user ids with given policy id",
+            message = "Get list of group ids with given policy id",
             response = String.class)
       })
   public @ResponseBody List<PolicyResponse> findGroupIds(
