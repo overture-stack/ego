@@ -413,7 +413,7 @@ public class UserControllerTest {
 
   @Test
   @SneakyThrows
-  public void deleteUser(){
+  public void deleteUser() {
     val userId = entityGenerator.setupUser("User ToDelete").getId();
     val entity = new HttpEntity<String>(null, headers);
 
@@ -422,11 +422,11 @@ public class UserControllerTest {
     val appBody = singletonList(appOne.getId().toString());
     val appEntity = new HttpEntity<>(appBody, headers);
     val addAppToUserResponse =
-            restTemplate.exchange(
-                  createURLWithPort(String.format("/users/%s/applications", userId)),
-                  HttpMethod.POST,
-                  appEntity,
-                  String.class);
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s/applications", userId)),
+            HttpMethod.POST,
+            appEntity,
+            String.class);
     val addAppToUserResponseStatus = addAppToUserResponse.getStatusCode();
     assertThat(addAppToUserResponseStatus).isEqualTo(HttpStatus.OK);
 
@@ -439,11 +439,11 @@ public class UserControllerTest {
     val groupBody = singletonList(groupOne.getId().toString());
     val groupEntity = new HttpEntity<>(groupBody, headers);
     val addGroupToUserResponse =
-            restTemplate.exchange(
-                    createURLWithPort(String.format("/users/%s/groups", userId)),
-                    HttpMethod.POST,
-                    groupEntity,
-                    String.class);
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s/groups", userId)),
+            HttpMethod.POST,
+            groupEntity,
+            String.class);
     val addGroupToUserResponseStatus = addGroupToUserResponse.getStatusCode();
     assertThat(addGroupToUserResponseStatus).isEqualTo(HttpStatus.OK);
     // Make sure user-group relationship is there
@@ -451,27 +451,28 @@ public class UserControllerTest {
 
     // delete user
     val deleteResponse =
-            restTemplate.exchange(
-                    createURLWithPort(String.format("/users/%s", userId)),
-                    HttpMethod.DELETE,
-                    entity,
-                    String.class);
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s", userId)),
+            HttpMethod.DELETE,
+            entity,
+            String.class);
     val deleteResponseStatus = deleteResponse.getStatusCode();
     assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
 
     // verify if user is deleted
     val getUserResponse =
-            restTemplate.exchange(
-                    createURLWithPort(String.format("/users/%s", userId)),
-                    HttpMethod.GET,
-                    entity,
-                    String.class);
+        restTemplate.exchange(
+            createURLWithPort(String.format("/users/%s", userId)),
+            HttpMethod.GET,
+            entity,
+            String.class);
     val getUserResponseStatus = getUserResponse.getStatusCode();
     assertThat(getUserResponseStatus).isEqualTo(HttpStatus.NOT_FOUND);
     val jsonResponse = MAPPER.readTree(getUserResponse.getBody());
-    assertThat(jsonResponse.get("error").asText()).isEqualTo(HttpStatus.NOT_FOUND.getReasonPhrase());
+    assertThat(jsonResponse.get("error").asText())
+        .isEqualTo(HttpStatus.NOT_FOUND.getReasonPhrase());
 
-    //check if user - group is deleted
+    // check if user - group is deleted
     val groupWithoutUser = groupService.getByName("GroupOne");
     assertThat(groupWithoutUser.getUsers()).isEmpty();
 
@@ -479,7 +480,6 @@ public class UserControllerTest {
     val appWithoutUser = applicationService.getByClientId("TempGroupApp");
     assertThat(appWithoutUser.getUsers()).isEmpty();
   }
-
 
   private String createURLWithPort(String uri) {
     return "http://localhost:" + port + uri;
