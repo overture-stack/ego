@@ -262,6 +262,19 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
           TypeUtils.convertToAnotherType(body, UserTokenClaims.class, Views.JWTAccessToken.class);
       return userService.get(tokenClaims.getSub());
     } catch (JwtException | ClassCastException e) {
+      log.error("Issue handling user token: {}", token);
+      return null;
+    }
+  }
+
+  public Application getTokenAppInfo(String token) {
+    try {
+      Claims body = getTokenClaims(token);
+      val tokenClaims =
+          TypeUtils.convertToAnotherType(body, AppTokenClaims.class, Views.JWTAccessToken.class);
+      return applicationService.getById(UUID.fromString(tokenClaims.getSub()));
+    } catch (JwtException | ClassCastException e) {
+      log.error("Issue handling application token: {}", token);
       return null;
     }
   }

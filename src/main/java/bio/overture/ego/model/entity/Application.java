@@ -16,7 +16,6 @@
 
 package bio.overture.ego.model.entity;
 
-import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static com.google.common.collect.Sets.newHashSet;
 
 import bio.overture.ego.model.enums.*;
@@ -26,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import javax.persistence.*;
@@ -93,6 +91,7 @@ public class Application implements Identifiable<UUID> {
   @Enumerated(EnumType.STRING)
   @org.hibernate.annotations.Type(type = "application_type_enum")
   @Column(name = SqlFields.APPLICATIONTYPE, nullable = false)
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   private ApplicationType applicationType;
 
   @NotNull
@@ -138,12 +137,7 @@ public class Application implements Identifiable<UUID> {
   @Builder.Default
   @ManyToMany(
       mappedBy = JavaFields.APPLICATIONS,
-      fetch = FetchType.LAZY,
+      fetch = FetchType.EAGER,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   private Set<Token> tokens = newHashSet();
-
-  @JsonView(Views.JWTAccessToken.class)
-  public List<String> getGroupNames() {
-    return getGroups().stream().map(Group::getName).collect(toImmutableList());
-  }
 }

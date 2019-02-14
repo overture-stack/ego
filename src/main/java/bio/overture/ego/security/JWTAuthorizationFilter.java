@@ -18,6 +18,10 @@ package bio.overture.ego.security;
 
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.TokenService;
+import bio.overture.ego.token.app.AppTokenClaims;
+import bio.overture.ego.token.user.UserTokenClaims;
+import bio.overture.ego.utils.TypeUtils;
+import bio.overture.ego.view.Views;
 import java.util.ArrayList;
 import java.util.Arrays;
 import javax.servlet.FilterChain;
@@ -65,24 +69,58 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     if (tokenPayload != null && tokenPayload.startsWith(applicationService.APP_TOKEN_PREFIX)) {
       authenticateApplication(tokenPayload);
     } else {
-      authenticateUser(tokenPayload);
+      authenticateUserOrApplication(tokenPayload);
     }
     chain.doFilter(request, response);
   }
 
-  private void authenticateUser(String tokenPayload) {
+  /**
+   * Responsible for authenticating a Bearer JWT into a user or application.
+   *
+   * @param tokenPayload The string representation of the Authorization Header with the token prefix
+   *     included
+   */
+  private void authenticateUserOrApplication(String tokenPayload) {
     if (!isValidToken(tokenPayload)) {
+      log.warn("Invalid token: {}", tokenPayload);
       SecurityContextHolder.clearContext();
       return;
     }
 
-    val authentication =
-        new UsernamePasswordAuthenticationToken(
-            tokenService.getTokenUserInfo(removeTokenPrefix(tokenPayload)),
-            null,
-            new ArrayList<>());
+    UsernamePasswordAuthenticationToken authentication = null;
+    val body = tokenService.getTokenClaims(removeTokenPrefix(tokenPayload));
+    try {
+      // Test Conversion
+      TypeUtils.convertToAnotherType(body, UserTokenClaims.class, Views.JWTAccessToken.class);
+      authentication =
+          new UsernamePasswordAuthenticationToken(
+              tokenService.getTokenUserInfo(removeTokenPrefix(tokenPayload)),
+              null,
+              new ArrayList<>());
+      SecurityContextHolder.getContext().setAuthentication(authentication);
+      return; // Escape
+    } catch (Exception e) {
+      log.warn("Token is valid but not a User JWT");
+    }
 
-    SecurityContextHolder.getContext().setAuthentication(authentication);
+    try {
+      // Test Conversion
+      TypeUtils.convertToAnotherType(body, AppTokenClaims.class, Views.JWTAccessToken.class);
+      authentication =
+          new UsernamePasswordAuthenticationToken(
+              tokenService.getTokenAppInfo(removeTokenPrefix(tokenPayload)),
+              null,
+              new ArrayList<>());
+      SecurityContextHolder.getContext().setAuthentication(authentication);
+      return; // Escape
+    } catch (Exception e) {
+      log.warn("Token is valid but not an Application JWT");
+      throw e;
+    }
+
+    // This section of code should be unreachable.
+    // throw new IllegalStateException("Invalid State: Token is valid, but does not correspond to a
+    // user or application.");
   }
 
   private void authenticateApplication(String token) {

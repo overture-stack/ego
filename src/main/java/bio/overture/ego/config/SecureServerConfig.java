@@ -139,7 +139,7 @@ public class SecureServerConfig {
   public class OAuthConfigurerAdapter extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-      http.antMatcher("/oauth/**")
+      http.antMatcher("/oauth/*/login")
           .csrf()
           .disable()
           .authorizeRequests()
