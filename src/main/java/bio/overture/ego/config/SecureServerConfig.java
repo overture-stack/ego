@@ -16,7 +16,10 @@
 
 package bio.overture.ego.config;
 
-import bio.overture.ego.security.*;
+import bio.overture.ego.security.AuthorizationManager;
+import bio.overture.ego.security.JWTAuthorizationFilter;
+import bio.overture.ego.security.OAuth2SsoFilter;
+import bio.overture.ego.security.SecureAuthorizationManager;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
@@ -34,8 +37,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.filter.OAuth2ClientContextFilter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableWebSecurity
@@ -56,18 +57,15 @@ public class SecureServerConfig {
   /** Dependencies */
   private AuthenticationManager authenticationManager;
 
-  private CorsProperties corsProperties;
   private OAuth2SsoFilter oAuth2SsoFilter;
 
   @SneakyThrows
   @Autowired
   public SecureServerConfig(
       AuthenticationManager authenticationManager,
-      OAuth2SsoFilter oAuth2SsoFilter,
-      CorsProperties corsProperties) {
+      OAuth2SsoFilter oAuth2SsoFilter) {
     this.authenticationManager = authenticationManager;
     this.oAuth2SsoFilter = oAuth2SsoFilter;
-    this.corsProperties = corsProperties;
   }
 
   @Bean
@@ -106,31 +104,6 @@ public class SecureServerConfig {
     registration.setFilter(filter);
     registration.setOrder(-100);
     return registration;
-  }
-
-  @Bean
-  public WebMvcConfigurer corsConfigurer() {
-    return new WebMvcConfigurer() {
-      @Override
-      public void addCorsMappings(CorsRegistry registry) {
-        registry
-            .addMapping("/**")
-            .allowedOrigins(corsProperties.getAllowedOrigins().toArray(new String[0]))
-            .allowedMethods("GET", "POST", "DELETE", "PUT", "PATCH", "HEAD", "OPTIONS")
-            .allowedHeaders(
-                "Origin",
-                "Accept",
-                "X-Requested-With",
-                "Content-Type",
-                "Access-Control-Request-Method",
-                "Access-Control-Request-Headers",
-                "token",
-                "AUTHORIZATION")
-            .exposedHeaders("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials")
-            .allowCredentials(true)
-            .maxAge(10);
-      }
-    };
   }
 
   //  int LOWEST_PRECEDENCE = Integer.MAX_VALUE;
