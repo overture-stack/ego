@@ -37,7 +37,7 @@ import java.net.URI;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CorsFilter implements Filter {
   @Autowired
-  ApplicationService applicationService;
+  private ApplicationService applicationService;
 
   @Override
   @SneakyThrows
@@ -80,7 +80,7 @@ public class CorsFilter implements Filter {
   }
 
   @Override
-  public void init(FilterConfig filterConfig) throws ServletException {}
+  public void init(FilterConfig filterConfig) {}
 
   @Override
   public void destroy() {}
