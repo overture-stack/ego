@@ -264,7 +264,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
           convertToAnotherType(body, UserTokenClaims.class, Views.JWTAccessToken.class);
       return userService.get(tokenClaims.getSub());
     } catch (JwtException | ClassCastException e) {
-      log.error("Issue handling user token: {}", new String(md5Digest(token.getBytes())));
+      log.error("Issue handling user token (MD5sum) {}", new String(md5Digest(token.getBytes())));
       return null;
     }
   }
@@ -276,7 +276,8 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
           convertToAnotherType(body, AppTokenClaims.class, Views.JWTAccessToken.class);
       return applicationService.getById(fromString(tokenClaims.getSub()));
     } catch (JwtException | ClassCastException e) {
-      log.error("Issue handling application token: {}", new String(md5Digest(token.getBytes())));
+      log.error(
+          "Issue handling application token (MD5sum) {}", new String(md5Digest(token.getBytes())));
       return null;
     }
   }
