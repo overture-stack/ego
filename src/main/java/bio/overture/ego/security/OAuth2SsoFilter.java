@@ -1,6 +1,12 @@
 package bio.overture.ego.security;
 
 import bio.overture.ego.service.ApplicationService;
+import java.io.IOException;
+import java.util.*;
+import javax.servlet.Filter;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -16,13 +22,6 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.filter.CompositeFilter;
-
-import javax.servlet.Filter;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.*;
 
 @Component
 @Profile("auth")
@@ -84,72 +83,80 @@ public class OAuth2SsoFilter extends CompositeFilter {
   class GithubFilter extends OAuth2SsoChildFilter {
     public GithubFilter(OAuth2ClientResources client) {
       super("/oauth/login/github", client);
-      super.setTokenServices(new OAuth2UserInfoTokenServices(
+      super.setTokenServices(
+          new OAuth2UserInfoTokenServices(
               client.getResource().getUserInfoUri(),
               client.getClient().getClientId(),
-              super.restTemplate
-      ) {
-        @Override
-        protected Map<String, Object> transformMap(Map<String, Object> map, String accessToken) throws NoSuchElementException {
-          OAuth2RestOperations restTemplate = getRestTemplate(accessToken);
-          String email;
+              super.restTemplate) {
+            @Override
+            protected Map<String, Object> transformMap(Map<String, Object> map, String accessToken)
+                throws NoSuchElementException {
+              OAuth2RestOperations restTemplate = getRestTemplate(accessToken);
+              String email;
 
-          try {
-            // [{email, primary, verified}]
-            email = (String) restTemplate.exchange("https://api.github.com/user/emails",
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<Map<String, Object>>>(){})
-                    .getBody()
-                    .stream()
-                    .filter(x -> x.get("verified").equals(true) && x.get("primary").equals(true))
-                    .findAny()
-                    .orElse(Collections.emptyMap())
-                    .get("email");
-          } catch (RestClientException |ClassCastException ex) {
-            return Collections.singletonMap("error", "Could not fetch user details");
-          }
+              try {
+                // [{email, primary, verified}]
+                email =
+                    (String)
+                        restTemplate
+                            .exchange(
+                                "https://api.github.com/user/emails",
+                                HttpMethod.GET,
+                                null,
+                                new ParameterizedTypeReference<List<Map<String, Object>>>() {})
+                            .getBody()
+                            .stream()
+                            .filter(
+                                x ->
+                                    x.get("verified").equals(true) && x.get("primary").equals(true))
+                            .findAny()
+                            .orElse(Collections.emptyMap())
+                            .get("email");
+              } catch (RestClientException | ClassCastException ex) {
+                return Collections.singletonMap("error", "Could not fetch user details");
+              }
 
-          if (email != null) {
-            map.put("email", email);
+              if (email != null) {
+                map.put("email", email);
 
-            String name = (String) map.get("name");
-            String [] names = name.split(" ");
-            if (names.length == 2) {
-              map.put("given_name", names[0]);
-              map.put("family_name", names[1]);
+                String name = (String) map.get("name");
+                String[] names = name.split(" ");
+                if (names.length == 2) {
+                  map.put("given_name", names[0]);
+                  map.put("family_name", names[1]);
+                }
+                return map;
+              } else {
+                return Collections.singletonMap("error", "Could not fetch user details");
+              }
             }
-            return map;
-          } else {
-            return Collections.singletonMap("error", "Could not fetch user details");
-          }
-        }
-      });
+          });
     }
   }
 
   class LinkedInFilter extends OAuth2SsoChildFilter {
     public LinkedInFilter(OAuth2ClientResources client) {
       super("/oauth/login/linkedin", client);
-      super.setTokenServices(new OAuth2UserInfoTokenServices(
+      super.setTokenServices(
+          new OAuth2UserInfoTokenServices(
               client.getResource().getUserInfoUri(),
               client.getClient().getClientId(),
-              super.restTemplate
-      ) {
-        @Override
-        protected Map<String, Object> transformMap(Map<String, Object> map, String accessToken) {
-          String email = (String) map.get("emailAddress");
+              super.restTemplate) {
+            @Override
+            protected Map<String, Object> transformMap(
+                Map<String, Object> map, String accessToken) {
+              String email = (String) map.get("emailAddress");
 
-          if (email != null) {
-            map.put("email", email);
-            map.put("given_name", map.get("firstName"));
-            map.put("family_name", map.get("lastName"));
-            return map;
-          } else {
-            return Collections.singletonMap("error", "Could not fetch user details");
-          }
-        }
-      });
+              if (email != null) {
+                map.put("email", email);
+                map.put("given_name", map.get("firstName"));
+                map.put("family_name", map.get("lastName"));
+                return map;
+              } else {
+                return Collections.singletonMap("error", "Could not fetch user details");
+              }
+            }
+          });
     }
   }
 

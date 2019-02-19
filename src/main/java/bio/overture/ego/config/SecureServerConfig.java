@@ -62,8 +62,7 @@ public class SecureServerConfig {
   @SneakyThrows
   @Autowired
   public SecureServerConfig(
-      AuthenticationManager authenticationManager,
-      OAuth2SsoFilter oAuth2SsoFilter) {
+      AuthenticationManager authenticationManager, OAuth2SsoFilter oAuth2SsoFilter) {
     this.authenticationManager = authenticationManager;
     this.oAuth2SsoFilter = oAuth2SsoFilter;
   }

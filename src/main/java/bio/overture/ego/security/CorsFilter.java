@@ -16,12 +16,12 @@
 
 package bio.overture.ego.security;
 
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.service.ApplicationService;
+import java.net.URI;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.service.ApplicationService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,15 +29,13 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
-
-// The filter it's better to add to security chain, reference https://spring.io/guides/topicals/spring-security-architecture/
+// The filter it's better to add to security chain, reference
+// https://spring.io/guides/topicals/spring-security-architecture/
 @Component
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CorsFilter implements Filter {
-  @Autowired
-  private ApplicationService applicationService;
+  @Autowired private ApplicationService applicationService;
 
   @Override
   @SneakyThrows
@@ -52,7 +50,11 @@ public class CorsFilter implements Filter {
       try {
         Application app = applicationService.getByClientId(clientId);
         URI uri = new URI(app.getRedirectUri());
-        response.setHeader("Access-Control-Allow-Origin", uri.getScheme() + "://" + uri.getHost()
+        response.setHeader(
+            "Access-Control-Allow-Origin",
+            uri.getScheme()
+                + "://"
+                + uri.getHost()
                 + (uri.getPort() == -1 ? "" : ":" + uri.getPort()));
       } catch (NullPointerException ex) {
         log.warn(ex.getMessage());
