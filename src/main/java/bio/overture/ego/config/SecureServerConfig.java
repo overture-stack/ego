@@ -51,7 +51,8 @@ public class SecureServerConfig {
         "/oauth/google/token",
         "/oauth/facebook/token",
         "/oauth/token/public_key",
-        "/oauth/token/verify"
+        "/oauth/token/verify",
+        "/oauth/ego-token"
       };
 
   /** Dependencies */
@@ -111,7 +112,9 @@ public class SecureServerConfig {
   public class OAuthConfigurerAdapter extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-      http.antMatcher("/oauth/**")
+      http.requestMatchers()
+          .antMatchers("/oauth/login/*", "/oauth/ego-token")
+          .and()
           .csrf()
           .disable()
           .authorizeRequests()

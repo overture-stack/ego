@@ -16,7 +16,6 @@
 
 package bio.overture.ego.model.entity;
 
-import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static com.google.common.collect.Sets.newHashSet;
 
 import bio.overture.ego.model.enums.*;
@@ -26,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import javax.persistence.*;
@@ -34,6 +32,7 @@ import javax.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.Accessors;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
 @Entity
@@ -44,7 +43,7 @@ import org.hibernate.annotations.TypeDef;
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonView(Views.REST.class)
-@ToString(exclude = {LombokFields.groups, LombokFields.users})
+@ToString(exclude = {LombokFields.groups, LombokFields.users, LombokFields.tokens})
 @EqualsAndHashCode(of = {LombokFields.id})
 @JsonPropertyOrder({
   JavaFields.ID,
@@ -91,8 +90,9 @@ public class Application implements Identifiable<UUID> {
 
   @NotNull
   @Enumerated(EnumType.STRING)
-  @org.hibernate.annotations.Type(type = "application_type_enum")
+  @Type(type = "application_type_enum")
   @Column(name = SqlFields.APPLICATIONTYPE, nullable = false)
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   private ApplicationType applicationType;
 
   @NotNull
@@ -141,9 +141,4 @@ public class Application implements Identifiable<UUID> {
       fetch = FetchType.LAZY,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   private Set<Token> tokens = newHashSet();
-
-  @JsonView(Views.JWTAccessToken.class)
-  public List<String> getGroupNames() {
-    return getGroups().stream().map(Group::getName).collect(toImmutableList());
-  }
 }
