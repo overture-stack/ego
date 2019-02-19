@@ -153,7 +153,6 @@ public class PolicyControllerTest {
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
-    // TODO: Fix it so that POST returns JSON, not just random string message
 
     val getResponse =
         restTemplate.exchange(
@@ -187,7 +186,6 @@ public class PolicyControllerTest {
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
-    // TODO: Fix it so that POST returns JSON, not just random string message
 
     val deleteResponse =
         restTemplate.exchange(
