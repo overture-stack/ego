@@ -17,6 +17,7 @@
 package bio.overture.ego.config;
 
 import bio.overture.ego.provider.oauth.ScopeAwareOAuth2RequestFactory;
+import bio.overture.ego.security.CorsFilter;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.CustomTokenEnhancer;
@@ -54,6 +55,12 @@ public class AuthConfig extends AuthorizationServerConfigurerAdapter {
   @Autowired TokenService tokenService;
   @Autowired private ApplicationService clientDetailsService;
   @Autowired private AuthenticationManager authenticationManager;
+
+  @Bean
+  @Primary
+  public CorsFilter corsFilter() {
+    return new CorsFilter();
+  }
 
   @Bean
   public SimpleDateFormat formatter() {

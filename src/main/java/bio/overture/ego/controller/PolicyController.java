@@ -157,8 +157,7 @@ public class PolicyController {
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Add group permission", response = String.class)})
   @JsonView(Views.REST.class)
-  public @ResponseBody
-  Group createGroupPermission(
+  public @ResponseBody Group createGroupPermission(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String policyId,
       @PathVariable(value = "group_id", required = true) String groupId,
