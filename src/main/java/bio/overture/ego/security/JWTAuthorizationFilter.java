@@ -17,6 +17,7 @@
 package bio.overture.ego.security;
 
 import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
+import static org.springframework.util.DigestUtils.md5Digest;
 
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.service.ApplicationService;
@@ -84,7 +85,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
    */
   private void authenticateUserOrApplication(String tokenPayload) {
     if (!isValidToken(tokenPayload)) {
-      log.warn("Invalid token: {}", tokenPayload);
+      log.warn("Invalid token: {}", new String(md5Digest(tokenPayload.getBytes())));
       SecurityContextHolder.clearContext();
       return;
     }
