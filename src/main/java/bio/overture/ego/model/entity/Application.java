@@ -32,6 +32,7 @@ import javax.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.Accessors;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
 @Entity
@@ -42,7 +43,7 @@ import org.hibernate.annotations.TypeDef;
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonView(Views.REST.class)
-@ToString(exclude = {LombokFields.groups, LombokFields.users})
+@ToString(exclude = {LombokFields.groups, LombokFields.users, LombokFields.tokens})
 @EqualsAndHashCode(of = {LombokFields.id})
 @JsonPropertyOrder({
   JavaFields.ID,
@@ -89,7 +90,7 @@ public class Application implements Identifiable<UUID> {
 
   @NotNull
   @Enumerated(EnumType.STRING)
-  @org.hibernate.annotations.Type(type = "application_type_enum")
+  @Type(type = "application_type_enum")
   @Column(name = SqlFields.APPLICATIONTYPE, nullable = false)
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   private ApplicationType applicationType;
@@ -137,7 +138,7 @@ public class Application implements Identifiable<UUID> {
   @Builder.Default
   @ManyToMany(
       mappedBy = JavaFields.APPLICATIONS,
-      fetch = FetchType.EAGER,
+      fetch = FetchType.LAZY,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   private Set<Token> tokens = newHashSet();
 }

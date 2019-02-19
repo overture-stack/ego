@@ -16,11 +16,13 @@
 
 package bio.overture.ego.security;
 
+import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
+
+import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.app.AppTokenClaims;
 import bio.overture.ego.token.user.UserTokenClaims;
-import bio.overture.ego.utils.TypeUtils;
 import bio.overture.ego.view.Views;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -91,7 +93,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     val body = tokenService.getTokenClaims(removeTokenPrefix(tokenPayload));
     try {
       // Test Conversion
-      TypeUtils.convertToAnotherType(body, UserTokenClaims.class, Views.JWTAccessToken.class);
+      convertToAnotherType(body, UserTokenClaims.class, Views.JWTAccessToken.class);
       authentication =
           new UsernamePasswordAuthenticationToken(
               tokenService.getTokenUserInfo(removeTokenPrefix(tokenPayload)),
@@ -100,12 +102,13 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
       SecurityContextHolder.getContext().setAuthentication(authentication);
       return; // Escape
     } catch (Exception e) {
+      log.debug(e.getMessage());
       log.warn("Token is valid but not a User JWT");
     }
 
     try {
       // Test Conversion
-      TypeUtils.convertToAnotherType(body, AppTokenClaims.class, Views.JWTAccessToken.class);
+      convertToAnotherType(body, AppTokenClaims.class, Views.JWTAccessToken.class);
       authentication =
           new UsernamePasswordAuthenticationToken(
               tokenService.getTokenAppInfo(removeTokenPrefix(tokenPayload)),
@@ -114,13 +117,11 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
       SecurityContextHolder.getContext().setAuthentication(authentication);
       return; // Escape
     } catch (Exception e) {
+      log.debug(e.getMessage());
       log.warn("Token is valid but not an Application JWT");
-      throw e;
     }
 
-    // This section of code should be unreachable.
-    // throw new IllegalStateException("Invalid State: Token is valid, but does not correspond to a
-    // user or application.");
+    throw new ForbiddenException("Bad Token");
   }
 
   private void authenticateApplication(String token) {

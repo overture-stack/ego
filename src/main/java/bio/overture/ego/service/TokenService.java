@@ -20,7 +20,10 @@ import static bio.overture.ego.model.dto.Scope.effectiveScopes;
 import static bio.overture.ego.model.dto.Scope.explicitScopes;
 import static bio.overture.ego.service.UserService.extractScopes;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
 import static java.lang.String.format;
+import static java.util.UUID.fromString;
+import static org.springframework.util.DigestUtils.md5Digest;
 
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
@@ -41,7 +44,6 @@ import bio.overture.ego.token.signer.TokenSigner;
 import bio.overture.ego.token.user.UserJWTAccessToken;
 import bio.overture.ego.token.user.UserTokenClaims;
 import bio.overture.ego.token.user.UserTokenContext;
-import bio.overture.ego.utils.TypeUtils;
 import bio.overture.ego.view.Views;
 import io.jsonwebtoken.*;
 import java.security.InvalidKeyException;
@@ -257,24 +259,24 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
 
   public User getTokenUserInfo(String token) {
     try {
-      Claims body = getTokenClaims(token);
+      val body = getTokenClaims(token);
       val tokenClaims =
-          TypeUtils.convertToAnotherType(body, UserTokenClaims.class, Views.JWTAccessToken.class);
+          convertToAnotherType(body, UserTokenClaims.class, Views.JWTAccessToken.class);
       return userService.get(tokenClaims.getSub());
     } catch (JwtException | ClassCastException e) {
-      log.error("Issue handling user token: {}", token);
+      log.error("Issue handling user token: {}", new String(md5Digest(token.getBytes())));
       return null;
     }
   }
 
   public Application getTokenAppInfo(String token) {
     try {
-      Claims body = getTokenClaims(token);
+      val body = getTokenClaims(token);
       val tokenClaims =
-          TypeUtils.convertToAnotherType(body, AppTokenClaims.class, Views.JWTAccessToken.class);
-      return applicationService.getById(UUID.fromString(tokenClaims.getSub()));
+          convertToAnotherType(body, AppTokenClaims.class, Views.JWTAccessToken.class);
+      return applicationService.getById(fromString(tokenClaims.getSub()));
     } catch (JwtException | ClassCastException e) {
-      log.error("Issue handling application token: {}", token);
+      log.error("Issue handling application token: {}", new String(md5Digest(token.getBytes())));
       return null;
     }
   }
@@ -303,7 +305,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   private String getSignedToken(TokenClaims claims) {
     if (tokenSigner.getKey().isPresent()) {
       return Jwts.builder()
-          .setClaims(TypeUtils.convertToAnotherType(claims, Map.class, Views.JWTAccessToken.class))
+          .setClaims(convertToAnotherType(claims, Map.class, Views.JWTAccessToken.class))
           .signWith(SignatureAlgorithm.RS256, tokenSigner.getKey().get())
           .compact();
     } else {
