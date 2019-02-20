@@ -114,8 +114,8 @@ public class SecureServerConfig {
     protected void configure(HttpSecurity http) throws Exception {
       http.requestMatchers()
           .antMatchers(
-  "/oauth/login/*"
-          )
+  "/oauth/login/*",
+              "/oauth/ego-token")
           .and()
           .csrf()
           .disable()
@@ -144,8 +144,7 @@ public class SecureServerConfig {
               "/configuration/**",
               "/v2/api**",
               "/webjars/**",
-              "/oauth/token/public_key",
-              "/oauth/ego-token")
+              "/oauth/token/public_key")
           .permitAll()
           .antMatchers(HttpMethod.OPTIONS, "/**")
           .permitAll()
