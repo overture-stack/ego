@@ -30,6 +30,10 @@ public class OAuth2ClientResources {
               session.setAttribute("ego_client_id", matcher.group(1));
             }
 
+            if (getPreEstablishedRedirectUri() != null) {
+              return getPreEstablishedRedirectUri();
+            }
+
             return new URI(
                     uri.getScheme(), uri.getAuthority(), uri.getPath(), null, uri.getFragment())
                 .toString();
