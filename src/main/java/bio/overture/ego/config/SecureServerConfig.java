@@ -108,15 +108,14 @@ public class SecureServerConfig {
 
   //  int LOWEST_PRECEDENCE = Integer.MAX_VALUE;
   @Configuration
-  @Order(SecurityProperties.BASIC_AUTH_ORDER + 10)
+  @Order(SecurityProperties.BASIC_AUTH_ORDER - 3)
   public class OAuthConfigurerAdapter extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
       http.requestMatchers()
           .antMatchers(
-  "/oauth/login/*",
-              "/oauth/ego-token",
-              "/oauth/token/public_key")
+  "/oauth/login/*"
+          )
           .and()
           .csrf()
           .disable()
@@ -129,7 +128,7 @@ public class SecureServerConfig {
   }
 
   @Configuration
-  @Order(SecurityProperties.BASIC_AUTH_ORDER - 10)
+  @Order(SecurityProperties.BASIC_AUTH_ORDER + 3)
   public class AppConfigurerAdapter extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -144,7 +143,9 @@ public class SecureServerConfig {
               "/configuration/ui",
               "/configuration/**",
               "/v2/api**",
-              "/webjars/**")
+              "/webjars/**",
+              "/oauth/token/public_key",
+              "/oauth/ego-token")
           .permitAll()
           .antMatchers(HttpMethod.OPTIONS, "/**")
           .permitAll()
