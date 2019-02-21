@@ -85,7 +85,8 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
    */
   private void authenticateUserOrApplication(String tokenPayload) {
     if (!isValidToken(tokenPayload)) {
-      log.warn("Invalid token (MD5sum): {}", new String(md5Digest(tokenPayload.getBytes())));
+      log.warn("Invalid token (MD5sum): {}",
+        tokenPayload == null ? "null token" : new String(md5Digest(tokenPayload.getBytes())));
       SecurityContextHolder.clearContext();
       return;
     }
