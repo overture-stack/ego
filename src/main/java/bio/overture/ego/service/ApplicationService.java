@@ -165,16 +165,16 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   }
 
   public Application findByBasicToken(@NonNull String token) {
-    log.error(format("Looking for token '%s'", token));
+    log.info(format("Looking for token '%s'", token));
     val base64encoding = removeAppTokenPrefix(token);
-    log.error(format("Decoding '%s'", base64encoding));
+    log.info(format("Decoding '%s'", base64encoding));
 
     val contents = new String(Base64.getDecoder().decode(base64encoding));
-    log.error(format("Decoded to '%s'", contents));
+    log.info(format("Decoded to '%s'", contents));
 
     val parts = COLON_SPLITTER.splitToList(contents);
     val clientId = parts.get(0);
-    log.error(format("Extracted client id '%s'", clientId));
+    log.info(format("Extracted client id '%s'", clientId));
     return getByClientId(clientId);
   }
 
