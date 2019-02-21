@@ -24,6 +24,8 @@
   - [Step 2 - Run](#step-2---run)
 - [Tech Specifications](#tech-specification)
 - [Usage](#usage)
+- [Shoutouts](#shoutouts)
+  - [Browserstack](#browserstack)
 
 ## Introduction
 
@@ -204,3 +206,11 @@ curl example:
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -d 'grant_type=client_credentials&client_id=my-app-id&client_secret=secretpassword'
 ```
+
+## Shoutouts
+
+### Browserstack
+Many thanks to [Browserstack](https://www.browserstack.com/) for giving our test capabilities a powerup!
+![Browserstack](https://p14.zdusercontent.com/attachment/1015988/qyPFNKIZXCbr4qKjd5oxrayZc?token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..-yKqMwgZKdCDJZmW2kcVYw.IKGbK6GBbU3uZ3B7Vapw8uZeQ-uhXDV9kANtz5OOOBl0Ceg6Oi1gS5wqBnStOsCKgb3CibgGIrYjk-odWPwaL9Ei0u3OIDuBldkxF6aJ6eGtC9G4LfbDLGtOnYkUiANvx5HNPb7HZa3QyivKxCcX_MjO5U01F0WbmJajfYBsFVHHLtO0dBqFz-eWZMmLB0yfjZEaVPAUfLk9H1TO4c6Vw91Or29FrzaoGDQmvmcP7Pg00LMoxuaLxGJuuOiUlEe6OunidzxRd_elUZxMJ_caonvHEjSCkq_yHilG67tGewY.IV6Qg9p5vE0TGk59pqZtRg)
+
+
