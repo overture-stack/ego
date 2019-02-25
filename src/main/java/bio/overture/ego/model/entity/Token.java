@@ -61,7 +61,7 @@ public class Token implements Identifiable<UUID> {
   private Date issueDate;
 
   @NotNull
-  @Column(name = SqlFields.ISREVOKED, updatable = false, nullable = false)
+  @Column(name = SqlFields.ISREVOKED, nullable = false)
   private boolean isRevoked;
 
   @Column(name = SqlFields.DESCRIPTION)
