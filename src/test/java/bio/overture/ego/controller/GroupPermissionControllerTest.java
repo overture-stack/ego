@@ -41,6 +41,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
@@ -55,6 +56,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
@@ -110,7 +112,7 @@ public class GroupPermissionControllerTest {
             .add(
                 PermissionRequest.builder()
                     .policyId(policies.get(0).getId().toString())
-                    .mask(AccessLevel.WRITE)
+                    .mask(WRITE)
                     .build())
             .add(
                 PermissionRequest.builder()
@@ -269,7 +271,7 @@ public class GroupPermissionControllerTest {
 
   /**
    * Happy path
-   * Add non-existent permissions to a group
+   * Add non-existent permissions to a group, and read it back
    */
   @Test
   @SneakyThrows
@@ -304,7 +306,7 @@ public class GroupPermissionControllerTest {
     assertThat(outputMap)
         .containsKeys(policies.get(0).getId().toString(), policies.get(1).getId().toString());
     assertThat(outputMap.get(policies.get(0).getId().toString()))
-        .isEqualTo(AccessLevel.WRITE.toString());
+        .isEqualTo(WRITE.toString());
     assertThat(outputMap.get(policies.get(1).getId().toString()))
         .isEqualTo(DENY.toString());
   }
@@ -395,13 +397,17 @@ public class GroupPermissionControllerTest {
   @Ignore
   public void deleteGroupPermissionsForGroup_EmptyPermissionIds_ThrowsNotFoundException() {}
 
+  /**
+   * Using the group controller, attempt to read a permission belonging to a non-existent group
+   */
   @Test
-  @Ignore
-  public void readGroupPermissionsForGroup_AlreadyExists_Success() {}
-
-  @Test
-  @Ignore
-  public void readGroupPermissionsForGroup_NonExistent_ThrowsNotFoundException() {}
+  public void readGroupPermissionsForGroup_NonExistent_ThrowsNotFoundException() {
+    val nonExistentGroupId = generateNonExistentId(groupService);
+    val r1 = initStringRequest()
+        .endpoint("groups/%s/permissions", nonExistentGroupId)
+        .get();
+    assertThat(r1.getStatusCode()).isEqualTo(NOT_FOUND);
+  }
 
   /** PolicyController */
 
@@ -531,13 +537,6 @@ public class GroupPermissionControllerTest {
         .post();
     assertThat(r2.getStatusCode()).isEqualTo(BAD_REQUEST);
   }
-
-  // Group
-  // TODO [rtisma]:  Test 1 - Get permissions when groupId DNE
-
-  // Policy controller
-  // TODO [rtisma]: Test 1 - add permissions with policy id DNE
-  // TODO [rtisma]: Test 2 - add permissions with group id DNE
 
   @Test
   @SneakyThrows
