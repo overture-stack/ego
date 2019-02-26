@@ -42,6 +42,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Collection;
 import java.util.List;
@@ -70,7 +71,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   private final ApplicationRepository applicationRepository;
   private final ApplicationService applicationService;
   private final PolicyService policyService;
-  private final GroupPermissionService permissionService;
 
   @Autowired
   public GroupService(
@@ -78,15 +78,13 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
       @NonNull UserRepository userRepository,
       @NonNull ApplicationRepository applicationRepository,
       @NonNull PolicyService policyService,
-      @NonNull ApplicationService applicationService,
-      @NonNull GroupPermissionService permissionService) {
+      @NonNull ApplicationService applicationService){
     super(Group.class, groupRepository);
     this.groupRepository = groupRepository;
     this.userRepository = userRepository;
     this.applicationRepository = applicationRepository;
     this.applicationService = applicationService;
     this.policyService = policyService;
-    this.permissionService = permissionService;
   }
 
   public Group create(@NonNull GroupRequest request) {
@@ -243,31 +241,16 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
 
   public void deleteGroupPermissions(
       @NonNull String groupId, @NonNull List<String> permissionsIds) {
-
-    val groupName = this.get(groupId).getName();
-    val fullGroup = groupRepository.getGroupByNameIgnoreCase(groupName);
-    val perms = fullGroup.get().getPermissions();
-    for (val p : perms) {
-      ////      p.getPolicy().getGroupPermissions().remove(p);
-      ////      p.getPolicy().getGroupPermissions().removeIf(x -> x.getId().equals(p.getId()));
-      ////      policyService.getRepository().save(p.getPolicy());
-      ////      p.setPolicy(null);
-      ////      p.getOwner().getPermissions().remove(p);
-      //      p.getOwner().getPermissions().removeIf(x -> x.getId().equals(p.getId()));
-      ////      groupRepository.save(p.getOwner());
-      ////      p.setOwner(null);
-      ////      permissionService.getRepository().save(p);
-      permissionService.delete(p.getId());
-    }
+    throw new NotImplementedException();
   }
 
   public void deleteGroupPermissions2(
       @NonNull String userId, @NonNull List<String> permissionsIds) {
-    val group = getById(fromString(userId));
-    permissionService
-        .getMany(convertToUUIDList(permissionsIds))
-        .forEach(gp -> associateGroupPermission(group, gp));
-    groupRepository.save(group);
+//    val group = getById(fromString(userId));
+//    permissionService
+//        .getMany(convertToUUIDList(permissionsIds))
+//        .forEach(gp -> associateGroupPermission(group, gp));
+//    groupRepository.save(group);
   }
 
   public void delete(String id) {
