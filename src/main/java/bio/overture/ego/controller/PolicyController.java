@@ -1,13 +1,14 @@
 package bio.overture.ego.controller;
 
 import bio.overture.ego.model.dto.GenericResponse;
+import bio.overture.ego.model.dto.MaskDTO;
 import bio.overture.ego.model.dto.PageDTO;
+import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.exceptions.PostWithIdentifierException;
-import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
@@ -23,7 +24,6 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -38,6 +38,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -161,9 +163,9 @@ public class PolicyController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String policyId,
       @PathVariable(value = "group_id", required = true) String groupId,
-      @RequestBody(required = true) String mask) {
-    return groupService.addGroupPermissions(
-        groupId, ImmutableList.of(new PermissionRequest(policyId, mask)));
+      @RequestBody(required = true) MaskDTO maskDTO) {
+    return groupPermissionService.addGroupPermissions(
+        groupId, ImmutableList.of(new PermissionRequest(policyId, maskDTO.getMask())));
   }
 
   @AdminScoped
@@ -192,8 +194,8 @@ public class PolicyController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String id,
       @PathVariable(value = "user_id", required = true) String userId,
-      @RequestBody(required = true) String mask) {
-    userService.addUserPermission(userId, new PermissionRequest(id, mask));
+      @RequestBody(required = true) MaskDTO maskDTO) {
+    userService.addUserPermission(userId, new PermissionRequest(id, maskDTO.getMask()));
     return "1 user permission successfully added to ACL '" + id + "'";
   }
 

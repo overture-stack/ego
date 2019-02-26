@@ -9,17 +9,14 @@ import lombok.NonNull;
 
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class PermissionRequest {
-
-  @NonNull private String policyId;
+@NoArgsConstructor
+public class MaskDTO {
 
   @NonNull private AccessLevel mask;
 
-  @Override
-  public String toString() {
-    return policyId + "." + mask;
+  public static MaskDTO createMaskDTO(AccessLevel mask){
+    return new MaskDTO(mask);
   }
 
 }

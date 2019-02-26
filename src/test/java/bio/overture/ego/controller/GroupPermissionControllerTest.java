@@ -14,6 +14,7 @@ import bio.overture.ego.utils.Streams;
 import bio.overture.ego.utils.WebResource;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
@@ -49,6 +51,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
@@ -62,7 +65,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 @SpringBootTest(
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class PermissionControllerTest {
+public class GroupPermissionControllerTest {
 
   /** Constants */
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -107,12 +110,12 @@ public class PermissionControllerTest {
             .add(
                 PermissionRequest.builder()
                     .policyId(policies.get(0).getId().toString())
-                    .mask(AccessLevel.WRITE.toString())
+                    .mask(AccessLevel.WRITE)
                     .build())
             .add(
                 PermissionRequest.builder()
                     .policyId(policies.get(1).getId().toString())
-                    .mask(AccessLevel.DENY.toString())
+                    .mask(DENY)
                     .build())
             .build();
 
@@ -225,7 +228,7 @@ public class PermissionControllerTest {
 
     val newPermRequest =
         PermissionRequest.builder()
-            .mask(differentMask.toString())
+            .mask(differentMask)
             .policyId(permissionRequests.get(0).getPolicyId())
             .build();
 
@@ -303,7 +306,7 @@ public class PermissionControllerTest {
     assertThat(outputMap.get(policies.get(0).getId().toString()))
         .isEqualTo(AccessLevel.WRITE.toString());
     assertThat(outputMap.get(policies.get(1).getId().toString()))
-        .isEqualTo(AccessLevel.DENY.toString());
+        .isEqualTo(DENY.toString());
   }
 
 
@@ -401,9 +404,12 @@ public class PermissionControllerTest {
   public void readGroupPermissionsForGroup_NonExistent_ThrowsNotFoundException() {}
 
   /** PolicyController */
+
+  /**
+   * Using the policy controller, add a single permission for a non-existent group
+   */
   @Test
-  @Ignore
-  public void addGroupPermissionsToPolicy_NonExistentGroupId_NotFound() {
+  public void addGroupPermissionToPolicy_NonExistentGroupId_NotFound() {
     val nonExistentGroupId = generateNonExistentId(groupService);
 
     val r1 =
@@ -411,54 +417,57 @@ public class PermissionControllerTest {
             .endpoint(
                 "policies/%s/permission/group/%s",
                 policies.get(0).getId().toString(), nonExistentGroupId.toString())
-            .body(AccessLevel.DENY.toString())
+            .body(createMaskJson(DENY.toString()))
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     assertThat(r1.getBody()).contains(nonExistentGroupId.toString());
   }
 
+  /**
+   * Using the policy controller, add a single permission for a non-existent policy
+   */
   @Test
-  @Ignore
-  public void addGroupPermissionsToPolicy_NonExistentPolicyId_NotFound() {
+  public void addGroupPermissionToPolicy_NonExistentPolicyId_NotFound() {
     val nonExistentPolicyId = generateNonExistentId(policyService);
 
     val r1 =
         initStringRequest()
             .endpoint(
                 "policies/%s/permission/group/%s", nonExistentPolicyId, group1.getId().toString())
-            .body(AccessLevel.DENY.toString())
+            .body(createMaskJson(DENY.toString()))
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     assertThat(r1.getBody()).contains(nonExistentPolicyId.toString());
   }
 
+  /**
+   * Add a single permission using the policy controller
+   */
   @Test
-  @Ignore
   @SneakyThrows
-  public void addGroupPermissionsToPolicy_Unique_Success() {
+  public void addGroupPermissionToPolicy_Unique_Success() {
     val permRequest = permissionRequests.get(0);
     // Create 2 requests with same policy but different groups
-    val r1 =
-        initRequest(Group.class)
+    val r1 = initRequest(Group.class)
             .endpoint(
                 "policies/%s/permission/group/%s",
                 permRequest.getPolicyId(), group1.getId().toString())
-            .body(permRequest.getMask())
+            .body(createMaskJson(permRequest.getMask().toString()))
             .post();
-    val r2 =
-        initRequest(Group.class)
+    assertThat(r1.getStatusCode()).isEqualTo(OK);
+    assertThat(r1.getBody()).isNotNull();
+    val r1body = r1.getBody();
+    assertThat(r1body.getId()).isEqualTo(group1.getId());
+
+    val r2 = initRequest(Group.class)
             .endpoint(
                 "policies/%s/permission/group/%s",
                 permRequest.getPolicyId(), group2.getId().toString())
-            .body(permRequest.getMask())
+            .body(createMaskJson(permRequest.getMask().toString()))
             .post();
-    assertThat(r1.getStatusCode()).isEqualTo(OK);
     assertThat(r2.getStatusCode()).isEqualTo(OK);
-    assertThat(r1.getBody()).isNotNull();
     assertThat(r2.getBody()).isNotNull();
-    val r1body = r1.getBody();
     val r2body = r2.getBody();
-    assertThat(r1body.getId()).isEqualTo(group1.getId());
     assertThat(r2body.getId()).isEqualTo(group2.getId());
 
     // Get the groups for the policy previously used
@@ -475,13 +484,60 @@ public class PermissionControllerTest {
             n -> {
               val actualGroupId = n.path("id").asText();
               val actualGroupName = n.path("name").asText();
-              val actualMask = n.path("mask").asText();
+              val actualMask = AccessLevel.fromValue(n.path("mask").asText());
               assertThat(expectedMap).containsKey(actualGroupId);
               val expectedGroup = expectedMap.get(actualGroupId);
               assertThat(actualGroupName).isEqualTo(expectedGroup.getName());
               assertThat(actualMask).isEqualTo(permRequest.getMask());
             });
   }
+
+  /**
+   * Using the group controller, add a group permission with an undefined mask
+   */
+  @Test
+  public void addGroupPermissionsToGroup_IncorrectMask_BadRequest(){
+    // Corrupt the request
+    val incorrectMask = "anIncorrectMask";
+    assertThatExceptionOfType(IllegalArgumentException.class)
+        .isThrownBy(() -> AccessLevel.fromValue(incorrectMask) );
+
+    val body = MAPPER.valueToTree(permissionRequests);
+    val firstElement = (ObjectNode)body.get(0);
+    firstElement.put("mask", incorrectMask);
+
+    val r1 = initStringRequest()
+            .endpoint("groups/%s/permissions", group1.getId().toString())
+            .body(body)
+            .post();
+    assertThat(r1.getStatusCode()).isEqualTo(BAD_REQUEST);
+  }
+
+  /**
+   * Using the policy controller, add a group permission with an undefined mask
+   */
+  @Test
+  public void addGroupPermissionsToPolicy_IncorrectMask_BadRequest(){
+    // Corrupt the request
+    val incorrectMask = "anIncorrectMask";
+    assertThatExceptionOfType(IllegalArgumentException.class)
+        .isThrownBy(() -> AccessLevel.fromValue(incorrectMask) );
+
+    // Using the policy controller
+    val policyId = permissionRequests.get(0).getPolicyId();
+    val r2 = initStringRequest()
+        .endpoint( "policies/%s/permission/group/%s", policyId, group1.getId().toString())
+        .body(createMaskJson(incorrectMask))
+        .post();
+    assertThat(r2.getStatusCode()).isEqualTo(BAD_REQUEST);
+  }
+
+  // Group
+  // TODO [rtisma]:  Test 1 - Get permissions when groupId DNE
+
+  // Policy controller
+  // TODO [rtisma]: Test 1 - add permissions with policy id DNE
+  // TODO [rtisma]: Test 2 - add permissions with group id DNE
 
   @Test
   @SneakyThrows
@@ -502,6 +558,10 @@ public class PermissionControllerTest {
 
   private <T> WebResource<T> initRequest(@NonNull Class<T> responseType) {
     return createWebResource(restTemplate, getServerUrl(), responseType).headers(this.headers);
+  }
+
+  private static ObjectNode createMaskJson(String maskStringValue){
+    return MAPPER.createObjectNode().put("mask", maskStringValue);
   }
 
   private String getServerUrl() {

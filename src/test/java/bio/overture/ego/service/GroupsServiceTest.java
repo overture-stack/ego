@@ -26,6 +26,9 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static bio.overture.ego.model.enums.AccessLevel.DENY;
+import static bio.overture.ego.model.enums.AccessLevel.READ;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static bio.overture.ego.utils.EntityTools.extractGroupNames;
 import static com.google.common.collect.Lists.newArrayList;
@@ -725,9 +728,9 @@ public class GroupsServiceTest {
 
     val permissions =
         Arrays.asList(
-            new PermissionRequest(study001id, "READ"),
-            new PermissionRequest(study002id, "WRITE"),
-            new PermissionRequest(study003id, "DENY"));
+            new PermissionRequest(study001id, READ),
+            new PermissionRequest(study002id, WRITE),
+            new PermissionRequest(study003id, DENY));
 
     val firstGroup = groups.get(0);
 
@@ -759,9 +762,9 @@ public class GroupsServiceTest {
 
     val permissions =
         Arrays.asList(
-            new PermissionRequest(study001id, "READ"),
-            new PermissionRequest(study002id, "WRITE"),
-            new PermissionRequest(study003id, "DENY"));
+            new PermissionRequest(study001id, READ),
+            new PermissionRequest(study002id, WRITE),
+            new PermissionRequest(study003id, DENY));
 
     groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);
 
@@ -799,9 +802,9 @@ public class GroupsServiceTest {
 
     val permissions =
         Arrays.asList(
-            new PermissionRequest(study001id, "READ"),
-            new PermissionRequest(study002id, "WRITE"),
-            new PermissionRequest(study003id, "DENY"));
+            new PermissionRequest(study001id, READ ),
+            new PermissionRequest(study002id, WRITE),
+            new PermissionRequest(study003id, DENY));
 
     groupService.addGroupPermissions(testGroup.getId().toString(), permissions);
 

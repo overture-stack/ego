@@ -22,7 +22,6 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
@@ -271,7 +270,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
 
   private GroupPermission resolveGroupPermission(PermissionRequest permission) {
     val policy = policyService.get(permission.getPolicyId());
-    val mask = AccessLevel.fromValue(permission.getMask());
+    val mask = permission.getMask();
     val gp = new GroupPermission();
     gp.setPolicy(policy);
     gp.setAccessLevel(mask);

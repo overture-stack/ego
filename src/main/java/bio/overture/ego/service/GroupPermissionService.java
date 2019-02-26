@@ -5,7 +5,6 @@ import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.repository.BaseRepository;
 import bio.overture.ego.repository.GroupPermissionRepository;
@@ -28,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import static bio.overture.ego.model.enums.AccessLevel.fromValue;
 import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.utils.CollectionUtils.difference;
@@ -97,7 +95,7 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
 
   private static PermissionRequest convertToPermissionRequest(GroupPermission gp){
     return PermissionRequest.builder()
-        .mask(gp.getAccessLevel().toString())
+        .mask(gp.getAccessLevel())
         .policyId(gp.getPolicy().getId().toString())
         .build();
   }
@@ -113,7 +111,7 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
   private void createGroupPermission(Map<String, Policy> policyMap, Group group, PermissionRequest request){
     val gp = new GroupPermission();
     val policy = policyMap.get(request.getPolicyId());
-    gp.setAccessLevel(fromValue(request.getMask()));
+    gp.setAccessLevel(request.getMask());
     associateGroupPermission(group, gp);
     associateGroupPermission(policy, gp);
     getRepository().save(gp);
@@ -137,7 +135,6 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
     permMap.forEach((policyId, value) -> {
       val accessLevels = value.stream()
           .map(PermissionRequest::getMask) // validate proper conversion
-          .map(AccessLevel::fromValue)
           .collect(toImmutableSet());
       checkUnique(accessLevels.size() < 2,
           "Found multiple (%s) permission requests for policyId '%s': %s",

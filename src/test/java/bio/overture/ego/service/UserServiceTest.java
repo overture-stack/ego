@@ -1,33 +1,18 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.service.UserService.USER_CONVERTER;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
-import static com.google.common.collect.Lists.newArrayList;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static java.util.UUID.randomUUID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.CreateUserRequest;
+import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
-import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
-import java.util.Collections;
-import java.util.Date;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -38,6 +23,25 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.Date;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static bio.overture.ego.model.enums.AccessLevel.DENY;
+import static bio.overture.ego.model.enums.AccessLevel.READ;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.service.UserService.USER_CONVERTER;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.UUID.randomUUID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -968,9 +972,9 @@ public class UserServiceTest {
 
     val permissions =
         asList(
-            new PermissionRequest(study001id, "READ"),
-            new PermissionRequest(study002id, "WRITE"),
-            new PermissionRequest(study003id, "DENY"));
+            new PermissionRequest(study001id, READ),
+            new PermissionRequest(study002id, WRITE),
+            new PermissionRequest(study003id, DENY));
 
     userService.addUserPermissions(user.getId().toString(), permissions);
 
@@ -997,9 +1001,9 @@ public class UserServiceTest {
 
     val permissions =
         asList(
-            new PermissionRequest(study001id, "READ"),
-            new PermissionRequest(study002id, "WRITE"),
-            new PermissionRequest(study003id, "DENY"));
+            new PermissionRequest(study001id, READ),
+            new PermissionRequest(study002id, WRITE),
+            new PermissionRequest(study003id, DENY));
 
     userService.addUserPermissions(user.getId().toString(), permissions);
 
@@ -1035,9 +1039,9 @@ public class UserServiceTest {
 
     val permissions =
         asList(
-            new PermissionRequest(study001id, "READ"),
-            new PermissionRequest(study002id, "WRITE"),
-            new PermissionRequest(study003id, "DENY"));
+            new PermissionRequest(study001id, READ),
+            new PermissionRequest(study002id, WRITE),
+            new PermissionRequest(study003id, DENY));
 
     userService.addUserPermissions(user.getId().toString(), permissions);
 
