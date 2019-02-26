@@ -16,35 +16,20 @@
 
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Converters.convertToUUIDList;
-import static bio.overture.ego.utils.Converters.convertToUUIDSet;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static java.lang.String.format;
-import static java.util.UUID.fromString;
-import static org.mapstruct.factory.Mappers.getMapper;
-import static org.springframework.data.jpa.domain.Specifications.where;
-
 import bio.overture.ego.model.dto.GroupRequest;
+import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.exceptions.NotFoundException;
-import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
 import com.google.common.collect.ImmutableList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
 import org.mapstruct.Mapper;
@@ -57,6 +42,23 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
+
+import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Converters.convertToUUIDList;
+import static bio.overture.ego.utils.Converters.convertToUUIDSet;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static java.lang.String.format;
+import static java.util.UUID.fromString;
+import static org.mapstruct.factory.Mappers.getMapper;
+import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
 public class GroupService extends AbstractNamedService<Group, UUID> {
@@ -93,6 +95,12 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     return getRepository().save(group);
   }
 
+  public Group getGroupWithRelationships(@NonNull String id){
+    val result = groupRepository.findGroupById(fromString(id));
+    checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
+    return result.get();
+  }
+
   public Group addAppsToGroup(@NonNull String grpId, @NonNull List<String> appIDs) {
     val group = getById(fromString(grpId));
     val apps = applicationService.getMany(convertToUUIDList(appIDs));
@@ -110,7 +118,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   }
 
   public Group addGroupPermissions(
-      @NonNull String groupId, @NonNull List<PolicyIdStringWithAccessLevel> permissions) {
+      @NonNull String groupId, @NonNull List<PermissionRequest> permissions) {
     val group = getById(fromString(groupId));
     permissions
         .stream()
@@ -278,7 +286,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         !groupRepository.existsByNameIgnoreCase(name), "A group with same name already exists");
   }
 
-  private GroupPermission resolveGroupPermission(PolicyIdStringWithAccessLevel permission) {
+  private GroupPermission resolveGroupPermission(PermissionRequest permission) {
     val policy = policyService.get(permission.getPolicyId());
     val mask = AccessLevel.fromValue(permission.getMask());
     val gp = new GroupPermission();

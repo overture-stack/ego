@@ -18,7 +18,7 @@ import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
-import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
+import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.utils.EntityGenerator;
@@ -968,9 +968,9 @@ public class UserServiceTest {
 
     val permissions =
         asList(
-            new PolicyIdStringWithAccessLevel(study001id, "READ"),
-            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
+            new PermissionRequest(study001id, "READ"),
+            new PermissionRequest(study002id, "WRITE"),
+            new PermissionRequest(study003id, "DENY"));
 
     userService.addUserPermissions(user.getId().toString(), permissions);
 
@@ -997,9 +997,9 @@ public class UserServiceTest {
 
     val permissions =
         asList(
-            new PolicyIdStringWithAccessLevel(study001id, "READ"),
-            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
+            new PermissionRequest(study001id, "READ"),
+            new PermissionRequest(study002id, "WRITE"),
+            new PermissionRequest(study003id, "DENY"));
 
     userService.addUserPermissions(user.getId().toString(), permissions);
 
@@ -1035,9 +1035,9 @@ public class UserServiceTest {
 
     val permissions =
         asList(
-            new PolicyIdStringWithAccessLevel(study001id, "READ"),
-            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
+            new PermissionRequest(study001id, "READ"),
+            new PermissionRequest(study002id, "WRITE"),
+            new PermissionRequest(study003id, "DENY"));
 
     userService.addUserPermissions(user.getId().toString(), permissions);
 

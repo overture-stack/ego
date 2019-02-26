@@ -42,7 +42,7 @@ import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.exceptions.NotFoundException;
-import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
+import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.UserSpecification;
@@ -139,7 +139,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
-  public User addUserPermission(String userId, @NonNull PolicyIdStringWithAccessLevel policy) {
+  public User addUserPermission(String userId, @NonNull PermissionRequest policy) {
     return addUserPermissions(userId, newArrayList(policy));
   }
 
@@ -150,7 +150,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   public User addUserPermissions(
-      @NonNull String userId, @NonNull List<PolicyIdStringWithAccessLevel> permissions) {
+      @NonNull String userId, @NonNull List<PermissionRequest> permissions) {
     val policyMap = permissions.stream().collect(groupingBy(x -> fromString(x.getPolicyId())));
     val user = getById(fromString(userId));
     policyService
@@ -475,12 +475,12 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   private static Stream<UserPermission> streamUserPermission(
-      User u, Map<UUID, List<PolicyIdStringWithAccessLevel>> policyMap, Policy p) {
+      User u, Map<UUID, List<PermissionRequest>> policyMap, Policy p) {
     val policyId = p.getId();
     return policyMap
         .get(policyId)
         .stream()
-        .map(PolicyIdStringWithAccessLevel::getMask)
+        .map(PermissionRequest::getMask)
         .map(AccessLevel::fromValue)
         .map(
             a -> {

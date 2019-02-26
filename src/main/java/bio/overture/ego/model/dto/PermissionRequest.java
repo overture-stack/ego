@@ -1,4 +1,4 @@
-package bio.overture.ego.model.params;
+package bio.overture.ego.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,9 +8,9 @@ import lombok.NonNull;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class PolicyIdStringWithAccessLevel {
+@AllArgsConstructor
+public class PermissionRequest {
   @NonNull private String policyId;
   @NonNull private String mask;
 

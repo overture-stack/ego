@@ -1,25 +1,14 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
-import static bio.overture.ego.utils.EntityTools.extractGroupNames;
-import static com.google.common.collect.Lists.newArrayList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.GroupRequest;
+import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
-import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -30,6 +19,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityNotFoundException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
+import static bio.overture.ego.utils.EntityTools.extractGroupNames;
+import static com.google.common.collect.Lists.newArrayList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -724,9 +725,9 @@ public class GroupsServiceTest {
 
     val permissions =
         Arrays.asList(
-            new PolicyIdStringWithAccessLevel(study001id, "READ"),
-            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
+            new PermissionRequest(study001id, "READ"),
+            new PermissionRequest(study002id, "WRITE"),
+            new PermissionRequest(study003id, "DENY"));
 
     val firstGroup = groups.get(0);
 
@@ -758,9 +759,9 @@ public class GroupsServiceTest {
 
     val permissions =
         Arrays.asList(
-            new PolicyIdStringWithAccessLevel(study001id, "READ"),
-            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
+            new PermissionRequest(study001id, "READ"),
+            new PermissionRequest(study002id, "WRITE"),
+            new PermissionRequest(study003id, "DENY"));
 
     groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);
 
@@ -798,9 +799,9 @@ public class GroupsServiceTest {
 
     val permissions =
         Arrays.asList(
-            new PolicyIdStringWithAccessLevel(study001id, "READ"),
-            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
+            new PermissionRequest(study001id, "READ"),
+            new PermissionRequest(study002id, "WRITE"),
+            new PermissionRequest(study003id, "DENY"));
 
     groupService.addGroupPermissions(testGroup.getId().toString(), permissions);
 
@@ -814,4 +815,5 @@ public class GroupsServiceTest {
     assertThat(pagedGroupPermissions.getContent().get(0).getPolicy().getName())
         .isEqualToIgnoringCase("testGetGroupPermissions_Study001");
   }
+
 }

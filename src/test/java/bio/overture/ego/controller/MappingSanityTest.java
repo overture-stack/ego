@@ -31,11 +31,9 @@ import static org.assertj.core.api.Assertions.assertThat;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class MappingSanityTest {
 
-
   @Autowired private GroupRepository groupRepository;
   @Autowired private PolicyRepository policyRepository;
   @Autowired private GroupPermissionRepository groupPermissionRepository;
-
 
   @Test
   public void sanityCRUD_GroupPermissions() {

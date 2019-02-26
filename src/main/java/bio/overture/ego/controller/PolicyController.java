@@ -7,7 +7,7 @@ import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.exceptions.PostWithIdentifierException;
-import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
+import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
@@ -163,7 +163,7 @@ public class PolicyController {
       @PathVariable(value = "group_id", required = true) String groupId,
       @RequestBody(required = true) String mask) {
     return groupService.addGroupPermissions(
-        groupId, ImmutableList.of(new PolicyIdStringWithAccessLevel(policyId, mask)));
+        groupId, ImmutableList.of(new PermissionRequest(policyId, mask)));
   }
 
   @AdminScoped
@@ -193,7 +193,7 @@ public class PolicyController {
       @PathVariable(value = "id", required = true) String id,
       @PathVariable(value = "user_id", required = true) String userId,
       @RequestBody(required = true) String mask) {
-    userService.addUserPermission(userId, new PolicyIdStringWithAccessLevel(id, mask));
+    userService.addUserPermission(userId, new PermissionRequest(id, mask));
     return "1 user permission successfully added to ACL '" + id + "'";
   }
 
