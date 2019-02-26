@@ -38,6 +38,10 @@ public class WebResource<T> {
     return doRequest(null, HttpMethod.GET);
   }
 
+  public ResponseEntity<T> put() {
+    return doRequest(this.body, HttpMethod.PUT);
+  }
+
   public ResponseEntity<T> post() {
     return doRequest(this.body, HttpMethod.POST);
   }

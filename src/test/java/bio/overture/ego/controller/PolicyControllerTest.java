@@ -266,10 +266,6 @@ public class PolicyControllerTest {
     return MAPPER.createObjectNode().put("mask", maskStringValue);
   }
 
-  private String createURLWithPort(String uri) {
-    return "http://localhost:" + port + uri;
-  }
-
   private WebResource<String> initStringRequest() {
     return initRequest(String.class);
   }

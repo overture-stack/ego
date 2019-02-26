@@ -7,7 +7,9 @@ import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.WebResource;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -32,6 +34,7 @@ import java.util.UUID;
 import static bio.overture.ego.utils.EntityTools.extractAppIds;
 import static bio.overture.ego.utils.EntityTools.extractGroupIds;
 import static bio.overture.ego.utils.EntityTools.extractIDs;
+import static bio.overture.ego.utils.WebResource.createWebResource;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -88,9 +91,11 @@ public class GroupControllerTest {
             .status(EntityStatus.PENDING.toString())
             .description("")
             .build();
-    val entity = new HttpEntity<Group>(group, headers);
-    val response =
-        restTemplate.exchange(createURLWithPort("/groups"), HttpMethod.POST, entity, String.class);
+
+    val response = initStringRequest()
+        .endpoint("/groups")
+        .body(group)
+        .post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
@@ -99,9 +104,11 @@ public class GroupControllerTest {
   @Test
   public void addUniqueGroup() {
     val group = entityGenerator.setupGroup("SameSame");
-    val entity = new HttpEntity<Group>(group, headers);
-    val response =
-        restTemplate.exchange(createURLWithPort("/groups"), HttpMethod.POST, entity, String.class);
+
+    val response = initStringRequest()
+        .endpoint("/groups")
+        .body(group)
+        .post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.CONFLICT);
@@ -111,10 +118,9 @@ public class GroupControllerTest {
   public void getGroup() {
     // Groups created in setup
     val groupId = groupService.getByName("Group One").getId();
-    val entity = new HttpEntity<String>(null, headers);
-    val response =
-        restTemplate.exchange(
-            createURLWithPort(format("/groups/%s", groupId)), HttpMethod.GET, entity, String.class);
+    val response = initStringRequest()
+        .endpoint("/groups/%s", groupId)
+        .get();
 
     val responseStatus = response.getStatusCode();
     val responseBody = response.getBody();
@@ -129,13 +135,9 @@ public class GroupControllerTest {
 
   @Test
   public void getGroupNotFound() {
-    val entity = new HttpEntity<String>(null, headers);
-    val response =
-        restTemplate.exchange(
-            createURLWithPort(format("/groups/%s", UUID.randomUUID())),
-            HttpMethod.GET,
-            entity,
-            String.class);
+    val response = initStringRequest()
+        .endpoint("/groups/%s", UUID.randomUUID())
+        .get();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.NOT_FOUND);
@@ -143,9 +145,9 @@ public class GroupControllerTest {
 
   @Test
   public void listGroups() {
-    val entity = new HttpEntity<String>(null, headers);
-    val response =
-        restTemplate.exchange(createURLWithPort("/groups"), HttpMethod.GET, entity, String.class);
+    val response = initStringRequest()
+        .endpoint("/groups")
+        .get();
 
     val responseStatus = response.getStatusCode();
     val responseBody = response.getBody();
@@ -178,13 +180,10 @@ public class GroupControllerTest {
             .description(group.getDescription())
             .build();
 
-    val entity = new HttpEntity<Group>(update, headers);
-    val response =
-        restTemplate.exchange(
-            createURLWithPort(format("/groups/%s", group.getId())),
-            HttpMethod.PUT,
-            entity,
-            String.class);
+    val response = initStringRequest()
+        .endpoint("/groups/%s", group.getId())
+        .body(update)
+        .put();
 
     val responseBody = response.getBody();
     val responseStatus = response.getStatusCode();
@@ -232,19 +231,14 @@ public class GroupControllerTest {
     val usersBody = singletonList(userOne.getId().toString());
     val appsBody = singletonList(appOne.getId().toString());
 
-    val saveGroupUsers = new HttpEntity<>(usersBody, headers);
-    val saveGroupApps = new HttpEntity<>(appsBody, headers);
-
-    restTemplate.exchange(
-        createURLWithPort(format("/groups/%s/users", group.getId())),
-        HttpMethod.POST,
-        saveGroupUsers,
-        String.class);
-    restTemplate.exchange(
-        createURLWithPort(format("/groups/%s/applications", group.getId())),
-        HttpMethod.POST,
-        saveGroupApps,
-        String.class);
+    initStringRequest()
+        .endpoint("/groups/%s/users", group.getId())
+        .body(usersBody)
+        .post();
+    initStringRequest()
+        .endpoint("/groups/%s/applications", group.getId())
+        .body(appsBody)
+        .post();
 
     // Check user-group relationship is there
     val userWithGroup = userService.getByName("TempGroupUser@domain.com");
@@ -254,13 +248,9 @@ public class GroupControllerTest {
     val applicationWithGroup = applicationService.getByClientId("TempGroupApp");
     assertThat(extractGroupIds(applicationWithGroup.getGroups())).contains(groupId);
 
-    val entity = new HttpEntity<String>(null, headers);
-    val response =
-        restTemplate.exchange(
-            createURLWithPort(format("/groups/%s", groupId)),
-            HttpMethod.DELETE,
-            entity,
-            String.class);
+    val response = initStringRequest()
+        .endpoint("/groups/%s", groupId)
+        .delete();
 
     val responseStatus = response.getStatusCode();
 
@@ -292,13 +282,11 @@ public class GroupControllerTest {
     val userTwo = userService.getByName("SecondUser@domain.com");
 
     val body = asList(userOne.getId().toString(), userTwo.getId().toString());
-    val entity = new HttpEntity<>(body, headers);
-    val response =
-        restTemplate.exchange(
-            createURLWithPort(format("/groups/%s/users", group.getId())),
-            HttpMethod.POST,
-            entity,
-            String.class);
+    val response = initStringRequest()
+        .endpoint("/groups/%s/users", group.getId())
+        .body(body)
+        .post();
+
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
@@ -323,44 +311,31 @@ public class GroupControllerTest {
     val remainUser = entityGenerator.setupUser("Keep This").getId().toString();
 
     val body = asList(deleteUser, remainUser);
-    val entity = new HttpEntity<>(body, headers);
-    val response =
-        restTemplate.exchange(
-            createURLWithPort(format("/groups/%s/users", groupId)),
-            HttpMethod.POST,
-            entity,
-            String.class);
+    val response = initStringRequest()
+        .endpoint("/groups/%s/users", groupId)
+        .body(body)
+        .post();
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
-    val getResponse =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/groups/%s/users", groupId)),
-            HttpMethod.GET,
-            entity,
-            String.class);
+    val getResponse = initStringRequest()
+        .endpoint("/groups/%s/users", groupId)
+        .get();
     val getResponseStatus = getResponse.getStatusCode();
     assertThat(getResponseStatus).isEqualTo(HttpStatus.OK);
     val getResponseJson = MAPPER.readTree(getResponse.getBody());
     assertThat(getResponseJson.get("count").asInt()).isEqualTo(2);
 
-    val deleteEntity = new HttpEntity<String>(null, headers);
-    val deleteResponse =
-        restTemplate.exchange(
-            createURLWithPort(format("/groups/%s/users/%s", groupId, deleteUser)),
-            HttpMethod.DELETE,
-            deleteEntity,
-            String.class);
+    val deleteResponse = initStringRequest()
+        .endpoint("/groups/%s/users/%s", groupId, deleteUser)
+        .delete();
 
     val deleteResponseStatus = deleteResponse.getStatusCode();
     assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
 
-    val secondGetResponse =
-        restTemplate.exchange(
-            createURLWithPort(format("/groups/%s/users", groupId)),
-            HttpMethod.GET,
-            entity,
-            String.class);
+    val secondGetResponse = initStringRequest()
+        .endpoint("/groups/%s/users", groupId)
+        .get();
 
     val secondGetResponseStatus = deleteResponse.getStatusCode();
     assertThat(secondGetResponseStatus).isEqualTo(HttpStatus.OK);
@@ -379,13 +354,10 @@ public class GroupControllerTest {
     val appTwo = applicationService.getByClientId("222222");
 
     val body = asList(appOne.getId().toString(), appTwo.getId().toString());
-    val entity = new HttpEntity<>(body, headers);
-    val response =
-        restTemplate.exchange(
-            createURLWithPort(format("/groups/%s/applications", group.getId())),
-            HttpMethod.POST,
-            entity,
-            String.class);
+    val response = initStringRequest()
+        .endpoint("/groups/%s/applications", group.getId())
+        .body(body)
+        .post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
@@ -411,44 +383,31 @@ public class GroupControllerTest {
     val remainApp = entityGenerator.setupApplication("KeepThis").getId().toString();
 
     val body = asList(deleteApp, remainApp);
-    val entity = new HttpEntity<>(body, headers);
-    val response =
-        restTemplate.exchange(
-            createURLWithPort(format("/groups/%s/applications", groupId)),
-            HttpMethod.POST,
-            entity,
-            String.class);
+    val response = initStringRequest()
+        .endpoint("/groups/%s/applications", groupId)
+        .body(body)
+        .post();
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
-    val getResponse =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/groups/%s/applications", groupId)),
-            HttpMethod.GET,
-            entity,
-            String.class);
+    val getResponse = initStringRequest()
+        .endpoint("/groups/%s/applications", groupId)
+        .get();
     val getResponseStatus = getResponse.getStatusCode();
     assertThat(getResponseStatus).isEqualTo(HttpStatus.OK);
     val getResponseJson = MAPPER.readTree(getResponse.getBody());
     assertThat(getResponseJson.get("count").asInt()).isEqualTo(2);
 
-    val deleteEntity = new HttpEntity<String>(null, headers);
-    val deleteResponse =
-        restTemplate.exchange(
-            createURLWithPort(format("/groups/%s/applications/%s", groupId, deleteApp)),
-            HttpMethod.DELETE,
-            deleteEntity,
-            String.class);
+    val deleteResponse = initStringRequest()
+        .endpoint("/groups/%s/applications/%s", groupId, deleteApp)
+        .delete();
 
     val deleteResponseStatus = deleteResponse.getStatusCode();
     assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
 
-    val secondGetResponse =
-        restTemplate.exchange(
-            createURLWithPort(format("/groups/%s/applications", groupId)),
-            HttpMethod.GET,
-            entity,
-            String.class);
+    val secondGetResponse = initStringRequest()
+        .endpoint("/groups/%s/applications", groupId)
+        .get();
 
     val secondGetResponseStatus = deleteResponse.getStatusCode();
     assertThat(secondGetResponseStatus).isEqualTo(HttpStatus.OK);
@@ -461,4 +420,17 @@ public class GroupControllerTest {
   private String createURLWithPort(String uri) {
     return "http://localhost:" + port + uri;
   }
+
+  private WebResource<String> initStringRequest() {
+    return initRequest(String.class);
+  }
+
+  private <T> WebResource<T> initRequest(@NonNull Class<T> responseType) {
+    return createWebResource(restTemplate, getServerUrl(), responseType).headers(this.headers);
+  }
+
+  private String getServerUrl() {
+    return "http://localhost:" + port;
+  }
+
 }

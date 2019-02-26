@@ -17,14 +17,14 @@
 
 package bio.overture.ego.controller;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.WebResource;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -35,9 +35,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import static bio.overture.ego.utils.WebResource.createWebResource;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -89,10 +94,10 @@ public class ApplicationControllerTest {
             .applicationType(ApplicationType.CLIENT)
             .build();
 
-    val entity = new HttpEntity<Application>(app, headers);
-    val response =
-        restTemplate.exchange(
-            createURLWithPort("/applications"), HttpMethod.POST, entity, String.class);
+    val response = initStringRequest()
+        .endpoint("/applications")
+        .body(app)
+        .post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
@@ -123,18 +128,18 @@ public class ApplicationControllerTest {
             .applicationType(ApplicationType.CLIENT)
             .build();
 
-    val entity1 = new HttpEntity<Application>(app1, headers);
-    val response1 =
-        restTemplate.exchange(
-            createURLWithPort("/applications"), HttpMethod.POST, entity1, String.class);
+    val response1 = initStringRequest()
+        .endpoint("/applications")
+        .body(app1)
+        .post();
 
     val responseStatus1 = response1.getStatusCode();
     assertThat(responseStatus1).isEqualTo(HttpStatus.OK);
 
-    val entity2 = new HttpEntity<Application>(app2, headers);
-    val response2 =
-        restTemplate.exchange(
-            createURLWithPort("/applications"), HttpMethod.POST, entity2, String.class);
+    val response2 = initStringRequest()
+        .endpoint("/applications")
+        .body(app2)
+        .post();
     val responseStatus2 = response2.getStatusCode();
     assertThat(responseStatus2).isEqualTo(HttpStatus.CONFLICT);
   }
@@ -143,13 +148,9 @@ public class ApplicationControllerTest {
   @SneakyThrows
   public void getApplication_Success() {
     val applicationId = applicationService.getByClientId("111111").getId();
-    val entity = new HttpEntity<String>(null, headers);
-    val response =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/applications/%s", applicationId)),
-            HttpMethod.GET,
-            entity,
-            String.class);
+    val response = initStringRequest()
+        .endpoint("/applications/%s", applicationId)
+        .get();
 
     val responseStatus = response.getStatusCode();
     val responseJson = MAPPER.readTree(response.getBody());
@@ -159,7 +160,15 @@ public class ApplicationControllerTest {
     assertThat(responseJson.get("applicationType").asText()).isEqualTo("CLIENT");
   }
 
-  private String createURLWithPort(String uri) {
-    return "http://localhost:" + port + uri;
+  private WebResource<String> initStringRequest() {
+    return initRequest(String.class);
+  }
+
+  private <T> WebResource<T> initRequest(@NonNull Class<T> responseType) {
+    return createWebResource(restTemplate, getServerUrl(), responseType).headers(this.headers);
+  }
+
+  private String getServerUrl() {
+    return "http://localhost:" + port;
   }
 }
