@@ -144,6 +144,7 @@ public class SecureServerConfig {
               "/configuration/**",
               "/v2/api**",
               "/webjars/**",
+              "/oauth/token/verify",
               "/oauth/token/public_key")
           .permitAll()
           .antMatchers(HttpMethod.OPTIONS, "/**")
