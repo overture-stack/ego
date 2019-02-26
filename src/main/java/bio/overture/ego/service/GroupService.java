@@ -233,7 +233,28 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     getRepository().save(group);
   }
 
-  public void deleteGroupPermissions(@NonNull String userId, @NonNull List<String> permissionsIds) {
+  public void deleteGroupPermissions(
+      @NonNull String groupId, @NonNull List<String> permissionsIds) {
+
+    val groupName = this.get(groupId).getName();
+    val fullGroup = groupRepository.getGroupByNameIgnoreCase(groupName);
+    val perms = fullGroup.get().getPermissions();
+    for (val p : perms) {
+      ////      p.getPolicy().getGroupPermissions().remove(p);
+      ////      p.getPolicy().getGroupPermissions().removeIf(x -> x.getId().equals(p.getId()));
+      ////      policyService.getRepository().save(p.getPolicy());
+      ////      p.setPolicy(null);
+      ////      p.getOwner().getPermissions().remove(p);
+      //      p.getOwner().getPermissions().removeIf(x -> x.getId().equals(p.getId()));
+      ////      groupRepository.save(p.getOwner());
+      ////      p.setOwner(null);
+      ////      permissionService.getRepository().save(p);
+      permissionService.delete(p.getId());
+    }
+  }
+
+  public void deleteGroupPermissions2(
+      @NonNull String userId, @NonNull List<String> permissionsIds) {
     val group = getById(fromString(userId));
     permissionService
         .getMany(convertToUUIDList(permissionsIds))

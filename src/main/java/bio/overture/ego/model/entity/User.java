@@ -16,10 +16,6 @@
 
 package bio.overture.ego.model.entity;
 
-import static bio.overture.ego.service.UserService.getPermissionsList;
-import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
-import static com.google.common.collect.Sets.newHashSet;
-
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
@@ -29,7 +25,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import java.util.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.GenericGenerator;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -45,14 +49,14 @@ import javax.persistence.NamedSubgraph;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.GenericGenerator;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import static bio.overture.ego.service.UserService.getPermissionsList;
+import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
+import static com.google.common.collect.Sets.newHashSet;
 
 // TODO: simplify annotations. Find common annotations for Ego entities, and put them all under a
 // single annotation
@@ -159,7 +163,8 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   @JsonIgnore
   @OneToMany(
       mappedBy = JavaFields.OWNER,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
       fetch = FetchType.LAZY)
   @Builder.Default
   private Set<UserPermission> userPermissions = newHashSet();
@@ -169,6 +174,7 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   @OneToMany(
       mappedBy = JavaFields.OWNER,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      //      orphanRemoval = true,
       fetch = FetchType.LAZY)
   private Set<Token> tokens = newHashSet();
 

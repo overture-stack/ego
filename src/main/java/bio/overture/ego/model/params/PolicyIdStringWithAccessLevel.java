@@ -1,13 +1,15 @@
 package bio.overture.ego.model.params;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 @Data
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
-@RequiredArgsConstructor
 public class PolicyIdStringWithAccessLevel {
   @NonNull private String policyId;
   @NonNull private String mask;
