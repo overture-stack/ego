@@ -23,6 +23,7 @@ import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.Streams;
 import bio.overture.ego.utils.WebResource;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,13 +45,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.UUID;
-import java.util.stream.StreamSupport;
 
+import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.EntityTools.extractUserIds;
 import static bio.overture.ego.utils.WebResource.createWebResource;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -187,8 +187,11 @@ public class UserControllerTest {
   @Test
   @SneakyThrows
   public void listUsersNoFilter() {
+    val numUsers = userService.getRepository().count();
+
+    // Since previous test may introduce new users. If there are more users than the default page size, only a subset will be returned and could cause a test failure.
     val response = initStringRequest()
-        .endpoint("/users/")
+        .endpoint("/users?offset=0&limit=%s", numUsers)
         .get();
 
     val responseStatus = response.getStatusCode();
@@ -200,11 +203,10 @@ public class UserControllerTest {
 
     // Verify that the returned Users are the ones from the setup.
     Iterable<JsonNode> resultSetIterable = () -> responseJson.get("resultSet").iterator();
-    val userNames =
-        StreamSupport.stream(resultSetIterable.spliterator(), false)
-            .map(j -> j.get("name").asText())
-            .collect(toList());
-    assertThat(userNames)
+    val actualUserNames = Streams.stream(resultSetIterable)
+        .map(j -> j.get("name").asText())
+        .collect(toImmutableList());
+    assertThat(actualUserNames)
         .contains("FirstUser@domain.com", "SecondUser@domain.com", "ThirdUser@domain.com");
   }
 

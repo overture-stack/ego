@@ -60,8 +60,6 @@ public class GroupControllerTest {
   private TestRestTemplate restTemplate = new TestRestTemplate();
   private HttpHeaders headers = new HttpHeaders();
 
-  private static boolean hasRunEntitySetup = false;
-
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
 
@@ -145,8 +143,12 @@ public class GroupControllerTest {
 
   @Test
   public void listGroups() {
+
+    val totalGroups = groupService.getRepository().count();
+
+    // Get all groups
     val response = initStringRequest()
-        .endpoint("/groups")
+        .endpoint("/groups?offset=0&limit=%s", totalGroups)
         .get();
 
     val responseStatus = response.getStatusCode();
