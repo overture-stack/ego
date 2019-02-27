@@ -15,23 +15,30 @@
  *
  */
 
-package bio.overture.ego.browser;
+package bio.overture.ego.selenium.driver;
 
+import com.browserstack.local.Local;
+import java.net.URL;
 import lombok.SneakyThrows;
-import lombok.val;
-import org.assertj.core.api.Assertions;
-import org.junit.Assert;
-import org.junit.Test;
-import org.openqa.selenium.By;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
-public class SwaggerTest extends BrowserStackJUnitTest {
+public class BrowserStackDriverProxy extends RemoteWebDriver {
 
-  @Test
+  /** State */
+  private final Local local;
+
   @SneakyThrows
-  public void test() {
-    driver.get("http://localhost:" + this.port + "/swagger-ui.html");
-    Thread.sleep(5000);
-    val titleText = driver.findElement(By.className("info_title")).getText();
-    Assertions.assertThat(titleText).isEqualTo("ego Service API");
+  public BrowserStackDriverProxy(
+      URL url, DesiredCapabilities capabilities, Local local) {
+    super(url, capabilities);
+    this.local = local;
+  }
+
+  @Override
+  @SneakyThrows
+  public void quit() {
+    if (local != null) local.stop();
+    super.quit();
   }
 }
