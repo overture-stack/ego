@@ -6,7 +6,6 @@ import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.repository.BaseRepository;
 import bio.overture.ego.repository.GroupPermissionRepository;
 import com.google.common.collect.ImmutableList;
@@ -29,6 +28,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
+import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.utils.CollectionUtils.difference;
@@ -101,6 +101,43 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
     return new PageImpl<>(groupPermissions, pageable, groupPermissions.size());
   }
 
+  @SneakyThrows
+  public GroupPermission getByPolicyAndGroup(@NonNull UUID policyId, @NonNull UUID groupId) {
+    val opt = repository.findByPolicy_IdAndOwner_id(policyId, groupId);
+    return opt.orElseThrow(() ->
+        buildNotFoundException("Permission with policyId '%s' and groupId '%s' cannot be found",
+            policyId, groupId));
+  }
+
+  public void deleteByPolicyAndGroup(@NonNull UUID policyId, @NonNull UUID groupId) {
+    val perm = getByPolicyAndGroup(policyId, groupId);
+    delete(perm.getId());
+  }
+
+  public List<GroupPermission> findAllByPolicy(@NonNull String policyId) {
+    return ImmutableList.copyOf(repository.findAllByPolicy_Id(fromString(policyId)));
+  }
+
+  public List<PolicyResponse> findByPolicy(@NonNull String policyId) {
+    val permissions = findAllByPolicy(policyId);
+    return mapToList(permissions, this::getPolicyResponse);
+  }
+
+  public PolicyResponse getPolicyResponse(@NonNull GroupPermission p) {
+    val name = p.getOwner().getName();
+    val id = p.getOwner().getId().toString();
+    val mask = p.getAccessLevel();
+    return PolicyResponse.builder().name(name).id(id).mask(mask).build();
+  }
+
+  private Set<PermissionRequest> resolveUniqueRequests(Group group, Collection<PermissionRequest> permissionRequests){
+    val existingPermissionRequests = group.getPermissions().stream()
+        .map(GroupPermissionService::convertToPermissionRequest)
+        .collect(toImmutableSet());
+    val permissionsRequestSet = ImmutableSet.copyOf(permissionRequests);
+    return Sets.difference(permissionsRequestSet, existingPermissionRequests);
+  }
+
   private Group createPermissions(Group group, Collection<PermissionRequest> newPermissionRequests){
     val policyIds = newPermissionRequests.stream()
         .map(PermissionRequest::getPolicyId)
@@ -112,6 +149,29 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
 
     newPermissionRequests.forEach(x -> createGroupPermission(policyMap, group, x));
     return group;
+  }
+
+  private void createGroupPermission(Map<UUID, Policy> policyMap, Group group, PermissionRequest request){
+    val gp = new GroupPermission();
+    val policy = policyMap.get(request.getPolicyId());
+    gp.setAccessLevel(request.getMask());
+    associateGroupPermission(group, gp);
+    associateGroupPermission(policy, gp);
+    getRepository().save(gp);
+  }
+
+  private void checkUniquePermissionRequests(Collection<PermissionRequest> requests){
+    val permMap = requests.stream().collect(groupingBy(PermissionRequest::getPolicyId));
+    policyService.checkExistence(permMap.keySet());
+    permMap.forEach((policyId, value) -> {
+      val accessLevels = value.stream()
+          .map(PermissionRequest::getMask) // validate proper conversion
+          .collect(toImmutableSet());
+      checkUnique(accessLevels.size() < 2,
+          "Found multiple (%s) permission requests for policyId '%s': %s",
+          accessLevels.size(), policyId,
+          COMMA.join(accessLevels));
+    });
   }
 
   /**
@@ -135,23 +195,6 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
         .build();
   }
 
-  private Set<PermissionRequest> resolveUniqueRequests(Group group, Collection<PermissionRequest> permissionRequests){
-    val existingPermissionRequests = group.getPermissions().stream()
-        .map(GroupPermissionService::convertToPermissionRequest)
-        .collect(toImmutableSet());
-    val permissionsRequestSet = ImmutableSet.copyOf(permissionRequests);
-    return Sets.difference(permissionsRequestSet, existingPermissionRequests);
-  }
-
-  private void createGroupPermission(Map<UUID, Policy> policyMap, Group group, PermissionRequest request){
-    val gp = new GroupPermission();
-    val policy = policyMap.get(request.getPolicyId());
-    gp.setAccessLevel(request.getMask());
-    associateGroupPermission(group, gp);
-    associateGroupPermission(policy, gp);
-    getRepository().save(gp);
-  }
-
   private static void associateGroupPermission(
       @NonNull Policy policy, @NonNull GroupPermission groupPermission) {
     policy.getGroupPermissions().add(groupPermission);
@@ -164,45 +207,4 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
     groupPermission.setOwner(group);
   }
 
-  private void checkUniquePermissionRequests(Collection<PermissionRequest> requests){
-    val permMap = requests.stream().collect(groupingBy(PermissionRequest::getPolicyId));
-    policyService.checkExistence(permMap.keySet());
-    permMap.forEach((policyId, value) -> {
-      val accessLevels = value.stream()
-          .map(PermissionRequest::getMask) // validate proper conversion
-          .collect(toImmutableSet());
-      checkUnique(accessLevels.size() < 2,
-          "Found multiple (%s) permission requests for policyId '%s': %s",
-          accessLevels.size(), policyId,
-          COMMA.join(accessLevels));
-    });
-  }
-
-  @SneakyThrows
-  public GroupPermission findByPolicyAndGroup(@NonNull String policyId, @NonNull String groupId) {
-    val opt = repository.findByPolicy_IdAndOwner_id(fromString(policyId), fromString(groupId));
-
-    return opt.orElseThrow(() -> new NotFoundException("Permission cannot be found."));
-  }
-
-  public void deleteByPolicyAndGroup(@NonNull String policyId, @NonNull String groupId) {
-    val perm = findByPolicyAndGroup(policyId, groupId);
-    delete(perm.getId());
-  }
-
-  public List<GroupPermission> findAllByPolicy(@NonNull String policyId) {
-    return ImmutableList.copyOf(repository.findAllByPolicy_Id(fromString(policyId)));
-  }
-
-  public List<PolicyResponse> findByPolicy(@NonNull String policyId) {
-    val permissions = findAllByPolicy(policyId);
-    return mapToList(permissions, this::getPolicyResponse);
-  }
-
-  public PolicyResponse getPolicyResponse(@NonNull GroupPermission p) {
-    val name = p.getOwner().getName();
-    val id = p.getOwner().getId().toString();
-    val mask = p.getAccessLevel();
-    return PolicyResponse.builder().name(name).id(id).mask(mask).build();
-  }
 }

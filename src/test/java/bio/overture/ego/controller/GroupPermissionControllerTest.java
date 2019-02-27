@@ -6,6 +6,7 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.service.UserService;
@@ -15,6 +16,7 @@ import bio.overture.ego.utils.WebResource;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Sets;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -34,8 +36,10 @@ import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+import org.testcontainers.shaded.org.apache.commons.lang.NotImplementedException;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -71,7 +75,7 @@ public class GroupPermissionControllerTest {
 
   /** Constants */
   private static final ObjectMapper MAPPER = new ObjectMapper();
-
+  private static final String INVALID_UUID = "invalidUUID000";
   private static final String ACCESS_TOKEN = "TestToken";
 
   /** State */
@@ -85,6 +89,7 @@ public class GroupPermissionControllerTest {
   @Autowired private GroupService groupService;
   @Autowired private PolicyService policyService;
   @Autowired private UserService userService;
+  @Autowired private GroupPermissionService groupPermissionService;
 
   /** State */
   private User user1;
@@ -194,7 +199,7 @@ public class GroupPermissionControllerTest {
    */
   @Test
   @SneakyThrows
-  public void addGroupPermissionsToGroup_AllAlreadyExists_Conflict() {
+  public void addGroupPermissionsToGroup_DuplicateRequest_Conflict() {
     log.info("Initially adding permissions to the group");
     val r1 =
         initRequest(Group.class)
@@ -316,11 +321,10 @@ public class GroupPermissionControllerTest {
 
 
 
-
-
   @Test
-  @Ignore
-  public void deleteGroupPermissionsForGroup_NonExistent_ThrowsNotFoundException() {
+  @SneakyThrows
+  public void deleteGroupPermissionsForGroup_NonExistent_NotFound() {
+    // Add permissions to group1
     val r1 =
         initRequest(Group.class)
             .endpoint("groups/%s/permissions", group1.getId().toString())
@@ -330,6 +334,44 @@ public class GroupPermissionControllerTest {
     assertThat(r1.getBody()).isNotNull();
     val r1body = r1.getBody();
     assertThat(r1body.getId()).isEqualTo(group1.getId());
+
+    // Get permissions for group1
+    val r2 = initStringRequest()
+        .endpoint("groups/%s/permissions", group1.getId().toString())
+        .get();
+    assertThat(r2.getStatusCode()).isEqualTo(OK);
+    assertThat(r2.getBody()).isNotNull();
+
+    // Assert the expected permission ids exist
+    val page = MAPPER.readTree(r2.getBody());
+    val existingPermissionIds =
+        Streams.stream(page.path("resultSet").iterator())
+            .map(x -> x.get("id"))
+            .map(JsonNode::asText)
+            .collect(toImmutableSet());
+    assertThat(existingPermissionIds).hasSize(permissionRequests.size());
+
+    // Attempt to delete permissions for a nonExistent group
+    val nonExistentGroupId = generateNonExistentId(groupService);
+    val r3 = initStringRequest()
+        .endpoint(
+            "groups/%s/permissions/%s",
+            nonExistentGroupId, COMMA.join(existingPermissionIds))
+        .delete();
+    assertThat(r3.getStatusCode()).isEqualTo(NOT_FOUND);
+
+    // Attempt to delete permissions for an existing group but a non-existent permission id
+    val nonExistentPermissionId = generateNonExistentId(groupPermissionService).toString();
+    val someExistingPermissionIds = Sets.<String>newHashSet();
+    someExistingPermissionIds.addAll(existingPermissionIds);
+    someExistingPermissionIds.add(nonExistentPermissionId);
+    assertThat(groupService.isExist(group1.getId())).isTrue();
+    val r4 = initStringRequest()
+        .endpoint(
+            "groups/%s/permissions/%s",
+            group1.getId(), COMMA.join(someExistingPermissionIds))
+        .delete();
+    assertThat(r4.getStatusCode()).isEqualTo(NOT_FOUND);
   }
 
   @Test
@@ -394,15 +436,11 @@ public class GroupPermissionControllerTest {
     assertThat(r6.getBody()).isNotNull();
   }
 
-  @Test
-  @Ignore
-  public void deleteGroupPermissionsForGroup_EmptyPermissionIds_ThrowsNotFoundException() {}
-
   /**
    * Using the group controller, attempt to read a permission belonging to a non-existent group
    */
   @Test
-  public void readGroupPermissionsForGroup_NonExistent_ThrowsNotFoundException() {
+  public void readGroupPermissionsForGroup_NonExistent_NotFound() {
     val nonExistentGroupId = generateNonExistentId(groupService);
     val r1 = initStringRequest()
         .endpoint("groups/%s/permissions", nonExistentGroupId)
@@ -539,18 +577,66 @@ public class GroupPermissionControllerTest {
     assertThat(r2.getStatusCode()).isEqualTo(BAD_REQUEST);
   }
 
+
+  @Test
+  public void uuidValidationForGroup_MalformedUUID_BadRequest(){
+    val r1 = initStringRequest()
+        .endpoint("groups/%s/permissions", INVALID_UUID)
+        .body(permissionRequests)
+        .post();
+    assertThat(r1.getStatusCode()).isEqualTo(BAD_REQUEST);
+
+    val r4 = initStringRequest()
+        .endpoint("groups/%s/permissions", INVALID_UUID)
+        .get();
+    assertThat(r4.getStatusCode()).isEqualTo(BAD_REQUEST);
+
+    val r5 = initStringRequest()
+        .endpoint( "groups/%s/permissions/%s", UUID.randomUUID(), INVALID_UUID)
+        .delete();
+    assertThat(r5.getStatusCode()).isEqualTo(BAD_REQUEST);
+
+    val r6 = initStringRequest()
+        .endpoint( "groups/%s/permissions/%s", INVALID_UUID, UUID.randomUUID())
+        .delete();
+    assertThat(r6.getStatusCode()).isEqualTo(BAD_REQUEST);
+  }
+
+  @Test
+  public void uuidValidationForPolicy_MalformedUUID_BadRequest(){
+    val r1 = initStringRequest()
+        .endpoint("policies/%s/permission/group/%s",
+            UUID.randomUUID(), INVALID_UUID)
+        .delete();
+    assertThat(r1.getStatusCode()).isEqualTo(BAD_REQUEST);
+
+    val r2 = initStringRequest()
+        .endpoint( "policies/%s/permission/group/%s",
+            UUID.randomUUID(), INVALID_UUID)
+        .body(createMaskJson(WRITE.toString()))
+        .post();
+    assertThat(r2.getStatusCode()).isEqualTo(BAD_REQUEST);
+
+    val r3 = initStringRequest()
+        .endpoint( "policies/%s/permission/group/%s",
+            INVALID_UUID, UUID.randomUUID())
+        .body(createMaskJson(WRITE.toString()))
+        .post();
+    assertThat(r3.getStatusCode()).isEqualTo(BAD_REQUEST);
+
+    val r4 = initStringRequest()
+        .endpoint("policies/%s/permission/group/%s",
+            INVALID_UUID, UUID.randomUUID())
+        .delete();
+    assertThat(r4.getStatusCode()).isEqualTo(BAD_REQUEST);
+  }
+
   @Test
   @SneakyThrows
   @Ignore
-  public void addGroupPermissionsToPolicy_DuplicateRequests_Success() {}
-
-  @Test
-  @Ignore
-  public void readGroupPermissionsForPolicy_AlreadyExists_Success() {}
-
-  @Test
-  @Ignore
-  public void readGroupPermissionsForPolicy_NonExistent_ThrowsNotFoundException() {}
+  public void addGroupPermissionsToPolicy_DuplicateRequests_Conflict() {
+    throw new NotImplementedException();
+  }
 
   private WebResource<String> initStringRequest() {
     return initRequest(String.class);

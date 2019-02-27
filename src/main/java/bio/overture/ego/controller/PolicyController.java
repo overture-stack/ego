@@ -180,11 +180,10 @@ public class PolicyController {
       })
   public @ResponseBody GenericResponse deleteGroupPermission(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
-      @PathVariable(value = "group_id", required = true) String groupId) {
-
+      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "group_id", required = true) UUID groupId) {
     groupPermissionService.deleteByPolicyAndGroup(id, groupId);
-    return new GenericResponse("Deleted permission for group %s on policy %s");
+    return new GenericResponse("Deleted permission for group '%s' on policy '%s'");
   }
 
   @AdminScoped
