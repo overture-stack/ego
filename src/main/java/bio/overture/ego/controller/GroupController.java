@@ -60,6 +60,7 @@ import springfox.documentation.annotations.ApiIgnore;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -236,8 +237,8 @@ public class GroupController {
   public void deletePermissions(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) String id,
-      @PathVariable(value = "permissionIds", required = true) List<String> permissionIds) {
-    groupService.deleteGroupPermissions(id, permissionIds);
+      @PathVariable(value = "permissionIds", required = true) List<UUID> permissionIds) {
+    groupPermissionService.deleteGroupPermissions(id, permissionIds);
   }
 
   /*

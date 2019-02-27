@@ -332,14 +332,11 @@ public class GroupPermissionControllerTest {
     assertThat(r1body.getId()).isEqualTo(group1.getId());
   }
 
-
-  @Ignore
   @Test
   @SneakyThrows
   public void deleteGroupPermissionsForGroup_AlreadyExists_Success() {
     // Add group permissions
-    val r1 =
-        initRequest(Group.class)
+    val r1 = initRequest(Group.class)
             .endpoint("groups/%s/permissions", group1.getId().toString())
             .body(permissionRequests)
             .post();
@@ -349,9 +346,13 @@ public class GroupPermissionControllerTest {
     assertThat(r1body.getId()).isEqualTo(group1.getId());
 
     // Get permissions for the group
-    val r2 = initStringRequest().endpoint("groups/%s/permissions", group1.getId().toString()).get();
+    val r2 = initStringRequest()
+        .endpoint("groups/%s/permissions", group1.getId().toString())
+        .get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
     assertThat(r2.getBody()).isNotNull();
+
+    // Assert the expected permission ids exist
     val page = MAPPER.readTree(r2.getBody());
     val existingPermissionIds =
         Streams.stream(page.path("resultSet").iterator())
@@ -361,33 +362,33 @@ public class GroupPermissionControllerTest {
     assertThat(existingPermissionIds).hasSize(permissionRequests.size());
 
     // Delete the permissions for the group
-    val r3 =
-        initStringRequest()
+    val r3 = initStringRequest()
             .endpoint(
                 "groups/%s/permissions/%s",
                 group1.getId().toString(), COMMA.join(existingPermissionIds))
             .delete();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
-    // Ensure permissions were deleted
+    // Assert the expected permissions were deleted
     val r4 = initStringRequest().endpoint("groups/%s/permissions", group1.getId().toString()).get();
     assertThat(r4.getStatusCode()).isEqualTo(OK);
     assertThat(r4.getBody()).isNotNull();
-    val page4 = MAPPER.readTree(r2.getBody());
+    val page4 = MAPPER.readTree(r4.getBody());
     val existingPermissionIds4 =
         Streams.stream(page4.path("resultSet").iterator())
             .map(x -> x.get("id"))
             .map(JsonNode::asText)
             .collect(toImmutableSet());
     assertThat(existingPermissionIds4).isEmpty();
-    // Ensure policies still exists
-    for (val p : policies) {
+
+    // Assert that the policies still exists
+    policies.forEach(p -> {
       val r5 = initStringRequest().endpoint("policies/%s", p.getId().toString()).get();
       assertThat(r5.getStatusCode()).isEqualTo(OK);
       assertThat(r5.getBody()).isNotNull();
-    }
+    });
 
-    // Ensure group still exists
+    // Assert the group still exists
     val r6 = initStringRequest().endpoint("groups/%s", group1.getId().toString()).get();
     assertThat(r6.getStatusCode()).isEqualTo(OK);
     assertThat(r6.getBody()).isNotNull();

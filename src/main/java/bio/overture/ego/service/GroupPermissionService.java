@@ -2,6 +2,7 @@ package bio.overture.ego.service;
 
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
+import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
@@ -28,6 +29,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.utils.CollectionUtils.difference;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
@@ -36,6 +38,7 @@ import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.convertToUUIDSet;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static java.util.UUID.fromString;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
@@ -57,6 +60,26 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
     this.repository = repository1;
     this.groupService = groupService;
     this.policyService = policyService;
+  }
+
+  public void deleteGroupPermissions(
+      @NonNull String groupId, @NonNull Collection<UUID> permissionsIds) {
+    checkMalformedRequest(!permissionsIds.isEmpty(),
+        "Must add at least 1 permission for group '%s'", groupId);
+    val group = groupService.getGroupWithRelationships(groupId);
+
+    val filteredPermissionMap = group.getPermissions().stream()
+        .filter(x -> permissionsIds.contains(x.getId()))
+        .collect(toMap(AbstractPermission::getId, identity()));
+    val existingPermissionIds = filteredPermissionMap.keySet();
+    val nonExistingPermissionIds = difference(permissionsIds, existingPermissionIds);
+    checkNotFound(nonExistingPermissionIds.isEmpty(),
+        "The following GroupPermission ids for the group '%s' were not found",
+        COMMA.join(nonExistingPermissionIds));
+    val permissionsToRemove = filteredPermissionMap.values();
+
+    disassociateGroupPermissions(permissionsToRemove);
+    getRepository().deleteAll(permissionsToRemove);
   }
 
   public Group addGroupPermissions(
@@ -91,6 +114,20 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
 
     newPermissionRequests.forEach(x -> createGroupPermission(policyMap, group, x));
     return group;
+  }
+
+  /**
+   * Disassociates group permissions from its parents
+   * @param groupPermissions assumed to be loaded with parents
+   */
+  private static void disassociateGroupPermissions(Collection<GroupPermission> groupPermissions){
+    groupPermissions.forEach( x-> {
+          x.getOwner().getPermissions().remove(x);
+          x.getPolicy().getGroupPermissions().remove(x);
+          x.setPolicy(null);
+          x.setOwner(null);
+        }
+    );
   }
 
   private static PermissionRequest convertToPermissionRequest(GroupPermission gp){
