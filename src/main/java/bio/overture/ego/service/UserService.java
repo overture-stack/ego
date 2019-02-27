@@ -157,7 +157,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
-  public User addUserPermission(String userId, @NonNull PermissionRequest policy) {
+  public User addUserPermission(UUID userId, @NonNull PermissionRequest policy) {
     return addUserPermissions(userId, newArrayList(policy));
   }
 
@@ -168,9 +168,10 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   public User addUserPermissions(
-      @NonNull String userId, @NonNull List<PermissionRequest> permissions) {
-    val policyMap = permissions.stream().collect(groupingBy(x -> fromString(x.getPolicyId())));
-    val user = getById(fromString(userId));
+      @NonNull UUID userId, @NonNull List<PermissionRequest> permissions) {
+    val policyMap = permissions.stream()
+        .collect(groupingBy(PermissionRequest::getPolicyId));
+    val user = getById(userId);
     policyService
         .getMany(ImmutableList.copyOf(policyMap.keySet()))
         .stream()

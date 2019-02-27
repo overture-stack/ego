@@ -7,13 +7,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
+import java.util.UUID;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class PermissionRequest {
 
-  @NonNull private String policyId;
+  @NonNull private UUID policyId;
 
   @NonNull private AccessLevel mask;
 

@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -161,8 +162,8 @@ public class PolicyController {
   @JsonView(Views.REST.class)
   public @ResponseBody Group createGroupPermission(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String policyId,
-      @PathVariable(value = "group_id", required = true) String groupId,
+      @PathVariable(value = "id", required = true) UUID policyId,
+      @PathVariable(value = "group_id", required = true) UUID groupId,
       @RequestBody(required = true) MaskDTO maskDTO) {
     return groupPermissionService.addGroupPermissions(
         groupId, ImmutableList.of(new PermissionRequest(policyId, maskDTO.getMask())));
@@ -192,8 +193,8 @@ public class PolicyController {
       value = {@ApiResponse(code = 200, message = "Add user permission", response = String.class)})
   public @ResponseBody String createUserPermission(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
-      @PathVariable(value = "user_id", required = true) String userId,
+      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "user_id", required = true) UUID userId,
       @RequestBody(required = true) MaskDTO maskDTO) {
     userService.addUserPermission(userId, new PermissionRequest(id, maskDTO.getMask()));
     return "1 user permission successfully added to ACL '" + id + "'";

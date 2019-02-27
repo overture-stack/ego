@@ -111,12 +111,12 @@ public class GroupPermissionControllerTest {
         ImmutableList.<PermissionRequest>builder()
             .add(
                 PermissionRequest.builder()
-                    .policyId(policies.get(0).getId().toString())
+                    .policyId(policies.get(0).getId())
                     .mask(WRITE)
                     .build())
             .add(
                 PermissionRequest.builder()
-                    .policyId(policies.get(1).getId().toString())
+                    .policyId(policies.get(1).getId())
                     .mask(DENY)
                     .build())
             .build();
@@ -254,7 +254,7 @@ public class GroupPermissionControllerTest {
    */
   @Test
   public void addGroupPermissionsToGroup_NonExistentPolicy_NotFound() {
-    val nonExistentPolicyId = generateNonExistentId(policyService).toString();
+    val nonExistentPolicyId = generateNonExistentId(policyService);
 
     // inject a non existent id
     permissionRequests.get(1).setPolicyId(nonExistentPolicyId);
@@ -265,8 +265,8 @@ public class GroupPermissionControllerTest {
             .body(permissionRequests)
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-    assertThat(r1.getBody()).contains(nonExistentPolicyId);
-    assertThat(r1.getBody()).doesNotContain(permissionRequests.get(0).getPolicyId());
+    assertThat(r1.getBody()).contains(nonExistentPolicyId.toString());
+    assertThat(r1.getBody()).doesNotContain(permissionRequests.get(0).getPolicyId().toString());
   }
 
   /**

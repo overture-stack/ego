@@ -962,13 +962,13 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
 
     val study001 = policyService.getByName("Study001");
-    val study001id = study001.getId().toString();
+    val study001id = study001.getId();
 
     val study002 = policyService.getByName("Study002");
-    val study002id = study002.getId().toString();
+    val study002id = study002.getId();
 
     val study003 = policyService.getByName("Study003");
-    val study003id = study003.getId().toString();
+    val study003id = study003.getId();
 
     val permissions =
         asList(
@@ -976,7 +976,7 @@ public class UserServiceTest {
             new PermissionRequest(study002id, WRITE),
             new PermissionRequest(study003id, DENY));
 
-    userService.addUserPermissions(user.getId().toString(), permissions);
+    userService.addUserPermissions(user.getId(), permissions);
 
     assertThat(PolicyPermissionUtils.extractPermissionStrings(user.getUserPermissions()))
         .containsExactlyInAnyOrder("Study001.READ", "Study002.WRITE", "Study003.DENY");
@@ -991,13 +991,13 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
 
     val study001 = policyService.getByName("Study001");
-    val study001id = study001.getId().toString();
+    val study001id = study001.getId();
 
     val study002 = policyService.getByName("Study002");
-    val study002id = study002.getId().toString();
+    val study002id = study002.getId();
 
     val study003 = policyService.getByName("Study003");
-    val study003id = study003.getId().toString();
+    val study003id = study003.getId();
 
     val permissions =
         asList(
@@ -1005,7 +1005,7 @@ public class UserServiceTest {
             new PermissionRequest(study002id, WRITE),
             new PermissionRequest(study003id, DENY));
 
-    userService.addUserPermissions(user.getId().toString(), permissions);
+    userService.addUserPermissions(user.getId(), permissions);
 
     val userPermissionsToRemove =
         user.getUserPermissions()
@@ -1029,13 +1029,13 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
 
     val study001 = policyService.getByName("Study001");
-    val study001id = study001.getId().toString();
+    val study001id = study001.getId();
 
     val study002 = policyService.getByName("Study002");
-    val study002id = study002.getId().toString();
+    val study002id = study002.getId();
 
     val study003 = policyService.getByName("Study003");
-    val study003id = study003.getId().toString();
+    val study003id = study003.getId();
 
     val permissions =
         asList(
@@ -1043,7 +1043,7 @@ public class UserServiceTest {
             new PermissionRequest(study002id, WRITE),
             new PermissionRequest(study003id, DENY));
 
-    userService.addUserPermissions(user.getId().toString(), permissions);
+    userService.addUserPermissions(user.getId(), permissions);
 
     val pagedUserPermissions =
         userService.getUserPermissions(

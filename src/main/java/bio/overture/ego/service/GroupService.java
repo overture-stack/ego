@@ -92,8 +92,8 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     return getRepository().save(group);
   }
 
-  public Group getGroupWithRelationships(@NonNull String id){
-    val result = groupRepository.findGroupById(fromString(id));
+  public Group getGroupWithRelationships(@NonNull UUID id){
+    val result = groupRepository.findGroupById(id);
     checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
     return result.get();
   }
@@ -269,7 +269,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   }
 
   private GroupPermission resolveGroupPermission(PermissionRequest permission) {
-    val policy = policyService.get(permission.getPolicyId());
+    val policy = policyService.getById(permission.getPolicyId());
     val mask = permission.getMask();
     val gp = new GroupPermission();
     gp.setPolicy(policy);

@@ -718,13 +718,13 @@ public class GroupsServiceTest {
     entityGenerator.setupTestPolicies();
 
     val study001 = policyService.getByName("Study001");
-    val study001id = study001.getId().toString();
+    val study001id = study001.getId();
 
     val study002 = policyService.getByName("Study002");
-    val study002id = study002.getId().toString();
+    val study002id = study002.getId();
 
     val study003 = policyService.getByName("Study003");
-    val study003id = study003.getId().toString();
+    val study003id = study003.getId();
 
     val permissions =
         Arrays.asList(
@@ -752,13 +752,13 @@ public class GroupsServiceTest {
     val firstGroup = groups.get(0);
 
     val study001 = policyService.getByName("Study001");
-    val study001id = study001.getId().toString();
+    val study001id = study001.getId();
 
     val study002 = policyService.getByName("Study002");
-    val study002id = study002.getId().toString();
+    val study002id = study002.getId();
 
     val study003 = policyService.getByName("Study003");
-    val study003id = study003.getId().toString();
+    val study003id = study003.getId();
 
     val permissions =
         Arrays.asList(
@@ -792,13 +792,13 @@ public class GroupsServiceTest {
     val testGroup = entityGenerator.setupGroup("testGetGroupPermissions_Group");
 
     val study001 = policyService.getByName("testGetGroupPermissions_Study001");
-    val study001id = study001.getId().toString();
+    val study001id = study001.getId();
 
     val study002 = policyService.getByName("testGetGroupPermissions_Study002");
-    val study002id = study002.getId().toString();
+    val study002id = study002.getId();
 
     val study003 = policyService.getByName("testGetGroupPermissions_Study003");
-    val study003id = study003.getId().toString();
+    val study003id = study003.getId();
 
     val permissions =
         Arrays.asList(

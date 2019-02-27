@@ -214,7 +214,7 @@ public class GroupController {
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<GroupPermission> getScopes(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
+      @PathVariable(value = "id", required = true) UUID id,
       Pageable pageable) {
     return new PageDTO<>(groupPermissionService.getGroupPermissions(id, pageable));
   }
@@ -225,7 +225,7 @@ public class GroupController {
       value = {@ApiResponse(code = 200, message = "Add group permissions", response = Group.class)})
   public @ResponseBody Group addPermissions(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
+      @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<PermissionRequest> permissions) {
     return groupPermissionService.addGroupPermissions(id, permissions);
   }
@@ -236,7 +236,7 @@ public class GroupController {
   @ResponseStatus(value = HttpStatus.OK)
   public void deletePermissions(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
+      @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "permissionIds", required = true) List<UUID> permissionIds) {
     groupPermissionService.deleteGroupPermissions(id, permissionIds);
   }

@@ -71,8 +71,6 @@ public class UserControllerTest {
   private TestRestTemplate restTemplate = new TestRestTemplate();
   private HttpHeaders headers = new HttpHeaders();
 
-  private static boolean hasRunEntitySetup = false;
-
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
 
@@ -86,12 +84,9 @@ public class UserControllerTest {
   public void setup() {
 
     // Initial setup of entities (run once
-    if (!hasRunEntitySetup) {
-      entityGenerator.setupTestUsers();
-      entityGenerator.setupTestApplications();
-      entityGenerator.setupTestGroups();
-      hasRunEntitySetup = true;
-    }
+    entityGenerator.setupTestUsers();
+    entityGenerator.setupTestApplications();
+    entityGenerator.setupTestGroups();
 
     headers.add("Authorization", "Bearer TestToken");
     headers.setContentType(MediaType.APPLICATION_JSON);

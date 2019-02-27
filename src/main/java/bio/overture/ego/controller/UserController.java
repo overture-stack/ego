@@ -16,17 +16,15 @@
 
 package bio.overture.ego.controller;
 
-import static org.springframework.util.StringUtils.isEmpty;
-
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.PageDTO;
+import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.exceptions.PostWithIdentifierException;
-import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
@@ -40,9 +38,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
-import javax.persistence.EntityNotFoundException;
-import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +56,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
+
+import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.UUID;
+
+import static org.springframework.util.StringUtils.isEmpty;
 
 @Slf4j
 @RestController
@@ -233,7 +235,7 @@ public class UserController {
       value = {@ApiResponse(code = 200, message = "Add user permissions", response = User.class)})
   public @ResponseBody User addPermissions(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
+      @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<PermissionRequest> permissions) {
     return userService.addUserPermissions(id, permissions);
   }

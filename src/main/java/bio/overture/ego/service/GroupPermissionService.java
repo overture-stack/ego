@@ -35,7 +35,6 @@ import static bio.overture.ego.utils.CollectionUtils.difference;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Converters.convertToUUIDSet;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static java.util.UUID.fromString;
 import static java.util.function.Function.identity;
@@ -63,7 +62,7 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
   }
 
   public void deleteGroupPermissions(
-      @NonNull String groupId, @NonNull Collection<UUID> permissionsIds) {
+      @NonNull UUID groupId, @NonNull Collection<UUID> permissionsIds) {
     checkMalformedRequest(!permissionsIds.isEmpty(),
         "Must add at least 1 permission for group '%s'", groupId);
     val group = groupService.getGroupWithRelationships(groupId);
@@ -83,7 +82,7 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
   }
 
   public Group addGroupPermissions(
-      @NonNull String groupId, @NonNull List<PermissionRequest> permissions) {
+      @NonNull UUID groupId, @NonNull List<PermissionRequest> permissions) {
     checkMalformedRequest(!permissions.isEmpty(),
         "Must add at least 1 permission for group '%s'", groupId);
     checkUniquePermissionRequests(permissions);
@@ -97,7 +96,7 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
   }
 
   public Page<GroupPermission> getGroupPermissions(
-      @NonNull String groupId, @NonNull Pageable pageable) {
+      @NonNull UUID groupId, @NonNull Pageable pageable) {
     val groupPermissions = ImmutableList.copyOf(groupService.getGroupWithRelationships(groupId).getPermissions());
     return new PageImpl<>(groupPermissions, pageable, groupPermissions.size());
   }
@@ -105,12 +104,11 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
   private Group createPermissions(Group group, Collection<PermissionRequest> newPermissionRequests){
     val policyIds = newPermissionRequests.stream()
         .map(PermissionRequest::getPolicyId)
-        .map(UUID::fromString)
         .collect(toImmutableList());
 
     val policyMap = policyService.getMany(policyIds)
         .stream()
-        .collect(toMap(x -> x.getId().toString(), x -> x));
+        .collect(toMap(Policy::getId, identity()));
 
     newPermissionRequests.forEach(x -> createGroupPermission(policyMap, group, x));
     return group;
@@ -133,7 +131,7 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
   private static PermissionRequest convertToPermissionRequest(GroupPermission gp){
     return PermissionRequest.builder()
         .mask(gp.getAccessLevel())
-        .policyId(gp.getPolicy().getId().toString())
+        .policyId(gp.getPolicy().getId())
         .build();
   }
 
@@ -145,7 +143,7 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
     return Sets.difference(permissionsRequestSet, existingPermissionRequests);
   }
 
-  private void createGroupPermission(Map<String, Policy> policyMap, Group group, PermissionRequest request){
+  private void createGroupPermission(Map<UUID, Policy> policyMap, Group group, PermissionRequest request){
     val gp = new GroupPermission();
     val policy = policyMap.get(request.getPolicyId());
     gp.setAccessLevel(request.getMask());
@@ -168,7 +166,7 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
 
   private void checkUniquePermissionRequests(Collection<PermissionRequest> requests){
     val permMap = requests.stream().collect(groupingBy(PermissionRequest::getPolicyId));
-    policyService.checkExistence(convertToUUIDSet(permMap.keySet()));
+    policyService.checkExistence(permMap.keySet());
     permMap.forEach((policyId, value) -> {
       val accessLevels = value.stream()
           .map(PermissionRequest::getMask) // validate proper conversion
