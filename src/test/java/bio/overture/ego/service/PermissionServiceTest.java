@@ -50,8 +50,8 @@ public class PermissionServiceTest {
     val group2 = groupService.getByName(name2);
 
     val permissions = asList(new PermissionRequest(policy.getId(), READ));
-    groupService.addGroupPermissions(group1.getId().toString(), permissions);
-    groupService.addGroupPermissions(group2.getId().toString(), permissions);
+    groupPermissionService.addGroupPermissions(group1.getId(), permissions);
+    groupPermissionService.addGroupPermissions(group2.getId(), permissions);
 
     val expected =
         asList(

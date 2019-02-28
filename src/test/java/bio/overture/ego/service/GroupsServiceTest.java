@@ -3,6 +3,7 @@ package bio.overture.ego.service;
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
@@ -47,6 +48,7 @@ public class GroupsServiceTest {
   @Autowired private UserService userService;
 
   @Autowired private GroupService groupService;
+  @Autowired private GroupPermissionService groupPermissionService;
 
   @Autowired private PolicyService policyService;
 
@@ -734,7 +736,7 @@ public class GroupsServiceTest {
 
     val firstGroup = groups.get(0);
 
-    groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);
+    groupPermissionService.addGroupPermissions(firstGroup.getId(), permissions);
 
     assertThat(PolicyPermissionUtils.extractPermissionStrings(firstGroup.getPermissions()))
         .containsExactlyInAnyOrder("Study001.READ", "Study002.WRITE", "Study003.DENY");
@@ -766,17 +768,17 @@ public class GroupsServiceTest {
             new PermissionRequest(study002id, WRITE),
             new PermissionRequest(study003id, DENY));
 
-    groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);
+    groupPermissionService.addGroupPermissions(firstGroup.getId(), permissions);
 
     val groupPermissionsToRemove =
         firstGroup
             .getPermissions()
             .stream()
             .filter(p -> !p.getPolicy().getName().equals("Study001"))
-            .map(p -> p.getId().toString())
+            .map(AbstractPermission::getId)
             .collect(Collectors.toList());
 
-    groupService.deleteGroupPermissions(firstGroup.getId().toString(), groupPermissionsToRemove);
+    groupPermissionService.deleteGroupPermissions(firstGroup.getId(), groupPermissionsToRemove);
 
     assertThat(PolicyPermissionUtils.extractPermissionStrings(firstGroup.getPermissions()))
         .containsExactlyInAnyOrder("Study001.READ");
@@ -806,7 +808,7 @@ public class GroupsServiceTest {
             new PermissionRequest(study002id, WRITE),
             new PermissionRequest(study003id, DENY));
 
-    groupService.addGroupPermissions(testGroup.getId().toString(), permissions);
+    groupPermissionService.addGroupPermissions(testGroup.getId(), permissions);
 
     val pagedGroupPermissions =
         groupService.getGroupPermissions(

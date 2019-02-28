@@ -17,7 +17,6 @@
 package bio.overture.ego.service;
 
 import bio.overture.ego.model.dto.GroupRequest;
-import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
@@ -41,7 +40,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Collection;
 import java.util.List;
@@ -69,21 +67,18 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   private final UserRepository userRepository;
   private final ApplicationRepository applicationRepository;
   private final ApplicationService applicationService;
-  private final PolicyService policyService;
 
   @Autowired
   public GroupService(
       @NonNull GroupRepository groupRepository,
       @NonNull UserRepository userRepository,
       @NonNull ApplicationRepository applicationRepository,
-      @NonNull PolicyService policyService,
       @NonNull ApplicationService applicationService){
     super(Group.class, groupRepository);
     this.groupRepository = groupRepository;
     this.userRepository = userRepository;
     this.applicationRepository = applicationRepository;
     this.applicationService = applicationService;
-    this.policyService = policyService;
   }
 
   public Group create(@NonNull GroupRequest request) {
@@ -112,16 +107,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     val users = userRepository.findAllByIdIn(convertToUUIDList(userIds));
     associateUsers(group, users);
     return groupRepository.save(group);
-  }
-
-  public Group addGroupPermissions(
-      @NonNull String groupId, @NonNull List<PermissionRequest> permissions) {
-    val group = getById(fromString(groupId));
-    permissions
-        .stream()
-        .map(this::resolveGroupPermission)
-        .forEach(gp -> associateGroupPermission(group, gp));
-    return getRepository().save(group);
   }
 
   public Group get(@NonNull String groupId) {
@@ -238,20 +223,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     getRepository().save(group);
   }
 
-  public void deleteGroupPermissions(
-      @NonNull String groupId, @NonNull List<String> permissionsIds) {
-    throw new NotImplementedException();
-  }
-
-  public void deleteGroupPermissions2(
-      @NonNull String userId, @NonNull List<String> permissionsIds) {
-//    val group = getById(fromString(userId));
-//    permissionService
-//        .getMany(convertToUUIDList(permissionsIds))
-//        .forEach(gp -> associateGroupPermission(group, gp));
-//    groupRepository.save(group);
-  }
-
   public void delete(String id) {
     delete(fromString(id));
   }
@@ -266,15 +237,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   private void checkNameUnique(String name) {
     checkUnique(
         !groupRepository.existsByNameIgnoreCase(name), "A group with same name already exists");
-  }
-
-  private GroupPermission resolveGroupPermission(PermissionRequest permission) {
-    val policy = policyService.getById(permission.getPolicyId());
-    val mask = permission.getMask();
-    val gp = new GroupPermission();
-    gp.setPolicy(policy);
-    gp.setAccessLevel(mask);
-    return gp;
   }
 
   private Application retrieveApplication(String appId) {
@@ -339,12 +301,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
       @NonNull Group group, @NonNull Collection<Application> applications) {
     group.getApplications().addAll(applications);
     applications.stream().map(Application::getGroups).forEach(groups -> groups.add(group));
-  }
-
-  private static void associateGroupPermission(
-      @NonNull Group group, @NonNull GroupPermission groupPermission) {
-    group.getPermissions().add(groupPermission);
-    groupPermission.setOwner(group);
   }
 
   @Mapper(
