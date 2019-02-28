@@ -58,7 +58,7 @@ public class PermissionServiceTest {
             new PolicyResponse(group1.getId().toString(), name1, READ),
             new PolicyResponse(group2.getId().toString(), name2, READ));
 
-    val actual = groupPermissionService.findByPolicy(policy.getId().toString());
+    val actual = groupPermissionService.findByPolicy(policy.getId());
 
     assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
   }
@@ -84,7 +84,7 @@ public class PermissionServiceTest {
             new PolicyResponse(user1.getId().toString(), name1, READ),
             new PolicyResponse(user2.getId().toString(), name2, READ));
 
-    val actual = userPermissionService.findByPolicy(policy.getId().toString());
+    val actual = userPermissionService.findByPolicy(policy.getId());
     ;
     System.out.printf("%s", actual.get(0).toString());
     assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);

@@ -13,7 +13,6 @@ import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.service.GroupPermissionService;
-import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
@@ -24,6 +23,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -47,20 +47,17 @@ import java.util.UUID;
 @RequestMapping("/policies")
 public class PolicyController {
   private final PolicyService policyService;
-  private final GroupService groupService;
   private final UserService userService;
   private final UserPermissionService userPermissionService;
   private final GroupPermissionService groupPermissionService;
 
   @Autowired
   public PolicyController(
-      PolicyService policyService,
-      GroupService groupService,
-      UserService userService,
-      UserPermissionService userPermissionService,
-      GroupPermissionService groupPermissionService) {
+      @NonNull PolicyService policyService,
+      @NonNull UserService userService,
+      @NonNull UserPermissionService userPermissionService,
+      @NonNull GroupPermissionService groupPermissionService) {
     this.policyService = policyService;
-    this.groupService = groupService;
     this.userService = userService;
     this.groupPermissionService = groupPermissionService;
     this.userPermissionService = userPermissionService;
@@ -228,7 +225,7 @@ public class PolicyController {
       })
   public @ResponseBody List<PolicyResponse> findUserIds(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id) {
+      @PathVariable(value = "id", required = true) UUID id) {
     return userPermissionService.findByPolicy(id);
   }
 
@@ -243,7 +240,7 @@ public class PolicyController {
       })
   public @ResponseBody List<PolicyResponse> findGroupIds(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id) {
+      @PathVariable(value = "id", required = true) UUID id) {
     return groupPermissionService.findByPolicy(id);
   }
 }

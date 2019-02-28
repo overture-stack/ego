@@ -1,14 +1,8 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
-import static java.util.UUID.fromString;
-
 import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.UserPermission;
-import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.repository.UserPermissionRepository;
-import com.google.common.collect.ImmutableList;
-import java.util.List;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +10,9 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
+import static java.util.UUID.fromString;
 
 @Slf4j
 @Service
@@ -30,28 +27,21 @@ public class UserPermissionService extends AbstractPermissionService<UserPermiss
     this.repository = repository;
   }
 
-  public List<UserPermission> findAllByPolicy(@NonNull String policyId) {
-    return ImmutableList.copyOf(repository.findAllByPolicy_Id(fromString(policyId)));
-  }
-
   @SneakyThrows
-  public UserPermission findByPolicyAndUser(@NonNull String policyId, @NonNull String userId) {
-    val opt = repository.findByPolicy_IdAndOwner_id(fromString(policyId), fromString(userId));
-
-    return opt.orElseThrow(() -> new NotFoundException("Permission cannot be found."));
+  public UserPermission getByPolicyAndUser(@NonNull String policyId, @NonNull String userId) {
+    return repository.findByPolicy_IdAndOwner_id(fromString(policyId), fromString(userId))
+    .orElseThrow(() -> buildNotFoundException(
+        "%s for policy '%s' and owner '%s' cannot be cannot be found",
+        UserPermission.class.getSimpleName(), policyId, userId));
   }
 
   public void deleteByPolicyAndUser(@NonNull String policyId, @NonNull String userId) {
-    val perm = findByPolicyAndUser(policyId, userId);
+    val perm = getByPolicyAndUser(policyId, userId);
     delete(perm.getId());
   }
 
-  public List<PolicyResponse> findByPolicy(@NonNull String policyId) {
-    val userPermissions = findAllByPolicy(policyId);
-    return mapToList(userPermissions, this::getPolicyResponse);
-  }
-
-  public PolicyResponse getPolicyResponse(@NonNull UserPermission userPermission) {
+  @Override
+  public PolicyResponse convertToPolicyResponse(@NonNull UserPermission userPermission) {
     val name = userPermission.getOwner().getName();
     val id = userPermission.getOwner().getId().toString();
     val mask = userPermission.getAccessLevel();

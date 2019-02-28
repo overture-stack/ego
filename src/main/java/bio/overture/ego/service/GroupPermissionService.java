@@ -6,7 +6,6 @@ import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.repository.BaseRepository;
 import bio.overture.ego.repository.GroupPermissionRepository;
 import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
 import com.google.common.collect.ImmutableList;
@@ -29,14 +28,12 @@ import static bio.overture.ego.model.exceptions.MalformedRequestException.checkM
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.utils.PermissionRequestAnalyzer.analyze;
 import static bio.overture.ego.utils.CollectionUtils.difference;
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.Joiners.COMMA;
+import static bio.overture.ego.utils.PermissionRequestAnalyzer.analyze;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static com.gs.collections.impl.factory.Sets.intersect;
-import static java.util.UUID.fromString;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
@@ -51,11 +48,11 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
 
   @Autowired
   public GroupPermissionService(
-      @NonNull BaseRepository<GroupPermission, UUID> repository,
-      @NonNull GroupPermissionRepository repository1, GroupService groupService,
+      @NonNull GroupPermissionRepository repository,
+      @NonNull GroupService groupService,
       @NonNull PolicyService policyService) {
     super(GroupPermission.class, repository);
-    this.repository = repository1;
+    this.repository = repository;
     this.groupService = groupService;
     this.policyService = policyService;
   }
@@ -124,27 +121,19 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
 
   @SneakyThrows
   public GroupPermission getByPolicyAndGroup(@NonNull UUID policyId, @NonNull UUID groupId) {
-    val opt = repository.findByPolicy_IdAndOwner_id(policyId, groupId);
-    return opt.orElseThrow(() ->
-        buildNotFoundException("Permission with policyId '%s' and groupId '%s' cannot be found",
-            policyId, groupId));
+    return repository.findByPolicy_IdAndOwner_id(policyId, groupId)
+        .orElseThrow(() ->
+            buildNotFoundException("%s with policyId '%s' and groupId '%s' cannot be found",
+                GroupPermission.class.getSimpleName(), policyId, groupId));
   }
 
   public void deleteByPolicyAndGroup(@NonNull UUID policyId, @NonNull UUID groupId) {
     val perm = getByPolicyAndGroup(policyId, groupId);
-    delete(perm.getId());
+    getRepository().delete(perm);
   }
 
-  public List<GroupPermission> findAllByPolicy(@NonNull String policyId) {
-    return ImmutableList.copyOf(repository.findAllByPolicy_Id(fromString(policyId)));
-  }
-
-  public List<PolicyResponse> findByPolicy(@NonNull String policyId) {
-    val permissions = findAllByPolicy(policyId);
-    return mapToList(permissions, this::getPolicyResponse);
-  }
-
-  public PolicyResponse getPolicyResponse(@NonNull GroupPermission p) {
+  @Override
+  public PolicyResponse convertToPolicyResponse(@NonNull GroupPermission p) {
     val name = p.getOwner().getName();
     val id = p.getOwner().getId().toString();
     val mask = p.getAccessLevel();

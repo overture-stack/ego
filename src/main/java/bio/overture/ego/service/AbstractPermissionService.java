@@ -3,7 +3,8 @@ package bio.overture.ego.service;
 import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.repository.BaseRepository;
+import bio.overture.ego.repository.PermissionRepository;
+import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static bio.overture.ego.model.dto.Scope.createScope;
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static java.util.UUID.fromString;
 
 @Slf4j
@@ -20,8 +22,10 @@ import static java.util.UUID.fromString;
 public abstract class AbstractPermissionService<T extends AbstractPermission>
     extends AbstractBaseService<T, UUID> {
 
-  public AbstractPermissionService(Class<T> entityType, BaseRepository<T, UUID> repository) {
+  private final PermissionRepository<T> permissionRepository;
+  public AbstractPermissionService(Class<T> entityType, PermissionRepository<T> repository) {
     super(entityType, repository);
+    this.permissionRepository = repository;
   }
 
   public T create(@NonNull T entity) {
@@ -49,9 +53,10 @@ public abstract class AbstractPermissionService<T extends AbstractPermission>
     delete(fromString(entityId));
   }
 
-  public abstract List<T> findAllByPolicy(String policyId);
+  public List<PolicyResponse> findByPolicy(UUID policyId){
+    val permissions = ImmutableList.copyOf(permissionRepository.findAllByPolicy_Id(policyId));
+    return mapToList(permissions, this::convertToPolicyResponse);
+  }
 
-  public abstract List<PolicyResponse> findByPolicy(String policyId);
-
-  public abstract PolicyResponse getPolicyResponse(T t);
+  public abstract PolicyResponse convertToPolicyResponse(T t);
 }
