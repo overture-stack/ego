@@ -3,6 +3,7 @@ package bio.overture.ego.controller;
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
@@ -22,7 +23,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +36,6 @@ import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
-import org.testcontainers.shaded.org.apache.commons.lang.NotImplementedException;
 
 import java.util.List;
 import java.util.UUID;
@@ -633,9 +632,87 @@ public class GroupPermissionControllerTest {
 
   @Test
   @SneakyThrows
-  @Ignore
   public void addGroupPermissionsToPolicy_DuplicateRequests_Conflict() {
-    throw new NotImplementedException();
+    val permRequest = permissionRequests.get(0);
+    // Create 2 identical requests with same policy and group
+    val r1 = initRequest(Group.class)
+        .endpoint(
+            "policies/%s/permission/group/%s",
+            permRequest.getPolicyId(), group1.getId().toString())
+        .body(createMaskJson(permRequest.getMask().toString()))
+        .post();
+    assertThat(r1.getStatusCode()).isEqualTo(OK);
+    assertThat(r1.getBody()).isNotNull();
+    val r1body = r1.getBody();
+    assertThat(r1body.getId()).isEqualTo(group1.getId());
+
+    val r2 = initRequest(Group.class)
+        .endpoint(
+            "policies/%s/permission/group/%s",
+            permRequest.getPolicyId(), group1.getId().toString())
+        .body(createMaskJson(permRequest.getMask().toString()))
+        .post();
+    assertThat(r2.getStatusCode()).isEqualTo(CONFLICT);
+  }
+
+  @Test
+  @SneakyThrows
+  public void updateGroupPermissionsToPolicy_DuplicateRequests_Conflict() {
+    val permRequest1 = permissionRequests.get(0);
+    val permRequest2 = permissionRequests.get(1);
+    assertThat(permRequest1.getMask()).isNotEqualTo(permRequest2.getMask());
+
+    // Create permission for group and policy
+    val r1 = initRequest(Group.class)
+        .endpoint(
+            "policies/%s/permission/group/%s",
+            permRequest1.getPolicyId(), group1.getId().toString())
+        .body(createMaskJson(permRequest1.getMask().toString()))
+        .post();
+    assertThat(r1.getStatusCode()).isEqualTo(OK);
+
+    // Get created permissions
+    val r2 = initStringRequest()
+        .endpoint("groups/%s/permissions", group1.getId())
+        .get();
+    assertThat(r2.getStatusCode()).isEqualTo(OK);
+    assertThat(r2.getBody()).isNotNull();
+
+    // Assert created permission is correct mask
+    val page = MAPPER.readTree(r2.getBody());
+    val existingPermissions =
+        Streams.stream(page.path("resultSet").iterator())
+            .map(x -> MAPPER.convertValue(x, GroupPermission.class))
+            .collect(toImmutableList());
+    assertThat(existingPermissions).hasSize(1);
+    val permission = existingPermissions.get(0);
+    assertThat(permission.getAccessLevel()).isEqualTo(permRequest1.getMask());
+
+    // Update the group permission
+    val r3 = initRequest(Group.class)
+        .endpoint(
+            "policies/%s/permission/group/%s",
+            permRequest1.getPolicyId(), group1.getId().toString())
+        .body(createMaskJson(permRequest2.getMask().toString()))
+        .post();
+    assertThat(r3.getStatusCode()).isEqualTo(OK);
+
+    // Get updated permissions
+    val r4 = initStringRequest()
+        .endpoint("groups/%s/permissions", group1.getId())
+        .get();
+    assertThat(r4.getStatusCode()).isEqualTo(OK);
+    assertThat(r4.getBody()).isNotNull();
+
+    // Assert updated permission is correct mask
+    val page2 = MAPPER.readTree(r4.getBody());
+    val existingPermissions2 =
+        Streams.stream(page2.path("resultSet").iterator())
+            .map(x -> MAPPER.convertValue(x, GroupPermission.class))
+            .collect(toImmutableList());
+    assertThat(existingPermissions2).hasSize(1);
+    val permission2 = existingPermissions2.get(0);
+    assertThat(permission2.getAccessLevel()).isEqualTo(permRequest2.getMask());
   }
 
   private WebResource<String> initStringRequest() {

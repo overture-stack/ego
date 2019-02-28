@@ -8,9 +8,8 @@ import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.repository.BaseRepository;
 import bio.overture.ego.repository.GroupPermissionRepository;
+import bio.overture.ego.service.PermissionRequestAnalyzer.PermissionAnalysis;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -24,21 +23,21 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.service.PermissionRequestAnalyzer.createFromExistingPermissionRequests;
 import static bio.overture.ego.utils.CollectionUtils.difference;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
-import static bio.overture.ego.utils.Collectors.toImmutableList;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.Joiners.COMMA;
+import static com.google.common.collect.Maps.uniqueIndex;
+import static com.gs.collections.impl.factory.Sets.intersect;
 import static java.util.UUID.fromString;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
 @Slf4j
@@ -62,16 +61,17 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
   }
 
   public void deleteGroupPermissions(
-      @NonNull UUID groupId, @NonNull Collection<UUID> permissionsIds) {
-    checkMalformedRequest(!permissionsIds.isEmpty(),
+      @NonNull UUID groupId, @NonNull Collection<UUID> permissionsIdsToDelete) {
+    checkMalformedRequest(!permissionsIdsToDelete.isEmpty(),
         "Must add at least 1 permission for group '%s'", groupId);
     val group = groupService.getGroupWithRelationships(groupId);
 
     val filteredPermissionMap = group.getPermissions().stream()
-        .filter(x -> permissionsIds.contains(x.getId()))
+        .filter(x -> permissionsIdsToDelete.contains(x.getId()))
         .collect(toMap(AbstractPermission::getId, identity()));
+
     val existingPermissionIds = filteredPermissionMap.keySet();
-    val nonExistingPermissionIds = difference(permissionsIds, existingPermissionIds);
+    val nonExistingPermissionIds = difference(permissionsIdsToDelete, existingPermissionIds);
     checkNotFound(nonExistingPermissionIds.isEmpty(),
         "The following GroupPermission ids for the group '%s' were not found",
         COMMA.join(nonExistingPermissionIds));
@@ -81,18 +81,40 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
     getRepository().deleteAll(permissionsToRemove);
   }
 
+  /**
+   * Adds permissions for the supplied group. The input permissionRequests are sanitized
+   * and then used to create new permissions and update existing ones.
+   * @param groupId permissionRequests will be applied to the group with this groupId
+   * @param permissionRequests permission to be created or updated
+   * @return group with new and updated permissions
+   */
   public Group addGroupPermissions(
-      @NonNull UUID groupId, @NonNull List<PermissionRequest> permissions) {
-    checkMalformedRequest(!permissions.isEmpty(),
+      @NonNull UUID groupId, @NonNull List<PermissionRequest> permissionRequests) {
+    checkMalformedRequest(!permissionRequests.isEmpty(),
         "Must add at least 1 permission for group '%s'", groupId);
-    checkUniquePermissionRequests(permissions);
+
+    // Check policies all exist
+    policyService.checkExistence(mapToSet(permissionRequests, PermissionRequest::getPolicyId));
+
     val group = groupService.getGroupWithRelationships(groupId);
-    val newPermissionRequests = resolveUniqueRequests(group, permissions);
-    val redundantRequests = difference(permissions, newPermissionRequests);
-    checkUnique(redundantRequests.isEmpty(),
+
+    // Convert the GroupPermission to PermissionRequests since all permission requests apply to the same owner (the group)
+    val existingPermissionRequests = mapToSet(group.getPermissions(), GroupPermissionService::convertToPermissionRequest);
+    val permissionAnalyzer = createFromExistingPermissionRequests(existingPermissionRequests);
+    val permissionAnalysis = permissionAnalyzer.analyze(permissionRequests);
+
+    // Check there are no unresolvable permission requests
+    checkUnique(permissionAnalysis.getUnresolvableMap().isEmpty(),
+        "Found multiple (%s) PermissionRequests with policyIds that have multiple masks: %s",
+        permissionAnalysis.getUnresolvableMap().keySet().size(),
+        permissionAnalysis.summarizeUnresolvables());
+
+    // Check that are no permission requests that effectively exist
+    checkUnique(permissionAnalysis.getDuplicates().isEmpty(),
         "The following permissions already exist for group '%s': ",
-        groupId, COMMA.join(redundantRequests));
-    return createPermissions(group, newPermissionRequests);
+        groupId, COMMA.join(permissionAnalysis.getDuplicates()));
+
+    return createOrUpdatePermissions(group, permissionAnalysis);
   }
 
   public Page<GroupPermission> getGroupPermissions(
@@ -130,24 +152,54 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
     return PolicyResponse.builder().name(name).id(id).mask(mask).build();
   }
 
-  private Set<PermissionRequest> resolveUniqueRequests(Group group, Collection<PermissionRequest> permissionRequests){
-    val existingPermissionRequests = group.getPermissions().stream()
-        .map(GroupPermissionService::convertToPermissionRequest)
-        .collect(toImmutableSet());
-    val permissionsRequestSet = ImmutableSet.copyOf(permissionRequests);
-    return Sets.difference(permissionsRequestSet, existingPermissionRequests);
+  /**
+   * Create or Update the permission for the group based on the supplied analysis
+   * @param group with all its relationships loaded
+   * @param permissionAnalysis containing pre-sanitized lists of createable and updateable requests
+   */
+  private Group createOrUpdatePermissions(Group group, PermissionAnalysis permissionAnalysis){
+    val updatedGroup = updateGroupPermissions(group, permissionAnalysis.getUpdateables());
+    return createGroupPermissions(updatedGroup, permissionAnalysis.getCreateables());
   }
 
-  private Group createPermissions(Group group, Collection<PermissionRequest> newPermissionRequests){
-    val policyIds = newPermissionRequests.stream()
-        .map(PermissionRequest::getPolicyId)
-        .collect(toImmutableList());
+  /**
+   * Update existing GroupPermissions for a group with different data while maintaining the same relationships
+   * @param group with all its relationships loaded
+   */
+  private Group updateGroupPermissions(Group group, Collection<PermissionRequest> updatePermissionRequests){
+    val existingGroupPermissionMap = uniqueIndex(group.getPermissions(), x -> x.getPolicy().getId());
 
-    val policyMap = policyService.getMany(policyIds)
-        .stream()
-        .collect(toMap(Policy::getId, identity()));
+    updatePermissionRequests.forEach(p -> {
+      val policyId = p.getPolicyId();
+      val mask = p.getMask();
+      checkNotFound(existingGroupPermissionMap.containsKey(policyId),
+          "Could not find existing GroupPermission with policyId '%s' for group '%s'",
+          policyId, group.getId());
+      val gp = existingGroupPermissionMap.get(policyId);
+      gp.setAccessLevel(mask);
+    });
+    return group;
+  }
 
-    newPermissionRequests.forEach(x -> createGroupPermission(policyMap, group, x));
+  /**
+   * Create new GroupPermissions for a group
+   * @param group with all its relationships loaded
+   */
+  private Group createGroupPermissions(Group group, Collection<PermissionRequest> createablePermissionRequests){
+    val existingGroupPermissionMap = uniqueIndex(group.getPermissions(), x -> x.getPolicy().getId());
+    val requestedPolicyIds = mapToSet(createablePermissionRequests, PermissionRequest::getPolicyId);
+
+    // Double check the permissions you are creating dont conflict with whats existing
+//    val redundantPolicyIds = difference(requestedPolicyIds, existingGroupPermissionMap.keySet());
+    val redundantPolicyIds = intersect(requestedPolicyIds, existingGroupPermissionMap.keySet());
+    checkUnique(redundantPolicyIds.isEmpty(),
+        "GroupPermissions with the following policyIds could not be created because "
+            + "GroupPermissions with those policyIds already exist: %s",
+        COMMA.join(redundantPolicyIds));
+
+    log.info("POLICY SERVICE GET MANYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY");
+    val requestedPolicyMap = uniqueIndex(policyService.getMany(requestedPolicyIds), Policy::getId);
+    createablePermissionRequests.forEach(x -> createGroupPermission(requestedPolicyMap, group, x));
     return group;
   }
 
@@ -157,21 +209,6 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
     gp.setAccessLevel(request.getMask());
     associateGroupPermission(group, gp);
     associateGroupPermission(policy, gp);
-    getRepository().save(gp);
-  }
-
-  private void checkUniquePermissionRequests(Collection<PermissionRequest> requests){
-    val permMap = requests.stream().collect(groupingBy(PermissionRequest::getPolicyId));
-    policyService.checkExistence(permMap.keySet());
-    permMap.forEach((policyId, value) -> {
-      val accessLevels = value.stream()
-          .map(PermissionRequest::getMask) // validate proper conversion
-          .collect(toImmutableSet());
-      checkUnique(accessLevels.size() < 2,
-          "Found multiple (%s) permission requests for policyId '%s': %s",
-          accessLevels.size(), policyId,
-          COMMA.join(accessLevels));
-    });
   }
 
   /**
