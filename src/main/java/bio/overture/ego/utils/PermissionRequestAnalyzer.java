@@ -1,12 +1,12 @@
-package bio.overture.ego.service;
+package bio.overture.ego.utils;
 
 import bio.overture.ego.model.dto.PermissionRequest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import lombok.Builder;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.val;
 
@@ -17,24 +17,19 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import static bio.overture.ego.service.PermissionRequestAnalyzer.REQUEST_TYPE.DUPLICATE;
-import static bio.overture.ego.service.PermissionRequestAnalyzer.REQUEST_TYPE.NEW;
-import static bio.overture.ego.service.PermissionRequestAnalyzer.REQUEST_TYPE.UPDATE;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.Joiners.COMMA;
+import static bio.overture.ego.utils.PermissionRequestAnalyzer.REQUEST_TYPE.DUPLICATE;
+import static bio.overture.ego.utils.PermissionRequestAnalyzer.REQUEST_TYPE.NEW;
+import static bio.overture.ego.utils.PermissionRequestAnalyzer.REQUEST_TYPE.UPDATE;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static com.google.common.collect.Maps.newHashMap;
+import static com.google.common.collect.Maps.uniqueIndex;
 import static java.lang.String.format;
-import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.joining;
 import static lombok.AccessLevel.PRIVATE;
 
-/**
- * Analyzes permission requests by comparing them to existing permission requests,
- * and categorizes them based on their { @code REQUEST_TYPE } and packs it all into a { @code PermissionAnalysis }
- */
-@RequiredArgsConstructor(access = PRIVATE)
+@NoArgsConstructor(access = PRIVATE)
 public class PermissionRequestAnalyzer {
 
   /**
@@ -49,16 +44,21 @@ public class PermissionRequestAnalyzer {
   }
 
   /**
-   * Dependencies
+   * Analyzes permission requests by comparing the {@param rawPermissionRequests} to {@param existingPermissionRequests}
+   * and categorizes them based on their { @code REQUEST_TYPE } and packs it all into a { @code PermissionAnalysis }.
+   * @param existingPermissionRequests collection of PermissionRequests that already exist
+   * @param rawPermissionRequests collection of PermissionRequests to analyze against the existing ones
+   * @return PermissionAnalysis
    */
-  private final Map<UUID, PermissionRequest> existingPermissionRequests;
-
-  public PermissionAnalysis analyze(
+  public static PermissionAnalysis analyze(
+      @NonNull Collection<PermissionRequest> existingPermissionRequests,
       @NonNull Collection<PermissionRequest> rawPermissionRequests ){
+    val existingPermissionRequestIndex = uniqueIndex(existingPermissionRequests, PermissionRequest::getPolicyId);
+
     val unresolvableRequestMap = filterUnresolvableRequests(rawPermissionRequests);
     val typeMap = rawPermissionRequests.stream()
         .filter(x -> !unresolvableRequestMap.containsKey(x.getPolicyId()))
-        .collect(groupingBy(this::resolvePermType));
+        .collect(groupingBy(x -> resolvePermType(existingPermissionRequestIndex, x)));
 
     return PermissionAnalysis.builder()
         .unresolvableMap(unresolvableRequestMap)
@@ -68,26 +68,21 @@ public class PermissionRequestAnalyzer {
         .build();
   }
 
-  private Set<PermissionRequest> extractPermissionRequests(Map<REQUEST_TYPE, List<PermissionRequest>> typeMap, REQUEST_TYPE permType){
+  private static Set<PermissionRequest> extractPermissionRequests(
+      Map<REQUEST_TYPE, List<PermissionRequest>> typeMap,
+      REQUEST_TYPE permType){
     return ImmutableSet.copyOf(typeMap.getOrDefault(permType, EMPTY_PERMISSION_REQUEST_LIST));
   }
 
-  private REQUEST_TYPE resolvePermType(PermissionRequest r){
-    if (existingPermissionRequests.containsValue(r)){
+  private static REQUEST_TYPE resolvePermType(Map<UUID, PermissionRequest> existingPermissionRequestIndex, PermissionRequest r){
+    if (existingPermissionRequestIndex.containsValue(r)){
       return DUPLICATE;
-    } else if (existingPermissionRequests.containsKey(r.getPolicyId())){
+    } else if (existingPermissionRequestIndex.containsKey(r.getPolicyId())){
       return UPDATE;
     } else {
       return NEW;
     }
   }
-
-  public static PermissionRequestAnalyzer createFromExistingPermissionRequests(Collection<PermissionRequest> existingPermissionRequests){
-    val existing = existingPermissionRequests.stream()
-        .collect(toMap(PermissionRequest::getPolicyId, identity()));
-    return new PermissionRequestAnalyzer(existing);
-  }
-
 
   private static Map<UUID, List<PermissionRequest>> filterUnresolvableRequests(
       @NonNull Collection<PermissionRequest> rawPermissionRequests){
@@ -107,6 +102,9 @@ public class PermissionRequestAnalyzer {
   @Value
   @Builder
   public static class PermissionAnalysis {
+
+    private static final String SEP = " , ";
+
     @NonNull private final Map<UUID, List<PermissionRequest>> unresolvableMap;
     @NonNull private final Set<PermissionRequest> duplicates;
     @NonNull private final Set<PermissionRequest> createables;
@@ -116,18 +114,17 @@ public class PermissionRequestAnalyzer {
       if (unresolvableMap.isEmpty()){
         return Optional.empty();
       }
-
-      val statements = unresolvableMap.entrySet()
-          .stream()
-          .map(this::convert)
-          .collect(toSet());
-      return Optional.of(COMMA.join(statements));
+      return Optional.of(
+          unresolvableMap.entrySet()
+              .stream()
+              .map(this::createDescription)
+              .collect(joining(SEP)));
     }
 
-    private String convert(Map.Entry<UUID, List<PermissionRequest>> entry){
-      val unresolvablePermissionRequests = entry.getValue();
+    private String createDescription(Map.Entry<UUID, List<PermissionRequest>> entry){
       val policyId = entry.getKey();
-      val masks = mapToSet(entry.getValue(), PermissionRequest::getMask);
+      val unresolvablePermissionRequests = entry.getValue();
+      val masks = mapToSet(unresolvablePermissionRequests, PermissionRequest::getMask);
       return format("%s : [%s]", policyId, COMMA.join(masks));
     }
   }

@@ -53,6 +53,7 @@ import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.WebResource.createWebResource;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Arrays.stream;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -273,6 +274,57 @@ public class GroupPermissionControllerTest {
     assertThat(r1.getBody()).doesNotContain(permissionRequests.get(0).getPolicyId().toString());
   }
 
+  @Test
+  @SneakyThrows
+  public void addGroupPermissions_CreateAndUpdate_Success(){
+    val permRequest1 = permissionRequests.get(0);
+    val permRequest2 = permissionRequests.get(1);
+    assertThat(permRequest1.getMask()).isNotEqualTo(permRequest2.getMask());
+
+    // Add initial GroupPermission
+    val r1 = initRequest(Group.class)
+            .endpoint("groups/%s/permissions", group1.getId().toString())
+            .body(ImmutableList.of(permRequest1))
+            .post();
+    assertThat(r1.getStatusCode()).isEqualTo(OK);
+
+    // Update permRequest1 locally
+    val updatePermRequest1 = PermissionRequest.builder()
+        .policyId(permRequest1.getPolicyId())
+        .mask(permRequest2.getMask())
+        .build();
+
+    // call addPerms for [updatedPermRequest1, permRequest2]
+    val r2 = initRequest(Group.class)
+        .endpoint("groups/%s/permissions", group1.getId().toString())
+        .body(ImmutableList.of(updatePermRequest1, permRequest2))
+        .post();
+    assertThat(r2.getStatusCode()).isEqualTo(OK);
+
+    // Get permissions for group
+    val r3 = initStringRequest()
+        .endpoint("groups/%s/permissions", group1.getId())
+        .get();
+    assertThat(r3.getStatusCode()).isEqualTo(OK);
+    assertThat(r3.getBody()).isNotNull();
+
+    // Assert created permission is correct mask
+    val page = MAPPER.readTree(r3.getBody());
+    val existingPermissionIndex =
+        Streams.stream(page.path("resultSet").iterator())
+            .map(x -> MAPPER.convertValue(x, GroupPermission.class))
+            .collect(toMap(x -> x.getPolicy().getId(), identity()));
+    assertThat(existingPermissionIndex.values()).hasSize(2);
+
+    // verify permission with permRequest1.getPolicyId() and group, has same mask as updatedPermRequest1.getMask()
+    assertThat(existingPermissionIndex).containsKey(updatePermRequest1.getPolicyId());
+    assertThat(existingPermissionIndex.get(updatePermRequest1.getPolicyId()).getAccessLevel()).isEqualTo(updatePermRequest1.getMask());
+
+    // verify permission with permRequest2.getPolicyId() and group, has same mask as permRequest2.getMask();
+    assertThat(existingPermissionIndex).containsKey(permRequest2.getPolicyId());
+    assertThat(existingPermissionIndex.get(permRequest2.getPolicyId()).getAccessLevel()).isEqualTo(permRequest2.getMask());
+  }
+
   /**
    * Happy path
    * Add non-existent permissions to a group, and read it back
@@ -313,6 +365,99 @@ public class GroupPermissionControllerTest {
         .isEqualTo(WRITE.toString());
     assertThat(outputMap.get(policies.get(1).getId().toString()))
         .isEqualTo(DENY.toString());
+  }
+
+  @Test
+  @SneakyThrows
+  public void deletePolicyWithPermissions_AlreadyExists_Success() {
+    // Add Permissions to group
+    val permRequest = permissionRequests.get(0);
+    val body = ImmutableList.of(permRequest);
+    val r1 =
+        initRequest(Group.class)
+            .endpoint("groups/%s/permissions", group1.getId().toString())
+            .body(body)
+            .post();
+    assertThat(r1.getStatusCode()).isEqualTo(OK);
+    assertThat(r1.getBody()).isNotNull();
+    val r1body = r1.getBody();
+    assertThat(r1body.getId()).isEqualTo(group1.getId());
+
+    // Get the policies for this group
+    val r2 = initStringRequest()
+        .endpoint("groups/%s/permissions", group1.getId().toString())
+        .get();
+    assertThat(r2.getStatusCode()).isEqualTo(OK);
+
+    // Assert the expected permission ids exist
+    val page = MAPPER.readTree(r2.getBody());
+    val existingPermissionIds =
+        Streams.stream(page.path("resultSet").iterator())
+            .map(x -> x.get("id"))
+            .map(JsonNode::asText)
+            .collect(toImmutableSet());
+    assertThat(existingPermissionIds).hasSize(1);
+
+    // Delete the policy
+    val r3 = initStringRequest()
+        .endpoint("policies/%s", permRequest.getPolicyId())
+        .delete();
+    assertThat(r3.getStatusCode()).isEqualTo(OK);
+
+    // Assert that the policy deletion cascaded the delete to the groupPermissions
+    existingPermissionIds.stream()
+        .map(UUID::fromString)
+        .forEach(x -> assertThat(groupPermissionService.isExist(x)).isFalse());
+
+    // Assert that the policy deletion DID NOT cascade past the GroupPermission and delete groups
+    assertThat(groupService.isExist(group1.getId())).isTrue();
+  }
+
+  @Test
+  @SneakyThrows
+  public void deleteGroupWithPermissions_AlreadyExists_Success() {
+    // Add Permissions to group
+    val r1 =
+        initRequest(Group.class)
+            .endpoint("groups/%s/permissions", group1.getId().toString())
+            .body(permissionRequests)
+            .post();
+    assertThat(r1.getStatusCode()).isEqualTo(OK);
+    assertThat(r1.getBody()).isNotNull();
+    val r1body = r1.getBody();
+    assertThat(r1body.getId()).isEqualTo(group1.getId());
+
+    // Get the policies for this group
+    val r2 = initStringRequest()
+        .endpoint("groups/%s/permissions", group1.getId().toString())
+        .get();
+    assertThat(r2.getStatusCode()).isEqualTo(OK);
+
+    // Assert the expected permission ids exist
+    val page = MAPPER.readTree(r2.getBody());
+    val existingPermissionIds =
+        Streams.stream(page.path("resultSet").iterator())
+            .map(x -> x.get("id"))
+            .map(JsonNode::asText)
+            .collect(toImmutableSet());
+    assertThat(existingPermissionIds).hasSize(permissionRequests.size());
+
+    // Delete the group
+    val r3 = initStringRequest()
+        .endpoint("groups/%s", group1.getId())
+        .delete();
+    assertThat(r3.getStatusCode()).isEqualTo(OK);
+
+    // Assert that the group deletion cascaded the delete to the groupPermissions
+    existingPermissionIds.stream()
+        .map(UUID::fromString)
+        .forEach(x -> assertThat(groupPermissionService.isExist(x)).isFalse());
+
+    // Assert that the group deletion DID NOT cascade past the GroupPermission and deleted policies
+    permissionRequests.stream()
+        .map(PermissionRequest::getPolicyId)
+        .distinct()
+        .forEach(x -> assertThat(policyService.isExist(x)).isTrue());
   }
 
 

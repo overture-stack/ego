@@ -8,7 +8,7 @@ import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.repository.BaseRepository;
 import bio.overture.ego.repository.GroupPermissionRepository;
-import bio.overture.ego.service.PermissionRequestAnalyzer.PermissionAnalysis;
+import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
 import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -29,7 +29,7 @@ import static bio.overture.ego.model.exceptions.MalformedRequestException.checkM
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.service.PermissionRequestAnalyzer.createFromExistingPermissionRequests;
+import static bio.overture.ego.utils.PermissionRequestAnalyzer.analyze;
 import static bio.overture.ego.utils.CollectionUtils.difference;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
@@ -100,8 +100,7 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
 
     // Convert the GroupPermission to PermissionRequests since all permission requests apply to the same owner (the group)
     val existingPermissionRequests = mapToSet(group.getPermissions(), GroupPermissionService::convertToPermissionRequest);
-    val permissionAnalyzer = createFromExistingPermissionRequests(existingPermissionRequests);
-    val permissionAnalysis = permissionAnalyzer.analyze(permissionRequests);
+    val permissionAnalysis = analyze(existingPermissionRequests, permissionRequests);
 
     // Check there are no unresolvable permission requests
     checkUnique(permissionAnalysis.getUnresolvableMap().isEmpty(),
