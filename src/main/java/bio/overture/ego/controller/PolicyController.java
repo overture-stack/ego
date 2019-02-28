@@ -148,7 +148,7 @@ public class PolicyController {
   @ResponseStatus(value = HttpStatus.OK)
   public void delete(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id) {
+      @PathVariable(value = "id", required = true) UUID id) {
     policyService.delete(id);
   }
 
@@ -179,7 +179,7 @@ public class PolicyController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "group_id", required = true) UUID groupId) {
-    groupPermissionService.deleteByPolicyAndGroup(id, groupId);
+    groupPermissionService.deleteByPolicyAndOwner(id, groupId);
     return new GenericResponse("Deleted permission for group '%s' on policy '%s'");
   }
 
@@ -207,10 +207,10 @@ public class PolicyController {
       })
   public @ResponseBody GenericResponse deleteUserPermission(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
-      @PathVariable(value = "user_id", required = true) String userId) {
+      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "user_id", required = true) UUID userId) {
 
-    userPermissionService.deleteByPolicyAndUser(id, userId);
+    userPermissionService.deleteByPolicyAndOwner(id, userId);
     return new GenericResponse("Deleted permission for user %s on policy %s");
   }
 

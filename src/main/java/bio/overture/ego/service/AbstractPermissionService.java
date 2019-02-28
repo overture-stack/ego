@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static bio.overture.ego.model.dto.Scope.createScope;
+import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static java.util.UUID.fromString;
 
@@ -23,6 +24,7 @@ public abstract class AbstractPermissionService<T extends AbstractPermission>
     extends AbstractBaseService<T, UUID> {
 
   private final PermissionRepository<T> permissionRepository;
+
   public AbstractPermissionService(Class<T> entityType, PermissionRepository<T> repository) {
     super(entityType, repository);
     this.permissionRepository = repository;
@@ -56,6 +58,18 @@ public abstract class AbstractPermissionService<T extends AbstractPermission>
   public List<PolicyResponse> findByPolicy(UUID policyId){
     val permissions = ImmutableList.copyOf(permissionRepository.findAllByPolicy_Id(policyId));
     return mapToList(permissions, this::convertToPolicyResponse);
+  }
+
+  public T getByPolicyAndOwner(@NonNull UUID policyId, @NonNull UUID userId) {
+    return permissionRepository.findByPolicy_IdAndOwner_id(policyId, userId)
+        .orElseThrow(() -> buildNotFoundException(
+            "%s for policy '%s' and owner '%s' cannot be cannot be found",
+            getEntityTypeName(), policyId, userId));
+  }
+
+  public void deleteByPolicyAndOwner(@NonNull UUID policyId, @NonNull UUID ownerId) {
+    val perm = getByPolicyAndOwner(policyId, ownerId);
+    getRepository().delete(perm);
   }
 
   public abstract PolicyResponse convertToPolicyResponse(T t);

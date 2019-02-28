@@ -10,7 +10,6 @@ import bio.overture.ego.repository.GroupPermissionRepository;
 import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
 import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +24,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
-import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.utils.CollectionUtils.difference;
@@ -42,7 +40,6 @@ import static java.util.stream.Collectors.toMap;
 public class GroupPermissionService extends AbstractPermissionService<GroupPermission> {
 
   /** Dependencies */
-  private final GroupPermissionRepository repository;
   private final GroupService groupService;
   private final PolicyService policyService;
 
@@ -52,7 +49,6 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
       @NonNull GroupService groupService,
       @NonNull PolicyService policyService) {
     super(GroupPermission.class, repository);
-    this.repository = repository;
     this.groupService = groupService;
     this.policyService = policyService;
   }
@@ -117,19 +113,6 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
       @NonNull UUID groupId, @NonNull Pageable pageable) {
     val groupPermissions = ImmutableList.copyOf(groupService.getGroupWithRelationships(groupId).getPermissions());
     return new PageImpl<>(groupPermissions, pageable, groupPermissions.size());
-  }
-
-  @SneakyThrows
-  public GroupPermission getByPolicyAndGroup(@NonNull UUID policyId, @NonNull UUID groupId) {
-    return repository.findByPolicy_IdAndOwner_id(policyId, groupId)
-        .orElseThrow(() ->
-            buildNotFoundException("%s with policyId '%s' and groupId '%s' cannot be found",
-                GroupPermission.class.getSimpleName(), policyId, groupId));
-  }
-
-  public void deleteByPolicyAndGroup(@NonNull UUID policyId, @NonNull UUID groupId) {
-    val perm = getByPolicyAndGroup(policyId, groupId);
-    getRepository().delete(perm);
   }
 
   @Override
