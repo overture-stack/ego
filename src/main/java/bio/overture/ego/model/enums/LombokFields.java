@@ -1,8 +1,8 @@
 package bio.overture.ego.model.enums;
 
-import static lombok.AccessLevel.PRIVATE;
-
 import lombok.NoArgsConstructor;
+
+import static lombok.AccessLevel.PRIVATE;
 
 /**
  * Note: When using a Lombok annotation with field names (for example @EqualsAndHashCode(ids =
@@ -15,6 +15,7 @@ public class LombokFields {
   public static final String id = "doesn't matter, lombok doesnt use this string";
   public static final String groups = "doesn't matter, lombok doesnt use this string";
   public static final String applications = "doesn't matter, lombok doesnt use this string";
+  public static final String policy = "doesn't matter, lombok doesnt use this string";
   public static final String userPermissions = "doesn't matter, lombok doesnt use this string";
   public static final String owner = "doesn't matter, lombok doesnt use this string";
   public static final String scopes = "doesn't matter, lombok doesnt use this string";

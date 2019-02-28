@@ -60,6 +60,8 @@ public class GroupControllerTest {
   private TestRestTemplate restTemplate = new TestRestTemplate();
   private HttpHeaders headers = new HttpHeaders();
 
+  private boolean hasRunEntitySetup = false;
+
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
 

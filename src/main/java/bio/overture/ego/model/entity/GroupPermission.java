@@ -25,7 +25,7 @@ import javax.persistence.Table;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
-@ToString(callSuper = true)
+@ToString(callSuper = true, exclude = { LombokFields.owner })
 @EqualsAndHashCode(
     callSuper = true,
     of = {LombokFields.id})
