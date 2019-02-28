@@ -190,14 +190,12 @@ public class GroupPermissionService extends AbstractPermissionService<GroupPermi
     val requestedPolicyIds = mapToSet(createablePermissionRequests, PermissionRequest::getPolicyId);
 
     // Double check the permissions you are creating dont conflict with whats existing
-//    val redundantPolicyIds = difference(requestedPolicyIds, existingGroupPermissionMap.keySet());
     val redundantPolicyIds = intersect(requestedPolicyIds, existingGroupPermissionMap.keySet());
     checkUnique(redundantPolicyIds.isEmpty(),
         "GroupPermissions with the following policyIds could not be created because "
             + "GroupPermissions with those policyIds already exist: %s",
         COMMA.join(redundantPolicyIds));
 
-    log.info("POLICY SERVICE GET MANYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY");
     val requestedPolicyMap = uniqueIndex(policyService.getMany(requestedPolicyIds), Policy::getId);
     createablePermissionRequests.forEach(x -> createGroupPermission(requestedPolicyMap, group, x));
     return group;
