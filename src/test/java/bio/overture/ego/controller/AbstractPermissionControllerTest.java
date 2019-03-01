@@ -11,20 +11,13 @@ import bio.overture.ego.service.NamedService;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.Streams;
-import bio.overture.ego.utils.WebResource;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
-import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.Before;
 import org.junit.Test;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
@@ -40,7 +33,6 @@ import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentName;
-import static bio.overture.ego.utils.WebResource.createWebResource;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static java.util.Arrays.asList;
@@ -49,29 +41,17 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Slf4j
 public abstract class AbstractPermissionControllerTest< O extends NameableEntity<UUID>,
-    P extends AbstractPermission<O >> {
+    P extends AbstractPermission<O >> extends AbstractControllerTest {
 
   /** Constants */
-  private static final ObjectMapper MAPPER = new ObjectMapper();
-
   private static final String INVALID_UUID = "invalidUUID000";
-  private static final String ACCESS_TOKEN = "TestToken";
-
-  /** State */
-  @LocalServerPort private int port;
-
-  private TestRestTemplate restTemplate = new TestRestTemplate();
-  private HttpHeaders headers = new HttpHeaders();
-
 
   /** State */
 
@@ -80,8 +60,8 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
   private List<Policy> policies;
   private List<PermissionRequest> permissionRequests;
 
-  @Before
-  public void setup() {
+  @Override
+  protected void beforeTest() {
     // Initial setup of entities (run once)
     this.owner1 = generateOwner(generateNonExistentOwnerName());
     this.owner2 = generateOwner(generateNonExistentOwnerName());
@@ -101,9 +81,6 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     // Sanity check
     assertThat(getOwnerService().isExist(owner1.getId())).isTrue();
     policies.forEach(p -> assertThat(getPolicyService().isExist(p.getId())).isTrue());
-
-    headers.add(AUTHORIZATION, "Bearer " + ACCESS_TOKEN);
-    headers.setContentType(APPLICATION_JSON);
   }
 
   /** Add permissions to a non-existent owner */
@@ -1003,24 +980,6 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
   protected abstract String getDeletePermissionEndpoint(String policyId, String  ownerId);
   protected abstract String getReadOwnersForPolicyEndpoint(String policyId);
 
-
-
-  private WebResource<String> initStringRequest() {
-    return initRequest(String.class);
-  }
-
-  private <T> WebResource<T> initRequest(@NonNull Class<T> responseType) {
-    return createWebResource(restTemplate, getServerUrl(), responseType).headers(this.headers);
-  }
-
-  private static ObjectNode createMaskJson(String maskStringValue) {
-    return MAPPER.createObjectNode().put("mask", maskStringValue);
-  }
-
-  private String getServerUrl() {
-    return "http://localhost:" + port;
-  }
-
   /**
    * For convenience
    */
@@ -1052,5 +1011,8 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     return getDeletePermissionEndpoint(policyId.toString(), ownerId.toString());
   }
 
+  public static ObjectNode createMaskJson(String maskStringValue) {
+    return MAPPER.createObjectNode().put("mask", maskStringValue);
+  }
 
 }

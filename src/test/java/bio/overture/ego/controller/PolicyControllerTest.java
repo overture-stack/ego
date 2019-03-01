@@ -17,35 +17,25 @@
 
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.model.enums.AccessLevel.READ;
-import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static bio.overture.ego.utils.WebResource.createWebResource;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.WebResource;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import static bio.overture.ego.model.enums.AccessLevel.READ;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -53,25 +43,16 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest(
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class PolicyControllerTest {
+public class PolicyControllerTest extends AbstractControllerTest {
 
-  /** Constants */
-  private static final ObjectMapper MAPPER = new ObjectMapper();
-
-  /** State */
-  @LocalServerPort private int port;
-
-  private TestRestTemplate restTemplate = new TestRestTemplate();
-  private HttpHeaders headers = new HttpHeaders();
   private static boolean hasRunEntitySetup = false;
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
+  @Autowired private PolicyService policyService;
 
-  @Autowired PolicyService policyService;
-
-  @Before
-  public void setup() {
+  @Override
+  protected  void beforeTest() {
     // Initial setup of entities (run once
     if (!hasRunEntitySetup) {
       entityGenerator.setupTestUsers();
@@ -79,9 +60,6 @@ public class PolicyControllerTest {
       entityGenerator.setupTestPolicies();
       hasRunEntitySetup = true;
     }
-
-    headers.add("Authorization", "Bearer TestToken");
-    headers.setContentType(MediaType.APPLICATION_JSON);
   }
 
   @Test
@@ -246,19 +224,4 @@ public class PolicyControllerTest {
     assertThat(getResponseJson.size()).isEqualTo(0);
   }
 
-  private static ObjectNode createMaskJson(String maskStringValue) {
-    return MAPPER.createObjectNode().put("mask", maskStringValue);
-  }
-
-  private WebResource<String> initStringRequest() {
-    return initRequest(String.class);
-  }
-
-  private <T> WebResource<T> initRequest(@NonNull Class<T> responseType) {
-    return createWebResource(restTemplate, getServerUrl(), responseType).headers(this.headers);
-  }
-
-  private String getServerUrl() {
-    return "http://localhost:" + port;
-  }
 }

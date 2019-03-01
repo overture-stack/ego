@@ -7,25 +7,15 @@ import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.WebResource;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -34,7 +24,6 @@ import java.util.UUID;
 import static bio.overture.ego.utils.EntityTools.extractAppIds;
 import static bio.overture.ego.utils.EntityTools.extractGroupIds;
 import static bio.overture.ego.utils.EntityTools.extractIDs;
-import static bio.overture.ego.utils.WebResource.createWebResource;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -49,28 +38,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class GroupControllerTest {
-
-  /** Constants */
-  private static final ObjectMapper MAPPER = new ObjectMapper();
-
-  /** State */
-  @LocalServerPort private int port;
-
-  private TestRestTemplate restTemplate = new TestRestTemplate();
-  private HttpHeaders headers = new HttpHeaders();
+public class GroupControllerTest extends AbstractControllerTest{
 
   private boolean hasRunEntitySetup = false;
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
-
   @Autowired private GroupService groupService;
   @Autowired private UserService userService;
   @Autowired private ApplicationService applicationService;
 
-  @Before
-  public void setup() {
+  @Override
+  protected void beforeTest() {
     // Initial setup of entities (run once
     if (!hasRunEntitySetup) {
       entityGenerator.setupTestUsers();
@@ -78,9 +57,6 @@ public class GroupControllerTest {
       entityGenerator.setupTestGroups();
       hasRunEntitySetup = true;
     }
-
-    headers.add("Authorization", "Bearer TestToken");
-    headers.setContentType(MediaType.APPLICATION_JSON);
   }
 
   @Test
@@ -190,13 +166,10 @@ public class GroupControllerTest {
     // Groups created in setup
     val groupId = entityGenerator.setupGroup("Partial").getId();
     val update = "{\"name\":\"Updated Partial\"}";
-    val entity = new HttpEntity<String>(update, headers);
-    val response =
-        restTemplate.exchange(
-            createURLWithPort(format("/groups/%s", groupId)),
-            HttpMethod.PATCH,
-            entity,
-            String.class);
+    val response = initStringRequest()
+            .endpoint("/groups/%s", groupId)
+            .body(update)
+            .post(); //TODO this should be a PATCH
 
     val responseBody = response.getBody();
     val responseStatus = response.getStatusCode();
@@ -378,19 +351,4 @@ public class GroupControllerTest {
         .isEqualTo(remainApp);
   }
 
-  private String createURLWithPort(String uri) {
-    return "http://localhost:" + port + uri;
-  }
-
-  private WebResource<String> initStringRequest() {
-    return initRequest(String.class);
-  }
-
-  private <T> WebResource<T> initRequest(@NonNull Class<T> responseType) {
-    return createWebResource(restTemplate, getServerUrl(), responseType).headers(this.headers);
-  }
-
-  private String getServerUrl() {
-    return "http://localhost:" + port;
-  }
 }

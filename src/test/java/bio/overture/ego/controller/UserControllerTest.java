@@ -17,14 +17,6 @@
 
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.utils.Collectors.toImmutableList;
-import static bio.overture.ego.utils.EntityTools.extractUserIds;
-import static bio.overture.ego.utils.WebResource.createWebResource;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.service.ApplicationService;
@@ -32,26 +24,26 @@ import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.Streams;
-import bio.overture.ego.utils.WebResource;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.UUID;
-import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.UUID;
+
+import static bio.overture.ego.utils.Collectors.toImmutableList;
+import static bio.overture.ego.utils.EntityTools.extractUserIds;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -59,36 +51,25 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest(
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class UserControllerTest {
+public class UserControllerTest extends AbstractControllerTest {
 
-  /** Constants */
-  private static final ObjectMapper MAPPER = new ObjectMapper();
-
-  /** State */
-  @LocalServerPort private int port;
-
-  private TestRestTemplate restTemplate = new TestRestTemplate();
-  private HttpHeaders headers = new HttpHeaders();
+  private static boolean hasRunEntitySetup = false;
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
-
   @Autowired private UserService userService;
-
   @Autowired private ApplicationService applicationService;
-
   @Autowired private GroupService groupService;
 
-  @Before
-  public void setup() {
-
+  @Override
+  protected void beforeTest() {
     // Initial setup of entities (run once
-    entityGenerator.setupTestUsers();
-    entityGenerator.setupTestApplications();
-    entityGenerator.setupTestGroups();
-
-    headers.add("Authorization", "Bearer TestToken");
-    headers.setContentType(MediaType.APPLICATION_JSON);
+    if (!hasRunEntitySetup) {
+      entityGenerator.setupTestUsers();
+      entityGenerator.setupTestApplications();
+      entityGenerator.setupTestGroups();
+      hasRunEntitySetup = true;
+    }
   }
 
   @Test
@@ -395,15 +376,4 @@ public class UserControllerTest {
     assertThat(appWithoutUser.getUsers()).isEmpty();
   }
 
-  private WebResource<String> initStringRequest() {
-    return initRequest(String.class);
-  }
-
-  private <T> WebResource<T> initRequest(@NonNull Class<T> responseType) {
-    return createWebResource(restTemplate, getServerUrl(), responseType).headers(this.headers);
-  }
-
-  private String getServerUrl() {
-    return "http://localhost:" + port;
-  }
 }

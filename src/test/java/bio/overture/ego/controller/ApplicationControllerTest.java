@@ -17,32 +17,23 @@
 
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.utils.WebResource.createWebResource;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.WebResource;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -50,25 +41,16 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest(
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class ApplicationControllerTest {
+public class ApplicationControllerTest extends AbstractControllerTest {
 
-  /** Constants */
-  private static final ObjectMapper MAPPER = new ObjectMapper();
-
-  /** State */
-  @LocalServerPort private int port;
-
-  private TestRestTemplate restTemplate = new TestRestTemplate();
-  private HttpHeaders headers = new HttpHeaders();
   private static boolean hasRunEntitySetup = false;
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
-
   @Autowired private ApplicationService applicationService;
 
-  @Before
-  public void setup() {
+  @Override
+  protected void beforeTest() {
     // Initial setup of entities (run once
     if (!hasRunEntitySetup) {
       entityGenerator.setupTestUsers();
@@ -76,9 +58,6 @@ public class ApplicationControllerTest {
       entityGenerator.setupTestGroups();
       hasRunEntitySetup = true;
     }
-
-    headers.add("Authorization", "Bearer TestToken");
-    headers.setContentType(MediaType.APPLICATION_JSON);
   }
 
   @Test
@@ -149,15 +128,4 @@ public class ApplicationControllerTest {
     assertThat(responseJson.get("applicationType").asText()).isEqualTo("CLIENT");
   }
 
-  private WebResource<String> initStringRequest() {
-    return initRequest(String.class);
-  }
-
-  private <T> WebResource<T> initRequest(@NonNull Class<T> responseType) {
-    return createWebResource(restTemplate, getServerUrl(), responseType).headers(this.headers);
-  }
-
-  private String getServerUrl() {
-    return "http://localhost:" + port;
-  }
 }
