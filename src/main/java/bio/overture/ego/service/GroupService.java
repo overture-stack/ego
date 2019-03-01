@@ -73,7 +73,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
       @NonNull GroupRepository groupRepository,
       @NonNull UserRepository userRepository,
       @NonNull ApplicationRepository applicationRepository,
-      @NonNull ApplicationService applicationService){
+      @NonNull ApplicationService applicationService) {
     super(Group.class, groupRepository);
     this.groupRepository = groupRepository;
     this.userRepository = userRepository;
@@ -87,7 +87,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     return getRepository().save(group);
   }
 
-  public Group getGroupWithRelationships(@NonNull UUID id){
+  public Group getGroupWithRelationships(@NonNull UUID id) {
     val result = groupRepository.findGroupById(id);
     checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
     return result.get();

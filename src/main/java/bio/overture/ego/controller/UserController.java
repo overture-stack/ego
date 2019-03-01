@@ -16,6 +16,8 @@
 
 package bio.overture.ego.controller;
 
+import static org.springframework.util.StringUtils.isEmpty;
+
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.dto.PermissionRequest;
@@ -30,6 +32,7 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
+import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -38,6 +41,10 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import java.util.UUID;
+import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,13 +64,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
-import javax.persistence.EntityNotFoundException;
-import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.UUID;
-
-import static org.springframework.util.StringUtils.isEmpty;
-
 @Slf4j
 @RestController
 @RequestMapping("/users")
@@ -74,15 +74,18 @@ public class UserController {
 
   private final GroupService groupService;
   private final ApplicationService applicationService;
+  private final UserPermissionService userPermissionService;
 
   @Autowired
   public UserController(
       @NonNull UserService userService,
       @NonNull GroupService groupService,
+      @NonNull UserPermissionService userPermissionService,
       @NonNull ApplicationService applicationService) {
     this.userService = userService;
     this.groupService = groupService;
     this.applicationService = applicationService;
+    this.userPermissionService = userPermissionService;
   }
 
   @AdminScoped
@@ -224,9 +227,9 @@ public class UserController {
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<UserPermission> getPermissions(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
+      @PathVariable(value = "id", required = true) UUID id,
       Pageable pageable) {
-    return new PageDTO<>(userService.getUserPermissions(id, pageable));
+    return new PageDTO<>(userPermissionService.getPermissions(id, pageable));
   }
 
   @AdminScoped
@@ -237,7 +240,7 @@ public class UserController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<PermissionRequest> permissions) {
-    return userService.addUserPermissions(id, permissions);
+    return userPermissionService.addPermissions(id, permissions);
   }
 
   @AdminScoped
@@ -246,9 +249,9 @@ public class UserController {
   @ResponseStatus(value = HttpStatus.OK)
   public void deletePermissions(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
-      @PathVariable(value = "permissionIds", required = true) List<String> permissionIds) {
-    userService.deleteUserPermissions(id, permissionIds);
+      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "permissionIds", required = true) List<UUID> permissionIds) {
+    userPermissionService.deletePermissions(id, permissionIds);
   }
 
   /*

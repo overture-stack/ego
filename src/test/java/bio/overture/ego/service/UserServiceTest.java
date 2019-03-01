@@ -1,35 +1,5 @@
 package bio.overture.ego.service;
 
-import bio.overture.ego.controller.resolver.PageableResolver;
-import bio.overture.ego.model.dto.CreateUserRequest;
-import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.dto.UpdateUserRequest;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.UserType;
-import bio.overture.ego.model.exceptions.NotFoundException;
-import bio.overture.ego.model.exceptions.UniqueViolationException;
-import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.token.IDToken;
-import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.PolicyPermissionUtils;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collections;
-import java.util.Date;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
@@ -42,6 +12,36 @@ import static java.util.Collections.singletonList;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
+import bio.overture.ego.controller.resolver.PageableResolver;
+import bio.overture.ego.model.dto.CreateUserRequest;
+import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.dto.UpdateUserRequest;
+import bio.overture.ego.model.entity.AbstractPermission;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.UserType;
+import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.exceptions.UniqueViolationException;
+import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.token.IDToken;
+import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.PolicyPermissionUtils;
+import java.util.Collections;
+import java.util.Date;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @SpringBootTest
@@ -58,6 +58,7 @@ public class UserServiceTest {
   @Autowired private GroupService groupService;
   @Autowired private PolicyService policyService;
   @Autowired private EntityGenerator entityGenerator;
+  @Autowired private UserPermissionService userPermissionService;
 
   @Test
   public void userConverter_UpdateUserRequest_User() {
@@ -976,7 +977,7 @@ public class UserServiceTest {
             new PermissionRequest(study002id, WRITE),
             new PermissionRequest(study003id, DENY));
 
-    userService.addUserPermissions(user.getId(), permissions);
+    userPermissionService.addPermissions(user.getId(), permissions);
 
     assertThat(PolicyPermissionUtils.extractPermissionStrings(user.getUserPermissions()))
         .containsExactlyInAnyOrder("Study001.READ", "Study002.WRITE", "Study003.DENY");
@@ -1005,16 +1006,16 @@ public class UserServiceTest {
             new PermissionRequest(study002id, WRITE),
             new PermissionRequest(study003id, DENY));
 
-    userService.addUserPermissions(user.getId(), permissions);
+    userPermissionService.addPermissions(user.getId(), permissions);
 
     val userPermissionsToRemove =
         user.getUserPermissions()
             .stream()
             .filter(p -> !p.getPolicy().getName().equals("Study001"))
-            .map(p -> p.getId().toString())
+            .map(AbstractPermission::getId)
             .collect(Collectors.toList());
 
-    userService.deleteUserPermissions(user.getId().toString(), userPermissionsToRemove);
+    userPermissionService.deletePermissions(user.getId(), userPermissionsToRemove);
 
     assertThat(PolicyPermissionUtils.extractPermissionStrings(user.getUserPermissions()))
         .containsExactlyInAnyOrder("Study001.READ");
@@ -1043,11 +1044,10 @@ public class UserServiceTest {
             new PermissionRequest(study002id, WRITE),
             new PermissionRequest(study003id, DENY));
 
-    userService.addUserPermissions(user.getId(), permissions);
+    userPermissionService.addPermissions(user.getId(), permissions);
 
     val pagedUserPermissions =
-        userService.getUserPermissions(
-            user.getId().toString(), new PageableResolver().getPageable());
+        userPermissionService.getPermissions(user.getId(), new PageableResolver().getPageable());
 
     assertThat(pagedUserPermissions.getTotalElements()).isEqualTo(3L);
   }

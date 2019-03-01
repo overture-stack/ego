@@ -23,6 +23,8 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +40,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
-
-import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -162,7 +161,7 @@ public class PolicyController {
       @PathVariable(value = "id", required = true) UUID policyId,
       @PathVariable(value = "group_id", required = true) UUID groupId,
       @RequestBody(required = true) MaskDTO maskDTO) {
-    return groupPermissionService.addGroupPermissions(
+    return groupPermissionService.addPermissions(
         groupId, ImmutableList.of(new PermissionRequest(policyId, maskDTO.getMask())));
   }
 
@@ -192,7 +191,9 @@ public class PolicyController {
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "user_id", required = true) UUID userId,
       @RequestBody(required = true) MaskDTO maskDTO) {
-    userService.addUserPermission(userId, new PermissionRequest(id, maskDTO.getMask()));
+    userPermissionService.addPermissions(
+        userId, ImmutableList.of(new PermissionRequest(id, maskDTO.getMask())));
+    // TODO [rtisma]: change this to actually return proper response
     return "1 user permission successfully added to ACL '" + id + "'";
   }
 

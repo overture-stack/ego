@@ -736,7 +736,7 @@ public class GroupsServiceTest {
 
     val firstGroup = groups.get(0);
 
-    groupPermissionService.addGroupPermissions(firstGroup.getId(), permissions);
+    groupPermissionService.addPermissions(firstGroup.getId(), permissions);
 
     assertThat(PolicyPermissionUtils.extractPermissionStrings(firstGroup.getPermissions()))
         .containsExactlyInAnyOrder("Study001.READ", "Study002.WRITE", "Study003.DENY");
@@ -768,7 +768,7 @@ public class GroupsServiceTest {
             new PermissionRequest(study002id, WRITE),
             new PermissionRequest(study003id, DENY));
 
-    groupPermissionService.addGroupPermissions(firstGroup.getId(), permissions);
+    groupPermissionService.addPermissions(firstGroup.getId(), permissions);
 
     val groupPermissionsToRemove =
         firstGroup
@@ -778,7 +778,7 @@ public class GroupsServiceTest {
             .map(AbstractPermission::getId)
             .collect(Collectors.toList());
 
-    groupPermissionService.deleteGroupPermissions(firstGroup.getId(), groupPermissionsToRemove);
+    groupPermissionService.deletePermissions(firstGroup.getId(), groupPermissionsToRemove);
 
     assertThat(PolicyPermissionUtils.extractPermissionStrings(firstGroup.getPermissions()))
         .containsExactlyInAnyOrder("Study001.READ");
@@ -804,11 +804,11 @@ public class GroupsServiceTest {
 
     val permissions =
         Arrays.asList(
-            new PermissionRequest(study001id, READ ),
+            new PermissionRequest(study001id, READ),
             new PermissionRequest(study002id, WRITE),
             new PermissionRequest(study003id, DENY));
 
-    groupPermissionService.addGroupPermissions(testGroup.getId(), permissions);
+    groupPermissionService.addPermissions(testGroup.getId(), permissions);
 
     val pagedGroupPermissions =
         groupService.getGroupPermissions(
@@ -820,5 +820,4 @@ public class GroupsServiceTest {
     assertThat(pagedGroupPermissions.getContent().get(0).getPolicy().getName())
         .isEqualToIgnoringCase("testGetGroupPermissions_Study001");
   }
-
 }

@@ -17,6 +17,11 @@
 
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.model.enums.AccessLevel.READ;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.utils.WebResource.createWebResource;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.service.PolicyService;
@@ -41,11 +46,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import static bio.overture.ego.model.enums.AccessLevel.READ;
-import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static bio.overture.ego.utils.WebResource.createWebResource;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -89,10 +89,7 @@ public class PolicyControllerTest {
   public void addpolicy_Success() {
     val policy = Policy.builder().name("AddPolicy").build();
 
-    val response = initStringRequest()
-            .endpoint("/policies")
-            .body(policy)
-            .post();
+    val response = initStringRequest().endpoint("/policies").body(policy).post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
@@ -109,18 +106,12 @@ public class PolicyControllerTest {
     val policy1 = Policy.builder().name("PolicyUnique").build();
     val policy2 = Policy.builder().name("PolicyUnique").build();
 
-    val response1 = initStringRequest()
-            .endpoint("/policies")
-            .body(policy1)
-            .post();
+    val response1 = initStringRequest().endpoint("/policies").body(policy1).post();
 
     val responseStatus1 = response1.getStatusCode();
     assertThat(responseStatus1).isEqualTo(HttpStatus.OK);
 
-    val response2 = initStringRequest()
-            .endpoint("/policies")
-            .body(policy2)
-            .post();
+    val response2 = initStringRequest().endpoint("/policies").body(policy2).post();
 
     val responseStatus2 = response2.getStatusCode();
     assertThat(responseStatus2).isEqualTo(HttpStatus.CONFLICT);
@@ -130,9 +121,7 @@ public class PolicyControllerTest {
   @SneakyThrows
   public void getPolicy_Success() {
     val policyId = policyService.getByName("Study001").getId();
-    val response = initStringRequest()
-            .endpoint("/policies/%s", policyId)
-            .get();
+    val response = initStringRequest().endpoint("/policies/%s", policyId).get();
 
     val responseStatus = response.getStatusCode();
     val responseJson = MAPPER.readTree(response.getBody());
@@ -147,17 +136,16 @@ public class PolicyControllerTest {
     val policyId = entityGenerator.setupSinglePolicy("AddGroupPermission").getId().toString();
     val groupId = entityGenerator.setupGroup("GroupPolicyAdd").getId().toString();
 
-    val response = initStringRequest()
-        .endpoint("/policies/%s/permission/group/%s", policyId, groupId)
-        .body(createMaskJson(WRITE.toString()))
-        .post();
+    val response =
+        initStringRequest()
+            .endpoint("/policies/%s/permission/group/%s", policyId, groupId)
+            .body(createMaskJson(WRITE.toString()))
+            .post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
-   val getResponse = initStringRequest()
-        .endpoint("/policies/%s/groups", policyId)
-        .get();
+    val getResponse = initStringRequest().endpoint("/policies/%s/groups", policyId).get();
 
     val getResponseStatus = getResponse.getStatusCode();
     val getResponseJson = MAPPER.readTree(getResponse.getBody());
@@ -174,24 +162,24 @@ public class PolicyControllerTest {
     val policyId = entityGenerator.setupSinglePolicy("DeleteGroupPermission").getId().toString();
     val groupId = entityGenerator.setupGroup("GroupPolicyDelete").getId().toString();
 
-    val response = initStringRequest()
-        .endpoint("/policies/%s/permission/group/%s", policyId, groupId)
-        .body(createMaskJson(WRITE.toString()))
-        .post();
+    val response =
+        initStringRequest()
+            .endpoint("/policies/%s/permission/group/%s", policyId, groupId)
+            .body(createMaskJson(WRITE.toString()))
+            .post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
-    val deleteResponse = initStringRequest()
-        .endpoint("/policies/%s/permission/group/%s", policyId, groupId)
-        .delete();
+    val deleteResponse =
+        initStringRequest()
+            .endpoint("/policies/%s/permission/group/%s", policyId, groupId)
+            .delete();
 
     val deleteResponseStatus = deleteResponse.getStatusCode();
     assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
 
-    val getResponse = initStringRequest()
-        .endpoint("/policies/%s/groups", policyId)
-        .get();
+    val getResponse = initStringRequest().endpoint("/policies/%s/groups", policyId).get();
 
     val getResponseStatus = getResponse.getStatusCode();
     val getResponseJson = (ArrayNode) MAPPER.readTree(getResponse.getBody());
@@ -206,18 +194,17 @@ public class PolicyControllerTest {
     val policyId = entityGenerator.setupSinglePolicy("AddUserPermission").getId().toString();
     val userId = entityGenerator.setupUser("UserPolicy Add").getId().toString();
 
-    val response = initStringRequest()
-        .endpoint( "/policies/%s/permission/user/%s", policyId, userId)
-        .body(createMaskJson(READ.toString()))
-        .post();
+    val response =
+        initStringRequest()
+            .endpoint("/policies/%s/permission/user/%s", policyId, userId)
+            .body(createMaskJson(READ.toString()))
+            .post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
     // TODO: Fix it so that POST returns JSON, not just random string message
 
-    val getResponse = initStringRequest()
-        .endpoint("/policies/%s/users", policyId)
-        .get();
+    val getResponse = initStringRequest().endpoint("/policies/%s/users", policyId).get();
 
     val getResponseStatus = getResponse.getStatusCode();
     val getResponseJson = MAPPER.readTree(getResponse.getBody());
@@ -234,26 +221,23 @@ public class PolicyControllerTest {
     val policyId = entityGenerator.setupSinglePolicy("DeleteGroupPermission").getId().toString();
     val userId = entityGenerator.setupUser("UserPolicy Delete").getId().toString();
 
-    val response = initStringRequest()
-        .endpoint("/policies/%s/permission/user/%s", policyId, userId)
-        .body(createMaskJson(WRITE.toString()))
-        .post();
-
+    val response =
+        initStringRequest()
+            .endpoint("/policies/%s/permission/user/%s", policyId, userId)
+            .body(createMaskJson(WRITE.toString()))
+            .post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
     // TODO: Fix it so that POST returns JSON, not just random string message
 
-    val deleteResponse = initStringRequest()
-        .endpoint("/policies/%s/permission/user/%s", policyId, userId)
-        .delete();
+    val deleteResponse =
+        initStringRequest().endpoint("/policies/%s/permission/user/%s", policyId, userId).delete();
 
     val deleteResponseStatus = deleteResponse.getStatusCode();
     assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
 
-    val getResponse = initStringRequest()
-        .endpoint("/policies/%s/users", policyId)
-        .get();
+    val getResponse = initStringRequest().endpoint("/policies/%s/users", policyId).get();
 
     val getResponseStatus = getResponse.getStatusCode();
     val getResponseJson = (ArrayNode) MAPPER.readTree(getResponse.getBody());
@@ -262,7 +246,7 @@ public class PolicyControllerTest {
     assertThat(getResponseJson.size()).isEqualTo(0);
   }
 
-  private static ObjectNode createMaskJson(String maskStringValue){
+  private static ObjectNode createMaskJson(String maskStringValue) {
     return MAPPER.createObjectNode().put("mask", maskStringValue);
   }
 

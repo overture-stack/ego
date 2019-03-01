@@ -1,17 +1,16 @@
 package bio.overture.ego.utils;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
 
 public class CollectionUtils {
 
@@ -31,8 +30,7 @@ public class CollectionUtils {
     return asList(strings);
   }
 
-  public static <T> Set<T> difference(Collection<T> left, Collection<T> right){
+  public static <T> Set<T> difference(Collection<T> left, Collection<T> right) {
     return Sets.difference(ImmutableSet.copyOf(left), ImmutableSet.copyOf(right));
   }
-
 }

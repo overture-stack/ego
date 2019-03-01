@@ -17,14 +17,12 @@
 package bio.overture.ego.service;
 
 import bio.overture.ego.model.dto.CreateUserRequest;
-import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
-import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.exceptions.NotFoundException;
@@ -32,7 +30,6 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.UserSpecification;
 import bio.overture.ego.token.IDToken;
-import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -46,7 +43,6 @@ import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,7 +51,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -72,8 +67,8 @@ import static bio.overture.ego.utils.Converters.convertToUUIDSet;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.String.format;
+import static java.util.Collections.reverse;
 import static java.util.Comparator.comparing;
 import static java.util.Objects.isNull;
 import static java.util.UUID.fromString;
@@ -93,23 +88,17 @@ public class UserService extends AbstractNamedService<User, UUID> {
   private final GroupService groupService;
 
   private final ApplicationService applicationService;
-  private final PolicyService policyService;
-  private final UserPermissionService userPermissionService;
   private final UserRepository userRepository;
 
   @Autowired
   public UserService(
       @NonNull UserRepository userRepository,
       @NonNull GroupService groupService,
-      @NonNull ApplicationService applicationService,
-      @NonNull PolicyService policyService,
-      @NonNull UserPermissionService userPermissionService) {
+      @NonNull ApplicationService applicationService) {
     super(User.class, userRepository);
     this.userRepository = userRepository;
     this.groupService = groupService;
     this.applicationService = applicationService;
-    this.policyService = policyService;
-    this.userPermissionService = userPermissionService;
   }
 
   // DEFAULTS
@@ -157,28 +146,10 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
-  public User addUserPermission(UUID userId, @NonNull PermissionRequest policy) {
-    return addUserPermissions(userId, newArrayList(policy));
-  }
-
   private User getUserWithRelationshipsById(@NonNull String id) {
     return userRepository
         .getUserById(fromString(id))
         .orElseThrow(() -> buildNotFoundException("The user could not be found"));
-  }
-
-  public User addUserPermissions(
-      @NonNull UUID userId, @NonNull List<PermissionRequest> permissions) {
-    val policyMap = permissions.stream()
-        .collect(groupingBy(PermissionRequest::getPolicyId));
-    val user = getById(userId);
-    policyService
-        .getMany(ImmutableList.copyOf(policyMap.keySet()))
-        .stream()
-        .flatMap(p -> streamUserPermission(user, policyMap, p))
-        .map(userPermissionService::create)
-        .forEach(p -> associateUserWithPermission(user, p));
-    return getRepository().save(user);
   }
 
   public User get(@NonNull String userId) {
@@ -249,21 +220,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
     getRepository().save(user);
   }
 
-  // TODO @rtisma: add test for checking user permission exists for user
-  public void deleteUserPermissions(
-      @NonNull String userId, @NonNull Collection<String> permissionsIds) {
-    val user = getUserWithRelationshipsById(userId);
-    val permsIdsToDisassociate = convertToUUIDSet(permissionsIds);
-    checkPermissionsExistForUser(user, permsIdsToDisassociate);
-    val permsToDisassociate =
-        user.getUserPermissions()
-            .stream()
-            .filter(p -> permsIdsToDisassociate.contains(p.getId()))
-            .collect(toImmutableSet());
-    disassociateUserFromUserPermissions(user, permsToDisassociate);
-    getRepository().save(user);
-  }
-
   public Page<User> findGroupUsers(
       @NonNull String groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository()
@@ -308,16 +264,11 @@ public class UserService extends AbstractNamedService<User, UUID> {
             pageable);
   }
 
-  public Page<UserPermission> getUserPermissions(
-      @NonNull String userId, @NonNull Pageable pageable) {
-    val userPermissions = ImmutableList.copyOf(getById(fromString(userId)).getUserPermissions());
-    return new PageImpl<>(userPermissions, pageable, userPermissions.size());
-  }
-
   public void delete(String id) {
     delete(fromString(id));
   }
 
+  // TODO [rtisma]: ensure that the user contains all its relationships
   public static Set<AbstractPermission> getPermissionsList(User user) {
     val up = user.getUserPermissions();
     val upStream = up == null ? Stream.<UserPermission>empty() : up.stream();
@@ -373,7 +324,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
     combinedPermissions.forEach(
         (entity, permissions) -> {
-          permissions.sort(comparing(AbstractPermission::getAccessLevel).reversed());
+          permissions.sort(comparing(AbstractPermission::getAccessLevel));
+          reverse(permissions);
           finalPermissionsList.add(permissions.get(0));
         });
     return finalPermissionsList;
@@ -381,17 +333,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   public static Set<Scope> extractScopes(@NonNull User user) {
     return mapToSet(getPermissionsList(user), AbstractPermissionService::buildScope);
-  }
-
-  public static void associateUserWithPermissions(
-      User user, @NonNull Collection<UserPermission> permissions) {
-    permissions.forEach(p -> associateUserWithPermission(user, p));
-  }
-
-  public static void associateUserWithPermission(
-      @NonNull User user, @NonNull UserPermission permission) {
-    user.getUserPermissions().add(permission);
-    permission.setOwner(user);
   }
 
   public static void associateUserWithGroups(User user, @NonNull Collection<Group> groups) {
@@ -415,12 +356,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
     applications.forEach(x -> x.getUsers().remove(user));
   }
 
-  public static void disassociateUserFromUserPermissions(
-      @NonNull User user, @NonNull Collection<UserPermission> userPermissions) {
-    user.getUserPermissions().removeAll(userPermissions);
-    userPermissions.forEach(x -> x.setOwner(null));
-  }
-
   public static void associateUserWithApplications(
       User user, @NonNull Collection<Application> apps) {
     apps.forEach(a -> associateUserWithApplication(user, a));
@@ -441,20 +376,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
           format(
               "The following groups do not exist for user '%s': %s",
               user.getId(), COMMA.join(nonExistentGroupIds)));
-    }
-  }
-
-  public static void checkPermissionsExistForUser(
-      @NonNull User user, @NonNull Collection<UUID> permissionIds) {
-    val existingPermIds =
-        user.getUserPermissions().stream().map(UserPermission::getId).collect(toImmutableSet());
-    val nonExistentPermIds =
-        permissionIds.stream().filter(x -> !existingPermIds.contains(x)).collect(toImmutableSet());
-    if (!nonExistentPermIds.isEmpty()) {
-      throw new NotFoundException(
-          format(
-              "The following user permissions do not exist for user '%s': %s",
-              user.getId(), COMMA.join(nonExistentPermIds)));
     }
   }
 
@@ -487,27 +408,12 @@ public class UserService extends AbstractNamedService<User, UUID> {
         !userRepository.existsByEmailIgnoreCase(email), "A user with same email already exists");
   }
 
-  private static <T extends AbstractPermission> T resolvePermissions(List<T> permissions) {
+  private static <T extends AbstractPermission> AbstractPermission resolvePermissions(
+      List<T> permissions) {
     checkState(!permissions.isEmpty(), "Input permissions list cannot be empty");
-    permissions.sort(comparing(AbstractPermission::getAccessLevel).reversed());
+    permissions.sort(comparing(AbstractPermission::getAccessLevel));
+    reverse(permissions);
     return permissions.get(0);
-  }
-
-  private static Stream<UserPermission> streamUserPermission(
-      User u, Map<UUID, List<PermissionRequest>> policyMap, Policy p) {
-    val policyId = p.getId();
-    return policyMap
-        .get(policyId)
-        .stream()
-        .map(PermissionRequest::getMask)
-        .map(
-            a -> {
-              val up = new UserPermission();
-              up.setAccessLevel(a);
-              up.setPolicy(p);
-              up.setOwner(u);
-              return up;
-            });
   }
 
   @Mapper(

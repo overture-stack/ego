@@ -1,22 +1,21 @@
 package bio.overture.ego.service;
 
-import bio.overture.ego.model.entity.Identifiable;
-import bio.overture.ego.repository.BaseRepository;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
-
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static com.google.common.collect.Sets.difference;
+
+import bio.overture.ego.model.entity.Identifiable;
+import bio.overture.ego.repository.BaseRepository;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.Set;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 
 /**
  * Base implementation
@@ -27,7 +26,7 @@ import static com.google.common.collect.Sets.difference;
 public abstract class AbstractBaseService<T extends Identifiable<ID>, ID>
     implements BaseService<T, ID> {
 
-  @NonNull private final Class<T> entityType;
+  @Getter @NonNull private final Class<T> entityType;
   @Getter @NonNull private final BaseRepository<T, ID> repository;
 
   @Override

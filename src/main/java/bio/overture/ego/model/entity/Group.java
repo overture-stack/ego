@@ -73,21 +73,21 @@ import static com.google.common.collect.Sets.newHashSet;
     name = "group-entity-with-relationships",
     attributeNodes = {
       @NamedAttributeNode(value = JavaFields.USERS, subgraph = "users-subgraph"),
-      @NamedAttributeNode(value = JavaFields.PERMISSIONS, subgraph = "permissions-subgraph" ),
+      @NamedAttributeNode(value = JavaFields.PERMISSIONS, subgraph = "permissions-subgraph"),
       @NamedAttributeNode(value = JavaFields.APPLICATIONS, subgraph = "applications-subgraph")
     },
     subgraphs = {
-        @NamedSubgraph(
-            name = "permissions-subgraph",
-            attributeNodes = {@NamedAttributeNode(JavaFields.POLICY)}),
-        @NamedSubgraph(
-            name = "applications-subgraph",
-            attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)}),
-        @NamedSubgraph(
-            name = "users-subgraph",
-            attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)})
+      @NamedSubgraph(
+          name = "permissions-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.POLICY)}),
+      @NamedSubgraph(
+          name = "applications-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)}),
+      @NamedSubgraph(
+          name = "users-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)})
     })
-public class Group implements PolicyOwner, Identifiable<UUID> {
+public class Group implements PolicyOwner, NameableEntity<UUID> {
 
   @Id
   @GeneratedValue(generator = "group_uuid")

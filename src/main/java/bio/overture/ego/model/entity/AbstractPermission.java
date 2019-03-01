@@ -40,7 +40,8 @@ import static bio.overture.ego.model.enums.AccessLevel.EGO_ACCESS_LEVEL_ENUM;
   @JsonSubTypes.Type(value = UserPermission.class, name = JavaFields.USERPERMISSIONS),
   @JsonSubTypes.Type(value = GroupPermission.class, name = JavaFields.GROUPPERMISSION)
 })
-public abstract class AbstractPermission implements Identifiable<UUID> {
+public abstract class AbstractPermission<O extends Identifiable<UUID>>
+    implements Identifiable<UUID> {
 
   @Id
   @Column(name = SqlFields.ID, updatable = false, nullable = false)
@@ -57,4 +58,8 @@ public abstract class AbstractPermission implements Identifiable<UUID> {
   @Enumerated(EnumType.STRING)
   @Type(type = EGO_ACCESS_LEVEL_ENUM)
   private AccessLevel accessLevel;
+
+  public abstract O getOwner();
+
+  public abstract void setOwner(O owner);
 }

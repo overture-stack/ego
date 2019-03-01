@@ -107,7 +107,7 @@ import static com.google.common.collect.Sets.newHashSet;
           name = "applications-subgraph",
           attributeNodes = {@NamedAttributeNode(JavaFields.USERS)})
     })
-public class User implements PolicyOwner, Identifiable<UUID> {
+public class User implements PolicyOwner, NameableEntity<UUID> {
 
   // TODO: find JPA equivalent for GenericGenerator
   @Id

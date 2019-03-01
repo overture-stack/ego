@@ -216,7 +216,7 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       Pageable pageable) {
-    return new PageDTO<>(groupPermissionService.getGroupPermissions(id, pageable));
+    return new PageDTO<>(groupPermissionService.getPermissions(id, pageable));
   }
 
   @AdminScoped
@@ -227,7 +227,7 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<PermissionRequest> permissions) {
-    return groupPermissionService.addGroupPermissions(id, permissions);
+    return groupPermissionService.addPermissions(id, permissions);
   }
 
   @AdminScoped
@@ -238,7 +238,7 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "permissionIds", required = true) List<UUID> permissionIds) {
-    groupPermissionService.deleteGroupPermissions(id, permissionIds);
+    groupPermissionService.deletePermissions(id, permissionIds);
   }
 
   /*
