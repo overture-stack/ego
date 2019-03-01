@@ -17,11 +17,11 @@
  */
 package bio.overture.ego.model.exceptions;
 
-import lombok.NonNull;
-import org.springframework.web.bind.annotation.ResponseStatus;
-
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+
+import lombok.NonNull;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(BAD_REQUEST)
 public class MalformedRequestException extends RuntimeException {

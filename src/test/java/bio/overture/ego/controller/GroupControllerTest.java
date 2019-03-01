@@ -92,10 +92,7 @@ public class GroupControllerTest {
             .description("")
             .build();
 
-    val response = initStringRequest()
-        .endpoint("/groups")
-        .body(group)
-        .post();
+    val response = initStringRequest().endpoint("/groups").body(group).post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
@@ -105,10 +102,7 @@ public class GroupControllerTest {
   public void addUniqueGroup() {
     val group = entityGenerator.setupGroup("SameSame");
 
-    val response = initStringRequest()
-        .endpoint("/groups")
-        .body(group)
-        .post();
+    val response = initStringRequest().endpoint("/groups").body(group).post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.CONFLICT);
@@ -118,9 +112,7 @@ public class GroupControllerTest {
   public void getGroup() {
     // Groups created in setup
     val groupId = groupService.getByName("Group One").getId();
-    val response = initStringRequest()
-        .endpoint("/groups/%s", groupId)
-        .get();
+    val response = initStringRequest().endpoint("/groups/%s", groupId).get();
 
     val responseStatus = response.getStatusCode();
     val responseBody = response.getBody();
@@ -135,9 +127,7 @@ public class GroupControllerTest {
 
   @Test
   public void getGroupNotFound() {
-    val response = initStringRequest()
-        .endpoint("/groups/%s", UUID.randomUUID())
-        .get();
+    val response = initStringRequest().endpoint("/groups/%s", UUID.randomUUID()).get();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.NOT_FOUND);
@@ -149,9 +139,7 @@ public class GroupControllerTest {
     val totalGroups = groupService.getRepository().count();
 
     // Get all groups
-    val response = initStringRequest()
-        .endpoint("/groups?offset=0&limit=%s", totalGroups)
-        .get();
+    val response = initStringRequest().endpoint("/groups?offset=0&limit=%s", totalGroups).get();
 
     val responseStatus = response.getStatusCode();
     val responseBody = response.getBody();
@@ -184,10 +172,7 @@ public class GroupControllerTest {
             .description(group.getDescription())
             .build();
 
-    val response = initStringRequest()
-        .endpoint("/groups/%s", group.getId())
-        .body(update)
-        .put();
+    val response = initStringRequest().endpoint("/groups/%s", group.getId()).body(update).put();
 
     val responseBody = response.getBody();
     val responseStatus = response.getStatusCode();
@@ -235,14 +220,8 @@ public class GroupControllerTest {
     val usersBody = singletonList(userOne.getId().toString());
     val appsBody = singletonList(appOne.getId().toString());
 
-    initStringRequest()
-        .endpoint("/groups/%s/users", group.getId())
-        .body(usersBody)
-        .post();
-    initStringRequest()
-        .endpoint("/groups/%s/applications", group.getId())
-        .body(appsBody)
-        .post();
+    initStringRequest().endpoint("/groups/%s/users", group.getId()).body(usersBody).post();
+    initStringRequest().endpoint("/groups/%s/applications", group.getId()).body(appsBody).post();
 
     // Check user-group relationship is there
     val userWithGroup = userService.getByName("TempGroupUser@domain.com");
@@ -252,9 +231,7 @@ public class GroupControllerTest {
     val applicationWithGroup = applicationService.getByClientId("TempGroupApp");
     assertThat(extractGroupIds(applicationWithGroup.getGroups())).contains(groupId);
 
-    val response = initStringRequest()
-        .endpoint("/groups/%s", groupId)
-        .delete();
+    val response = initStringRequest().endpoint("/groups/%s", groupId).delete();
 
     val responseStatus = response.getStatusCode();
 
@@ -286,11 +263,8 @@ public class GroupControllerTest {
     val userTwo = userService.getByName("SecondUser@domain.com");
 
     val body = asList(userOne.getId().toString(), userTwo.getId().toString());
-    val response = initStringRequest()
-        .endpoint("/groups/%s/users", group.getId())
-        .body(body)
-        .post();
-
+    val response =
+        initStringRequest().endpoint("/groups/%s/users", group.getId()).body(body).post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
@@ -315,31 +289,23 @@ public class GroupControllerTest {
     val remainUser = entityGenerator.setupUser("Keep This").getId().toString();
 
     val body = asList(deleteUser, remainUser);
-    val response = initStringRequest()
-        .endpoint("/groups/%s/users", groupId)
-        .body(body)
-        .post();
+    val response = initStringRequest().endpoint("/groups/%s/users", groupId).body(body).post();
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
-    val getResponse = initStringRequest()
-        .endpoint("/groups/%s/users", groupId)
-        .get();
+    val getResponse = initStringRequest().endpoint("/groups/%s/users", groupId).get();
     val getResponseStatus = getResponse.getStatusCode();
     assertThat(getResponseStatus).isEqualTo(HttpStatus.OK);
     val getResponseJson = MAPPER.readTree(getResponse.getBody());
     assertThat(getResponseJson.get("count").asInt()).isEqualTo(2);
 
-    val deleteResponse = initStringRequest()
-        .endpoint("/groups/%s/users/%s", groupId, deleteUser)
-        .delete();
+    val deleteResponse =
+        initStringRequest().endpoint("/groups/%s/users/%s", groupId, deleteUser).delete();
 
     val deleteResponseStatus = deleteResponse.getStatusCode();
     assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
 
-    val secondGetResponse = initStringRequest()
-        .endpoint("/groups/%s/users", groupId)
-        .get();
+    val secondGetResponse = initStringRequest().endpoint("/groups/%s/users", groupId).get();
 
     val secondGetResponseStatus = deleteResponse.getStatusCode();
     assertThat(secondGetResponseStatus).isEqualTo(HttpStatus.OK);
@@ -358,10 +324,8 @@ public class GroupControllerTest {
     val appTwo = applicationService.getByClientId("222222");
 
     val body = asList(appOne.getId().toString(), appTwo.getId().toString());
-    val response = initStringRequest()
-        .endpoint("/groups/%s/applications", group.getId())
-        .body(body)
-        .post();
+    val response =
+        initStringRequest().endpoint("/groups/%s/applications", group.getId()).body(body).post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
@@ -387,31 +351,24 @@ public class GroupControllerTest {
     val remainApp = entityGenerator.setupApplication("KeepThis").getId().toString();
 
     val body = asList(deleteApp, remainApp);
-    val response = initStringRequest()
-        .endpoint("/groups/%s/applications", groupId)
-        .body(body)
-        .post();
+    val response =
+        initStringRequest().endpoint("/groups/%s/applications", groupId).body(body).post();
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
-    val getResponse = initStringRequest()
-        .endpoint("/groups/%s/applications", groupId)
-        .get();
+    val getResponse = initStringRequest().endpoint("/groups/%s/applications", groupId).get();
     val getResponseStatus = getResponse.getStatusCode();
     assertThat(getResponseStatus).isEqualTo(HttpStatus.OK);
     val getResponseJson = MAPPER.readTree(getResponse.getBody());
     assertThat(getResponseJson.get("count").asInt()).isEqualTo(2);
 
-    val deleteResponse = initStringRequest()
-        .endpoint("/groups/%s/applications/%s", groupId, deleteApp)
-        .delete();
+    val deleteResponse =
+        initStringRequest().endpoint("/groups/%s/applications/%s", groupId, deleteApp).delete();
 
     val deleteResponseStatus = deleteResponse.getStatusCode();
     assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
 
-    val secondGetResponse = initStringRequest()
-        .endpoint("/groups/%s/applications", groupId)
-        .get();
+    val secondGetResponse = initStringRequest().endpoint("/groups/%s/applications", groupId).get();
 
     val secondGetResponseStatus = deleteResponse.getStatusCode();
     assertThat(secondGetResponseStatus).isEqualTo(HttpStatus.OK);
@@ -436,5 +393,4 @@ public class GroupControllerTest {
   private String getServerUrl() {
     return "http://localhost:" + port;
   }
-
 }

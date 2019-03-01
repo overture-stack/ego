@@ -34,13 +34,13 @@ public interface BaseService<T, ID> {
 
   Set<T> getMany(Collection<ID> ids);
 
-  default void checkExistence(@NonNull Collection<ID> ids){
-    val missingIds = ids.stream()
-        .filter(x -> !isExist(x))
-        .collect(toImmutableSet());
-    checkNotFound(missingIds.isEmpty(),
+  default void checkExistence(@NonNull Collection<ID> ids) {
+    val missingIds = ids.stream().filter(x -> !isExist(x)).collect(toImmutableSet());
+    checkNotFound(
+        missingIds.isEmpty(),
         "The following '%s' entity ids do no exist: %s",
-        getEntityTypeName(), COMMA.join(missingIds));
+        getEntityTypeName(),
+        COMMA.join(missingIds));
   }
 
   default void checkExistence(@NonNull ID id) {

@@ -3,11 +3,10 @@ package bio.overture.ego.repository;
 import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.NameableEntity;
 import bio.overture.ego.model.enums.AccessLevel;
-import org.springframework.data.repository.NoRepositoryBean;
-
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.data.repository.NoRepositoryBean;
 
 @NoRepositoryBean
 public interface PermissionRepository<

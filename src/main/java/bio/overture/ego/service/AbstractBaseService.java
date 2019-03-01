@@ -55,9 +55,7 @@ public abstract class AbstractBaseService<T extends Identifiable<ID>, ID>
     val entities = repository.findAllByIdIn(ImmutableList.copyOf(ids));
 
     val requestedIds = ImmutableSet.copyOf(ids);
-    val existingIds = entities.stream()
-        .map(Identifiable::getId)
-        .collect(toImmutableSet());
+    val existingIds = entities.stream().map(Identifiable::getId).collect(toImmutableSet());
     val nonExistingIds = difference(requestedIds, existingIds);
 
     checkNotFound(
@@ -67,6 +65,4 @@ public abstract class AbstractBaseService<T extends Identifiable<ID>, ID>
         COMMA.join(nonExistingIds));
     return entities;
   }
-
-
 }

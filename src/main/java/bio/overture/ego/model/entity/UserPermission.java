@@ -6,13 +6,6 @@ import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -20,6 +13,12 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
 import javax.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = Tables.USER_PERMISSION)
@@ -35,8 +34,8 @@ import javax.persistence.Table;
 @NamedEntityGraph(
     name = "user-permission-entity-with-relationships",
     attributeNodes = {
-        @NamedAttributeNode(value = JavaFields.POLICY),
-        @NamedAttributeNode(value = JavaFields.OWNER)
+      @NamedAttributeNode(value = JavaFields.POLICY),
+      @NamedAttributeNode(value = JavaFields.OWNER)
     })
 public class UserPermission extends AbstractPermission<User> {
 

@@ -16,15 +16,14 @@
 
 package bio.overture.ego.repository;
 
-import bio.overture.ego.model.entity.Group;
-import org.springframework.data.jpa.repository.EntityGraph;
+import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
 
+import bio.overture.ego.model.entity.Group;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
-import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface GroupRepository extends NamedRepository<Group, UUID> {
 

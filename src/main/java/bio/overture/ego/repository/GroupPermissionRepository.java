@@ -1,13 +1,12 @@
 package bio.overture.ego.repository;
 
+import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
+
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
-import org.springframework.data.jpa.repository.EntityGraph;
-
 import java.util.Set;
 import java.util.UUID;
-
-import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface GroupPermissionRepository extends PermissionRepository<Group, GroupPermission> {
 

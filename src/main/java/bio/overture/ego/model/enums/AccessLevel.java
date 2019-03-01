@@ -16,15 +16,13 @@
 
 package bio.overture.ego.model.enums;
 
+import java.util.Arrays;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 
-import java.util.Arrays;
-
 @RequiredArgsConstructor
 public enum AccessLevel {
-
   READ("READ"),
   WRITE("WRITE"),
   DENY("DENY");
@@ -40,10 +38,7 @@ public enum AccessLevel {
       }
     }
     throw new IllegalArgumentException(
-        "Invalid enum value '"
-            + value
-            + "', Allowed values are "
-            + Arrays.toString(values()));
+        "Invalid enum value '" + value + "', Allowed values are " + Arrays.toString(values()));
   }
 
   /**
@@ -74,5 +69,4 @@ public enum AccessLevel {
   public String toString() {
     return value;
   }
-
 }

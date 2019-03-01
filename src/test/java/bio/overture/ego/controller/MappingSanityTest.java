@@ -37,11 +37,9 @@ public class MappingSanityTest {
 
   @Test
   public void sanityCRUD_GroupPermissions() {
-    //Create group
-    val group = Group.builder()
-        .name("myGroup")
-        .status(ApplicationStatus.APPROVED.toString())
-        .build();
+    // Create group
+    val group =
+        Group.builder().name("myGroup").status(ApplicationStatus.APPROVED.toString()).build();
     groupRepository.save(group);
 
     // Create policy
@@ -59,7 +57,6 @@ public class MappingSanityTest {
     assertThat(groupRepository.existsById(group.getId())).isTrue();
     assertThat(policyRepository.existsById(policy.getId())).isTrue();
     assertThat(groupPermissionRepository.existsById(perm.getId())).isTrue();
-
 
     // Assert group has only that one permission
     val fullGroupResult = groupRepository.getGroupByNameIgnoreCase(group.getName());
@@ -84,11 +81,12 @@ public class MappingSanityTest {
     assertThat(perm1.getOwner().getId()).isEqualTo(group.getId());
     assertThat(perm1.getPolicy().getId()).isEqualTo(policy.getId());
 
-//    No need to disassociate policy and group from permission and vice versa, becuase delete is all that is needed for OneToMany
-//    fullGroup.getPermissions().remove(perm1);
-//    fullPolicy.getGroupPermissions().remove(perm1);
-//    perm1.setOwner(null);
-//    perm1.setPolicy(null);
+    //    No need to disassociate policy and group from permission and vice versa, becuase delete is
+    // all that is needed for OneToMany
+    //    fullGroup.getPermissions().remove(perm1);
+    //    fullPolicy.getGroupPermissions().remove(perm1);
+    //    perm1.setOwner(null);
+    //    perm1.setPolicy(null);
 
     // Delete group permission
     assertThat(groupPermissionRepository.existsById(perm.getId())).isTrue();
@@ -109,5 +107,4 @@ public class MappingSanityTest {
     val fullPolicy2 = fullPolicyResult2.get();
     assertThat(fullPolicy2.getGroupPermissions()).doesNotContain(perm);
   }
-
 }

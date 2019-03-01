@@ -1,16 +1,14 @@
 package bio.overture.ego.controller;
 
-import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.GroupPermission;
+import bio.overture.ego.model.entity.AbstractPermission;
+import bio.overture.ego.model.entity.Identifiable;
+import bio.overture.ego.model.entity.NameableEntity;
 import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.service.GroupPermissionService;
-import bio.overture.ego.service.GroupService;
+import bio.overture.ego.service.AbstractPermissionService;
+import bio.overture.ego.service.NamedService;
 import bio.overture.ego.service.PolicyService;
-import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.Streams;
 import bio.overture.ego.utils.WebResource;
@@ -24,34 +22,28 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentName;
-import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.WebResource.createWebResource;
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.uniqueIndex;
+import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -65,13 +57,7 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Slf4j
-@ActiveProfiles("test")
-@RunWith(SpringRunner.class)
-@TestExecutionListeners(listeners = DependencyInjectionTestExecutionListener.class)
-@SpringBootTest(
-    classes = AuthorizationServiceMain.class,
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class GroupPermissionControllerTest {
+public abstract class AbstractPermissionControllerTest<O extends NameableEntity<UUID>, P extends AbstractPermission<O>> {
 
   /** Constants */
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -85,32 +71,24 @@ public class GroupPermissionControllerTest {
   private TestRestTemplate restTemplate = new TestRestTemplate();
   private HttpHeaders headers = new HttpHeaders();
 
-  /** Dependencies */
-  @Autowired private EntityGenerator entityGenerator;
-  @Autowired private GroupService groupService;
-  @Autowired private PolicyService policyService;
-  @Autowired private UserService userService;
-  @Autowired private GroupPermissionService groupPermissionService;
 
   /** State */
-  private User user1;
 
-  private Group group1;
-  private Group group2;
+  private O owner1;
+  private O owner2;
   private List<Policy> policies;
   private List<PermissionRequest> permissionRequests;
 
   @Before
   public void setup() {
     // Initial setup of entities (run once)
-    this.group1 = entityGenerator.setupGroup(generateNonExistentName(groupService));
-    this.group2 = entityGenerator.setupGroup(generateNonExistentName(groupService));
-    this.user1 = entityGenerator.setupUser(entityGenerator.generateNonExistentUserName());
+    this.owner1 = generateOwner(generateNonExistentOwnerName());
+    this.owner2 = generateOwner(generateNonExistentOwnerName());
     this.policies =
         IntStream.range(0, 2)
             .boxed()
-            .map(x -> generateNonExistentName(policyService))
-            .map(entityGenerator::setupSinglePolicy)
+            .map(x -> generateNonExistentName(getPolicyService()))
+            .map(x -> getEntityGenerator().setupSinglePolicy(x))
             .collect(toImmutableList());
 
     this.permissionRequests =
@@ -120,86 +98,129 @@ public class GroupPermissionControllerTest {
             .build();
 
     // Sanity check
-    assertThat(groupService.isExist(group1.getId())).isTrue();
-    assertThat(userService.isExist(user1.getId())).isTrue();
-    policies.forEach(p -> assertThat(policyService.isExist(p.getId())).isTrue());
+    assertThat(getOwnerService().isExist(owner1.getId())).isTrue();
+    policies.forEach(p -> assertThat(getPolicyService().isExist(p.getId())).isTrue());
 
     headers.add(AUTHORIZATION, "Bearer " + ACCESS_TOKEN);
     headers.setContentType(APPLICATION_JSON);
   }
 
-  /** Add permissions to a non-existent group */
+  protected abstract Class<O> getOwnerType();
+  protected abstract Class<P> getPermissionType();
+
+  protected abstract O generateOwner(String name);
+  protected abstract String generateNonExistentOwnerName();
+
+  protected abstract NamedService<O, UUID> getOwnerService();
+  protected abstract AbstractPermissionService<O,P> getPermissionService();
+
+  protected abstract String getAddPermissionsEndpoint(String ownerId);
+  protected abstract String getAddPermissionEndpoint(String policyId, String ownerId);
+  protected abstract String getReadPermissionsEndpoint(String ownerId);
+  protected abstract String getDeleteOwnerEndpoint(String ownerId);
+  protected abstract String getDeletePermissionsEndpoint(String ownerId, Collection<String> permissionIds);
+  protected abstract String getDeletePermissionEndpoint(String policyId, String  ownerId);
+
+  protected abstract EntityGenerator getEntityGenerator();
+  protected abstract PolicyService getPolicyService();
+
+  private String getAddPermissionsEndpoint(UUID ownerId){
+    return getAddPermissionsEndpoint(ownerId.toString());
+  }
+
+  private String getAddPermissionEndpoint(UUID policyId, UUID ownerId){
+    return getAddPermissionEndpoint(policyId.toString(), ownerId.toString());
+  }
+
+  private String getReadPermissionsEndpoint(UUID ownerId){
+    return getReadPermissionsEndpoint(ownerId.toString());
+  }
+
+  private String getDeleteOwnerEndpoint(UUID ownerId){
+    return getDeleteOwnerEndpoint(ownerId.toString());
+  }
+
+  private String getDeletePermissionsEndpoint(UUID ownerId, Collection<UUID> permissionIds){
+    return getDeletePermissionsEndpoint(ownerId.toString(), mapToList(permissionIds, UUID::toString));
+  }
+
+  private String getDeletePermissionEndpoint(UUID policyId, UUID  ownerId){
+    return getDeletePermissionEndpoint(policyId.toString(), ownerId.toString());
+  }
+
+
+  /** Add permissions to a non-existent owner */
   @Test
-  public void addGroupPermissionsToGroup_NonExistentGroup_NotFound() {
-    val nonExistentGroupId = generateNonExistentId(groupService);
+  public void addPermissionsToOwner_NonExistentGroup_NotFound() {
+    val nonExistentOwnerId = generateNonExistentId(getOwnerService());
     val r1 =
         initStringRequest()
-            .endpoint("groups/%s/permissions", nonExistentGroupId.toString())
+            .endpoint(getAddPermissionsEndpoint(nonExistentOwnerId))
             .body(permissionRequests)
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-    assertThat(r1.getBody()).contains(nonExistentGroupId.toString());
+    assertThat(r1.getBody()).contains(nonExistentOwnerId.toString());
   }
 
-  /** Attempt to add an empty list of permission request to a group */
+  /** Attempt to add an empty list of permission request to an owner */
   @Test
   @SneakyThrows
-  public void addGroupPermissionsToGroup_EmptyPermissionRequests_Conflict() {
+  public void addPermissionsToOwner_EmptyPermissionRequests_Conflict() {
     // Add some of the permissions
     val r1 =
-        initRequest(Group.class)
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+        initStringRequest()
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(newArrayList())
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(BAD_REQUEST);
   }
 
-  /** Add permissions to a group that has SOME those permissions */
+  /** Add permissions to an owner that has SOME those permissions */
   @Test
   @SneakyThrows
-  public void addGroupPermissionsToGroup_SomeAlreadyExists_Conflict() {
+  public void addPermissionsToOwner_SomeAlreadyExists_Conflict() {
     val somePermissionRequests = ImmutableList.of(permissionRequests.get(0));
 
     // Add some of the permissions
     val r1 =
-        initRequest(Group.class)
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+        initRequest(getOwnerType())
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(somePermissionRequests)
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
     assertThat(r1.getBody()).isNotNull();
     val r1body = r1.getBody();
-    assertThat(r1body.getId()).isEqualTo(group1.getId());
+    assertThat(r1body.getId()).isEqualTo(owner1.getId());
 
     // Add all the permissions, including the one before
     val r2 =
-        initRequest(Group.class)
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+        initRequest(getOwnerType())
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(permissionRequests)
             .post();
     assertThat(r2.getStatusCode()).isEqualTo(CONFLICT);
     assertThat(r2.getBody()).isNotNull();
   }
 
-  /** Add permissions to a group that has all those permissions */
+  /** Add permissions to an owner that has all those permissions */
   @Test
   @SneakyThrows
-  public void addGroupPermissionsToGroup_DuplicateRequest_Conflict() {
-    log.info("Initially adding permissions to the group");
+  public void addPermissionsToOwner_DuplicateRequest_Conflict() {
+    log.info("Initially adding permissions to the owner");
     val r1 =
-        initRequest(Group.class)
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+        initRequest(getOwnerType())
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(permissionRequests)
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
     assertThat(r1.getBody()).isNotNull();
     val r1body = r1.getBody();
-    assertThat(r1body.getId()).isEqualTo(group1.getId());
+    assertThat(r1body.getId()).isEqualTo(owner1.getId());
 
-    log.info("Add the same permissions to the group. This means duplicates are being added");
+    log.info("Add the same permissions to the owner. This means duplicates are being added");
     val r2 =
-        initRequest(Group.class)
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+        initRequest(getOwnerType())
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(permissionRequests)
             .post();
     assertThat(r2.getStatusCode()).isEqualTo(CONFLICT);
@@ -207,14 +228,14 @@ public class GroupPermissionControllerTest {
   }
 
   /**
-   * Create permissions for the group, using one addPermissionRequest with multiple masks for a
+   * Create permissions for the owner, using one addPermissionRequest with multiple masks for a
    * policyId
    */
   @Test
-  public void addGroupPermissionsToGroup_MultipleMasks_Conflict() {
+  public void addPermissionsToOwner_MultipleMasks_Conflict() {
     val result =
         stream(AccessLevel.values())
-            .filter(x -> !x.toString().equals(permissionRequests.get(0).getMask()))
+            .filter(x -> !x.equals(permissionRequests.get(0).getMask()))
             .findAny();
     assertThat(result).isNotEmpty();
     val differentMask = result.get();
@@ -233,24 +254,24 @@ public class GroupPermissionControllerTest {
 
     val r1 =
         initStringRequest()
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(newPolicyIdStringWithAccessLevel)
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(CONFLICT);
     assertThat(r1.getBody()).isNotNull();
   }
 
-  /** Add permissions containing a non-existing policyId to a group */
+  /** Add permissions containing a non-existing policyId to an owner */
   @Test
-  public void addGroupPermissionsToGroup_NonExistentPolicy_NotFound() {
-    val nonExistentPolicyId = generateNonExistentId(policyService);
+  public void addPermissionsToOwner_NonExistentPolicy_NotFound() {
+    val nonExistentPolicyId = generateNonExistentId(getPolicyService());
 
     // inject a non existent id
     permissionRequests.get(1).setPolicyId(nonExistentPolicyId);
 
     val r1 =
         initStringRequest()
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(permissionRequests)
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -260,15 +281,15 @@ public class GroupPermissionControllerTest {
 
   @Test
   @SneakyThrows
-  public void addGroupPermissions_CreateAndUpdate_Success() {
+  public void addPermissions_CreateAndUpdate_Success() {
     val permRequest1 = permissionRequests.get(0);
     val permRequest2 = permissionRequests.get(1);
     assertThat(permRequest1.getMask()).isNotEqualTo(permRequest2.getMask());
 
-    // Add initial GroupPermission
+    // Add initial Permission
     val r1 =
-        initRequest(Group.class)
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+        initStringRequest()
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(ImmutableList.of(permRequest1))
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
@@ -282,14 +303,16 @@ public class GroupPermissionControllerTest {
 
     // call addPerms for [updatedPermRequest1, permRequest2]
     val r2 =
-        initRequest(Group.class)
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+        initStringRequest()
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(ImmutableList.of(updatePermRequest1, permRequest2))
             .post();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
 
-    // Get permissions for group
-    val r3 = initStringRequest().endpoint("groups/%s/permissions", group1.getId()).get();
+    // Get permissions for owner
+    val r3 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
+        .get();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
     assertThat(r3.getBody()).isNotNull();
 
@@ -297,40 +320,39 @@ public class GroupPermissionControllerTest {
     val page = MAPPER.readTree(r3.getBody());
     val existingPermissionIndex =
         Streams.stream(page.path("resultSet").iterator())
-            .map(x -> MAPPER.convertValue(x, GroupPermission.class))
+            .map(x -> MAPPER.convertValue(x, getPermissionType()))
             .collect(toMap(x -> x.getPolicy().getId(), identity()));
     assertThat(existingPermissionIndex.values()).hasSize(2);
 
-    // verify permission with permRequest1.getPolicyId() and group, has same mask as
+    // verify permission with permRequest1.getPolicyId() and owner, has same mask as
     // updatedPermRequest1.getMask()
     assertThat(existingPermissionIndex).containsKey(updatePermRequest1.getPolicyId());
     assertThat(existingPermissionIndex.get(updatePermRequest1.getPolicyId()).getAccessLevel())
         .isEqualTo(updatePermRequest1.getMask());
 
-    // verify permission with permRequest2.getPolicyId() and group, has same mask as
+    // verify permission with permRequest2.getPolicyId() and owner, has same mask as
     // permRequest2.getMask();
     assertThat(existingPermissionIndex).containsKey(permRequest2.getPolicyId());
     assertThat(existingPermissionIndex.get(permRequest2.getPolicyId()).getAccessLevel())
         .isEqualTo(permRequest2.getMask());
   }
 
-  /** Happy path Add non-existent permissions to a group, and read it back */
+  /** Happy path Add non-existent permissions to an owner, and read it back */
   @Test
   @SneakyThrows
-  public void addGroupPermissionsToGroup_Unique_Success() {
-    // Add Permissions to group
+  public void addPermissionsToOwner_Unique_Success() {
+    // Add Permissions to owner
     val r1 =
-        initRequest(Group.class)
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+        initStringRequest()
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(permissionRequests)
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
-    assertThat(r1.getBody()).isNotNull();
-    val r1body = r1.getBody();
-    assertThat(r1body.getId()).isEqualTo(group1.getId());
 
-    // Get the policies for this group
-    val r3 = initStringRequest().endpoint("groups/%s/permissions", group1.getId().toString()).get();
+    // Get the policies for this owner
+    val r3 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
+        .get();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Analyze results
@@ -352,21 +374,20 @@ public class GroupPermissionControllerTest {
   @Test
   @SneakyThrows
   public void deletePolicyWithPermissions_AlreadyExists_Success() {
-    // Add Permissions to group
+    // Add Permissions to owner
     val permRequest = permissionRequests.get(0);
     val body = ImmutableList.of(permRequest);
     val r1 =
-        initRequest(Group.class)
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+        initStringRequest()
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(body)
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
-    assertThat(r1.getBody()).isNotNull();
-    val r1body = r1.getBody();
-    assertThat(r1body.getId()).isEqualTo(group1.getId());
 
-    // Get the policies for this group
-    val r2 = initStringRequest().endpoint("groups/%s/permissions", group1.getId().toString()).get();
+    // Get the policies for this owner
+    val r2 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
+        .get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
 
     // Assert the expected permission ids exist
@@ -379,35 +400,36 @@ public class GroupPermissionControllerTest {
     assertThat(existingPermissionIds).hasSize(1);
 
     // Delete the policy
-    val r3 = initStringRequest().endpoint("policies/%s", permRequest.getPolicyId()).delete();
+    val r3 = initStringRequest()
+        .endpoint("policies/%s", permRequest.getPolicyId())
+        .delete();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
-    // Assert that the policy deletion cascaded the delete to the groupPermissions
+    // Assert that the policy deletion cascaded the delete to the permissions
     existingPermissionIds
         .stream()
         .map(UUID::fromString)
-        .forEach(x -> assertThat(groupPermissionService.isExist(x)).isFalse());
+        .forEach(x -> assertThat(getPermissionService().isExist(x)).isFalse());
 
-    // Assert that the policy deletion DID NOT cascade past the GroupPermission and delete groups
-    assertThat(groupService.isExist(group1.getId())).isTrue();
+    // Assert that the policy deletion DID NOT cascade past the permissions and delete the owner
+    assertThat(getOwnerService().isExist(owner1.getId())).isTrue();
   }
 
   @Test
   @SneakyThrows
-  public void deleteGroupWithPermissions_AlreadyExists_Success() {
-    // Add Permissions to group
+  public void deleteOwnerWithPermissions_AlreadyExists_Success() {
+    // Add Permissions to owner
     val r1 =
-        initRequest(Group.class)
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+        initStringRequest()
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(permissionRequests)
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
-    assertThat(r1.getBody()).isNotNull();
-    val r1body = r1.getBody();
-    assertThat(r1body.getId()).isEqualTo(group1.getId());
 
-    // Get the policies for this group
-    val r2 = initStringRequest().endpoint("groups/%s/permissions", group1.getId().toString()).get();
+    // Get the policies for this owner
+    val r2 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
+        .get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
 
     // Assert the expected permission ids exist
@@ -419,41 +441,40 @@ public class GroupPermissionControllerTest {
             .collect(toImmutableSet());
     assertThat(existingPermissionIds).hasSize(permissionRequests.size());
 
-    // Delete the group
-    val r3 = initStringRequest().endpoint("groups/%s", group1.getId()).delete();
+    // Delete the owner
+    val r3 = initStringRequest()
+        .endpoint(getDeleteOwnerEndpoint(owner1.getId()))
+        .delete();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
-    // Assert that the group deletion cascaded the delete to the groupPermissions
+    // Assert that the owner deletion cascaded the delete to the permissions
     existingPermissionIds
         .stream()
         .map(UUID::fromString)
-        .forEach(x -> assertThat(groupPermissionService.isExist(x)).isFalse());
+        .forEach(x -> assertThat(getPermissionService().isExist(x)).isFalse());
 
-    // Assert that the group deletion DID NOT cascade past the GroupPermission and deleted policies
+    // Assert that the owner deletion DID NOT cascade past the permission and deleted policies
     permissionRequests
         .stream()
         .map(PermissionRequest::getPolicyId)
         .distinct()
-        .forEach(x -> assertThat(policyService.isExist(x)).isTrue());
+        .forEach(x -> assertThat(getPolicyService().isExist(x)).isTrue());
   }
 
-  /** GroupController */
   @Test
   @SneakyThrows
-  public void deleteGroupPermissionsForGroup_NonExistent_NotFound() {
-    // Add permissions to group1
-    val r1 =
-        initRequest(Group.class)
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+  public void deletePermissionsForOwner_NonExistent_NotFound() {
+    // Add permissions to owner
+    val r1 = initStringRequest()
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(permissionRequests)
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
-    assertThat(r1.getBody()).isNotNull();
-    val r1body = r1.getBody();
-    assertThat(r1body.getId()).isEqualTo(group1.getId());
 
-    // Get permissions for group1
-    val r2 = initStringRequest().endpoint("groups/%s/permissions", group1.getId().toString()).get();
+    // Get permissions for owner
+    val r2 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
+        .get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
     assertThat(r2.getBody()).isNotNull();
 
@@ -463,74 +484,71 @@ public class GroupPermissionControllerTest {
         Streams.stream(page.path("resultSet").iterator())
             .map(x -> x.get("id"))
             .map(JsonNode::asText)
+            .map(UUID::fromString)
             .collect(toImmutableSet());
     assertThat(existingPermissionIds).hasSize(permissionRequests.size());
 
-    // Attempt to delete permissions for a nonExistent group
-    val nonExistentGroupId = generateNonExistentId(groupService);
+    // Attempt to delete permissions for a nonExistent owner
+    val nonExistentOwnerId = generateNonExistentId(getOwnerService());
     val r3 =
         initStringRequest()
-            .endpoint(
-                "groups/%s/permissions/%s", nonExistentGroupId, COMMA.join(existingPermissionIds))
+            .endpoint(getDeletePermissionsEndpoint(nonExistentOwnerId, existingPermissionIds))
             .delete();
     assertThat(r3.getStatusCode()).isEqualTo(NOT_FOUND);
 
-    // Attempt to delete permissions for an existing group but a non-existent permission id
-    val nonExistentPermissionId = generateNonExistentId(groupPermissionService).toString();
-    val someExistingPermissionIds = Sets.<String>newHashSet();
+    // Attempt to delete permissions for an existing owner but a non-existent permission id
+    val nonExistentPermissionId = generateNonExistentId(getPermissionService());
+    val someExistingPermissionIds = Sets.<UUID>newHashSet();
     someExistingPermissionIds.addAll(existingPermissionIds);
     someExistingPermissionIds.add(nonExistentPermissionId);
-    assertThat(groupService.isExist(group1.getId())).isTrue();
-    val r4 =
-        initStringRequest()
-            .endpoint(
-                "groups/%s/permissions/%s", group1.getId(), COMMA.join(someExistingPermissionIds))
+    assertThat(getOwnerService().isExist(owner1.getId())).isTrue();
+    val r4 = initStringRequest()
+            .endpoint(getDeletePermissionsEndpoint(owner1.getId(), someExistingPermissionIds))
             .delete();
     assertThat(r4.getStatusCode()).isEqualTo(NOT_FOUND);
   }
 
   @Test
   @SneakyThrows
-  public void deleteGroupPermissionsForPolicy_NonExistentGroup_NotFound() {
+  public void deletePermissionsForPolicy_NonExistentOwner_NotFound() {
     val permRequest = permissionRequests.get(0);
     val policyId = permRequest.getPolicyId();
-    val nonExistingGroupId = generateNonExistentId(groupService);
-    val r3 =
-        initRequest(Group.class)
-            .endpoint("policies/%s/permission/group/%s", policyId, nonExistingGroupId)
+    val nonExistingGroupId = generateNonExistentId(getOwnerService());
+    val r3 = initStringRequest()
+            .endpoint(getDeletePermissionEndpoint(policyId, nonExistingGroupId))
             .delete();
     assertThat(r3.getStatusCode()).isEqualTo(NOT_FOUND);
   }
 
   @Test
   @SneakyThrows
-  public void deleteGroupPermissionsForPolicy_NonExistentPolicy_NotFound() {
-    val nonExistentPolicyId = generateNonExistentId(policyService);
-    val r3 =
-        initRequest(Group.class)
-            .endpoint("policies/%s/permission/group/%s", nonExistentPolicyId, group1.getId())
-            .delete();
+  public void deletePermissionsForPolicy_NonExistentPolicy_NotFound() {
+    val nonExistentPolicyId = generateNonExistentId(getPolicyService());
+    val r3 = initStringRequest()
+        .endpoint(getDeletePermissionEndpoint(nonExistentPolicyId, owner1.getId()))
+        .delete();
     assertThat(r3.getStatusCode()).isEqualTo(NOT_FOUND);
   }
 
   @Test
   @SneakyThrows
-  public void deleteGroupPermissionsForPolicy_DuplicateRequest_NotFound() {
+  public void deletePermissionsForPolicy_DuplicateRequest_NotFound() {
     val permRequest = permissionRequests.get(0);
     val policyId = permRequest.getPolicyId();
     val mask = permRequest.getMask();
 
     // Create a permission
     val r1 =
-        initRequest(Group.class)
-            .endpoint("policies/%s/permission/group/%s", policyId, group1.getId())
+        initStringRequest()
+            .endpoint(getAddPermissionEndpoint(policyId, owner1.getId()))
             .body(createMaskJson(mask.toString()))
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
-    assertThat(r1.getBody()).isNotNull();
 
     // Assert the permission exists
-    val r2 = initStringRequest().endpoint("groups/%s/permissions", group1.getId()).get();
+    val r2 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
+        .get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
     assertThat(r2.getBody()).isNotNull();
     val page = MAPPER.readTree(r2.getBody());
@@ -542,15 +560,16 @@ public class GroupPermissionControllerTest {
     assertThat(existingPermissionIds).hasSize(1);
 
     // Delete an existing permission
-    val r3 =
-        initRequest(Group.class)
-            .endpoint("policies/%s/permission/group/%s", policyId, group1.getId())
-            .delete();
+    val r3 = initStringRequest()
+        .endpoint(getDeletePermissionEndpoint(policyId, owner1.getId()))
+        .delete();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
     assertThat(r3.getBody()).isNotNull();
 
     // Assert the permission no longer exists
-    val r4 = initStringRequest().endpoint("groups/%s/permissions", group1.getId()).get();
+    val r4 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
+        .get();
     assertThat(r4.getStatusCode()).isEqualTo(OK);
     assertThat(r4.getBody()).isNotNull();
     val page2 = MAPPER.readTree(r4.getBody());
@@ -563,8 +582,8 @@ public class GroupPermissionControllerTest {
 
     // Delete an existing permission
     val r5 =
-        initRequest(Group.class)
-            .endpoint("policies/%s/permission/group/%s", policyId, group1.getId())
+        initStringRequest()
+            .endpoint(getDeletePermissionEndpoint(policyId, owner1.getId()))
             .delete();
     assertThat(r5.getStatusCode()).isEqualTo(NOT_FOUND);
     assertThat(r5.getBody()).isNotNull();
@@ -572,22 +591,24 @@ public class GroupPermissionControllerTest {
 
   @Test
   @SneakyThrows
-  public void deleteGroupPermissionsForPolicy_AlreadyExists_Success() {
+  public void deletePermissionsForPolicy_AlreadyExists_Success() {
     val permRequest = permissionRequests.get(0);
     val policyId = permRequest.getPolicyId();
     val mask = permRequest.getMask();
 
     // Create a permission
     val r1 =
-        initRequest(Group.class)
-            .endpoint("policies/%s/permission/group/%s", policyId, group1.getId())
+        initStringRequest()
+            .endpoint(getDeletePermissionEndpoint(policyId, owner1.getId()))
             .body(createMaskJson(mask.toString()))
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
     assertThat(r1.getBody()).isNotNull();
 
     // Assert the permission exists
-    val r2 = initStringRequest().endpoint("groups/%s/permissions", group1.getId()).get();
+    val r2 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
+        .get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
     assertThat(r2.getBody()).isNotNull();
     val page = MAPPER.readTree(r2.getBody());
@@ -600,14 +621,16 @@ public class GroupPermissionControllerTest {
 
     // Delete an existing permission
     val r3 =
-        initRequest(Group.class)
-            .endpoint("policies/%s/permission/group/%s", policyId, group1.getId())
+        initStringRequest()
+            .endpoint(getDeletePermissionEndpoint(policyId, owner1.getId()))
             .delete();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
     assertThat(r3.getBody()).isNotNull();
 
     // Assert the permission no longer exists
-    val r4 = initStringRequest().endpoint("groups/%s/permissions", group1.getId()).get();
+    val r4 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
+        .get();
     assertThat(r4.getStatusCode()).isEqualTo(OK);
     assertThat(r4.getBody()).isNotNull();
     val page2 = MAPPER.readTree(r4.getBody());
@@ -621,20 +644,19 @@ public class GroupPermissionControllerTest {
 
   @Test
   @SneakyThrows
-  public void deleteGroupPermissionsForGroup_AlreadyExists_Success() {
-    // Add group permissions
+  public void deletePermissionsForOwner_AlreadyExists_Success() {
+    // Add owner permissions
     val r1 =
-        initRequest(Group.class)
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+        initStringRequest()
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(permissionRequests)
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
-    assertThat(r1.getBody()).isNotNull();
-    val r1body = r1.getBody();
-    assertThat(r1body.getId()).isEqualTo(group1.getId());
 
-    // Get permissions for the group
-    val r2 = initStringRequest().endpoint("groups/%s/permissions", group1.getId().toString()).get();
+    // Get permissions for the owner
+    val r2 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
+        .get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
     assertThat(r2.getBody()).isNotNull();
 
@@ -644,20 +666,21 @@ public class GroupPermissionControllerTest {
         Streams.stream(page.path("resultSet").iterator())
             .map(x -> x.get("id"))
             .map(JsonNode::asText)
+            .map(UUID::fromString)
             .collect(toImmutableSet());
     assertThat(existingPermissionIds).hasSize(permissionRequests.size());
 
-    // Delete the permissions for the group
+    // Delete the permissions for the owner
     val r3 =
         initStringRequest()
-            .endpoint(
-                "groups/%s/permissions/%s",
-                group1.getId().toString(), COMMA.join(existingPermissionIds))
+            .endpoint(getDeletePermissionsEndpoint(owner1.getId(), existingPermissionIds))
             .delete();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Assert the expected permissions were deleted
-    val r4 = initStringRequest().endpoint("groups/%s/permissions", group1.getId().toString()).get();
+    val r4 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
+        .get();
     assertThat(r4.getStatusCode()).isEqualTo(OK);
     assertThat(r4.getBody()).isNotNull();
     val page4 = MAPPER.readTree(r4.getBody());
@@ -671,52 +694,50 @@ public class GroupPermissionControllerTest {
     // Assert that the policies still exists
     policies.forEach(
         p -> {
-          val r5 = initStringRequest().endpoint("policies/%s", p.getId().toString()).get();
+          val r5 = initStringRequest()
+              .endpoint("policies/%s", p.getId().toString())
+              .get();
           assertThat(r5.getStatusCode()).isEqualTo(OK);
           assertThat(r5.getBody()).isNotNull();
         });
 
-    // Assert the group still exists
-    val r6 = initStringRequest().endpoint("groups/%s", group1.getId().toString()).get();
-    assertThat(r6.getStatusCode()).isEqualTo(OK);
-    assertThat(r6.getBody()).isNotNull();
+    // Assert the owner still exists
+    assertThat(getOwnerService().isExist(owner1.getId())).isTrue();
   }
 
-  /** Using the group controller, attempt to read a permission belonging to a non-existent group */
+  /** Using the owners controller, attempt to read a permission belonging to a non-existent owner */
   @Test
-  public void readGroupPermissionsForGroup_NonExistent_NotFound() {
-    val nonExistentGroupId = generateNonExistentId(groupService);
-    val r1 = initStringRequest().endpoint("groups/%s/permissions", nonExistentGroupId).get();
+  public void readPermissionsForOwner_NonExistent_NotFound() {
+    val nonExistentOwnerId = generateNonExistentId(getOwnerService());
+    val r1 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(nonExistentOwnerId))
+        .get();
     assertThat(r1.getStatusCode()).isEqualTo(NOT_FOUND);
   }
 
   /** PolicyController */
 
-  /** Using the policy controller, add a single permission for a non-existent group */
+  /** Using the policy controller, add a single permission for a non-existent owner */
   @Test
-  public void addGroupPermissionToPolicy_NonExistentGroupId_NotFound() {
-    val nonExistentGroupId = generateNonExistentId(groupService);
+  public void addPermissionToPolicy_NonExistentOwnerId_NotFound() {
+    val nonExistentOwnerId = generateNonExistentId(getOwnerService());
 
-    val r1 =
-        initStringRequest()
-            .endpoint(
-                "policies/%s/permission/group/%s",
-                policies.get(0).getId().toString(), nonExistentGroupId.toString())
-            .body(createMaskJson(DENY.toString()))
-            .post();
+    val r1 = initStringRequest()
+        .endpoint(getAddPermissionEndpoint(policies.get(0).getId(), nonExistentOwnerId))
+        .body(createMaskJson(DENY.toString()))
+        .post();
     assertThat(r1.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-    assertThat(r1.getBody()).contains(nonExistentGroupId.toString());
+    assertThat(r1.getBody()).contains(nonExistentOwnerId.toString());
   }
 
   /** Using the policy controller, add a single permission for a non-existent policy */
   @Test
-  public void addGroupPermissionToPolicy_NonExistentPolicyId_NotFound() {
-    val nonExistentPolicyId = generateNonExistentId(policyService);
+  public void addPermissionToPolicy_NonExistentPolicyId_NotFound() {
+    val nonExistentPolicyId = generateNonExistentId(getPolicyService());
 
     val r1 =
         initStringRequest()
-            .endpoint(
-                "policies/%s/permission/group/%s", nonExistentPolicyId, group1.getId().toString())
+            .endpoint(getAddPermissionEndpoint(nonExistentPolicyId, owner1.getId()))
             .body(createMaskJson(DENY.toString()))
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -726,58 +747,50 @@ public class GroupPermissionControllerTest {
   /** Add a single permission using the policy controller */
   @Test
   @SneakyThrows
-  public void addGroupPermissionToPolicy_Unique_Success() {
+  public void addPermissionToPolicy_Unique_Success() {
     val permRequest = permissionRequests.get(0);
-    // Create 2 requests with same policy but different groups
-    val r1 =
-        initRequest(Group.class)
-            .endpoint(
-                "policies/%s/permission/group/%s",
-                permRequest.getPolicyId(), group1.getId().toString())
+
+    // Create 2 requests with same policy but different owners
+    val r1 = initStringRequest()
+            .endpoint(getAddPermissionEndpoint(permRequest.getPolicyId(), owner1.getId()))
             .body(createMaskJson(permRequest.getMask().toString()))
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
-    assertThat(r1.getBody()).isNotNull();
-    val r1body = r1.getBody();
-    assertThat(r1body.getId()).isEqualTo(group1.getId());
 
-    val r2 =
-        initRequest(Group.class)
-            .endpoint(
-                "policies/%s/permission/group/%s",
-                permRequest.getPolicyId(), group2.getId().toString())
-            .body(createMaskJson(permRequest.getMask().toString()))
-            .post();
+    val r2 = initStringRequest()
+        .endpoint(getAddPermissionEndpoint(permRequest.getPolicyId(), owner2.getId()))
+        .body(createMaskJson(permRequest.getMask().toString()))
+        .post();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
-    assertThat(r2.getBody()).isNotNull();
-    val r2body = r2.getBody();
-    assertThat(r2body.getId()).isEqualTo(group2.getId());
 
-    // Get the groups for the policy previously used
-    val r3 = initStringRequest().endpoint("policies/%s/groups", permRequest.getPolicyId()).get();
+    // Get the owners for the policy previously used
+    val r3 = initStringRequest()
+        .endpoint("policies/%s/groups", permRequest.getPolicyId())
+        .get();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
-    // Assert that response contains both groupIds, groupNames and policyId
+    // Assert that response contains both ownerIds, ownerNames and policyId
     val body = MAPPER.readTree(r3.getBody());
     assertThat(body).isNotNull();
-    val expectedMap =
-        Stream.of(group1, group2).collect(Collectors.toMap(x -> x.getId().toString(), x -> x));
+
+    val expectedMap = uniqueIndex(asList(owner1, owner2), Identifiable::getId);
+
     Streams.stream(body.iterator())
         .forEach(
             n -> {
-              val actualGroupId = n.path("id").asText();
-              val actualGroupName = n.path("name").asText();
+              val actualOwnerId = UUID.fromString(n.path("id").asText());
+              val actualOwnerName = n.path("name").asText();
               val actualMask = AccessLevel.fromValue(n.path("mask").asText());
-              assertThat(expectedMap).containsKey(actualGroupId);
-              val expectedGroup = expectedMap.get(actualGroupId);
-              assertThat(actualGroupName).isEqualTo(expectedGroup.getName());
+              assertThat(expectedMap).containsKey(actualOwnerId);
+              val expectedOwner = expectedMap.get(actualOwnerId);
+              assertThat(actualOwnerName).isEqualTo(expectedOwner.getName());
               assertThat(actualMask).isEqualTo(permRequest.getMask());
             });
   }
 
-  /** Using the group controller, add a group permission with an undefined mask */
+  /** Using the owners controller, add a permission with an undefined mask */
   @Test
-  public void addGroupPermissionsToGroup_IncorrectMask_BadRequest() {
+  public void addPermissionsToOwner_IncorrectMask_BadRequest() {
     // Corrupt the request
     val incorrectMask = "anIncorrectMask";
     assertThatExceptionOfType(IllegalArgumentException.class)
@@ -789,15 +802,15 @@ public class GroupPermissionControllerTest {
 
     val r1 =
         initStringRequest()
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(body)
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(BAD_REQUEST);
   }
 
-  /** Using the policy controller, add a group permission with an undefined mask */
+  /** Using the policy controller, add a permission with an undefined mask */
   @Test
-  public void addGroupPermissionsToPolicy_IncorrectMask_BadRequest() {
+  public void addPermissionsToPolicy_IncorrectMask_BadRequest() {
     // Corrupt the request
     val incorrectMask = "anIncorrectMask";
     assertThatExceptionOfType(IllegalArgumentException.class)
@@ -805,35 +818,36 @@ public class GroupPermissionControllerTest {
 
     // Using the policy controller
     val policyId = permissionRequests.get(0).getPolicyId();
-    val r2 =
-        initStringRequest()
-            .endpoint("policies/%s/permission/group/%s", policyId, group1.getId().toString())
-            .body(createMaskJson(incorrectMask))
-            .post();
+    val r2 = initStringRequest()
+        .endpoint(getAddPermissionEndpoint(policyId, owner1.getId()))
+        .body(createMaskJson(incorrectMask))
+        .post();
     assertThat(r2.getStatusCode()).isEqualTo(BAD_REQUEST);
   }
 
   @Test
-  public void uuidValidationForGroup_MalformedUUID_BadRequest() {
+  public void uuidValidationForOwner_MalformedUUID_BadRequest() {
     val r1 =
         initStringRequest()
-            .endpoint("groups/%s/permissions", INVALID_UUID)
+            .endpoint(getAddPermissionsEndpoint(INVALID_UUID))
             .body(permissionRequests)
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(BAD_REQUEST);
 
-    val r4 = initStringRequest().endpoint("groups/%s/permissions", INVALID_UUID).get();
+    val r4 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(INVALID_UUID))
+        .get();
     assertThat(r4.getStatusCode()).isEqualTo(BAD_REQUEST);
 
     val r5 =
         initStringRequest()
-            .endpoint("groups/%s/permissions/%s", UUID.randomUUID(), INVALID_UUID)
+            .endpoint(getDeletePermissionEndpoint(UUID.randomUUID().toString(), INVALID_UUID))
             .delete();
     assertThat(r5.getStatusCode()).isEqualTo(BAD_REQUEST);
 
     val r6 =
         initStringRequest()
-            .endpoint("groups/%s/permissions/%s", INVALID_UUID, UUID.randomUUID())
+            .endpoint(getDeletePermissionEndpoint(INVALID_UUID, UUID.randomUUID().toString()))
             .delete();
     assertThat(r6.getStatusCode()).isEqualTo(BAD_REQUEST);
   }
@@ -842,53 +856,46 @@ public class GroupPermissionControllerTest {
   public void uuidValidationForPolicy_MalformedUUID_BadRequest() {
     val r1 =
         initStringRequest()
-            .endpoint("policies/%s/permission/group/%s", UUID.randomUUID(), INVALID_UUID)
+            .endpoint(getDeletePermissionEndpoint(UUID.randomUUID().toString(), INVALID_UUID))
             .delete();
     assertThat(r1.getStatusCode()).isEqualTo(BAD_REQUEST);
 
     val r2 =
         initStringRequest()
-            .endpoint("policies/%s/permission/group/%s", UUID.randomUUID(), INVALID_UUID)
+            .endpoint(getAddPermissionEndpoint(UUID.randomUUID().toString(), INVALID_UUID))
             .body(createMaskJson(WRITE.toString()))
             .post();
     assertThat(r2.getStatusCode()).isEqualTo(BAD_REQUEST);
 
     val r3 =
         initStringRequest()
-            .endpoint("policies/%s/permission/group/%s", INVALID_UUID, UUID.randomUUID())
+            .endpoint(getAddPermissionEndpoint(INVALID_UUID, UUID.randomUUID().toString()))
             .body(createMaskJson(WRITE.toString()))
             .post();
     assertThat(r3.getStatusCode()).isEqualTo(BAD_REQUEST);
 
     val r4 =
         initStringRequest()
-            .endpoint("policies/%s/permission/group/%s", INVALID_UUID, UUID.randomUUID())
+            .endpoint(getDeletePermissionEndpoint(INVALID_UUID, UUID.randomUUID().toString()))
             .delete();
     assertThat(r4.getStatusCode()).isEqualTo(BAD_REQUEST);
   }
 
   @Test
   @SneakyThrows
-  public void addGroupPermissionsToPolicy_DuplicateRequests_Conflict() {
+  public void addPermissionsToPolicy_DuplicateRequests_Conflict() {
     val permRequest = permissionRequests.get(0);
-    // Create 2 identical requests with same policy and group
+    // Create 2 identical requests with same policy and owner
     val r1 =
-        initRequest(Group.class)
-            .endpoint(
-                "policies/%s/permission/group/%s",
-                permRequest.getPolicyId(), group1.getId().toString())
+        initStringRequest()
+            .endpoint(getAddPermissionEndpoint(permRequest.getPolicyId(), owner1.getId()))
             .body(createMaskJson(permRequest.getMask().toString()))
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
-    assertThat(r1.getBody()).isNotNull();
-    val r1body = r1.getBody();
-    assertThat(r1body.getId()).isEqualTo(group1.getId());
 
     val r2 =
-        initRequest(Group.class)
-            .endpoint(
-                "policies/%s/permission/group/%s",
-                permRequest.getPolicyId(), group1.getId().toString())
+        initStringRequest()
+            .endpoint(getAddPermissionEndpoint(permRequest.getPolicyId(), owner1.getId()))
             .body(createMaskJson(permRequest.getMask().toString()))
             .post();
     assertThat(r2.getStatusCode()).isEqualTo(CONFLICT);
@@ -906,16 +913,17 @@ public class GroupPermissionControllerTest {
     assertThat(updatedMask).isNotEqualTo(permRequest1.getMask());
     assertThat(permRequest1.getMask()).isNotEqualTo(permRequest2.getMask());
 
-    // Create permission for group
-    val r1 =
-        initRequest(Group.class)
-            .endpoint("groups/%s/permissions", group1.getId().toString())
+    // Create permission for owner
+    val r1 = initStringRequest()
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(ImmutableList.of(permRequest1))
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Get created permissions
-    val r2 = initStringRequest().endpoint("groups/%s/permissions", group1.getId()).get();
+    val r2 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
+        .get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
     assertThat(r2.getBody()).isNotNull();
 
@@ -923,22 +931,23 @@ public class GroupPermissionControllerTest {
     val page = MAPPER.readTree(r2.getBody());
     val existingPermissions =
         Streams.stream(page.path("resultSet").iterator())
-            .map(x -> MAPPER.convertValue(x, GroupPermission.class))
+            .map(x -> MAPPER.convertValue(x, getPermissionType()))
             .collect(toImmutableList());
     assertThat(existingPermissions).hasSize(1);
     val permission = existingPermissions.get(0);
     assertThat(permission.getAccessLevel()).isEqualTo(permRequest1.getMask());
 
-    // Update the group permission
-    val r3 =
-        initRequest(Group.class)
-            .endpoint("groups/%s/permissions", group1.getId().toString())
-            .body(ImmutableList.of(updatedPermRequest1))
-            .post();
+    // Update the permission
+    val r3 = initStringRequest()
+        .endpoint(getAddPermissionsEndpoint(owner1.getId()))
+        .body(ImmutableList.of(updatedPermRequest1))
+        .post();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Get updated permissions
-    val r4 = initStringRequest().endpoint("groups/%s/permissions", group1.getId()).get();
+    val r4 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
+        .get();
     assertThat(r4.getStatusCode()).isEqualTo(OK);
     assertThat(r4.getBody()).isNotNull();
 
@@ -946,7 +955,7 @@ public class GroupPermissionControllerTest {
     val page2 = MAPPER.readTree(r4.getBody());
     val existingPermissions2 =
         Streams.stream(page2.path("resultSet").iterator())
-            .map(x -> MAPPER.convertValue(x, GroupPermission.class))
+            .map(x -> MAPPER.convertValue(x, getPermissionType()))
             .collect(toImmutableList());
     assertThat(existingPermissions2).hasSize(1);
     val permission2 = existingPermissions2.get(0);
@@ -955,23 +964,22 @@ public class GroupPermissionControllerTest {
 
   @Test
   @SneakyThrows
-  public void updateGroupPermissionsToPolicy_AlreadyExists_Success() {
+  public void updatePermissionsToPolicy_AlreadyExists_Success() {
     val permRequest1 = permissionRequests.get(0);
     val permRequest2 = permissionRequests.get(1);
     assertThat(permRequest1.getMask()).isNotEqualTo(permRequest2.getMask());
 
-    // Create permission for group and policy
-    val r1 =
-        initRequest(Group.class)
-            .endpoint(
-                "policies/%s/permission/group/%s",
-                permRequest1.getPolicyId(), group1.getId().toString())
+    // Create permission for owner and policy
+    val r1 = initStringRequest()
+            .endpoint(getAddPermissionEndpoint(permRequest1.getPolicyId(), owner1.getId()))
             .body(createMaskJson(permRequest1.getMask().toString()))
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Get created permissions
-    val r2 = initStringRequest().endpoint("groups/%s/permissions", group1.getId()).get();
+    val r2 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
+        .get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
     assertThat(r2.getBody()).isNotNull();
 
@@ -979,24 +987,24 @@ public class GroupPermissionControllerTest {
     val page = MAPPER.readTree(r2.getBody());
     val existingPermissions =
         Streams.stream(page.path("resultSet").iterator())
-            .map(x -> MAPPER.convertValue(x, GroupPermission.class))
+            .map(x -> MAPPER.convertValue(x, getPermissionType()))
             .collect(toImmutableList());
     assertThat(existingPermissions).hasSize(1);
     val permission = existingPermissions.get(0);
     assertThat(permission.getAccessLevel()).isEqualTo(permRequest1.getMask());
 
-    // Update the group permission
+    // Update the permission
     val r3 =
-        initRequest(Group.class)
-            .endpoint(
-                "policies/%s/permission/group/%s",
-                permRequest1.getPolicyId(), group1.getId().toString())
+        initStringRequest()
+            .endpoint(getAddPermissionEndpoint(permRequest1.getPolicyId(), owner1.getId()))
             .body(createMaskJson(permRequest2.getMask().toString()))
             .post();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Get updated permissions
-    val r4 = initStringRequest().endpoint("groups/%s/permissions", group1.getId()).get();
+    val r4 = initStringRequest()
+        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
+        .get();
     assertThat(r4.getStatusCode()).isEqualTo(OK);
     assertThat(r4.getBody()).isNotNull();
 
@@ -1004,7 +1012,7 @@ public class GroupPermissionControllerTest {
     val page2 = MAPPER.readTree(r4.getBody());
     val existingPermissions2 =
         Streams.stream(page2.path("resultSet").iterator())
-            .map(x -> MAPPER.convertValue(x, GroupPermission.class))
+            .map(x -> MAPPER.convertValue(x, getPermissionType()))
             .collect(toImmutableList());
     assertThat(existingPermissions2).hasSize(1);
     val permission2 = existingPermissions2.get(0);

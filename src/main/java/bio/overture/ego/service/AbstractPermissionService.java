@@ -1,28 +1,5 @@
 package bio.overture.ego.service;
 
-import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.dto.PolicyResponse;
-import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.NameableEntity;
-import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.repository.PermissionRepository;
-import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
-import com.google.common.collect.ImmutableList;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
 import static bio.overture.ego.model.dto.Scope.createScope;
 import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
@@ -37,6 +14,28 @@ import static com.google.common.collect.Maps.uniqueIndex;
 import static com.gs.collections.impl.factory.Sets.intersect;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+
+import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.dto.PolicyResponse;
+import bio.overture.ego.model.dto.Scope;
+import bio.overture.ego.model.entity.AbstractPermission;
+import bio.overture.ego.model.entity.NameableEntity;
+import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.repository.PermissionRepository;
+import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
+import com.google.common.collect.ImmutableList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Transactional
@@ -63,7 +62,9 @@ public abstract class AbstractPermissionService<
   }
 
   protected abstract Collection<P> getPermissionsForOwner(O owner);
+
   protected abstract Collection<P> getPermissionsForPolicy(Policy policy);
+
   public abstract O getOwnerWithRelationships(UUID ownerId);
 
   public String getOwnerTypeName() {
@@ -132,7 +133,6 @@ public abstract class AbstractPermissionService<
     disassociatePermissions(permissionsToRemove);
     getRepository().deleteAll(permissionsToRemove);
   }
-
 
   /**
    * Adds permissions for the supplied owner. The input permissionRequests are sanitized and then

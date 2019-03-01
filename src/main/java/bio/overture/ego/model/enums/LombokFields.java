@@ -1,8 +1,8 @@
 package bio.overture.ego.model.enums;
 
-import lombok.NoArgsConstructor;
-
 import static lombok.AccessLevel.PRIVATE;
+
+import lombok.NoArgsConstructor;
 
 /**
  * Note: When using a Lombok annotation with field names (for example @EqualsAndHashCode(ids =

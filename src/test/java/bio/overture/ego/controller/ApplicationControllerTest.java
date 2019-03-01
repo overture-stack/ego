@@ -17,6 +17,9 @@
 
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.utils.WebResource.createWebResource;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.enums.ApplicationType;
@@ -40,9 +43,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import static bio.overture.ego.utils.WebResource.createWebResource;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -94,10 +94,7 @@ public class ApplicationControllerTest {
             .applicationType(ApplicationType.CLIENT)
             .build();
 
-    val response = initStringRequest()
-        .endpoint("/applications")
-        .body(app)
-        .post();
+    val response = initStringRequest().endpoint("/applications").body(app).post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
@@ -128,18 +125,12 @@ public class ApplicationControllerTest {
             .applicationType(ApplicationType.CLIENT)
             .build();
 
-    val response1 = initStringRequest()
-        .endpoint("/applications")
-        .body(app1)
-        .post();
+    val response1 = initStringRequest().endpoint("/applications").body(app1).post();
 
     val responseStatus1 = response1.getStatusCode();
     assertThat(responseStatus1).isEqualTo(HttpStatus.OK);
 
-    val response2 = initStringRequest()
-        .endpoint("/applications")
-        .body(app2)
-        .post();
+    val response2 = initStringRequest().endpoint("/applications").body(app2).post();
     val responseStatus2 = response2.getStatusCode();
     assertThat(responseStatus2).isEqualTo(HttpStatus.CONFLICT);
   }
@@ -148,9 +139,7 @@ public class ApplicationControllerTest {
   @SneakyThrows
   public void getApplication_Success() {
     val applicationId = applicationService.getByClientId("111111").getId();
-    val response = initStringRequest()
-        .endpoint("/applications/%s", applicationId)
-        .get();
+    val response = initStringRequest().endpoint("/applications/%s", applicationId).get();
 
     val responseStatus = response.getStatusCode();
     val responseJson = MAPPER.readTree(response.getBody());

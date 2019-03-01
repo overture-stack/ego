@@ -15,8 +15,7 @@ public class MaskDTO {
 
   @NonNull private AccessLevel mask;
 
-  public static MaskDTO createMaskDTO(AccessLevel mask){
+  public static MaskDTO createMaskDTO(AccessLevel mask) {
     return new MaskDTO(mask);
   }
-
 }

@@ -1,13 +1,12 @@
 package bio.overture.ego.model.dto;
 
 import bio.overture.ego.model.enums.AccessLevel;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-
-import java.util.UUID;
 
 @Data
 @Builder
@@ -23,5 +22,4 @@ public class PermissionRequest {
   public String toString() {
     return policyId + "." + mask;
   }
-
 }
