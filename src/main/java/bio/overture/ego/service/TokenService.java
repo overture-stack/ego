@@ -31,6 +31,7 @@ import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.reactor.events.UserEvents;
@@ -61,6 +62,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
@@ -165,10 +167,13 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   }
 
   @SneakyThrows
-  public Token issueToken(UUID user_id, List<ScopeName> scopeNames, List<UUID> apps) {
+  public Token issueToken(
+      UUID user_id, List<ScopeName> scopeNames, List<UUID> apps, String description) {
     log.info(format("Looking for user '%s'", str(user_id)));
     log.info(format("Scopes are '%s'", strList(scopeNames)));
     log.info(format("Apps are '%s'", strList(apps)));
+    log.info(format("Token description is '%s'", description));
+
     val u =
         userService
             .findById(user_id)
@@ -197,6 +202,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     token.setRevoked(false);
     token.setName(tokenString);
     token.setOwner(u);
+    token.setDescription(description);
 
     for (Scope requestedScope : requestedScopes) {
       token.addScope(requestedScope);
@@ -320,7 +326,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       throw new InvalidTokenException("No token field found in POST request");
     }
 
-    log.error(format("token='%s'", token));
+    log.info(format("token ='%s'", token));
     val application = applicationService.findByBasicToken(authToken);
 
     val t =
@@ -345,23 +351,39 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     return new TokenScopeResponse(owner.getName(), clientId, t.getSecondsUntilExpiry(), names);
   }
 
-  public void revokeToken(UUID userId, @NonNull String tokenName) {
+  public void revokeToken(@NonNull String tokenName) {
     validateTokenName(tokenName);
+    val principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-    log.info(format("Looking for user: '%s'. ", str(userId)));
-    val user =
-        userService
-            .findById(userId)
-            .orElseThrow(
-                () -> new UsernameNotFoundException(format("Can't find user '%s'", str(userId))));
+    if (principal instanceof User) {
+      revokeTokenAsUser(tokenName);
+    } else if (principal instanceof Application) {
+      revokeTokenAsApplication(tokenName, (Application) principal);
+    } else {
+      log.info("Unknown type of authentication, token is not allowed to be revoked.");
+      throw new InvalidRequestException("Unknown type of authentication.");
+    }
+  }
 
-    log.info(format("validating if user '%s' has permission to revoke token.", str(userId)));
-    if (userService.isAdmin(user) && userService.isActiveUser(user)) {
-      revokeToken(tokenName);
+  private void revokeTokenAsUser(String tokenName) {
+    val token =
+        findByTokenString(tokenName)
+            .orElseThrow(() -> new InvalidTokenException("Token not found! "));
+    if (userService.isAdmin(token.getOwner()) && userService.isActiveUser(token.getOwner())) {
+      revoke(tokenName);
     } else {
       // if it's a regular user, check if the token belongs to the user
-      verifyToken(tokenName, userId);
-      revokeToken(tokenName);
+      verifyToken(tokenName, token.getOwner().getId());
+      revoke(tokenName);
+    }
+  }
+
+  private void revokeTokenAsApplication(String tokenName, Application application) {
+    if (application.getApplicationType().equals(ApplicationType.ADMIN)) {
+      revoke(tokenName);
+    } else {
+      throw new InvalidRequestException(
+          format("The application does not have permission to revoke token '%s'", tokenName));
     }
   }
 
@@ -386,7 +408,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     }
   }
 
-  private void revokeToken(String token) {
+  private void revoke(String token) {
     val currentToken =
         findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found."));
     if (currentToken.isRevoked()) {
@@ -420,6 +442,8 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
 
   private void createTokenResponse(@NonNull Token token, @NonNull List<TokenResponse> responses) {
     Set<String> scopes = mapToSet(token.scopes(), scope -> scope.toString());
-    responses.add(new TokenResponse(token.getName(), scopes, token.getSecondsUntilExpiry()));
+    responses.add(
+        new TokenResponse(
+            token.getName(), scopes, token.getSecondsUntilExpiry(), token.getDescription()));
   }
 }

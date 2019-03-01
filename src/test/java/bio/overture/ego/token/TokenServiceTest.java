@@ -195,7 +195,7 @@ public class TokenServiceTest {
     val applications = new ArrayList<UUID>();
 
     assertThatExceptionOfType(UsernameNotFoundException.class)
-        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, applications));
+        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, applications, "new token"));
   }
 
   @Test
@@ -209,7 +209,7 @@ public class TokenServiceTest {
     val applications = new ArrayList<UUID>();
 
     assertThatExceptionOfType(InvalidScopeException.class)
-        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, applications));
+        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, applications, "new token"));
   }
 
   @Test
@@ -241,7 +241,7 @@ public class TokenServiceTest {
     val scopes = EntityGenerator.scopeNames("collab.READ");
     val applications = new ArrayList<UUID>();
 
-    val token = tokenService.issueToken(uuid, scopes, applications);
+    val token = tokenService.issueToken(uuid, scopes, applications, "New Token");
 
     assertFalse(token.isRevoked());
     Assert.assertEquals(token.getOwner().getId(), uuid);
@@ -268,7 +268,7 @@ public class TokenServiceTest {
     val applications = new ArrayList<UUID>();
 
     assertThatExceptionOfType(NotFoundException.class)
-        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, applications));
+        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, applications, "new token"));
   }
 
   @Test
@@ -283,7 +283,7 @@ public class TokenServiceTest {
     applications.add(UUID.randomUUID());
 
     assertThatExceptionOfType(InvalidScopeException.class)
-        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, applications));
+        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, applications, "new token"));
   }
 
   @Test
