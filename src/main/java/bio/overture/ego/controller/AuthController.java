@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
@@ -110,6 +111,7 @@ public class AuthController {
   @SneakyThrows
   public ResponseEntity<String> user(OAuth2Authentication authentication) {
     String token = tokenService.generateUserToken((IDToken) authentication.getPrincipal());
+    SecurityContextHolder.getContext().setAuthentication(null);
     return new ResponseEntity<>(token, HttpStatus.OK);
   }
 
