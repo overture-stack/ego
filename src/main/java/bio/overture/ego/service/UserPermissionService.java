@@ -4,13 +4,14 @@ import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.repository.UserPermissionRepository;
-import java.util.Collection;
-import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collection;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -30,17 +31,17 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
   }
 
   @Override
-  protected Collection<UserPermission> getPermissionsForOwner(User owner) {
+  protected Collection<UserPermission> getPermissionsForOwner(@NonNull User owner) {
     return owner.getUserPermissions();
   }
 
   @Override
-  protected Collection<UserPermission> getPermissionsForPolicy(Policy policy) {
+  protected Collection<UserPermission> getPermissionsForPolicy(@NonNull Policy policy) {
     return policy.getUserPermissions();
   }
 
   @Override
-  public User getOwnerWithRelationships(UUID ownerId) {
+  public User getOwnerWithRelationships(@NonNull UUID ownerId) {
     return userService.getById(ownerId);
   }
 }

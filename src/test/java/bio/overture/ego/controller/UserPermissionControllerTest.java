@@ -72,27 +72,31 @@ public class UserPermissionControllerTest extends AbstractPermissionControllerTe
   }
 
   @Override protected String getAddPermissionsEndpoint(String ownerId) {
-    return format("groups/%s/permissions", ownerId);
+    return format("users/%s/permissions", ownerId);
   }
 
   @Override protected String getAddPermissionEndpoint(String policyId, String ownerId) {
-    return format("policies/%s/permission/group/%s", policyId, ownerId);
+    return format("policies/%s/permission/user/%s", policyId, ownerId);
   }
 
   @Override protected String getReadPermissionsEndpoint(String ownerId) {
-    return format("groups/%s/permissions", ownerId);
+    return format("users/%s/permissions", ownerId);
   }
 
   @Override protected String getDeleteOwnerEndpoint(String ownerId) {
-    return format("groups/%s", ownerId);
+    return format("users/%s", ownerId);
   }
 
   @Override protected String getDeletePermissionsEndpoint(String ownerId, Collection<String> permissionIds) {
-    return format("groups/%s/permissions/%s", ownerId, COMMA.join(permissionIds));
+    return format("users/%s/permissions/%s", ownerId, COMMA.join(permissionIds));
   }
 
   @Override protected String getDeletePermissionEndpoint(String policyId, String ownerId) {
-    return format("policies/%s/permission/group/%s", policyId, ownerId);
+    return format("policies/%s/permission/user/%s", policyId, ownerId);
+  }
+
+  @Override protected String getReadOwnersForPolicyEndpoint(String policyId) {
+    return  format("policies/%s/users", policyId);
   }
 
 }

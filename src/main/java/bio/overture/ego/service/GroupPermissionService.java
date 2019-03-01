@@ -4,12 +4,13 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.repository.GroupPermissionRepository;
-import java.util.Collection;
-import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Collection;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -28,17 +29,18 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
   }
 
   @Override
-  protected Collection<GroupPermission> getPermissionsForOwner(Group owner) {
+  protected Collection<GroupPermission> getPermissionsForOwner(@NonNull Group owner) {
     return owner.getPermissions();
   }
 
   @Override
-  protected Collection<GroupPermission> getPermissionsForPolicy(Policy policy) {
+  protected Collection<GroupPermission> getPermissionsForPolicy(@NonNull Policy policy) {
     return policy.getGroupPermissions();
   }
 
   @Override
-  public Group getOwnerWithRelationships(UUID ownerId) {
+  public Group getOwnerWithRelationships(@NonNull UUID ownerId) {
     return groupService.getGroupWithRelationships(ownerId);
   }
+
 }

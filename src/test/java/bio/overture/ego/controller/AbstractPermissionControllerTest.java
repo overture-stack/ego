@@ -57,7 +57,8 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Slf4j
-public abstract class AbstractPermissionControllerTest<O extends NameableEntity<UUID>, P extends AbstractPermission<O>> {
+public abstract class AbstractPermissionControllerTest< O extends NameableEntity<UUID>,
+    P extends AbstractPermission<O >> {
 
   /** Constants */
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -105,53 +106,9 @@ public abstract class AbstractPermissionControllerTest<O extends NameableEntity<
     headers.setContentType(APPLICATION_JSON);
   }
 
-  protected abstract Class<O> getOwnerType();
-  protected abstract Class<P> getPermissionType();
-
-  protected abstract O generateOwner(String name);
-  protected abstract String generateNonExistentOwnerName();
-
-  protected abstract NamedService<O, UUID> getOwnerService();
-  protected abstract AbstractPermissionService<O,P> getPermissionService();
-
-  protected abstract String getAddPermissionsEndpoint(String ownerId);
-  protected abstract String getAddPermissionEndpoint(String policyId, String ownerId);
-  protected abstract String getReadPermissionsEndpoint(String ownerId);
-  protected abstract String getDeleteOwnerEndpoint(String ownerId);
-  protected abstract String getDeletePermissionsEndpoint(String ownerId, Collection<String> permissionIds);
-  protected abstract String getDeletePermissionEndpoint(String policyId, String  ownerId);
-
-  protected abstract EntityGenerator getEntityGenerator();
-  protected abstract PolicyService getPolicyService();
-
-  private String getAddPermissionsEndpoint(UUID ownerId){
-    return getAddPermissionsEndpoint(ownerId.toString());
-  }
-
-  private String getAddPermissionEndpoint(UUID policyId, UUID ownerId){
-    return getAddPermissionEndpoint(policyId.toString(), ownerId.toString());
-  }
-
-  private String getReadPermissionsEndpoint(UUID ownerId){
-    return getReadPermissionsEndpoint(ownerId.toString());
-  }
-
-  private String getDeleteOwnerEndpoint(UUID ownerId){
-    return getDeleteOwnerEndpoint(ownerId.toString());
-  }
-
-  private String getDeletePermissionsEndpoint(UUID ownerId, Collection<UUID> permissionIds){
-    return getDeletePermissionsEndpoint(ownerId.toString(), mapToList(permissionIds, UUID::toString));
-  }
-
-  private String getDeletePermissionEndpoint(UUID policyId, UUID  ownerId){
-    return getDeletePermissionEndpoint(policyId.toString(), ownerId.toString());
-  }
-
-
   /** Add permissions to a non-existent owner */
   @Test
-  public void addPermissionsToOwner_NonExistentGroup_NotFound() {
+  public void addPermissionsToOwner_NonExistentOwner_NotFound() {
     val nonExistentOwnerId = generateNonExistentId(getOwnerService());
     val r1 =
         initStringRequest()
@@ -513,9 +470,9 @@ public abstract class AbstractPermissionControllerTest<O extends NameableEntity<
   public void deletePermissionsForPolicy_NonExistentOwner_NotFound() {
     val permRequest = permissionRequests.get(0);
     val policyId = permRequest.getPolicyId();
-    val nonExistingGroupId = generateNonExistentId(getOwnerService());
+    val nonExistingOwnerId = generateNonExistentId(getOwnerService());
     val r3 = initStringRequest()
-            .endpoint(getDeletePermissionEndpoint(policyId, nonExistingGroupId))
+            .endpoint(getDeletePermissionEndpoint(policyId, nonExistingOwnerId))
             .delete();
     assertThat(r3.getStatusCode()).isEqualTo(NOT_FOUND);
   }
@@ -765,7 +722,7 @@ public abstract class AbstractPermissionControllerTest<O extends NameableEntity<
 
     // Get the owners for the policy previously used
     val r3 = initStringRequest()
-        .endpoint("policies/%s/groups", permRequest.getPolicyId())
+        .endpoint(getReadOwnersForPolicyEndpoint(permRequest.getPolicyId()))
         .get();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
@@ -903,7 +860,7 @@ public abstract class AbstractPermissionControllerTest<O extends NameableEntity<
 
   @Test
   @SneakyThrows
-  public void updateGroupPermissionsToGroup_AlreadyExists_Success() {
+  public void updatePermissionsToOwner_AlreadyExists_Success() {
     val permRequest1 = permissionRequests.get(0);
     val permRequest2 = permissionRequests.get(1);
     val updatedMask = permRequest2.getMask();
@@ -1019,6 +976,35 @@ public abstract class AbstractPermissionControllerTest<O extends NameableEntity<
     assertThat(permission2.getAccessLevel()).isEqualTo(permRequest2.getMask());
   }
 
+  /**
+   *  Necessary abstract methods for a generic abstract test
+   */
+
+  // Commonly used
+  protected abstract EntityGenerator getEntityGenerator();
+  protected abstract PolicyService getPolicyService();
+
+  // Owner specific
+  protected abstract Class<O> getOwnerType();
+  protected abstract O generateOwner(String name);
+  protected abstract NamedService<O, UUID> getOwnerService();
+  protected abstract String generateNonExistentOwnerName();
+
+  // Permission specific
+  protected abstract Class<P> getPermissionType();
+  protected abstract AbstractPermissionService<O,P> getPermissionService();
+
+  // Endpoints
+  protected abstract String getAddPermissionsEndpoint(String ownerId);
+  protected abstract String getAddPermissionEndpoint(String policyId, String ownerId);
+  protected abstract String getReadPermissionsEndpoint(String ownerId);
+  protected abstract String getDeleteOwnerEndpoint(String ownerId);
+  protected abstract String getDeletePermissionsEndpoint(String ownerId, Collection<String> permissionIds);
+  protected abstract String getDeletePermissionEndpoint(String policyId, String  ownerId);
+  protected abstract String getReadOwnersForPolicyEndpoint(String policyId);
+
+
+
   private WebResource<String> initStringRequest() {
     return initRequest(String.class);
   }
@@ -1034,4 +1020,37 @@ public abstract class AbstractPermissionControllerTest<O extends NameableEntity<
   private String getServerUrl() {
     return "http://localhost:" + port;
   }
+
+  /**
+   * For convenience
+   */
+  private String getReadOwnersForPolicyEndpoint(UUID policyId){
+    return getReadOwnersForPolicyEndpoint(policyId.toString());
+  }
+
+  private String getAddPermissionsEndpoint(UUID ownerId){
+    return getAddPermissionsEndpoint(ownerId.toString());
+  }
+
+  private String getAddPermissionEndpoint(UUID policyId, UUID ownerId){
+    return getAddPermissionEndpoint(policyId.toString(), ownerId.toString());
+  }
+
+  private String getReadPermissionsEndpoint(UUID ownerId){
+    return getReadPermissionsEndpoint(ownerId.toString());
+  }
+
+  private String getDeleteOwnerEndpoint(UUID ownerId){
+    return getDeleteOwnerEndpoint(ownerId.toString());
+  }
+
+  private String getDeletePermissionsEndpoint(UUID ownerId, Collection<UUID> permissionIds){
+    return getDeletePermissionsEndpoint(ownerId.toString(), mapToList(permissionIds, UUID::toString));
+  }
+
+  private String getDeletePermissionEndpoint(UUID policyId, UUID  ownerId){
+    return getDeletePermissionEndpoint(policyId.toString(), ownerId.toString());
+  }
+
+
 }
