@@ -356,7 +356,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     val principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
     if (principal instanceof User) {
-      revokeTokenAsUser(tokenName);
+      revokeTokenAsUser(tokenName, (User) principal);
     } else if (principal instanceof Application) {
       revokeTokenAsApplication(tokenName, (Application) principal);
     } else {
@@ -365,15 +365,12 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     }
   }
 
-  private void revokeTokenAsUser(String tokenName) {
-    val token =
-        findByTokenString(tokenName)
-            .orElseThrow(() -> new InvalidTokenException("Token not found! "));
-    if (userService.isAdmin(token.getOwner()) && userService.isActiveUser(token.getOwner())) {
+  private void revokeTokenAsUser(String tokenName, User user) {
+    if (userService.isAdmin(user) && userService.isActiveUser(user)) {
       revoke(tokenName);
     } else {
       // if it's a regular user, check if the token belongs to the user
-      verifyToken(tokenName, token.getOwner().getId());
+      verifyToken(tokenName, user.getId());
       revoke(tokenName);
     }
   }
