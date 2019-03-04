@@ -36,6 +36,9 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
   @Test
   @SneakyThrows
   public void loadAdmin_Success() {
+    val facebookUser = System.getenv("FACEBOOK_USER");
+    val facebookPass = System.getenv("FACEBOOK_PASS");
+
     val uiPort = uiContainer.getMappedPort(80);
 
     applicationService.create(
@@ -61,10 +64,10 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
     Thread.sleep(1000);
 
     val email = driver.findElement(By.id("email"));
-    email.sendKeys("immxgmqvsf_1551302168@tfbnw.net");
+    email.sendKeys(facebookUser);
 
     val pass = driver.findElement(By.id("pass"));
-    pass.sendKeys("foobar123");
+    pass.sendKeys(facebookPass);
 
     driver.findElement(By.id("loginbutton")).click();
 
