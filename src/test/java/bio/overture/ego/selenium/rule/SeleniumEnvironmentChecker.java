@@ -15,29 +15,27 @@
  *
  */
 
-package bio.overture.ego.selenium.driver;
+package bio.overture.ego.selenium.rule;
 
-import com.browserstack.local.Local;
-import java.net.URL;
-import lombok.SneakyThrows;
-import org.openqa.selenium.remote.DesiredCapabilities;
-import org.openqa.selenium.remote.RemoteWebDriver;
+import bio.overture.ego.selenium.driver.WebDriverFactory.DriverType;
+import lombok.Getter;
 
-public class BrowserStackDriverProxy extends RemoteWebDriver {
+public class SeleniumEnvironmentChecker {
 
-  /** State */
-  private final Local local;
+  @Getter private DriverType type;
 
-  @SneakyThrows
-  public BrowserStackDriverProxy(URL url, DesiredCapabilities capabilities, Local local) {
-    super(url, capabilities);
-    this.local = local;
+  public SeleniumEnvironmentChecker() {
+    String envVar = System.getenv("SELENIUM_TEST_TYPE");
+    if (envVar != null) {
+      type = DriverType.valueOf(envVar);
+    }
   }
 
-  @Override
-  @SneakyThrows
-  public void quit() {
-    if (local != null) local.stop();
-    super.quit();
+  public boolean shouldRunTest() {
+    if (type == DriverType.BROWSERSTACK || type == DriverType.LOCAL) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }

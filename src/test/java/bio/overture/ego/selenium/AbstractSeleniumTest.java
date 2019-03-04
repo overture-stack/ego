@@ -19,10 +19,10 @@ package bio.overture.ego.selenium;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.selenium.driver.WebDriverFactory;
+import bio.overture.ego.selenium.rule.AssumingSeleniumEnvironment;
+import bio.overture.ego.selenium.rule.SeleniumEnvironmentChecker;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.browserstack.local.Local;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -30,53 +30,53 @@ import org.junit.*;
 import org.junit.runner.RunWith;
 import org.openqa.selenium.WebDriver;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.GenericContainer;
 
 @Slf4j
-@ActiveProfiles("test")
+@ActiveProfiles({"test", "secure", "auth"})
 @RunWith(SpringRunner.class)
 @SpringBootTest(
     classes = AuthorizationServiceMain.class,
-    properties = {
-      "server.port=19001"
-    },
+    properties = {"server.port=19001"},
     webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @Ignore
-public class AbstractSeleniumTest {
+public abstract class AbstractSeleniumTest {
 
   public int port = 19001;
   public static WebDriver driver;
 
   private static final WebDriverFactory FACTORY = new WebDriverFactory();
 
+  @ClassRule
+  public static AssumingSeleniumEnvironment seleniumEnvironment =
+      new AssumingSeleniumEnvironment(new SeleniumEnvironmentChecker());
+
   @Rule public GenericContainer uiContainer = createGenericContainer();
 
   @BeforeClass
   public static void openBrowser() {
-    val testTypeEnv = System.getenv("SELENIUM_TEST_TYPE");
-    Assume.assumeTrue(testTypeEnv != null);
-    val testType = WebDriverFactory.DriverType.valueOf(testTypeEnv);
-    driver = FACTORY.createDriver(testType);
+    driver = FACTORY.createDriver(seleniumEnvironment.getDriverType());
   }
 
   @AfterClass
-  public static void tearDown() throws Exception {
-    driver.quit();
+  public static void tearDown() {
+    if (driver != null) {
+      driver.quit();
+    }
   }
 
   @SneakyThrows
   private GenericContainer createGenericContainer() {
-    return new GenericContainer("overture/ego-ui:78fa34a-alpine")
+    return new GenericContainer("overture/ego-ui:260a87b-alpine")
         .withExposedPorts(80)
         .withEnv(createEnvMap());
   }
 
   private Map<String, String> createEnvMap() {
     val envs = new HashMap<String, String>();
-    envs.put("REACT_APP_API", Integer.toString(port));
+    envs.put("REACT_APP_API", "http://localhost:" + port);
     envs.put("REACT_APP_EGO_CLIENT_ID", "seleniumClient");
     return envs;
   }

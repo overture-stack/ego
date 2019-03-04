@@ -17,13 +17,12 @@
 
 package bio.overture.ego.selenium.driver;
 
+import com.browserstack.local.Local;
 import java.io.FileReader;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import com.browserstack.local.Local;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -50,7 +49,8 @@ public class WebDriverFactory {
 
   private WebDriver createChromeDriver() {
     val chromeDriverPath = System.getenv("CHROME_DRIVER_PATH");
-    if (chromeDriverPath == null) throw new RuntimeException("Please set the CHROME_DRIVER_PATH environment variable");
+    if (chromeDriverPath == null)
+      throw new RuntimeException("Please set the CHROME_DRIVER_PATH environment variable");
     System.setProperty("webdriver.chrome.driver", chromeDriverPath);
     val driver = new ChromeDriver();
     driver
@@ -96,10 +96,20 @@ public class WebDriverFactory {
 
     log.info(capabilities.toString());
 
-    return new BrowserStackDriverProxy(
-        new URL("http://" + username + ":" + accessKey + "@" + config.get("server") + "/wd/hub"),
-        capabilities,
-      local);
+    val driver =
+        new BrowserStackDriverProxy(
+            new URL(
+                "http://" + username + ":" + accessKey + "@" + config.get("server") + "/wd/hub"),
+            capabilities,
+            local);
+
+    driver
+        .manage()
+        .timeouts()
+        .implicitlyWait(2, TimeUnit.SECONDS)
+        .pageLoadTimeout(2, TimeUnit.SECONDS);
+
+    return driver;
   }
 
   public enum DriverType {

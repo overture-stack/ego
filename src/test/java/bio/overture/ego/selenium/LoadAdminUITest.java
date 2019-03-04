@@ -17,18 +17,67 @@
 
 package bio.overture.ego.selenium;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import bio.overture.ego.model.dto.CreateApplicationRequest;
+import bio.overture.ego.model.enums.ApplicationType;
+import bio.overture.ego.service.ApplicationService;
+import lombok.SneakyThrows;
 import lombok.val;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.openqa.selenium.By;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class LoadAdminUITest extends AbstractSeleniumTest {
 
+  /** Dependencies */
+  @Autowired private ApplicationService applicationService;
+
   @Test
+  @SneakyThrows
   public void loadAdmin_Success() {
-    driver.get("http://localhost:" + uiContainer.getMappedPort(80));
+    val uiPort = uiContainer.getMappedPort(80);
+
+    applicationService.create(
+        CreateApplicationRequest.builder()
+            .clientId("seleniumClient")
+            .clientSecret("seleniumSecret")
+            .name("Selenium Tests")
+            .redirectUri("http://localhost:" + uiPort)
+            .applicationType(ApplicationType.ADMIN)
+            .status("Approved")
+            .description("testing")
+            .build());
+
+    driver.get("http://localhost:" + uiPort);
     val titleText =
         driver.findElement(By.className("Login")).findElement(By.tagName("h1")).getText();
-    Assertions.assertThat(titleText).isEqualTo("Admin Portal");
+    assertThat(titleText).isEqualTo("Admin Portal");
+
+    Thread.sleep(1000);
+
+    driver.findElement(By.className("fa-facebook")).click();
+
+    Thread.sleep(1000);
+
+    val email = driver.findElement(By.id("email"));
+    email.sendKeys("immxgmqvsf_1551302168@tfbnw.net");
+
+    val pass = driver.findElement(By.id("pass"));
+    pass.sendKeys("foobar123");
+
+    driver.findElement(By.id("loginbutton")).click();
+
+    Thread.sleep(1000);
+
+    val messageDiv =
+        driver
+            .findElement(By.id("root"))
+            .findElement(By.tagName("div"))
+            .findElement(By.tagName("div"))
+            .getText();
+    assertThat(messageDiv).contains("Your account does not have an administrator userType.");
+
+    Thread.sleep(1000);
   }
 }
