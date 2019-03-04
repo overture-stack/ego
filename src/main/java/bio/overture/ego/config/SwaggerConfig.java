@@ -16,11 +16,18 @@
 
 package bio.overture.ego.config;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.val;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.Contact;
 import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.paths.RelativePathProvider;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
@@ -28,24 +35,47 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @Configuration
 public class SwaggerConfig {
 
+  @Component
+  @ConfigurationProperties(prefix="swagger")
+  class SwaggerProperties {
+    /**
+     * Specify host if ego is running behind proxy.
+     */
+    @Setter @Getter private String host = "";
+
+    /**
+     * If there is url write rule, you may want to set this variable. This value requires host to be not empty.
+     */
+    @Setter @Getter private String baseUrl = "";
+  }
+
   @Bean
-  public Docket productApi() {
-    return new Docket(DocumentationType.SWAGGER_2)
-        .select()
-        .apis(RequestHandlerSelectors.basePackage("bio.overture.ego.controller"))
-        .build()
-        .apiInfo(metaInfo());
+  public Docket productApi(SwaggerProperties properties) {
+    val docket = new Docket(DocumentationType.SWAGGER_2)
+            .select()
+            .apis(RequestHandlerSelectors.basePackage("bio.overture.ego.controller"))
+            .build()
+            .host(properties.host)
+            .pathProvider(new RelativePathProvider(null) {
+                            @Override
+                            public String getApplicationBasePath() {
+                              return properties.getBaseUrl();
+                            }
+                          })
+            .apiInfo(metaInfo());
+
+    return docket;
   }
 
   private ApiInfo metaInfo() {
 
     return new ApiInfo(
-        "ego Service API",
-        "ego API Documentation",
-        "0.01",
-        "",
-        "",
-        "Apache License Version 2.0",
-        "");
+            "ego Service API",
+            "ego API Documentation",
+            "0.02",
+            "",
+            new Contact("", "",""),
+            "Apache License Version 2.0",
+            "");
   }
 }
