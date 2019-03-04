@@ -80,12 +80,13 @@ public class TokenController {
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "user_id") UUID user_id,
       @RequestParam(value = "scopes") ArrayList<String> scopes,
-      @RequestParam(value = "applications", required = false) ArrayList<UUID> applications) {
+      @RequestParam(value = "applications", required = false) ArrayList<UUID> applications,
+      @RequestParam(value = "description", required = false) String description) {
     val scopeNames = mapToList(scopes, s -> new ScopeName(s));
-    val t = tokenService.issueToken(user_id, scopeNames, applications);
+    val t = tokenService.issueToken(user_id, scopeNames, applications, description);
     Set<String> issuedScopes = mapToSet(t.scopes(), x -> x.toString());
     TokenResponse response =
-        new TokenResponse(t.getName(), issuedScopes, t.getSecondsUntilExpiry());
+        new TokenResponse(t.getName(), issuedScopes, t.getSecondsUntilExpiry(), t.getDescription());
     return response;
   }
 
@@ -93,9 +94,8 @@ public class TokenController {
   @ResponseStatus(value = HttpStatus.OK)
   public @ResponseBody String revokeToken(
       @RequestHeader(value = "Authorization") final String authorization,
-      @RequestParam(value = "user_id") UUID user_id,
       @RequestParam(value = "token") final String token) {
-    tokenService.revokeToken(user_id, token);
+    tokenService.revokeToken(token);
     return format("Token '%s' is successfully revoked!", token);
   }
 

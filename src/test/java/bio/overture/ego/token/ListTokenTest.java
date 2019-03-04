@@ -57,8 +57,10 @@ public class ListTokenTest {
 
     val userToken1 =
         entityGenerator.setupToken(test.regularUser, tokenString1, 1000, scopes1, applications);
+    userToken1.setDescription("Test token 1.");
     val userToken2 =
         entityGenerator.setupToken(test.regularUser, tokenString2, 1000, scopes2, applications);
+    userToken2.setDescription("Test token 2.");
 
     Set<Token> tokens = new HashSet<>();
     tokens.add(userToken1);
@@ -68,8 +70,12 @@ public class ListTokenTest {
     val responseList = tokenService.listToken(test.regularUser.getId());
 
     List<TokenResponse> expected = new ArrayList<>();
-    expected.add(new TokenResponse(tokenString1, scopeString1, userToken1.getSecondsUntilExpiry()));
-    expected.add(new TokenResponse(tokenString2, scopeString2, userToken2.getSecondsUntilExpiry()));
+    expected.add(
+        new TokenResponse(
+            tokenString1, scopeString1, userToken1.getSecondsUntilExpiry(), "Test token 1."));
+    expected.add(
+        new TokenResponse(
+            tokenString2, scopeString2, userToken2.getSecondsUntilExpiry(), "Test token 2."));
 
     assertTrue((responseList.stream().allMatch(response -> expected.contains(response))));
   }
