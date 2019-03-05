@@ -29,12 +29,12 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
   }
 
   @Override
-  protected Collection<GroupPermission> getPermissionsForOwner(@NonNull Group owner) {
+  protected Collection<GroupPermission> getPermissionsFromOwner(@NonNull Group owner) {
     return owner.getPermissions();
   }
 
   @Override
-  protected Collection<GroupPermission> getPermissionsForPolicy(@NonNull Policy policy) {
+  protected Collection<GroupPermission> getPermissionsFromPolicy(@NonNull Policy policy) {
     return policy.getGroupPermissions();
   }
 

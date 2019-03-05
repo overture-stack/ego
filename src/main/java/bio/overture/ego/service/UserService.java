@@ -269,7 +269,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   // TODO [rtisma]: ensure that the user contains all its relationships
-  public static Set<AbstractPermission> getPermissionsList(User user) {
+  public static Set<AbstractPermission> resolveFinalPermissions(User user) {
     val up = user.getUserPermissions();
     val upStream = up == null ? Stream.<UserPermission>empty() : up.stream();
 
@@ -332,7 +332,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   public static Set<Scope> extractScopes(@NonNull User user) {
-    return mapToSet(getPermissionsList(user), AbstractPermissionService::buildScope);
+    return mapToSet(resolveFinalPermissions(user), AbstractPermissionService::buildScope);
   }
 
   public static void associateUserWithGroups(User user, @NonNull Collection<Group> groups) {
@@ -408,7 +408,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
         !userRepository.existsByEmailIgnoreCase(email), "A user with same email already exists");
   }
 
-  private static <T extends AbstractPermission> AbstractPermission resolvePermissions(
+  private static <T extends AbstractPermission> T resolvePermissions(
       List<T> permissions) {
     checkState(!permissions.isEmpty(), "Input permissions list cannot be empty");
     permissions.sort(comparing(AbstractPermission::getAccessLevel));

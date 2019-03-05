@@ -62,9 +62,9 @@ public abstract class AbstractPermissionService<
     this.ownerBaseService = ownerBaseService;
   }
 
-  protected abstract Collection<P> getPermissionsForOwner(O owner);
+  protected abstract Collection<P> getPermissionsFromOwner(O owner);
 
-  protected abstract Collection<P> getPermissionsForPolicy(Policy policy);
+  protected abstract Collection<P> getPermissionsFromPolicy(Policy policy);
 
   public abstract O getOwnerWithRelationships(UUID ownerId);
 
@@ -93,7 +93,7 @@ public abstract class AbstractPermissionService<
         ownerId);
     val owner = getOwnerWithRelationships(ownerId);
 
-    val permissions = getPermissionsForOwner(owner);
+    val permissions = getPermissionsFromOwner(owner);
     val filteredPermissionMap =
         permissions
             .stream()
@@ -137,7 +137,7 @@ public abstract class AbstractPermissionService<
 
     // Convert the GroupPermission to PermissionRequests since all permission requests apply to the
     // same owner (the group)
-    val existingPermissions = getPermissionsForOwner(owner);
+    val existingPermissions = getPermissionsFromOwner(owner);
     val existingPermissionRequests =
         mapToSet(existingPermissions, AbstractPermissionService::convertToPermissionRequest);
     val permissionAnalysis = analyze(existingPermissionRequests, permissionRequests);
@@ -193,7 +193,7 @@ public abstract class AbstractPermissionService<
    */
   private O updateGroupPermissions(
       O owner, Collection<PermissionRequest> updatePermissionRequests) {
-    val existingPermissions = getPermissionsForOwner(owner);
+    val existingPermissions = getPermissionsFromOwner(owner);
     val existingPermissionIndex = uniqueIndex(existingPermissions, x -> x.getPolicy().getId());
 
     updatePermissionRequests.forEach(
@@ -220,7 +220,7 @@ public abstract class AbstractPermissionService<
    */
   private O createGroupPermissions(
       O owner, Collection<PermissionRequest> createablePermissionRequests) {
-    val existingPermissions = getPermissionsForOwner(owner);
+    val existingPermissions = getPermissionsFromOwner(owner);
     val existingPermissionIndex = uniqueIndex(existingPermissions, x -> x.getPolicy().getId());
     val requestedPolicyIds = mapToSet(createablePermissionRequests, PermissionRequest::getPolicyId);
 
@@ -281,9 +281,9 @@ public abstract class AbstractPermissionService<
   public void disassociatePermissions(Collection<P> permissions) {
     permissions.forEach(
         x -> {
-          val ownerPermissions = getPermissionsForOwner(x.getOwner());
+          val ownerPermissions = getPermissionsFromOwner(x.getOwner());
           ownerPermissions.remove(x);
-          val policyPermissions = getPermissionsForPolicy(x.getPolicy());
+          val policyPermissions = getPermissionsFromPolicy(x.getPolicy());
           policyPermissions.remove(x);
           x.setPolicy(null);
           x.setOwner(null);
@@ -291,13 +291,13 @@ public abstract class AbstractPermissionService<
   }
 
   public void associatePermission(@NonNull Policy policy, @NonNull P permission) {
-    val policyPermissions = getPermissionsForPolicy(policy);
+    val policyPermissions = getPermissionsFromPolicy(policy);
     policyPermissions.add(permission);
     permission.setPolicy(policy);
   }
 
   public void associatePermission(@NonNull O owner, @NonNull P permission) {
-    val ownerPermissions = getPermissionsForOwner(owner);
+    val ownerPermissions = getPermissionsFromOwner(owner);
     ownerPermissions.add(permission);
     permission.setOwner(owner);
   }

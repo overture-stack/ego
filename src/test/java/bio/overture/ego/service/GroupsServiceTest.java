@@ -811,8 +811,7 @@ public class GroupsServiceTest {
     groupPermissionService.addPermissions(testGroup.getId(), permissions);
 
     val pagedGroupPermissions =
-        groupService.getGroupPermissions(
-            testGroup.getId().toString(), new PageableResolver().getPageable());
+        groupPermissionService.getPermissions(testGroup.getId(), new PageableResolver().getPageable());
 
     assertThat(pagedGroupPermissions.getTotalElements()).isEqualTo(1L);
     assertThat(pagedGroupPermissions.getContent().get(0).getAccessLevel().toString())
