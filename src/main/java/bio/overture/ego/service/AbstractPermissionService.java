@@ -1,5 +1,28 @@
 package bio.overture.ego.service;
 
+import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.dto.PolicyResponse;
+import bio.overture.ego.model.dto.Scope;
+import bio.overture.ego.model.entity.AbstractPermission;
+import bio.overture.ego.model.entity.NameableEntity;
+import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.repository.PermissionRepository;
+import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
+import com.google.common.collect.ImmutableList;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import static bio.overture.ego.model.dto.Scope.createScope;
 import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
@@ -14,28 +37,6 @@ import static com.google.common.collect.Maps.uniqueIndex;
 import static com.gs.collections.impl.factory.Sets.intersect;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
-
-import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.dto.PolicyResponse;
-import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.NameableEntity;
-import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.repository.PermissionRepository;
-import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
-import com.google.common.collect.ImmutableList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Transactional
@@ -67,10 +68,6 @@ public abstract class AbstractPermissionService<
 
   public abstract O getOwnerWithRelationships(UUID ownerId);
 
-  public String getOwnerTypeName() {
-    return ownerType.getSimpleName();
-  }
-
   public List<PolicyResponse> findByPolicy(UUID policyId) {
     val permissions = ImmutableList.copyOf(permissionRepository.findAllByPolicy_Id(policyId));
     return mapToList(permissions, this::convertToPolicyResponse);
@@ -82,26 +79,9 @@ public abstract class AbstractPermissionService<
     return new PageImpl<>(permissions, pageable, permissions.size());
   }
 
-  public P getByPolicyAndOwner(@NonNull UUID policyId, @NonNull UUID ownerId) {
-    return permissionRepository
-        .findByPolicy_IdAndOwner_id(policyId, ownerId)
-        .orElseThrow(
-            () ->
-                buildNotFoundException(
-                    "%s for policy '%s' and owner '%s' cannot be cannot be found",
-                    getEntityTypeName(), policyId, ownerId));
-  }
-
   public void deleteByPolicyAndOwner(@NonNull UUID policyId, @NonNull UUID ownerId) {
     val perm = getByPolicyAndOwner(policyId, ownerId);
     getRepository().delete(perm);
-  }
-
-  public PolicyResponse convertToPolicyResponse(@NonNull P p) {
-    val name = p.getOwner().getName();
-    val id = p.getOwner().getId().toString();
-    val mask = p.getAccessLevel();
-    return PolicyResponse.builder().name(name).id(id).mask(mask).build();
   }
 
   public void deletePermissions(
@@ -178,6 +158,20 @@ public abstract class AbstractPermissionService<
         COMMA.join(permissionAnalysis.getDuplicates()));
 
     return createOrUpdatePermissions(owner, permissionAnalysis);
+  }
+
+  private P getByPolicyAndOwner(@NonNull UUID policyId, @NonNull UUID ownerId) {
+    return permissionRepository
+        .findByPolicy_IdAndOwner_id(policyId, ownerId)
+        .orElseThrow(
+            () ->
+                buildNotFoundException(
+                    "%s for policy '%s' and owner '%s' cannot be cannot be found",
+                    getEntityTypeName(), policyId, ownerId));
+  }
+
+  private String getOwnerTypeName() {
+    return ownerType.getSimpleName();
   }
 
   /**
@@ -267,7 +261,17 @@ public abstract class AbstractPermissionService<
         .build();
   }
 
-  /** Stateless member methods */
+  /** Stateless member methods
+   * If these stateless member methods were static, their signature would look ugly with all the generic type bounding.
+   * In the interest of more readable code, using member methods is a cleaner approach.
+   *
+   */
+  private PolicyResponse convertToPolicyResponse(@NonNull P p) {
+    val name = p.getOwner().getName();
+    val id = p.getOwner().getId().toString();
+    val mask = p.getAccessLevel();
+    return PolicyResponse.builder().name(name).id(id).mask(mask).build();
+  }
 
   /**
    * Disassociates group permissions from its parents

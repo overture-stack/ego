@@ -33,6 +33,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import static bio.overture.ego.controller.AbstractPermissionControllerTest.createMaskJson;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static org.assertj.core.api.Assertions.assertThat;
