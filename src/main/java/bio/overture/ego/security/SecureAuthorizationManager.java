@@ -59,7 +59,7 @@ public class SecureAuthorizationManager implements AuthorizationManager {
   public boolean authorizeWithApplication(@NonNull Authentication authentication) {
     // User user = (User)authentication.getPrincipal();
     // return authorize(authentication) && user.getApplications().contains(appName);
-    log.error("Trying to authorize as application");
+    log.info("Trying to authorize as application");
     return true;
   }
 

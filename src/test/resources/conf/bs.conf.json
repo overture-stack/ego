@@ -1,0 +1,19 @@
+{
+  "server": "hub-cloud.browserstack.com",
+  "user": "*",
+  "key": "*",
+
+  "capabilities": {
+    "os": "Windows",
+    "os_version": "10",
+    "browser": "Chrome",
+    "browser_version": "62.0",
+    "browserstack.debug": true,
+    "browserstack.local": true,
+    "project": "ego"
+  },
+
+  "environments": [{
+    "browser": "chrome"
+  }]
+}

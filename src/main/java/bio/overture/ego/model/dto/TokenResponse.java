@@ -15,4 +15,5 @@ public class TokenResponse {
   String accessToken;
   private Set<String> scope;
   private Long exp;
+  private String description;
 }
