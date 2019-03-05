@@ -1,5 +1,6 @@
 package bio.overture.ego.model.entity;
 
+import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
@@ -9,8 +10,9 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
 import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,10 +31,15 @@ import lombok.ToString;
 @EqualsAndHashCode(
     callSuper = true,
     of = {LombokFields.id})
-public class UserPermission extends AbstractPermission {
+@NamedEntityGraph(
+    name = "user-permission-entity-with-relationships",
+    attributeNodes = {
+      @NamedAttributeNode(value = JavaFields.POLICY),
+      @NamedAttributeNode(value = JavaFields.OWNER)
+    })
+public class UserPermission extends AbstractPermission<User> {
 
-  @NotNull
-  @ManyToOne(fetch = FetchType.EAGER)
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = SqlFields.USERID_JOIN, nullable = false)
   private User owner;
 }

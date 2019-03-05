@@ -1,25 +1,15 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
-import static bio.overture.ego.utils.EntityTools.extractGroupNames;
-import static com.google.common.collect.Lists.newArrayList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.GroupRequest;
+import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
-import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -30,6 +20,21 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityNotFoundException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static bio.overture.ego.model.enums.AccessLevel.DENY;
+import static bio.overture.ego.model.enums.AccessLevel.READ;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
+import static bio.overture.ego.utils.EntityTools.extractGroupNames;
+import static com.google.common.collect.Lists.newArrayList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -43,6 +48,7 @@ public class GroupsServiceTest {
   @Autowired private UserService userService;
 
   @Autowired private GroupService groupService;
+  @Autowired private GroupPermissionService groupPermissionService;
 
   @Autowired private PolicyService policyService;
 
@@ -714,23 +720,23 @@ public class GroupsServiceTest {
     entityGenerator.setupTestPolicies();
 
     val study001 = policyService.getByName("Study001");
-    val study001id = study001.getId().toString();
+    val study001id = study001.getId();
 
     val study002 = policyService.getByName("Study002");
-    val study002id = study002.getId().toString();
+    val study002id = study002.getId();
 
     val study003 = policyService.getByName("Study003");
-    val study003id = study003.getId().toString();
+    val study003id = study003.getId();
 
     val permissions =
         Arrays.asList(
-            new PolicyIdStringWithAccessLevel(study001id, "READ"),
-            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
+            new PermissionRequest(study001id, READ),
+            new PermissionRequest(study002id, WRITE),
+            new PermissionRequest(study003id, DENY));
 
     val firstGroup = groups.get(0);
 
-    groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);
+    groupPermissionService.addPermissions(firstGroup.getId(), permissions);
 
     assertThat(PolicyPermissionUtils.extractPermissionStrings(firstGroup.getPermissions()))
         .containsExactlyInAnyOrder("Study001.READ", "Study002.WRITE", "Study003.DENY");
@@ -748,31 +754,31 @@ public class GroupsServiceTest {
     val firstGroup = groups.get(0);
 
     val study001 = policyService.getByName("Study001");
-    val study001id = study001.getId().toString();
+    val study001id = study001.getId();
 
     val study002 = policyService.getByName("Study002");
-    val study002id = study002.getId().toString();
+    val study002id = study002.getId();
 
     val study003 = policyService.getByName("Study003");
-    val study003id = study003.getId().toString();
+    val study003id = study003.getId();
 
     val permissions =
         Arrays.asList(
-            new PolicyIdStringWithAccessLevel(study001id, "READ"),
-            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
+            new PermissionRequest(study001id, READ),
+            new PermissionRequest(study002id, WRITE),
+            new PermissionRequest(study003id, DENY));
 
-    groupService.addGroupPermissions(firstGroup.getId().toString(), permissions);
+    groupPermissionService.addPermissions(firstGroup.getId(), permissions);
 
     val groupPermissionsToRemove =
         firstGroup
             .getPermissions()
             .stream()
             .filter(p -> !p.getPolicy().getName().equals("Study001"))
-            .map(p -> p.getId().toString())
+            .map(AbstractPermission::getId)
             .collect(Collectors.toList());
 
-    groupService.deleteGroupPermissions(firstGroup.getId().toString(), groupPermissionsToRemove);
+    groupPermissionService.deletePermissions(firstGroup.getId(), groupPermissionsToRemove);
 
     assertThat(PolicyPermissionUtils.extractPermissionStrings(firstGroup.getPermissions()))
         .containsExactlyInAnyOrder("Study001.READ");
@@ -788,21 +794,21 @@ public class GroupsServiceTest {
     val testGroup = entityGenerator.setupGroup("testGetGroupPermissions_Group");
 
     val study001 = policyService.getByName("testGetGroupPermissions_Study001");
-    val study001id = study001.getId().toString();
+    val study001id = study001.getId();
 
     val study002 = policyService.getByName("testGetGroupPermissions_Study002");
-    val study002id = study002.getId().toString();
+    val study002id = study002.getId();
 
     val study003 = policyService.getByName("testGetGroupPermissions_Study003");
-    val study003id = study003.getId().toString();
+    val study003id = study003.getId();
 
     val permissions =
         Arrays.asList(
-            new PolicyIdStringWithAccessLevel(study001id, "READ"),
-            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
+            new PermissionRequest(study001id, READ),
+            new PermissionRequest(study002id, WRITE),
+            new PermissionRequest(study003id, DENY));
 
-    groupService.addGroupPermissions(testGroup.getId().toString(), permissions);
+    groupPermissionService.addPermissions(testGroup.getId(), permissions);
 
     val pagedGroupPermissions =
         groupService.getGroupPermissions(

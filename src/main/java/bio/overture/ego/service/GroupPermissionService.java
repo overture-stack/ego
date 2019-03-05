@@ -1,61 +1,46 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
-import static java.util.UUID.fromString;
-
-import bio.overture.ego.model.dto.PolicyResponse;
+import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
-import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.repository.GroupPermissionRepository;
-import com.google.common.collect.ImmutableList;
-import java.util.List;
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collection;
+import java.util.UUID;
 
 @Slf4j
 @Service
-@Transactional
-public class GroupPermissionService extends AbstractPermissionService<GroupPermission> {
+public class GroupPermissionService extends AbstractPermissionService<Group, GroupPermission> {
 
   /** Dependencies */
-  private final GroupPermissionRepository repository;
+  private final GroupService groupService;
 
   @Autowired
-  public GroupPermissionService(@NonNull GroupPermissionRepository repository) {
-    super(GroupPermission.class, repository);
-    this.repository = repository;
+  public GroupPermissionService(
+      @NonNull GroupPermissionRepository repository,
+      @NonNull GroupService groupService,
+      @NonNull PolicyService policyService) {
+    super(Group.class, GroupPermission.class, groupService, policyService, repository);
+    this.groupService = groupService;
   }
 
-  @SneakyThrows
-  public GroupPermission findByPolicyAndGroup(@NonNull String policyId, @NonNull String groupId) {
-    val opt = repository.findByPolicy_IdAndOwner_id(fromString(policyId), fromString(groupId));
-
-    return opt.orElseThrow(() -> new NotFoundException("Permission cannot be found."));
+  @Override
+  protected Collection<GroupPermission> getPermissionsForOwner(@NonNull Group owner) {
+    return owner.getPermissions();
   }
 
-  public void deleteByPolicyAndGroup(@NonNull String policyId, @NonNull String groupId) {
-    val perm = findByPolicyAndGroup(policyId, groupId);
-    delete(perm.getId());
+  @Override
+  protected Collection<GroupPermission> getPermissionsForPolicy(@NonNull Policy policy) {
+    return policy.getGroupPermissions();
   }
 
-  public List<GroupPermission> findAllByPolicy(@NonNull String policyId) {
-    return ImmutableList.copyOf(repository.findAllByPolicy_Id(fromString(policyId)));
+  @Override
+  public Group getOwnerWithRelationships(@NonNull UUID ownerId) {
+    return groupService.getGroupWithRelationships(ownerId);
   }
 
-  public List<PolicyResponse> findByPolicy(@NonNull String policyId) {
-    val permissions = findAllByPolicy(policyId);
-    return mapToList(permissions, this::getPolicyResponse);
-  }
-
-  public PolicyResponse getPolicyResponse(@NonNull GroupPermission p) {
-    val name = p.getOwner().getName();
-    val id = p.getOwner().getId().toString();
-    val mask = p.getAccessLevel();
-    return PolicyResponse.builder().name(name).id(id).mask(mask).build();
-  }
 }

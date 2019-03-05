@@ -17,34 +17,33 @@
 
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.utils.EntityTools.extractUserIds;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.service.*;
+import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.GroupService;
+import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.Streams;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.*;
-import java.util.stream.StreamSupport;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.UUID;
+
+import static bio.overture.ego.utils.Collectors.toImmutableList;
+import static bio.overture.ego.utils.EntityTools.extractUserIds;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -52,31 +51,18 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest(
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class UserControllerTest {
-
-  /** Constants */
-  private static final ObjectMapper MAPPER = new ObjectMapper();
-
-  /** State */
-  @LocalServerPort private int port;
-
-  private TestRestTemplate restTemplate = new TestRestTemplate();
-  private HttpHeaders headers = new HttpHeaders();
+public class UserControllerTest extends AbstractControllerTest {
 
   private static boolean hasRunEntitySetup = false;
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
-
   @Autowired private UserService userService;
-
   @Autowired private ApplicationService applicationService;
-
   @Autowired private GroupService groupService;
 
-  @Before
-  public void setup() {
-
+  @Override
+  protected void beforeTest() {
     // Initial setup of entities (run once
     if (!hasRunEntitySetup) {
       entityGenerator.setupTestUsers();
@@ -84,9 +70,6 @@ public class UserControllerTest {
       entityGenerator.setupTestGroups();
       hasRunEntitySetup = true;
     }
-
-    headers.add("Authorization", "Bearer TestToken");
-    headers.setContentType(MediaType.APPLICATION_JSON);
   }
 
   @Test
@@ -102,10 +85,7 @@ public class UserControllerTest {
             .status("Approved")
             .build();
 
-    val entity = new HttpEntity<User>(user, headers);
-
-    val response =
-        restTemplate.exchange(createURLWithPort("/users"), HttpMethod.POST, entity, String.class);
+    val response = initStringRequest().endpoint("/users").body(user).post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
@@ -132,17 +112,13 @@ public class UserControllerTest {
             .status("Approved")
             .build();
 
-    val entity1 = new HttpEntity<User>(user1, headers);
-    val response1 =
-        restTemplate.exchange(createURLWithPort("/users"), HttpMethod.POST, entity1, String.class);
+    val response1 = initStringRequest().endpoint("/users").body(user1).post();
     val responseStatus1 = response1.getStatusCode();
 
     assertThat(responseStatus1).isEqualTo(HttpStatus.OK);
 
     // Return a 409 conflict because email already exists for a registered user.
-    val entity2 = new HttpEntity<User>(user2, headers);
-    val response2 =
-        restTemplate.exchange(createURLWithPort("/users"), HttpMethod.POST, entity2, String.class);
+    val response2 = initStringRequest().endpoint("/users").body(user2).post();
     val responseStatus2 = response2.getStatusCode();
     assertThat(responseStatus2).isEqualTo(HttpStatus.CONFLICT);
   }
@@ -153,13 +129,7 @@ public class UserControllerTest {
 
     // Users created in setup
     val userId = userService.getByName("FirstUser@domain.com").getId();
-    val entity = new HttpEntity<String>(null, headers);
-    val response =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s", userId)),
-            HttpMethod.GET,
-            entity,
-            String.class);
+    val response = initStringRequest().endpoint("/users/%s", userId).get();
 
     val responseStatus = response.getStatusCode();
     val responseJson = MAPPER.readTree(response.getBody());
@@ -175,13 +145,7 @@ public class UserControllerTest {
 
   @Test
   public void getUser404() {
-    val entity = new HttpEntity<String>(null, headers);
-    val response =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s", UUID.randomUUID().toString())),
-            HttpMethod.GET,
-            entity,
-            String.class);
+    val response = initStringRequest().endpoint("/users/%s", UUID.randomUUID().toString()).get();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.NOT_FOUND);
@@ -190,9 +154,11 @@ public class UserControllerTest {
   @Test
   @SneakyThrows
   public void listUsersNoFilter() {
-    val entity = new HttpEntity<String>(null, headers);
-    val response =
-        restTemplate.exchange(createURLWithPort("/users/"), HttpMethod.GET, entity, String.class);
+    val numUsers = userService.getRepository().count();
+
+    // Since previous test may introduce new users. If there are more users than the default page
+    // size, only a subset will be returned and could cause a test failure.
+    val response = initStringRequest().endpoint("/users?offset=0&limit=%s", numUsers).get();
 
     val responseStatus = response.getStatusCode();
     val responseJson = MAPPER.readTree(response.getBody());
@@ -203,21 +169,18 @@ public class UserControllerTest {
 
     // Verify that the returned Users are the ones from the setup.
     Iterable<JsonNode> resultSetIterable = () -> responseJson.get("resultSet").iterator();
-    val userNames =
-        StreamSupport.stream(resultSetIterable.spliterator(), false)
+    val actualUserNames =
+        Streams.stream(resultSetIterable)
             .map(j -> j.get("name").asText())
-            .collect(toList());
-    assertThat(userNames)
+            .collect(toImmutableList());
+    assertThat(actualUserNames)
         .contains("FirstUser@domain.com", "SecondUser@domain.com", "ThirdUser@domain.com");
   }
 
   @Test
   @SneakyThrows
   public void listUsersWithQuery() {
-    val entity = new HttpEntity<String>(null, headers);
-    val response =
-        restTemplate.exchange(
-            createURLWithPort("/users?query=FirstUser"), HttpMethod.GET, entity, String.class);
+    val response = initStringRequest().endpoint("/users?query=FirstUser").get();
 
     val responseStatus = response.getStatusCode();
     val responseJson = MAPPER.readTree(response.getBody());
@@ -234,13 +197,7 @@ public class UserControllerTest {
     val user = entityGenerator.setupUser("update test");
     val update = User.builder().id(user.getId()).status("Rejected").build();
 
-    val entity = new HttpEntity<User>(update, headers);
-    val response =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s", user.getId())),
-            HttpMethod.PUT,
-            entity,
-            String.class);
+    val response = initStringRequest().endpoint("/users/%s", user.getId()).body(update).put();
 
     val responseBody = response.getBody();
 
@@ -256,23 +213,16 @@ public class UserControllerTest {
     val userId = entityGenerator.setupUser("Group1 User").getId();
     val groupId = entityGenerator.setupGroup("Addone Group").getId().toString();
 
-    val entity = new HttpEntity<>(singletonList(groupId), headers);
     val response =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s/groups", userId)),
-            HttpMethod.POST,
-            entity,
-            String.class);
+        initStringRequest()
+            .endpoint("/users/%s/groups", userId)
+            .body(singletonList(groupId))
+            .post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
-    val groupResponse =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s/groups", userId)),
-            HttpMethod.GET,
-            entity,
-            String.class);
+    val groupResponse = initStringRequest().endpoint("/users/%s/groups", userId).get();
 
     val groupResponseStatus = groupResponse.getStatusCode();
     assertThat(groupResponseStatus).isEqualTo(HttpStatus.OK);
@@ -290,41 +240,25 @@ public class UserControllerTest {
     val deleteGroup = entityGenerator.setupGroup("Delete One Group").getId().toString();
     val remainGroup = entityGenerator.setupGroup("Don't Delete This One").getId().toString();
 
-    val entity = new HttpEntity<>(asList(deleteGroup, remainGroup), headers);
-    restTemplate.exchange(
-        createURLWithPort(String.format("/users/%s/groups", userId)),
-        HttpMethod.POST,
-        entity,
-        String.class);
-    val groupResponse =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s/groups", userId)),
-            HttpMethod.GET,
-            entity,
-            String.class);
+    initStringRequest()
+        .endpoint("/users/%s/groups", userId)
+        .body(asList(deleteGroup, remainGroup))
+        .post();
+
+    val groupResponse = initStringRequest().endpoint("/users/%s/groups", userId).get();
 
     val groupResponseStatus = groupResponse.getStatusCode();
     assertThat(groupResponseStatus).isEqualTo(HttpStatus.OK);
     val groupResponseJson = MAPPER.readTree(groupResponse.getBody());
     assertThat(groupResponseJson.get("count").asInt()).isEqualTo(2);
 
-    val deleteEntity = new HttpEntity<String>(null, headers);
     val deleteResponse =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s/groups/%s", userId, deleteGroup)),
-            HttpMethod.DELETE,
-            deleteEntity,
-            String.class);
+        initStringRequest().endpoint("/users/%s/groups/%s", userId, deleteGroup).delete();
 
     val deleteResponseStatus = deleteResponse.getStatusCode();
     assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
 
-    val secondGetResponse =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s/groups", userId)),
-            HttpMethod.GET,
-            entity,
-            String.class);
+    val secondGetResponse = initStringRequest().endpoint("/users/%s/groups", userId).get();
     val secondGetResponseStatus = deleteResponse.getStatusCode();
     assertThat(secondGetResponseStatus).isEqualTo(HttpStatus.OK);
     val secondGetResponseJson = MAPPER.readTree(secondGetResponse.getBody());
@@ -339,23 +273,16 @@ public class UserControllerTest {
     val userId = entityGenerator.setupUser("AddApp1 User").getId();
     val appId = entityGenerator.setupApplication("app1").getId().toString();
 
-    val entity = new HttpEntity<>(singletonList(appId), headers);
     val response =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s/applications", userId)),
-            HttpMethod.POST,
-            entity,
-            String.class);
+        initStringRequest()
+            .endpoint("/users/%s/applications", userId)
+            .body(singletonList(appId))
+            .post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
-    val appResponse =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s/applications", userId)),
-            HttpMethod.GET,
-            entity,
-            String.class);
+    val appResponse = initStringRequest().endpoint("/users/%s/applications", userId).get();
 
     val appResponseStatus = appResponse.getStatusCode();
     assertThat(appResponseStatus).isEqualTo(HttpStatus.OK);
@@ -373,36 +300,25 @@ public class UserControllerTest {
     val deleteApp = entityGenerator.setupApplication("deleteApp").getId().toString();
     val remainApp = entityGenerator.setupApplication("remainApp").getId().toString();
 
-    val entity = new HttpEntity<>(asList(deleteApp, remainApp), headers);
     val appResponse =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s/applications", userId)),
-            HttpMethod.POST,
-            entity,
-            String.class);
+        initStringRequest()
+            .endpoint("/users/%s/applications", userId)
+            .body(asList(deleteApp, remainApp))
+            .post();
 
     log.info(appResponse.getBody());
 
     val appResponseStatus = appResponse.getStatusCode();
     assertThat(appResponseStatus).isEqualTo(HttpStatus.OK);
 
-    val deleteEntity = new HttpEntity<String>(null, headers);
     val deleteResponse =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s/applications/%s", userId, deleteApp)),
-            HttpMethod.DELETE,
-            deleteEntity,
-            String.class);
+        initStringRequest().endpoint("/users/%s/applications/%s", userId, deleteApp).delete();
 
     val deleteResponseStatus = deleteResponse.getStatusCode();
     assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
 
-    val secondGetResponse =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s/applications", userId)),
-            HttpMethod.GET,
-            entity,
-            String.class);
+    val secondGetResponse = initStringRequest().endpoint("/users/%s/applications", userId).get();
+
     val secondGetResponseStatus = deleteResponse.getStatusCode();
     assertThat(secondGetResponseStatus).isEqualTo(HttpStatus.OK);
     val secondGetResponseJson = MAPPER.readTree(secondGetResponse.getBody());
@@ -415,18 +331,12 @@ public class UserControllerTest {
   @SneakyThrows
   public void deleteUser() {
     val userId = entityGenerator.setupUser("User ToDelete").getId();
-    val entity = new HttpEntity<String>(null, headers);
 
     // Add application to user
     val appOne = entityGenerator.setupApplication("TempGroupApp");
     val appBody = singletonList(appOne.getId().toString());
-    val appEntity = new HttpEntity<>(appBody, headers);
     val addAppToUserResponse =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s/applications", userId)),
-            HttpMethod.POST,
-            appEntity,
-            String.class);
+        initStringRequest().endpoint("/users/%s/applications", userId).body(appBody).post();
     val addAppToUserResponseStatus = addAppToUserResponse.getStatusCode();
     assertThat(addAppToUserResponseStatus).isEqualTo(HttpStatus.OK);
 
@@ -437,35 +347,20 @@ public class UserControllerTest {
     // Add group to user
     val groupOne = entityGenerator.setupGroup("GroupOne");
     val groupBody = singletonList(groupOne.getId().toString());
-    val groupEntity = new HttpEntity<>(groupBody, headers);
     val addGroupToUserResponse =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s/groups", userId)),
-            HttpMethod.POST,
-            groupEntity,
-            String.class);
+        initStringRequest().endpoint("/users/%s/groups", userId).body(groupBody).post();
     val addGroupToUserResponseStatus = addGroupToUserResponse.getStatusCode();
     assertThat(addGroupToUserResponseStatus).isEqualTo(HttpStatus.OK);
     // Make sure user-group relationship is there
     assertThat(extractUserIds(groupService.getByName("GroupOne").getUsers())).contains(userId);
 
     // delete user
-    val deleteResponse =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s", userId)),
-            HttpMethod.DELETE,
-            entity,
-            String.class);
+    val deleteResponse = initStringRequest().endpoint("/users/%s", userId).delete();
     val deleteResponseStatus = deleteResponse.getStatusCode();
     assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
 
     // verify if user is deleted
-    val getUserResponse =
-        restTemplate.exchange(
-            createURLWithPort(String.format("/users/%s", userId)),
-            HttpMethod.GET,
-            entity,
-            String.class);
+    val getUserResponse = initStringRequest().endpoint("/users/%s", userId).get();
     val getUserResponseStatus = getUserResponse.getStatusCode();
     assertThat(getUserResponseStatus).isEqualTo(HttpStatus.NOT_FOUND);
     val jsonResponse = MAPPER.readTree(getUserResponse.getBody());
@@ -481,7 +376,4 @@ public class UserControllerTest {
     assertThat(appWithoutUser.getUsers()).isEmpty();
   }
 
-  private String createURLWithPort(String uri) {
-    return "http://localhost:" + port + uri;
-  }
 }

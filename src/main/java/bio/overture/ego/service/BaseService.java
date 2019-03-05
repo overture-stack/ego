@@ -1,10 +1,12 @@
 package bio.overture.ego.service;
 
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Joiners.COMMA;
 import static java.lang.String.format;
 
 import bio.overture.ego.model.exceptions.NotFoundException;
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import lombok.NonNull;
@@ -30,7 +32,16 @@ public interface BaseService<T, ID> {
 
   void delete(ID id);
 
-  Set<T> getMany(List<ID> ids);
+  Set<T> getMany(Collection<ID> ids);
+
+  default void checkExistence(@NonNull Collection<ID> ids) {
+    val missingIds = ids.stream().filter(x -> !isExist(x)).collect(toImmutableSet());
+    checkNotFound(
+        missingIds.isEmpty(),
+        "The following '%s' entity ids do no exist: %s",
+        getEntityTypeName(),
+        COMMA.join(missingIds));
+  }
 
   default void checkExistence(@NonNull ID id) {
     checkNotFound(

@@ -62,16 +62,18 @@ public class Policy implements Identifiable<UUID> {
   @JsonIgnore
   @Builder.Default
   @OneToMany(
-      mappedBy = JavaFields.OWNER,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      mappedBy = JavaFields.POLICY,
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
       fetch = FetchType.LAZY)
   private Set<GroupPermission> groupPermissions = newHashSet();
 
   @JsonIgnore
   @Builder.Default
   @OneToMany(
-      mappedBy = JavaFields.OWNER,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      mappedBy = JavaFields.POLICY,
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
       fetch = FetchType.LAZY)
   private Set<UserPermission> userPermissions = newHashSet();
 }

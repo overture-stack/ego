@@ -72,10 +72,13 @@ import org.hibernate.annotations.GenericGenerator;
     name = "group-entity-with-relationships",
     attributeNodes = {
       @NamedAttributeNode(value = JavaFields.USERS, subgraph = "users-subgraph"),
-      @NamedAttributeNode(value = JavaFields.PERMISSIONS),
+      @NamedAttributeNode(value = JavaFields.PERMISSIONS, subgraph = "permissions-subgraph"),
       @NamedAttributeNode(value = JavaFields.APPLICATIONS, subgraph = "applications-subgraph")
     },
     subgraphs = {
+      @NamedSubgraph(
+          name = "permissions-subgraph",
+          attributeNodes = {@NamedAttributeNode(JavaFields.POLICY)}),
       @NamedSubgraph(
           name = "applications-subgraph",
           attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)}),
@@ -83,7 +86,7 @@ import org.hibernate.annotations.GenericGenerator;
           name = "users-subgraph",
           attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)})
     })
-public class Group implements PolicyOwner, Identifiable<UUID> {
+public class Group implements PolicyOwner, NameableEntity<UUID> {
 
   @Id
   @GeneratedValue(generator = "group_uuid")
@@ -109,7 +112,8 @@ public class Group implements PolicyOwner, Identifiable<UUID> {
   @Builder.Default
   @OneToMany(
       mappedBy = JavaFields.OWNER,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
       fetch = FetchType.LAZY)
   private Set<GroupPermission> permissions = newHashSet();
 

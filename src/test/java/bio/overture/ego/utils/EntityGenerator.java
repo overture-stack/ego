@@ -1,6 +1,5 @@
 package bio.overture.ego.utils;
 
-import static bio.overture.ego.service.UserService.associateUserWithPermissions;
 import static bio.overture.ego.utils.CollectionUtils.listOf;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.Splitters.COMMA_SPLITTER;
@@ -30,6 +29,7 @@ import bio.overture.ego.service.NamedService;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.TokenStoreService;
+import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
 import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
@@ -65,6 +65,8 @@ public class EntityGenerator {
   @Autowired private PolicyService policyService;
 
   @Autowired private TokenStoreService tokenStoreService;
+
+  @Autowired private UserPermissionService userPermissionService;
 
   private CreateApplicationRequest createApplicationCreateRequest(String clientId) {
     return CreateApplicationRequest.builder()
@@ -266,7 +268,7 @@ public class EntityGenerator {
                   return up;
                 })
             .collect(toList());
-    associateUserWithPermissions(user, userPermissions);
+    userPermissions.forEach(p -> userPermissionService.associatePermission(user, p));
     userService.getRepository().save(user);
   }
 

@@ -1,18 +1,18 @@
 package bio.overture.ego.controller;
 
 import bio.overture.ego.model.dto.GenericResponse;
+import bio.overture.ego.model.dto.MaskDTO;
 import bio.overture.ego.model.dto.PageDTO;
+import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.exceptions.PostWithIdentifierException;
-import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.service.GroupPermissionService;
-import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
@@ -24,6 +24,8 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.List;
+import java.util.UUID;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -44,20 +46,17 @@ import springfox.documentation.annotations.ApiIgnore;
 @RequestMapping("/policies")
 public class PolicyController {
   private final PolicyService policyService;
-  private final GroupService groupService;
   private final UserService userService;
   private final UserPermissionService userPermissionService;
   private final GroupPermissionService groupPermissionService;
 
   @Autowired
   public PolicyController(
-      PolicyService policyService,
-      GroupService groupService,
-      UserService userService,
-      UserPermissionService userPermissionService,
-      GroupPermissionService groupPermissionService) {
+      @NonNull PolicyService policyService,
+      @NonNull UserService userService,
+      @NonNull UserPermissionService userPermissionService,
+      @NonNull GroupPermissionService groupPermissionService) {
     this.policyService = policyService;
-    this.groupService = groupService;
     this.userService = userService;
     this.groupPermissionService = groupPermissionService;
     this.userPermissionService = userPermissionService;
@@ -148,7 +147,7 @@ public class PolicyController {
   @ResponseStatus(value = HttpStatus.OK)
   public void delete(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id) {
+      @PathVariable(value = "id", required = true) UUID id) {
     policyService.delete(id);
   }
 
@@ -159,11 +158,11 @@ public class PolicyController {
   @JsonView(Views.REST.class)
   public @ResponseBody Group createGroupPermission(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String policyId,
-      @PathVariable(value = "group_id", required = true) String groupId,
-      @RequestBody(required = true) String mask) {
-    return groupService.addGroupPermissions(
-        groupId, ImmutableList.of(new PolicyIdStringWithAccessLevel(policyId, mask)));
+      @PathVariable(value = "id", required = true) UUID policyId,
+      @PathVariable(value = "group_id", required = true) UUID groupId,
+      @RequestBody(required = true) MaskDTO maskDTO) {
+    return groupPermissionService.addPermissions(
+        groupId, ImmutableList.of(new PermissionRequest(policyId, maskDTO.getMask())));
   }
 
   @AdminScoped
@@ -177,11 +176,10 @@ public class PolicyController {
       })
   public @ResponseBody GenericResponse deleteGroupPermission(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
-      @PathVariable(value = "group_id", required = true) String groupId) {
-
-    groupPermissionService.deleteByPolicyAndGroup(id, groupId);
-    return new GenericResponse("Deleted permission for group %s on policy %s");
+      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "group_id", required = true) UUID groupId) {
+    groupPermissionService.deleteByPolicyAndOwner(id, groupId);
+    return new GenericResponse("Deleted permission for group '%s' on policy '%s'");
   }
 
   @AdminScoped
@@ -190,10 +188,12 @@ public class PolicyController {
       value = {@ApiResponse(code = 200, message = "Add user permission", response = String.class)})
   public @ResponseBody String createUserPermission(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
-      @PathVariable(value = "user_id", required = true) String userId,
-      @RequestBody(required = true) String mask) {
-    userService.addUserPermission(userId, new PolicyIdStringWithAccessLevel(id, mask));
+      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "user_id", required = true) UUID userId,
+      @RequestBody(required = true) MaskDTO maskDTO) {
+    userPermissionService.addPermissions(
+        userId, ImmutableList.of(new PermissionRequest(id, maskDTO.getMask())));
+    // TODO [rtisma]: change this to actually return proper response
     return "1 user permission successfully added to ACL '" + id + "'";
   }
 
@@ -208,10 +208,10 @@ public class PolicyController {
       })
   public @ResponseBody GenericResponse deleteUserPermission(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
-      @PathVariable(value = "user_id", required = true) String userId) {
+      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "user_id", required = true) UUID userId) {
 
-    userPermissionService.deleteByPolicyAndUser(id, userId);
+    userPermissionService.deleteByPolicyAndOwner(id, userId);
     return new GenericResponse("Deleted permission for user %s on policy %s");
   }
 
@@ -226,7 +226,7 @@ public class PolicyController {
       })
   public @ResponseBody List<PolicyResponse> findUserIds(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id) {
+      @PathVariable(value = "id", required = true) UUID id) {
     return userPermissionService.findByPolicy(id);
   }
 
@@ -241,7 +241,7 @@ public class PolicyController {
       })
   public @ResponseBody List<PolicyResponse> findGroupIds(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id) {
+      @PathVariable(value = "id", required = true) UUID id) {
     return groupPermissionService.findByPolicy(id);
   }
 }

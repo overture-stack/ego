@@ -18,16 +18,17 @@ package bio.overture.ego.controller;
 
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.dto.PageDTO;
+import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.PostWithIdentifierException;
-import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.view.Views;
@@ -37,9 +38,9 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.List;
+import java.util.UUID;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
-import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +62,6 @@ import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
 @Slf4j
-@Builder
 @RestController
 @RequestMapping("/groups")
 public class GroupController {
@@ -69,15 +69,18 @@ public class GroupController {
   private final GroupService groupService;
   private final ApplicationService applicationService;
   private final UserService userService;
+  private final GroupPermissionService groupPermissionService;
 
   @Autowired
   public GroupController(
       @NonNull GroupService groupService,
       @NonNull ApplicationService applicationService,
+      @NonNull GroupPermissionService groupPermissionService,
       @NonNull UserService userService) {
     this.groupService = groupService;
     this.applicationService = applicationService;
     this.userService = userService;
+    this.groupPermissionService = groupPermissionService;
   }
 
   @AdminScoped
@@ -210,9 +213,9 @@ public class GroupController {
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<GroupPermission> getScopes(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
+      @PathVariable(value = "id", required = true) UUID id,
       Pageable pageable) {
-    return new PageDTO<>(groupService.getGroupPermissions(id, pageable));
+    return new PageDTO<>(groupPermissionService.getPermissions(id, pageable));
   }
 
   @AdminScoped
@@ -221,9 +224,9 @@ public class GroupController {
       value = {@ApiResponse(code = 200, message = "Add group permissions", response = Group.class)})
   public @ResponseBody Group addPermissions(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
-      @RequestBody(required = true) List<PolicyIdStringWithAccessLevel> permissions) {
-    return groupService.addGroupPermissions(id, permissions);
+      @PathVariable(value = "id", required = true) UUID id,
+      @RequestBody(required = true) List<PermissionRequest> permissions) {
+    return groupPermissionService.addPermissions(id, permissions);
   }
 
   @AdminScoped
@@ -232,9 +235,9 @@ public class GroupController {
   @ResponseStatus(value = HttpStatus.OK)
   public void deletePermissions(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
-      @PathVariable(value = "permissionIds", required = true) List<String> permissionIds) {
-    groupService.deleteGroupPermissions(id, permissionIds);
+      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "permissionIds", required = true) List<UUID> permissionIds) {
+    groupPermissionService.deletePermissions(id, permissionIds);
   }
 
   /*

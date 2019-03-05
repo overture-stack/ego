@@ -38,10 +38,7 @@ public enum AccessLevel {
       }
     }
     throw new IllegalArgumentException(
-        "Unknown enum applicationType "
-            + value
-            + ", Allowed values are "
-            + Arrays.toString(values()));
+        "Invalid enum value '" + value + "', Allowed values are " + Arrays.toString(values()));
   }
 
   /**

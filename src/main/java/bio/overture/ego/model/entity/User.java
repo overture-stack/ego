@@ -29,7 +29,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -103,7 +106,7 @@ import org.hibernate.annotations.GenericGenerator;
           name = "applications-subgraph",
           attributeNodes = {@NamedAttributeNode(JavaFields.USERS)})
     })
-public class User implements PolicyOwner, Identifiable<UUID> {
+public class User implements PolicyOwner, NameableEntity<UUID> {
 
   // TODO: find JPA equivalent for GenericGenerator
   @Id
@@ -159,7 +162,8 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   @JsonIgnore
   @OneToMany(
       mappedBy = JavaFields.OWNER,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
       fetch = FetchType.LAZY)
   @Builder.Default
   private Set<UserPermission> userPermissions = newHashSet();
@@ -169,6 +173,7 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   @OneToMany(
       mappedBy = JavaFields.OWNER,
       cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      //      orphanRemoval = true,
       fetch = FetchType.LAZY)
   private Set<Token> tokens = newHashSet();
 

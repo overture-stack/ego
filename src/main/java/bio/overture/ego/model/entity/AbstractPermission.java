@@ -23,6 +23,7 @@ import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -30,6 +31,7 @@ import org.hibernate.annotations.TypeDef;
 @Data
 @MappedSuperclass
 @EqualsAndHashCode(of = {LombokFields.id})
+@ToString(exclude = {LombokFields.policy})
 @TypeDef(name = EGO_ACCESS_LEVEL_ENUM, typeClass = PostgreSQLEnumType.class)
 @JsonPropertyOrder({JavaFields.ID, JavaFields.POLICY, JavaFields.OWNER, JavaFields.ACCESS_LEVEL})
 @JsonInclude(JsonInclude.Include.ALWAYS)
@@ -37,7 +39,8 @@ import org.hibernate.annotations.TypeDef;
   @JsonSubTypes.Type(value = UserPermission.class, name = JavaFields.USERPERMISSIONS),
   @JsonSubTypes.Type(value = GroupPermission.class, name = JavaFields.GROUPPERMISSION)
 })
-public abstract class AbstractPermission implements Identifiable<UUID> {
+public abstract class AbstractPermission<O extends Identifiable<UUID>>
+    implements Identifiable<UUID> {
 
   @Id
   @Column(name = SqlFields.ID, updatable = false, nullable = false)
@@ -45,8 +48,7 @@ public abstract class AbstractPermission implements Identifiable<UUID> {
   @GeneratedValue(generator = "permission_uuid")
   private UUID id;
 
-  @NotNull
-  @ManyToOne(fetch = FetchType.EAGER)
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = SqlFields.POLICYID_JOIN, nullable = false)
   private Policy policy;
 
@@ -55,4 +57,8 @@ public abstract class AbstractPermission implements Identifiable<UUID> {
   @Enumerated(EnumType.STRING)
   @Type(type = EGO_ACCESS_LEVEL_ENUM)
   private AccessLevel accessLevel;
+
+  public abstract O getOwner();
+
+  public abstract void setOwner(O owner);
 }

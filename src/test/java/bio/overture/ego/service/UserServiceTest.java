@@ -1,5 +1,8 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.AccessLevel.DENY;
+import static bio.overture.ego.model.enums.AccessLevel.READ;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static bio.overture.ego.service.UserService.USER_CONVERTER;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
@@ -12,13 +15,14 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.CreateUserRequest;
+import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.UpdateUserRequest;
+import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
-import bio.overture.ego.model.params.PolicyIdStringWithAccessLevel;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.utils.EntityGenerator;
@@ -54,6 +58,7 @@ public class UserServiceTest {
   @Autowired private GroupService groupService;
   @Autowired private PolicyService policyService;
   @Autowired private EntityGenerator entityGenerator;
+  @Autowired private UserPermissionService userPermissionService;
 
   @Test
   public void userConverter_UpdateUserRequest_User() {
@@ -958,21 +963,21 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
 
     val study001 = policyService.getByName("Study001");
-    val study001id = study001.getId().toString();
+    val study001id = study001.getId();
 
     val study002 = policyService.getByName("Study002");
-    val study002id = study002.getId().toString();
+    val study002id = study002.getId();
 
     val study003 = policyService.getByName("Study003");
-    val study003id = study003.getId().toString();
+    val study003id = study003.getId();
 
     val permissions =
         asList(
-            new PolicyIdStringWithAccessLevel(study001id, "READ"),
-            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
+            new PermissionRequest(study001id, READ),
+            new PermissionRequest(study002id, WRITE),
+            new PermissionRequest(study003id, DENY));
 
-    userService.addUserPermissions(user.getId().toString(), permissions);
+    userPermissionService.addPermissions(user.getId(), permissions);
 
     assertThat(PolicyPermissionUtils.extractPermissionStrings(user.getUserPermissions()))
         .containsExactlyInAnyOrder("Study001.READ", "Study002.WRITE", "Study003.DENY");
@@ -987,30 +992,30 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
 
     val study001 = policyService.getByName("Study001");
-    val study001id = study001.getId().toString();
+    val study001id = study001.getId();
 
     val study002 = policyService.getByName("Study002");
-    val study002id = study002.getId().toString();
+    val study002id = study002.getId();
 
     val study003 = policyService.getByName("Study003");
-    val study003id = study003.getId().toString();
+    val study003id = study003.getId();
 
     val permissions =
         asList(
-            new PolicyIdStringWithAccessLevel(study001id, "READ"),
-            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
+            new PermissionRequest(study001id, READ),
+            new PermissionRequest(study002id, WRITE),
+            new PermissionRequest(study003id, DENY));
 
-    userService.addUserPermissions(user.getId().toString(), permissions);
+    userPermissionService.addPermissions(user.getId(), permissions);
 
     val userPermissionsToRemove =
         user.getUserPermissions()
             .stream()
             .filter(p -> !p.getPolicy().getName().equals("Study001"))
-            .map(p -> p.getId().toString())
+            .map(AbstractPermission::getId)
             .collect(Collectors.toList());
 
-    userService.deleteUserPermissions(user.getId().toString(), userPermissionsToRemove);
+    userPermissionService.deletePermissions(user.getId(), userPermissionsToRemove);
 
     assertThat(PolicyPermissionUtils.extractPermissionStrings(user.getUserPermissions()))
         .containsExactlyInAnyOrder("Study001.READ");
@@ -1025,25 +1030,24 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
 
     val study001 = policyService.getByName("Study001");
-    val study001id = study001.getId().toString();
+    val study001id = study001.getId();
 
     val study002 = policyService.getByName("Study002");
-    val study002id = study002.getId().toString();
+    val study002id = study002.getId();
 
     val study003 = policyService.getByName("Study003");
-    val study003id = study003.getId().toString();
+    val study003id = study003.getId();
 
     val permissions =
         asList(
-            new PolicyIdStringWithAccessLevel(study001id, "READ"),
-            new PolicyIdStringWithAccessLevel(study002id, "WRITE"),
-            new PolicyIdStringWithAccessLevel(study003id, "DENY"));
+            new PermissionRequest(study001id, READ),
+            new PermissionRequest(study002id, WRITE),
+            new PermissionRequest(study003id, DENY));
 
-    userService.addUserPermissions(user.getId().toString(), permissions);
+    userPermissionService.addPermissions(user.getId(), permissions);
 
     val pagedUserPermissions =
-        userService.getUserPermissions(
-            user.getId().toString(), new PageableResolver().getPageable());
+        userPermissionService.getPermissions(user.getId(), new PageableResolver().getPageable());
 
     assertThat(pagedUserPermissions.getTotalElements()).isEqualTo(3L);
   }

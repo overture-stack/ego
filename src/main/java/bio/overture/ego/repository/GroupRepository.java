@@ -32,6 +32,9 @@ public interface GroupRepository extends NamedRepository<Group, UUID> {
 
   boolean existsByNameIgnoreCase(String name);
 
+  @EntityGraph(value = "group-entity-with-relationships", type = FETCH)
+  Optional<Group> findGroupById(UUID id);
+
   Set<Group> findAllByIdIn(List<UUID> groupIds);
 
   @Override
