@@ -43,11 +43,17 @@ facebook:
     clientId:
     clientSecret:
     accessTokenUri: https://graph.facebook.com/oauth/access_token
+    userAuthorizationUri: https://www.facebook.com/dialog/oauth
     tokenValidateUri: https://graph.facebook.com/debug_token
-    clientAuthenticationScheme: query
+    tokenName: oauth_token
+    authenticationScheme: query
+    clientAuthenticationScheme: form
+    scope:
+      - email
     timeout:
       connect: 5000
       read: 5000
+    user-authorization-uri: https://www.facebook.com/dialog/oauth
   resource:
     userInfoUri: https://graph.facebook.com/me?fields=email,first_name,last_name
 

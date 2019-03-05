@@ -110,6 +110,8 @@ public class AuthController {
       value = "/ego-token")
   @SneakyThrows
   public ResponseEntity<String> user(OAuth2Authentication authentication) {
+    if (authentication == null)
+      return new ResponseEntity<>("Please login", HttpStatus.UNAUTHORIZED);
     String token = tokenService.generateUserToken((IDToken) authentication.getPrincipal());
     SecurityContextHolder.getContext().setAuthentication(null);
     return new ResponseEntity<>(token, HttpStatus.OK);
