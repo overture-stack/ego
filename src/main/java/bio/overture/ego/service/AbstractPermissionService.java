@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static bio.overture.ego.model.dto.Scope.createScope;
@@ -31,11 +32,18 @@ import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUn
 import static bio.overture.ego.utils.CollectionUtils.difference;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.PermissionRequestAnalyzer.analyze;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static com.gs.collections.impl.factory.Sets.intersect;
+import static java.util.Arrays.stream;
+import static java.util.Collections.reverse;
+import static java.util.Comparator.comparing;
+import static java.util.Objects.isNull;
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
 @Slf4j
@@ -261,11 +269,29 @@ public abstract class AbstractPermissionService<
         .build();
   }
 
-  /** Stateless member methods
-   * If these stateless member methods were static, their signature would look ugly with all the generic type bounding.
-   * In the interest of more readable code, using member methods is a cleaner approach.
-   *
+  /**
+   * Stateless member methods If these stateless member methods were static, their signature would
+   * look ugly with all the generic type bounding. In the interest of more readable code, using
+   * member methods is a cleaner approach.
    */
+  public static Set<AbstractPermission> resolveFinalPermissions(Collection<? extends AbstractPermission> ... collections) {
+    val combinedPermissionAgg = stream(collections)
+        .flatMap(Collection::stream)
+        .filter(x -> !isNull(x.getPolicy()))
+        .collect(groupingBy(AbstractPermission::getPolicy));
+    return combinedPermissionAgg.values()
+        .stream()
+        .map(AbstractPermissionService::resolvePermissions)
+        .collect(toImmutableSet());
+  }
+
+  private static AbstractPermission resolvePermissions(List<? extends AbstractPermission> permissions) {
+    checkState(!permissions.isEmpty(), "Input permission list cannot be empty");
+    permissions.sort(comparing(AbstractPermission::getAccessLevel));
+    reverse(permissions);
+    return permissions.get(0);
+  }
+
   private PolicyResponse convertToPolicyResponse(@NonNull P p) {
     val name = p.getOwner().getName();
     val id = p.getOwner().getId().toString();

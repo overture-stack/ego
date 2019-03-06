@@ -42,5 +42,4 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
   public Group getOwnerWithRelationships(@NonNull UUID ownerId) {
     return groupService.getGroupWithRelationships(ownerId);
   }
-
 }

@@ -36,32 +36,33 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 public class SwaggerConfig {
 
   @Component
-  @ConfigurationProperties(prefix="swagger")
+  @ConfigurationProperties(prefix = "swagger")
   class SwaggerProperties {
-    /**
-     * Specify host if ego is running behind proxy.
-     */
+    /** Specify host if ego is running behind proxy. */
     @Setter @Getter private String host = "";
 
     /**
-     * If there is url write rule, you may want to set this variable. This value requires host to be not empty.
+     * If there is url write rule, you may want to set this variable. This value requires host to be
+     * not empty.
      */
     @Setter @Getter private String baseUrl = "";
   }
 
   @Bean
   public Docket productApi(SwaggerProperties properties) {
-    val docket = new Docket(DocumentationType.SWAGGER_2)
+    val docket =
+        new Docket(DocumentationType.SWAGGER_2)
             .select()
             .apis(RequestHandlerSelectors.basePackage("bio.overture.ego.controller"))
             .build()
             .host(properties.host)
-            .pathProvider(new RelativePathProvider(null) {
-                            @Override
-                            public String getApplicationBasePath() {
-                              return properties.getBaseUrl();
-                            }
-                          })
+            .pathProvider(
+                new RelativePathProvider(null) {
+                  @Override
+                  public String getApplicationBasePath() {
+                    return properties.getBaseUrl();
+                  }
+                })
             .apiInfo(metaInfo());
 
     return docket;
@@ -70,12 +71,12 @@ public class SwaggerConfig {
   private ApiInfo metaInfo() {
 
     return new ApiInfo(
-            "ego Service API",
-            "ego API Documentation",
-            "0.02",
-            "",
-            new Contact("", "",""),
-            "Apache License Version 2.0",
-            "");
+        "ego Service API",
+        "ego API Documentation",
+        "0.02",
+        "",
+        new Contact("", "", ""),
+        "Apache License Version 2.0",
+        "");
   }
 }

@@ -54,7 +54,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static bio.overture.ego.service.UserService.resolveFinalPermissions;
+import static bio.overture.ego.service.UserService.resolveUsersPermissions;
 import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
 import static com.google.common.collect.Sets.newHashSet;
 
@@ -204,6 +204,6 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   // Creates permissions in JWTAccessToken::context::user
   @JsonView(Views.JWTAccessToken.class)
   public List<String> getPermissions() {
-    return extractPermissionStrings(resolveFinalPermissions(this));
+    return extractPermissionStrings(resolveUsersPermissions(this));
   }
 }

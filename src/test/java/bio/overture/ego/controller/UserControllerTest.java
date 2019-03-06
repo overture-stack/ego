@@ -17,6 +17,13 @@
 
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.utils.Collectors.toImmutableList;
+import static bio.overture.ego.utils.EntityTools.extractUserIds;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.service.ApplicationService;
@@ -25,6 +32,7 @@ import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.Streams;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -35,15 +43,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.UUID;
-
-import static bio.overture.ego.utils.Collectors.toImmutableList;
-import static bio.overture.ego.utils.EntityTools.extractUserIds;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -57,6 +56,7 @@ public class UserControllerTest extends AbstractControllerTest {
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
+
   @Autowired private UserService userService;
   @Autowired private ApplicationService applicationService;
   @Autowired private GroupService groupService;
@@ -375,5 +375,4 @@ public class UserControllerTest extends AbstractControllerTest {
     val appWithoutUser = applicationService.getByClientId("TempGroupApp");
     assertThat(appWithoutUser.getUsers()).isEmpty();
   }
-
 }

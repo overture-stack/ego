@@ -1,31 +1,5 @@
 package bio.overture.ego.controller;
 
-import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.Identifiable;
-import bio.overture.ego.model.entity.NameableEntity;
-import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.service.AbstractPermissionService;
-import bio.overture.ego.service.NamedService;
-import bio.overture.ego.service.PolicyService;
-import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.Streams;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Sets;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.junit.Test;
-import org.springframework.http.HttpStatus;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.IntStream;
-
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
@@ -46,16 +20,42 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 
+import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.entity.AbstractPermission;
+import bio.overture.ego.model.entity.Identifiable;
+import bio.overture.ego.model.entity.NameableEntity;
+import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.service.AbstractPermissionService;
+import bio.overture.ego.service.NamedService;
+import bio.overture.ego.service.PolicyService;
+import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.Streams;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Sets;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.IntStream;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.junit.Test;
+import org.springframework.http.HttpStatus;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
 @Slf4j
-public abstract class AbstractPermissionControllerTest< O extends NameableEntity<UUID>,
-    P extends AbstractPermission<O >> extends AbstractControllerTest {
+public abstract class AbstractPermissionControllerTest<
+        O extends NameableEntity<UUID>, P extends AbstractPermission<O>>
+    extends AbstractControllerTest {
 
   /** Constants */
   private static final String INVALID_UUID = "invalidUUID000";
 
   /** State */
-
   private O owner1;
+
   private O owner2;
   private List<Policy> policies;
   private List<PermissionRequest> permissionRequests;
@@ -244,9 +244,7 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(r2.getStatusCode()).isEqualTo(OK);
 
     // Get permissions for owner
-    val r3 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
-        .get();
+    val r3 = initStringRequest().endpoint(getReadPermissionsEndpoint(owner1.getId())).get();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
     assertThat(r3.getBody()).isNotNull();
 
@@ -284,9 +282,7 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Get the policies for this owner
-    val r3 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
-        .get();
+    val r3 = initStringRequest().endpoint(getReadPermissionsEndpoint(owner1.getId())).get();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Analyze results
@@ -312,16 +308,11 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     val permRequest = permissionRequests.get(0);
     val body = ImmutableList.of(permRequest);
     val r1 =
-        initStringRequest()
-            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
-            .body(body)
-            .post();
+        initStringRequest().endpoint(getAddPermissionsEndpoint(owner1.getId())).body(body).post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Get the policies for this owner
-    val r2 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
-        .get();
+    val r2 = initStringRequest().endpoint(getReadPermissionsEndpoint(owner1.getId())).get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
 
     // Assert the expected permission ids exist
@@ -334,9 +325,7 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(existingPermissionIds).hasSize(1);
 
     // Delete the policy
-    val r3 = initStringRequest()
-        .endpoint("policies/%s", permRequest.getPolicyId())
-        .delete();
+    val r3 = initStringRequest().endpoint("policies/%s", permRequest.getPolicyId()).delete();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Assert that the policy deletion cascaded the delete to the permissions
@@ -361,9 +350,7 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Get the policies for this owner
-    val r2 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
-        .get();
+    val r2 = initStringRequest().endpoint(getReadPermissionsEndpoint(owner1.getId())).get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
 
     // Assert the expected permission ids exist
@@ -376,9 +363,7 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(existingPermissionIds).hasSize(permissionRequests.size());
 
     // Delete the owner
-    val r3 = initStringRequest()
-        .endpoint(getDeleteOwnerEndpoint(owner1.getId()))
-        .delete();
+    val r3 = initStringRequest().endpoint(getDeleteOwnerEndpoint(owner1.getId())).delete();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Assert that the owner deletion cascaded the delete to the permissions
@@ -399,16 +384,15 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
   @SneakyThrows
   public void deletePermissionsForOwner_NonExistent_NotFound() {
     // Add permissions to owner
-    val r1 = initStringRequest()
+    val r1 =
+        initStringRequest()
             .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(permissionRequests)
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Get permissions for owner
-    val r2 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
-        .get();
+    val r2 = initStringRequest().endpoint(getReadPermissionsEndpoint(owner1.getId())).get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
     assertThat(r2.getBody()).isNotNull();
 
@@ -436,7 +420,8 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     someExistingPermissionIds.addAll(existingPermissionIds);
     someExistingPermissionIds.add(nonExistentPermissionId);
     assertThat(getOwnerService().isExist(owner1.getId())).isTrue();
-    val r4 = initStringRequest()
+    val r4 =
+        initStringRequest()
             .endpoint(getDeletePermissionsEndpoint(owner1.getId(), someExistingPermissionIds))
             .delete();
     assertThat(r4.getStatusCode()).isEqualTo(NOT_FOUND);
@@ -448,7 +433,8 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     val permRequest = permissionRequests.get(0);
     val policyId = permRequest.getPolicyId();
     val nonExistingOwnerId = generateNonExistentId(getOwnerService());
-    val r3 = initStringRequest()
+    val r3 =
+        initStringRequest()
             .endpoint(getDeletePermissionEndpoint(policyId, nonExistingOwnerId))
             .delete();
     assertThat(r3.getStatusCode()).isEqualTo(NOT_FOUND);
@@ -458,9 +444,10 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
   @SneakyThrows
   public void deletePermissionsForPolicy_NonExistentPolicy_NotFound() {
     val nonExistentPolicyId = generateNonExistentId(getPolicyService());
-    val r3 = initStringRequest()
-        .endpoint(getDeletePermissionEndpoint(nonExistentPolicyId, owner1.getId()))
-        .delete();
+    val r3 =
+        initStringRequest()
+            .endpoint(getDeletePermissionEndpoint(nonExistentPolicyId, owner1.getId()))
+            .delete();
     assertThat(r3.getStatusCode()).isEqualTo(NOT_FOUND);
   }
 
@@ -480,9 +467,7 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Assert the permission exists
-    val r2 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
-        .get();
+    val r2 = initStringRequest().endpoint(getReadPermissionsEndpoint(owner1.getId())).get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
     assertThat(r2.getBody()).isNotNull();
     val page = MAPPER.readTree(r2.getBody());
@@ -494,16 +479,15 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(existingPermissionIds).hasSize(1);
 
     // Delete an existing permission
-    val r3 = initStringRequest()
-        .endpoint(getDeletePermissionEndpoint(policyId, owner1.getId()))
-        .delete();
+    val r3 =
+        initStringRequest()
+            .endpoint(getDeletePermissionEndpoint(policyId, owner1.getId()))
+            .delete();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
     assertThat(r3.getBody()).isNotNull();
 
     // Assert the permission no longer exists
-    val r4 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
-        .get();
+    val r4 = initStringRequest().endpoint(getReadPermissionsEndpoint(owner1.getId())).get();
     assertThat(r4.getStatusCode()).isEqualTo(OK);
     assertThat(r4.getBody()).isNotNull();
     val page2 = MAPPER.readTree(r4.getBody());
@@ -540,9 +524,7 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(r1.getBody()).isNotNull();
 
     // Assert the permission exists
-    val r2 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
-        .get();
+    val r2 = initStringRequest().endpoint(getReadPermissionsEndpoint(owner1.getId())).get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
     assertThat(r2.getBody()).isNotNull();
     val page = MAPPER.readTree(r2.getBody());
@@ -562,9 +544,7 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(r3.getBody()).isNotNull();
 
     // Assert the permission no longer exists
-    val r4 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
-        .get();
+    val r4 = initStringRequest().endpoint(getReadPermissionsEndpoint(owner1.getId())).get();
     assertThat(r4.getStatusCode()).isEqualTo(OK);
     assertThat(r4.getBody()).isNotNull();
     val page2 = MAPPER.readTree(r4.getBody());
@@ -588,9 +568,7 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Get permissions for the owner
-    val r2 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
-        .get();
+    val r2 = initStringRequest().endpoint(getReadPermissionsEndpoint(owner1.getId())).get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
     assertThat(r2.getBody()).isNotNull();
 
@@ -612,9 +590,7 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Assert the expected permissions were deleted
-    val r4 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
-        .get();
+    val r4 = initStringRequest().endpoint(getReadPermissionsEndpoint(owner1.getId())).get();
     assertThat(r4.getStatusCode()).isEqualTo(OK);
     assertThat(r4.getBody()).isNotNull();
     val page4 = MAPPER.readTree(r4.getBody());
@@ -628,9 +604,7 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     // Assert that the policies still exists
     policies.forEach(
         p -> {
-          val r5 = initStringRequest()
-              .endpoint("policies/%s", p.getId().toString())
-              .get();
+          val r5 = initStringRequest().endpoint("policies/%s", p.getId().toString()).get();
           assertThat(r5.getStatusCode()).isEqualTo(OK);
           assertThat(r5.getBody()).isNotNull();
         });
@@ -643,9 +617,7 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
   @Test
   public void readPermissionsForOwner_NonExistent_NotFound() {
     val nonExistentOwnerId = generateNonExistentId(getOwnerService());
-    val r1 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(nonExistentOwnerId))
-        .get();
+    val r1 = initStringRequest().endpoint(getReadPermissionsEndpoint(nonExistentOwnerId)).get();
     assertThat(r1.getStatusCode()).isEqualTo(NOT_FOUND);
   }
 
@@ -656,10 +628,11 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
   public void addPermissionToPolicy_NonExistentOwnerId_NotFound() {
     val nonExistentOwnerId = generateNonExistentId(getOwnerService());
 
-    val r1 = initStringRequest()
-        .endpoint(getAddPermissionEndpoint(policies.get(0).getId(), nonExistentOwnerId))
-        .body(createMaskJson(DENY.toString()))
-        .post();
+    val r1 =
+        initStringRequest()
+            .endpoint(getAddPermissionEndpoint(policies.get(0).getId(), nonExistentOwnerId))
+            .body(createMaskJson(DENY.toString()))
+            .post();
     assertThat(r1.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     assertThat(r1.getBody()).contains(nonExistentOwnerId.toString());
   }
@@ -685,22 +658,25 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     val permRequest = permissionRequests.get(0);
 
     // Create 2 requests with same policy but different owners
-    val r1 = initStringRequest()
+    val r1 =
+        initStringRequest()
             .endpoint(getAddPermissionEndpoint(permRequest.getPolicyId(), owner1.getId()))
             .body(createMaskJson(permRequest.getMask().toString()))
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
-    val r2 = initStringRequest()
-        .endpoint(getAddPermissionEndpoint(permRequest.getPolicyId(), owner2.getId()))
-        .body(createMaskJson(permRequest.getMask().toString()))
-        .post();
+    val r2 =
+        initStringRequest()
+            .endpoint(getAddPermissionEndpoint(permRequest.getPolicyId(), owner2.getId()))
+            .body(createMaskJson(permRequest.getMask().toString()))
+            .post();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
 
     // Get the owners for the policy previously used
-    val r3 = initStringRequest()
-        .endpoint(getReadOwnersForPolicyEndpoint(permRequest.getPolicyId()))
-        .get();
+    val r3 =
+        initStringRequest()
+            .endpoint(getReadOwnersForPolicyEndpoint(permRequest.getPolicyId()))
+            .get();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Assert that response contains both ownerIds, ownerNames and policyId
@@ -735,10 +711,7 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     firstElement.put("mask", incorrectMask);
 
     val r1 =
-        initStringRequest()
-            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
-            .body(body)
-            .post();
+        initStringRequest().endpoint(getAddPermissionsEndpoint(owner1.getId())).body(body).post();
     assertThat(r1.getStatusCode()).isEqualTo(BAD_REQUEST);
   }
 
@@ -752,10 +725,11 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
 
     // Using the policy controller
     val policyId = permissionRequests.get(0).getPolicyId();
-    val r2 = initStringRequest()
-        .endpoint(getAddPermissionEndpoint(policyId, owner1.getId()))
-        .body(createMaskJson(incorrectMask))
-        .post();
+    val r2 =
+        initStringRequest()
+            .endpoint(getAddPermissionEndpoint(policyId, owner1.getId()))
+            .body(createMaskJson(incorrectMask))
+            .post();
     assertThat(r2.getStatusCode()).isEqualTo(BAD_REQUEST);
   }
 
@@ -768,9 +742,7 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(BAD_REQUEST);
 
-    val r4 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(INVALID_UUID))
-        .get();
+    val r4 = initStringRequest().endpoint(getReadPermissionsEndpoint(INVALID_UUID)).get();
     assertThat(r4.getStatusCode()).isEqualTo(BAD_REQUEST);
 
     val r5 =
@@ -848,16 +820,15 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(permRequest1.getMask()).isNotEqualTo(permRequest2.getMask());
 
     // Create permission for owner
-    val r1 = initStringRequest()
+    val r1 =
+        initStringRequest()
             .endpoint(getAddPermissionsEndpoint(owner1.getId()))
             .body(ImmutableList.of(permRequest1))
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Get created permissions
-    val r2 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
-        .get();
+    val r2 = initStringRequest().endpoint(getReadPermissionsEndpoint(owner1.getId())).get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
     assertThat(r2.getBody()).isNotNull();
 
@@ -872,16 +843,15 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(permission.getAccessLevel()).isEqualTo(permRequest1.getMask());
 
     // Update the permission
-    val r3 = initStringRequest()
-        .endpoint(getAddPermissionsEndpoint(owner1.getId()))
-        .body(ImmutableList.of(updatedPermRequest1))
-        .post();
+    val r3 =
+        initStringRequest()
+            .endpoint(getAddPermissionsEndpoint(owner1.getId()))
+            .body(ImmutableList.of(updatedPermRequest1))
+            .post();
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Get updated permissions
-    val r4 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
-        .get();
+    val r4 = initStringRequest().endpoint(getReadPermissionsEndpoint(owner1.getId())).get();
     assertThat(r4.getStatusCode()).isEqualTo(OK);
     assertThat(r4.getBody()).isNotNull();
 
@@ -904,16 +874,15 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(permRequest1.getMask()).isNotEqualTo(permRequest2.getMask());
 
     // Create permission for owner and policy
-    val r1 = initStringRequest()
+    val r1 =
+        initStringRequest()
             .endpoint(getAddPermissionEndpoint(permRequest1.getPolicyId(), owner1.getId()))
             .body(createMaskJson(permRequest1.getMask().toString()))
             .post();
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Get created permissions
-    val r2 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
-        .get();
+    val r2 = initStringRequest().endpoint(getReadPermissionsEndpoint(owner1.getId())).get();
     assertThat(r2.getStatusCode()).isEqualTo(OK);
     assertThat(r2.getBody()).isNotNull();
 
@@ -936,9 +905,7 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Get updated permissions
-    val r4 = initStringRequest()
-        .endpoint(getReadPermissionsEndpoint(owner1.getId()))
-        .get();
+    val r4 = initStringRequest().endpoint(getReadPermissionsEndpoint(owner1.getId())).get();
     assertThat(r4.getStatusCode()).isEqualTo(OK);
     assertThat(r4.getBody()).isNotNull();
 
@@ -953,66 +920,74 @@ public abstract class AbstractPermissionControllerTest< O extends NameableEntity
     assertThat(permission2.getAccessLevel()).isEqualTo(permRequest2.getMask());
   }
 
-  /**
-   *  Necessary abstract methods for a generic abstract test
-   */
+  /** Necessary abstract methods for a generic abstract test */
 
   // Commonly used
   protected abstract EntityGenerator getEntityGenerator();
+
   protected abstract PolicyService getPolicyService();
 
   // Owner specific
   protected abstract Class<O> getOwnerType();
+
   protected abstract O generateOwner(String name);
+
   protected abstract NamedService<O, UUID> getOwnerService();
+
   protected abstract String generateNonExistentOwnerName();
 
   // Permission specific
   protected abstract Class<P> getPermissionType();
-  protected abstract AbstractPermissionService<O,P> getPermissionService();
+
+  protected abstract AbstractPermissionService<O, P> getPermissionService();
 
   // Endpoints
   protected abstract String getAddPermissionsEndpoint(String ownerId);
+
   protected abstract String getAddPermissionEndpoint(String policyId, String ownerId);
+
   protected abstract String getReadPermissionsEndpoint(String ownerId);
+
   protected abstract String getDeleteOwnerEndpoint(String ownerId);
-  protected abstract String getDeletePermissionsEndpoint(String ownerId, Collection<String> permissionIds);
-  protected abstract String getDeletePermissionEndpoint(String policyId, String  ownerId);
+
+  protected abstract String getDeletePermissionsEndpoint(
+      String ownerId, Collection<String> permissionIds);
+
+  protected abstract String getDeletePermissionEndpoint(String policyId, String ownerId);
+
   protected abstract String getReadOwnersForPolicyEndpoint(String policyId);
 
-  /**
-   * For convenience
-   */
-  private String getReadOwnersForPolicyEndpoint(UUID policyId){
+  /** For convenience */
+  private String getReadOwnersForPolicyEndpoint(UUID policyId) {
     return getReadOwnersForPolicyEndpoint(policyId.toString());
   }
 
-  private String getAddPermissionsEndpoint(UUID ownerId){
+  private String getAddPermissionsEndpoint(UUID ownerId) {
     return getAddPermissionsEndpoint(ownerId.toString());
   }
 
-  private String getAddPermissionEndpoint(UUID policyId, UUID ownerId){
+  private String getAddPermissionEndpoint(UUID policyId, UUID ownerId) {
     return getAddPermissionEndpoint(policyId.toString(), ownerId.toString());
   }
 
-  private String getReadPermissionsEndpoint(UUID ownerId){
+  private String getReadPermissionsEndpoint(UUID ownerId) {
     return getReadPermissionsEndpoint(ownerId.toString());
   }
 
-  private String getDeleteOwnerEndpoint(UUID ownerId){
+  private String getDeleteOwnerEndpoint(UUID ownerId) {
     return getDeleteOwnerEndpoint(ownerId.toString());
   }
 
-  private String getDeletePermissionsEndpoint(UUID ownerId, Collection<UUID> permissionIds){
-    return getDeletePermissionsEndpoint(ownerId.toString(), mapToList(permissionIds, UUID::toString));
+  private String getDeletePermissionsEndpoint(UUID ownerId, Collection<UUID> permissionIds) {
+    return getDeletePermissionsEndpoint(
+        ownerId.toString(), mapToList(permissionIds, UUID::toString));
   }
 
-  private String getDeletePermissionEndpoint(UUID policyId, UUID  ownerId){
+  private String getDeletePermissionEndpoint(UUID policyId, UUID ownerId) {
     return getDeletePermissionEndpoint(policyId.toString(), ownerId.toString());
   }
 
   public static ObjectNode createMaskJson(String maskStringValue) {
     return MAPPER.createObjectNode().put("mask", maskStringValue);
   }
-
 }

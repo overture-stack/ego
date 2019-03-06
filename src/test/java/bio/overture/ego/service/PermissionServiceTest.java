@@ -1,5 +1,9 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.AccessLevel.READ;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.utils.EntityGenerator;
@@ -12,10 +16,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-
-import static bio.overture.ego.model.enums.AccessLevel.READ;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @SpringBootTest
