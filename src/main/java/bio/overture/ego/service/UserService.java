@@ -30,6 +30,7 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.UserSpecification;
 import bio.overture.ego.token.IDToken;
+import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -54,19 +55,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.enums.UserType.resolveUserTypeIgnoreCase;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.convertToUUIDList;
 import static bio.overture.ego.utils.Converters.convertToUUIDSet;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Joiners.COMMA;
-import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 import static java.util.Collections.reverse;
 import static java.util.Comparator.comparing;
@@ -269,31 +269,23 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   // TODO [rtisma]: ensure that the user contains all its relationships
-  public static Set<AbstractPermission> getPermissionsList(User user) {
+  public static Set<AbstractPermission> resolveUsersPermissions(User user) {
     val up = user.getUserPermissions();
-    val upStream = up == null ? Stream.<UserPermission>empty() : up.stream();
+    Collection<UserPermission> userPermissions = isNull(up) ? ImmutableList.of() : up;
 
     val gp = user.getGroups();
-    val gpStream =
-        gp == null
-            ? Stream.<GroupPermission>empty()
-            : gp.stream().map(Group::getPermissions).flatMap(Collection::stream);
-
-    val combinedPermissions =
-        concat(upStream, gpStream)
-            .filter(a -> a.getPolicy() != null)
-            .collect(groupingBy(AbstractPermission::getPolicy));
-
-    return combinedPermissions
-        .values()
-        .stream()
-        .map(UserService::resolvePermissions)
-        .collect(toImmutableSet());
+    Collection<GroupPermission> groupPermissions = isNull(gp)
+        ? ImmutableList.of() : gp.stream()
+        .map(Group::getPermissions)
+        .flatMap(Collection::stream)
+        .collect( toImmutableSet());
+    return resolveFinalPermissions(userPermissions, groupPermissions);
   }
 
   // TODO: [rtisma] this is the old implementation. Ensure there is a test for this, and if there
   // isnt,
   // create one, and ensure the Old and new refactored method are correct
+  @Deprecated
   public static Set<AbstractPermission> getPermissionsListOld(User user) {
     // Get user's individual permission (stream)
     val userPermissions =
@@ -332,7 +324,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   public static Set<Scope> extractScopes(@NonNull User user) {
-    return mapToSet(getPermissionsList(user), AbstractPermissionService::buildScope);
+    return mapToSet(resolveUsersPermissions(user), AbstractPermissionService::buildScope);
   }
 
   public static void associateUserWithGroups(User user, @NonNull Collection<Group> groups) {
@@ -406,14 +398,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
   private void checkEmailUnique(String email) {
     checkUnique(
         !userRepository.existsByEmailIgnoreCase(email), "A user with same email already exists");
-  }
-
-  private static <T extends AbstractPermission> AbstractPermission resolvePermissions(
-      List<T> permissions) {
-    checkState(!permissions.isEmpty(), "Input permissions list cannot be empty");
-    permissions.sort(comparing(AbstractPermission::getAccessLevel));
-    reverse(permissions);
-    return permissions.get(0);
   }
 
   @Mapper(

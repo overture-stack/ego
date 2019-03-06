@@ -31,12 +31,12 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
   }
 
   @Override
-  protected Collection<UserPermission> getPermissionsForOwner(@NonNull User owner) {
+  protected Collection<UserPermission> getPermissionsFromOwner(@NonNull User owner) {
     return owner.getUserPermissions();
   }
 
   @Override
-  protected Collection<UserPermission> getPermissionsForPolicy(@NonNull Policy policy) {
+  protected Collection<UserPermission> getPermissionsFromPolicy(@NonNull Policy policy) {
     return policy.getUserPermissions();
   }
 

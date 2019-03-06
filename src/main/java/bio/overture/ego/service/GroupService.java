@@ -32,7 +32,6 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.search.SearchFilter;
@@ -40,7 +39,6 @@ import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
-import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -53,7 +51,6 @@ import org.mapstruct.ReportingPolicy;
 import org.mapstruct.TargetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -138,12 +135,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
 
   public Page<Group> listGroups(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return groupRepository.findAll(GroupSpecification.filterBy(filters), pageable);
-  }
-
-  public Page<GroupPermission> getGroupPermissions(
-      @NonNull String groupId, @NonNull Pageable pageable) {
-    val groupPermissions = ImmutableList.copyOf(getById(fromString(groupId)).getPermissions());
-    return new PageImpl<>(groupPermissions, pageable, groupPermissions.size());
   }
 
   public Page<Group> findGroups(

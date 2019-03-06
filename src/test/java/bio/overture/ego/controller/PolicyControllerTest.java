@@ -17,6 +17,11 @@
 
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.controller.AbstractPermissionControllerTest.createMaskJson;
+import static bio.overture.ego.model.enums.AccessLevel.READ;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.service.PolicyService;
@@ -33,11 +38,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static bio.overture.ego.controller.AbstractPermissionControllerTest.createMaskJson;
-import static bio.overture.ego.model.enums.AccessLevel.READ;
-import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static org.assertj.core.api.Assertions.assertThat;
-
 @Slf4j
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
@@ -50,10 +50,11 @@ public class PolicyControllerTest extends AbstractControllerTest {
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
+
   @Autowired private PolicyService policyService;
 
   @Override
-  protected  void beforeTest() {
+  protected void beforeTest() {
     // Initial setup of entities (run once
     if (!hasRunEntitySetup) {
       entityGenerator.setupTestUsers();
@@ -224,5 +225,4 @@ public class PolicyControllerTest extends AbstractControllerTest {
     assertThat(getResponseStatus).isEqualTo(HttpStatus.OK);
     assertThat(getResponseJson.size()).isEqualTo(0);
   }
-
 }

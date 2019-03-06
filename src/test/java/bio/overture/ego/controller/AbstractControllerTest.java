@@ -1,5 +1,9 @@
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.utils.WebResource.createWebResource;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+
 import bio.overture.ego.utils.WebResource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NonNull;
@@ -9,15 +13,12 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
 
-import static bio.overture.ego.utils.WebResource.createWebResource;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-
 @Slf4j
-public abstract class AbstractControllerTest{
+public abstract class AbstractControllerTest {
 
   /** Constants */
   public static final ObjectMapper MAPPER = new ObjectMapper();
+
   private static final String ACCESS_TOKEN = "TestToken";
 
   /** State */
@@ -33,9 +34,7 @@ public abstract class AbstractControllerTest{
     beforeTest();
   }
 
-  /**
-   * Additional setup before each test
-   */
+  /** Additional setup before each test */
   protected abstract void beforeTest();
 
   public WebResource<String> initStringRequest() {
@@ -49,6 +48,4 @@ public abstract class AbstractControllerTest{
   public String getServerUrl() {
     return "http://localhost:" + port;
   }
-
-
 }
