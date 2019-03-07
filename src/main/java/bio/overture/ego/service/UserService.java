@@ -63,15 +63,12 @@ import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUn
 import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Converters.convertToUUIDList;
-import static bio.overture.ego.utils.Converters.convertToUUIDSet;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static java.lang.String.format;
 import static java.util.Collections.reverse;
 import static java.util.Comparator.comparing;
 import static java.util.Objects.isNull;
-import static java.util.UUID.fromString;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.concat;
 import static org.springframework.data.jpa.domain.Specifications.where;
@@ -86,9 +83,17 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   /** Dependencies */
   private final GroupService groupService;
-
   private final ApplicationService applicationService;
   private final UserRepository userRepository;
+
+  /**
+   * Configuration
+   */
+  @Value("${default.user.type}")
+  private String DEFAULT_USER_TYPE;
+
+  @Value("${default.user.status}")
+  private String DEFAULT_USER_STATUS;
 
   @Autowired
   public UserService(
@@ -100,13 +105,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
     this.groupService = groupService;
     this.applicationService = applicationService;
   }
-
-  // DEFAULTS
-  @Value("${default.user.type}")
-  private String DEFAULT_USER_TYPE;
-
-  @Value("${default.user.status}")
-  private String DEFAULT_USER_STATUS;
 
   public User create(@NonNull CreateUserRequest request) {
     checkEmailUnique(request.getEmail());
@@ -125,9 +123,9 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .build());
   }
 
-  public User addUserToGroups(@NonNull String userId, @NonNull List<String> groupIDs) {
-    val user = getById(fromString(userId));
-    val groups = groupService.getMany(convertToUUIDList(groupIDs));
+  public User addUserToGroups(@NonNull UUID id, @NonNull List<UUID> groupIds) {
+    val user = getById(id);
+    val groups = groupService.getMany(groupIds);
     associateUserWithGroups(user, groups);
     // TODO: @rtisma test setting groups even if there were existing groups before does not delete
     // the existing ones. Becuase the PERSIST and MERGE cascade type is used, this should
@@ -136,9 +134,9 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
-  public User addUserToApps(@NonNull String userId, @NonNull List<String> appIDs) {
-    val user = getById(fromString(userId));
-    val apps = applicationService.getMany(convertToUUIDList(appIDs));
+  public User addUserToApps(@NonNull UUID id, @NonNull List<UUID> appIds) {
+    val user = getById(id);
+    val apps = applicationService.getMany(appIds);
     associateUserWithApplications(user, apps);
     // TODO: @rtisma test setting apps even if there were existing apps before does not delete the
     // existing ones. Becuase the PERSIST and MERGE cascade applicationType is used, this should
@@ -146,22 +144,10 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
-  private User getUserWithRelationshipsById(@NonNull String id) {
+  private User getUserWithRelationshipsById(@NonNull UUID id) {
     return userRepository
-        .getUserById(fromString(id))
+        .getUserById(id)
         .orElseThrow(() -> buildNotFoundException("The user could not be found"));
-  }
-
-  public User get(@NonNull String userId) {
-    return getById(fromString(userId));
-  }
-
-  // TODO: [rtisma] remove this method once reactor is removed (EGO-209
-  @Deprecated
-  public User update(@NonNull User data) {
-    val user = getById(data.getId());
-    user.setUserType(resolveUserTypeIgnoreCase(data.getUserType()).toString());
-    return getRepository().save(user);
   }
 
   /**
@@ -170,8 +156,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
    * @param r updater
    * @param id updatee
    */
-  public User partialUpdate(@NonNull String id, @NonNull UpdateUserRequest r) {
-    val user = getById(fromString(id));
+  public User partialUpdate(@NonNull UUID id, @NonNull UpdateUserRequest r) {
+    val user = getById(id);
     validateUpdateRequest(user, r);
     USER_CONVERTER.updateUser(r, user);
     return getRepository().save(user);
@@ -190,14 +176,13 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   // TODO @rtisma: add test for checking group exists for user
-  public void deleteUserFromGroups(@NonNull String userId, @NonNull Collection<String> groupIds) {
-    val user = getUserWithRelationshipsById(userId);
-    val groupIdsToDisassociate = convertToUUIDSet(groupIds);
-    checkGroupsExistForUser(user, groupIdsToDisassociate);
+  public void deleteUserFromGroups(@NonNull UUID id, @NonNull Collection<UUID> groupIds) {
+    val user = getUserWithRelationshipsById(id);
+    checkGroupsExistForUser(user, groupIds);
     val groupsToDisassociate =
         user.getGroups()
             .stream()
-            .filter(g -> groupIdsToDisassociate.contains(g.getId()))
+            .filter(g -> groupIds.contains(g.getId()))
             .collect(toImmutableSet());
     disassociateUserFromGroups(user, groupsToDisassociate);
     getRepository().save(user);
@@ -207,65 +192,60 @@ public class UserService extends AbstractNamedService<User, UUID> {
   // field
   // TODO @rtisma: add test for checking user exists
   // TODO @rtisma: add test for checking application exists for a user
-  public void deleteUserFromApps(@NonNull String userId, @NonNull Collection<String> appIDs) {
-    val user = getUserWithRelationshipsById(userId);
-    val appIdsToDisassociate = convertToUUIDSet(appIDs);
-    checkApplicationsExistForUser(user, appIdsToDisassociate);
+  public void deleteUserFromApps(@NonNull UUID id, @NonNull Collection<UUID> appIds) {
+    val user = getUserWithRelationshipsById(id);
+    checkApplicationsExistForUser(user, appIds);
     val appsToDisassociate =
         user.getApplications()
             .stream()
-            .filter(a -> appIdsToDisassociate.contains(a.getId()))
+            .filter(a -> appIds.contains(a.getId()))
             .collect(toImmutableSet());
     disassociateUserFromApplications(user, appsToDisassociate);
     getRepository().save(user);
   }
 
   public Page<User> findGroupUsers(
-      @NonNull String groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+      @NonNull UUID groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository()
         .findAll(
-            where(UserSpecification.inGroup(fromString(groupId)))
+            where(UserSpecification.inGroup(groupId))
                 .and(UserSpecification.filterBy(filters)),
             pageable);
   }
 
   public Page<User> findGroupUsers(
-      @NonNull String groupId,
+      @NonNull UUID groupId,
       @NonNull String query,
       @NonNull List<SearchFilter> filters,
       @NonNull Pageable pageable) {
     return getRepository()
         .findAll(
-            where(UserSpecification.inGroup(fromString(groupId)))
+            where(UserSpecification.inGroup(groupId))
                 .and(UserSpecification.containsText(query))
                 .and(UserSpecification.filterBy(filters)),
             pageable);
   }
 
   public Page<User> findAppUsers(
-      @NonNull String appId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+      @NonNull UUID appId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository()
         .findAll(
-            where(UserSpecification.ofApplication(fromString(appId)))
+            where(UserSpecification.ofApplication(appId))
                 .and(UserSpecification.filterBy(filters)),
             pageable);
   }
 
   public Page<User> findAppUsers(
-      @NonNull String appId,
+      @NonNull UUID appId,
       @NonNull String query,
       @NonNull List<SearchFilter> filters,
       @NonNull Pageable pageable) {
     return getRepository()
         .findAll(
-            where(UserSpecification.ofApplication(fromString(appId)))
+            where(UserSpecification.ofApplication(appId))
                 .and(UserSpecification.containsText(query))
                 .and(UserSpecification.filterBy(filters)),
             pageable);
-  }
-
-  public void delete(String id) {
-    delete(fromString(id));
   }
 
   // TODO [rtisma]: ensure that the user contains all its relationships
@@ -408,6 +388,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
     public abstract User convertToUser(CreateUserRequest request);
 
     public abstract void updateUser(User updatingUser, @MappingTarget User userToUpdate);
+
+    public abstract UpdateUserRequest convertToUpdateRequest(User user);
 
     public abstract void updateUser(
         UpdateUserRequest updateRequest, @MappingTarget User userToUpdate);

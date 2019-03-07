@@ -16,8 +16,6 @@
 
 package bio.overture.ego.controller;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
@@ -38,8 +36,6 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
-import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,11 +55,18 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.UUID;
+
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 @Slf4j
 @RestController
 @RequestMapping("/applications")
 public class ApplicationController {
 
+  /** Dependencies */
   private final ApplicationService applicationService;
   private final GroupService groupService;
   private final UserService userService;
@@ -153,8 +156,8 @@ public class ApplicationController {
   @JsonView(Views.REST.class)
   public @ResponseBody Application get(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String applicationId) {
-    return applicationService.get(applicationId);
+      @PathVariable(value = "id", required = true) UUID id) {
+    return applicationService.getById(id);
   }
 
   @AdminScoped
@@ -165,7 +168,7 @@ public class ApplicationController {
       })
   public @ResponseBody Application updateApplication(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(name = "id", required = true) String id,
+      @PathVariable(name = "id", required = true) UUID id,
       @RequestBody(required = true) UpdateApplicationRequest updateRequest) {
     return applicationService.partialUpdate(id, updateRequest);
   }
@@ -175,8 +178,8 @@ public class ApplicationController {
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteApplication(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String applicationId) {
-    applicationService.delete(applicationId);
+      @PathVariable(value = "id", required = true) UUID id) {
+    applicationService.delete(id);
   }
 
   /*
@@ -221,15 +224,15 @@ public class ApplicationController {
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<User> getApplicationUsers(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String appId,
+      @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
     // TODO: [rtisma] create tests for this business logic. This logic should remain in controller.
     if (isEmpty(query)) {
-      return new PageDTO<>(userService.findAppUsers(appId, filters, pageable));
+      return new PageDTO<>(userService.findAppUsers(id, filters, pageable));
     } else {
-      return new PageDTO<>(userService.findAppUsers(appId, query, filters, pageable));
+      return new PageDTO<>(userService.findAppUsers(id, query, filters, pageable));
     }
   }
 
@@ -278,15 +281,15 @@ public class ApplicationController {
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Group> getApplicationsGroups(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String appId,
+      @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
     // TODO: [rtisma] create tests for this business logic. This logic should remain in controller.
     if (isEmpty(query)) {
-      return new PageDTO<>(groupService.findApplicationGroups(appId, filters, pageable));
+      return new PageDTO<>(groupService.findApplicationGroups(id, filters, pageable));
     } else {
-      return new PageDTO<>(groupService.findApplicationGroups(appId, query, filters, pageable));
+      return new PageDTO<>(groupService.findApplicationGroups(id, query, filters, pageable));
     }
   }
 

@@ -16,8 +16,6 @@
 
 package bio.overture.ego.controller;
 
-import static org.springframework.util.StringUtils.isEmpty;
-
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.dto.PermissionRequest;
@@ -41,10 +39,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
-import java.util.UUID;
-import javax.persistence.EntityNotFoundException;
-import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +58,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
+import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.UUID;
+
+import static org.springframework.util.StringUtils.isEmpty;
+
 @Slf4j
 @RestController
 @RequestMapping("/users")
@@ -71,7 +72,6 @@ public class UserController {
 
   /** Dependencies */
   private final UserService userService;
-
   private final GroupService groupService;
   private final ApplicationService applicationService;
   private final UserPermissionService userPermissionService;
@@ -164,8 +164,8 @@ public class UserController {
   @JsonView(Views.REST.class)
   public @ResponseBody User getUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id) {
-    return userService.get(id);
+      @PathVariable(value = "id", required = true) UUID id) {
+    return userService.getById(id);
   }
 
   @AdminScoped
@@ -179,7 +179,7 @@ public class UserController {
       })
   public @ResponseBody User updateUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String id,
+      @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) UpdateUserRequest updateUserRequest) {
     return userService.partialUpdate(id, updateUserRequest);
   }
@@ -189,8 +189,8 @@ public class UserController {
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String userId) {
-    userService.delete(userId);
+      @PathVariable(value = "id", required = true) UUID id) {
+    userService.delete(id);
   }
 
   /*
@@ -296,16 +296,16 @@ public class UserController {
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Group> getUsersGroups(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String userId,
+      @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
     // TODO: [rtisma] create tests for this controller logic. This logic should remain in
     // controller.
     if (isEmpty(query)) {
-      return new PageDTO<>(groupService.findUserGroups(userId, filters, pageable));
+      return new PageDTO<>(groupService.findUserGroups(id, filters, pageable));
     } else {
-      return new PageDTO<>(groupService.findUserGroups(userId, query, filters, pageable));
+      return new PageDTO<>(groupService.findUserGroups(id, query, filters, pageable));
     }
   }
 
@@ -315,10 +315,10 @@ public class UserController {
       value = {@ApiResponse(code = 200, message = "Add Groups to user", response = User.class)})
   public @ResponseBody User addGroupsToUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String userId,
-      @RequestBody(required = true) List<String> groupIDs) {
+      @PathVariable(value = "id", required = true) UUID id,
+      @RequestBody(required = true) List<UUID> groupIds) {
 
-    return userService.addUserToGroups(userId, groupIDs);
+    return userService.addUserToGroups(id, groupIds);
   }
 
   @AdminScoped
@@ -327,9 +327,9 @@ public class UserController {
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteGroupFromUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String userId,
-      @PathVariable(value = "groupIDs", required = true) List<String> groupIDs) {
-    userService.deleteUserFromGroups(userId, groupIDs);
+      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "groupIDs", required = true) List<UUID> groupIDs) {
+    userService.deleteUserFromGroups(id, groupIDs);
   }
 
   /*
@@ -374,16 +374,16 @@ public class UserController {
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Application> getUsersApplications(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String userId,
+      @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
     // TODO: [rtisma] create tests for this controller logic. This logic should remain in
     // controller.
     if (isEmpty(query)) {
-      return new PageDTO<>(applicationService.findUserApps(userId, filters, pageable));
+      return new PageDTO<>(applicationService.findUserApps(id, filters, pageable));
     } else {
-      return new PageDTO<>(applicationService.findUserApps(userId, query, filters, pageable));
+      return new PageDTO<>(applicationService.findUserApps(id, query, filters, pageable));
     }
   }
 
@@ -395,20 +395,20 @@ public class UserController {
       })
   public @ResponseBody User addAppsToUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String userId,
-      @RequestBody(required = true) List<String> appIDs) {
-    return userService.addUserToApps(userId, appIDs);
+      @PathVariable(value = "id", required = true) UUID id,
+      @RequestBody(required = true) List<UUID> appIds) {
+    return userService.addUserToApps(id, appIds);
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/applications/{appIDs}")
+  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/applications/{appIds}")
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete Applications from User")})
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteAppFromUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String userId,
-      @PathVariable(value = "appIDs", required = true) List<String> appIDs) {
-    userService.deleteUserFromApps(userId, appIDs);
+      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "appIds", required = true) List<UUID> appIds) {
+    userService.deleteUserFromApps(id, appIds);
   }
 
   @ExceptionHandler({EntityNotFoundException.class})

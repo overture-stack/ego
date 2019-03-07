@@ -16,15 +16,6 @@
 
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.dto.Scope.effectiveScopes;
-import static bio.overture.ego.model.dto.Scope.explicitScopes;
-import static bio.overture.ego.service.UserService.extractScopes;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
-import static java.lang.String.format;
-import static java.util.UUID.fromString;
-import static org.springframework.util.DigestUtils.md5Digest;
-
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
@@ -46,17 +37,11 @@ import bio.overture.ego.token.user.UserJWTAccessToken;
 import bio.overture.ego.token.user.UserTokenClaims;
 import bio.overture.ego.token.user.UserTokenContext;
 import bio.overture.ego.view.Views;
-import io.jsonwebtoken.*;
-import java.security.InvalidKeyException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -69,6 +54,26 @@ import org.springframework.security.oauth2.common.exceptions.InvalidScopeExcepti
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
 
+import java.security.InvalidKeyException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+import static bio.overture.ego.model.dto.Scope.effectiveScopes;
+import static bio.overture.ego.model.dto.Scope.explicitScopes;
+import static bio.overture.ego.service.UserService.extractScopes;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
+import static java.lang.String.format;
+import static java.util.UUID.fromString;
+import static org.springframework.util.DigestUtils.md5Digest;
+
 @Slf4j
 @Service
 public class TokenService extends AbstractNamedService<Token, UUID> {
@@ -77,9 +82,6 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
    * Constant
    */
   private static final String ISSUER_NAME = "ego";
-
-  @Value("${jwt.duration:86400000}")
-  private int DURATION;
 
   /*
    * Dependencies
@@ -90,6 +92,13 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   private UserEvents userEvents;
   private TokenStoreService tokenStoreService;
   private PolicyService policyService;
+
+  /**
+   * Configuration
+   */
+  @Value("${jwt.duration:86400000}")
+  private int DURATION;
+
 
   public TokenService(
       @NonNull TokenSigner tokenSigner,
@@ -211,7 +220,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     if (apps != null) {
       log.info("Generating apps list");
       for (val appId : apps) {
-        val app = applicationService.get(appId.toString());
+        val app = applicationService.getById(appId);
         token.addApplication(app);
       }
     }
@@ -268,7 +277,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       val body = getTokenClaims(token);
       val tokenClaims =
           convertToAnotherType(body, UserTokenClaims.class, Views.JWTAccessToken.class);
-      return userService.get(tokenClaims.getSub());
+      return userService.getById(fromString(tokenClaims.getSub()));
     } catch (JwtException | ClassCastException e) {
       log.error("Issue handling user token (MD5sum) {}", new String(md5Digest(token.getBytes())));
       return null;
@@ -438,9 +447,13 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   }
 
   private void createTokenResponse(@NonNull Token token, @NonNull List<TokenResponse> responses) {
-    Set<String> scopes = mapToSet(token.scopes(), scope -> scope.toString());
+    val scopes = mapToSet(token.scopes(), Scope::toString);
     responses.add(
-        new TokenResponse(
-            token.getName(), scopes, token.getSecondsUntilExpiry(), token.getDescription()));
+        TokenResponse.builder()
+        .accessToken(token.getName())
+        .scope(scopes)
+        .exp(token.getSecondsUntilExpiry())
+        .description(token.getDescription())
+        .build());
   }
 }

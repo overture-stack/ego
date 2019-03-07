@@ -15,7 +15,6 @@ import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.service.UserPermissionService;
-import bio.overture.ego.service.UserService;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableList;
@@ -23,8 +22,6 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
-import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,23 +38,25 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
+import java.util.List;
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequestMapping("/policies")
 public class PolicyController {
+
+  /** Dependencies */
   private final PolicyService policyService;
-  private final UserService userService;
   private final UserPermissionService userPermissionService;
   private final GroupPermissionService groupPermissionService;
 
   @Autowired
   public PolicyController(
       @NonNull PolicyService policyService,
-      @NonNull UserService userService,
       @NonNull UserPermissionService userPermissionService,
       @NonNull GroupPermissionService groupPermissionService) {
     this.policyService = policyService;
-    this.userService = userService;
     this.groupPermissionService = groupPermissionService;
     this.userPermissionService = userPermissionService;
   }
@@ -69,8 +68,8 @@ public class PolicyController {
   @JsonView(Views.REST.class)
   public @ResponseBody Policy get(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String applicationId) {
-    return policyService.get(applicationId);
+      @PathVariable(value = "id", required = true) UUID id) {
+    return policyService.getById(id);
   }
 
   @AdminScoped
@@ -137,7 +136,7 @@ public class PolicyController {
       value = {@ApiResponse(code = 200, message = "Updated Policy", response = Policy.class)})
   public @ResponseBody Policy update(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id") String id,
+      @PathVariable(value = "id") UUID id,
       @RequestBody(required = true) PolicyRequest updatedRequst) {
     return policyService.partialUpdate(id, updatedRequst);
   }
@@ -158,11 +157,11 @@ public class PolicyController {
   @JsonView(Views.REST.class)
   public @ResponseBody Group createGroupPermission(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) UUID policyId,
+      @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "group_id", required = true) UUID groupId,
       @RequestBody(required = true) MaskDTO maskDTO) {
     return groupPermissionService.addPermissions(
-        groupId, ImmutableList.of(new PermissionRequest(policyId, maskDTO.getMask())));
+        groupId, ImmutableList.of(new PermissionRequest(id, maskDTO.getMask())));
   }
 
   @AdminScoped

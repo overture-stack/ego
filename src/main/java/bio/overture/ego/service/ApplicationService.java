@@ -16,29 +16,20 @@
 
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.enums.ApplicationStatus.APPROVED;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.token.app.AppTokenClaims.*;
-import static bio.overture.ego.utils.CollectionUtils.setOf;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
-import static java.lang.String.format;
-import static java.util.UUID.fromString;
-import static org.mapstruct.factory.Mappers.getMapper;
-import static org.springframework.data.jpa.domain.Specifications.where;
-
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
-import java.util.*;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValueCheckStrategy;
+import org.mapstruct.ReportingPolicy;
+import org.mapstruct.TargetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -51,11 +42,34 @@ import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static bio.overture.ego.model.enums.ApplicationStatus.APPROVED;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
+import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
+import static bio.overture.ego.token.app.AppTokenClaims.SCOPES;
+import static bio.overture.ego.utils.CollectionUtils.setOf;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
+import static java.lang.String.format;
+import static org.mapstruct.factory.Mappers.getMapper;
+import static org.springframework.data.jpa.domain.Specifications.where;
+
 @Service
 @Slf4j
 public class ApplicationService extends AbstractNamedService<Application, UUID>
     implements ClientDetailsService {
 
+  /**
+   * Constants
+   */
   public static final ApplicationConverter APPLICATION_CONVERTER =
       getMapper(ApplicationConverter.class);
   public static final String APP_TOKEN_PREFIX = "Basic ";
@@ -81,12 +95,8 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     return getRepository().save(application);
   }
 
-  public Application get(@NonNull String applicationId) {
-    return getById(fromString(applicationId));
-  }
-
-  public Application partialUpdate(@NonNull String id, @NonNull UpdateApplicationRequest request) {
-    val app = getById(fromString(id));
+  public Application partialUpdate(@NonNull UUID id, @NonNull UpdateApplicationRequest request) {
+    val app = getById(id);
     validateUpdateRequest(app, request);
     APPLICATION_CONVERTER.updateApplication(request, app);
     return getRepository().save(app);
@@ -107,44 +117,44 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   }
 
   public Page<Application> findUserApps(
-      @NonNull String userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+      @NonNull UUID userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository()
         .findAll(
-            where(ApplicationSpecification.usedBy(fromString(userId)))
+            where(ApplicationSpecification.usedBy(userId))
                 .and(ApplicationSpecification.filterBy(filters)),
             pageable);
   }
 
   public Page<Application> findUserApps(
-      @NonNull String userId,
+      @NonNull UUID userId,
       @NonNull String query,
       @NonNull List<SearchFilter> filters,
       @NonNull Pageable pageable) {
     return getRepository()
         .findAll(
-            where(ApplicationSpecification.usedBy(fromString(userId)))
+            where(ApplicationSpecification.usedBy(userId))
                 .and(ApplicationSpecification.containsText(query))
                 .and(ApplicationSpecification.filterBy(filters)),
             pageable);
   }
 
   public Page<Application> findGroupApplications(
-      @NonNull String groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+      @NonNull UUID groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository()
         .findAll(
-            where(ApplicationSpecification.inGroup(fromString(groupId)))
+            where(ApplicationSpecification.inGroup(groupId))
                 .and(ApplicationSpecification.filterBy(filters)),
             pageable);
   }
 
   public Page<Application> findGroupApplications(
-      @NonNull String groupId,
+      @NonNull UUID groupId,
       @NonNull String query,
       @NonNull List<SearchFilter> filters,
       @NonNull Pageable pageable) {
     return getRepository()
         .findAll(
-            where(ApplicationSpecification.inGroup(fromString(groupId)))
+            where(ApplicationSpecification.inGroup(groupId))
                 .and(ApplicationSpecification.containsText(query))
                 .and(ApplicationSpecification.filterBy(filters)),
             pageable);
@@ -178,15 +188,6 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     return getByClientId(clientId);
   }
 
-  // TODO: [rtisma] will not work, because if Application has associated users, the foreign key
-  // contraint on the userapplication table will prevent the application record from being deleted.
-  // First the appropriate rows of the userapplication join table have to be deleted (i.e
-  // disassociation of users from an application), and then the application record can be deleted
-  // http://docs.jboss.org/hibernate/orm/5.4/userguide/html_single/Hibernate_User_Guide.html#associations-many-to-many
-  public void delete(String id) {
-    delete(fromString(id));
-  }
-
   @Override
   public ClientDetails loadClientByClientId(@NonNull String clientId)
       throws ClientRegistrationException {
@@ -211,18 +212,6 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     authorities.add(new SimpleGrantedAuthority(ROLE));
     clientDetails.setAuthorities(authorities);
     return clientDetails;
-  }
-
-  @Deprecated
-  public Application create(@NonNull Application applicationInfo) {
-    return getRepository().save(applicationInfo);
-  }
-
-  @Deprecated
-  public Application update(@NonNull Application updatedApplicationInfo) {
-    checkExistence(updatedApplicationInfo.getId());
-    getRepository().save(updatedApplicationInfo);
-    return updatedApplicationInfo;
   }
 
   private void validateUpdateRequest(Application originalApplication, UpdateApplicationRequest r) {

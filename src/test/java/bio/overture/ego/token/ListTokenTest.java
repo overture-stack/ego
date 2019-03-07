@@ -1,8 +1,6 @@
 package bio.overture.ego.token;
 
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static org.junit.Assert.assertTrue;
-
+import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
@@ -10,7 +8,6 @@ import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.TestData;
-import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
@@ -23,6 +20,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static org.junit.Assert.assertTrue;
 
 @Slf4j
 @SpringBootTest
@@ -49,8 +54,8 @@ public class ListTokenTest {
     val scopes1 = test.getScopes("song.WRITE", "id.WRITE");
     val scopes2 = test.getScopes("song.READ", "id.READ");
 
-    Set<String> scopeString1 = mapToSet(scopes1, scope -> scope.toString());
-    Set<String> scopeString2 = mapToSet(scopes2, scope -> scope.toString());
+    Set<String> scopeString1 = mapToSet(scopes1, Scope::toString);
+    Set<String> scopeString2 = mapToSet(scopes2, Scope::toString);
 
     val applications = new HashSet<Application>();
     applications.add(test.score);
@@ -71,13 +76,23 @@ public class ListTokenTest {
 
     List<TokenResponse> expected = new ArrayList<>();
     expected.add(
-        new TokenResponse(
-            tokenString1, scopeString1, userToken1.getSecondsUntilExpiry(), "Test token 1."));
+        TokenResponse.builder()
+            .accessToken(tokenString1)
+            .scope(scopeString1)
+            .exp(userToken1.getSecondsUntilExpiry())
+            .description( "Test token 1.")
+            .build()
+    );
     expected.add(
-        new TokenResponse(
-            tokenString2, scopeString2, userToken2.getSecondsUntilExpiry(), "Test token 2."));
+        TokenResponse.builder()
+            .accessToken(tokenString2)
+            .scope(scopeString2)
+            .exp(userToken2.getSecondsUntilExpiry())
+            .description( "Test token 2.")
+            .build()
+    );
 
-    assertTrue((responseList.stream().allMatch(response -> expected.contains(response))));
+    assertTrue((responseList.stream().allMatch(expected::contains)));
   }
 
   @Test

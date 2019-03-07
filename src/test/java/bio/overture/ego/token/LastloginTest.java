@@ -56,7 +56,7 @@ public class LastloginTest {
     // trigger exception, as there are two
     // threads involved, new thread will try to find user in an empty repo which
     // will cause exception. This is done even if lastLogin assertion fails
-    userService.delete(user.getId().toString());
+    userService.delete(user.getId());
 
     assertNotNull("Verify after generatedUserToken, last login is not null.", lastLogin);
   }
