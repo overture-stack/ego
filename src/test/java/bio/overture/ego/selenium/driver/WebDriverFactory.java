@@ -18,11 +18,6 @@
 package bio.overture.ego.selenium.driver;
 
 import com.browserstack.local.Local;
-import java.io.FileReader;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -33,8 +28,16 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
+import java.io.FileReader;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 @Slf4j
 public class WebDriverFactory {
+
+  private static final int TIMEOUT_SECONDS = 10;
 
   public WebDriver createDriver(DriverType type) {
     switch (type) {
@@ -56,8 +59,8 @@ public class WebDriverFactory {
     driver
         .manage()
         .timeouts()
-        .implicitlyWait(2, TimeUnit.SECONDS)
-        .pageLoadTimeout(2, TimeUnit.SECONDS);
+        .implicitlyWait(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .pageLoadTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS);
     return driver;
   }
 
@@ -106,8 +109,8 @@ public class WebDriverFactory {
     driver
         .manage()
         .timeouts()
-        .implicitlyWait(2, TimeUnit.SECONDS)
-        .pageLoadTimeout(2, TimeUnit.SECONDS);
+        .implicitlyWait(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .pageLoadTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
     return driver;
   }
