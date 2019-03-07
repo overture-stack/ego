@@ -1,18 +1,5 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.enums.AccessLevel.DENY;
-import static bio.overture.ego.model.enums.AccessLevel.READ;
-import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static bio.overture.ego.service.UserService.USER_CONVERTER;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
-import static com.google.common.collect.Lists.newArrayList;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static java.util.UUID.randomUUID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.PermissionRequest;
@@ -27,11 +14,7 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
-import java.util.Collections;
-import java.util.Date;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import com.google.common.collect.ImmutableList;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -43,6 +26,25 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.Date;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static bio.overture.ego.model.enums.AccessLevel.DENY;
+import static bio.overture.ego.model.enums.AccessLevel.READ;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.service.UserService.USER_CONVERTER;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.UUID.randomUUID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -51,7 +53,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Ignore("replace with controller tests.")
 public class UserServiceTest {
 
-  private static final String NON_EXISTENT_USER = "827fae28-7fb8-11e8-adc0-fa7ae01bbebc";
+  private static final UUID NON_EXISTENT_USER = UUID.fromString("827fae28-7fb8-11e8-adc0-fa7ae01bbebc");
 
   @Autowired private ApplicationService applicationService;
   @Autowired private UserService userService;
@@ -176,14 +178,14 @@ public class UserServiceTest {
   @Test
   public void testGet() {
     val user = entityGenerator.setupUser("User One");
-    val savedUser = userService.get(user.getId().toString());
+    val savedUser = userService.getById(user.getId());
     assertThat(savedUser.getName()).isEqualTo("UserOne@domain.com");
   }
 
   @Test
   public void testGetNotFoundException() {
     assertThatExceptionOfType(NotFoundException.class)
-        .isThrownBy(() -> userService.get(NON_EXISTENT_USER));
+        .isThrownBy(() -> userService.getById(NON_EXISTENT_USER));
   }
 
   @Test
@@ -271,10 +273,10 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val groupId = groupService.getByName("Group One").getId().toString();
+    val groupId = groupService.getByName("Group One").getId();
 
-    userService.addUserToGroups(user.getId().toString(), singletonList(groupId));
-    userService.addUserToGroups(userTwo.getId().toString(), singletonList(groupId));
+    userService.addUserToGroups(user.getId(), singletonList(groupId));
+    userService.addUserToGroups(userTwo.getId(), singletonList(groupId));
 
     val users =
         userService.findGroupUsers(
@@ -289,7 +291,7 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestGroups();
 
-    val groupId = groupService.getByName("Group One").getId().toString();
+    val groupId = groupService.getByName("Group One").getId();
 
     val users =
         userService.findGroupUsers(
@@ -299,27 +301,16 @@ public class UserServiceTest {
   }
 
   @Test
-  public void testFindGroupUsersNoQueryFiltersEmptyGroupString() {
-    entityGenerator.setupTestGroups();
-    entityGenerator.setupTestUsers();
-    assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(
-            () ->
-                userService.findGroupUsers(
-                    "", Collections.emptyList(), new PageableResolver().getPageable()));
-  }
-
-  @Test
   public void testFindGroupUsersNoQueryFilters() {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestGroups();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = userService.getByName("SecondUser@domain.com");
-    val groupId = groupService.getByName("Group One").getId().toString();
+    val groupId = groupService.getByName("Group One").getId();
 
-    userService.addUserToGroups(user.getId().toString(), newArrayList(groupId));
-    userService.addUserToGroups(userTwo.getId().toString(), newArrayList(groupId));
+    userService.addUserToGroups(user.getId(), newArrayList(groupId));
+    userService.addUserToGroups(userTwo.getId(), newArrayList(groupId));
 
     val userFilters = new SearchFilter("name", "First");
 
@@ -338,10 +329,10 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val groupId = groupService.getByName("Group One").getId().toString();
+    val groupId = groupService.getByName("Group One").getId();
 
-    userService.addUserToGroups(user.getId().toString(), singletonList(groupId));
-    userService.addUserToGroups(userTwo.getId().toString(), singletonList(groupId));
+    userService.addUserToGroups(user.getId(), singletonList(groupId));
+    userService.addUserToGroups(userTwo.getId(), singletonList(groupId));
 
     val userFilters = new SearchFilter("name", "First");
 
@@ -359,10 +350,10 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val groupId = groupService.getByName("Group One").getId().toString();
+    val groupId = groupService.getByName("Group One").getId();
 
-    userService.addUserToGroups(user.getId().toString(), singletonList(groupId));
-    userService.addUserToGroups(userTwo.getId().toString(), singletonList(groupId));
+    userService.addUserToGroups(user.getId(), singletonList(groupId));
+    userService.addUserToGroups(userTwo.getId(), singletonList(groupId));
 
     val users =
         userService.findGroupUsers(
@@ -381,10 +372,10 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = applicationService.getByClientId("111111").getId().toString();
+    val appId = applicationService.getByClientId("111111").getId();
 
-    userService.addUserToApps(user.getId().toString(), singletonList(appId));
-    userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
+    userService.addUserToApps(user.getId(), singletonList(appId));
+    userService.addUserToApps(userTwo.getId(), singletonList(appId));
 
     val users =
         userService.findAppUsers(
@@ -399,7 +390,7 @@ public class UserServiceTest {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
-    val appId = applicationService.getByClientId("111111").getId().toString();
+    val appId = applicationService.getByClientId("111111").getId();
 
     val users =
         userService.findAppUsers(
@@ -409,27 +400,16 @@ public class UserServiceTest {
   }
 
   @Test
-  public void testFindAppUsersNoQueryNoFiltersEmptyUserString() {
-    entityGenerator.setupTestUsers();
-    entityGenerator.setupTestApplications();
-    assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(
-            () ->
-                userService.findAppUsers(
-                    "", Collections.emptyList(), new PageableResolver().getPageable()));
-  }
-
-  @Test
   public void testFindAppUsersNoQueryFilters() {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = applicationService.getByClientId("111111").getId().toString();
+    val appId = applicationService.getByClientId("111111").getId();
 
-    userService.addUserToApps(user.getId().toString(), singletonList(appId));
-    userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
+    userService.addUserToApps(user.getId(),singletonList(appId));
+    userService.addUserToApps(userTwo.getId(), singletonList(appId));
 
     val userFilters = new SearchFilter("name", "First");
 
@@ -448,10 +428,10 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = applicationService.getByClientId("111111").getId().toString();
+    val appId = applicationService.getByClientId("111111").getId();
 
-    userService.addUserToApps(user.getId().toString(), singletonList(appId));
-    userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
+    userService.addUserToApps(user.getId(), singletonList(appId));
+    userService.addUserToApps(userTwo.getId(), singletonList(appId));
 
     val userFilters = new SearchFilter("name", "First");
 
@@ -469,10 +449,10 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val userTwo = (userService.getByName("SecondUser@domain.com"));
-    val appId = applicationService.getByClientId("111111").getId().toString();
+    val appId = applicationService.getByClientId("111111").getId();
 
-    userService.addUserToApps(user.getId().toString(), singletonList(appId));
-    userService.addUserToApps(userTwo.getId().toString(), singletonList(appId));
+    userService.addUserToApps(user.getId(), singletonList(appId));
+    userService.addUserToApps(userTwo.getId(), singletonList(appId));
 
     val users =
         userService.findAppUsers(
@@ -488,7 +468,7 @@ public class UserServiceTest {
     val user = entityGenerator.setupUser("First User");
     val updated =
         userService.partialUpdate(
-            user.getId().toString(), UpdateUserRequest.builder().firstName("NotFirst").build());
+            user.getId(), UpdateUserRequest.builder().firstName("NotFirst").build());
     assertThat(updated.getFirstName()).isEqualTo("NotFirst");
   }
 
@@ -497,7 +477,7 @@ public class UserServiceTest {
     val user = entityGenerator.setupUser("First User");
     val updated =
         userService.partialUpdate(
-            user.getId().toString(), UpdateUserRequest.builder().userType("user").build());
+            user.getId(), UpdateUserRequest.builder().userType("user").build());
     assertThat(updated.getUserType()).isEqualTo("USER");
   }
 
@@ -506,7 +486,7 @@ public class UserServiceTest {
     val user = entityGenerator.setupUser("First User");
     val updated =
         userService.partialUpdate(
-            user.getId().toString(), UpdateUserRequest.builder().userType("admin").build());
+            user.getId(), UpdateUserRequest.builder().userType("admin").build());
     assertThat(updated.getUserType()).isEqualTo("ADMIN");
   }
 
@@ -560,12 +540,12 @@ public class UserServiceTest {
     assertThat(u1.getEmail()).isEqualTo(ur3.getEmail());
     assertThat(u2.getEmail()).isNotEqualTo(ur3.getEmail());
     assertThatExceptionOfType(UniqueViolationException.class)
-        .isThrownBy(() -> userService.partialUpdate(u2.getId().toString(), ur3));
+        .isThrownBy(() -> userService.partialUpdate(u2.getId(), ur3));
   }
 
   @Test
   public void testUpdateNonexistentEntity() {
-    val nonExistentId = generateNonExistentId(userService).toString();
+    val nonExistentId = generateNonExistentId(userService);
     val updateRequest =
         UpdateUserRequest.builder()
             .firstName("Doesnot")
@@ -577,18 +557,6 @@ public class UserServiceTest {
             .build();
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.partialUpdate(nonExistentId, updateRequest));
-  }
-
-  @Test
-  @Ignore(
-      "This is ignored because an updateRequest object doesnt contain an id, therefore there is nothing to cause an UpdateID error in the first place")
-  @Deprecated
-  public void testUpdateIdNotAllowed() {
-    val user = entityGenerator.setupUser("First User");
-    val nonExistingId = EntityGenerator.generateNonExistentId(userService);
-    user.setId(nonExistingId);
-    // New id means new non-existent policy or one that exists and is being overwritten
-    assertThatExceptionOfType(NotFoundException.class).isThrownBy(() -> userService.update(user));
   }
 
   @Test
@@ -640,11 +608,11 @@ public class UserServiceTest {
     entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
-    val groupId = group.getId().toString();
+    val groupId = group.getId();
     val groupTwo = groupService.getByName("Group Two");
-    val groupTwoId = groupTwo.getId().toString();
+    val groupTwoId = groupTwo.getId();
     val user = userService.getByName("FirstUser@domain.com");
-    val userId = user.getId().toString();
+    val userId = user.getId();
 
     userService.addUserToGroups(userId, asList(groupId, groupTwoId));
 
@@ -661,22 +629,10 @@ public class UserServiceTest {
     entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
-    val groupId = group.getId().toString();
+    val groupId = group.getId();
 
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.addUserToGroups(NON_EXISTENT_USER, singletonList(groupId)));
-  }
-
-  @Test
-  public void addUserToGroupsEmptyUserString() {
-    entityGenerator.setupTestUsers();
-    entityGenerator.setupTestGroups();
-
-    val group = groupService.getByName("Group One");
-    val groupId = group.getId().toString();
-
-    assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> userService.addUserToGroups("", singletonList(groupId)));
   }
 
   @Test
@@ -685,10 +641,10 @@ public class UserServiceTest {
     entityGenerator.setupTestGroups();
 
     val user = userService.getByName("FirstUser@domain.com");
-    val userId = user.getId().toString();
+    val userId = user.getId();
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> userService.addUserToGroups(userId, singletonList("")));
+        .isThrownBy(() -> userService.addUserToGroups(userId, ImmutableList.of()));
   }
 
   @Test
@@ -697,7 +653,7 @@ public class UserServiceTest {
     entityGenerator.setupTestGroups();
 
     val user = userService.getByName("FirstUser@domain.com");
-    val userId = user.getId().toString();
+    val userId = user.getId();
 
     userService.addUserToGroups(userId, Collections.emptyList());
 
@@ -712,11 +668,11 @@ public class UserServiceTest {
     entityGenerator.setupTestApplications();
 
     val app = applicationService.getByClientId("111111");
-    val appId = app.getId().toString();
+    val appId = app.getId();
     val appTwo = applicationService.getByClientId("222222");
-    val appTwoId = appTwo.getId().toString();
+    val appTwoId = appTwo.getId();
     val user = userService.getByName("FirstUser@domain.com");
-    val userId = user.getId().toString();
+    val userId = user.getId();
 
     userService.addUserToApps(userId, asList(appId, appTwoId));
 
@@ -733,7 +689,7 @@ public class UserServiceTest {
     entityGenerator.setupTestApplications();
 
     val app = applicationService.getByClientId("111111");
-    val appId = app.getId().toString();
+    val appId = app.getId();
 
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.addUserToApps(NON_EXISTENT_USER, singletonList(appId)));
@@ -745,10 +701,10 @@ public class UserServiceTest {
     entityGenerator.setupTestApplications();
 
     val user = userService.getByName("FirstUser@domain.com");
-    val userId = user.getId().toString();
+    val userId = user.getId();
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> userService.addUserToApps(userId, singletonList("")));
+        .isThrownBy(() -> userService.addUserToApps(userId, ImmutableList.of()));
   }
 
   @Test
@@ -757,7 +713,7 @@ public class UserServiceTest {
     entityGenerator.setupTestApplications();
 
     val user = userService.getByName("FirstUser@domain.com");
-    val userId = user.getId().toString();
+    val userId = user.getId();
 
     userService.addUserToApps(userId, Collections.emptyList());
 
@@ -775,7 +731,7 @@ public class UserServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
 
-    userService.delete(user.getId().toString());
+    userService.delete(user.getId());
 
     val usersAfter =
         userService.listUsers(Collections.emptyList(), new PageableResolver().getPageable());
@@ -791,13 +747,6 @@ public class UserServiceTest {
         .isThrownBy(() -> userService.delete(NON_EXISTENT_USER));
   }
 
-  @Test
-  public void testDeleteEmptyIdString() {
-    entityGenerator.setupTestGroups();
-    assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> userService.delete(""));
-  }
-
   // Delete User from Group
   @Test
   public void testDeleteUserFromGroup() {
@@ -805,11 +754,11 @@ public class UserServiceTest {
     entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
-    val groupId = group.getId().toString();
+    val groupId = group.getId();
     val groupTwo = groupService.getByName("Group Two");
-    val groupTwoId = groupTwo.getId().toString();
+    val groupTwoId = groupTwo.getId();
     val user = userService.getByName("FirstUser@domain.com");
-    val userId = user.getId().toString();
+    val userId = user.getId();
 
     userService.addUserToGroups(userId, asList(groupId, groupTwoId));
 
@@ -828,11 +777,11 @@ public class UserServiceTest {
     entityGenerator.setupTestGroups();
 
     val group = groupService.getByName("Group One");
-    val groupId = group.getId().toString();
+    val groupId = group.getId();
     val groupTwo = groupService.getByName("Group Two");
-    val groupTwoId = groupTwo.getId().toString();
+    val groupTwoId = groupTwo.getId();
     val user = userService.getByName("FirstUser@domain.com");
-    val userId = user.getId().toString();
+    val userId = user.getId();
 
     userService.addUserToGroups(userId, asList(groupId, groupTwoId));
 
@@ -842,38 +791,20 @@ public class UserServiceTest {
   }
 
   @Test
-  public void testDeleteUserFromGroupEmptyUserString() {
-    entityGenerator.setupTestUsers();
-    entityGenerator.setupTestGroups();
-
-    val group = groupService.getByName("Group One");
-    val groupId = group.getId().toString();
-    val groupTwo = groupService.getByName("Group Two");
-    val groupTwoId = groupTwo.getId().toString();
-    val user = userService.getByName("FirstUser@domain.com");
-    val userId = user.getId().toString();
-
-    userService.addUserToGroups(userId, asList(groupId, groupTwoId));
-
-    assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> userService.deleteUserFromGroups("", singletonList(groupId)));
-  }
-
-  @Test
   public void testDeleteUserFromGroupEmptyGroupsList() {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestGroups();
 
     val user = userService.getByName("FirstUser@domain.com");
-    val userId = user.getId().toString();
+    val userId = user.getId();
     val group = groupService.getByName("Group One");
-    val groupId = group.getId().toString();
+    val groupId = group.getId();
 
     userService.addUserToGroups(userId, singletonList(groupId));
     assertThat(user.getGroups().size()).isEqualTo(1);
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> userService.deleteUserFromGroups(userId, singletonList("")));
+        .isThrownBy(() -> userService.deleteUserFromGroups(userId, ImmutableList.of()));
   }
 
   // Delete User from App
@@ -883,11 +814,11 @@ public class UserServiceTest {
     entityGenerator.setupTestApplications();
 
     val app = applicationService.getByClientId("111111");
-    val appId = app.getId().toString();
+    val appId = app.getId();
     val appTwo = applicationService.getByClientId("222222");
-    val appTwoId = appTwo.getId().toString();
+    val appTwoId = appTwo.getId();
     val user = userService.getByName("FirstUser@domain.com");
-    val userId = user.getId().toString();
+    val userId = user.getId();
 
     userService.addUserToApps(userId, asList(appId, appTwoId));
 
@@ -906,11 +837,11 @@ public class UserServiceTest {
     entityGenerator.setupTestApplications();
 
     val app = applicationService.getByClientId("111111");
-    val appId = app.getId().toString();
+    val appId = app.getId();
     val appTwo = applicationService.getByClientId("222222");
-    val appTwoId = appTwo.getId().toString();
+    val appTwoId = appTwo.getId();
     val user = userService.getByName("FirstUser@domain.com");
-    val userId = user.getId().toString();
+    val userId = user.getId();
 
     userService.addUserToApps(userId, asList(appId, appTwoId));
 
@@ -919,39 +850,21 @@ public class UserServiceTest {
   }
 
   @Test
-  public void testDeleteUserFromAppEmptyUserString() {
-    entityGenerator.setupTestUsers();
-    entityGenerator.setupTestApplications();
-
-    val app = applicationService.getByClientId("111111");
-    val appId = app.getId().toString();
-    val appTwo = applicationService.getByClientId("222222");
-    val appTwoId = appTwo.getId().toString();
-    val user = userService.getByName("FirstUser@domain.com");
-    val userId = user.getId().toString();
-
-    userService.addUserToApps(userId, asList(appId, appTwoId));
-
-    assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> userService.deleteUserFromApps("", singletonList(appId)));
-  }
-
-  @Test
   public void testDeleteUserFromAppEmptyAppsList() {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
     val app = applicationService.getByClientId("111111");
-    val appId = app.getId().toString();
+    val appId = app.getId();
     val appTwo = applicationService.getByClientId("222222");
-    val appTwoId = appTwo.getId().toString();
+    val appTwoId = appTwo.getId();
     val user = userService.getByName("FirstUser@domain.com");
-    val userId = user.getId().toString();
+    val userId = user.getId();
 
     userService.addUserToApps(userId, asList(appId, appTwoId));
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> userService.deleteUserFromApps(userId, singletonList("")));
+        .isThrownBy(() -> userService.deleteUserFromApps(userId, ImmutableList.of()));
   }
 
   @Test

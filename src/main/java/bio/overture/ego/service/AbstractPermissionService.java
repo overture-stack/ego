@@ -52,6 +52,9 @@ public abstract class AbstractPermissionService<
         O extends NameableEntity<UUID>, P extends AbstractPermission<O>>
     extends AbstractBaseService<P, UUID> {
 
+  /**
+   * Dependencies
+   */
   private final BaseService<Policy, UUID> policyBaseService;
   private final BaseService<O, UUID> ownerBaseService;
   private final PermissionRepository<O, P> permissionRepository;
@@ -93,9 +96,9 @@ public abstract class AbstractPermissionService<
   }
 
   public void deletePermissions(
-      @NonNull UUID ownerId, @NonNull Collection<UUID> permissionsIdsToDelete) {
+      @NonNull UUID ownerId, @NonNull Collection<UUID> idsToDelete) {
     checkMalformedRequest(
-        !permissionsIdsToDelete.isEmpty(),
+        !idsToDelete.isEmpty(),
         "Must add at least 1 permission for %s '%s'",
         getOwnerTypeName(),
         ownerId);
@@ -105,11 +108,11 @@ public abstract class AbstractPermissionService<
     val filteredPermissionMap =
         permissions
             .stream()
-            .filter(x -> permissionsIdsToDelete.contains(x.getId()))
+            .filter(x -> idsToDelete.contains(x.getId()))
             .collect(toMap(AbstractPermission::getId, identity()));
 
     val existingPermissionIds = filteredPermissionMap.keySet();
-    val nonExistingPermissionIds = difference(permissionsIdsToDelete, existingPermissionIds);
+    val nonExistingPermissionIds = difference(idsToDelete, existingPermissionIds);
     checkNotFound(
         nonExistingPermissionIds.isEmpty(),
         "The following %s ids for the %s '%s' were not found",

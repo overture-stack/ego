@@ -1,8 +1,5 @@
 package bio.overture.ego.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.entity.Group;
@@ -10,10 +7,6 @@ import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.EntityGenerator;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
@@ -25,6 +18,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -71,14 +72,14 @@ public class PolicyServiceTest {
   @Test
   public void testGet() {
     val policy = entityGenerator.setupPolicy("Study001", groups.get(0).getName());
-    val savedPolicy = policyService.get(policy.getId().toString());
+    val savedPolicy = policyService.getById(policy.getId());
     assertThat(savedPolicy.getName()).isEqualTo("Study001");
   }
 
   @Test
   public void testGetNotFoundException() {
     assertThatExceptionOfType(NotFoundException.class)
-        .isThrownBy(() -> policyService.get(UUID.randomUUID().toString()));
+        .isThrownBy(() -> policyService.getById(UUID.randomUUID()));
   }
 
   @Test
@@ -156,7 +157,7 @@ public class PolicyServiceTest {
     assertThat(p1.getName()).isEqualTo(ur3.getName());
     assertThat(p2.getName()).isNotEqualTo(ur3.getName());
     assertThatExceptionOfType(UniqueViolationException.class)
-        .isThrownBy(() -> policyService.partialUpdate(p2.getId().toString(), ur3));
+        .isThrownBy(() -> policyService.partialUpdate(p2.getId(),ur3));
   }
 
   @Test
@@ -173,7 +174,7 @@ public class PolicyServiceTest {
   public void testUpdate() {
     val policy = entityGenerator.setupPolicy("Study001", groups.get(0).getName());
     val updateRequest = PolicyRequest.builder().name("StudyOne").build();
-    val updated = policyService.partialUpdate(policy.getId().toString(), updateRequest);
+    val updated = policyService.partialUpdate(policy.getId(), updateRequest);
     assertThat(updated.getName()).isEqualTo("StudyOne");
   }
 
@@ -182,7 +183,7 @@ public class PolicyServiceTest {
   public void testDelete() {
     entityGenerator.setupTestPolicies();
     val policy = policyService.getByName("Study001");
-    policyService.delete(policy.getId().toString());
+    policyService.delete(policy.getId());
 
     val remainingAclEntities =
         policyService.listPolicies(Collections.emptyList(), new PageableResolver().getPageable());

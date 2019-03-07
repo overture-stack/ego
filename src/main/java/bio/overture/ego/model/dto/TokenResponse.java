@@ -2,18 +2,18 @@ package bio.overture.ego.model.dto;
 
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
-import java.util.Set;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.Value;
 
-@EqualsAndHashCode
-@AllArgsConstructor
-@Getter
+import java.util.Set;
+
+@Value
+@Builder
 @JsonView(Views.REST.class)
 public class TokenResponse {
-  String accessToken;
-  private Set<String> scope;
-  private Long exp;
+  @NonNull private final String accessToken;
+  @NonNull private final Set<String> scope;
+  @NonNull private final Long exp;
   private String description;
 }

@@ -16,21 +16,13 @@
 
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static java.lang.String.format;
-
+import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.security.ApplicationScoped;
 import bio.overture.ego.service.TokenService;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -51,11 +43,22 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static java.lang.String.format;
+
 @Slf4j
 @RestController
 @RequestMapping("/o")
 public class TokenController {
 
+  /** Dependencies */
   private final TokenService tokenService;
 
   @Autowired
@@ -82,12 +85,15 @@ public class TokenController {
       @RequestParam(value = "scopes") ArrayList<String> scopes,
       @RequestParam(value = "applications", required = false) ArrayList<UUID> applications,
       @RequestParam(value = "description", required = false) String description) {
-    val scopeNames = mapToList(scopes, s -> new ScopeName(s));
+    val scopeNames = mapToList(scopes, ScopeName::new);
     val t = tokenService.issueToken(user_id, scopeNames, applications, description);
-    Set<String> issuedScopes = mapToSet(t.scopes(), x -> x.toString());
-    TokenResponse response =
-        new TokenResponse(t.getName(), issuedScopes, t.getSecondsUntilExpiry(), t.getDescription());
-    return response;
+    Set<String> issuedScopes = mapToSet(t.scopes(), Scope::toString);
+    return TokenResponse.builder()
+        .accessToken(t.getName())
+        .scope(issuedScopes)
+        .exp(t.getSecondsUntilExpiry())
+        .description(t.getDescription())
+        .build();
   }
 
   @RequestMapping(method = RequestMethod.DELETE, value = "/token")

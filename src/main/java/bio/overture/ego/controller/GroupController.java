@@ -37,10 +37,6 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
-import java.util.UUID;
-import javax.persistence.EntityNotFoundException;
-import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,11 +57,17 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
+import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequestMapping("/groups")
 public class GroupController {
 
+  /** Dependencies */
   private final GroupService groupService;
   private final ApplicationService applicationService;
   private final UserService userService;
@@ -155,8 +157,8 @@ public class GroupController {
   @JsonView(Views.REST.class)
   public @ResponseBody Group getGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION) final String accessToken,
-      @PathVariable(value = "id") String groupId) {
-    return groupService.get(groupId);
+      @PathVariable(value = "id") UUID id) {
+    return groupService.getById(id);
   }
 
   @AdminScoped
@@ -165,7 +167,7 @@ public class GroupController {
       value = {@ApiResponse(code = 200, message = "Updated group info", response = Group.class)})
   public @ResponseBody Group updateGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id") String id,
+      @PathVariable(value = "id") UUID id,
       @RequestBody(required = true) GroupRequest updateRequest) {
     return groupService.partialUpdate(id, updateRequest);
   }
@@ -175,8 +177,8 @@ public class GroupController {
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String groupId) {
-    groupService.delete(groupId);
+      @PathVariable(value = "id", required = true) UUID id) {
+    groupService.delete(id);
   }
 
   /*
@@ -285,15 +287,15 @@ public class GroupController {
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Application> getGroupsApplications(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String groupId,
+      @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
     if (StringUtils.isEmpty(query)) {
-      return new PageDTO<>(applicationService.findGroupApplications(groupId, filters, pageable));
+      return new PageDTO<>(applicationService.findGroupApplications(id, filters, pageable));
     } else {
       return new PageDTO<>(
-          applicationService.findGroupApplications(groupId, query, filters, pageable));
+          applicationService.findGroupApplications(id, query, filters, pageable));
     }
   }
 
@@ -303,20 +305,20 @@ public class GroupController {
       value = {@ApiResponse(code = 200, message = "Add Apps to Group", response = Group.class)})
   public @ResponseBody Group addAppsToGroups(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String grpId,
-      @RequestBody(required = true) List<String> apps) {
-    return groupService.addAppsToGroup(grpId, apps);
+      @PathVariable(value = "id", required = true) UUID id,
+      @RequestBody(required = true) List<UUID> appIds) {
+    return groupService.addAppsToGroup(id, appIds);
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/applications/{appIDs}")
+  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/applications/{appIds}")
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete Apps from Group")})
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteAppsFromGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String grpId,
-      @PathVariable(value = "appIDs", required = true) List<String> appIDs) {
-    groupService.deleteAppsFromGroup(grpId, appIDs);
+      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "appIds", required = true) List<UUID> appIds) {
+    groupService.deleteAppsFromGroup(id, appIds);
   }
 
   /*
@@ -361,14 +363,14 @@ public class GroupController {
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<User> getGroupsUsers(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String groupId,
+      @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
     if (StringUtils.isEmpty(query)) {
-      return new PageDTO<>(userService.findGroupUsers(groupId, filters, pageable));
+      return new PageDTO<>(userService.findGroupUsers(id, filters, pageable));
     } else {
-      return new PageDTO<>(userService.findGroupUsers(groupId, query, filters, pageable));
+      return new PageDTO<>(userService.findGroupUsers(id, query, filters, pageable));
     }
   }
 
@@ -378,20 +380,20 @@ public class GroupController {
       value = {@ApiResponse(code = 200, message = "Add Users to Group", response = Group.class)})
   public @ResponseBody Group addUsersToGroups(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String grpId,
-      @RequestBody(required = true) List<String> users) {
-    return groupService.addUsersToGroup(grpId, users);
+      @PathVariable(value = "id", required = true) UUID id,
+      @RequestBody(required = true) List<UUID> userIds) {
+    return groupService.addUsersToGroup(id, userIds);
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/users/{userIDs}")
+  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/users/{userIds}")
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete Users from Group")})
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteUsersFromGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) String grpId,
-      @PathVariable(value = "userIDs", required = true) List<String> userIDs) {
-    groupService.deleteUsersFromGroup(grpId, userIDs);
+      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "userIds", required = true) List<UUID> userIds) {
+    groupService.deleteUsersFromGroup(id, userIds);
   }
 
   @ExceptionHandler({EntityNotFoundException.class})
