@@ -19,6 +19,7 @@ package bio.overture.ego.controller;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
+import bio.overture.ego.model.dto.UserScopesResponse;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.security.ApplicationScoped;
@@ -75,6 +76,15 @@ public class TokenController {
       @RequestParam(value = "token") final String token) {
 
     return tokenService.checkToken(authToken, token);
+  }
+
+  @RequestMapping(method = RequestMethod.GET, value = "/scopes")
+  @ResponseStatus(value = HttpStatus.OK)
+  @SneakyThrows
+  public @ResponseBody UserScopesResponse userScope(
+          @RequestHeader(value = "Authorization") final String auth,
+          @RequestParam(value = "userName") final String userName) {
+    return tokenService.userScopes(userName);
   }
 
   @RequestMapping(method = RequestMethod.POST, value = "/token")

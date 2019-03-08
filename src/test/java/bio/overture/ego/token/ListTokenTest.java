@@ -97,8 +97,7 @@ public class ListTokenTest {
 
   @Test
   public void testEmptyTokenList() {
-    exception.expect(NotFoundException.class);
-    exception.expectMessage("User is not associated with any token.");
-    tokenService.listToken(test.regularUser.getId());
+    val tokens = tokenService.listToken(test.regularUser.getId());
+    assertTrue(tokens.isEmpty());
   }
 }
