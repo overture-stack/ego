@@ -19,6 +19,7 @@ package bio.overture.ego.service;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
+import bio.overture.ego.model.dto.UserScopesResponse;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.entity.User;
@@ -42,6 +43,17 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.security.InvalidKeyException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -360,6 +372,14 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     return new TokenScopeResponse(owner.getName(), clientId, t.getSecondsUntilExpiry(), names);
   }
 
+  public UserScopesResponse userScopes(@NonNull String userName){
+    val user = userService.getByName(userName);
+    val scopes = extractScopes(user);
+    val names = mapToSet(scopes, Scope::toString);
+
+    return new UserScopesResponse(names);
+  }
+
   public void revokeToken(@NonNull String tokenName) {
     validateTokenName(tokenName);
     val principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -432,13 +452,13 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
                 () -> new UsernameNotFoundException(format("Can't find user '%s'", str(userId))));
 
     val tokens = user.getTokens();
-
     if (tokens.isEmpty()) {
-      throw new NotFoundException("User is not associated with any token.");
+      return new ArrayList<>();
     }
 
+    val unrevokedTokens = tokens.stream().filter((token -> !token.isRevoked())).collect(Collectors.toSet());
     List<TokenResponse> response = new ArrayList<>();
-    tokens.forEach(
+    unrevokedTokens.forEach(
         token -> {
           createTokenResponse(token, response);
         });
