@@ -69,7 +69,7 @@ public abstract class AbstractSeleniumTest {
 
   @SneakyThrows
   private GenericContainer createGenericContainer() {
-    return new GenericContainer("overture/ego-ui:260a87b-alpine")
+    return new GenericContainer("overture/ego-ui:2.0.1")
         .withExposedPorts(80)
         .withEnv(createEnvMap());
   }
