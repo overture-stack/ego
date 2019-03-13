@@ -353,6 +353,10 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     val t =
         findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found"));
 
+    if(t.isRevoked()){
+        throw new InvalidTokenException(format("Token \"%s\" has expired or is no longer valid. ", token));
+    }
+
     val clientId = application.getClientId();
     val apps = t.getApplications();
     log.info(format("Applications are %s", apps.toString()));
