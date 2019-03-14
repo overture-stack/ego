@@ -121,7 +121,7 @@ token:
 default:
   user:
     type: USER
-    status: Approved
+    status: APPROVED
 ---
 ###############################################################################
 # Profile - "jks"

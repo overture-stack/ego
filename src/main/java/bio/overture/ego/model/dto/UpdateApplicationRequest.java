@@ -16,6 +16,8 @@
 
 package bio.overture.ego.model.dto;
 
+import bio.overture.ego.model.enums.ApplicationType;
+import bio.overture.ego.model.enums.StatusType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,9 +31,9 @@ public class UpdateApplicationRequest {
 
   private String name;
   private String clientId;
-  private String applicationType;
+  private ApplicationType type;
   private String clientSecret;
   private String redirectUri;
   private String description;
-  private String status;
+  private StatusType status;
 }

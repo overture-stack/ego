@@ -17,16 +17,17 @@
 
 package bio.overture.ego.selenium;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.model.dto.CreateApplicationRequest;
-import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.service.ApplicationService;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import static bio.overture.ego.model.enums.ApplicationType.ADMIN;
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class LoadAdminUITest extends AbstractSeleniumTest {
 
@@ -47,8 +48,8 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
             .clientSecret("seleniumSecret")
             .name("Selenium Tests")
             .redirectUri("http://localhost:" + uiPort)
-            .applicationType(ApplicationType.ADMIN)
-            .status("Approved")
+            .type(ADMIN)
+            .status(APPROVED)
             .description("testing")
             .build());
 

@@ -17,8 +17,6 @@
 
 package bio.overture.ego.controller;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.enums.ApplicationType;
@@ -34,6 +32,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -70,8 +71,8 @@ public class ApplicationControllerTest extends AbstractControllerTest {
             .clientId("addApplication_Success")
             .clientSecret("addApplication_Success")
             .redirectUri("http://example.com")
-            .status("Approved")
-            .applicationType(ApplicationType.CLIENT)
+            .status(APPROVED)
+            .type(ApplicationType.CLIENT)
             .build();
 
     val response = initStringRequest().endpoint("/applications").body(app).post();
@@ -91,8 +92,8 @@ public class ApplicationControllerTest extends AbstractControllerTest {
             .clientId("addDuplicateApplication")
             .clientSecret("addDuplicateApplication")
             .redirectUri("http://example.com")
-            .status("Approved")
-            .applicationType(ApplicationType.CLIENT)
+            .status(APPROVED)
+            .type(ApplicationType.CLIENT)
             .build();
 
     val app2 =
@@ -101,8 +102,8 @@ public class ApplicationControllerTest extends AbstractControllerTest {
             .clientId("addDuplicateApplication")
             .clientSecret("addDuplicateApplication")
             .redirectUri("http://example.com")
-            .status("Approved")
-            .applicationType(ApplicationType.CLIENT)
+            .status(APPROVED)
+            .type(ApplicationType.CLIENT)
             .build();
 
     val response1 = initStringRequest().endpoint("/applications").body(app1).post();
@@ -126,6 +127,6 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
     assertThat(responseJson.get("name").asText()).isEqualTo("Application 111111");
-    assertThat(responseJson.get("applicationType").asText()).isEqualTo("CLIENT");
+    assertThat(responseJson.get("type").asText()).isEqualTo("CLIENT");
   }
 }

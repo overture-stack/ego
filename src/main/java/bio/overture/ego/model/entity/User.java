@@ -17,14 +17,18 @@
 package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.enums.JavaFields;
+import bio.overture.ego.model.enums.LanguageType;
 import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
+import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.Tables;
+import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,10 +37,14 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -54,6 +62,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
 import static bio.overture.ego.service.UserService.resolveUsersPermissions;
 import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
 import static com.google.common.collect.Sets.newHashSet;
@@ -92,6 +101,7 @@ import static com.google.common.collect.Sets.newHashSet;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
+@TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
 @NamedEntityGraph(
     name = "user-entity-with-relationships",
     attributeNodes = {
@@ -127,15 +137,18 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   private String email;
 
   @NotNull
-  @Column(name = SqlFields.USERTYPE, nullable = false)
+  @Type(type = EGO_ENUM)
+  @Enumerated(EnumType.STRING)
+  @Column(name = SqlFields.TYPE, nullable = false)
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  private String userType;
+  private UserType type;
 
-  // TODO: [rtisma] replace with Enum similar to AccessLevel
   @NotNull
+  @Type(type = EGO_ENUM)
+  @Enumerated(EnumType.STRING)
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.STATUS, nullable = false)
-  private String status;
+  private StatusType status;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.FIRSTNAME)
@@ -154,10 +167,11 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   @Column(name = SqlFields.LASTLOGIN)
   private Date lastLogin;
 
-  // TODO: [rtisma] replace with Enum similar to AccessLevel
-  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
+  @Type(type = EGO_ENUM)
+  @Enumerated(EnumType.STRING)
   @Column(name = SqlFields.PREFERREDLANGUAGE)
-  private String preferredLanguage;
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
+  private LanguageType preferredLanguage;
 
   // TODO: [rtisma] test that always initialized with empty set
   @JsonIgnore

@@ -16,6 +16,7 @@
 
 package bio.overture.ego.model.dto;
 
+import bio.overture.ego.model.enums.StatusType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,5 +30,5 @@ public class GroupRequest {
 
   private String name;
   private String description;
-  private String status;
+  private StatusType status;
 }

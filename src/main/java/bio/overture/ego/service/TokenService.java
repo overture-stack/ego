@@ -23,7 +23,6 @@ import bio.overture.ego.model.dto.UserScopesResponse;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.reactor.events.UserEvents;
@@ -43,17 +42,6 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import java.security.InvalidKeyException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -76,9 +64,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static bio.overture.ego.model.dto.Scope.effectiveScopes;
 import static bio.overture.ego.model.dto.Scope.explicitScopes;
+import static bio.overture.ego.model.enums.ApplicationType.ADMIN;
 import static bio.overture.ego.service.UserService.extractScopes;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
@@ -405,7 +395,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   }
 
   private void revokeTokenAsApplication(String tokenName, Application application) {
-    if (application.getApplicationType().equals(ApplicationType.ADMIN)) {
+    if (application.getType() == ADMIN) {
       revoke(tokenName);
     } else {
       throw new InvalidRequestException(

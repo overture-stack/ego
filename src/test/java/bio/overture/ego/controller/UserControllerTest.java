@@ -17,13 +17,6 @@
 
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.utils.Collectors.toImmutableList;
-import static bio.overture.ego.utils.EntityTools.extractUserIds;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.service.ApplicationService;
@@ -32,7 +25,6 @@ import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.Streams;
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -43,6 +35,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.UUID;
+
+import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.StatusType.REJECTED;
+import static bio.overture.ego.model.enums.UserType.USER;
+import static bio.overture.ego.utils.Collectors.toImmutableList;
+import static bio.overture.ego.utils.EntityTools.extractUserIds;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -80,9 +85,9 @@ public class UserControllerTest extends AbstractControllerTest {
             .firstName("foo")
             .lastName("bar")
             .email("foobar@foo.bar")
-            .preferredLanguage("English")
-            .userType("USER")
-            .status("Approved")
+            .preferredLanguage(ENGLISH)
+            .type(USER)
+            .status(APPROVED)
             .build();
 
     val response = initStringRequest().endpoint("/users").body(user).post();
@@ -98,18 +103,18 @@ public class UserControllerTest extends AbstractControllerTest {
             .firstName("unique")
             .lastName("unique")
             .email("unique@unique.com")
-            .preferredLanguage("English")
-            .userType("USER")
-            .status("Approved")
+            .preferredLanguage(ENGLISH)
+            .type(USER)
+            .status(APPROVED)
             .build();
     val user2 =
         User.builder()
             .firstName("unique")
             .lastName("unique")
             .email("unique@unique.com")
-            .preferredLanguage("English")
-            .userType("USER")
-            .status("Approved")
+            .preferredLanguage(ENGLISH)
+            .type(USER)
+            .status(APPROVED)
             .build();
 
     val response1 = initStringRequest().endpoint("/users").body(user1).post();
@@ -138,8 +143,8 @@ public class UserControllerTest extends AbstractControllerTest {
     assertThat(responseJson.get("firstName").asText()).isEqualTo("First");
     assertThat(responseJson.get("lastName").asText()).isEqualTo("User");
     assertThat(responseJson.get("name").asText()).isEqualTo("FirstUser@domain.com");
-    assertThat(responseJson.get("preferredLanguage").asText()).isEqualTo("English");
-    assertThat(responseJson.get("status").asText()).isEqualTo("Approved");
+    assertThat(responseJson.get("preferredLanguage").asText()).isEqualTo(ENGLISH.toString());
+    assertThat(responseJson.get("status").asText()).isEqualTo(APPROVED.toString());
     assertThat(responseJson.get("id").asText()).isEqualTo(userId.toString());
   }
 
@@ -195,7 +200,7 @@ public class UserControllerTest extends AbstractControllerTest {
   @Test
   public void updateUser() {
     val user = entityGenerator.setupUser("update test");
-    val update = User.builder().id(user.getId()).status("Rejected").build();
+    val update = User.builder().id(user.getId()).status(REJECTED).build();
 
     val response = initStringRequest().endpoint("/users/%s", user.getId()).body(update).put();
 
@@ -204,7 +209,7 @@ public class UserControllerTest extends AbstractControllerTest {
     HttpStatus responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
     assertThatJson(responseBody).node("id").isEqualTo(user.getId());
-    assertThatJson(responseBody).node("status").isEqualTo("Rejected");
+    assertThatJson(responseBody).node("status").isEqualTo(REJECTED.toString());
   }
 
   @Test

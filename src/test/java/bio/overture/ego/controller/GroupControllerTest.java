@@ -1,24 +1,11 @@
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.utils.EntityTools.extractAppIds;
-import static bio.overture.ego.utils.EntityTools.extractGroupIds;
-import static bio.overture.ego.utils.EntityTools.extractIDs;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
-import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
-import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -30,6 +17,20 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.UUID;
+
+import static bio.overture.ego.model.enums.StatusType.PENDING;
+import static bio.overture.ego.utils.EntityTools.extractAppIds;
+import static bio.overture.ego.utils.EntityTools.extractGroupIds;
+import static bio.overture.ego.utils.EntityTools.extractIDs;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -64,7 +65,7 @@ public class GroupControllerTest extends AbstractControllerTest {
     val group =
         Group.builder()
             .name("Wizards")
-            .status(EntityStatus.PENDING.toString())
+            .status(PENDING)
             .description("")
             .build();
 
@@ -94,7 +95,7 @@ public class GroupControllerTest extends AbstractControllerTest {
     val responseBody = response.getBody();
     val expected =
         format(
-            "{\"id\":\"%s\",\"name\":\"Group One\",\"description\":\"\",\"status\":\"Pending\"}",
+            "{\"id\":\"%s\",\"name\":\"Group One\",\"description\":\"\",\"status\":\"PENDING\"}",
             groupId);
 
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
@@ -122,7 +123,7 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     val expected =
         format(
-            "[{\"id\":\"%s\",\"name\":\"Group One\",\"description\":\"\",\"status\":\"Pending\"}, {\"id\":\"%s\",\"name\":\"Group Two\",\"description\":\"\",\"status\":\"Pending\"}, {\"id\":\"%s\",\"name\":\"Group Three\",\"description\":\"\",\"status\":\"Pending\"}]",
+            "[{\"id\":\"%s\",\"name\":\"Group One\",\"description\":\"\",\"status\":\"PENDING\"}, {\"id\":\"%s\",\"name\":\"Group Two\",\"description\":\"\",\"status\":\"PENDING\"}, {\"id\":\"%s\",\"name\":\"Group Three\",\"description\":\"\",\"status\":\"PENDING\"}]",
             groupService.getByName("Group One").getId(),
             groupService.getByName("Group Two").getId(),
             groupService.getByName("Group Three").getId());
