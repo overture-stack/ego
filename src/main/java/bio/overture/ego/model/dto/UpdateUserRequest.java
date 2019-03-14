@@ -16,11 +16,15 @@
 
 package bio.overture.ego.model.dto;
 
-import java.util.Date;
+import bio.overture.ego.model.enums.LanguageType;
+import bio.overture.ego.model.enums.StatusType;
+import bio.overture.ego.model.enums.UserType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Date;
 
 @Data
 @Builder
@@ -29,10 +33,10 @@ import lombok.NoArgsConstructor;
 public class UpdateUserRequest {
 
   private String email;
-  private String userType;
-  private String status;
+  private UserType type;
+  private StatusType status;
   private String firstName;
   private String lastName;
-  private String preferredLanguage;
+  private LanguageType preferredLanguage;
   private Date lastLogin;
 }

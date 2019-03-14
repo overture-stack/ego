@@ -1,8 +1,8 @@
 package bio.overture.ego.model.enums;
 
-import static lombok.AccessLevel.PRIVATE;
-
 import lombok.NoArgsConstructor;
+
+import static lombok.AccessLevel.PRIVATE;
 
 @NoArgsConstructor(access = PRIVATE)
 public class SqlFields {
@@ -10,8 +10,7 @@ public class SqlFields {
   public static final String ID = "id";
   public static final String NAME = "name";
   public static final String EMAIL = "email";
-  public static final String USERTYPE = "usertype";
-  public static final String APPLICATIONTYPE = "applicationtype";
+  public static final String TYPE = "type";
   public static final String STATUS = "status";
   public static final String FIRSTNAME = "firstname";
   public static final String LASTNAME = "lastname";

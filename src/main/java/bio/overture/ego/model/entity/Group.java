@@ -16,21 +16,31 @@
 
 package bio.overture.ego.model.entity;
 
-import static com.google.common.collect.Sets.newHashSet;
-
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
+import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import java.util.Set;
-import java.util.UUID;
+import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -43,13 +53,11 @@ import javax.persistence.NamedSubgraph;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import org.hibernate.annotations.GenericGenerator;
+import java.util.Set;
+import java.util.UUID;
+
+import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
+import static com.google.common.collect.Sets.newHashSet;
 
 @Data
 @Entity
@@ -59,6 +67,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Table(name = Tables.GROUP)
 @JsonView(Views.REST.class)
 @EqualsAndHashCode(of = {LombokFields.id})
+@TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
 @ToString(exclude = {LombokFields.users, LombokFields.applications, LombokFields.permissions})
 @JsonPropertyOrder({
   JavaFields.ID,
@@ -101,10 +110,11 @@ public class Group implements PolicyOwner, NameableEntity<UUID> {
   @Column(name = SqlFields.DESCRIPTION)
   private String description;
 
-  // TODO: [rtisma] replace with Enum similar to AccessLevel
   @NotNull
+  @Type(type = EGO_ENUM)
+  @Enumerated(EnumType.STRING)
   @Column(name = SqlFields.STATUS, nullable = false)
-  private String status;
+  private StatusType status;
 
   // TODO: [rtisma] rename this to groupPermissions.
   // Ensure anything using JavaFields.PERMISSIONS is also replaced with JavaFields.GROUPPERMISSIONS

@@ -1,19 +1,22 @@
 package bio.overture.ego.utils;
 
-import static bio.overture.ego.utils.CollectionUtils.listOf;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.model.params.ScopeName;
+import lombok.val;
+
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import lombok.val;
+
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.UserType.USER;
+import static bio.overture.ego.utils.CollectionUtils.listOf;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 
 public class TestData {
   public Application song;
@@ -59,8 +62,8 @@ public class TestData {
     entityGenerator.addPermissions(user2, getScopes("song.READ", "collab.READ", "id.WRITE"));
 
     regularUser = entityGenerator.setupUser("Regular User");
-    regularUser.setUserType("USER");
-    regularUser.setStatus("Approved");
+    regularUser.setType(USER);
+    regularUser.setStatus(APPROVED);
     entityGenerator.addPermissions(regularUser, getScopes("song.READ", "collab.READ"));
   }
 

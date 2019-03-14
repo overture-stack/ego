@@ -16,31 +16,33 @@
 
 package bio.overture.ego.model.enums;
 
-import static bio.overture.ego.utils.Streams.stream;
-import static java.lang.String.format;
-
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static bio.overture.ego.utils.Streams.stream;
+import static java.lang.String.format;
+
 @RequiredArgsConstructor
 public enum UserType {
-  USER("USER"),
-  ADMIN("ADMIN");
+  USER,
+  ADMIN;
 
-  @NonNull private final String value;
-
-  @Override
-  public String toString() {
-    return value;
-  }
-
-  public static UserType resolveUserTypeIgnoreCase(@NonNull String userType) {
+  public static UserType resolveUserType(@NonNull String userType) {
     return stream(values())
-        .filter(x -> x.toString().equals(userType.toUpperCase()))
+        .filter(x -> x.toString().equals(userType))
         .findFirst()
         .orElseThrow(
             () ->
-                new IllegalStateException(
-                    format("The user applicationType '%s' cannot be resolved", userType)));
+                new IllegalArgumentException(
+                    format(
+                        "The user type '%s' cannot be resolved. Must be one of: [%s]",
+                        userType, COMMA.join(values()))));
   }
+
+  @Override
+  public String toString() {
+    return this.name();
+  }
+
 }

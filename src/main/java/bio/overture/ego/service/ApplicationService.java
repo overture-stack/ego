@@ -49,7 +49,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static bio.overture.ego.model.enums.ApplicationStatus.APPROVED;
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
@@ -195,7 +195,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
     val application = getByClientId(clientId);
 
-    if (!application.getStatus().equals(APPROVED.toString())) {
+    if (application.getStatus() != APPROVED) {
       throw new ClientRegistrationException("Client Access is not approved.");
     }
 

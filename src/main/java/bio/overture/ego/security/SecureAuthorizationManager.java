@@ -24,13 +24,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.Authentication;
 
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.UserType.ADMIN;
+import static bio.overture.ego.model.enums.UserType.USER;
+
 @Slf4j
 @Profile("auth")
 public class SecureAuthorizationManager implements AuthorizationManager {
   public boolean authorize(@NonNull Authentication authentication) {
     log.info("Trying to authorize as user");
     User user = (User) authentication.getPrincipal();
-    return "user".equals(user.getUserType().toLowerCase()) && isActiveUser(user);
+    return user.getType() == USER && isActiveUser(user);
   }
 
   public boolean authorizeWithAdminRole(@NonNull Authentication authentication) {
@@ -39,11 +43,11 @@ public class SecureAuthorizationManager implements AuthorizationManager {
     if (authentication.getPrincipal() instanceof User) {
       User user = (User) authentication.getPrincipal();
       log.info("Trying to authorize user '" + user.getName() + "' as admin");
-      status = "admin".equals(user.getUserType().toLowerCase()) && isActiveUser(user);
+      status = user.getType() == ADMIN && isActiveUser(user);
     } else if (authentication.getPrincipal() instanceof Application) {
       Application application = (Application) authentication.getPrincipal();
       log.info("Trying to authorize application '" + application.getName() + "' as admin");
-      status = application.getApplicationType() == ApplicationType.ADMIN;
+      status = application.getType() == ApplicationType.ADMIN;
     } else {
       log.info("Unknown applicationType of authentication passed to authorizeWithAdminRole");
     }
@@ -64,6 +68,6 @@ public class SecureAuthorizationManager implements AuthorizationManager {
   }
 
   public boolean isActiveUser(User user) {
-    return "approved".equals(user.getStatus().toLowerCase());
+    return user.getStatus() == APPROVED;
   }
 }

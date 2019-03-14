@@ -16,6 +16,7 @@
 
 package bio.overture.ego.service;
 
+import bio.overture.ego.config.UserDefaultsConfig;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UpdateUserRequest;
@@ -42,7 +43,6 @@ import org.mapstruct.ReportingPolicy;
 import org.mapstruct.TargetType;
 import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -57,7 +57,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import static bio.overture.ego.model.enums.UserType.ADMIN;
-import static bio.overture.ego.model.enums.UserType.resolveUserTypeIgnoreCase;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
@@ -89,21 +88,19 @@ public class UserService extends AbstractNamedService<User, UUID> {
   /**
    * Configuration
    */
-  @Value("${default.user.type}")
-  private String DEFAULT_USER_TYPE;
-
-  @Value("${default.user.status}")
-  private String DEFAULT_USER_STATUS;
+  private final UserDefaultsConfig userDefaultsConfig;
 
   @Autowired
   public UserService(
       @NonNull UserRepository userRepository,
       @NonNull GroupService groupService,
-      @NonNull ApplicationService applicationService) {
+      @NonNull ApplicationService applicationService,
+      @NonNull UserDefaultsConfig userDefaultsConfig) {
     super(User.class, userRepository);
     this.userRepository = userRepository;
     this.groupService = groupService;
     this.applicationService = applicationService;
+    this.userDefaultsConfig = userDefaultsConfig;
   }
 
   public User create(@NonNull CreateUserRequest request) {
@@ -118,8 +115,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .email(idToken.getEmail())
             .firstName(idToken.getGiven_name())
             .lastName(idToken.getFamily_name())
-            .status(DEFAULT_USER_STATUS)
-            .userType(DEFAULT_USER_TYPE)
+            .status(userDefaultsConfig.getDefaultUserStatus())
+            .type(userDefaultsConfig.getDefaultUserType())
             .build());
   }
 
@@ -367,12 +364,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
     onUpdateDetected(originalUser.getEmail(), r.getEmail(), () -> checkEmailUnique(r.getEmail()));
-    // Ensure type is the right value. This should be removed once Enums are properly
-    // used
-    onUpdateDetected(
-        originalUser.getUserType(),
-        r.getUserType(),
-        () -> resolveUserTypeIgnoreCase(r.getUserType()));
   }
 
   private void checkEmailUnique(String email) {
@@ -400,11 +391,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
     @AfterMapping
     protected void correctUserData(@MappingTarget User userToUpdate) {
-      // Ensure UserType is a correct value
-      if (!isNull(userToUpdate.getUserType())) {
-        userToUpdate.setUserType(resolveUserTypeIgnoreCase(userToUpdate.getUserType()).toString());
-      }
-
       // Set UserName to equal the email.
       userToUpdate.setName(userToUpdate.getEmail());
 
@@ -416,10 +402,11 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   public boolean isActiveUser(User user) {
-    return resolveUserTypeIgnoreCase(user.getUserType()) == ADMIN;
+    return isAdmin(user);
   }
 
   public boolean isAdmin(User user) {
-    return "admin".equals((user.getUserType().toLowerCase()));
+    return user.getType() == ADMIN;
   }
+
 }

@@ -4,7 +4,6 @@ import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.enums.EntityStatus;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
@@ -30,6 +29,8 @@ import java.util.stream.Collectors;
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.StatusType.PENDING;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static bio.overture.ego.utils.EntityTools.extractGroupNames;
 import static com.google.common.collect.Lists.newArrayList;
@@ -63,7 +64,7 @@ public class GroupsServiceTest {
 
   @Test
   public void uniqueNameCheck_CreateGroup_ThrowsUniqueConstraintException() {
-    val r1 = GroupRequest.builder().name(UUID.randomUUID().toString()).status("Pending").build();
+    val r1 = GroupRequest.builder().name(UUID.randomUUID().toString()).status(PENDING).build();
 
     val g1 = groupService.create(r1);
     assertThat(groupService.isExist(g1.getId())).isTrue();
@@ -77,9 +78,9 @@ public class GroupsServiceTest {
   public void uniqueClientIdCheck_UpdateGroup_ThrowsUniqueConstraintException() {
     val name1 = UUID.randomUUID().toString();
     val name2 = UUID.randomUUID().toString();
-    val cr1 = GroupRequest.builder().name(name1).status("Pending").build();
+    val cr1 = GroupRequest.builder().name(name1).status(PENDING).build();
 
-    val cr2 = GroupRequest.builder().name(name2).status("Approved").build();
+    val cr2 = GroupRequest.builder().name(name2).status(APPROVED).build();
 
     val g1 = groupService.create(cr1);
     assertThat(groupService.isExist(g1.getId())).isTrue();
@@ -436,7 +437,7 @@ public class GroupsServiceTest {
     val nonExistentEntity =
         GroupRequest.builder()
             .name("NonExistent")
-            .status(EntityStatus.PENDING.toString())
+            .status(PENDING)
             .description("")
             .build();
     assertThatExceptionOfType(NotFoundException.class)

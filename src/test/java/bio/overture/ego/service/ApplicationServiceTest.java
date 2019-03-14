@@ -5,7 +5,6 @@ import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.enums.ApplicationStatus;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
@@ -31,6 +30,10 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.StatusType.DISABLED;
+import static bio.overture.ego.model.enums.StatusType.PENDING;
+import static bio.overture.ego.model.enums.StatusType.REJECTED;
 import static bio.overture.ego.service.ApplicationService.APPLICATION_CONVERTER;
 import static bio.overture.ego.utils.CollectionUtils.setOf;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
@@ -64,7 +67,7 @@ public class ApplicationServiceTest {
     val clientId = randomUUID().toString();
     val clientSecret = randomUUID().toString();
     val name = randomUUID().toString();
-    val status = ApplicationStatus.PENDING.toString();
+    val status = PENDING;
 
     val groups =
         IntStream.range(0, 3)
@@ -89,7 +92,7 @@ public class ApplicationServiceTest {
     val partialAppUpdateRequest =
         UpdateApplicationRequest.builder()
             .name(newName)
-            .status(ApplicationStatus.APPROVED.toString())
+            .status(APPROVED)
             .redirectUri(randomUUID().toString())
             .build();
     APPLICATION_CONVERTER.updateApplication(partialAppUpdateRequest, app);
@@ -99,7 +102,7 @@ public class ApplicationServiceTest {
     assertThat(app.getClientSecret()).isEqualTo(clientSecret);
     assertThat(app.getClientId()).isEqualTo(clientId);
     assertThat(app.getRedirectUri()).isNotNull();
-    assertThat(app.getStatus()).isEqualTo(ApplicationStatus.APPROVED.toString());
+    assertThat(app.getStatus()).isEqualTo(APPROVED);
     assertThat(app.getId()).isEqualTo(id);
     assertThat(app.getName()).isEqualTo(newName);
     assertThat(app.getUsers()).isNull();
@@ -109,7 +112,7 @@ public class ApplicationServiceTest {
   public void applicationConversion_CreateApplicationRequest_Application() {
     val req =
         CreateApplicationRequest.builder()
-            .status(ApplicationStatus.PENDING.toString())
+            .status(PENDING)
             .clientSecret(randomUUID().toString())
             .clientId(randomUUID().toString())
             .name(randomUUID().toString())
@@ -488,7 +491,7 @@ public class ApplicationServiceTest {
             .clientId(UUID.randomUUID().toString())
             .clientSecret(UUID.randomUUID().toString())
             .name(UUID.randomUUID().toString())
-            .status("Pending")
+            .status(PENDING)
             .build();
 
     val a1 = applicationService.create(r1);
@@ -508,7 +511,7 @@ public class ApplicationServiceTest {
             .clientId(clientId1)
             .clientSecret(UUID.randomUUID().toString())
             .name(UUID.randomUUID().toString())
-            .status("Pending")
+            .status(PENDING)
             .build();
 
     val cr2 =
@@ -516,7 +519,7 @@ public class ApplicationServiceTest {
             .clientId(clientId2)
             .clientSecret(UUID.randomUUID().toString())
             .name(UUID.randomUUID().toString())
-            .status("Approved")
+            .status(APPROVED)
             .build();
 
     val a1 = applicationService.create(cr1);
@@ -580,7 +583,7 @@ public class ApplicationServiceTest {
   public void testLoadClientByClientId() {
     val application = entityGenerator.setupApplication("123456");
     val updateRequest =
-        UpdateApplicationRequest.builder().status(ApplicationStatus.APPROVED.toString()).build();
+        UpdateApplicationRequest.builder().status(APPROVED).build();
     applicationService.partialUpdate(application.getId(), updateRequest);
 
     val client = applicationService.loadClientByClientId("123456");
@@ -613,19 +616,19 @@ public class ApplicationServiceTest {
   @Test
   public void testLoadClientByClientIdNotApproved() {
     val application = entityGenerator.setupApplication("123456");
-    val updateRequest = UpdateApplicationRequest.builder().status("Pending").build();
+    val updateRequest = UpdateApplicationRequest.builder().status(PENDING).build();
     applicationService.partialUpdate(application.getId(), updateRequest);
     assertThatExceptionOfType(ClientRegistrationException.class)
         .isThrownBy(() -> applicationService.loadClientByClientId("123456"))
         .withMessage("Client Access is not approved.");
 
-    updateRequest.setStatus("Rejected");
+    updateRequest.setStatus(REJECTED);
     applicationService.partialUpdate(application.getId(), updateRequest);
     assertThatExceptionOfType(ClientRegistrationException.class)
         .isThrownBy(() -> applicationService.loadClientByClientId("123456"))
         .withMessage("Client Access is not approved.");
 
-    updateRequest.setStatus("Disabled");
+    updateRequest.setStatus(DISABLED);
     applicationService.partialUpdate(application.getId(), updateRequest);
     assertThatExceptionOfType(ClientRegistrationException.class)
         .isThrownBy(() -> applicationService.loadClientByClientId("123456"))

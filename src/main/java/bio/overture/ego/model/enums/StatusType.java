@@ -19,18 +19,33 @@ package bio.overture.ego.model.enums;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
-public enum EntityStatus {
-  APPROVED("Approved"),
-  DISABLED("Disabled"),
-  PENDING("Pending"),
-  REJECTED("Rejected"),
-  ;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static bio.overture.ego.utils.Streams.stream;
+import static java.lang.String.format;
 
-  @NonNull private final String value;
+@RequiredArgsConstructor
+public enum StatusType {
+
+  APPROVED,
+  DISABLED,
+  PENDING,
+  REJECTED;
+
+  public static StatusType resolveStatusType(@NonNull String statusType) {
+    return stream(values())
+        .filter(x -> x.toString().equals(statusType))
+        .findFirst()
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException(
+                    format(
+                        "The status type '%s' cannot be resolved. Must be one of: [%s]",
+                        statusType, COMMA.join(values()))));
+  }
 
   @Override
   public String toString() {
-    return value;
+    return this.name();
   }
+
 }

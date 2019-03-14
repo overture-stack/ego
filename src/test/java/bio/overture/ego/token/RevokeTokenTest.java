@@ -1,13 +1,9 @@
 package bio.overture.ego.token;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.TestData;
-import java.util.HashSet;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
@@ -22,6 +18,13 @@ import org.springframework.security.oauth2.common.exceptions.InvalidTokenExcepti
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.UserType.ADMIN;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 @Slf4j
 @SpringBootTest
@@ -51,8 +54,8 @@ public class RevokeTokenTest {
     applications.add(test.score);
 
     entityGenerator.setupToken(test.user1, adminTokenString, 1000, scopes, applications);
-    test.user1.setUserType("ADMIN");
-    test.user1.setStatus("Approved");
+    test.user1.setType(ADMIN);
+    test.user1.setStatus(APPROVED);
 
     val randomTokenString = "891044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val randomToken =
@@ -76,8 +79,8 @@ public class RevokeTokenTest {
 
     val adminToken =
         entityGenerator.setupToken(test.user1, tokenString, 1000, scopes, applications);
-    test.user1.setUserType("ADMIN");
-    test.user1.setStatus("Approved");
+    test.user1.setType(ADMIN);
+    test.user1.setStatus(APPROVED);
 
     assertFalse(adminToken.isRevoked());
 

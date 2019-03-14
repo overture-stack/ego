@@ -18,14 +18,15 @@ package bio.overture.ego.repository.queryspecification;
 
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.QueryUtils;
-import java.util.Arrays;
-import java.util.List;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import java.util.Arrays;
+import java.util.List;
 
 public class SpecificationBase<T> {
   protected static <T> Predicate[] getQueryPredicates(
@@ -44,7 +45,9 @@ public class SpecificationBase<T> {
       @NonNull String fieldName,
       String fieldValue) {
     val finalText = QueryUtils.prepareForQuery(fieldValue);
-    return builder.like(builder.lower(root.get(fieldName)), finalText);
+
+    // Cast "as" String so that we can search ENUM types
+    return builder.like(builder.lower(root.get(fieldName).as(String.class)), finalText);
   }
 
   public static <T> Specification<T> filterBy(@NonNull List<SearchFilter> filters) {
