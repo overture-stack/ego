@@ -114,7 +114,7 @@ public class GroupController {
         paramType = "query",
         value =
             "Filter by status. "
-                + "You could also specify filters on any field of the policy being queried as "
+                + "You could also specify filters on any field of the group being queried as "
                 + "query parameters in this format: name=something")
   })
   @ApiResponses(
@@ -274,7 +274,7 @@ public class GroupController {
         paramType = "query",
         value =
             "Filter by status. "
-                + "You could also specify filters on any field of the policy being queried as "
+                + "You could also specify filters on any field of the application being queried as "
                 + "query parameters in this format: name=something")
   })
   @ApiResponses(
@@ -352,7 +352,7 @@ public class GroupController {
         paramType = "query",
         value =
             "Filter by status. "
-                + "You could also specify filters on any field of the policy being queried as "
+                + "You could also specify filters on any field of the user being queried as "
                 + "query parameters in this format: name=something")
   })
   @ApiResponses(
