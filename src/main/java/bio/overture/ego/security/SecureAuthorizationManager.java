@@ -16,6 +16,10 @@
 
 package bio.overture.ego.security;
 
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.UserType.ADMIN;
+import static bio.overture.ego.model.enums.UserType.USER;
+
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.ApplicationType;
@@ -23,10 +27,6 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.Authentication;
-
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static bio.overture.ego.model.enums.UserType.ADMIN;
-import static bio.overture.ego.model.enums.UserType.USER;
 
 @Slf4j
 @Profile("auth")

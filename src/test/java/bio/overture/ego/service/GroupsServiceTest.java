@@ -1,31 +1,5 @@
 package bio.overture.ego.service;
 
-import bio.overture.ego.controller.resolver.PageableResolver;
-import bio.overture.ego.model.dto.GroupRequest;
-import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.exceptions.NotFoundException;
-import bio.overture.ego.model.exceptions.UniqueViolationException;
-import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.PolicyPermissionUtils;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.EntityNotFoundException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
@@ -36,6 +10,31 @@ import static bio.overture.ego.utils.EntityTools.extractGroupNames;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
+import bio.overture.ego.controller.resolver.PageableResolver;
+import bio.overture.ego.model.dto.GroupRequest;
+import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.entity.AbstractPermission;
+import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.exceptions.UniqueViolationException;
+import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.PolicyPermissionUtils;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import javax.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @SpringBootTest
@@ -338,17 +337,11 @@ public class GroupsServiceTest {
     entityGenerator.setupTestApplications("testFindApplicationsGroupsNoQueryFilters");
 
     val groupId =
-        groupService
-            .getByName("Group One_testFindApplicationsGroupsNoQueryFilters")
-            .getId();
+        groupService.getByName("Group One_testFindApplicationsGroupsNoQueryFilters").getId();
     val groupTwoId =
-        groupService
-            .getByName("Group Two_testFindApplicationsGroupsNoQueryFilters")
-            .getId();
+        groupService.getByName("Group Two_testFindApplicationsGroupsNoQueryFilters").getId();
     val applicationId =
-        applicationService
-            .getByClientId("111111_testFindApplicationsGroupsNoQueryFilters")
-            .getId() ;
+        applicationService.getByClientId("111111_testFindApplicationsGroupsNoQueryFilters").getId();
 
     groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
     groupService.addAppsToGroup(groupTwoId, Arrays.asList(applicationId));
@@ -371,13 +364,9 @@ public class GroupsServiceTest {
     entityGenerator.setupTestApplications("testFindApplicationsGroupsQueryAndFilters");
 
     val groupId =
-        groupService
-            .getByName("Group One_testFindApplicationsGroupsQueryAndFilters")
-            .getId();
+        groupService.getByName("Group One_testFindApplicationsGroupsQueryAndFilters").getId();
     val groupTwoId =
-        groupService
-            .getByName("Group Two_testFindApplicationsGroupsQueryAndFilters")
-            .getId();
+        groupService.getByName("Group Two_testFindApplicationsGroupsQueryAndFilters").getId();
     val applicationId =
         applicationService
             .getByClientId("111111_testFindApplicationsGroupsQueryAndFilters")
@@ -435,11 +424,7 @@ public class GroupsServiceTest {
   public void testUpdateNonexistentEntity() {
     val nonExistentId = generateNonExistentId(groupService);
     val nonExistentEntity =
-        GroupRequest.builder()
-            .name("NonExistent")
-            .status(PENDING)
-            .description("")
-            .build();
+        GroupRequest.builder().name("NonExistent").status(PENDING).description("").build();
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> groupService.partialUpdate(nonExistentId, nonExistentEntity));
   }
@@ -490,9 +475,7 @@ public class GroupsServiceTest {
     val applicationId = applicationService.getByClientId("111111").getId();
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
-            () ->
-                groupService.addAppsToGroup(
-                    UUID.randomUUID(), Arrays.asList(applicationId)));
+            () -> groupService.addAppsToGroup(UUID.randomUUID(), Arrays.asList(applicationId)));
   }
 
   @Test
@@ -502,9 +485,7 @@ public class GroupsServiceTest {
 
     val groupId = groupService.getByName("Group One").getId();
     assertThatExceptionOfType(NotFoundException.class)
-        .isThrownBy(
-            () ->
-                groupService.addAppsToGroup(groupId, Arrays.asList(UUID.randomUUID())));
+        .isThrownBy(() -> groupService.addAppsToGroup(groupId, Arrays.asList(UUID.randomUUID())));
   }
 
   @Test
@@ -581,8 +562,7 @@ public class GroupsServiceTest {
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
             () ->
-                groupService.deleteAppsFromGroup(
-                    UUID.randomUUID(), Arrays.asList(applicationId)));
+                groupService.deleteAppsFromGroup(UUID.randomUUID(), Arrays.asList(applicationId)));
   }
 
   @Test
@@ -609,9 +589,7 @@ public class GroupsServiceTest {
     val user = entityGenerator.setupUser("foo bar");
     val group = entityGenerator.setupGroup("testGroup");
 
-    val updatedGroup =
-        groupService.addUsersToGroup(
-            group.getId(), newArrayList(user.getId()));
+    val updatedGroup = groupService.addUsersToGroup(group.getId(), newArrayList(user.getId()));
 
     groupService.delete(updatedGroup.getId());
     assertThat(userService.getById(user.getId())).isNotNull();
@@ -623,8 +601,7 @@ public class GroupsServiceTest {
     val app = entityGenerator.setupApplication("foobar");
     val group = entityGenerator.setupGroup("testGroup");
 
-    val updatedGroup =
-        groupService.addAppsToGroup(group.getId(), newArrayList(app.getId()));
+    val updatedGroup = groupService.addAppsToGroup(group.getId(), newArrayList(app.getId()));
 
     groupService.delete(updatedGroup.getId());
     assertThat(applicationService.getById(app.getId())).isNotNull();

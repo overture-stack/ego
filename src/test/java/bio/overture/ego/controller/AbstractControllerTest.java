@@ -12,7 +12,6 @@ import org.junit.Before;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpRequest;
 
 @Slf4j
 public abstract class AbstractControllerTest {

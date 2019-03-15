@@ -17,27 +17,6 @@
 
 package bio.overture.ego.controller;
 
-import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.UserService;
-import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.Streams;
-import com.fasterxml.jackson.databind.JsonNode;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.UUID;
-
 import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.REJECTED;
@@ -48,6 +27,26 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import bio.overture.ego.AuthorizationServiceMain;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.GroupService;
+import bio.overture.ego.service.UserService;
+import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.Streams;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.util.UUID;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
 
 @Slf4j
 @ActiveProfiles("test")

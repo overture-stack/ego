@@ -16,6 +16,8 @@
 
 package bio.overture.ego.controller;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
@@ -36,6 +38,9 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import java.util.UUID;
+import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,12 +60,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.UUID;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
-
 @Slf4j
 @RestController
 @RequestMapping("/applications")
@@ -68,6 +67,7 @@ public class ApplicationController {
 
   /** Dependencies */
   private final ApplicationService applicationService;
+
   private final GroupService groupService;
   private final UserService userService;
 

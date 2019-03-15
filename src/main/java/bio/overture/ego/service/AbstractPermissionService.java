@@ -1,29 +1,5 @@
 package bio.overture.ego.service;
 
-import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.dto.PolicyResponse;
-import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.NameableEntity;
-import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.repository.PermissionRepository;
-import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
-import com.google.common.collect.ImmutableList;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
 import static bio.overture.ego.model.dto.Scope.createScope;
 import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
@@ -46,16 +22,38 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
+import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.dto.PolicyResponse;
+import bio.overture.ego.model.dto.Scope;
+import bio.overture.ego.model.entity.AbstractPermission;
+import bio.overture.ego.model.entity.NameableEntity;
+import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.repository.PermissionRepository;
+import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
+import com.google.common.collect.ImmutableList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
+
 @Slf4j
 @Transactional
 public abstract class AbstractPermissionService<
         O extends NameableEntity<UUID>, P extends AbstractPermission<O>>
     extends AbstractBaseService<P, UUID> {
 
-  /**
-   * Dependencies
-   */
+  /** Dependencies */
   private final BaseService<Policy, UUID> policyBaseService;
+
   private final BaseService<O, UUID> ownerBaseService;
   private final PermissionRepository<O, P> permissionRepository;
   private final Class<O> ownerType;
@@ -95,8 +93,7 @@ public abstract class AbstractPermissionService<
     getRepository().delete(perm);
   }
 
-  public void deletePermissions(
-      @NonNull UUID ownerId, @NonNull Collection<UUID> idsToDelete) {
+  public void deletePermissions(@NonNull UUID ownerId, @NonNull Collection<UUID> idsToDelete) {
     checkMalformedRequest(
         !idsToDelete.isEmpty(),
         "Must add at least 1 permission for %s '%s'",
@@ -277,18 +274,22 @@ public abstract class AbstractPermissionService<
    * look ugly with all the generic type bounding. In the interest of more readable code, using
    * member methods is a cleaner approach.
    */
-  public static Set<AbstractPermission> resolveFinalPermissions(Collection<? extends AbstractPermission> ... collections) {
-    val combinedPermissionAgg = stream(collections)
-        .flatMap(Collection::stream)
-        .filter(x -> !isNull(x.getPolicy()))
-        .collect(groupingBy(AbstractPermission::getPolicy));
-    return combinedPermissionAgg.values()
+  public static Set<AbstractPermission> resolveFinalPermissions(
+      Collection<? extends AbstractPermission>... collections) {
+    val combinedPermissionAgg =
+        stream(collections)
+            .flatMap(Collection::stream)
+            .filter(x -> !isNull(x.getPolicy()))
+            .collect(groupingBy(AbstractPermission::getPolicy));
+    return combinedPermissionAgg
+        .values()
         .stream()
         .map(AbstractPermissionService::resolvePermissions)
         .collect(toImmutableSet());
   }
 
-  private static AbstractPermission resolvePermissions(List<? extends AbstractPermission> permissions) {
+  private static AbstractPermission resolvePermissions(
+      List<? extends AbstractPermission> permissions) {
     checkState(!permissions.isEmpty(), "Input permission list cannot be empty");
     permissions.sort(comparing(AbstractPermission::getAccessLevel));
     reverse(permissions);

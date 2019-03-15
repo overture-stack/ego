@@ -16,6 +16,9 @@
 
 package bio.overture.ego.model.entity;
 
+import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
+import static com.google.common.collect.Sets.newHashSet;
+
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
@@ -26,16 +29,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-
+import java.util.Set;
+import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -53,11 +48,15 @@ import javax.persistence.NamedSubgraph;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import java.util.Set;
-import java.util.UUID;
-
-import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
-import static com.google.common.collect.Sets.newHashSet;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
 
 @Data
 @Entity

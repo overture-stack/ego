@@ -1,21 +1,19 @@
 package bio.overture.ego.service;
 
+import bio.overture.ego.event.CleanupTokenPublisher;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.entity.User;
 import bio.overture.ego.repository.GroupPermissionRepository;
-import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -23,34 +21,38 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
 
   /** Dependencies */
   private final GroupService groupService;
-  private final TokenService tokenService;
+
+  private final CleanupTokenPublisher cleanupTokenPublisher;
 
   @Autowired
   public GroupPermissionService(
       @NonNull GroupPermissionRepository repository,
       @NonNull GroupService groupService,
-      @NonNull TokenService tokenService,
+      @NonNull CleanupTokenPublisher cleanupTokenPublisher,
       @NonNull PolicyService policyService) {
     super(Group.class, GroupPermission.class, groupService, policyService, repository);
     this.groupService = groupService;
-    this.tokenService = tokenService;
+    this.cleanupTokenPublisher = cleanupTokenPublisher;
   }
 
   /**
-   * Decorates the call to addPermissions with the functionality to also cleanup user tokens in the event
-   * that the permission added downgrades the available scopes to the users of this group.
+   * Decorates the call to addPermissions with the functionality to also cleanup user tokens in the
+   * event that the permission added downgrades the available scopes to the users of this group.
+   *
    * @param groupId Id of the group who's permissions are being added or updated
    * @param permissionRequests A list of permission changes
    */
   @Override
-  public Group addPermissions(@NonNull UUID groupId, @NonNull List<PermissionRequest> permissionRequests) {
+  public Group addPermissions(
+      @NonNull UUID groupId, @NonNull List<PermissionRequest> permissionRequests) {
     val group = super.addPermissions(groupId, permissionRequests);
-    tokenService.cleanupTokens(group.getUsers());
+    cleanupTokenPublisher.requestTokenCleanup(group.getUsers());
     return group;
   }
 
   /**
    * Decorates the call to deletePermissions with the functionality to also cleanup user tokens
+   *
    * @param groupId Id of the group who's permissions are being deleted
    * @param idsToDelete Ids of the permission to delete
    */
@@ -58,7 +60,7 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
   public void deletePermissions(@NonNull UUID groupId, @NonNull Collection<UUID> idsToDelete) {
     super.deletePermissions(groupId, idsToDelete);
     val group = getOwnerWithRelationships(groupId);
-    tokenService.cleanupTokens(group.getUsers());
+    cleanupTokenPublisher.requestTokenCleanup(group.getUsers());
   }
 
   @Override
@@ -75,5 +77,4 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
   public Group getOwnerWithRelationships(@NonNull UUID ownerId) {
     return groupService.getGroupWithRelationships(ownerId);
   }
-
 }

@@ -16,6 +16,16 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.dto.Scope.effectiveScopes;
+import static bio.overture.ego.model.dto.Scope.explicitScopes;
+import static bio.overture.ego.model.enums.ApplicationType.ADMIN;
+import static bio.overture.ego.service.UserService.extractScopes;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
+import static java.lang.String.format;
+import static java.util.UUID.fromString;
+import static org.springframework.util.DigestUtils.md5Digest;
+
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
@@ -42,18 +52,6 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
-import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
-import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
-import org.springframework.stereotype.Service;
-
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -65,16 +63,17 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import static bio.overture.ego.model.dto.Scope.effectiveScopes;
-import static bio.overture.ego.model.dto.Scope.explicitScopes;
-import static bio.overture.ego.model.enums.ApplicationType.ADMIN;
-import static bio.overture.ego.service.UserService.extractScopes;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
-import static java.lang.String.format;
-import static java.util.UUID.fromString;
-import static org.springframework.util.DigestUtils.md5Digest;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
+import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
+import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -95,12 +94,9 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   private TokenStoreService tokenStoreService;
   private PolicyService policyService;
 
-  /**
-   * Configuration
-   */
+  /** Configuration */
   @Value("${jwt.duration:86400000}")
   private int DURATION;
-
 
   public TokenService(
       @NonNull TokenSigner tokenSigner,
@@ -343,8 +339,9 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     val t =
         findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found"));
 
-    if(t.isRevoked()){
-        throw new InvalidTokenException(format("Token \"%s\" has expired or is no longer valid. ", token));
+    if (t.isRevoked()) {
+      throw new InvalidTokenException(
+          format("Token \"%s\" has expired or is no longer valid. ", token));
     }
 
     val clientId = application.getClientId();
@@ -366,32 +363,12 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     return new TokenScopeResponse(owner.getName(), clientId, t.getSecondsUntilExpiry(), names);
   }
 
-  public UserScopesResponse userScopes(@NonNull String userName){
+  public UserScopesResponse userScopes(@NonNull String userName) {
     val user = userService.getByName(userName);
     val scopes = extractScopes(user);
     val names = mapToSet(scopes, Scope::toString);
 
     return new UserScopesResponse(names);
-  }
-
-  public void cleanupTokens(@NonNull Set<User> users) {
-    users.forEach(user -> {
-      val scopes = userScopes(user.getName()).getScopes();
-      val tokens = listToken(user.getId());
-
-      tokens.forEach(token -> {
-        val effectiveUserScopes = new HashSet<>();
-        scopes.forEach(s -> {
-          effectiveUserScopes.add(s);
-          if (s.contains(".WRITE")) effectiveUserScopes.add(s.replace(".WRITE", ".READ"));
-        });
-
-        if (!effectiveUserScopes.containsAll(token.getScope())) {
-          log.info("Token scopes not contained in user scopes, revoking. {} not in {}", token.getScope(), effectiveUserScopes);
-          revoke(token.getAccessToken());
-        }
-      });
-    });
   }
 
   public void revokeToken(@NonNull String tokenName) {
@@ -448,7 +425,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     }
   }
 
-  private void revoke(String token) {
+  public void revoke(String token) {
     val currentToken =
         findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found."));
     if (currentToken.isRevoked()) {
@@ -470,7 +447,8 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       return new ArrayList<>();
     }
 
-    val unrevokedTokens = tokens.stream().filter((token -> !token.isRevoked())).collect(Collectors.toSet());
+    val unrevokedTokens =
+        tokens.stream().filter((token -> !token.isRevoked())).collect(Collectors.toSet());
     List<TokenResponse> response = new ArrayList<>();
     unrevokedTokens.forEach(
         token -> {
@@ -484,10 +462,10 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     val scopes = mapToSet(token.scopes(), Scope::toString);
     responses.add(
         TokenResponse.builder()
-        .accessToken(token.getName())
-        .scope(scopes)
-        .exp(token.getSecondsUntilExpiry())
-        .description(token.getDescription())
-        .build());
+            .accessToken(token.getName())
+            .scope(scopes)
+            .exp(token.getSecondsUntilExpiry())
+            .description(token.getDescription())
+            .build());
   }
 }

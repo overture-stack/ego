@@ -16,6 +16,18 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static java.lang.String.format;
+import static java.util.UUID.fromString;
+import static org.mapstruct.factory.Mappers.getMapper;
+import static org.springframework.data.jpa.domain.Specifications.where;
+
+import bio.overture.ego.event.CleanupTokenPublisher;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
@@ -26,6 +38,9 @@ import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
 import org.mapstruct.Mapper;
@@ -38,21 +53,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-
-import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static java.lang.String.format;
-import static java.util.UUID.fromString;
-import static org.mapstruct.factory.Mappers.getMapper;
-import static org.springframework.data.jpa.domain.Specifications.where;
-
 @Service
 public class GroupService extends AbstractNamedService<Group, UUID> {
 
@@ -61,21 +61,25 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
 
   /** Dependencies */
   private final GroupRepository groupRepository;
+
   private final UserRepository userRepository;
   private final ApplicationRepository applicationRepository;
   private final ApplicationService applicationService;
+  private final CleanupTokenPublisher cleanupTokenPublisher;
 
   @Autowired
   public GroupService(
       @NonNull GroupRepository groupRepository,
       @NonNull UserRepository userRepository,
       @NonNull ApplicationRepository applicationRepository,
-      @NonNull ApplicationService applicationService) {
+      @NonNull ApplicationService applicationService,
+      @NonNull CleanupTokenPublisher cleanupTokenPublisher) {
     super(Group.class, groupRepository);
     this.groupRepository = groupRepository;
     this.userRepository = userRepository;
     this.applicationRepository = applicationRepository;
     this.applicationService = applicationService;
+    this.cleanupTokenPublisher = cleanupTokenPublisher;
   }
 
   public Group create(@NonNull GroupRequest request) {
@@ -103,6 +107,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     val group = getById(id);
     val users = userRepository.findAllByIdIn(userIds);
     associateUsers(group, users);
+    cleanupTokenPublisher.requestTokenCleanup(users);
     return groupRepository.save(group);
   }
 
@@ -127,8 +132,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   public Page<Group> findUserGroups(
       @NonNull UUID userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return groupRepository.findAll(
-        where(GroupSpecification.containsUser(userId))
-            .and(GroupSpecification.filterBy(filters)),
+        where(GroupSpecification.containsUser(userId)).and(GroupSpecification.filterBy(filters)),
         pageable);
   }
 
@@ -189,6 +193,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
             .collect(toImmutableSet());
     disassociateGroupFromUsers(group, usersToDisassociate);
     getRepository().save(group);
+    cleanupTokenPublisher.requestTokenCleanup(usersToDisassociate);
   }
 
   private void validateUpdateRequest(Group originalGroup, GroupRequest updateRequest) {
