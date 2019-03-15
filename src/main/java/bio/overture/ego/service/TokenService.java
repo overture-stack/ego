@@ -374,6 +374,26 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     return new UserScopesResponse(names);
   }
 
+  public void cleanupTokens(@NonNull Set<User> users) {
+    users.forEach(user -> {
+      val scopes = userScopes(user.getName()).getScopes();
+      val tokens = listToken(user.getId());
+
+      tokens.forEach(token -> {
+        val effectiveUserScopes = new HashSet<>();
+        scopes.forEach(s -> {
+          effectiveUserScopes.add(s);
+          if (s.contains(".WRITE")) effectiveUserScopes.add(s.replace(".WRITE", ".READ"));
+        });
+
+        if (!effectiveUserScopes.containsAll(token.getScope())) {
+          log.info("Token scopes not contained in user scopes, revoking. {} not in {}", token.getScope(), effectiveUserScopes);
+          revoke(token.getAccessToken());
+        }
+      });
+    });
+  }
+
   public void revokeToken(@NonNull String tokenName) {
     validateTokenName(tokenName);
     val principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();

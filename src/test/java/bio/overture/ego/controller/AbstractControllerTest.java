@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpRequest;
 
 @Slf4j
 public abstract class AbstractControllerTest {
@@ -41,8 +42,16 @@ public abstract class AbstractControllerTest {
     return initRequest(String.class);
   }
 
+  public WebResource<String> initStringRequest(HttpHeaders headers) {
+    return initRequest(String.class, headers);
+  }
+
   public <T> WebResource<T> initRequest(@NonNull Class<T> responseType) {
     return createWebResource(restTemplate, getServerUrl(), responseType).headers(this.headers);
+  }
+
+  public <T> WebResource<T> initRequest(@NonNull Class<T> responseType, HttpHeaders headers) {
+    return createWebResource(restTemplate, getServerUrl(), responseType).headers(headers);
   }
 
   public String getServerUrl() {
