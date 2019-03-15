@@ -118,7 +118,7 @@ public class GroupController {
                 + "query parameters in this format: name=something")
   })
   @ApiResponses(
-      value = {@ApiResponse(code = 200, message = "Page of Groups", response = PageDTO.class)})
+      value = {@ApiResponse(code = 200, message = "Page of Groups")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Group> getGroupsList(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
@@ -210,7 +210,7 @@ public class GroupController {
   })
   @ApiResponses(
       value = {
-        @ApiResponse(code = 200, message = "Page of group permissions", response = PageDTO.class)
+        @ApiResponse(code = 200, message = "Page of group permissions"),
       })
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<GroupPermission> getScopes(
@@ -281,8 +281,7 @@ public class GroupController {
       value = {
         @ApiResponse(
             code = 200,
-            message = "Page of Applications of group",
-            response = PageDTO.class)
+            message = "Page of Applications of group" )
       })
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Application> getGroupsApplications(
@@ -358,7 +357,7 @@ public class GroupController {
   })
   @ApiResponses(
       value = {
-        @ApiResponse(code = 200, message = "Page of Users of group", response = PageDTO.class)
+        @ApiResponse(code = 200, message = "Page of Users of group")
       })
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<User> getGroupsUsers(
