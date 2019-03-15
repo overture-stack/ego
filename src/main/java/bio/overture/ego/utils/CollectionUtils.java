@@ -1,16 +1,21 @@
 package bio.overture.ego.utils;
 
-import static java.util.Arrays.asList;
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import lombok.NonNull;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
+
+import static bio.overture.ego.utils.Collectors.toImmutableList;
+import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static java.util.stream.IntStream.range;
 
 public class CollectionUtils {
 
@@ -32,5 +37,9 @@ public class CollectionUtils {
 
   public static <T> Set<T> difference(Collection<T> left, Collection<T> right) {
     return Sets.difference(ImmutableSet.copyOf(left), ImmutableSet.copyOf(right));
+  }
+
+  public static <T> List<T> repeatedCallsOf(@NonNull Supplier<T> callback, int numberOfCalls) {
+    return range(0, numberOfCalls).boxed().map(x -> callback.get()).collect(toImmutableList());
   }
 }
