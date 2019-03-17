@@ -1,17 +1,18 @@
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.utils.WebResource.createWebResource;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-
 import bio.overture.ego.utils.WebResource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.junit.Before;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
+
+import static bio.overture.ego.utils.WebResource.createWebResource;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Slf4j
 public abstract class AbstractControllerTest {
@@ -20,6 +21,10 @@ public abstract class AbstractControllerTest {
   public static final ObjectMapper MAPPER = new ObjectMapper();
 
   private static final String ACCESS_TOKEN = "TestToken";
+
+  /**
+   * Config
+   */
 
   /** State */
   @LocalServerPort private int port;
@@ -36,9 +41,11 @@ public abstract class AbstractControllerTest {
 
   /** Additional setup before each test */
   protected abstract void beforeTest();
+  protected abstract boolean enableLogging();
 
   public WebResource<String> initStringRequest() {
-    return initRequest(String.class);
+    val out = initRequest(String.class);
+    return enableLogging() ? out.prettyLogging() : out;
   }
 
   public <T> WebResource<T> initRequest(@NonNull Class<T> responseType) {

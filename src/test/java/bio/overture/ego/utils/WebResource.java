@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Joiners.AMPERSAND;
@@ -61,7 +62,6 @@ public class WebResource<T> {
   }
 
   public WebResource<T> body(Object body) {
-
     this.body = body;
     return this;
   }
@@ -72,13 +72,11 @@ public class WebResource<T> {
   }
 
   public WebResource<T> logging(){
-    return logging(false);
+    return configLogging(true, false);
   }
 
-  public WebResource<T> logging(boolean prettyMode){
-    this.enableLogging = true;
-    this.pretty = prettyMode;
-    return this;
+  public WebResource<T> prettyLogging(){
+    return configLogging(true, true);
   }
 
   public WebResource<T> queryParam(String key, Object ... values){
@@ -116,6 +114,12 @@ public class WebResource<T> {
 
   public ResponseOption<T> postAnd() {
     return new ResponseOption<>(post());
+  }
+
+  private WebResource<T> configLogging(boolean enable, boolean pretty){
+    this.enableLogging = enable;
+    this.pretty = pretty;
+    return this;
   }
 
   private Optional<String> getQuery(){
@@ -194,14 +198,10 @@ public class WebResource<T> {
 
   @Value
   public static class ResponseOption<T>{
-    @NonNull private final ResponseEntity<T> r;
-
-    public ResponseEntity<T> getResponse(){
-      return r;
-    }
+    @NonNull private final ResponseEntity<T> response;
 
     public ResponseOption<T> assertStatusCode(HttpStatus code){
-      assertThat(r.getStatusCode()).isEqualTo(code);
+      assertThat(response.getStatusCode()).isEqualTo(code);
       return this;
     }
 
@@ -226,8 +226,12 @@ public class WebResource<T> {
     }
 
     public ResponseOption<T> assertHasBody(){
-      assertThat(r.hasBody()).isTrue();
+      assertThat(response.hasBody()).isTrue();
       return this;
+    }
+
+    public <R> R map(Function<ResponseEntity<T>, R> transformingFunction){
+      return transformingFunction.apply(getResponse());
     }
 
   }
@@ -237,7 +241,7 @@ public class WebResource<T> {
   private static class CleanResponse{
     @NonNull private final String statusCodeName;
     private final int statusCodeValue;
-    @NonNull private final Object body;
+    private final Object body;
   }
 
 

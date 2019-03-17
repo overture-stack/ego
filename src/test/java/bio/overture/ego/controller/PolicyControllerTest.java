@@ -17,11 +17,6 @@
 
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.controller.AbstractPermissionControllerTest.createMaskJson;
-import static bio.overture.ego.model.enums.AccessLevel.READ;
-import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.service.PolicyService;
@@ -33,10 +28,16 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import static bio.overture.ego.controller.AbstractPermissionControllerTest.createMaskJson;
+import static bio.overture.ego.model.enums.AccessLevel.READ;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -50,8 +51,15 @@ public class PolicyControllerTest extends AbstractControllerTest {
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
-
   @Autowired private PolicyService policyService;
+
+  @Value("${logging.test.controller.enable}")
+  private boolean enableLogging;
+
+  @Override
+  protected boolean enableLogging() {
+    return enableLogging;
+  }
 
   @Override
   protected void beforeTest() {

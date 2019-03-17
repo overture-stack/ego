@@ -10,17 +10,16 @@ import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.repository.GroupPermissionRepository;
 import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
-import bio.overture.ego.utils.CollectionUtils;
 import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.Joiners;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang.NotImplementedException;
@@ -28,6 +27,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,11 +38,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.DESCRIPTION;
+import static bio.overture.ego.model.enums.JavaFields.NAME;
+import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
+import static bio.overture.ego.model.enums.JavaFields.STATUS;
+import static bio.overture.ego.model.enums.JavaFields.USERS;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.DISABLED;
 import static bio.overture.ego.model.enums.StatusType.PENDING;
@@ -55,6 +60,8 @@ import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.convertToIds;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentName;
+import static bio.overture.ego.utils.EntityGenerator.randomEnum;
+import static bio.overture.ego.utils.EntityGenerator.randomEnumExcluding;
 import static bio.overture.ego.utils.EntityTools.extractAppIds;
 import static bio.overture.ego.utils.EntityTools.extractGroupIds;
 import static bio.overture.ego.utils.EntityTools.extractIDs;
@@ -82,6 +89,7 @@ import static org.springframework.http.HttpStatus.OK;
 public class GroupControllerTest extends AbstractControllerTest {
 
   private boolean hasRunEntitySetup = false;
+  private static final boolean ENABLE_LOGGING = true;
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
@@ -90,7 +98,15 @@ public class GroupControllerTest extends AbstractControllerTest {
   @Autowired private UserService userService;
   @Autowired private ApplicationService applicationService;
   @Autowired private GroupPermissionRepository groupPermissionRepository;
+  @Autowired private GroupPermissionService groupPermissionService;
 
+  @Value("${logging.test.controller.enable}")
+  private boolean enableLogging;
+
+  @Override
+  protected boolean enableLogging() {
+    return enableLogging;
+  }
 
   @Override
   protected void beforeTest() {
@@ -826,7 +842,7 @@ public class GroupControllerTest extends AbstractControllerTest {
     // Search users
     val r2 = initStringRequest()
         .endpoint("groups/%s/user", g1.getId())
-        .logging(true)
+        .logging()
         .queryParam("query", "orange")
         .queryParam("status", DISABLED)
         .get();
@@ -1010,32 +1026,180 @@ public class GroupControllerTest extends AbstractControllerTest {
 
 	@Test
 	public void updateGroup_ExistingGroup_Success(){
-		throw new NotImplementedException("need to implement the test 'updateGroup_ExistingGroup_Success'");
+    val g = entityGenerator.generateRandomGroup();
+
+    val updateRequest1 = GroupRequest.builder()
+        .name(generateNonExistentName(groupService))
+        .status(null)
+        .description(null)
+        .build();
+
+    val updatedGroup1 = extractOneEntityFromResponse(
+        initStringRequest()
+            .endpoint("/groups/%s", g.getId())
+            .body(updateRequest1)
+            .putAnd()
+            .assertOk()
+            .assertHasBody()
+            .getResponse(), Group.class);
+    assertThat(updatedGroup1).isEqualToIgnoringGivenFields(g, NAME, PERMISSIONS, APPLICATIONS, USERS);
+    assertThat(updatedGroup1.getName()).isEqualTo(updateRequest1.getName());
+
+    val updateRequest2 = GroupRequest.builder()
+        .name(null)
+        .status(randomEnumExcluding(StatusType.class, g.getStatus()))
+        .description(null)
+        .build();
+    val updatedGroup2 = extractOneEntityFromResponse(
+        initStringRequest()
+            .endpoint("/groups/%s", g.getId())
+            .body(updateRequest2)
+            .putAnd()
+            .assertOk()
+            .assertHasBody()
+            .getResponse(), Group.class);
+    assertThat(updatedGroup2).isEqualToIgnoringGivenFields(updatedGroup1, STATUS, PERMISSIONS, APPLICATIONS, USERS);
+    assertThat(updatedGroup2.getStatus()).isEqualTo(updateRequest2.getStatus());
+
+    val description = "my description";
+    val updateRequest3 = GroupRequest.builder()
+        .name(null)
+        .status(null)
+        .description(description)
+        .build();
+    val updatedGroup3 = extractOneEntityFromResponse(
+        initStringRequest()
+            .endpoint("/groups/%s", g.getId())
+            .body(updateRequest3)
+            .putAnd()
+            .assertOk()
+            .assertHasBody()
+            .getResponse(), Group.class);
+    assertThat(updatedGroup3).isEqualToIgnoringGivenFields(updatedGroup2, DESCRIPTION, PERMISSIONS, APPLICATIONS, USERS);
+    assertThat(updatedGroup3.getDescription()).isEqualTo(updateRequest3.getDescription());
 	}
 
 	@Test
 	public void updateGroup_NonExistentGroup_NotFound(){
-		throw new NotImplementedException("need to implement the test 'updateGroup_NonExistentGroup_NotFound'");
+    val nonExistentId = generateNonExistentId(groupService);
+    val updateRequest = GroupRequest.builder().build();
+    initStringRequest()
+        .endpoint("/groups/%s", nonExistentId)
+        .body(updateRequest)
+        .putAnd()
+        .assertNotFound();
 	}
 
 	@Test
 	public void updateGroup_NameAlreadyExists_Conflict(){
-		throw new NotImplementedException("need to implement the test 'updateGroup_NameAlreadyExists_Conflict'");
-	}
-
-	@Test
-	public void updateGroup_SomeNullFields_Success(){
-		throw new NotImplementedException("need to implement the test 'updateGroup_SomeNullFields_Success'");
+    val data = generateUniqueTestGroupData();
+    val group0 = data.getGroups().get(0);
+    val group1 = data.getGroups().get(1);
+    val updateRequest = GroupRequest.builder()
+        .name(group1.getName())
+        .build();
+    initStringRequest()
+        .endpoint("groups/%s", group0.getId())
+        .body(updateRequest)
+        .logging()
+        .putAnd()
+        .assertConflict();
 	}
 
 	@Test
 	public void statusValidation_MalformedStatus_Conflict(){
-		throw new NotImplementedException("need to implement the test 'statusValidation_MalformedStatus_Conflict'");
+    val invalidStatus = "something123";
+    val match = stream(StatusType.values()).anyMatch(x -> x.toString().equals(invalidStatus));
+    assertThat(match).isFalse();
+
+    val data = generateUniqueTestGroupData();
+    val group = data.getGroups().get(0);
+
+    // getGroupList: GET /groups
+    initStringRequest()
+        .logging()
+        .endpoint("/groups")
+        .queryParam("status", invalidStatus)
+        .getAnd()
+        .assertBadRequest();
+
+    // createGroup: POST /groups
+    val createRequest = MAPPER.createObjectNode()
+        .put("name", generateNonExistentName(groupService))
+        .put("status", invalidStatus);
+    initStringRequest()
+        .logging()
+        .endpoint("/groups")
+        .body(createRequest)
+        .postAnd()
+        .assertBadRequest();
+
+    // updateGroup:  PUT /groups
+    val updateRequest = MAPPER.createObjectNode()
+        .put("status", invalidStatus);
+    initStringRequest()
+        .logging()
+        .endpoint("/groups/%s", group.getId())
+        .body(updateRequest)
+        .putAnd()
+        .assertBadRequest();
+
+    // getGroupsApplications:  GET /groups/{groupId}/applications
+    initStringRequest()
+        .logging()
+        .endpoint("/groups/%s/applications", group.getId())
+        .queryParam("status", invalidStatus)
+        .getAnd()
+        .assertBadRequest();
+
+    // getScopes:  GET /groups/{groupId}/permissions
+    initStringRequest()
+        .logging()
+        .endpoint("/groups/%s/permissions", group.getId())
+        .queryParam("status", invalidStatus)
+        .getAnd()
+        .assertBadRequest();
+
+    // getGroupsUsers:  GET /groups/{groupId}/users
+    initStringRequest()
+        .logging()
+        .endpoint("/groups/%s/users", group.getId())
+        .queryParam("status", invalidStatus)
+        .getAnd()
+        .assertBadRequest();
 	}
+
 
 	@Test
 	public void getScopes_FindAllQuery_Success(){
-		throw new NotImplementedException("need to implement the test 'getScopes_FindAllQuery_Success'");
+    val data = generateUniqueTestGroupData();
+    val group0 = data.getGroups().get(0);
+
+    // Assert without using a controller, there are no users for the group
+    val beforeGroup = groupPermissionService.getOwnerWithRelationships(group0.getId());
+    assertThat(beforeGroup.getPermissions()).isEmpty();
+
+    // Add policies to group
+    data.getPolicies().forEach(
+        p -> {
+          val randomMask = randomEnum(AccessLevel.class);
+          val r1 = addGroupPermissionPostRequest(group0, p, randomMask);
+          assertThat(r1.getStatusCode()).isEqualTo(OK);
+        }
+    );
+
+    // Assert without using a controller, there are users for the group
+    val afterGroup = groupPermissionService.getOwnerWithRelationships(group0.getId());
+    assertThat(afterGroup.getPermissions()).hasSize(2);
+
+    // Get permissions for a group using a controller
+    val r2 = initStringRequest()
+        .endpoint("/groups/%s/permissions", group0.getId())
+        .getAnd()
+        .assertOk()
+        .getResponse();
+    val actualPermissions = extractPageResultSetFromResponse(r2, GroupPermission.class);
+    assertThat(actualPermissions).containsExactlyInAnyOrderElementsOf(afterGroup.getPermissions());
 	}
 
 	@Test
@@ -1045,42 +1209,177 @@ public class GroupControllerTest extends AbstractControllerTest {
 
 	@Test
 	public void addAppsToGroup_NonExistentGroup_NotFound(){
-		throw new NotImplementedException("need to implement the test 'addAppsToGroup_NonExistentGroup_NotFound'");
+    val data = generateUniqueTestGroupData();
+    val nonExistentId = generateNonExistentId(groupService);
+    val appIds = convertToIds(data.getApplications());
+
+    initStringRequest()
+        .endpoint("/groups/%s/applications", nonExistentId)
+        .body(appIds)
+        .postAnd()
+        .assertNotFound();
 	}
 
 	@Test
 	public void addAppsToGroup_AllExistingUnassociatedApps_Success(){
-		throw new NotImplementedException("need to implement the test 'addAppsToGroup_AllExistingUnassociatedApps_Success'");
+    val data = generateUniqueTestGroupData();
+    val group0 = data.getGroups().get(0);
+    val appIds = convertToIds(data.getApplications());
+
+    // Assert without using the controller, that the group is not associated with any apps
+    val beforeGroup = groupService.getGroupWithRelationships(group0.getId());
+    assertThat(beforeGroup.getApplications()).isEmpty();
+
+    // Add applications to the group
+    initStringRequest()
+        .endpoint("/groups/%s/applications", group0.getId())
+        .body(appIds)
+        .postAnd()
+        .assertOk();
+
+    // Assert without usign the controller, that the group IS associated with all the apps
+    val afterGroup = groupService.getGroupWithRelationships(group0.getId());
+    assertThat(afterGroup.getApplications()).containsExactlyInAnyOrderElementsOf(data.getApplications());
 	}
 
 	@Test
 	public void addAppsToGroup_SomeExistingAppsButAllUnassociated_NotFound(){
-		throw new NotImplementedException("need to implement the test 'addAppsToGroup_SomeExistingAppsButAllUnassociated_NotFound'");
+
+    // Setup data
+    val data = generateUniqueTestGroupData();
+    val group0 = data.getGroups().get(0);
+    val existingAppIds = convertToIds(data.getApplications());
+    val nonExistingAppIds = repeatedCallsOf(() -> generateNonExistentId(applicationService), 3);
+    val appIdsToAssociate = concatToSet(existingAppIds, nonExistingAppIds);
+
+    // Add some existing and non-existing app ids to an existing group
+    initStringRequest()
+        .endpoint("/groups/%s/applications", group0.getId())
+        .body(appIdsToAssociate)
+        .postAnd()
+        .assertNotFound();
 	}
 
 	@Test
-	public void addAppsToGroup_AllExsitingAppsButSomeAlreadyAssociated_Conflict(){
-		throw new NotImplementedException("need to implement the test 'addAppsToGroup_AllExsitingAppsButSomeAlreadyAssociated_Conflict'");
+	public void addAppsToGroup_AllExsitingAppsButSomeNotAssociated_Conflict(){
+    // Setup data
+    val data = generateUniqueTestGroupData();
+    val group0 = data.getGroups().get(0);
+    val app0Id = data.getApplications().get(0).getId();
+    val app1Id = data.getApplications().get(1).getId();
+
+    // Add app0 to the group0
+    initStringRequest()
+        .endpoint("/groups/%s/applications", group0.getId())
+        .body(newArrayList(app0Id))
+        .postAnd()
+        .assertOk();
+
+    // Add app0 and app1 to the group0, where app0 was previously allready associated, however all apps exist
+    initStringRequest()
+        .endpoint("/groups/%s/applications", group0.getId())
+        .body(newArrayList(app0Id, app1Id))
+        .postAnd()
+        .assertConflict();
 	}
 
 	@Test
 	public void removeAppsFromGroup_AllExistingAssociatedApps_Success(){
-		throw new NotImplementedException("need to implement the test 'removeAppsFromGroup_AllExistingAssociatedApps_Success'");
+    // Setup data
+    val data = generateUniqueTestGroupData();
+    val group0 = data.getGroups().get(0);
+
+    // Add all apps to the groupo
+    initStringRequest()
+        .endpoint("/groups/%s/applications", group0.getId())
+        .body(convertToIds(data.getApplications()))
+        .postAnd()
+        .assertOk();
+
+    // Assert the group has all the apps
+    val actualApplications = initStringRequest()
+        .endpoint("/groups/%s/applications", group0.getId())
+        .getAnd()
+        .assertOk()
+        .assertHasBody()
+        .map(response -> extractPageResultSetFromResponse(response, Application.class));
+    assertThat(actualApplications).containsExactlyInAnyOrderElementsOf(data.getApplications());
+
+    // Remove all apps
+    val appIdsToRemove = convertToIds(data.getApplications());
+    initStringRequest()
+        .endpoint("/groups/%s/applications/%s", group0.getId(), COMMA.join(appIdsToRemove))
+        .deleteAnd()
+        .assertOk();
+
+    // Assert the group has 0 apps
+    val actualApplications2 = initStringRequest()
+        .endpoint("/groups/%s/applications", group0.getId())
+        .getAnd()
+        .assertOk()
+        .assertHasBody()
+        .map(response -> extractPageResultSetFromResponse(response, Application.class));
+    assertThat(actualApplications2).isEmpty();
 	}
 
 	@Test
-	public void removeAppsFromGroup_AllExistingAppsButSomeAlreadyAssociated_Conflict(){
-		throw new NotImplementedException("need to implement the test 'removeAppsFromGroup_AllExistingAppsButSomeAlreadyAssociated_Conflict'");
+	public void removeAppsFromGroup_AllExistingAppsButSomeNotAssociated_Conflict(){
+    // Setup data
+    val data = generateUniqueTestGroupData();
+    val group0 = data.getGroups().get(0);
+    val app0Id = data.getApplications().get(0).getId();
+    val app1Id = data.getApplications().get(1).getId();
+
+    // Add app0 to the group0
+    initStringRequest()
+        .endpoint("/groups/%s/applications", group0.getId())
+        .body(newArrayList(app0Id))
+        .postAnd()
+        .assertOk();
+
+    // Remove associated and non-associated apps from the group, however all are existing
+    val appIdsToRemove = newArrayList(app0Id, app1Id);
+    initStringRequest()
+        .endpoint("/groups/%s/applications/%s", group0.getId(), COMMA.join(appIdsToRemove))
+        .deleteAnd()
+        .assertConflict();
 	}
 
 	@Test
 	public void removeAppsFromGroup_SomeNonExistingAppsButAllAssociated_NotFound(){
-		throw new NotImplementedException("need to implement the test 'removeAppsFromGroup_SomeNonExistingAppsButAllAssociated_NotFound'");
+
+    // Setup data
+    val data = generateUniqueTestGroupData();
+    val group0 = data.getGroups().get(0);
+    val existingAppIds = convertToIds(data.getApplications());
+    val nonExistingAppIds = repeatedCallsOf(() -> generateNonExistentId(applicationService),3);
+    val appIdsToDisassociate = concatToSet(existingAppIds, nonExistingAppIds);
+
+    // Add all existing apps to group
+    initStringRequest()
+        .endpoint("/groups/%s/applications", group0.getId())
+        .body(existingAppIds)
+        .postAnd()
+        .assertOk();
+
+    // Attempt to disassociate existing associated apps and non-exsiting apps from the group, and fail
+    initStringRequest()
+        .endpoint("/groups/%s/applications/%s", group0.getId(), COMMA.join(appIdsToDisassociate))
+        .deleteAnd()
+        .assertNotFound();
 	}
 
 	@Test
 	public void removeAppsFromGroup_NonExistentGroup_NotFound(){
-		throw new NotImplementedException("need to implement the test 'removeAppsFromGroup_NonExistentGroup_NotFound'");
+    val nonExistentId = generateNonExistentId(groupService);
+    val data = generateUniqueTestGroupData();
+    val existingApplicationIds = convertToIds(data.getApplications());
+
+    // Assert that the group does not exist
+    initStringRequest()
+        .endpoint("/groups/%s/applications/%s", nonExistentId, COMMA.join(existingApplicationIds))
+        .deleteAnd()
+        .assertNotFound();
 	}
 
 	@Test
@@ -1090,7 +1389,13 @@ public class GroupControllerTest extends AbstractControllerTest {
 
 	@Test
 	public void getAppsFromGroup_NonExistentGroup_NotFound(){
-		throw new NotImplementedException("need to implement the test 'getAppsFromGroup_NonExistentGroup_NotFound'");
+    val nonExistentId = generateNonExistentId(groupService);
+
+    // Atempt to get applications for non existent group, and fail
+    initStringRequest()
+        .endpoint("/groups/%s/applications", nonExistentId)
+        .getAnd()
+        .assertNotFound();
 	}
 
 	@Test
@@ -1230,7 +1535,7 @@ public class GroupControllerTest extends AbstractControllerTest {
         .get();
   }
 
-  @Value
+  @lombok.Value
   @Builder
   public static class TestGroupData{
     @NonNull private final List<Group> groups;

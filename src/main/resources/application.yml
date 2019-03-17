@@ -26,6 +26,9 @@ spring.datasource:
 spring:
   flyway:
     enabled: false
+  jackson:
+    deserialization.FAIL_ON_UNKNOWN_PROPERTIES: true
+
 
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
 spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
@@ -168,6 +171,9 @@ spring:
 ###############################################################################
 spring:
   profiles: test
+logging.test.controller.enable: true
+
+
 
 spring.datasource:
   driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver

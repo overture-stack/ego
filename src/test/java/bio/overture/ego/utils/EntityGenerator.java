@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -40,6 +41,8 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
@@ -49,7 +52,9 @@ import static bio.overture.ego.utils.CollectionUtils.listOf;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.Splitters.COMMA_SPLITTER;
 import static com.google.common.collect.Lists.newArrayList;
+import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Math.abs;
+import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -400,6 +405,34 @@ public class EntityGenerator {
 
   public static List<ScopeName> scopeNames(String... strings) {
     return mapToList(listOf(strings), ScopeName::new);
+  }
+
+  public static <E extends Enum<E>> E randomEnumExcluding(Class<E> enumClass, E enumToExclude){
+    val list = stream(enumClass.getEnumConstants())
+        .filter(x -> x != enumToExclude)
+        .collect(toList());
+    return randomElementOf(list);
+  }
+
+  public static <T> T randomNull(Supplier<T> callback){
+    return randomBoundedInt(2) == 0 ? null : callback.get();
+  }
+
+  public static int randomBoundedInt(int maxExclusive){
+    return abs(new Random().nextInt()) % maxExclusive;
+  }
+
+  public static int randomBoundedInt(int minInclusive, int maxExclusive){
+    assertThat(MAX_VALUE - maxExclusive).isGreaterThan(minInclusive);
+    return minInclusive + randomBoundedInt(maxExclusive);
+  }
+
+  public static <T> T randomElementOf(List<T> list){
+    return list.get(randomBoundedInt(list.size()));
+  }
+
+  public static <T> T randomElementOf(T ... objects){
+    return objects[randomBoundedInt(objects.length)];
   }
 
   public static <T> String generateNonExistentName(NamedService<T, UUID> namedService) {
