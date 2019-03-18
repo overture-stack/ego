@@ -37,6 +37,10 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import java.util.UUID;
+import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,11 +61,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
-import javax.persistence.EntityNotFoundException;
-import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.UUID;
-
 @Slf4j
 @RestController
 @RequestMapping("/groups")
@@ -69,6 +68,7 @@ public class GroupController {
 
   /** Dependencies */
   private final GroupService groupService;
+
   private final ApplicationService applicationService;
   private final UserService userService;
   private final GroupPermissionService groupPermissionService;
@@ -294,8 +294,7 @@ public class GroupController {
     if (StringUtils.isEmpty(query)) {
       return new PageDTO<>(applicationService.findGroupApplications(id, filters, pageable));
     } else {
-      return new PageDTO<>(
-          applicationService.findGroupApplications(id, query, filters, pageable));
+      return new PageDTO<>(applicationService.findGroupApplications(id, query, filters, pageable));
     }
   }
 

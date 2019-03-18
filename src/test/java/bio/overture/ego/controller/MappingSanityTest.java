@@ -1,5 +1,8 @@
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
@@ -19,9 +22,6 @@ import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static org.assertj.core.api.Assertions.assertThat;
-
 @Slf4j
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
@@ -38,8 +38,7 @@ public class MappingSanityTest {
   @Test
   public void sanityCRUD_GroupPermissions() {
     // Create group
-    val group =
-        Group.builder().name("myGroup").status(APPROVED).build();
+    val group = Group.builder().name("myGroup").status(APPROVED).build();
     groupRepository.save(group);
 
     // Create policy

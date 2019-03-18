@@ -16,46 +16,6 @@
 
 package bio.overture.ego.service;
 
-import bio.overture.ego.config.UserDefaultsConfig;
-import bio.overture.ego.model.dto.CreateUserRequest;
-import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.dto.UpdateUserRequest;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.GroupPermission;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.entity.UserPermission;
-import bio.overture.ego.model.exceptions.NotFoundException;
-import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.repository.UserRepository;
-import bio.overture.ego.repository.queryspecification.UserSpecification;
-import bio.overture.ego.token.IDToken;
-import com.google.common.collect.ImmutableList;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.mapstruct.AfterMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValueCheckStrategy;
-import org.mapstruct.ReportingPolicy;
-import org.mapstruct.TargetType;
-import org.mapstruct.factory.Mappers;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
@@ -72,6 +32,45 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.concat;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
+import bio.overture.ego.config.UserDefaultsConfig;
+import bio.overture.ego.model.dto.CreateUserRequest;
+import bio.overture.ego.model.dto.Scope;
+import bio.overture.ego.model.dto.UpdateUserRequest;
+import bio.overture.ego.model.entity.AbstractPermission;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.GroupPermission;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.entity.UserPermission;
+import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.repository.UserRepository;
+import bio.overture.ego.repository.queryspecification.UserSpecification;
+import bio.overture.ego.token.IDToken;
+import com.google.common.collect.ImmutableList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValueCheckStrategy;
+import org.mapstruct.ReportingPolicy;
+import org.mapstruct.TargetType;
+import org.mapstruct.factory.Mappers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 @Slf4j
 @Service
 @Transactional
@@ -82,12 +81,11 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   /** Dependencies */
   private final GroupService groupService;
+
   private final ApplicationService applicationService;
   private final UserRepository userRepository;
 
-  /**
-   * Configuration
-   */
+  /** Configuration */
   private final UserDefaultsConfig userDefaultsConfig;
 
   @Autowired
@@ -177,8 +175,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     val user = getUserWithRelationshipsById(id);
     checkGroupsExistForUser(user, groupIds);
     val groupsToDisassociate =
-        user.getGroups()
-            .stream()
+        user.getGroups().stream()
             .filter(g -> groupIds.contains(g.getId()))
             .collect(toImmutableSet());
     disassociateUserFromGroups(user, groupsToDisassociate);
@@ -193,8 +190,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     val user = getUserWithRelationshipsById(id);
     checkApplicationsExistForUser(user, appIds);
     val appsToDisassociate =
-        user.getApplications()
-            .stream()
+        user.getApplications().stream()
             .filter(a -> appIds.contains(a.getId()))
             .collect(toImmutableSet());
     disassociateUserFromApplications(user, appsToDisassociate);
@@ -205,8 +201,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
       @NonNull UUID groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository()
         .findAll(
-            where(UserSpecification.inGroup(groupId))
-                .and(UserSpecification.filterBy(filters)),
+            where(UserSpecification.inGroup(groupId)).and(UserSpecification.filterBy(filters)),
             pageable);
   }
 
@@ -227,8 +222,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
       @NonNull UUID appId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository()
         .findAll(
-            where(UserSpecification.ofApplication(appId))
-                .and(UserSpecification.filterBy(filters)),
+            where(UserSpecification.ofApplication(appId)).and(UserSpecification.filterBy(filters)),
             pageable);
   }
 
@@ -251,11 +245,13 @@ public class UserService extends AbstractNamedService<User, UUID> {
     Collection<UserPermission> userPermissions = isNull(up) ? ImmutableList.of() : up;
 
     val gp = user.getGroups();
-    Collection<GroupPermission> groupPermissions = isNull(gp)
-        ? ImmutableList.of() : gp.stream()
-        .map(Group::getPermissions)
-        .flatMap(Collection::stream)
-        .collect( toImmutableSet());
+    Collection<GroupPermission> groupPermissions =
+        isNull(gp)
+            ? ImmutableList.of()
+            : gp.stream()
+                .map(Group::getPermissions)
+                .flatMap(Collection::stream)
+                .collect(toImmutableSet());
     return resolveFinalPermissions(userPermissions, groupPermissions);
   }
 
@@ -270,9 +266,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
     // Get permissions from the user's groups (stream)
     val userGroupsPermissions =
-        Optional.ofNullable(user.getGroups())
-            .orElse(new HashSet<>())
-            .stream()
+        Optional.ofNullable(user.getGroups()).orElse(new HashSet<>()).stream()
             .map(Group::getPermissions)
             .flatMap(Collection::stream);
 
@@ -408,5 +402,4 @@ public class UserService extends AbstractNamedService<User, UUID> {
   public boolean isAdmin(User user) {
     return user.getType() == ADMIN;
   }
-
 }

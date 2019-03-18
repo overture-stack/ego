@@ -1,36 +1,5 @@
 package bio.overture.ego.service;
 
-import bio.overture.ego.controller.resolver.PageableResolver;
-import bio.overture.ego.model.dto.CreateUserRequest;
-import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.dto.UpdateUserRequest;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.exceptions.NotFoundException;
-import bio.overture.ego.model.exceptions.UniqueViolationException;
-import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.token.IDToken;
-import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.PolicyPermissionUtils;
-import com.google.common.collect.ImmutableList;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collections;
-import java.util.Date;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
@@ -50,6 +19,36 @@ import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import bio.overture.ego.controller.resolver.PageableResolver;
+import bio.overture.ego.model.dto.CreateUserRequest;
+import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.dto.UpdateUserRequest;
+import bio.overture.ego.model.entity.AbstractPermission;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.exceptions.UniqueViolationException;
+import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.token.IDToken;
+import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.PolicyPermissionUtils;
+import com.google.common.collect.ImmutableList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
+
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -58,7 +57,8 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 @Ignore("replace with controller tests.")
 public class UserServiceTest {
 
-  private static final UUID NON_EXISTENT_USER = UUID.fromString("827fae28-7fb8-11e8-adc0-fa7ae01bbebc");
+  private static final UUID NON_EXISTENT_USER =
+      UUID.fromString("827fae28-7fb8-11e8-adc0-fa7ae01bbebc");
 
   @Autowired private ApplicationService applicationService;
   @Autowired private UserService userService;
@@ -413,7 +413,7 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val appId = applicationService.getByClientId("111111").getId();
 
-    userService.addUserToApps(user.getId(),singletonList(appId));
+    userService.addUserToApps(user.getId(), singletonList(appId));
     userService.addUserToApps(userTwo.getId(), singletonList(appId));
 
     val userFilters = new SearchFilter("name", "First");
@@ -481,8 +481,7 @@ public class UserServiceTest {
   public void testUpdateTypeUser() {
     val user = entityGenerator.setupUser("First User");
     val updated =
-        userService.partialUpdate(
-            user.getId(), UpdateUserRequest.builder().type(USER).build());
+        userService.partialUpdate(user.getId(), UpdateUserRequest.builder().type(USER).build());
     assertThat(updated.getType()).isEqualTo("USER");
   }
 
@@ -490,8 +489,7 @@ public class UserServiceTest {
   public void testUpdateUserTypeAdmin() {
     val user = entityGenerator.setupUser("First User");
     val updated =
-        userService.partialUpdate(
-            user.getId(), UpdateUserRequest.builder().type(ADMIN).build());
+        userService.partialUpdate(user.getId(), UpdateUserRequest.builder().type(ADMIN).build());
     assertThat(updated.getType()).isEqualTo("ADMIN");
   }
 
@@ -927,8 +925,7 @@ public class UserServiceTest {
     userPermissionService.addPermissions(user.getId(), permissions);
 
     val userPermissionsToRemove =
-        user.getUserPermissions()
-            .stream()
+        user.getUserPermissions().stream()
             .filter(p -> !p.getPolicy().getName().equals("Study001"))
             .map(AbstractPermission::getId)
             .collect(Collectors.toList());

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public enum LanguageType {
-
   ENGLISH,
   FRENCH,
   SPANISH;
@@ -13,5 +12,4 @@ public enum LanguageType {
   public String toString() {
     return this.name();
   }
-
 }

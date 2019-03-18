@@ -58,8 +58,7 @@ public class PermissionRequestAnalyzer {
 
     val unresolvableRequestMap = filterUnresolvableRequests(rawPermissionRequests);
     val typeMap =
-        rawPermissionRequests
-            .stream()
+        rawPermissionRequests.stream()
             .filter(x -> !unresolvableRequestMap.containsKey(x.getPolicyId()))
             .collect(groupingBy(x -> resolvePermType(existingPermissionRequestIndex, x)));
 
@@ -92,9 +91,7 @@ public class PermissionRequestAnalyzer {
     val grouping =
         rawPermissionRequests.stream().collect(groupingBy(PermissionRequest::getPolicyId));
     val unresolvableRequestMap = newHashMap(grouping);
-    grouping
-        .values()
-        .stream()
+    grouping.values().stream()
         // filter aggregates that have multiple permissions for the same policyID
         .filter(x -> x.size() == 1)
         .map(x -> x.get(0))

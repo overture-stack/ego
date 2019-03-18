@@ -16,6 +16,17 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static java.lang.String.format;
+import static java.util.UUID.fromString;
+import static org.mapstruct.factory.Mappers.getMapper;
+import static org.springframework.data.jpa.domain.Specifications.where;
+
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
@@ -26,6 +37,9 @@ import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
 import org.mapstruct.Mapper;
@@ -38,21 +52,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-
-import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static java.lang.String.format;
-import static java.util.UUID.fromString;
-import static org.mapstruct.factory.Mappers.getMapper;
-import static org.springframework.data.jpa.domain.Specifications.where;
-
 @Service
 public class GroupService extends AbstractNamedService<Group, UUID> {
 
@@ -61,6 +60,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
 
   /** Dependencies */
   private final GroupRepository groupRepository;
+
   private final UserRepository userRepository;
   private final ApplicationRepository applicationRepository;
   private final ApplicationService applicationService;
@@ -127,8 +127,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   public Page<Group> findUserGroups(
       @NonNull UUID userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return groupRepository.findAll(
-        where(GroupSpecification.containsUser(userId))
-            .and(GroupSpecification.filterBy(filters)),
+        where(GroupSpecification.containsUser(userId)).and(GroupSpecification.filterBy(filters)),
         pageable);
   }
 
@@ -168,9 +167,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     val group = getById(id);
     checkAppsExistForGroup(group, appIds);
     val appsToDisassociate =
-        group
-            .getApplications()
-            .stream()
+        group.getApplications().stream()
             .filter(a -> appIds.contains(a.getId()))
             .collect(toImmutableSet());
     val apps = appIds.stream().map(this::retrieveApplication).collect(toImmutableSet());
@@ -182,9 +179,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     val group = getById(id);
     checkUsersExistForGroup(group, userIds);
     val usersToDisassociate =
-        group
-            .getUsers()
-            .stream()
+        group.getUsers().stream()
             .filter(u -> userIds.contains(u.getId()))
             .collect(toImmutableSet());
     disassociateGroupFromUsers(group, usersToDisassociate);

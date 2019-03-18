@@ -22,6 +22,8 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +40,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
-import java.util.List;
-import java.util.UUID;
-
 @Slf4j
 @RestController
 @RequestMapping("/policies")
@@ -48,6 +47,7 @@ public class PolicyController {
 
   /** Dependencies */
   private final PolicyService policyService;
+
   private final UserPermissionService userPermissionService;
   private final GroupPermissionService groupPermissionService;
 

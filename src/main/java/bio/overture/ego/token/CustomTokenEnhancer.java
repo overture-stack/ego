@@ -40,9 +40,7 @@ public class CustomTokenEnhancer implements TokenEnhancer {
 
     // get user or application token
     return oAuth2Authentication.getAuthorities() != null
-            && oAuth2Authentication
-                .getAuthorities()
-                .stream()
+            && oAuth2Authentication.getAuthorities().stream()
                 .anyMatch(authority -> AppTokenClaims.ROLE.equals(authority.getAuthority()))
         ? getApplicationAccessToken(oAuth2Authentication.getPrincipal().toString())
         : getUserAccessToken(oAuth2Authentication.getPrincipal().toString());
