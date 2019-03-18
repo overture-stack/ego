@@ -48,10 +48,7 @@ public class UserTokenClaims extends TokenClaims {
   }
 
   public List<String> getAud() {
-    return this.context
-        .getUserInfo()
-        .getApplications()
-        .stream()
+    return this.context.getUserInfo().getApplications().stream()
         .map(Application::getName)
         .collect(Collectors.toList());
   }

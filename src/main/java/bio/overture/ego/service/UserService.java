@@ -175,8 +175,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     val user = getUserWithRelationshipsById(id);
     checkGroupsExistForUser(user, groupIds);
     val groupsToDisassociate =
-        user.getGroups()
-            .stream()
+        user.getGroups().stream()
             .filter(g -> groupIds.contains(g.getId()))
             .collect(toImmutableSet());
     disassociateUserFromGroups(user, groupsToDisassociate);
@@ -191,8 +190,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     val user = getUserWithRelationshipsById(id);
     checkApplicationsExistForUser(user, appIds);
     val appsToDisassociate =
-        user.getApplications()
-            .stream()
+        user.getApplications().stream()
             .filter(a -> appIds.contains(a.getId()))
             .collect(toImmutableSet());
     disassociateUserFromApplications(user, appsToDisassociate);
@@ -268,9 +266,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
     // Get permissions from the user's groups (stream)
     val userGroupsPermissions =
-        Optional.ofNullable(user.getGroups())
-            .orElse(new HashSet<>())
-            .stream()
+        Optional.ofNullable(user.getGroups()).orElse(new HashSet<>()).stream()
             .map(Group::getPermissions)
             .flatMap(Collection::stream);
 

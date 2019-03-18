@@ -167,9 +167,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     val group = getById(id);
     checkAppsExistForGroup(group, appIds);
     val appsToDisassociate =
-        group
-            .getApplications()
-            .stream()
+        group.getApplications().stream()
             .filter(a -> appIds.contains(a.getId()))
             .collect(toImmutableSet());
     val apps = appIds.stream().map(this::retrieveApplication).collect(toImmutableSet());
@@ -181,9 +179,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     val group = getById(id);
     checkUsersExistForGroup(group, userIds);
     val usersToDisassociate =
-        group
-            .getUsers()
-            .stream()
+        group.getUsers().stream()
             .filter(u -> userIds.contains(u.getId()))
             .collect(toImmutableSet());
     disassociateGroupFromUsers(group, usersToDisassociate);

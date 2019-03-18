@@ -668,9 +668,7 @@ public class GroupsServiceTest {
     groupPermissionService.addPermissions(firstGroup.getId(), permissions);
 
     val groupPermissionsToRemove =
-        firstGroup
-            .getPermissions()
-            .stream()
+        firstGroup.getPermissions().stream()
             .filter(p -> !p.getPolicy().getName().equals("Study001"))
             .map(AbstractPermission::getId)
             .collect(Collectors.toList());

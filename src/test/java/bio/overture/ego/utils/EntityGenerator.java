@@ -255,8 +255,7 @@ public class EntityGenerator {
 
   public void addPermissions(User user, Set<Scope> scopes) {
     val userPermissions =
-        scopes
-            .stream()
+        scopes.stream()
             .map(
                 s -> {
                   UserPermission up = new UserPermission();

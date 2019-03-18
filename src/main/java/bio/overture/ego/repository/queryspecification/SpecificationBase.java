@@ -53,8 +53,7 @@ public class SpecificationBase<T> {
     return (root, query, builder) -> {
       query.distinct(true);
       return builder.and(
-          filters
-              .stream()
+          filters.stream()
               .map(f -> filterByField(builder, root, f.getFilterField(), f.getFilterValue()))
               .toArray(Predicate[]::new));
     };

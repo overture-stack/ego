@@ -925,8 +925,7 @@ public class UserServiceTest {
     userPermissionService.addPermissions(user.getId(), permissions);
 
     val userPermissionsToRemove =
-        user.getUserPermissions()
-            .stream()
+        user.getUserPermissions().stream()
             .filter(p -> !p.getPolicy().getName().equals("Study001"))
             .map(AbstractPermission::getId)
             .collect(Collectors.toList());
