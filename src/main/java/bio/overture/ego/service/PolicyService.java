@@ -1,10 +1,16 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static org.mapstruct.factory.Mappers.getMapper;
+
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.PolicyRepository;
 import bio.overture.ego.repository.queryspecification.PolicySpecification;
+import java.util.List;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -19,26 +25,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
-
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static org.mapstruct.factory.Mappers.getMapper;
-
 @Slf4j
 @Service
 @Transactional
 public class PolicyService extends AbstractNamedService<Policy, UUID> {
 
-  /**
-   * Constants
-   */
+  /** Constants */
   private static final PolicyConverter POLICY_CONVERTER = getMapper(PolicyConverter.class);
 
-  /**
-   * Dependencies
-   */
+  /** Dependencies */
   private final PolicyRepository policyRepository;
 
   @Autowired

@@ -4,13 +4,12 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.repository.GroupPermissionRepository;
+import java.util.Collection;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Collection;
-import java.util.UUID;
 
 @Slf4j
 @Service

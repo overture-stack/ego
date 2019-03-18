@@ -1,25 +1,5 @@
 package bio.overture.ego.controller;
 
-import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.UserService;
-import bio.overture.ego.utils.EntityGenerator;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.UUID;
-
 import static bio.overture.ego.model.enums.StatusType.PENDING;
 import static bio.overture.ego.utils.EntityTools.extractAppIds;
 import static bio.overture.ego.utils.EntityTools.extractGroupIds;
@@ -31,6 +11,25 @@ import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import bio.overture.ego.AuthorizationServiceMain;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.GroupService;
+import bio.overture.ego.service.UserService;
+import bio.overture.ego.utils.EntityGenerator;
+import java.util.UUID;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -62,12 +61,7 @@ public class GroupControllerTest extends AbstractControllerTest {
 
   @Test
   public void addGroup() {
-    val group =
-        Group.builder()
-            .name("Wizards")
-            .status(PENDING)
-            .description("")
-            .build();
+    val group = Group.builder().name("Wizards").status(PENDING).description("").build();
 
     val response = initStringRequest().endpoint("/groups").body(group).post();
 

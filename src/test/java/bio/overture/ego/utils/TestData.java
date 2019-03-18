@@ -1,22 +1,21 @@
 package bio.overture.ego.utils;
 
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.UserType.USER;
+import static bio.overture.ego.utils.CollectionUtils.listOf;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.model.params.ScopeName;
-import lombok.val;
-
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static bio.overture.ego.model.enums.UserType.USER;
-import static bio.overture.ego.utils.CollectionUtils.listOf;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import lombok.val;
 
 public class TestData {
   public Application song;
