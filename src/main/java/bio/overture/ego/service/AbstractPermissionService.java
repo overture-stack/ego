@@ -103,8 +103,7 @@ public abstract class AbstractPermissionService<
 
     val permissions = getPermissionsFromOwner(owner);
     val filteredPermissionMap =
-        permissions
-            .stream()
+        permissions.stream()
             .filter(x -> idsToDelete.contains(x.getId()))
             .collect(toMap(AbstractPermission::getId, identity()));
 
@@ -281,9 +280,7 @@ public abstract class AbstractPermissionService<
             .flatMap(Collection::stream)
             .filter(x -> !isNull(x.getPolicy()))
             .collect(groupingBy(AbstractPermission::getPolicy));
-    return combinedPermissionAgg
-        .values()
-        .stream()
+    return combinedPermissionAgg.values().stream()
         .map(AbstractPermissionService::resolvePermissions)
         .collect(toImmutableSet());
   }

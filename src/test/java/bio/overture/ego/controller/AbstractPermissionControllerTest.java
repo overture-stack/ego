@@ -329,8 +329,7 @@ public abstract class AbstractPermissionControllerTest<
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Assert that the policy deletion cascaded the delete to the permissions
-    existingPermissionIds
-        .stream()
+    existingPermissionIds.stream()
         .map(UUID::fromString)
         .forEach(x -> assertThat(getPermissionService().isExist(x)).isFalse());
 
@@ -367,14 +366,12 @@ public abstract class AbstractPermissionControllerTest<
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Assert that the owner deletion cascaded the delete to the permissions
-    existingPermissionIds
-        .stream()
+    existingPermissionIds.stream()
         .map(UUID::fromString)
         .forEach(x -> assertThat(getPermissionService().isExist(x)).isFalse());
 
     // Assert that the owner deletion DID NOT cascade past the permission and deleted policies
-    permissionRequests
-        .stream()
+    permissionRequests.stream()
         .map(PermissionRequest::getPolicyId)
         .distinct()
         .forEach(x -> assertThat(getPolicyService().isExist(x)).isTrue());

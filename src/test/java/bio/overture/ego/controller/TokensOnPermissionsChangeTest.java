@@ -192,9 +192,8 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
   }
 
   /**
-   * Scenario: User is part of a group that has a WRITE permission. User has a token using this scope. The group then
-   * has the permission deleted.
-   * Behavior: Token should be revoked.
+   * Scenario: User is part of a group that has a WRITE permission. User has a token using this
+   * scope. The group then has the permission deleted. Behavior: Token should be revoked.
    */
   @Test
   @SneakyThrows
@@ -225,9 +224,9 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
   }
 
   /**
-   * Scenario: User is part of a group that has a READ permission. User has a token using this scope. The group then
-   * has the permission upgraded to WRITE.
-   * Behavior: Token should remain valid.
+   * Scenario: User is part of a group that has a READ permission. User has a token using this
+   * scope. The group then has the permission upgraded to WRITE. Behavior: Token should remain
+   * valid.
    */
   @Test
   @SneakyThrows
@@ -256,9 +255,8 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
   }
 
   /**
-   * Scenario: User is part of a group that has a WRITE permission. User has a token using this scope. The group then
-   * has the permission downgraded to READ.
-   * Behavior: Token should be revoked.
+   * Scenario: User is part of a group that has a WRITE permission. User has a token using this
+   * scope. The group then has the permission downgraded to READ. Behavior: Token should be revoked.
    */
   @Test
   @SneakyThrows
@@ -287,9 +285,8 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
   }
 
   /**
-   * Scenario: User is part of a group that has a WRITE permission. User has a token using this scope. The group then
-   * has the permission downgraded to DENY.
-   * Behavior: Token should be revoked.
+   * Scenario: User is part of a group that has a WRITE permission. User has a token using this
+   * scope. The group then has the permission downgraded to DENY. Behavior: Token should be revoked.
    */
   @Test
   @SneakyThrows
@@ -318,9 +315,8 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
   }
 
   /**
-   * Scenario: User is part of a group that has a WRITE permission. User has a token using this scope. The user is then
-   * removed from this group.
-   * Behavior: Token should be revoked.
+   * Scenario: User is part of a group that has a WRITE permission. User has a token using this
+   * scope. The user is then removed from this group. Behavior: Token should be revoked.
    */
   @Test
   @SneakyThrows
@@ -345,9 +341,9 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
   }
 
   /**
-   * Scenario: User is part of a group that has a WRITE permission. User has a token using this scope. The user is then
-   * added to a group that has the DENY permission.
-   * Behavior: Token should be revoked.
+   * Scenario: User is part of a group that has a WRITE permission. User has a token using this
+   * scope. The user is then added to a group that has the DENY permission. Behavior: Token should
+   * be revoked.
    */
   @Test
   @SneakyThrows
@@ -384,9 +380,9 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
   }
 
   /**
-   * Scenario: User is part of a group that has a READ permission. User has a token using this scope. The user is then
-   * added to a group that has the WRITE permission.
-   * Behavior: Token should remain valid.
+   * Scenario: User is part of a group that has a READ permission. User has a token using this
+   * scope. The user is then added to a group that has the WRITE permission. Behavior: Token should
+   * remain valid.
    */
   @Test
   @SneakyThrows
@@ -400,23 +396,23 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     val groupWrite = entityGenerator.setupGroup("AddWriteUpgradeGroupPermission");
 
     val permissionRequest =
-      ImmutableList.of(
-        PermissionRequest.builder().policyId(policy.getId()).mask(AccessLevel.WRITE).build());
+        ImmutableList.of(
+            PermissionRequest.builder().policyId(policy.getId()).mask(AccessLevel.WRITE).build());
     initStringRequest()
-      .endpoint("/groups/%s/permissions", groupWrite.getId().toString())
-      .body(permissionRequest)
-      .post();
+        .endpoint("/groups/%s/permissions", groupWrite.getId().toString())
+        .body(permissionRequest)
+        .post();
 
     val groupRequest = ImmutableList.of(groupWrite.getId());
     val groupResponse =
-      initStringRequest()
-        .endpoint("/users/%s/groups", user.getId().toString())
-        .body(groupRequest)
-        .post();
+        initStringRequest()
+            .endpoint("/users/%s/groups", user.getId().toString())
+            .body(groupRequest)
+            .post();
     assertThat(groupResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
-      initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be revoked
     assertThat(checkTokenAfterUpgradeResponse.getStatusCode()).isEqualTo(HttpStatus.MULTI_STATUS);

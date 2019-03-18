@@ -104,8 +104,7 @@ public class OAuth2SsoFilter extends CompositeFilter {
                                 HttpMethod.GET,
                                 null,
                                 new ParameterizedTypeReference<List<Map<String, Object>>>() {})
-                            .getBody()
-                            .stream()
+                            .getBody().stream()
                             .filter(
                                 x ->
                                     x.get("verified").equals(true) && x.get("primary").equals(true))
