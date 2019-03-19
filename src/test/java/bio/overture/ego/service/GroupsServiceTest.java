@@ -4,9 +4,13 @@ import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.AbstractPermission;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.service.association.impl_old.FunctionalAssociationService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +58,8 @@ public class GroupsServiceTest {
   @Autowired private PolicyService policyService;
 
   @Autowired private EntityGenerator entityGenerator;
+  @Autowired private FunctionalAssociationService<Group, Application> groupApplicationAssociatorService;
+  @Autowired private FunctionalAssociationService<Group, User> groupUserAssociatorService;
 
   // Create
   @Test
@@ -211,8 +217,8 @@ public class GroupsServiceTest {
     val userTwoId = userService.getByName("SecondUser@domain.com").getId();
     val groupId = groupService.getByName("Group One").getId();
 
-    userService.addUserToGroups(userId, Arrays.asList(groupId));
-    userService.addUserToGroups(userTwoId, Arrays.asList(groupId));
+    groupUserAssociatorService.associateParentWithChildren(userId, Arrays.asList(groupId));
+    groupUserAssociatorService.associateParentWithChildren(userTwoId, Arrays.asList(groupId));
 
     val groups =
         groupService.findUserGroups(
@@ -245,7 +251,7 @@ public class GroupsServiceTest {
     val groupId = groupService.getByName("Group One").getId();
     val groupTwoId = groupService.getByName("Group Two").getId();
 
-    userService.addUserToGroups(userId, Arrays.asList(groupId, groupTwoId));
+    groupUserAssociatorService.associateParentWithChildren(userId, Arrays.asList(groupId, groupTwoId));
 
     val groupsFilters = new SearchFilter("name", "Group One");
 
@@ -266,7 +272,7 @@ public class GroupsServiceTest {
     val groupId = groupService.getByName("Group One").getId();
     val groupTwoId = groupService.getByName("Group Two").getId();
 
-    userService.addUserToGroups(userId, Arrays.asList(groupId, groupTwoId));
+    groupUserAssociatorService.associateParentWithChildren(userId, Arrays.asList(groupId, groupTwoId));
 
     val groupsFilters = new SearchFilter("name", "Group One");
 
@@ -286,7 +292,7 @@ public class GroupsServiceTest {
     val groupId = groupService.getByName("Group One").getId();
     val groupTwoId = groupService.getByName("Group Two").getId();
 
-    userService.addUserToGroups(userId, Arrays.asList(groupId, groupTwoId));
+    groupUserAssociatorService.associateParentWithChildren(userId, Arrays.asList(groupId, groupTwoId));
 
     val groups =
         groupService.findUserGroups(
@@ -307,8 +313,8 @@ public class GroupsServiceTest {
     val applicationId = applicationService.getByClientId("111111").getId();
     val applicationTwoId = applicationService.getByClientId("222222").getId();
 
-    groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
-    groupService.addAppsToGroup(groupTwoId, Arrays.asList(applicationTwoId));
+    groupApplicationAssociatorService.associateParentWithChildren(groupId, Arrays.asList(applicationId));
+    groupApplicationAssociatorService.associateParentWithChildren(groupTwoId, Arrays.asList(applicationTwoId));
 
     val groups =
         groupService.findApplicationGroups(
@@ -350,8 +356,8 @@ public class GroupsServiceTest {
             .getByClientId("111111_testFindApplicationsGroupsNoQueryFilters")
             .getId() ;
 
-    groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
-    groupService.addAppsToGroup(groupTwoId, Arrays.asList(applicationId));
+    groupApplicationAssociatorService.associateParentWithChildren(groupId, Arrays.asList(applicationId));
+    groupApplicationAssociatorService.associateParentWithChildren(groupTwoId, Arrays.asList(applicationId));
 
     val groupsFilters =
         new SearchFilter("name", "Group One_testFindApplicationsGroupsNoQueryFilters");
@@ -383,8 +389,8 @@ public class GroupsServiceTest {
             .getByClientId("111111_testFindApplicationsGroupsQueryAndFilters")
             .getId();
 
-    groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
-    groupService.addAppsToGroup(groupTwoId, Arrays.asList(applicationId));
+    groupApplicationAssociatorService.associateParentWithChildren(groupId, Arrays.asList(applicationId));
+    groupApplicationAssociatorService.associateParentWithChildren(groupTwoId, Arrays.asList(applicationId));
 
     val groupsFilters =
         new SearchFilter("name", "Group One_testFindApplicationsGroupsQueryAndFilters");
@@ -408,8 +414,8 @@ public class GroupsServiceTest {
     val groupTwoId = groupService.getByName("Group Two").getId();
     val applicationId = applicationService.getByClientId("111111").getId();
 
-    groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
-    groupService.addAppsToGroup(groupTwoId, Arrays.asList(applicationId));
+    groupApplicationAssociatorService.associateParentWithChildren(groupId, Arrays.asList(applicationId));
+    groupApplicationAssociatorService.associateParentWithChildren(groupTwoId, Arrays.asList(applicationId));
 
     val groups =
         groupService.findApplicationGroups(
@@ -476,7 +482,7 @@ public class GroupsServiceTest {
     val application = applicationService.getByClientId("111111");
     val applicationId = application.getId();
 
-    groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
+    groupApplicationAssociatorService.associateParentWithChildren(groupId, Arrays.asList(applicationId));
 
     val group = groupService.getById(groupId);
 
@@ -491,7 +497,7 @@ public class GroupsServiceTest {
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
             () ->
-                groupService.addAppsToGroup(
+                groupApplicationAssociatorService.associateParentWithChildren(
                     UUID.randomUUID(), Arrays.asList(applicationId)));
   }
 
@@ -504,7 +510,7 @@ public class GroupsServiceTest {
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
             () ->
-                groupService.addAppsToGroup(groupId, Arrays.asList(UUID.randomUUID())));
+                groupApplicationAssociatorService.associateParentWithChildren(groupId, Arrays.asList(UUID.randomUUID())));
   }
 
   @Test
@@ -515,7 +521,7 @@ public class GroupsServiceTest {
     val group = groupService.getByName("Group One");
     val groupId = group.getId();
 
-    groupService.addAppsToGroup(groupId, Collections.emptyList());
+    groupApplicationAssociatorService.associateParentWithChildren(groupId, Collections.emptyList());
 
     val nonUpdated = groupService.getByName("Group One");
     assertThat(nonUpdated).isEqualTo(group);
@@ -553,12 +559,12 @@ public class GroupsServiceTest {
     val application = applicationService.getByClientId("111111");
     val applicationId = application.getId();
 
-    groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
+    groupApplicationAssociatorService.associateParentWithChildren(groupId, Arrays.asList(applicationId));
 
     val group = groupService.getById(groupId);
     assertThat(group.getApplications().size()).isEqualTo(1);
 
-    groupService.deleteAppsFromGroup(groupId, Arrays.asList(applicationId));
+    groupApplicationAssociatorService.disassociateParentFromChildren(groupId, Arrays.asList(applicationId));
 
     val groupWithDeleteApp = groupService.getById(groupId);
     assertThat(groupWithDeleteApp.getApplications().size()).isEqualTo(0);
@@ -573,7 +579,7 @@ public class GroupsServiceTest {
     val application = applicationService.getByClientId("111111");
     val applicationId = application.getId();
 
-    groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
+    groupApplicationAssociatorService.associateParentWithChildren(groupId, Arrays.asList(applicationId));
 
     val group = groupService.getById(groupId);
     assertThat(group.getApplications().size()).isEqualTo(1);
@@ -581,7 +587,7 @@ public class GroupsServiceTest {
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
             () ->
-                groupService.deleteAppsFromGroup(
+                groupApplicationAssociatorService.disassociateParentFromChildren(
                     UUID.randomUUID(), Arrays.asList(applicationId)));
   }
 
@@ -594,13 +600,13 @@ public class GroupsServiceTest {
     val application = applicationService.getByClientId("111111");
     val applicationId = application.getId();
 
-    groupService.addAppsToGroup(groupId, Arrays.asList(applicationId));
+    groupApplicationAssociatorService.associateParentWithChildren(groupId, Arrays.asList(applicationId));
 
     val group = groupService.getById(groupId);
     assertThat(group.getApplications().size()).isEqualTo(1);
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> groupService.deleteAppsFromGroup(groupId, Arrays.asList()));
+        .isThrownBy(() -> groupApplicationAssociatorService.disassociateParentFromChildren(groupId, Arrays.asList()));
   }
 
   /** This test guards against bad cascades against users */
@@ -610,8 +616,7 @@ public class GroupsServiceTest {
     val group = entityGenerator.setupGroup("testGroup");
 
     val updatedGroup =
-        groupService.addUsersToGroup(
-            group.getId(), newArrayList(user.getId()));
+        userService.addUsersToGroup(group.getId(), newArrayList(user.getId()));
 
     groupService.delete(updatedGroup.getId());
     assertThat(userService.getById(user.getId())).isNotNull();
@@ -624,7 +629,7 @@ public class GroupsServiceTest {
     val group = entityGenerator.setupGroup("testGroup");
 
     val updatedGroup =
-        groupService.addAppsToGroup(group.getId(), newArrayList(app.getId()));
+        groupApplicationAssociatorService.associateParentWithChildren(group.getId(), newArrayList(app.getId()));
 
     groupService.delete(updatedGroup.getId());
     assertThat(applicationService.getById(app.getId())).isNotNull();

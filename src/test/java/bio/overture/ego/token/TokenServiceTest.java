@@ -18,10 +18,13 @@
 package bio.overture.ego.token;
 
 import bio.overture.ego.model.dto.Scope;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.association.impl_old.FunctionalAssociationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
@@ -73,6 +76,7 @@ public class TokenServiceTest {
   @Autowired private EntityGenerator entityGenerator;
 
   @Autowired private TokenService tokenService;
+  @Autowired private FunctionalAssociationService<Group, User> groupUserAssociatorService;
 
   public static TestData test = null;
 
@@ -87,7 +91,7 @@ public class TokenServiceTest {
     val group2 = entityGenerator.setupGroup("testGroup");
     val app2 = entityGenerator.setupApplication("foo");
 
-    userService.addUserToGroups(user.getId(),newArrayList(group2.getId()));
+    groupUserAssociatorService.associateParentWithChildren(user.getId(),newArrayList(group2.getId()));
     userService.addUserToApps(user.getId(), newArrayList(app2.getId()));
 
     val token = tokenService.generateUserToken(userService.getById(user.getId()));

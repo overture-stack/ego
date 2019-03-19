@@ -20,12 +20,11 @@ import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupRepository;
-import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
+import bio.overture.ego.service.association.FindRequest;
 import lombok.NonNull;
 import lombok.val;
 import org.mapstruct.Mapper;
@@ -36,24 +35,29 @@ import org.mapstruct.TargetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.criteria.JoinType;
+import javax.transaction.Transactional;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
-import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
+import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
+import static bio.overture.ego.model.enums.JavaFields.USERS;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static java.lang.String.format;
-import static java.util.UUID.fromString;
+import static javax.persistence.criteria.JoinType.LEFT;
 import static org.mapstruct.factory.Mappers.getMapper;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Service
+@Transactional
 public class GroupService extends AbstractNamedService<Group, UUID> {
 
   /** Constants */
@@ -61,21 +65,18 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
 
   /** Dependencies */
   private final GroupRepository groupRepository;
-  private final UserRepository userRepository;
-  private final ApplicationRepository applicationRepository;
-  private final ApplicationService applicationService;
 
   @Autowired
-  public GroupService(
-      @NonNull GroupRepository groupRepository,
-      @NonNull UserRepository userRepository,
-      @NonNull ApplicationRepository applicationRepository,
-      @NonNull ApplicationService applicationService) {
+  public GroupService(@NonNull GroupRepository groupRepository ) {
     super(Group.class, groupRepository);
     this.groupRepository = groupRepository;
-    this.userRepository = userRepository;
-    this.applicationRepository = applicationRepository;
-    this.applicationService = applicationService;
+  }
+
+  @Override
+  public Group getWithRelationships(UUID id) {
+    val result =(Optional<Group>)getRepository().findOne(fetchSpecification(id, true, true, true));
+    checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
+    return result.get();
   }
 
   public Group create(@NonNull GroupRequest request) {
@@ -88,22 +89,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     val result = groupRepository.findGroupById(id);
     checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
     return result.get();
-  }
-
-  public Group addAppsToGroup(@NonNull UUID id, @NonNull List<UUID> appIds) {
-    val group = getById(id);
-    val apps = applicationService.getMany(appIds);
-    associateApplications(group, apps);
-    return getRepository().save(group);
-  }
-
-  // TODO: [rtisma] need to validate userIds all exist. Cannot use userService as it causes circular
-  // dependency
-  public Group addUsersToGroup(@NonNull UUID id, @NonNull List<UUID> userIds) {
-    val group = getById(id);
-    val users = userRepository.findAllByIdIn(userIds);
-    associateUsers(group, users);
-    return groupRepository.save(group);
   }
 
   public Group partialUpdate(@NonNull UUID id, @NonNull GroupRequest r) {
@@ -132,6 +117,14 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         pageable);
   }
 
+  public static Specification<Group> buildFindGroupsByUserSpecification(@NonNull FindRequest findRequest){
+    val baseSpec = where(GroupSpecification.containsUser(findRequest.getId()))
+        .and(GroupSpecification.filterBy(findRequest.getFilters()));
+    return findRequest.getQuery()
+        .map(q  -> baseSpec.and(GroupSpecification.containsText(q)))
+        .orElse(baseSpec);
+  }
+
   public Page<Group> findUserGroups(
       @NonNull UUID userId,
       @NonNull String query,
@@ -152,6 +145,14 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         pageable);
   }
 
+  public static Specification<Group> buildFindGroupsByApplicationSpecification(@NonNull FindRequest applicationFindRequest){
+    val baseSpec = where(GroupSpecification.containsApplication(applicationFindRequest.getId()))
+        .and(GroupSpecification.filterBy(applicationFindRequest.getFilters()));
+    return applicationFindRequest.getQuery()
+        .map(q -> baseSpec.and(GroupSpecification.containsText(q)))
+        .orElse(baseSpec);
+  }
+
   public Page<Group> findApplicationGroups(
       @NonNull UUID appId,
       @NonNull String query,
@@ -162,33 +163,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
             .and(GroupSpecification.containsText(query))
             .and(GroupSpecification.filterBy(filters)),
         pageable);
-  }
-
-  public void deleteAppsFromGroup(@NonNull UUID id, @NonNull List<UUID> appIds) {
-    val group = getById(id);
-    checkAppsExistForGroup(group, appIds);
-    val appsToDisassociate =
-        group
-            .getApplications()
-            .stream()
-            .filter(a -> appIds.contains(a.getId()))
-            .collect(toImmutableSet());
-    val apps = appIds.stream().map(this::retrieveApplication).collect(toImmutableSet());
-    disassociateGroupFromApps(group, appsToDisassociate);
-    getRepository().save(group);
-  }
-
-  public void deleteUsersFromGroup(@NonNull UUID id, @NonNull List<UUID> userIds) {
-    val group = getById(id);
-    checkUsersExistForGroup(group, userIds);
-    val usersToDisassociate =
-        group
-            .getUsers()
-            .stream()
-            .filter(u -> userIds.contains(u.getId()))
-            .collect(toImmutableSet());
-    disassociateGroupFromUsers(group, usersToDisassociate);
-    getRepository().save(group);
   }
 
   private void validateUpdateRequest(Group originalGroup, GroupRequest updateRequest) {
@@ -203,68 +177,42 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         !groupRepository.existsByNameIgnoreCase(name), "A group with same name already exists");
   }
 
-  private Application retrieveApplication(UUID appId) {
-    // using applicationRepository since using applicationService causes cyclic dependency error
-    return applicationRepository
-        .findById(appId)
-        .orElseThrow(() -> buildNotFoundException("Could not find Application with ID: %s", appId));
+  public static void associateUsers(@NonNull Group group, @NonNull Collection<User> users){
+    group.getUsers().addAll(users);
+    users.stream().map(User::getGroups).forEach(x -> x.add(group));
   }
 
-  private User retrieveUser(String userId) {
-    // using applicationRepository since using applicationService causes cyclic dependency error
-    return userRepository
-        .findById(fromString(userId))
-        .orElseThrow(() -> buildNotFoundException("Could not find User with ID: %s", userId));
-  }
-
-  public static void checkUsersExistForGroup(
-      @NonNull Group group, @NonNull Collection<UUID> userIds) {
-    val existingUserIds = group.getUsers().stream().map(User::getId).collect(toImmutableSet());
-    val nonExistentUserIds =
-        userIds.stream().filter(x -> !existingUserIds.contains(x)).collect(toImmutableSet());
-    if (!nonExistentUserIds.isEmpty()) {
-      throw new NotFoundException(
-          format(
-              "The following users do not exist for group '%s': %s",
-              group.getId(), COMMA.join(nonExistentUserIds)));
-    }
-  }
-
-  public static void disassociateGroupFromUsers(
+  public static void disassociateUsers(
       @NonNull Group group, @NonNull Collection<User> users) {
     group.getUsers().removeAll(users);
     users.forEach(x -> x.getGroups().remove(group));
   }
 
-  public static void checkAppsExistForGroup(
-      @NonNull Group group, @NonNull Collection<UUID> appIds) {
-    val existingAppIds =
-        group.getApplications().stream().map(Application::getId).collect(toImmutableSet());
-    val nonExistentAppIds =
-        appIds.stream().filter(x -> !existingAppIds.contains(x)).collect(toImmutableSet());
-    if (!nonExistentAppIds.isEmpty()) {
-      throw new NotFoundException(
-          format(
-              "The following apps do not exist for group '%s': %s",
-              group.getId(), COMMA.join(nonExistentAppIds)));
-    }
+  public static void associateApplications(
+      @NonNull Group group, @NonNull Collection<Application> applications) {
+    group.getApplications().addAll(applications);
+    applications.stream().map(Application::getGroups).forEach(groups -> groups.add(group));
   }
 
-  public static void disassociateGroupFromApps(
+  public static void disassociateApplications(
       @NonNull Group group, @NonNull Collection<Application> apps) {
     group.getApplications().removeAll(apps);
     apps.forEach(x -> x.getGroups().remove(group));
   }
 
-  private static void associateUsers(@NonNull Group group, @NonNull Collection<User> users) {
-    group.getUsers().addAll(users);
-    users.stream().map(User::getGroups).forEach(groups -> groups.add(group));
-  }
-
-  private static void associateApplications(
-      @NonNull Group group, @NonNull Collection<Application> applications) {
-    group.getApplications().addAll(applications);
-    applications.stream().map(Application::getGroups).forEach(groups -> groups.add(group));
+  private static Specification<Group> fetchSpecification(UUID id, boolean fetchApplications, boolean fetchUsers, boolean fetchGroupPermissions){
+    return (fromGroup, query, builder) -> {
+      if (fetchApplications){
+        fromGroup.fetch(APPLICATIONS, LEFT);
+      }
+      if (fetchUsers){
+        fromGroup.fetch(USERS, LEFT);
+      }
+      if(fetchGroupPermissions){
+        fromGroup.fetch(PERMISSIONS, LEFT);
+      }
+      return builder.equal(fromGroup.get(ID),id );
+    };
   }
 
   @Mapper(

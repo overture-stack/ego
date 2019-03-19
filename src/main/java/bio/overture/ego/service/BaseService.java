@@ -9,6 +9,8 @@ import bio.overture.ego.model.exceptions.NotFoundException;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
+
+import bio.overture.ego.repository.BaseRepository;
 import lombok.NonNull;
 import lombok.val;
 
@@ -33,6 +35,8 @@ public interface BaseService<T, ID> {
   void delete(ID id);
 
   Set<T> getMany(Collection<ID> ids);
+
+  T getWithRelationships(ID id);
 
   default void checkExistence(@NonNull Collection<ID> ids) {
     val missingIds = ids.stream().filter(x -> !isExist(x)).collect(toImmutableSet());

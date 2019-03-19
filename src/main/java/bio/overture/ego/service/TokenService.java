@@ -47,6 +47,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
@@ -69,11 +70,18 @@ import java.util.stream.Collectors;
 import static bio.overture.ego.model.dto.Scope.effectiveScopes;
 import static bio.overture.ego.model.dto.Scope.explicitScopes;
 import static bio.overture.ego.model.enums.ApplicationType.ADMIN;
+import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.SCOPES;
+import static bio.overture.ego.model.enums.JavaFields.TOKEN;
+import static bio.overture.ego.model.enums.JavaFields.USERS;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.service.UserService.extractScopes;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
 import static java.lang.String.format;
 import static java.util.UUID.fromString;
+import static javax.persistence.criteria.JoinType.LEFT;
 import static org.springframework.util.DigestUtils.md5Digest;
 
 @Slf4j
@@ -117,6 +125,13 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     this.userEvents = userEvents;
     this.tokenStoreService = tokenStoreService;
     this.policyService = policyService;
+  }
+
+  @Override
+  public Token getWithRelationships(@NonNull UUID id) {
+    val result =(Optional<Token>)getRepository().findOne(fetchSpecification(id, true, true, true));
+    checkNotFound(result.isPresent(), "The tokenId '%s' does not exist", id);
+    return result.get();
   }
 
   public String generateUserToken(IDToken idToken) {
@@ -469,5 +484,21 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
         .exp(token.getSecondsUntilExpiry())
         .description(token.getDescription())
         .build());
+  }
+
+  public static Specification<Token> fetchSpecification(UUID id,
+      boolean fetchUser, boolean fetchApplications, boolean fetchTokenScopes){
+    return (fromToken, query, builder) -> {
+      if (fetchUser){
+        fromToken.fetch(USERS, LEFT);
+      }
+      if(fetchApplications){
+        fromToken.fetch(APPLICATIONS, LEFT);
+      }
+      if(fetchTokenScopes){
+        fromToken.fetch(SCOPES, LEFT);
+      }
+      return builder.equal(fromToken.get(ID),id );
+    };
   }
 }

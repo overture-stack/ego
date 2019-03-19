@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 8088
 
 jwt:
   secret: testsecretisalsoasecret
@@ -15,10 +15,10 @@ spring.main.allow-bean-definition-overriding: true
 # Datasource
 spring.datasource:
   driver-class-name: org.postgresql.Driver
-  url: jdbc:postgresql://localhost:5432/ego?stringtype=unspecified
+  url: jdbc:postgresql://localhost:8432/ego?stringtype=unspecified
 
   username: postgres
-  password:
+  password: password
   max-active: 10
   max-idle: 1
   min-idle: 1
@@ -109,8 +109,8 @@ logging:
 
 # Hibernate SQL Debugging
 #spring.jpa.properties.hibernate.format_sql: true
-#logging.level.org.hibernate.SQL: DEBUG
-#logging.level.org.hibernate.type.descriptor.sql: TRACE
+logging.level.org.hibernate.SQL: DEBUG
+logging.level.org.hibernate.type.descriptor.sql: TRACE
 
 
 # When you are desperate, use this...

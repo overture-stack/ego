@@ -29,6 +29,8 @@ import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.association.AssociationService;
+import bio.overture.ego.service.association.impl_old.FunctionalAssociationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
@@ -81,7 +83,7 @@ public class UserController {
       @NonNull UserService userService,
       @NonNull GroupService groupService,
       @NonNull UserPermissionService userPermissionService,
-      @NonNull ApplicationService applicationService) {
+      @NonNull ApplicationService applicationService){
     this.userService = userService;
     this.groupService = groupService;
     this.applicationService = applicationService;
@@ -317,7 +319,8 @@ public class UserController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<UUID> groupIds) {
-
+    //TODO: [rtisma] put this in once tests are created
+//    return userGroupAssociatorService.addChildrenToParent(id, groupIds);
     return userService.addUserToGroups(id, groupIds);
   }
 
@@ -329,6 +332,8 @@ public class UserController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "groupIDs", required = true) List<UUID> groupIDs) {
+    //TODO: [rtisma] put this in once tests are created
+//    userGroupAssociatorService.removeChildrenFromParent(id, groupIDs);
     userService.deleteUserFromGroups(id, groupIDs);
   }
 

@@ -3,6 +3,7 @@ package bio.overture.ego.utils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import lombok.NonNull;
+import lombok.val;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,6 +30,19 @@ public class CollectionUtils {
     return collection.stream().map(mapper).collect(toList());
   }
 
+  public static <T> Set<T> findDuplicates(Collection<T> collection){
+    val exitingSet = Sets.<T>newHashSet();
+    val duplicateSet = Sets.<T>newHashSet();
+    collection.forEach( x -> {
+      if (exitingSet.contains(x)){
+        duplicateSet.add(x);
+      } else {
+        exitingSet.add(x);
+      }
+    });
+    return duplicateSet;
+  }
+
   public static Set<String> setOf(String... strings) {
     return stream(strings).collect(toSet());
   }
@@ -39,6 +53,10 @@ public class CollectionUtils {
 
   public static <T> Set<T> difference(Collection<T> left, Collection<T> right) {
     return Sets.difference(ImmutableSet.copyOf(left), ImmutableSet.copyOf(right));
+  }
+
+  public static <T> Set<T> intersection(Collection<T> left, Collection<T> right) {
+    return Sets.intersection(ImmutableSet.copyOf(left), ImmutableSet.copyOf(right));
   }
 
   public static <T> List<T> repeatedCallsOf(@NonNull Supplier<T> callback, int numberOfCalls) {

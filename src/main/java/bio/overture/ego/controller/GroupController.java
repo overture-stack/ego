@@ -27,10 +27,13 @@ import bio.overture.ego.model.exceptions.PostWithIdentifierException;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
-import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.association.AssociationService;
 import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.UserService;
+import bio.overture.ego.service.association.FindRequest;
+import bio.overture.ego.service.association.impl_old.ApplicationGroupAssociationService;
+import bio.overture.ego.service.association.impl_old.GroupApplicationAssociationService;
+import bio.overture.ego.service.association.impl_old.GroupUserAssociationService;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.ApiImplicitParam;
@@ -39,12 +42,12 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -62,6 +65,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.UUID;
 
+import static org.springframework.util.StringUtils.isEmpty;
+
 @Slf4j
 @RestController
 @RequestMapping("/groups")
@@ -69,20 +74,26 @@ public class GroupController {
 
   /** Dependencies */
   private final GroupService groupService;
-  private final ApplicationService applicationService;
-  private final UserService userService;
   private final GroupPermissionService groupPermissionService;
+  private final AssociationService<Group, Application, UUID> groupApplicationAssociationService;
+  private final AssociationService<Group, User, UUID> groupUserAssociationService;
+  private final AssociationService<User, Group, UUID> userGroupAssociationService;
+  private final AssociationService<Application, Group, UUID> applicationGroupAssociationService;
 
   @Autowired
   public GroupController(
       @NonNull GroupService groupService,
-      @NonNull ApplicationService applicationService,
       @NonNull GroupPermissionService groupPermissionService,
-      @NonNull UserService userService) {
+      @NonNull AssociationService<Group, Application, UUID> groupApplicationAssociationService,
+      @NonNull AssociationService<Group, User, UUID> groupUserAssociationService,
+      @NonNull AssociationService<Application, Group, UUID> applicationGroupAssociationService,
+      @NonNull AssociationService<User, Group, UUID> userGroupAssociationService ) {
     this.groupService = groupService;
-    this.applicationService = applicationService;
-    this.userService = userService;
     this.groupPermissionService = groupPermissionService;
+    this.groupApplicationAssociationService = groupApplicationAssociationService;
+    this.groupUserAssociationService = groupUserAssociationService;
+    this.applicationGroupAssociationService = applicationGroupAssociationService;
+    this.userGroupAssociationService = userGroupAssociationService;
   }
 
   @AdminScoped
@@ -127,7 +138,7 @@ public class GroupController {
       Pageable pageable) {
     // TODO: [rtisma] create tests for this controller logic. This logic should remain in
     // controller.
-    if (StringUtils.isEmpty(query)) {
+    if (isEmpty(query)) {
       return new PageDTO<>(groupService.listGroups(filters, pageable));
     } else {
       return new PageDTO<>(groupService.findGroups(query, filters, pageable));
@@ -290,13 +301,15 @@ public class GroupController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    if (StringUtils.isEmpty(query)) {
-      return new PageDTO<>(applicationService.findGroupApplications(id, filters, pageable));
-    } else {
-      return new PageDTO<>(
-          applicationService.findGroupApplications(id, query, filters, pageable));
-    }
+    val findRequest = FindRequest.builder()
+        .id(id)
+        .query(isEmpty(query) ? null : query)
+        .filters(filters)
+        .pageable(pageable)
+        .build();
+    return new PageDTO<>(applicationGroupAssociationService.findParentsForChild(findRequest));
   }
+
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/applications")
@@ -306,7 +319,7 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<UUID> appIds) {
-    return groupService.addAppsToGroup(id, appIds);
+    return groupApplicationAssociationService.associateParentWithChildren(id, appIds);
   }
 
   @AdminScoped
@@ -317,7 +330,7 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "appIds", required = true) List<UUID> appIds) {
-    groupService.deleteAppsFromGroup(id, appIds);
+    groupApplicationAssociationService.disassociateParentFromChildren(id, appIds);
   }
 
   /*
@@ -366,22 +379,24 @@ public class GroupController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    if (StringUtils.isEmpty(query)) {
-      return new PageDTO<>(userService.findGroupUsers(id, filters, pageable));
-    } else {
-      return new PageDTO<>(userService.findGroupUsers(id, query, filters, pageable));
-    }
+    val findRequest = FindRequest.builder()
+        .id(id)
+        .query(isEmpty(query) ? null : query)
+        .filters(filters)
+        .pageable(pageable)
+        .build();
+    return new PageDTO<>(userGroupAssociationService.findParentsForChild(findRequest));
   }
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/users")
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Add Users to Group", response = Group.class)})
-  public @ResponseBody Group addUsersToGroups(
+  public @ResponseBody Group addUsersToGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<UUID> userIds) {
-    return groupService.addUsersToGroup(id, userIds);
+    return groupUserAssociationService.associateParentWithChildren(id, userIds);
   }
 
   @AdminScoped
@@ -392,7 +407,7 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "userIds", required = true) List<UUID> userIds) {
-    groupService.deleteUsersFromGroup(id, userIds);
+    groupUserAssociationService.disassociateParentFromChildren(id, userIds);
   }
 
   @ExceptionHandler({EntityNotFoundException.class})

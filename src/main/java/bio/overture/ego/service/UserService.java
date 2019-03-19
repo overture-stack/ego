@@ -30,6 +30,7 @@ import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.UserSpecification;
+import bio.overture.ego.service.association.FindRequest;
 import bio.overture.ego.token.IDToken;
 import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
@@ -45,6 +46,7 @@ import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,8 +58,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.GROUPS;
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.USERPERMISSIONS;
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
@@ -70,6 +77,7 @@ import static java.util.Comparator.comparing;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.concat;
+import static javax.persistence.criteria.JoinType.LEFT;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 @Slf4j
@@ -109,6 +117,12 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
+  public User getUserWithRelationships(@NonNull UUID id){
+    val result = userRepository.getUserById(id);
+    checkNotFound(result.isPresent(), "The userId '%s' does not exist", id);
+    return result.get();
+  }
+
   public User createFromIDToken(IDToken idToken) {
     return create(
         CreateUserRequest.builder()
@@ -141,6 +155,13 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
+  @Override
+  public User getWithRelationships(@NonNull UUID id) {
+    val result =(Optional<User>)getRepository().findOne(fetchSpecification(id, true, true, true));
+    checkNotFound(result.isPresent(), "The userId '%s' does not exist", id);
+    return result.get();
+  }
+
   private User getUserWithRelationshipsById(@NonNull UUID id) {
     return userRepository
         .getUserById(id)
@@ -170,6 +191,17 @@ public class UserService extends AbstractNamedService<User, UUID> {
         .findAll(
             where(UserSpecification.containsText(query)).and(UserSpecification.filterBy(filters)),
             pageable);
+  }
+
+  // Since the User is the owning side of this relationship,
+  // the UserService should drive the association and not the GroupService.
+  // This also removed the cyclical dependency between the User and Group service
+  public Group addUsersToGroup(@NonNull UUID id, @NonNull List<UUID> userIds) {
+    val group = groupService.getById(id);
+    val users = userRepository.findAllByIdIn(userIds);
+    associateUsers(group, users);
+    userRepository.saveAll(users);
+    return group;
   }
 
   // TODO @rtisma: add test for checking group exists for user
@@ -230,6 +262,22 @@ public class UserService extends AbstractNamedService<User, UUID> {
             where(UserSpecification.ofApplication(appId))
                 .and(UserSpecification.filterBy(filters)),
             pageable);
+  }
+
+  public static Specification<User> buildFindUserByGroupSpecification(@NonNull FindRequest findRequest){
+    val baseSpec = where(UserSpecification.inGroup(findRequest.getId()))
+        .and(UserSpecification.filterBy(findRequest.getFilters()));
+    return findRequest.getQuery()
+        .map(q -> baseSpec.and(UserSpecification.containsText(q)))
+        .orElse(baseSpec);
+  }
+
+  public static Specification<User> buildFindUserByApplicationSpecification(@NonNull FindRequest findRequest){
+    val baseSpec = where(UserSpecification.ofApplication(findRequest.getId()))
+        .and(UserSpecification.filterBy(findRequest.getFilters()));
+    return findRequest.getQuery()
+        .map(q -> baseSpec.and(UserSpecification.containsText(q)))
+        .orElse(baseSpec);
   }
 
   public Page<User> findAppUsers(
@@ -348,6 +396,11 @@ public class UserService extends AbstractNamedService<User, UUID> {
     }
   }
 
+  public static void associateUsers(@NonNull Group group, @NonNull Collection<User> users) {
+    group.getUsers().addAll(users);
+    users.stream().map(User::getGroups).forEach(groups -> groups.add(group));
+  }
+
   public static void checkApplicationsExistForUser(
       @NonNull User user, @NonNull Collection<UUID> appIds) {
     val existingAppIds =
@@ -369,6 +422,21 @@ public class UserService extends AbstractNamedService<User, UUID> {
   private void checkEmailUnique(String email) {
     checkUnique(
         !userRepository.existsByEmailIgnoreCase(email), "A user with same email already exists");
+  }
+
+  private static Specification<User> fetchSpecification(UUID id, boolean fetchUserPermissions, boolean fetchGroups, boolean fetchApplications){
+    return (fromGroup, query, builder) -> {
+      if (fetchApplications){
+        fromGroup.fetch(APPLICATIONS, LEFT);
+      }
+      if (fetchGroups){
+        fromGroup.fetch(GROUPS, LEFT);
+      }
+      if(fetchUserPermissions){
+        fromGroup.fetch(USERPERMISSIONS, LEFT);
+      }
+      return builder.equal(fromGroup.get(ID),id );
+    };
   }
 
   @Mapper(

@@ -6,6 +6,7 @@ import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.NameableEntity;
 import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.repository.PermissionRepository;
 import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
 import com.google.common.collect.ImmutableList;
@@ -16,6 +17,7 @@ import lombok.val;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
@@ -25,6 +27,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import static bio.overture.ego.model.dto.Scope.createScope;
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.POLICY;
 import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
@@ -45,6 +49,7 @@ import static java.util.Objects.isNull;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
+import static javax.persistence.criteria.JoinType.LEFT;
 
 @Slf4j
 @Transactional
@@ -78,6 +83,21 @@ public abstract class AbstractPermissionService<
   protected abstract Collection<P> getPermissionsFromPolicy(Policy policy);
 
   public abstract O getOwnerWithRelationships(UUID ownerId);
+
+  //TODO: [rtisma] replace getOwnerWithRelationships with this
+  @Override
+  public P getWithRelationships(@NonNull UUID id) {
+    throw new IllegalStateException("not implemetned");
+  }
+
+  private Specification<O> fetchSpecification(UUID id, boolean fetchPolicy){
+    return (fromOwner, query, builder) -> {
+      if (fetchPolicy){
+        fromOwner.fetch(POLICY, LEFT);
+      }
+      return builder.equal(fromOwner.get(ID),id );
+    };
+  }
 
   public List<PolicyResponse> findByPolicy(UUID policyId) {
     val permissions = ImmutableList.copyOf(permissionRepository.findAllByPolicy_Id(policyId));

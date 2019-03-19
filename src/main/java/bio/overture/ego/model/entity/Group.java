@@ -31,6 +31,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
@@ -129,7 +130,7 @@ public class Group implements PolicyOwner, NameableEntity<UUID> {
 
   @ManyToMany(
       fetch = FetchType.LAZY,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+      cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
   @JoinTable(
       name = Tables.GROUP_APPLICATION,
       joinColumns = {@JoinColumn(name = SqlFields.GROUPID_JOIN)},
@@ -148,4 +149,11 @@ public class Group implements PolicyOwner, NameableEntity<UUID> {
   @JsonIgnore
   @Builder.Default
   private Set<User> users = newHashSet();
+
+  public Group addApplication(@NonNull Application a){
+    this.applications.add(a);
+    a.getGroups().add(this);
+    return this;
+  }
+
 }

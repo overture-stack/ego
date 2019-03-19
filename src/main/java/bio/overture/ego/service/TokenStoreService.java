@@ -21,6 +21,7 @@ import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.repository.TokenStoreRepository;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.commons.lang.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
+
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.service.TokenService.fetchSpecification;
 
 @Slf4j
 @Service
@@ -43,6 +47,13 @@ public class TokenStoreService extends AbstractNamedService<Token, UUID> {
   public TokenStoreService(@NonNull TokenStoreRepository repository) {
     super(Token.class, repository);
     this.tokenRepository = repository;
+  }
+
+  @Override
+  public Token getWithRelationships(@NonNull UUID id) {
+    val result =(Optional<Token>)getRepository().findOne(fetchSpecification(id, true, true, true));
+    checkNotFound(result.isPresent(), "The tokenId '%s' does not exist", id);
+    return result.get();
   }
 
   public Token create(@NonNull CreateTokenRequest createTokenRequest) {

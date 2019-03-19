@@ -39,7 +39,6 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -146,25 +145,16 @@ public class Application implements Identifiable<UUID> {
 
   @JsonIgnore
   @Builder.Default
-  @ManyToMany(
-      mappedBy = JavaFields.APPLICATIONS,
-      fetch = FetchType.LAZY,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+  @ManyToMany(mappedBy = JavaFields.APPLICATIONS, fetch = FetchType.LAZY)
   private Set<Group> groups = newHashSet();
 
   @JsonIgnore
   @Builder.Default
-  @ManyToMany(
-      mappedBy = JavaFields.APPLICATIONS,
-      fetch = FetchType.LAZY,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+  @ManyToMany(mappedBy = JavaFields.APPLICATIONS, fetch = FetchType.LAZY)
   private Set<User> users = newHashSet();
 
   @JsonIgnore
   @Builder.Default
-  @ManyToMany(
-      mappedBy = JavaFields.APPLICATIONS,
-      fetch = FetchType.LAZY,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+  @ManyToMany(mappedBy = JavaFields.APPLICATIONS, fetch = FetchType.LAZY)
   private Set<Token> tokens = newHashSet();
 }

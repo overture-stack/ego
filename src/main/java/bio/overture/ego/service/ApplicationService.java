@@ -19,9 +19,11 @@ package bio.overture.ego.service;
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
+import bio.overture.ego.service.association.FindRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -33,6 +35,7 @@ import org.mapstruct.TargetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -49,6 +52,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static bio.overture.ego.model.enums.JavaFields.GROUPS;
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.TOKEN;
+import static bio.overture.ego.model.enums.JavaFields.TOKENS;
+import static bio.overture.ego.model.enums.JavaFields.USERS;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
@@ -59,6 +67,7 @@ import static bio.overture.ego.utils.CollectionUtils.setOf;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
 import static java.lang.String.format;
+import static javax.persistence.criteria.JoinType.LEFT;
 import static org.mapstruct.factory.Mappers.getMapper;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
@@ -102,6 +111,14 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     return getRepository().save(app);
   }
 
+  @Override
+  public Application getWithRelationships(@NonNull UUID id) {
+    val result = (Optional<Application>)getRepository()
+        .findOne(fetchSpecification(id, true, true, true));
+    checkNotFound(result.isPresent(), "The applicationId '%s' does not exist", id);
+    return result.get();
+  }
+
   public Page<Application> listApps(
       @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository().findAll(ApplicationSpecification.filterBy(filters), pageable);
@@ -123,6 +140,15 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
             where(ApplicationSpecification.usedBy(userId))
                 .and(ApplicationSpecification.filterBy(filters)),
             pageable);
+  }
+
+
+  public static Specification<Application> buildFindApplicationByGroupSpecification(@NonNull FindRequest findRequest){
+    val baseSpec = where(ApplicationSpecification.inGroup(findRequest.getId()))
+        .and(ApplicationSpecification.filterBy(findRequest.getFilters()));
+    return findRequest.getQuery()
+        .map(q -> baseSpec.and(ApplicationSpecification.containsText(q)))
+        .orElse(baseSpec);
   }
 
   public Page<Application> findUserApps(
@@ -229,6 +255,21 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
   private static String removeAppTokenPrefix(String token) {
     return token.replace(APP_TOKEN_PREFIX, "").trim();
+  }
+
+  private static Specification<Application> fetchSpecification(UUID id, boolean fetchGroups, boolean fetchTokens, boolean fetchUsers){
+    return (fromApplication, query, builder) -> {
+      if (fetchGroups){
+        fromApplication.fetch(GROUPS, LEFT);
+      }
+      if (fetchTokens){
+        fromApplication.fetch(TOKENS, LEFT);
+      }
+      if(fetchUsers){
+        fromApplication.fetch(USERS, LEFT);
+      }
+      return builder.equal(fromApplication.get(ID),id );
+    };
   }
 
   @Mapper(

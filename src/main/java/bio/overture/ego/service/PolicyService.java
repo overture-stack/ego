@@ -16,14 +16,21 @@ import org.mapstruct.TargetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
+import static bio.overture.ego.model.enums.JavaFields.USERPERMISSIONS;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static javax.persistence.criteria.JoinType.LEFT;
 import static org.mapstruct.factory.Mappers.getMapper;
 
 @Slf4j
@@ -53,6 +60,13 @@ public class PolicyService extends AbstractNamedService<Policy, UUID> {
     return getRepository().save(policy);
   }
 
+  @Override
+  public Policy getWithRelationships(@NonNull UUID id) {
+    val result =(Optional<Policy>)getRepository().findOne(fetchSpecification(id, true, true));
+    checkNotFound(result.isPresent(), "The policyId '%s' does not exist", id);
+    return result.get();
+  }
+
   public Page<Policy> listPolicies(
       @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return policyRepository.findAll(PolicySpecification.filterBy(filters), pageable);
@@ -75,6 +89,19 @@ public class PolicyService extends AbstractNamedService<Policy, UUID> {
   private void checkNameUnique(String name) {
     checkUnique(
         !policyRepository.existsByNameIgnoreCase(name), "A policy with same name already exists");
+  }
+
+  private static Specification<Policy> fetchSpecification(UUID id,
+      boolean fetchGroupPermissions, boolean fetchUserPermissions){
+    return (fromPolicy, query, builder) -> {
+      if (fetchGroupPermissions){
+        fromPolicy.fetch(PERMISSIONS, LEFT);
+      }
+      if(fetchUserPermissions){
+        fromPolicy.fetch(USERPERMISSIONS, LEFT);
+      }
+      return builder.equal(fromPolicy.get(ID),id );
+    };
   }
 
   @Mapper(

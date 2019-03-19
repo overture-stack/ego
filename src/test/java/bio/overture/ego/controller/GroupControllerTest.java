@@ -2,7 +2,7 @@ package bio.overture.ego.controller;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.GroupRequest;
-import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.dto.MaskDTO;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
@@ -11,7 +11,9 @@ import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.StatusType;
+import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupPermissionRepository;
+import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.GroupService;
@@ -544,10 +546,16 @@ public class GroupControllerTest extends AbstractControllerTest {
 	@Test
 	public void getGroups_FindAllQuery_Success(){
     val expectedGroups = repeatedCallsOf(() -> entityGenerator.generateRandomGroup(), 4);
-    val actualGroups = initRequest(Group.class)
+    val numGroups = groupService.getRepository().count();
+    val actualGroups = initStringRequest()
         .endpoint("/groups")
-        .get();
-    assertThat(actualGroups).isEqualToComparingFieldByField(expectedGroups);
+        .queryParam("limit", numGroups)
+        .queryParam("offset", 0)
+        .getAnd()
+        .assertOk()
+        .assertHasBody()
+        .map(x -> extractPageResultSetFromResponse(x, Group.class));
+    assertThat(actualGroups).containsAll(expectedGroups);
 	}
 
 	@Test
@@ -579,40 +587,63 @@ public class GroupControllerTest extends AbstractControllerTest {
                 .build()),
         Group.class);
 
-    val r1 = extractPageResultSetFromResponse(
-        initStringRequest()
-            .endpoint("/groups")
-            .queryParam("query", "abc")
-            .logging()
-            .get(), Group.class);
+    val numGroups = groupPermissionRepository.count();
+
+    val r1 = initStringRequest()
+        .endpoint("/groups")
+        .queryParam("query", "abc")
+        .queryParam("offset", 0)
+        .queryParam("length", numGroups)
+        .logging()
+        .getAnd()
+        .assertOk()
+        .assertHasBody()
+        .map(x -> extractPageResultSetFromResponse(x, Group.class));
     assertThat(r1).containsExactlyInAnyOrder(g1,g2, g3);
 
-    val r2 = extractPageResultSetFromResponse(
-        initStringRequest()
-            .endpoint("/groups")
-            .queryParam("query", "abc2")
-            .get(), Group.class);
+    val r2 = initStringRequest()
+        .endpoint("/groups")
+        .queryParam("query", "abc2")
+        .queryParam("offset", 0)
+        .queryParam("length", numGroups)
+        .getAnd()
+        .assertOk()
+        .assertHasBody()
+        .map(x -> extractPageResultSetFromResponse(x, Group.class));
     assertThat(r2).containsExactlyInAnyOrder(g3,g2);
 
-    val r3 = extractPageResultSetFromResponse(
-        initStringRequest()
-            .endpoint("/groups")
-            .queryParam("query", "abc")
-            .queryParam("status", REJECTED)
-            .get(), Group.class);
-    assertThat(r3).containsExactlyInAnyOrder(g3);
+    val r3 = initStringRequest()
+        .endpoint("/groups")
+        .queryParam("query", "abc")
+        .queryParam("status", REJECTED)
+        .queryParam("offset", 0)
+        .queryParam("length", numGroups)
+        .getAnd()
+        .assertOk()
+        .assertHasBody()
+        .map(x -> extractPageResultSetFromResponse(x, Group.class));
+    val nonRejectedGroups = r3.stream()
+        .filter(x -> x.getStatus() != REJECTED)
+        .collect(toImmutableSet());
+    assertThat(nonRejectedGroups).isEmpty();
 
-    val r4 = extractPageResultSetFromResponse(
-        initStringRequest()
-            .endpoint("/groups")
-            .queryParam("query", "blueberry")
-            .get(), Group.class);
+    val r4 = initStringRequest()
+        .endpoint("/groups")
+        .queryParam("query", "blueberry")
+        .queryParam("offset", 0)
+        .queryParam("length", numGroups)
+        .getAnd()
+        .assertOk()
+        .assertHasBody()
+        .map(x -> extractPageResultSetFromResponse(x, Group.class));
     assertThat(r4).containsExactlyInAnyOrder(g1, g2);
 
     val r5 = extractPageResultSetFromResponse(
         initStringRequest()
             .endpoint("/groups")
             .queryParam("query", "orange")
+            .queryParam("offset", 0)
+            .queryParam("length", numGroups)
             .get(), Group.class);
     assertThat(r5).containsExactlyInAnyOrder(g3, g2);
 
@@ -621,6 +652,8 @@ public class GroupControllerTest extends AbstractControllerTest {
             .endpoint("/groups")
             .queryParam("query", "orange")
             .queryParam("status", REJECTED)
+            .queryParam("offset", 0)
+            .queryParam("length", numGroups)
             .get(), Group.class);
     assertThat(r6).containsExactlyInAnyOrder(g3);
 
@@ -628,6 +661,8 @@ public class GroupControllerTest extends AbstractControllerTest {
         initStringRequest()
             .endpoint("/groups")
             .queryParam("query", g1.getId())
+            .queryParam("offset", 0)
+            .queryParam("length", numGroups)
             .get(), Group.class);
     assertThat(r7).containsExactlyInAnyOrder(g1);
 	}
@@ -729,7 +764,7 @@ public class GroupControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	public void removeUsersFromGroup_AllExistingUsersButSomeNotAssociated_Conflict(){
+	public void removeUsersFromGroup_AllExistingUsersButSomeNotAssociated_NotFound(){
     val data = generateUniqueTestGroupData();
     val group0 = data.getGroups().get(0);
 
@@ -745,7 +780,7 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     // Delete all users
     val r2 = deleteUsersFromGroupDeleteRequest(group0, data.getUsers());
-    assertThat(r2.getStatusCode()).isEqualTo(CONFLICT);
+    assertThat(r2.getStatusCode()).isEqualTo(NOT_FOUND);
 	}
 
 	@Test
@@ -1323,7 +1358,7 @@ public class GroupControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	public void removeAppsFromGroup_AllExistingAppsButSomeNotAssociated_Conflict(){
+	public void removeAppsFromGroup_AllExistingAppsButSomeNotAssociated_NotFound(){
     // Setup data
     val data = generateUniqueTestGroupData();
     val group0 = data.getGroups().get(0);
@@ -1342,7 +1377,7 @@ public class GroupControllerTest extends AbstractControllerTest {
     initStringRequest()
         .endpoint("/groups/%s/applications/%s", group0.getId(), COMMA.join(appIdsToRemove))
         .deleteAnd()
-        .assertConflict();
+        .assertNotFound();
 	}
 
 	@Test
@@ -1447,9 +1482,8 @@ public class GroupControllerTest extends AbstractControllerTest {
 
   @SneakyThrows
   private ResponseEntity<String> addGroupPermissionPostRequest(Group g, Policy p, AccessLevel mask){
-    val body = PermissionRequest.builder()
+    val body = MaskDTO.builder()
         .mask(mask)
-        .policyId(p.getId())
         .build();
     return initStringRequest()
         .endpoint("/policies/%s/permission/group/%s",p.getId(), g.getId())
@@ -1543,6 +1577,8 @@ public class GroupControllerTest extends AbstractControllerTest {
     @NonNull private final List<User> users;
     @NonNull private final List<Policy> policies;
   }
+
+  @Autowired private GroupRepository groupRepository;
 
 
 }

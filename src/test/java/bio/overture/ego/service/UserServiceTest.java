@@ -6,10 +6,12 @@ import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.service.association.impl_old.FunctionalAssociationService;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
@@ -66,6 +68,7 @@ public class UserServiceTest {
   @Autowired private PolicyService policyService;
   @Autowired private EntityGenerator entityGenerator;
   @Autowired private UserPermissionService userPermissionService;
+  @Autowired private FunctionalAssociationService<Group, User> groupUserAssociatorService;
 
   @Test
   public void userConverter_UpdateUserRequest_User() {
@@ -280,8 +283,8 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val groupId = groupService.getByName("Group One").getId();
 
-    userService.addUserToGroups(user.getId(), singletonList(groupId));
-    userService.addUserToGroups(userTwo.getId(), singletonList(groupId));
+    groupUserAssociatorService.associateParentWithChildren(user.getId(), singletonList(groupId));
+    groupUserAssociatorService.associateParentWithChildren(userTwo.getId(), singletonList(groupId));
 
     val users =
         userService.findGroupUsers(
@@ -314,8 +317,8 @@ public class UserServiceTest {
     val userTwo = userService.getByName("SecondUser@domain.com");
     val groupId = groupService.getByName("Group One").getId();
 
-    userService.addUserToGroups(user.getId(), newArrayList(groupId));
-    userService.addUserToGroups(userTwo.getId(), newArrayList(groupId));
+    groupUserAssociatorService.associateParentWithChildren(user.getId(), newArrayList(groupId));
+    groupUserAssociatorService.associateParentWithChildren(userTwo.getId(), newArrayList(groupId));
 
     val userFilters = new SearchFilter("name", "First");
 
@@ -336,8 +339,8 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val groupId = groupService.getByName("Group One").getId();
 
-    userService.addUserToGroups(user.getId(), singletonList(groupId));
-    userService.addUserToGroups(userTwo.getId(), singletonList(groupId));
+    groupUserAssociatorService.associateParentWithChildren(user.getId(), singletonList(groupId));
+    groupUserAssociatorService.associateParentWithChildren(userTwo.getId(), singletonList(groupId));
 
     val userFilters = new SearchFilter("name", "First");
 
@@ -357,8 +360,8 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val groupId = groupService.getByName("Group One").getId();
 
-    userService.addUserToGroups(user.getId(), singletonList(groupId));
-    userService.addUserToGroups(userTwo.getId(), singletonList(groupId));
+    groupUserAssociatorService.associateParentWithChildren(user.getId(), singletonList(groupId));
+    groupUserAssociatorService.associateParentWithChildren(userTwo.getId(), singletonList(groupId));
 
     val users =
         userService.findGroupUsers(
@@ -619,7 +622,7 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId();
 
-    userService.addUserToGroups(userId, asList(groupId, groupTwoId));
+    groupUserAssociatorService.associateParentWithChildren(userId, asList(groupId, groupTwoId));
 
     val groups =
         groupService.findUserGroups(
@@ -637,7 +640,7 @@ public class UserServiceTest {
     val groupId = group.getId();
 
     assertThatExceptionOfType(NotFoundException.class)
-        .isThrownBy(() -> userService.addUserToGroups(NON_EXISTENT_USER, singletonList(groupId)));
+        .isThrownBy(() -> groupUserAssociatorService.associateParentWithChildren(NON_EXISTENT_USER, singletonList(groupId)));
   }
 
   @Test
@@ -649,7 +652,7 @@ public class UserServiceTest {
     val userId = user.getId();
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> userService.addUserToGroups(userId, ImmutableList.of()));
+        .isThrownBy(() -> groupUserAssociatorService.associateParentWithChildren(userId, ImmutableList.of()));
   }
 
   @Test
@@ -660,7 +663,7 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId();
 
-    userService.addUserToGroups(userId, Collections.emptyList());
+    groupUserAssociatorService.associateParentWithChildren(userId, Collections.emptyList());
 
     val nonUpdated = userService.getByName("FirstUser@domain.com");
     assertThat(nonUpdated).isEqualTo(user);
@@ -765,7 +768,7 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId();
 
-    userService.addUserToGroups(userId, asList(groupId, groupTwoId));
+    groupUserAssociatorService.associateParentWithChildren(userId, asList(groupId, groupTwoId));
 
     userService.deleteUserFromGroups(userId, singletonList(groupId));
 
@@ -788,7 +791,7 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId();
 
-    userService.addUserToGroups(userId, asList(groupId, groupTwoId));
+    groupUserAssociatorService.associateParentWithChildren(userId, asList(groupId, groupTwoId));
 
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
@@ -805,7 +808,7 @@ public class UserServiceTest {
     val group = groupService.getByName("Group One");
     val groupId = group.getId();
 
-    userService.addUserToGroups(userId, singletonList(groupId));
+    groupUserAssociatorService.associateParentWithChildren(userId, singletonList(groupId));
     assertThat(user.getGroups().size()).isEqualTo(1);
 
     assertThatExceptionOfType(IllegalArgumentException.class)
