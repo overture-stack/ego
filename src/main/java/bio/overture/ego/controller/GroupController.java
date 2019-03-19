@@ -23,17 +23,15 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.exceptions.PostWithIdentifierException;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
-import bio.overture.ego.service.association.AssociationService;
 import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.GroupService;
+import bio.overture.ego.service.association.AssociationService;
 import bio.overture.ego.service.association.FindRequest;
-import bio.overture.ego.service.association.impl_old.ApplicationGroupAssociationService;
-import bio.overture.ego.service.association.impl_old.GroupApplicationAssociationService;
-import bio.overture.ego.service.association.impl_old.GroupUserAssociationService;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.ApiImplicitParam;
@@ -99,45 +97,45 @@ public class GroupController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiImplicitParams({
-    @ApiImplicitParam(
-        name = "limit",
-        dataType = "string",
-        paramType = "query",
-        value = "Number of results to retrieve"),
-    @ApiImplicitParam(
-        name = "offset",
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
-        name = "sort",
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
-        name = "sortOrder",
-        dataType = "string",
-        paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC"),
-    @ApiImplicitParam(
-        name = "status",
-        dataType = "string",
-        paramType = "query",
-        value =
-            "Filter by status. "
-                + "You could also specify filters on any field of the group being queried as "
-                + "query parameters in this format: name=something")
+      @ApiImplicitParam(
+          name = "limit",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Number of results to retrieve"),
+      @ApiImplicitParam(
+          name = "offset",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Index of first result to retrieve"),
+      @ApiImplicitParam(
+          name = Fields.ID,
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Search for ids containing this text"),
+      @ApiImplicitParam(
+          name = "sort",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Field to sort on"),
+      @ApiImplicitParam(
+          name = "sortOrder",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Sorting order: ASC|DESC. Default order: DESC"),
   })
   @ApiResponses(
-      value = {@ApiResponse(code = 200, message = "Page of Groups")})
+      value = {@ApiResponse(code = 200, message = "Page Groups")})
   @JsonView(Views.REST.class)
-  public @ResponseBody PageDTO<Group> getGroupsList(
+  public @ResponseBody PageDTO<Group> findGroups(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    // TODO: [rtisma] create tests for this controller logic. This logic should remain in
-    // controller.
     if (isEmpty(query)) {
       return new PageDTO<>(groupService.listGroups(filters, pageable));
     } else {
@@ -198,37 +196,41 @@ public class GroupController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/permissions")
   @ApiImplicitParams({
-    @ApiImplicitParam(
-        name = "limit",
-        dataType = "string",
-        paramType = "query",
-        value = "Results to retrieve"),
-    @ApiImplicitParam(
-        name = "offset",
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
-        name = "sort",
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
-        name = "sortOrder",
-        dataType = "string",
-        paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC")
+      @ApiImplicitParam(
+          name = "limit",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Number of results to retrieve"),
+      @ApiImplicitParam(
+          name = "offset",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Index of first result to retrieve"),
+      @ApiImplicitParam(
+          name = "sort",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Field to sort on"),
+      @ApiImplicitParam(
+          name = "sortOrder",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Sorting order: ASC|DESC. Default order: DESC"),
   })
   @ApiResponses(
       value = {
-        @ApiResponse(code = 200, message = "Page of group permissions"),
+        @ApiResponse(code = 200, message = "Page of Group Permissions for a Group"),
       })
   @JsonView(Views.REST.class)
-  public @ResponseBody PageDTO<GroupPermission> getScopes(
+  public @ResponseBody PageDTO<GroupPermission> getGroupPermissionsForGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "id", required = true) UUID groupId,
       Pageable pageable) {
-    return new PageDTO<>(groupPermissionService.getPermissions(id, pageable));
+    return new PageDTO<>(groupPermissionService.getPermissions(groupId, pageable));
   }
 
   @AdminScoped
@@ -259,50 +261,52 @@ public class GroupController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/applications")
   @ApiImplicitParams({
-    @ApiImplicitParam(
-        name = "limit",
-        dataType = "string",
-        paramType = "query",
-        value = "Number of results to retrieve"),
-    @ApiImplicitParam(
-        name = "offset",
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
-        name = "sort",
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
-        name = "sortOrder",
-        dataType = "string",
-        paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC"),
-    @ApiImplicitParam(
-        name = "status",
-        dataType = "string",
-        paramType = "query",
-        value =
-            "Filter by status. "
-                + "You could also specify filters on any field of the application being queried as "
-                + "query parameters in this format: name=something")
+      @ApiImplicitParam(
+          name = "limit",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Number of results to retrieve"),
+      @ApiImplicitParam(
+          name = "offset",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Index of first result to retrieve"),
+      @ApiImplicitParam(
+          name = Fields.ID,
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Search for ids containing this text"),
+      @ApiImplicitParam(
+          name = "sort",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Field to sort on"),
+      @ApiImplicitParam(
+          name = "sortOrder",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Sorting order: ASC|DESC. Default order: DESC"),
   })
   @ApiResponses(
       value = {
         @ApiResponse(
             code = 200,
-            message = "Page of Applications of group" )
+            message = "Page Applications for a Group" )
       })
   @JsonView(Views.REST.class)
-  public @ResponseBody PageDTO<Application> getGroupsApplications(
+  public @ResponseBody PageDTO<Application> getApplicationsForGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "id", required = true) UUID groupId,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
     val findRequest = FindRequest.builder()
-        .id(id)
+        .id(groupId)
         .query(isEmpty(query) ? null : query)
         .filters(filters)
         .pageable(pageable)
@@ -339,48 +343,50 @@ public class GroupController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
   @ApiImplicitParams({
-    @ApiImplicitParam(
-        name = "limit",
-        dataType = "string",
-        paramType = "query",
-        value = "Number of results to retrieve"),
-    @ApiImplicitParam(
-        name = "offset",
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
-        name = "sort",
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
-        name = "sortOrder",
-        dataType = "string",
-        paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC"),
-    @ApiImplicitParam(
-        name = "status",
-        dataType = "string",
-        paramType = "query",
-        value =
-            "Filter by status. "
-                + "You could also specify filters on any field of the user being queried as "
-                + "query parameters in this format: name=something")
+      @ApiImplicitParam(
+          name = "limit",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Number of results to retrieve"),
+      @ApiImplicitParam(
+          name = "offset",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Index of first result to retrieve"),
+      @ApiImplicitParam(
+          name = Fields.ID,
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Search for ids containing this text"),
+      @ApiImplicitParam(
+          name = "sort",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Field to sort on"),
+      @ApiImplicitParam(
+          name = "sortOrder",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Sorting order: ASC|DESC. Default order: DESC"),
   })
   @ApiResponses(
       value = {
-        @ApiResponse(code = 200, message = "Page of Users of group")
+        @ApiResponse(code = 200, message = "Page Users for a Group")
       })
   @JsonView(Views.REST.class)
-  public @ResponseBody PageDTO<User> getGroupsUsers(
+  public @ResponseBody PageDTO<User> getUsersForGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "id", required = true) UUID groupId,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
     val findRequest = FindRequest.builder()
-        .id(id)
+        .id(groupId)
         .query(isEmpty(query) ? null : query)
         .filters(filters)
         .pageable(pageable)

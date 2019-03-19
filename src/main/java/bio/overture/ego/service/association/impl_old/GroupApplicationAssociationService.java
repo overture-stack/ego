@@ -5,7 +5,6 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.association.AbstractManyToManyAssociationService;
 import bio.overture.ego.service.association.FindRequest;
 import lombok.NonNull;
 import lombok.val;
@@ -56,7 +55,7 @@ public class GroupApplicationAssociationService extends AbstractManyToManyAssoci
 
   @Override
   protected Group getParentWithChildren(@NonNull UUID id) {
-    return groupService.getGroupWithRelationships(id);
+    return groupService.getWithRelationships(id);
   }
 
 }

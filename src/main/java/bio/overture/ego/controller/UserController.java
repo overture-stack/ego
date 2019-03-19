@@ -24,13 +24,12 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
+import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.exceptions.PostWithIdentifierException;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.service.association.AssociationService;
-import bio.overture.ego.service.association.impl_old.FunctionalAssociationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
@@ -93,37 +92,39 @@ public class UserController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiImplicitParams({
-    @ApiImplicitParam(
-        name = "limit",
-        dataType = "string",
-        paramType = "query",
-        value = "Results to retrieve"),
-    @ApiImplicitParam(
-        name = "offset",
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
-        name = "sort",
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
-        name = "sortOrder",
-        dataType = "string",
-        paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC"),
-    @ApiImplicitParam(
-        name = "status",
-        dataType = "string",
-        paramType = "query",
-        value =
-            "Filter by status. "
-                + "You could also specify filters on any field of the policy being queried as "
-                + "query parameters in this format: name=something")
+      @ApiImplicitParam(
+          name = "limit",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Number of results to retrieve"),
+      @ApiImplicitParam(
+          name = "offset",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Index of first result to retrieve"),
+      @ApiImplicitParam(
+          name = Fields.ID,
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Search for ids containing this text"),
+      @ApiImplicitParam(
+          name = "sort",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Field to sort on"),
+      @ApiImplicitParam(
+          name = "sortOrder",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Sorting order: ASC|DESC. Default order: DESC"),
   })
   @ApiResponses(
-      value = {@ApiResponse(code = 200, message = "Page of Users", response = PageDTO.class)})
+      value = {@ApiResponse(code = 200, message = "Page Users")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<User> getUsersList(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
@@ -201,30 +202,34 @@ public class UserController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/permissions")
   @ApiImplicitParams({
-    @ApiImplicitParam(
-        name = "limit",
-        dataType = "string",
-        paramType = "query",
-        value = "Results to retrieve"),
-    @ApiImplicitParam(
-        name = "offset",
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
-        name = "sort",
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
-        name = "sortOrder",
-        dataType = "string",
-        paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC")
+      @ApiImplicitParam(
+          name = "limit",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Number of results to retrieve"),
+      @ApiImplicitParam(
+          name = "offset",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Index of first result to retrieve"),
+      @ApiImplicitParam(
+          name = "sort",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Field to sort on"),
+      @ApiImplicitParam(
+          name = "sortOrder",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Sorting order: ASC|DESC. Default order: DESC"),
   })
   @ApiResponses(
       value = {
-        @ApiResponse(code = 200, message = "Page of user permissions", response = PageDTO.class)
+        @ApiResponse(code = 200, message = "Page User Permissions for a User")
       })
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<UserPermission> getPermissions(
@@ -262,38 +267,40 @@ public class UserController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
   @ApiImplicitParams({
-    @ApiImplicitParam(
-        name = "limit",
-        dataType = "string",
-        paramType = "query",
-        value = "Results to retrieve"),
-    @ApiImplicitParam(
-        name = "offset",
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
-        name = "sort",
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
-        name = "sortOrder",
-        dataType = "string",
-        paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC"),
-    @ApiImplicitParam(
-        name = "status",
-        dataType = "string",
-        paramType = "query",
-        value =
-            "Filter by status. "
-                + "You could also specify filters on any field of the policy being queried as "
-                + "query parameters in this format: name=something")
+      @ApiImplicitParam(
+          name = "limit",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Number of results to retrieve"),
+      @ApiImplicitParam(
+          name = "offset",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Index of first result to retrieve"),
+      @ApiImplicitParam(
+          name = Fields.ID,
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Search for ids containing this text"),
+      @ApiImplicitParam(
+          name = "sort",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Field to sort on"),
+      @ApiImplicitParam(
+          name = "sortOrder",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Sorting order: ASC|DESC. Default order: DESC"),
   })
   @ApiResponses(
       value = {
-        @ApiResponse(code = 200, message = "Page of Groups of user", response = PageDTO.class)
+        @ApiResponse(code = 200, message = "Page Groups for a User")
       })
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Group> getUsersGroups(
@@ -343,38 +350,40 @@ public class UserController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/applications")
   @ApiImplicitParams({
-    @ApiImplicitParam(
-        name = "limit",
-        dataType = "string",
-        paramType = "query",
-        value = "Results to retrieve"),
-    @ApiImplicitParam(
-        name = "offset",
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
-        name = "sort",
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
-        name = "sortOrder",
-        dataType = "string",
-        paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC"),
-    @ApiImplicitParam(
-        name = "status",
-        dataType = "string",
-        paramType = "query",
-        value =
-            "Filter by status. "
-                + "You could also specify filters on any field of the policy being queried as "
-                + "query parameters in this format: name=something")
+      @ApiImplicitParam(
+          name = "limit",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Number of results to retrieve"),
+      @ApiImplicitParam(
+          name = "offset",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Index of first result to retrieve"),
+      @ApiImplicitParam(
+          name = Fields.ID,
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Search for ids containing this text"),
+      @ApiImplicitParam(
+          name = "sort",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Field to sort on"),
+      @ApiImplicitParam(
+          name = "sortOrder",
+          required = false,
+          dataType = "string",
+          paramType = "query",
+          value = "Sorting order: ASC|DESC. Default order: DESC"),
   })
   @ApiResponses(
       value = {
-        @ApiResponse(code = 200, message = "Page of apps of user", response = PageDTO.class)
+        @ApiResponse(code = 200, message = "Page Applications for a User")
       })
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Application> getUsersApplications(

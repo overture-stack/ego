@@ -17,10 +17,7 @@
 package bio.overture.ego.service;
 
 import bio.overture.ego.model.dto.GroupRequest;
-import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
@@ -38,9 +35,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.criteria.JoinType;
 import javax.transaction.Transactional;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -83,12 +78,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     checkNameUnique(request.getName());
     val group = GROUP_CONVERTER.convertToGroup(request);
     return getRepository().save(group);
-  }
-
-  public Group getGroupWithRelationships(@NonNull UUID id) {
-    val result = groupRepository.findGroupById(id);
-    checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
-    return result.get();
   }
 
   public Group partialUpdate(@NonNull UUID id, @NonNull GroupRequest r) {
@@ -175,29 +164,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   private void checkNameUnique(String name) {
     checkUnique(
         !groupRepository.existsByNameIgnoreCase(name), "A group with same name already exists");
-  }
-
-  public static void associateUsers(@NonNull Group group, @NonNull Collection<User> users){
-    group.getUsers().addAll(users);
-    users.stream().map(User::getGroups).forEach(x -> x.add(group));
-  }
-
-  public static void disassociateUsers(
-      @NonNull Group group, @NonNull Collection<User> users) {
-    group.getUsers().removeAll(users);
-    users.forEach(x -> x.getGroups().remove(group));
-  }
-
-  public static void associateApplications(
-      @NonNull Group group, @NonNull Collection<Application> applications) {
-    group.getApplications().addAll(applications);
-    applications.stream().map(Application::getGroups).forEach(groups -> groups.add(group));
-  }
-
-  public static void disassociateApplications(
-      @NonNull Group group, @NonNull Collection<Application> apps) {
-    group.getApplications().removeAll(apps);
-    apps.forEach(x -> x.getGroups().remove(group));
   }
 
   private static Specification<Group> fetchSpecification(UUID id, boolean fetchApplications, boolean fetchUsers, boolean fetchGroupPermissions){

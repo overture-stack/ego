@@ -11,15 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
-import java.util.UUID;
 
 @Slf4j
 @Service
 @Transactional
 public class UserPermissionService extends AbstractPermissionService<User, UserPermission> {
-
-  /** Dependencies */
-  private final UserService userService;
 
   @Autowired
   public UserPermissionService(
@@ -27,7 +23,6 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
       @NonNull UserService userService,
       @NonNull PolicyService policyService) {
     super(User.class, UserPermission.class, userService, policyService, repository);
-    this.userService = userService;
   }
 
   @Override
@@ -38,10 +33,5 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
   @Override
   protected Collection<UserPermission> getPermissionsFromPolicy(@NonNull Policy policy) {
     return policy.getUserPermissions();
-  }
-
-  @Override
-  public User getOwnerWithRelationships(@NonNull UUID ownerId) {
-    return userService.getById(ownerId);
   }
 }

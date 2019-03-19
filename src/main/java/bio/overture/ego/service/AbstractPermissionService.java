@@ -6,7 +6,6 @@ import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.NameableEntity;
 import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.repository.PermissionRepository;
 import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
 import com.google.common.collect.ImmutableList;
@@ -23,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -82,21 +82,11 @@ public abstract class AbstractPermissionService<
 
   protected abstract Collection<P> getPermissionsFromPolicy(Policy policy);
 
-  public abstract O getOwnerWithRelationships(UUID ownerId);
-
-  //TODO: [rtisma] replace getOwnerWithRelationships with this
   @Override
   public P getWithRelationships(@NonNull UUID id) {
-    throw new IllegalStateException("not implemetned");
-  }
-
-  private Specification<O> fetchSpecification(UUID id, boolean fetchPolicy){
-    return (fromOwner, query, builder) -> {
-      if (fetchPolicy){
-        fromOwner.fetch(POLICY, LEFT);
-      }
-      return builder.equal(fromOwner.get(ID),id );
-    };
+    val result = (Optional<P>)permissionRepository.findOne(fetchSpecification(id, true));
+    checkNotFound(result.isPresent(), "The groupPermissionId '%s' does not exist", id);
+    return result.get();
   }
 
   public List<PolicyResponse> findByPolicy(UUID policyId) {
@@ -122,7 +112,7 @@ public abstract class AbstractPermissionService<
         "Must add at least 1 permission for %s '%s'",
         getOwnerTypeName(),
         ownerId);
-    val owner = getOwnerWithRelationships(ownerId);
+    val owner = ownerBaseService.getWithRelationships(ownerId);
 
     val permissions = getPermissionsFromOwner(owner);
     val filteredPermissionMap =
@@ -164,7 +154,7 @@ public abstract class AbstractPermissionService<
     // Check policies all exist
     policyBaseService.checkExistence(mapToSet(permissionRequests, PermissionRequest::getPolicyId));
 
-    val owner = getOwnerWithRelationships(ownerId);
+    val owner = ownerBaseService.getWithRelationships(ownerId);
 
     // Convert the GroupPermission to PermissionRequests since all permission requests apply to the
     // same owner (the group)
@@ -203,6 +193,18 @@ public abstract class AbstractPermissionService<
 
   private String getOwnerTypeName() {
     return ownerType.getSimpleName();
+  }
+
+  /**
+   * Specification that allows for dynamic loading of relationships
+   */
+  private Specification<O> fetchSpecification(UUID id, boolean fetchPolicy){
+    return (fromOwner, query, builder) -> {
+      if (fetchPolicy){
+        fromOwner.fetch(POLICY, LEFT);
+      }
+      return builder.equal(fromOwner.get(ID),id );
+    };
   }
 
   /**

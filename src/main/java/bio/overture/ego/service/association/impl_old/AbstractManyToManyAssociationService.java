@@ -2,8 +2,8 @@ package bio.overture.ego.service.association.impl_old;
 
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.service.BaseService;
+import bio.overture.ego.service.association.AssociationService;
 import com.google.common.collect.ImmutableSet;
-import lombok.Builder;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -11,8 +11,6 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.Collection;
 import java.util.UUID;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
@@ -20,34 +18,26 @@ import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUn
 import static bio.overture.ego.utils.CollectionUtils.difference;
 import static bio.overture.ego.utils.CollectionUtils.findDuplicates;
 import static bio.overture.ego.utils.CollectionUtils.intersection;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.convertToIds;
 import static bio.overture.ego.utils.Joiners.PRETTY_COMMA;
-import static com.google.common.collect.Sets.newHashSet;
 
-@Builder
 @RequiredArgsConstructor
-public class FunctionalAssociationService<P extends Identifiable<UUID>, C extends Identifiable<UUID>> {
+public abstract class AbstractManyToManyAssociationService<P extends Identifiable<UUID>, C extends Identifiable<UUID>> implements
+    AssociationService<P, C, UUID> {
 
-  @NonNull private final Class<P> parentType;
-  @NonNull private final Class<C> childType;
-  @NonNull private final Function<P, Collection<C>> getChildrenCallback;
-  @NonNull private final Function<UUID, P> getParentWithRelationshipsCallback;
-  @NonNull private final BiConsumer<P, Collection<C>> associationCallback;
-  @NonNull private final BiConsumer<P, Collection<C>> disassociationCallback;
-  @NonNull private final BaseService<C, UUID> childService;
-  @NonNull private final CrudRepository<P, UUID> parentRepository;
+  private final Class<P> parentType;
+  private final Class<C> childType;
+  private final CrudRepository<P, UUID> parentRepository;
+  private final BaseService<C, UUID> childService;
 
+  @Override
   public P associateParentWithChildren(@NonNull UUID parentId, @NonNull Collection<UUID> childIds){
     // check duplicate childIds
-    val duplicateChildIds = findDuplicates(childIds);
-    checkMalformedRequest(duplicateChildIds.isEmpty(),
-        "The following %s ids contain duplicates: [%s]" ,
-        childType.getSimpleName(), PRETTY_COMMA.join(duplicateChildIds));
+    checkDuplicates(childType, childIds);
 
     // Get existing associated child ids with the parent
-    val parentWithChildren = getParentWithRelationshipsCallback.apply(parentId);
-    val existingAssociatedChildIds = convertToIds(getChildrenCallback.apply(parentWithChildren));
+    val parentWithChildren = getParentWithChildren(parentId);
+    val existingAssociatedChildIds = convertToIds(extractChildrenFromParent(parentWithChildren));
 
     // Check there are no application ids that are already associated with the parent
     val existingAlreadyAssociatedChildIds = intersection(existingAssociatedChildIds, childIds);
@@ -60,23 +50,21 @@ public class FunctionalAssociationService<P extends Identifiable<UUID>, C extend
 
     // Get all unassociated child ids. If they do not exist, an error is thrown
     val nonAssociatedChildIds = difference(childIds,existingAssociatedChildIds);
-    val unassociatedChildren = childService.getMany(nonAssociatedChildIds);
+    val nonAssociatedChildren = childService.getMany(nonAssociatedChildIds);
 
     // Associate the existing children with the parent
-    associationCallback.accept(parentWithChildren, unassociatedChildren);
+    associate(parentWithChildren, nonAssociatedChildren);
     return parentRepository.save(parentWithChildren);
   }
 
+  @Override
   public void disassociateParentFromChildren(@NonNull UUID parentId, @NonNull Collection<UUID> childIds){
     // check duplicate childIds
-    val duplicateChildIds = findDuplicates(childIds);
-    checkMalformedRequest(duplicateChildIds.isEmpty(),
-        "The following %s ids contain duplicates: [%s]" ,
-        childType.getSimpleName(), PRETTY_COMMA.join(duplicateChildIds));
+    checkDuplicates(childType, childIds);
 
     // Get existing associated child ids with the parent
-    val parentWithChildren = getParentWithRelationshipsCallback.apply(parentId);
-    val children = getChildrenCallback.apply(parentWithChildren);
+    val parentWithChildren = getParentWithChildren(parentId);
+    val children = extractChildrenFromParent(parentWithChildren);
     val existingAssociatedChildIds = convertToIds(children);
 
     // Get existing and non-existing non-associated child ids. Error out if there are existing and non-existing non-associated child ids
@@ -91,11 +79,21 @@ public class FunctionalAssociationService<P extends Identifiable<UUID>, C extend
 
     // Since all child ids exist and are associated with the parent, disassociate them from eachother
     val childIdsToDisassociate = ImmutableSet.copyOf(childIds);
-    val childrenToDisassociate = children.stream()
-        .filter(x -> childIdsToDisassociate.contains(x.getId()))
-        .collect(toImmutableSet());
-    disassociationCallback.accept(parentWithChildren, childrenToDisassociate);
+    disassociate(parentWithChildren, childIdsToDisassociate);
     parentRepository.save(parentWithChildren);
   }
+
+  private static <T extends Identifiable<UUID>> void checkDuplicates(Class<T> childType, Collection<UUID> ids){
+    // check duplicate childIds
+    val duplicateChildIds = findDuplicates(ids);
+    checkMalformedRequest(duplicateChildIds.isEmpty(),
+        "The following %s ids contain duplicates: [%s]" ,
+        childType.getSimpleName(), PRETTY_COMMA.join(duplicateChildIds));
+  }
+
+  protected abstract void associate(P parentWithChildren, Collection<C> children);
+  protected abstract void disassociate(P parentWithChildren, Collection<UUID> childIds);
+  protected abstract Collection<C> extractChildrenFromParent(P parent);
+  protected abstract P getParentWithChildren(UUID parentId);
 
 }

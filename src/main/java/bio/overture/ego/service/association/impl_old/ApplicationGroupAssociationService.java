@@ -4,7 +4,6 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.service.association.AbstractManyToManyAssociationService;
 import bio.overture.ego.service.association.FindRequest;
 import lombok.NonNull;
 import lombok.val;

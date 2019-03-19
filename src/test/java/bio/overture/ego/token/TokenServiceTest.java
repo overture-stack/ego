@@ -23,11 +23,9 @@ import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.ScopeName;
-import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.service.association.impl_old.FunctionalAssociationService;
-import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
+import bio.overture.ego.service.association.AssociationService;
 import bio.overture.ego.utils.CollectionUtils;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.TestData;
@@ -67,16 +65,14 @@ import static org.junit.Assert.assertTrue;
 @ActiveProfiles("test")
 @Ignore
 public class TokenServiceTest {
-  @Autowired private ApplicationService applicationService;
 
   @Autowired private UserService userService;
-
-  @Autowired private GroupService groupService;
 
   @Autowired private EntityGenerator entityGenerator;
 
   @Autowired private TokenService tokenService;
-  @Autowired private FunctionalAssociationService<Group, User> groupUserAssociatorService;
+
+  @Autowired private AssociationService<Group, User, UUID> groupUserAssociationService;
 
   public static TestData test = null;
 
@@ -91,7 +87,7 @@ public class TokenServiceTest {
     val group2 = entityGenerator.setupGroup("testGroup");
     val app2 = entityGenerator.setupApplication("foo");
 
-    groupUserAssociatorService.associateParentWithChildren(user.getId(),newArrayList(group2.getId()));
+    groupUserAssociationService.associateParentWithChildren(user.getId(),newArrayList(group2.getId()));
     userService.addUserToApps(user.getId(), newArrayList(app2.getId()));
 
     val token = tokenService.generateUserToken(userService.getById(user.getId()));

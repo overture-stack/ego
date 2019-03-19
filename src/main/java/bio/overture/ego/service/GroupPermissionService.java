@@ -10,14 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
-import java.util.UUID;
 
 @Slf4j
 @Service
 public class GroupPermissionService extends AbstractPermissionService<Group, GroupPermission> {
-
-  /** Dependencies */
-  private final GroupService groupService;
 
   @Autowired
   public GroupPermissionService(
@@ -25,7 +21,6 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
       @NonNull GroupService groupService,
       @NonNull PolicyService policyService) {
     super(Group.class, GroupPermission.class, groupService, policyService, repository);
-    this.groupService = groupService;
   }
 
   @Override
@@ -38,8 +33,4 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
     return policy.getGroupPermissions();
   }
 
-  @Override
-  public Group getOwnerWithRelationships(@NonNull UUID ownerId) {
-    return groupService.getGroupWithRelationships(ownerId);
-  }
 }

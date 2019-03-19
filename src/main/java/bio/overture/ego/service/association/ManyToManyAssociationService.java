@@ -1,26 +1,17 @@
 package bio.overture.ego.service.association;
 
 import bio.overture.ego.model.entity.Identifiable;
-import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.BaseRepository;
 import bio.overture.ego.service.BaseService;
 import com.google.common.collect.ImmutableSet;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.Repository;
-import reactor.jarjar.jsr166e.ConcurrentHashMapV8;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -32,7 +23,6 @@ import static bio.overture.ego.utils.CollectionUtils.findDuplicates;
 import static bio.overture.ego.utils.CollectionUtils.intersection;
 import static bio.overture.ego.utils.Converters.convertToIds;
 import static bio.overture.ego.utils.Joiners.PRETTY_COMMA;
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 @Builder
 @RequiredArgsConstructor
@@ -101,19 +91,18 @@ public class ManyToManyAssociationService<P extends Identifiable<UUID>, C extend
     parentRepository.save(parentWithChildren);
   }
 
-  private static <T extends Identifiable<UUID>> void checkDuplicates(Class<T> childType, Collection<UUID> ids){
-    // check duplicate childIds
-    val duplicateChildIds = findDuplicates(ids);
-    checkMalformedRequest(duplicateChildIds.isEmpty(),
-        "The following %s ids contain duplicates: [%s]" ,
-        childType.getSimpleName(), PRETTY_COMMA.join(duplicateChildIds));
-  }
-
   private void associate(P parentWithChildren, Collection<C> children){
     getChildrenFromParentFunction.apply(parentWithChildren).addAll(children);
     children.stream()
         .map(getParentsFromChildFunction)
         .forEach(parents -> parents.add(parentWithChildren));
+  }
+
+  @Override
+  public Page<P> findParentsForChild(FindRequest findRequest) {
+    childService.checkExistence(findRequest.getId());
+    val spec = parentFindRequestSpecificationCallback.apply(findRequest);
+    return parentRepository.findAll(spec, findRequest.getPageable());
   }
 
   private void disassociate(P parentWithChildren, Collection<UUID> childIds){
@@ -125,10 +114,12 @@ public class ManyToManyAssociationService<P extends Identifiable<UUID>, C extend
     children.removeIf(x -> childIds.contains(x.getId()));
   }
 
-  @Override
-  public Page<P> findParentsForChild(FindRequest findRequest) {
-    val spec = parentFindRequestSpecificationCallback.apply(findRequest);
-    return parentRepository.findAll(spec, findRequest.getPageable());
+  private static <T extends Identifiable<UUID>> void checkDuplicates(Class<T> entityType, Collection<UUID> ids){
+    // check duplicate childIds
+    val duplicateChildIds = findDuplicates(ids);
+    checkMalformedRequest(duplicateChildIds.isEmpty(),
+        "The following %s ids contain duplicates: [%s]" ,
+        entityType.getSimpleName(), PRETTY_COMMA.join(duplicateChildIds));
   }
 
 }
