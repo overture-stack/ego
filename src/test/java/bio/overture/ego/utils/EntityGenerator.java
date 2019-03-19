@@ -36,7 +36,6 @@ import bio.overture.ego.service.UserService;
 import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -238,13 +237,11 @@ public class EntityGenerator {
     setupPolicies("Study001,Group One", "Study002,Group Two", "Study003,Group Three");
   }
 
-  public Token setupToken(
-      User user, String token, long duration, Set<Scope> scopes, Set<Application> applications) {
+  public Token setupToken(User user, String token, long duration, Set<Scope> scopes) {
     val tokenObject =
         Token.builder()
             .name(token)
             .owner(user)
-            .applications(applications == null ? new HashSet<>() : applications)
             .issueDate(Date.from(Instant.now().plusSeconds(duration)))
             .build();
 
