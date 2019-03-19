@@ -88,6 +88,22 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     return getRepository().save(group);
   }
 
+  /**
+   * Decorate the delete method for group's users to also trigger a token check after group delete.
+   * @param groupId The ID of the group to be deleted.
+   */
+  @Override
+  public void delete(@NonNull UUID groupId) {
+    super.checkExistence(groupId);
+
+    // Users that will need tokens check.
+    val users = getGroupWithRelationships(groupId).getUsers();
+
+    // For semantic/readability reasons, check tokens AFTER group has been marked for delete.
+    super.delete(groupId);
+    cleanupTokenPublisher.requestTokenCleanup(users);
+  }
+
   public Group getGroupWithRelationships(@NonNull UUID id) {
     val result = groupRepository.findGroupById(id);
     checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);

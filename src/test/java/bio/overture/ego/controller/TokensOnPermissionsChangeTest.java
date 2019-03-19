@@ -414,8 +414,34 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     val checkTokenAfterUpgradeResponse =
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
-    // Should be revoked
+    // Should be valid
     assertThat(checkTokenAfterUpgradeResponse.getStatusCode()).isEqualTo(HttpStatus.MULTI_STATUS);
+  }
+
+  /**
+   * Scenario: User is part of a group that has a READ permission. User has a token using this
+   * scope. The group is then deleted. Behavior: Token should be revoked.
+   */
+  @Test
+  @SneakyThrows
+  public void deleteGroupWithUserAndPermission_ExistingToken_RevokeTokenSuccess() {
+    val user = entityGenerator.setupUser("UserFoo deleteGroupWithUserPermission");
+    val group = entityGenerator.setupGroup("DeleteGroupWithUserPermission");
+    val policy = entityGenerator.setupSinglePolicy("PolicyForDeleteGroupWithUserPermission");
+
+    val accessToken = groupPermissionTestSetup(user, group, policy, AccessLevel.READ, "READ");
+
+    val deleteGroupResponse =
+      initStringRequest()
+        .endpoint("/users/%s/groups/%s", user.getId().toString(), group.getId().toString())
+        .delete();
+    assertThat(deleteGroupResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+    val checkTokenAfterGroupDeleteResponse =
+      initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
+
+    // Should be revoked
+    assertThat(checkTokenAfterGroupDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
   }
 
   /**
