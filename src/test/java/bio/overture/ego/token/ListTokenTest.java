@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
-import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.utils.EntityGenerator;
@@ -55,14 +54,9 @@ public class ListTokenTest {
     Set<String> scopeString1 = mapToSet(scopes1, Scope::toString);
     Set<String> scopeString2 = mapToSet(scopes2, Scope::toString);
 
-    val applications = new HashSet<Application>();
-    applications.add(test.score);
-
-    val userToken1 =
-        entityGenerator.setupToken(test.regularUser, tokenString1, 1000, scopes1, applications);
+    val userToken1 = entityGenerator.setupToken(test.regularUser, tokenString1, 1000, scopes1);
     userToken1.setDescription("Test token 1.");
-    val userToken2 =
-        entityGenerator.setupToken(test.regularUser, tokenString2, 1000, scopes2, applications);
+    val userToken2 = entityGenerator.setupToken(test.regularUser, tokenString2, 1000, scopes2);
     userToken2.setDescription("Test token 2.");
 
     Set<Token> tokens = new HashSet<>();

@@ -174,11 +174,9 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   }
 
   @SneakyThrows
-  public Token issueToken(
-      UUID user_id, List<ScopeName> scopeNames, List<UUID> apps, String description) {
+  public Token issueToken(UUID user_id, List<ScopeName> scopeNames, String description) {
     log.info(format("Looking for user '%s'", str(user_id)));
     log.info(format("Scopes are '%s'", strList(scopeNames)));
-    log.info(format("Apps are '%s'", strList(apps)));
     log.info(format("Token description is '%s'", description));
 
     val u =
@@ -213,14 +211,6 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
 
     for (Scope requestedScope : requestedScopes) {
       token.addScope(requestedScope);
-    }
-
-    if (apps != null) {
-      log.info("Generating apps list");
-      for (val appId : apps) {
-        val app = applicationService.getById(appId);
-        token.addApplication(app);
-      }
     }
 
     log.info("Creating token in token store");
@@ -333,29 +323,20 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       throw new InvalidTokenException("No token field found in POST request");
     }
 
-    log.info(format("token ='%s'", token));
+    log.debug(format("token ='%s'", token));
     val application = applicationService.findByBasicToken(authToken);
 
     val t =
         findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found"));
 
-    if (t.isRevoked()) {
+    if (t.isRevoked())
       throw new InvalidTokenException(
           format("Token \"%s\" has expired or is no longer valid. ", token));
-    }
-
-    val clientId = application.getClientId();
-    val apps = t.getApplications();
-    log.info(format("Applications are %s", apps.toString()));
-    if (apps != null && !apps.isEmpty()) {
-      if (!(apps.stream().anyMatch(app -> app.getClientId().equals(clientId)))) {
-        throw new InvalidTokenException("Token not authorized for this client");
-      }
-    }
 
     // We want to limit the scopes listed in the token to those scopes that the user
     // is allowed to access at the time the token is checked -- we don't assume that
     // they have not changed since the token was issued.
+    val clientId = application.getClientId();
     val owner = t.getOwner();
     val scopes = explicitScopes(effectiveScopes(extractScopes(owner), t.scopes()));
     val names = mapToSet(scopes, Scope::toString);

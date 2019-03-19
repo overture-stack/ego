@@ -20,8 +20,6 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -42,7 +40,7 @@ import org.joda.time.DateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {LombokFields.applications, LombokFields.owner, LombokFields.scopes})
+@ToString(exclude = {LombokFields.owner, LombokFields.scopes})
 @EqualsAndHashCode(of = {LombokFields.id})
 public class Token implements Identifiable<UUID> {
 
@@ -81,17 +79,6 @@ public class Token implements Identifiable<UUID> {
   @Builder.Default
   private Set<TokenScope> scopes = newHashSet();
 
-  @JsonIgnore
-  @ManyToMany(
-      fetch = FetchType.LAZY,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-  @JoinTable(
-      name = Tables.TOKEN_APPLICATION,
-      joinColumns = {@JoinColumn(name = SqlFields.TOKENID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = SqlFields.APPID_JOIN)})
-  @Builder.Default
-  private Set<Application> applications = newHashSet();
-
   public void setExpires(int seconds) {
     this.issueDate = DateTime.now().plusSeconds(seconds).toDate();
   }
@@ -115,12 +102,5 @@ public class Token implements Identifiable<UUID> {
 
   public void setScopes(Set<Scope> scopes) {
     this.scopes = mapToSet(scopes, s -> new TokenScope(this, s.getPolicy(), s.getAccessLevel()));
-  }
-
-  public void addApplication(Application app) {
-    if (applications == null) {
-      applications = new HashSet<>();
-    }
-    applications.add(app);
   }
 }
