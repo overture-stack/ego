@@ -22,7 +22,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
-// @Ignore("replace with controller tests.")
 public class LastloginTest {
 
   @Autowired private TokenService tokenService;
