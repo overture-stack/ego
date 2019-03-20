@@ -13,7 +13,6 @@ import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.PermissionRequestAnalyzer.analyze;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Maps.uniqueIndex;
-import static com.gs.collections.impl.factory.Sets.intersect;
 import static java.util.Arrays.stream;
 import static java.util.Collections.reverse;
 import static java.util.Comparator.comparing;
@@ -21,6 +20,7 @@ import static java.util.Objects.isNull;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
+import static org.eclipse.collections.impl.factory.Sets.intersect;
 
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
