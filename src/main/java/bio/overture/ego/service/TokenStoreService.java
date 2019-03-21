@@ -48,7 +48,9 @@ public class TokenStoreService extends AbstractNamedService<Token, UUID> {
 
   @Deprecated
   public Token create(@NonNull Token scopedAccessToken) {
-    return tokenRepository.save(scopedAccessToken);
+    Token res = tokenRepository.save(scopedAccessToken);
+    tokenRepository.updateRedundantTokens(scopedAccessToken.getOwner().getId());
+    return res;
   }
 
   public Optional<Token> findByTokenName(String tokenName) {
