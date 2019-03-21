@@ -1,6 +1,6 @@
 package bio.overture.ego.service;
 
-import bio.overture.ego.event.CleanupTokenPublisher;
+import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
@@ -25,17 +25,17 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
   /** Dependencies */
   private final UserService userService;
 
-  private final CleanupTokenPublisher cleanupTokenPublisher;
+  private final TokenEventsPublisher tokenEventsPublisher;
 
   @Autowired
   public UserPermissionService(
       @NonNull UserPermissionRepository repository,
       @NonNull UserService userService,
-      @NonNull CleanupTokenPublisher cleanupTokenPublisher,
+      @NonNull TokenEventsPublisher tokenEventsPublisher,
       @NonNull PolicyService policyService) {
     super(User.class, UserPermission.class, userService, policyService, repository);
     this.userService = userService;
-    this.cleanupTokenPublisher = cleanupTokenPublisher;
+    this.tokenEventsPublisher = tokenEventsPublisher;
   }
 
   /**
@@ -49,7 +49,7 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
   public User addPermissions(
       @NonNull UUID userId, @NonNull List<PermissionRequest> permissionRequests) {
     val user = super.addPermissions(userId, permissionRequests);
-    cleanupTokenPublisher.requestTokenCleanup(ImmutableSet.of(userService.getById(userId)));
+    tokenEventsPublisher.requestTokenCleanupByUsers(ImmutableSet.of(userService.getById(userId)));
     return user;
   }
 
@@ -62,7 +62,7 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
   @Override
   public void deletePermissions(@NonNull UUID userId, @NonNull Collection<UUID> idsToDelete) {
     super.deletePermissions(userId, idsToDelete);
-    cleanupTokenPublisher.requestTokenCleanup(ImmutableSet.of(userService.getById(userId)));
+    tokenEventsPublisher.requestTokenCleanupByUsers(ImmutableSet.of(userService.getById(userId)));
   }
 
   @Override

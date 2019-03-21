@@ -2,7 +2,6 @@ package bio.overture.ego.controller;
 
 import static bio.overture.ego.model.enums.StatusType.PENDING;
 import static bio.overture.ego.utils.EntityTools.extractAppIds;
-import static bio.overture.ego.utils.EntityTools.extractGroupIds;
 import static bio.overture.ego.utils.EntityTools.extractIDs;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -181,9 +180,11 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     // Users for test
     val userOne = entityGenerator.setupUser("TempGroup User");
+    val userId = userOne.getId();
 
     // Application for test
     val appOne = entityGenerator.setupApplication("TempGroupApp");
+    val appId = appOne.getId();
 
     // REST to get users/app in group
     val usersBody = singletonList(userOne.getId().toString());
@@ -191,14 +192,6 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     initStringRequest().endpoint("/groups/%s/users", group.getId()).body(usersBody).post();
     initStringRequest().endpoint("/groups/%s/applications", group.getId()).body(appsBody).post();
-
-    // Check user-group relationship is there
-    val userWithGroup = userService.getByName("TempGroupUser@domain.com");
-    assertThat(extractGroupIds(userWithGroup.getGroups())).contains(groupId);
-
-    // Check app-group relationship is there
-    val applicationWithGroup = applicationService.getByClientId("TempGroupApp");
-    assertThat(extractGroupIds(applicationWithGroup.getGroups())).contains(groupId);
 
     val response = initStringRequest().endpoint("/groups/%s", groupId).delete();
 
@@ -208,17 +201,18 @@ public class GroupControllerTest extends AbstractControllerTest {
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
     // Check user-group relationship is also deleted
-    val userWithoutGroup = userService.getByName("TempGroupUser@domain.com");
-    assertThat(userWithoutGroup).isNotNull();
-    assertThat(extractGroupIds(userWithoutGroup.getGroups())).doesNotContain(groupId);
+    val userWithoutGroup = initStringRequest().endpoint("/users/%s/groups", userId).get();
+    assertThat(userWithoutGroup.getBody()).doesNotContain(groupId.toString());
 
-    // Check app-group relationship is also deleted
-    val applicationWithoutGroup = applicationService.getByClientId("TempGroupApp");
-    assertThat(applicationWithoutGroup).isNotNull();
-    assertThat(extractGroupIds(applicationWithoutGroup.getGroups())).doesNotContain(groupId);
+    // Check user-group relationship is also deleted
+    val applicationWithoutGroup =
+        initStringRequest().endpoint("/applications/%s/groups", appId).get();
+    assertThat(applicationWithoutGroup.getBody()).doesNotContain(groupId.toString());
 
     // Check group is deleted
-    assertThat(groupService.findByName("DeleteOne")).isEmpty();
+    val groupResponse = initStringRequest().endpoint("/groups/%s", groupId).get();
+    log.info(groupResponse.getBody());
+    assertThat(groupResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
   }
 
   // TODO: [rtisma] will eventually be fixed when properly using query by Specification, which will

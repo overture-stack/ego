@@ -432,16 +432,17 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     val accessToken = groupPermissionTestSetup(user, group, policy, AccessLevel.READ, "READ");
 
     val deleteGroupResponse =
-      initStringRequest()
-        .endpoint("/users/%s/groups/%s", user.getId().toString(), group.getId().toString())
-        .delete();
+        initStringRequest()
+            .endpoint("/users/%s/groups/%s", user.getId().toString(), group.getId().toString())
+            .delete();
     assertThat(deleteGroupResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 
     val checkTokenAfterGroupDeleteResponse =
-      initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be revoked
-    assertThat(checkTokenAfterGroupDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(checkTokenAfterGroupDeleteResponse.getStatusCode())
+        .isEqualTo(HttpStatus.BAD_REQUEST);
   }
 
   /**

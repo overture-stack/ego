@@ -15,22 +15,20 @@
  *
  */
 
-package bio.overture.ego.event;
+package bio.overture.ego.event.token;
 
-import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.entity.Token;
 import java.util.Set;
+import lombok.Getter;
+import lombok.NonNull;
 import org.springframework.context.ApplicationEvent;
 
-public class CleanupTokensEvent extends ApplicationEvent {
+public class RevokeTokensEvent extends ApplicationEvent {
 
-  private Set<User> users;
+  @Getter private Set<Token> tokens;
 
-  public CleanupTokensEvent(Object source, Set<User> users) {
+  public RevokeTokensEvent(@NonNull Object source, @NonNull Set<Token> tokens) {
     super(source);
-    this.users = users;
-  }
-
-  public Set<User> getUsers() {
-    return users;
+    this.tokens = tokens;
   }
 }

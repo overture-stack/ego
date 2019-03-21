@@ -33,7 +33,7 @@ import static java.util.stream.Stream.concat;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 import bio.overture.ego.config.UserDefaultsConfig;
-import bio.overture.ego.event.CleanupTokenPublisher;
+import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UpdateUserRequest;
@@ -84,7 +84,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
   /** Dependencies */
   private final GroupService groupService;
 
-  private final CleanupTokenPublisher cleanupTokenPublisher;
+  private final TokenEventsPublisher tokenEventsPublisher;
   private final ApplicationService applicationService;
   private final UserRepository userRepository;
 
@@ -97,13 +97,13 @@ public class UserService extends AbstractNamedService<User, UUID> {
       @NonNull GroupService groupService,
       @NonNull ApplicationService applicationService,
       @NonNull UserDefaultsConfig userDefaultsConfig,
-      @NonNull CleanupTokenPublisher cleanupTokenPublisher) {
+      @NonNull TokenEventsPublisher tokenEventsPublisher) {
     super(User.class, userRepository);
     this.userRepository = userRepository;
     this.groupService = groupService;
     this.applicationService = applicationService;
     this.userDefaultsConfig = userDefaultsConfig;
-    this.cleanupTokenPublisher = cleanupTokenPublisher;
+    this.tokenEventsPublisher = tokenEventsPublisher;
   }
 
   public User create(@NonNull CreateUserRequest request) {
@@ -132,7 +132,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     // work
     // correctly
     val retUser = getRepository().save(user);
-    cleanupTokenPublisher.requestTokenCleanup(ImmutableSet.of(retUser));
+    tokenEventsPublisher.requestTokenCleanupByUsers(ImmutableSet.of(retUser));
     return retUser;
   }
 
@@ -187,7 +187,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .collect(toImmutableSet());
     disassociateUserFromGroups(user, groupsToDisassociate);
     getRepository().save(user);
-    cleanupTokenPublisher.requestTokenCleanup(ImmutableSet.of(user));
+    tokenEventsPublisher.requestTokenCleanupByUsers(ImmutableSet.of(user));
   }
 
   // TODO @rtisma: add test for all entities to ensure they implement .equals() using only the id

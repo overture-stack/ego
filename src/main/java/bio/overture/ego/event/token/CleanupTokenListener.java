@@ -15,7 +15,7 @@
  *
  */
 
-package bio.overture.ego.event;
+package bio.overture.ego.event.token;
 
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 
@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class CleanupTokenListener implements ApplicationListener<CleanupTokensEvent> {
+public class CleanupTokenListener implements ApplicationListener<CleanupUserTokensEvent> {
 
   /** Dependencies */
   private final TokenService tokenService;
@@ -46,7 +46,7 @@ public class CleanupTokenListener implements ApplicationListener<CleanupTokensEv
   }
 
   @Override
-  public void onApplicationEvent(@NonNull CleanupTokensEvent event) {
+  public void onApplicationEvent(@NonNull CleanupUserTokensEvent event) {
     cleanupTokens(event.getUsers());
   }
 

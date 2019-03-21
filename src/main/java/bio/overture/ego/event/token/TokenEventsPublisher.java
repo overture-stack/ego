@@ -15,8 +15,9 @@
  *
  */
 
-package bio.overture.ego.event;
+package bio.overture.ego.event.token;
 
+import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.entity.User;
 import java.util.Set;
 import lombok.NonNull;
@@ -25,16 +26,20 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CleanupTokenPublisher {
+public class TokenEventsPublisher {
 
   private ApplicationEventPublisher applicationEventPublisher;
 
   @Autowired
-  public CleanupTokenPublisher(ApplicationEventPublisher applicationEventPublisher) {
+  public TokenEventsPublisher(ApplicationEventPublisher applicationEventPublisher) {
     this.applicationEventPublisher = applicationEventPublisher;
   }
 
-  public void requestTokenCleanup(@NonNull final Set<User> users) {
-    applicationEventPublisher.publishEvent(new CleanupTokensEvent(this, users));
+  public void requestTokenCleanupByUsers(@NonNull final Set<User> users) {
+    applicationEventPublisher.publishEvent(new CleanupUserTokensEvent(this, users));
+  }
+
+  public void requestTokenCleanup(@NonNull final Set<Token> tokens) {
+    applicationEventPublisher.publishEvent(new RevokeTokensEvent(this, tokens));
   }
 }

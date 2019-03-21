@@ -27,7 +27,7 @@ import static java.util.UUID.fromString;
 import static org.mapstruct.factory.Mappers.getMapper;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
-import bio.overture.ego.event.CleanupTokenPublisher;
+import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
@@ -65,7 +65,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   private final UserRepository userRepository;
   private final ApplicationRepository applicationRepository;
   private final ApplicationService applicationService;
-  private final CleanupTokenPublisher cleanupTokenPublisher;
+  private final TokenEventsPublisher tokenEventsPublisher;
 
   @Autowired
   public GroupService(
@@ -73,13 +73,13 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
       @NonNull UserRepository userRepository,
       @NonNull ApplicationRepository applicationRepository,
       @NonNull ApplicationService applicationService,
-      @NonNull CleanupTokenPublisher cleanupTokenPublisher) {
+      @NonNull TokenEventsPublisher tokenEventsPublisher) {
     super(Group.class, groupRepository);
     this.groupRepository = groupRepository;
     this.userRepository = userRepository;
     this.applicationRepository = applicationRepository;
     this.applicationService = applicationService;
-    this.cleanupTokenPublisher = cleanupTokenPublisher;
+    this.tokenEventsPublisher = tokenEventsPublisher;
   }
 
   public Group create(@NonNull GroupRequest request) {
@@ -90,18 +90,26 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
 
   /**
    * Decorate the delete method for group's users to also trigger a token check after group delete.
+   *
    * @param groupId The ID of the group to be deleted.
    */
   @Override
   public void delete(@NonNull UUID groupId) {
     super.checkExistence(groupId);
 
-    // Users that will need tokens check.
-    val users = getGroupWithRelationships(groupId).getUsers();
+    val group = getGroupWithRelationships(groupId);
+    val users = group.getUsers();
+    group.getUsers().forEach(x -> x.getGroups().remove(group));
+    group.getUsers().clear();
 
-    // For semantic/readability reasons, check tokens AFTER group has been marked for delete.
+    group.getApplications().forEach(x -> x.getGroups().remove(group));
+    group.getApplications().clear();
+
+    group.getPermissions().forEach(x -> x.setOwner(null));
+    group.getPermissions().clear();
+
     super.delete(groupId);
-    cleanupTokenPublisher.requestTokenCleanup(users);
+    tokenEventsPublisher.requestTokenCleanupByUsers(users);
   }
 
   public Group getGroupWithRelationships(@NonNull UUID id) {
@@ -123,7 +131,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     val group = getById(id);
     val users = userRepository.findAllByIdIn(userIds);
     associateUsers(group, users);
-    cleanupTokenPublisher.requestTokenCleanup(users);
+    tokenEventsPublisher.requestTokenCleanupByUsers(users);
     return groupRepository.save(group);
   }
 
@@ -205,7 +213,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
             .collect(toImmutableSet());
     disassociateGroupFromUsers(group, usersToDisassociate);
     getRepository().save(group);
-    cleanupTokenPublisher.requestTokenCleanup(usersToDisassociate);
+    tokenEventsPublisher.requestTokenCleanupByUsers(usersToDisassociate);
   }
 
   private void validateUpdateRequest(Group originalGroup, GroupRequest updateRequest) {

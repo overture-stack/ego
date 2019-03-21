@@ -186,7 +186,8 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   @Builder.Default
   @OneToMany(
       mappedBy = JavaFields.OWNER,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      orphanRemoval = true,
+      cascade = CascadeType.ALL,
       fetch = FetchType.LAZY)
   private Set<Token> tokens = newHashSet();
 

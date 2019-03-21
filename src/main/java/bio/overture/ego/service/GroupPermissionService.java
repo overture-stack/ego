@@ -1,6 +1,6 @@
 package bio.overture.ego.service;
 
-import bio.overture.ego.event.CleanupTokenPublisher;
+import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
@@ -22,17 +22,17 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
   /** Dependencies */
   private final GroupService groupService;
 
-  private final CleanupTokenPublisher cleanupTokenPublisher;
+  private final TokenEventsPublisher tokenEventsPublisher;
 
   @Autowired
   public GroupPermissionService(
       @NonNull GroupPermissionRepository repository,
       @NonNull GroupService groupService,
-      @NonNull CleanupTokenPublisher cleanupTokenPublisher,
+      @NonNull TokenEventsPublisher tokenEventsPublisher,
       @NonNull PolicyService policyService) {
     super(Group.class, GroupPermission.class, groupService, policyService, repository);
     this.groupService = groupService;
-    this.cleanupTokenPublisher = cleanupTokenPublisher;
+    this.tokenEventsPublisher = tokenEventsPublisher;
   }
 
   /**
@@ -46,7 +46,7 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
   public Group addPermissions(
       @NonNull UUID groupId, @NonNull List<PermissionRequest> permissionRequests) {
     val group = super.addPermissions(groupId, permissionRequests);
-    cleanupTokenPublisher.requestTokenCleanup(group.getUsers());
+    tokenEventsPublisher.requestTokenCleanupByUsers(group.getUsers());
     return group;
   }
 
@@ -60,7 +60,7 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
   public void deletePermissions(@NonNull UUID groupId, @NonNull Collection<UUID> idsToDelete) {
     super.deletePermissions(groupId, idsToDelete);
     val group = getOwnerWithRelationships(groupId);
-    cleanupTokenPublisher.requestTokenCleanup(group.getUsers());
+    tokenEventsPublisher.requestTokenCleanupByUsers(group.getUsers());
   }
 
   @Override
