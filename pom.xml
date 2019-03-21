@@ -235,19 +235,6 @@
             <version>${mapstruct.version}</version>
         </dependency>
 
-        <!-- Eclipse collections --> 
-        <dependency>
-            <groupId>org.eclipse.collections</groupId>
-            <artifactId>eclipse-collections-api</artifactId>
-            <version>9.2.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.collections</groupId>
-            <artifactId>eclipse-collections</artifactId>
-            <version>9.2.0</version>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>

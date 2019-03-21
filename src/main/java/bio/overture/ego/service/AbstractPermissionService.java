@@ -20,7 +20,6 @@ import static java.util.Objects.isNull;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
-import static org.eclipse.collections.impl.factory.Sets.intersect;
 
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
@@ -31,6 +30,7 @@ import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.repository.PermissionRepository;
 import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -232,7 +232,8 @@ public abstract class AbstractPermissionService<
     val requestedPolicyIds = mapToSet(createablePermissionRequests, PermissionRequest::getPolicyId);
 
     // Double check the permissions you are creating dont conflict with whats existing
-    val redundantPolicyIds = intersect(requestedPolicyIds, existingPermissionIndex.keySet());
+    val redundantPolicyIds =
+        Sets.intersection(requestedPolicyIds, existingPermissionIndex.keySet());
     checkUnique(
         redundantPolicyIds.isEmpty(),
         "%ss with the following policyIds could not be created because "
