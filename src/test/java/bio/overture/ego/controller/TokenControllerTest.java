@@ -4,7 +4,6 @@ import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableSet;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
@@ -59,22 +58,20 @@ public class TokenControllerTest {
     entityGenerator.setupPolicies("aws,no-be-used", "collab,no-be-used");
     entityGenerator.addPermissions(user, entityGenerator.getScopes("aws.READ", "collab.READ"));
 
+    val tokenRevoke =
+            entityGenerator.setupToken(
+                    user, "token 1", 1000, entityGenerator.getScopes("collab.READ", "aws.READ"));
 
-    val tokenRevoke = entityGenerator.setupToken(user,
-            "token 1",
-            1000,
-            entityGenerator.getScopes("collab.READ", "aws.READ"));
+    val otherToken =
+            entityGenerator.setupToken(
+                    standByUser,
+                    "token not be affected",
+                    1000,
+                    entityGenerator.getScopes("collab.READ", "aws.READ"));
 
-    val otherToken = entityGenerator.setupToken(standByUser,
-            "token not be affected",
-            1000,
-            entityGenerator.getScopes("collab.READ", "aws.READ"));
-
-    val otherToken2 = entityGenerator.setupToken(user,
-            "token 2 not be affected",
-            1000,
-            entityGenerator.getScopes("collab.READ"));
-
+    val otherToken2 =
+            entityGenerator.setupToken(
+                    user, "token 2 not be affected", 1000, entityGenerator.getScopes("collab.READ"));
 
     assertThat(tokenService.getById(tokenRevoke.getId()).isRevoked()).isFalse();
     assertThat(tokenService.getById(otherToken.getId()).isRevoked()).isFalse();
@@ -82,7 +79,12 @@ public class TokenControllerTest {
 
     val entity = new HttpEntity<>(null, headers);
     val response =
-            restTemplate.exchange(createURLWithPort("/o/token?user_id={userId}&scopes=collab.READ&scopes=aws.READ"), HttpMethod.POST, entity, String.class, user.getId().toString());
+            restTemplate.exchange(
+                    createURLWithPort("/o/token?user_id={userId}&scopes=collab.READ&scopes=aws.READ"),
+                    HttpMethod.POST,
+                    entity,
+                    String.class,
+                    user.getId().toString());
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
@@ -90,5 +92,4 @@ public class TokenControllerTest {
     assertThat(tokenService.getById(otherToken.getId()).isRevoked()).isFalse();
     assertThat(tokenService.getById(otherToken2.getId()).isRevoked()).isFalse();
   }
-
 }

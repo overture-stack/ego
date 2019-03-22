@@ -22,7 +22,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
@@ -30,7 +29,6 @@ import org.hibernate.annotations.TypeDef;
 
 @Data
 @MappedSuperclass
-@EqualsAndHashCode(of = {LombokFields.id})
 @ToString(exclude = {LombokFields.policy})
 @TypeDef(name = EGO_ACCESS_LEVEL_ENUM, typeClass = PostgreSQLEnumType.class)
 @JsonPropertyOrder({JavaFields.ID, JavaFields.POLICY, JavaFields.OWNER, JavaFields.ACCESS_LEVEL})

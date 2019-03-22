@@ -238,7 +238,6 @@ public class EntityGenerator {
                   up.setPolicy(s.getPolicy());
                   up.setAccessLevel(s.getAccessLevel());
                   up.setOwner(user);
-                  userPermissionService.getRepository().save(up);
                   return up;
                 })
             .collect(toSet());
