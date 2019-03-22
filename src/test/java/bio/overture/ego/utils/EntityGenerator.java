@@ -8,39 +8,17 @@ import static bio.overture.ego.utils.CollectionUtils.listOf;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.Splitters.COMMA_SPLITTER;
 import static com.google.common.collect.Lists.newArrayList;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import bio.overture.ego.model.dto.CreateApplicationRequest;
-import bio.overture.ego.model.dto.CreateUserRequest;
-import bio.overture.ego.model.dto.GroupRequest;
-import bio.overture.ego.model.dto.PolicyRequest;
-import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.entity.Token;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.entity.UserPermission;
+import bio.overture.ego.model.dto.*;
+import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.model.params.ScopeName;
-import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.service.BaseService;
-import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.NamedService;
-import bio.overture.ego.service.PolicyService;
-import bio.overture.ego.service.TokenService;
-import bio.overture.ego.service.TokenStoreService;
-import bio.overture.ego.service.UserPermissionService;
-import bio.overture.ego.service.UserService;
+import bio.overture.ego.service.*;
 import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -259,10 +237,11 @@ public class EntityGenerator {
                   up.setPolicy(s.getPolicy());
                   up.setAccessLevel(s.getAccessLevel());
                   up.setOwner(user);
+                  userPermissionService.getRepository().save(up);
                   return up;
                 })
-            .collect(toList());
-    userPermissions.forEach(p -> userPermissionService.associatePermission(user, p));
+            .collect(toSet());
+    user.getUserPermissions().addAll(userPermissions);
     userService.getRepository().save(user);
   }
 
