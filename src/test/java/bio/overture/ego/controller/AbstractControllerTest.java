@@ -41,8 +41,16 @@ public abstract class AbstractControllerTest {
     return initRequest(String.class);
   }
 
+  public WebResource<String> initStringRequest(HttpHeaders headers) {
+    return initRequest(String.class, headers);
+  }
+
   public <T> WebResource<T> initRequest(@NonNull Class<T> responseType) {
     return createWebResource(restTemplate, getServerUrl(), responseType).headers(this.headers);
+  }
+
+  public <T> WebResource<T> initRequest(@NonNull Class<T> responseType, HttpHeaders headers) {
+    return createWebResource(restTemplate, getServerUrl(), responseType).headers(headers);
   }
 
   public String getServerUrl() {

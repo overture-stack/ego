@@ -406,7 +406,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     }
   }
 
-  private void revoke(String token) {
+  public void revoke(String token) {
     val currentToken =
         findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found."));
     if (currentToken.isRevoked()) {

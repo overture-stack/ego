@@ -27,6 +27,7 @@ import static java.util.UUID.fromString;
 import static org.mapstruct.factory.Mappers.getMapper;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
+import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
@@ -64,24 +65,51 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   private final UserRepository userRepository;
   private final ApplicationRepository applicationRepository;
   private final ApplicationService applicationService;
+  private final TokenEventsPublisher tokenEventsPublisher;
 
   @Autowired
   public GroupService(
       @NonNull GroupRepository groupRepository,
       @NonNull UserRepository userRepository,
       @NonNull ApplicationRepository applicationRepository,
-      @NonNull ApplicationService applicationService) {
+      @NonNull ApplicationService applicationService,
+      @NonNull TokenEventsPublisher tokenEventsPublisher) {
     super(Group.class, groupRepository);
     this.groupRepository = groupRepository;
     this.userRepository = userRepository;
     this.applicationRepository = applicationRepository;
     this.applicationService = applicationService;
+    this.tokenEventsPublisher = tokenEventsPublisher;
   }
 
   public Group create(@NonNull GroupRequest request) {
     checkNameUnique(request.getName());
     val group = GROUP_CONVERTER.convertToGroup(request);
     return getRepository().save(group);
+  }
+
+  /**
+   * Decorate the delete method for group's users to also trigger a token check after group delete.
+   *
+   * @param groupId The ID of the group to be deleted.
+   */
+  @Override
+  public void delete(@NonNull UUID groupId) {
+    super.checkExistence(groupId);
+
+    val group = getGroupWithRelationships(groupId);
+    val users = group.getUsers();
+    group.getUsers().forEach(x -> x.getGroups().remove(group));
+    group.getUsers().clear();
+
+    group.getApplications().forEach(x -> x.getGroups().remove(group));
+    group.getApplications().clear();
+
+    group.getPermissions().forEach(x -> x.setOwner(null));
+    group.getPermissions().clear();
+
+    super.delete(groupId);
+    tokenEventsPublisher.requestTokenCleanupByUsers(users);
   }
 
   public Group getGroupWithRelationships(@NonNull UUID id) {
@@ -103,6 +131,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     val group = getById(id);
     val users = userRepository.findAllByIdIn(userIds);
     associateUsers(group, users);
+    tokenEventsPublisher.requestTokenCleanupByUsers(users);
     return groupRepository.save(group);
   }
 
@@ -184,6 +213,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
             .collect(toImmutableSet());
     disassociateGroupFromUsers(group, usersToDisassociate);
     getRepository().save(group);
+    tokenEventsPublisher.requestTokenCleanupByUsers(usersToDisassociate);
   }
 
   private void validateUpdateRequest(Group originalGroup, GroupRequest updateRequest) {
