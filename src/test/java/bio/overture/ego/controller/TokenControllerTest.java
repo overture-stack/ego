@@ -56,7 +56,7 @@ public class TokenControllerTest {
 
     val tokenRevoke =
         entityGenerator.setupToken(
-            user, "token 1", 1000, entityGenerator.getScopes("collab.READ", "aws.READ"));
+            user, "token1", 1000, entityGenerator.getScopes("collab.READ", "aws.READ"));
 
     val otherToken =
         entityGenerator.setupToken(
@@ -83,6 +83,17 @@ public class TokenControllerTest {
             user.getId().toString());
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+
+    log.info(response.getBody());
+
+    //    val response2 =
+    //      restTemplate.exchange(
+    //        createURLWithPort("/o/check_token?token=" + tokenRevoke.getName()),
+    //        HttpMethod.POST,
+    //        entity,
+    //        String.class,
+    //        user.getId().toString());
+    //    log.info(response2.getBody());
 
     assertThat(tokenService.getById(tokenRevoke.getId()).isRevoked()).isTrue();
     assertThat(tokenService.getById(otherToken.getId()).isRevoked()).isFalse();

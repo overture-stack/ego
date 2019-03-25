@@ -53,15 +53,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.security.InvalidKeyException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -96,6 +88,9 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   /** Configuration */
   @Value("${jwt.duration:86400000}")
   private int DURATION;
+
+  @Value("${apitoken.duration:365}")
+  private int API_TOKEN_DURATION;
 
   public TokenService(
       @NonNull TokenSigner tokenSigner,
@@ -196,8 +191,15 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     val tokenString = generateTokenString();
     log.info(format("Generated token string '%s'", str(tokenString)));
 
+    val cal = Calendar.getInstance();
+    cal.add(Calendar.DAY_OF_YEAR, API_TOKEN_DURATION);
+    val expiryDate = cal.getTime();
+
+    val today = Calendar.getInstance();
+
     val token = new Token();
-    token.setExpires(DURATION);
+    token.setExpiryDate(expiryDate);
+    token.setIssueDate(today.getTime());
     token.setRevoked(false);
     token.setName(tokenString);
     token.setOwner(u);
