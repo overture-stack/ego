@@ -123,7 +123,7 @@ public class TokenControllerTest extends AbstractControllerTest {
 
   @SneakyThrows
   @Test
-  public void issueToken_exactScope(){
+  public void issueTokenExactScope(){
     // if scopes are exactly the same as user scopes, issue token should be successful,
 
     val user = userService.getByName("FirstUser@domain.com");
@@ -394,7 +394,7 @@ public class TokenControllerTest extends AbstractControllerTest {
 
   @SneakyThrows
   @Test
-  public void getUserScope_invalidUserName(){
+  public void getUserScopeInvalidUserName(){
     val userName = "randomUser@domain.com";
     val response = initStringRequest().endpoint("o/scopes?userName=%s", userName).get();
 
@@ -441,7 +441,7 @@ public class TokenControllerTest extends AbstractControllerTest {
 
   @SneakyThrows
   @Test
-  public void listToken_noToken(){
+  public void listTokenEmptyToken(){
     val userId = test.adminUser.getId().toString();
     val response = initStringRequest().endpoint("o/token?user_id=%s", userId).get();
 
