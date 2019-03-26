@@ -36,7 +36,8 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 @Slf4j
 public class WebDriverFactory {
 
-  private static final int TIMEOUT_SECONDS = 10;
+  private static final int TIMEOUT_SECONDS = 15;
+  private static final int PAGELOAD_TIMEOUT = 30;
 
   public WebDriver createDriver(DriverType type) {
     switch (type) {
@@ -59,7 +60,7 @@ public class WebDriverFactory {
         .manage()
         .timeouts()
         .implicitlyWait(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-        .pageLoadTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        .pageLoadTimeout(PAGELOAD_TIMEOUT, TimeUnit.SECONDS);
     return driver;
   }
 
@@ -109,7 +110,7 @@ public class WebDriverFactory {
         .manage()
         .timeouts()
         .implicitlyWait(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-        .pageLoadTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        .pageLoadTimeout(PAGELOAD_TIMEOUT, TimeUnit.SECONDS);
 
     return driver;
   }
