@@ -19,10 +19,7 @@ public class WithMockCustomUserSecurityContextFactory
         implements WithSecurityContextFactory<WithMockCustomUser> {
 
   @Autowired
-  UserService userService;
-
-  @Autowired
-  EntityGenerator entityGenerator;
+  private UserService userService;
 
   @Override
   public SecurityContext createSecurityContext(WithMockCustomUser customUser) {

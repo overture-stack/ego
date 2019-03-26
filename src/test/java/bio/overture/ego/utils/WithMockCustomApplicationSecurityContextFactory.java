@@ -17,7 +17,7 @@ public class WithMockCustomApplicationSecurityContextFactory
         implements WithSecurityContextFactory<WithMockCustomApplication> {
 
   @Autowired
-  ApplicationService applicationService;
+  private ApplicationService applicationService;
 
   @Override
   public SecurityContext createSecurityContext(WithMockCustomApplication customApplication) {

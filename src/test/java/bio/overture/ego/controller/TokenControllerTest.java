@@ -41,19 +41,16 @@ public class TokenControllerTest extends AbstractControllerTest {
   private EntityGenerator entityGenerator;
 
   @Autowired
-  UserService userService;
+  private UserService userService;
 
   @Autowired
-  ApplicationService applicationService;
+  private PolicyService policyService;
 
   @Autowired
-  PolicyService policyService;
+  private UserPermissionService userPermissionService;
 
   @Autowired
-  UserPermissionService userPermissionService;
-
-  @Autowired
-  TokenService tokenService;
+  private TokenService tokenService;
 
   private TestData test;
 

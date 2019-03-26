@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.service.TokenService;
-import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.TestData;
 import bio.overture.ego.utils.WithMockCustomApplication;
@@ -44,10 +43,7 @@ import org.springframework.web.context.WebApplicationContext;
 public class RevokeTokenControllerTest {
 
   @Autowired
-  UserService userService;
-
-  @Autowired
-  TokenService tokenService;
+  private TokenService tokenService;
 
   @Autowired
   private EntityGenerator entityGenerator;
@@ -62,7 +58,7 @@ public class RevokeTokenControllerTest {
   private static final String ACCESS_TOKEN = "TestToken";
 
   @Before
-  public void setup(){
+  public void initTest(){
     test = new TestData(entityGenerator);
     this.mockMvc = MockMvcBuilders
             .webAppContextSetup(webApplicationContext)
