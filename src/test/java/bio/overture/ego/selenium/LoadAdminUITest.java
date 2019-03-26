@@ -53,8 +53,6 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
             .description("testing")
             .build());
 
-    Thread.sleep(5000);
-
     driver.get("http://localhost:" + uiPort);
     val titleText =
         driver.findElement(By.className("Login")).findElement(By.tagName("h1")).getText();
