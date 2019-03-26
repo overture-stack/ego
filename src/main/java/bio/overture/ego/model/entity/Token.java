@@ -74,7 +74,8 @@ public class Token implements Identifiable<UUID> {
   @JsonIgnore
   @OneToMany(
       mappedBy = JavaFields.TOKEN,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      orphanRemoval = true,
+      cascade = CascadeType.ALL,
       fetch = FetchType.LAZY)
   @Builder.Default
   private Set<TokenScope> scopes = newHashSet();

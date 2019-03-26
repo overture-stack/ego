@@ -29,13 +29,13 @@ import static org.springframework.util.DigestUtils.md5Digest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
+import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.dto.UserScopesResponse;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.ScopeName;
-import bio.overture.ego.reactor.events.UserEvents;
 import bio.overture.ego.repository.TokenStoreRepository;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.TokenClaims;
@@ -90,7 +90,6 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   private TokenSigner tokenSigner;
   private UserService userService;
   private ApplicationService applicationService;
-  private UserEvents userEvents;
   private TokenStoreService tokenStoreService;
   private PolicyService policyService;
 
@@ -102,7 +101,6 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       @NonNull TokenSigner tokenSigner,
       @NonNull UserService userService,
       @NonNull ApplicationService applicationService,
-      @NonNull UserEvents userEvents,
       @NonNull TokenStoreService tokenStoreService,
       @NonNull PolicyService policyService,
       @NonNull TokenStoreRepository tokenStoreRepository) {
@@ -110,7 +108,6 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     this.tokenSigner = tokenSigner;
     this.userService = userService;
     this.applicationService = applicationService;
-    this.userEvents = userEvents;
     this.tokenStoreService = tokenStoreService;
     this.policyService = policyService;
   }
@@ -125,11 +122,8 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       user = userService.createFromIDToken(idToken);
     }
 
-    // Update user.lastLogin in the DB
-    // Use events as these are async:
-    //    the DB call won't block returning the ScopedAccessToken
-    user.setLastLogin(new Date());
-    userEvents.update(user);
+    UpdateUserRequest u = UpdateUserRequest.builder().lastLogin(new Date()).build();
+    userService.partialUpdate(user.getId(), u);
 
     return generateUserToken(user);
   }
@@ -406,7 +400,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     }
   }
 
-  private void revoke(String token) {
+  public void revoke(String token) {
     val currentToken =
         findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found."));
     if (currentToken.isRevoked()) {

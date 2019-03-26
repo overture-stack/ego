@@ -30,7 +30,7 @@ import org.hibernate.annotations.TypeDef;
 @Entity
 @TypeDef(name = EGO_ACCESS_LEVEL_ENUM, typeClass = PostgreSQLEnumType.class)
 @Table(name = Tables.TOKENSCOPE)
-class TokenScope implements Serializable {
+public class TokenScope implements Serializable {
 
   // TODO; [rtisma] correct the Id stuff. There is a way to define a 2-tuple primary key. refer to
   // song Info entity (@EmbeddedId)

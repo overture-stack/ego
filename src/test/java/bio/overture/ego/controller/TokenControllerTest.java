@@ -3,7 +3,6 @@ package bio.overture.ego.controller;
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.utils.EntityGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
@@ -23,12 +22,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @SpringBootTest(
-        classes = AuthorizationServiceMain.class,
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+    classes = AuthorizationServiceMain.class,
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TokenControllerTest {
-
-  /** Constants */
-  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   /** State */
   @LocalServerPort private int port;

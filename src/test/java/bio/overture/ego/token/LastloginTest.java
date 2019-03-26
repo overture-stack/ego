@@ -7,10 +7,10 @@ import bio.overture.ego.model.entity.User;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
+import java.util.Date;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
-@Ignore("replace with controller tests.")
 public class LastloginTest {
 
   @Autowired private TokenService tokenService;
@@ -47,17 +46,12 @@ public class LastloginTest {
 
     tokenService.generateUserToken(idToken);
 
-    // Another thread is setting user.lastlogin, make main thread wait until setting is complete.
-    Thread.sleep(200);
-
     val lastLogin = userService.getByName(idToken.getEmail()).getLastLogin();
-
-    // Must manually delete user. Using @Transactional will
-    // trigger exception, as there are two
-    // threads involved, new thread will try to find user in an empty repo which
-    // will cause exception. This is done even if lastLogin assertion fails
     userService.delete(user.getId());
 
     assertNotNull("Verify after generatedUserToken, last login is not null.", lastLogin);
+    val tolerance = 2 * 1000; // 2 seconds
+    val now = new Date().getTime();
+    assert (now - lastLogin.getTime()) <= tolerance;
   }
 }
