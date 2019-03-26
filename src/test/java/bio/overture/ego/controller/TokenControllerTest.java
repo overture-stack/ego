@@ -402,7 +402,7 @@ public class TokenControllerTest extends AbstractControllerTest {
   @SneakyThrows
   @Test
   public void listToken(){
-    val user = userService.getByName("FirstUser@domain.com");
+    val user = entityGenerator.setupUser("List Token");
     val userId = user.getId().toString();
 
     val tokenString1 = "791044a1-3ffd-4164-a6a0-0e1e666b28dc";
