@@ -84,17 +84,6 @@ public class TokenControllerTest {
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.OK);
 
-    log.info(response.getBody());
-
-    //    val response2 =
-    //      restTemplate.exchange(
-    //        createURLWithPort("/o/check_token?token=" + tokenRevoke.getName()),
-    //        HttpMethod.POST,
-    //        entity,
-    //        String.class,
-    //        user.getId().toString());
-    //    log.info(response2.getBody());
-
     assertThat(tokenService.getById(tokenRevoke.getId()).isRevoked()).isTrue();
     assertThat(tokenService.getById(otherToken.getId()).isRevoked()).isFalse();
     assertThat(tokenService.getById(otherToken2.getId()).isRevoked()).isFalse();
