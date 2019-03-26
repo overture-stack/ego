@@ -9,10 +9,7 @@ import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -32,7 +29,6 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.val;
 import org.hibernate.annotations.GenericGenerator;
-import org.joda.time.DateTime;
 
 @Entity
 @Table(name = Tables.TOKEN)
@@ -59,6 +55,10 @@ public class Token implements Identifiable<UUID> {
   private Date issueDate;
 
   @NotNull
+  @Column(name = SqlFields.EXPIRYDATE, updatable = false, nullable = false)
+  private Date expiryDate;
+
+  @NotNull
   @Column(name = SqlFields.ISREVOKED, nullable = false)
   private boolean isRevoked;
 
@@ -80,12 +80,8 @@ public class Token implements Identifiable<UUID> {
   @Builder.Default
   private Set<TokenScope> scopes = newHashSet();
 
-  public void setExpires(int seconds) {
-    this.issueDate = DateTime.now().plusSeconds(seconds).toDate();
-  }
-
   public Long getSecondsUntilExpiry() {
-    val seconds = (issueDate.getTime() - DateTime.now().getMillis()) / 1000;
+    val seconds = expiryDate.getTime() / 1000L - Calendar.getInstance().getTime().getTime() / 1000L;
     return seconds > 0 ? seconds : 0;
   }
 

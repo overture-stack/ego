@@ -66,8 +66,10 @@ public class TokensOnUserAndPolicyDeletes extends AbstractControllerTest {
     hasRunEntitySetup = true;
   }
 
-  /** Scenario: Two users with tokens that have a scope on a policy. Delete one user. Expected Behavior: Deleted user
-   * shold also have tokens deleted, other user's tokens should remain valid. */
+  /**
+   * Scenario: Two users with tokens that have a scope on a policy. Delete one user. Expected
+   * Behavior: Deleted user shold also have tokens deleted, other user's tokens should remain valid.
+   */
   @Test
   public void deleteUser_ExistingTokens_TokensDeletedSuccess() {
     val userDelete = entityGenerator.setupUser("UserTokens DeleteUser");
@@ -92,8 +94,10 @@ public class TokensOnUserAndPolicyDeletes extends AbstractControllerTest {
         .isEqualTo(HttpStatus.MULTI_STATUS);
   }
 
-  /** Scenario: User1 has token for policy1. User2 has token for policy2. Delete policy1. Expected Behavior: User1 should
-   * have token deleted, user2's token should remain valid.*/
+  /**
+   * Scenario: User1 has token for policy1. User2 has token for policy2. Delete policy1. Expected
+   * Behavior: User1 should have token deleted, user2's token should remain valid.
+   */
   @Test
   public void deletePolicy_ExistingTokens_TokensDeletedSuccess() {
     val user1 = entityGenerator.setupUser("UserTokens ForDeletedPolicy");

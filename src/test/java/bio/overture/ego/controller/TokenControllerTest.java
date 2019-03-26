@@ -56,7 +56,7 @@ public class TokenControllerTest {
 
     val tokenRevoke =
         entityGenerator.setupToken(
-            user, "token 1", 1000, entityGenerator.getScopes("collab.READ", "aws.READ"));
+            user, "token1", 1000, entityGenerator.getScopes("collab.READ", "aws.READ"));
 
     val otherToken =
         entityGenerator.setupToken(
