@@ -130,7 +130,7 @@ public class Group implements PolicyOwner, NameableEntity<UUID> {
 
   @ManyToMany(
       fetch = FetchType.LAZY,
-      cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
   @JoinTable(
       name = Tables.GROUP_APPLICATION,
       joinColumns = {@JoinColumn(name = SqlFields.GROUPID_JOIN)},
@@ -150,10 +150,9 @@ public class Group implements PolicyOwner, NameableEntity<UUID> {
   @Builder.Default
   private Set<User> users = newHashSet();
 
-  public Group addApplication(@NonNull Application a){
+  public Group addApplication(@NonNull Application a) {
     this.applications.add(a);
     a.getGroups().add(this);
     return this;
   }
-
 }

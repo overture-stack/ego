@@ -34,5 +34,4 @@ public abstract class AbstractNamedService<T extends Identifiable<ID>, ID>
         name);
     return result.get();
   }
-
 }

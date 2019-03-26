@@ -57,10 +57,9 @@ public abstract class AbstractPermissionService<
         O extends NameableEntity<UUID>, P extends AbstractPermission<O>>
     extends AbstractBaseService<P, UUID> {
 
-  /**
-   * Dependencies
-   */
+  /** Dependencies */
   private final BaseService<Policy, UUID> policyBaseService;
+
   private final BaseService<O, UUID> ownerBaseService;
   private final PermissionRepository<O, P> permissionRepository;
   private final Class<O> ownerType;
@@ -84,7 +83,7 @@ public abstract class AbstractPermissionService<
 
   @Override
   public P getWithRelationships(@NonNull UUID id) {
-    val result = (Optional<P>)permissionRepository.findOne(fetchSpecification(id, true));
+    val result = (Optional<P>) permissionRepository.findOne(fetchSpecification(id, true));
     checkNotFound(result.isPresent(), "The groupPermissionId '%s' does not exist", id);
     return result.get();
   }
@@ -105,8 +104,7 @@ public abstract class AbstractPermissionService<
     getRepository().delete(perm);
   }
 
-  public void deletePermissions(
-      @NonNull UUID ownerId, @NonNull Collection<UUID> idsToDelete) {
+  public void deletePermissions(@NonNull UUID ownerId, @NonNull Collection<UUID> idsToDelete) {
     checkMalformedRequest(
         !idsToDelete.isEmpty(),
         "Must add at least 1 permission for %s '%s'",
@@ -195,15 +193,13 @@ public abstract class AbstractPermissionService<
     return ownerType.getSimpleName();
   }
 
-  /**
-   * Specification that allows for dynamic loading of relationships
-   */
-  private Specification<O> fetchSpecification(UUID id, boolean fetchPolicy){
+  /** Specification that allows for dynamic loading of relationships */
+  private Specification<O> fetchSpecification(UUID id, boolean fetchPolicy) {
     return (fromOwner, query, builder) -> {
-      if (fetchPolicy){
+      if (fetchPolicy) {
         fromOwner.fetch(POLICY, LEFT);
       }
-      return builder.equal(fromOwner.get(ID),id );
+      return builder.equal(fromOwner.get(ID), id);
     };
   }
 
@@ -299,18 +295,22 @@ public abstract class AbstractPermissionService<
    * look ugly with all the generic type bounding. In the interest of more readable code, using
    * member methods is a cleaner approach.
    */
-  public static Set<AbstractPermission> resolveFinalPermissions(Collection<? extends AbstractPermission> ... collections) {
-    val combinedPermissionAgg = stream(collections)
-        .flatMap(Collection::stream)
-        .filter(x -> !isNull(x.getPolicy()))
-        .collect(groupingBy(AbstractPermission::getPolicy));
-    return combinedPermissionAgg.values()
+  public static Set<AbstractPermission> resolveFinalPermissions(
+      Collection<? extends AbstractPermission>... collections) {
+    val combinedPermissionAgg =
+        stream(collections)
+            .flatMap(Collection::stream)
+            .filter(x -> !isNull(x.getPolicy()))
+            .collect(groupingBy(AbstractPermission::getPolicy));
+    return combinedPermissionAgg
+        .values()
         .stream()
         .map(AbstractPermissionService::resolvePermissions)
         .collect(toImmutableSet());
   }
 
-  private static AbstractPermission resolvePermissions(List<? extends AbstractPermission> permissions) {
+  private static AbstractPermission resolvePermissions(
+      List<? extends AbstractPermission> permissions) {
     checkState(!permissions.isEmpty(), "Input permission list cannot be empty");
     permissions.sort(comparing(AbstractPermission::getAccessLevel));
     reverse(permissions);

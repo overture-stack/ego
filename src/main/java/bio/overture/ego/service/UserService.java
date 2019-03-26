@@ -90,12 +90,11 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   /** Dependencies */
   private final GroupService groupService;
+
   private final ApplicationService applicationService;
   private final UserRepository userRepository;
 
-  /**
-   * Configuration
-   */
+  /** Configuration */
   private final UserDefaultsConfig userDefaultsConfig;
 
   @Autowired
@@ -117,7 +116,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
-  public User getUserWithRelationships(@NonNull UUID id){
+  public User getUserWithRelationships(@NonNull UUID id) {
     val result = userRepository.getUserById(id);
     checkNotFound(result.isPresent(), "The userId '%s' does not exist", id);
     return result.get();
@@ -157,7 +156,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   @Override
   public User getWithRelationships(@NonNull UUID id) {
-    val result =(Optional<User>)getRepository().findOne(fetchSpecification(id, true, true, true));
+    val result = (Optional<User>) getRepository().findOne(fetchSpecification(id, true, true, true));
     checkNotFound(result.isPresent(), "The userId '%s' does not exist", id);
     return result.get();
   }
@@ -237,8 +236,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
       @NonNull UUID groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository()
         .findAll(
-            where(UserSpecification.inGroup(groupId))
-                .and(UserSpecification.filterBy(filters)),
+            where(UserSpecification.inGroup(groupId)).and(UserSpecification.filterBy(filters)),
             pageable);
   }
 
@@ -259,23 +257,28 @@ public class UserService extends AbstractNamedService<User, UUID> {
       @NonNull UUID appId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository()
         .findAll(
-            where(UserSpecification.ofApplication(appId))
-                .and(UserSpecification.filterBy(filters)),
+            where(UserSpecification.ofApplication(appId)).and(UserSpecification.filterBy(filters)),
             pageable);
   }
 
-  public static Specification<User> buildFindUserByGroupSpecification(@NonNull FindRequest findRequest){
-    val baseSpec = where(UserSpecification.inGroup(findRequest.getId()))
-        .and(UserSpecification.filterBy(findRequest.getFilters()));
-    return findRequest.getQuery()
+  public static Specification<User> buildFindUserByGroupSpecification(
+      @NonNull FindRequest findRequest) {
+    val baseSpec =
+        where(UserSpecification.inGroup(findRequest.getId()))
+            .and(UserSpecification.filterBy(findRequest.getFilters()));
+    return findRequest
+        .getQuery()
         .map(q -> baseSpec.and(UserSpecification.containsText(q)))
         .orElse(baseSpec);
   }
 
-  public static Specification<User> buildFindUserByApplicationSpecification(@NonNull FindRequest findRequest){
-    val baseSpec = where(UserSpecification.ofApplication(findRequest.getId()))
-        .and(UserSpecification.filterBy(findRequest.getFilters()));
-    return findRequest.getQuery()
+  public static Specification<User> buildFindUserByApplicationSpecification(
+      @NonNull FindRequest findRequest) {
+    val baseSpec =
+        where(UserSpecification.ofApplication(findRequest.getId()))
+            .and(UserSpecification.filterBy(findRequest.getFilters()));
+    return findRequest
+        .getQuery()
         .map(q -> baseSpec.and(UserSpecification.containsText(q)))
         .orElse(baseSpec);
   }
@@ -299,11 +302,13 @@ public class UserService extends AbstractNamedService<User, UUID> {
     Collection<UserPermission> userPermissions = isNull(up) ? ImmutableList.of() : up;
 
     val gp = user.getGroups();
-    Collection<GroupPermission> groupPermissions = isNull(gp)
-        ? ImmutableList.of() : gp.stream()
-        .map(Group::getPermissions)
-        .flatMap(Collection::stream)
-        .collect( toImmutableSet());
+    Collection<GroupPermission> groupPermissions =
+        isNull(gp)
+            ? ImmutableList.of()
+            : gp.stream()
+                .map(Group::getPermissions)
+                .flatMap(Collection::stream)
+                .collect(toImmutableSet());
     return resolveFinalPermissions(userPermissions, groupPermissions);
   }
 
@@ -424,18 +429,19 @@ public class UserService extends AbstractNamedService<User, UUID> {
         !userRepository.existsByEmailIgnoreCase(email), "A user with same email already exists");
   }
 
-  private static Specification<User> fetchSpecification(UUID id, boolean fetchUserPermissions, boolean fetchGroups, boolean fetchApplications){
+  private static Specification<User> fetchSpecification(
+      UUID id, boolean fetchUserPermissions, boolean fetchGroups, boolean fetchApplications) {
     return (fromGroup, query, builder) -> {
-      if (fetchApplications){
+      if (fetchApplications) {
         fromGroup.fetch(APPLICATIONS, LEFT);
       }
-      if (fetchGroups){
+      if (fetchGroups) {
         fromGroup.fetch(GROUPS, LEFT);
       }
-      if(fetchUserPermissions){
+      if (fetchUserPermissions) {
         fromGroup.fetch(USERPERMISSIONS, LEFT);
       }
-      return builder.equal(fromGroup.get(ID),id );
+      return builder.equal(fromGroup.get(ID), id);
     };
   }
 
@@ -476,5 +482,4 @@ public class UserService extends AbstractNamedService<User, UUID> {
   public boolean isAdmin(User user) {
     return user.getType() == ADMIN;
   }
-
 }

@@ -1,7 +1,6 @@
 package bio.overture.ego.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Builder;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -21,11 +20,9 @@ import java.util.function.Function;
 
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Joiners.AMPERSAND;
-import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.Joiners.PATH;
-import static bio.overture.ego.utils.WebResource.QueryParam.createQueryParam;
+import static bio.overture.ego.utils.QueryParam.createQueryParam;
 import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
-import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
@@ -41,7 +38,8 @@ public class WebResource<T> {
 
   private static final ObjectMapper REGULAR_MAPPER = new ObjectMapper();
   private static final ObjectMapper PRETTY_MAPPER = new ObjectMapper();
-  static{
+
+  static {
     PRETTY_MAPPER.enable(INDENT_OUTPUT);
   }
 
@@ -71,15 +69,15 @@ public class WebResource<T> {
     return this;
   }
 
-  public WebResource<T> logging(){
+  public WebResource<T> logging() {
     return configLogging(true, false);
   }
 
-  public WebResource<T> prettyLogging(){
+  public WebResource<T> prettyLogging() {
     return configLogging(true, true);
   }
 
-  public WebResource<T> queryParam(String key, Object ... values){
+  public WebResource<T> queryParam(String key, Object... values) {
     queryParams.add(createQueryParam(key, values));
     return this;
   }
@@ -116,30 +114,27 @@ public class WebResource<T> {
     return new ResponseOption<>(post());
   }
 
-  private WebResource<T> configLogging(boolean enable, boolean pretty){
+  private WebResource<T> configLogging(boolean enable, boolean pretty) {
     this.enableLogging = enable;
     this.pretty = pretty;
     return this;
   }
 
-  private Optional<String> getQuery(){
-    val queryStrings = queryParams.stream()
-        .map(QueryParam::toString)
-        .collect(toImmutableSet());
-    return queryStrings.isEmpty() ? Optional.empty() :  Optional.of(AMPERSAND.join(queryStrings));
+  private Optional<String> getQuery() {
+    val queryStrings = queryParams.stream().map(QueryParam::toString).collect(toImmutableSet());
+    return queryStrings.isEmpty() ? Optional.empty() : Optional.of(AMPERSAND.join(queryStrings));
   }
 
   private String getUrl() {
-    return PATH.join(this.serverUrl, this.endpoint)+getQuery()
-        .map(x -> "?"+x)
-        .orElse("");
+    return PATH.join(this.serverUrl, this.endpoint) + getQuery().map(x -> "?" + x).orElse("");
   }
 
   @SneakyThrows
   private ResponseEntity<T> doRequest(Object body, HttpMethod httpMethod) {
     logRequest(enableLogging, pretty, httpMethod, getUrl(), body);
-    val response = restTemplate.exchange(
-        getUrl(), httpMethod, new HttpEntity<>(body, this.headers), this.responseType);
+    val response =
+        restTemplate.exchange(
+            getUrl(), httpMethod, new HttpEntity<>(body, this.headers), this.responseType);
     logResponse(enableLogging, pretty, response);
     return response;
   }
@@ -150,29 +145,33 @@ public class WebResource<T> {
   }
 
   @SneakyThrows
-  private static void logRequest(boolean enable, boolean pretty, HttpMethod httpMethod, String url,  Object body){
-    if (enable){
-      if (isNull(body)){
+  private static void logRequest(
+      boolean enable, boolean pretty, HttpMethod httpMethod, String url, Object body) {
+    if (enable) {
+      if (isNull(body)) {
         log.info("[REQUEST] {} {}", httpMethod, url);
       } else {
-        if (pretty){
-          log.info("[REQUEST] {} {} < \n{}", httpMethod, url, PRETTY_MAPPER.writeValueAsString(body));
+        if (pretty) {
+          log.info(
+              "[REQUEST] {} {} < \n{}", httpMethod, url, PRETTY_MAPPER.writeValueAsString(body));
         } else {
-          log.info("[REQUEST] {} {} < {}", httpMethod, url, REGULAR_MAPPER.writeValueAsString(body));
+          log.info(
+              "[REQUEST] {} {} < {}", httpMethod, url, REGULAR_MAPPER.writeValueAsString(body));
         }
       }
     }
   }
 
   @SneakyThrows
-  private static <T> void logResponse(boolean enable, boolean pretty, ResponseEntity<T> response){
-    if (enable){
-      val output = CleanResponse.builder()
-          .body(response.hasBody() ? response.getBody() : null)
-          .statusCodeName(response.getStatusCode().name())
-          .statusCodeValue(response.getStatusCodeValue())
-          .build();
-      if (pretty){
+  private static <T> void logResponse(boolean enable, boolean pretty, ResponseEntity<T> response) {
+    if (enable) {
+      val output =
+          CleanResponse.builder()
+              .body(response.hasBody() ? response.getBody() : null)
+              .statusCodeName(response.getStatusCode().name())
+              .statusCodeValue(response.getStatusCodeValue())
+              .build();
+      if (pretty) {
         log.info("[RESPONSE] > \n{}", PRETTY_MAPPER.writeValueAsString(output));
       } else {
         log.info("[RESPONSE] > {}", REGULAR_MAPPER.writeValueAsString(output));
@@ -181,68 +180,41 @@ public class WebResource<T> {
   }
 
   @Value
-  @Builder
-  public static class QueryParam{
-    @NonNull private final String key;
-    @NonNull private final Object value;
-
-    public static QueryParam createQueryParam(String key, Object ... values) {
-      return new QueryParam(key, COMMA.join(values));
-    }
-
-    @Override
-    public String toString() {
-      return format("%s=%s",key,value);
-    }
-  }
-
-  @Value
-  public static class ResponseOption<T>{
+  public static class ResponseOption<T> {
     @NonNull private final ResponseEntity<T> response;
 
-    public ResponseOption<T> assertStatusCode(HttpStatus code){
+    public ResponseOption<T> assertStatusCode(HttpStatus code) {
       assertThat(response.getStatusCode()).isEqualTo(code);
       return this;
     }
 
-    public ResponseOption<T> assertOk(){
+    public ResponseOption<T> assertOk() {
       assertStatusCode(OK);
       return this;
     }
 
-    public ResponseOption<T> assertNotFound(){
+    public ResponseOption<T> assertNotFound() {
       assertStatusCode(NOT_FOUND);
       return this;
     }
 
-    public ResponseOption<T> assertConflict(){
+    public ResponseOption<T> assertConflict() {
       assertStatusCode(CONFLICT);
       return this;
     }
 
-    public ResponseOption<T> assertBadRequest(){
+    public ResponseOption<T> assertBadRequest() {
       assertStatusCode(BAD_REQUEST);
       return this;
     }
 
-    public ResponseOption<T> assertHasBody(){
+    public ResponseOption<T> assertHasBody() {
       assertThat(response.hasBody()).isTrue();
       return this;
     }
 
-    public <R> R map(Function<ResponseEntity<T>, R> transformingFunction){
+    public <R> R map(Function<ResponseEntity<T>, R> transformingFunction) {
       return transformingFunction.apply(getResponse());
     }
-
   }
-
-  @Value
-  @Builder
-  private static class CleanResponse{
-    @NonNull private final String statusCodeName;
-    private final int statusCodeValue;
-    private final Object body;
-  }
-
-
 }

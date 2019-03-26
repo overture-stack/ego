@@ -62,14 +62,15 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   private final GroupRepository groupRepository;
 
   @Autowired
-  public GroupService(@NonNull GroupRepository groupRepository ) {
+  public GroupService(@NonNull GroupRepository groupRepository) {
     super(Group.class, groupRepository);
     this.groupRepository = groupRepository;
   }
 
   @Override
   public Group getWithRelationships(UUID id) {
-    val result =(Optional<Group>)getRepository().findOne(fetchSpecification(id, true, true, true));
+    val result =
+        (Optional<Group>) getRepository().findOne(fetchSpecification(id, true, true, true));
     checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
     return result.get();
   }
@@ -101,16 +102,18 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   public Page<Group> findUserGroups(
       @NonNull UUID userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return groupRepository.findAll(
-        where(GroupSpecification.containsUser(userId))
-            .and(GroupSpecification.filterBy(filters)),
+        where(GroupSpecification.containsUser(userId)).and(GroupSpecification.filterBy(filters)),
         pageable);
   }
 
-  public static Specification<Group> buildFindGroupsByUserSpecification(@NonNull FindRequest findRequest){
-    val baseSpec = where(GroupSpecification.containsUser(findRequest.getId()))
-        .and(GroupSpecification.filterBy(findRequest.getFilters()));
-    return findRequest.getQuery()
-        .map(q  -> baseSpec.and(GroupSpecification.containsText(q)))
+  public static Specification<Group> buildFindGroupsByUserSpecification(
+      @NonNull FindRequest findRequest) {
+    val baseSpec =
+        where(GroupSpecification.containsUser(findRequest.getId()))
+            .and(GroupSpecification.filterBy(findRequest.getFilters()));
+    return findRequest
+        .getQuery()
+        .map(q -> baseSpec.and(GroupSpecification.containsText(q)))
         .orElse(baseSpec);
   }
 
@@ -134,10 +137,13 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         pageable);
   }
 
-  public static Specification<Group> buildFindGroupsByApplicationSpecification(@NonNull FindRequest applicationFindRequest){
-    val baseSpec = where(GroupSpecification.containsApplication(applicationFindRequest.getId()))
-        .and(GroupSpecification.filterBy(applicationFindRequest.getFilters()));
-    return applicationFindRequest.getQuery()
+  public static Specification<Group> buildFindGroupsByApplicationSpecification(
+      @NonNull FindRequest applicationFindRequest) {
+    val baseSpec =
+        where(GroupSpecification.containsApplication(applicationFindRequest.getId()))
+            .and(GroupSpecification.filterBy(applicationFindRequest.getFilters()));
+    return applicationFindRequest
+        .getQuery()
         .map(q -> baseSpec.and(GroupSpecification.containsText(q)))
         .orElse(baseSpec);
   }
@@ -166,18 +172,19 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         !groupRepository.existsByNameIgnoreCase(name), "A group with same name already exists");
   }
 
-  private static Specification<Group> fetchSpecification(UUID id, boolean fetchApplications, boolean fetchUsers, boolean fetchGroupPermissions){
+  private static Specification<Group> fetchSpecification(
+      UUID id, boolean fetchApplications, boolean fetchUsers, boolean fetchGroupPermissions) {
     return (fromGroup, query, builder) -> {
-      if (fetchApplications){
+      if (fetchApplications) {
         fromGroup.fetch(APPLICATIONS, LEFT);
       }
-      if (fetchUsers){
+      if (fetchUsers) {
         fromGroup.fetch(USERS, LEFT);
       }
-      if(fetchGroupPermissions){
+      if (fetchGroupPermissions) {
         fromGroup.fetch(PERMISSIONS, LEFT);
       }
-      return builder.equal(fromGroup.get(ID),id );
+      return builder.equal(fromGroup.get(ID), id);
     };
   }
 

@@ -16,6 +16,22 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.dto.Scope.effectiveScopes;
+import static bio.overture.ego.model.dto.Scope.explicitScopes;
+import static bio.overture.ego.model.enums.ApplicationType.ADMIN;
+import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.SCOPES;
+import static bio.overture.ego.model.enums.JavaFields.USERS;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.service.UserService.extractScopes;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
+import static java.lang.String.format;
+import static java.util.UUID.fromString;
+import static javax.persistence.criteria.JoinType.LEFT;
+import static org.springframework.util.DigestUtils.md5Digest;
+
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
@@ -42,6 +58,17 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.security.InvalidKeyException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -54,35 +81,6 @@ import org.springframework.security.oauth2.common.exceptions.InvalidRequestExcep
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
-
-import java.security.InvalidKeyException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static bio.overture.ego.model.dto.Scope.effectiveScopes;
-import static bio.overture.ego.model.dto.Scope.explicitScopes;
-import static bio.overture.ego.model.enums.ApplicationType.ADMIN;
-import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
-import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.SCOPES;
-import static bio.overture.ego.model.enums.JavaFields.TOKEN;
-import static bio.overture.ego.model.enums.JavaFields.USERS;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.service.UserService.extractScopes;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
-import static java.lang.String.format;
-import static java.util.UUID.fromString;
-import static javax.persistence.criteria.JoinType.LEFT;
-import static org.springframework.util.DigestUtils.md5Digest;
 
 @Slf4j
 @Service
@@ -103,12 +101,9 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   private TokenStoreService tokenStoreService;
   private PolicyService policyService;
 
-  /**
-   * Configuration
-   */
+  /** Configuration */
   @Value("${jwt.duration:86400000}")
   private int DURATION;
-
 
   public TokenService(
       @NonNull TokenSigner tokenSigner,
@@ -129,7 +124,8 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
 
   @Override
   public Token getWithRelationships(@NonNull UUID id) {
-    val result =(Optional<Token>)getRepository().findOne(fetchSpecification(id, true, true, true));
+    val result =
+        (Optional<Token>) getRepository().findOne(fetchSpecification(id, true, true, true));
     checkNotFound(result.isPresent(), "The tokenId '%s' does not exist", id);
     return result.get();
   }
@@ -358,8 +354,9 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     val t =
         findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found"));
 
-    if(t.isRevoked()){
-        throw new InvalidTokenException(format("Token \"%s\" has expired or is no longer valid. ", token));
+    if (t.isRevoked()) {
+      throw new InvalidTokenException(
+          format("Token \"%s\" has expired or is no longer valid. ", token));
     }
 
     val clientId = application.getClientId();
@@ -381,7 +378,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     return new TokenScopeResponse(owner.getName(), clientId, t.getSecondsUntilExpiry(), names);
   }
 
-  public UserScopesResponse userScopes(@NonNull String userName){
+  public UserScopesResponse userScopes(@NonNull String userName) {
     val user = userService.getByName(userName);
     val scopes = extractScopes(user);
     val names = mapToSet(scopes, Scope::toString);
@@ -465,7 +462,8 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       return new ArrayList<>();
     }
 
-    val unrevokedTokens = tokens.stream().filter((token -> !token.isRevoked())).collect(Collectors.toSet());
+    val unrevokedTokens =
+        tokens.stream().filter((token -> !token.isRevoked())).collect(Collectors.toSet());
     List<TokenResponse> response = new ArrayList<>();
     unrevokedTokens.forEach(
         token -> {
@@ -479,26 +477,26 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     val scopes = mapToSet(token.scopes(), Scope::toString);
     responses.add(
         TokenResponse.builder()
-        .accessToken(token.getName())
-        .scope(scopes)
-        .exp(token.getSecondsUntilExpiry())
-        .description(token.getDescription())
-        .build());
+            .accessToken(token.getName())
+            .scope(scopes)
+            .exp(token.getSecondsUntilExpiry())
+            .description(token.getDescription())
+            .build());
   }
 
-  public static Specification<Token> fetchSpecification(UUID id,
-      boolean fetchUser, boolean fetchApplications, boolean fetchTokenScopes){
+  public static Specification<Token> fetchSpecification(
+      UUID id, boolean fetchUser, boolean fetchApplications, boolean fetchTokenScopes) {
     return (fromToken, query, builder) -> {
-      if (fetchUser){
+      if (fetchUser) {
         fromToken.fetch(USERS, LEFT);
       }
-      if(fetchApplications){
+      if (fetchApplications) {
         fromToken.fetch(APPLICATIONS, LEFT);
       }
-      if(fetchTokenScopes){
+      if (fetchTokenScopes) {
         fromToken.fetch(SCOPES, LEFT);
       }
-      return builder.equal(fromToken.get(ID),id );
+      return builder.equal(fromToken.get(ID), id);
     };
   }
 }

@@ -2,11 +2,10 @@ package bio.overture.ego.model.dto;
 
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
+import java.util.Set;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
-
-import java.util.Set;
 
 @Value
 @Builder

@@ -1,5 +1,19 @@
 package bio.overture.ego.utils;
 
+import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.StatusType.PENDING;
+import static bio.overture.ego.model.enums.UserType.ADMIN;
+import static bio.overture.ego.utils.CollectionUtils.listOf;
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
+import static bio.overture.ego.utils.Splitters.COMMA_SPLITTER;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.lang.Integer.MAX_VALUE;
+import static java.lang.Math.abs;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.GroupRequest;
@@ -27,13 +41,7 @@ import bio.overture.ego.service.TokenStoreService;
 import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
 import com.google.common.collect.ImmutableSet;
-import lombok.NonNull;
-import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -42,21 +50,10 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
-import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static bio.overture.ego.model.enums.StatusType.PENDING;
-import static bio.overture.ego.model.enums.UserType.ADMIN;
-import static bio.overture.ego.utils.CollectionUtils.listOf;
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
-import static bio.overture.ego.utils.Splitters.COMMA_SPLITTER;
-import static com.google.common.collect.Lists.newArrayList;
-import static java.lang.Integer.MAX_VALUE;
-import static java.lang.Math.abs;
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
+import lombok.NonNull;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Component
 /**
@@ -67,7 +64,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class EntityGenerator {
 
-  private static final String DICTIONARY = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-abcdefghijklmnopqrstuvwxyz";
+  private static final String DICTIONARY =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-abcdefghijklmnopqrstuvwxyz";
 
   @Autowired private TokenService tokenService;
 
@@ -175,107 +173,103 @@ public class EntityGenerator {
   }
 
   private GroupRequest createGroupRequest(String name) {
-    return GroupRequest.builder()
-        .name(name)
-        .status(PENDING)
-        .description("")
-        .build();
+    return GroupRequest.builder().name(name).status(PENDING).description("").build();
   }
 
-  public static <E extends Enum<E>> E randomEnum(Class<E> e){
+  public static <E extends Enum<E>> E randomEnum(Class<E> e) {
     val enums = e.getEnumConstants();
     val r = new Random();
     val randomPos = abs(r.nextInt()) % enums.length;
     return enums[randomPos];
   }
 
-  public static StatusType randomStatusType(){
+  public static StatusType randomStatusType() {
     return randomEnum(StatusType.class);
   }
 
-
-  private static String internalRandomString(String dictionary, int length){
+  private static String internalRandomString(String dictionary, int length) {
     val r = new Random();
     val sb = new StringBuilder();
     r.ints(length, 0, dictionary.length()).map(dictionary::charAt).forEach(sb::append);
     return sb.toString();
   }
 
-  public static String randomStringWithSpaces(int length){
-    val newDictionary = DICTIONARY+" ";
+  public static String randomStringWithSpaces(int length) {
+    val newDictionary = DICTIONARY + " ";
     return internalRandomString(newDictionary, length);
   }
 
-  public static String randomStringNoSpaces(int length){
+  public static String randomStringNoSpaces(int length) {
     return internalRandomString(DICTIONARY, length);
   }
 
-  public Group generateRandomGroup(){
-    val request = GroupRequest.builder()
-        .name(generateNonExistentName(groupService))
-        .status(randomStatusType())
-        .description(randomStringWithSpaces(15))
-        .build();
+  public Group generateRandomGroup() {
+    val request =
+        GroupRequest.builder()
+            .name(generateNonExistentName(groupService))
+            .status(randomStatusType())
+            .description(randomStringWithSpaces(15))
+            .build();
     return groupService.create(request);
   }
 
-  public static ApplicationType randomApplicationType(){
+  public static ApplicationType randomApplicationType() {
     return randomEnum(ApplicationType.class);
   }
 
-  public static UserType randomUserType(){
+  public static UserType randomUserType() {
     return randomEnum(UserType.class);
   }
 
-  public static LanguageType randomLanguageType(){
+  public static LanguageType randomLanguageType() {
     return randomEnum(LanguageType.class);
   }
 
-  public static AccessLevel randomAccessLevel(){
+  public static AccessLevel randomAccessLevel() {
     return randomEnum(AccessLevel.class);
   }
 
-  public Application generateRandomApplication(){
-    val request = CreateApplicationRequest.builder()
-        .clientId(randomStringNoSpaces(10))
-        .clientSecret(randomStringNoSpaces(10))
-        .name(generateNonExistentName(applicationService))
-        .type(randomApplicationType())
-        .status(randomStatusType())
-        .redirectUri("https://ego.com/"+randomStringNoSpaces(7))
-        .description(randomStringWithSpaces(15))
-        .build();
+  public Application generateRandomApplication() {
+    val request =
+        CreateApplicationRequest.builder()
+            .clientId(randomStringNoSpaces(10))
+            .clientSecret(randomStringNoSpaces(10))
+            .name(generateNonExistentName(applicationService))
+            .type(randomApplicationType())
+            .status(randomStatusType())
+            .redirectUri("https://ego.com/" + randomStringNoSpaces(7))
+            .description(randomStringWithSpaces(15))
+            .build();
     return applicationService.create(request);
   }
 
-  private String randomUserEmail(){
+  private String randomUserEmail() {
     String email;
     Optional<User> result;
 
     do {
-      email = randomStringNoSpaces(5)+"@xyz.com";
+      email = randomStringNoSpaces(5) + "@xyz.com";
       result = userService.findByName(email);
     } while (result.isPresent());
 
     return email;
   }
 
-  public User generateRandomUser(){
-    val request = CreateUserRequest.builder()
-        .email(randomUserEmail())
-        .status(randomStatusType())
-        .type(randomUserType())
-        .preferredLanguage(randomLanguageType())
-        .firstName(randomStringNoSpaces(5))
-        .lastName(randomStringNoSpaces(6))
-        .build();
+  public User generateRandomUser() {
+    val request =
+        CreateUserRequest.builder()
+            .email(randomUserEmail())
+            .status(randomStatusType())
+            .type(randomUserType())
+            .preferredLanguage(randomLanguageType())
+            .firstName(randomStringNoSpaces(5))
+            .lastName(randomStringNoSpaces(6))
+            .build();
     return userService.create(request);
   }
 
-  public Policy generateRandomPolicy(){
-    val request = PolicyRequest.builder()
-        .name(generateNonExistentName(policyService))
-        .build();
+  public Policy generateRandomPolicy() {
+    val request = PolicyRequest.builder().name(generateNonExistentName(policyService)).build();
     return policyService.create(request);
   }
 
@@ -293,7 +287,6 @@ public class EntityGenerator {
   public void setupTestGroups() {
     setupGroups("Group One", "Group Two", "Group Three");
   }
-
 
   public Policy setupSinglePolicy(String name) {
     return policyService
@@ -314,7 +307,6 @@ public class EntityGenerator {
               return policyService.create(createRequest);
             });
   }
-
 
   public Policy setupPolicy(@NonNull String csv) {
     val args = newArrayList(COMMA_SPLITTER.split(csv));
@@ -407,31 +399,30 @@ public class EntityGenerator {
     return mapToList(listOf(strings), ScopeName::new);
   }
 
-  public static <E extends Enum<E>> E randomEnumExcluding(Class<E> enumClass, E enumToExclude){
-    val list = stream(enumClass.getEnumConstants())
-        .filter(x -> x != enumToExclude)
-        .collect(toList());
+  public static <E extends Enum<E>> E randomEnumExcluding(Class<E> enumClass, E enumToExclude) {
+    val list =
+        stream(enumClass.getEnumConstants()).filter(x -> x != enumToExclude).collect(toList());
     return randomElementOf(list);
   }
 
-  public static <T> T randomNull(Supplier<T> callback){
+  public static <T> T randomNull(Supplier<T> callback) {
     return randomBoundedInt(2) == 0 ? null : callback.get();
   }
 
-  public static int randomBoundedInt(int maxExclusive){
+  public static int randomBoundedInt(int maxExclusive) {
     return abs(new Random().nextInt()) % maxExclusive;
   }
 
-  public static int randomBoundedInt(int minInclusive, int maxExclusive){
+  public static int randomBoundedInt(int minInclusive, int maxExclusive) {
     assertThat(MAX_VALUE - maxExclusive).isGreaterThan(minInclusive);
     return minInclusive + randomBoundedInt(maxExclusive);
   }
 
-  public static <T> T randomElementOf(List<T> list){
+  public static <T> T randomElementOf(List<T> list) {
     return list.get(randomBoundedInt(list.size()));
   }
 
-  public static <T> T randomElementOf(T ... objects){
+  public static <T> T randomElementOf(T... objects) {
     return objects[randomBoundedInt(objects.length)];
   }
 

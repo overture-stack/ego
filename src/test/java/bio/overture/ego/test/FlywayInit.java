@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import lombok.extern.slf4j.Slf4j;
 import org.flywaydb.core.Flyway;
-import org.junit.Test;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
 @Slf4j
@@ -18,5 +17,4 @@ public class FlywayInit {
     flyway.setDataSource(new SingleConnectionDataSource(connection, true));
     flyway.migrate();
   }
-
 }

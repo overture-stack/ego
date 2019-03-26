@@ -1,10 +1,22 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
+import static bio.overture.ego.model.enums.JavaFields.USERPERMISSIONS;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static javax.persistence.criteria.JoinType.LEFT;
+import static org.mapstruct.factory.Mappers.getMapper;
+
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.PolicyRepository;
 import bio.overture.ego.repository.queryspecification.PolicySpecification;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -20,32 +32,15 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
-import static bio.overture.ego.model.enums.JavaFields.USERPERMISSIONS;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static javax.persistence.criteria.JoinType.LEFT;
-import static org.mapstruct.factory.Mappers.getMapper;
-
 @Slf4j
 @Service
 @Transactional
 public class PolicyService extends AbstractNamedService<Policy, UUID> {
 
-  /**
-   * Constants
-   */
+  /** Constants */
   private static final PolicyConverter POLICY_CONVERTER = getMapper(PolicyConverter.class);
 
-  /**
-   * Dependencies
-   */
+  /** Dependencies */
   private final PolicyRepository policyRepository;
 
   @Autowired
@@ -62,7 +57,7 @@ public class PolicyService extends AbstractNamedService<Policy, UUID> {
 
   @Override
   public Policy getWithRelationships(@NonNull UUID id) {
-    val result =(Optional<Policy>)getRepository().findOne(fetchSpecification(id, true, true));
+    val result = (Optional<Policy>) getRepository().findOne(fetchSpecification(id, true, true));
     checkNotFound(result.isPresent(), "The policyId '%s' does not exist", id);
     return result.get();
   }
@@ -91,16 +86,16 @@ public class PolicyService extends AbstractNamedService<Policy, UUID> {
         !policyRepository.existsByNameIgnoreCase(name), "A policy with same name already exists");
   }
 
-  private static Specification<Policy> fetchSpecification(UUID id,
-      boolean fetchGroupPermissions, boolean fetchUserPermissions){
+  private static Specification<Policy> fetchSpecification(
+      UUID id, boolean fetchGroupPermissions, boolean fetchUserPermissions) {
     return (fromPolicy, query, builder) -> {
-      if (fetchGroupPermissions){
+      if (fetchGroupPermissions) {
         fromPolicy.fetch(PERMISSIONS, LEFT);
       }
-      if(fetchUserPermissions){
+      if (fetchUserPermissions) {
         fromPolicy.fetch(USERPERMISSIONS, LEFT);
       }
-      return builder.equal(fromPolicy.get(ID),id );
+      return builder.equal(fromPolicy.get(ID), id);
     };
   }
 

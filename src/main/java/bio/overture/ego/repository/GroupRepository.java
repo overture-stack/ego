@@ -18,22 +18,12 @@ package bio.overture.ego.repository;
 
 import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
 
-import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
-import bio.overture.ego.model.entity.GroupPermission;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.JavaFields;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
-
-import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
 
 public interface GroupRepository extends NamedRepository<Group, UUID> {
 
@@ -51,5 +41,4 @@ public interface GroupRepository extends NamedRepository<Group, UUID> {
   default Optional<Group> findByName(String name) {
     return getGroupByNameIgnoreCase(name);
   }
-
 }

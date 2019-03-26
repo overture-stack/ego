@@ -1,18 +1,17 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static java.lang.String.format;
-
 import bio.overture.ego.model.exceptions.NotFoundException;
+import lombok.NonNull;
+import lombok.val;
+
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 
-import bio.overture.ego.repository.BaseRepository;
-import lombok.NonNull;
-import lombok.val;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static java.lang.String.format;
 
 public interface BaseService<T, ID> {
 

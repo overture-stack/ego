@@ -23,6 +23,8 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,9 +41,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
-import java.util.List;
-import java.util.UUID;
-
 @Slf4j
 @RestController
 @RequestMapping("/policies")
@@ -49,6 +48,7 @@ public class PolicyController {
 
   /** Dependencies */
   private final PolicyService policyService;
+
   private final UserPermissionService userPermissionService;
   private final GroupPermissionService groupPermissionService;
 
@@ -76,39 +76,38 @@ public class PolicyController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiImplicitParams({
-      @ApiImplicitParam(
-          name = "limit",
-          required = false,
-          dataType = "string",
-          paramType = "query",
-          value = "Number of results to retrieve"),
-      @ApiImplicitParam(
-          name = "offset",
-          required = false,
-          dataType = "string",
-          paramType = "query",
-          value = "Index of first result to retrieve"),
-      @ApiImplicitParam(
-          name = Fields.ID,
-          required = false,
-          dataType = "string",
-          paramType = "query",
-          value = "Search for ids containing this text"),
-      @ApiImplicitParam(
-          name = "sort",
-          required = false,
-          dataType = "string",
-          paramType = "query",
-          value = "Field to sort on"),
-      @ApiImplicitParam(
-          name = "sortOrder",
-          required = false,
-          dataType = "string",
-          paramType = "query",
-          value = "Sorting order: ASC|DESC. Default order: DESC"),
+    @ApiImplicitParam(
+        name = "limit",
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Number of results to retrieve"),
+    @ApiImplicitParam(
+        name = "offset",
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Index of first result to retrieve"),
+    @ApiImplicitParam(
+        name = Fields.ID,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Search for ids containing this text"),
+    @ApiImplicitParam(
+        name = "sort",
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Field to sort on"),
+    @ApiImplicitParam(
+        name = "sortOrder",
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Sorting order: ASC|DESC. Default order: DESC"),
   })
-  @ApiResponses(
-      value = {@ApiResponse(code = 200, message = "Page Policies")})
+  @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Policies")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Policy> getPolicies(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,

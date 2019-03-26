@@ -16,12 +16,12 @@
 
 package bio.overture.ego.model.enums;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.Streams.stream;
 import static java.lang.String.format;
+
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public enum UserType {
@@ -44,5 +44,4 @@ public enum UserType {
   public String toString() {
     return this.name();
   }
-
 }

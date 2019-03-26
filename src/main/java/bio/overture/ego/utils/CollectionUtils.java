@@ -5,7 +5,6 @@ import com.google.common.collect.Sets;
 import lombok.NonNull;
 import lombok.val;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -30,16 +29,17 @@ public class CollectionUtils {
     return collection.stream().map(mapper).collect(toList());
   }
 
-  public static <T> Set<T> findDuplicates(Collection<T> collection){
+  public static <T> Set<T> findDuplicates(Collection<T> collection) {
     val exitingSet = Sets.<T>newHashSet();
     val duplicateSet = Sets.<T>newHashSet();
-    collection.forEach( x -> {
-      if (exitingSet.contains(x)){
-        duplicateSet.add(x);
-      } else {
-        exitingSet.add(x);
-      }
-    });
+    collection.forEach(
+        x -> {
+          if (exitingSet.contains(x)) {
+            duplicateSet.add(x);
+          } else {
+            exitingSet.add(x);
+          }
+        });
     return duplicateSet;
   }
 
@@ -47,7 +47,7 @@ public class CollectionUtils {
     return stream(strings).collect(toSet());
   }
 
-  public static List<String> listOf(String ... strings) {
+  public static List<String> listOf(String... strings) {
     return asList(strings);
   }
 
@@ -63,15 +63,11 @@ public class CollectionUtils {
     return range(0, numberOfCalls).boxed().map(x -> callback.get()).collect(toImmutableList());
   }
 
-  public static <T> Set<T> concatToSet(@NonNull Collection<T> ... collections){
-    return stream(collections)
-        .flatMap(Collection::stream)
-        .collect(toImmutableSet());
+  public static <T> Set<T> concatToSet(@NonNull Collection<T>... collections) {
+    return stream(collections).flatMap(Collection::stream).collect(toImmutableSet());
   }
 
-  public static <T> List<T> concatToList(@NonNull Collection<T> ... collections){
-    return stream(collections)
-        .flatMap(Collection::stream)
-        .collect(toImmutableList());
+  public static <T> List<T> concatToList(@NonNull Collection<T>... collections) {
+    return stream(collections).flatMap(Collection::stream).collect(toImmutableList());
   }
 }

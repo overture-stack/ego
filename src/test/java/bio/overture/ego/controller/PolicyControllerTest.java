@@ -18,7 +18,7 @@
 package bio.overture.ego.controller;
 
 import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -51,6 +51,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
+
   @Autowired private PolicyService policyService;
 
   @Value("${logging.test.controller.enable}")
@@ -75,7 +76,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
   @Test
   @SneakyThrows
   public void addpolicy_Success() {
-    val policy = Policy.builder().name("AddPolicy").build();
+    val policy = PolicyRequest.builder().name("AddPolicy").build();
 
     val response = initStringRequest().endpoint("/policies").body(policy).post();
 
@@ -91,8 +92,8 @@ public class PolicyControllerTest extends AbstractControllerTest {
   @Test
   @SneakyThrows
   public void addDuplicatePolicy_Conflict() {
-    val policy1 = Policy.builder().name("PolicyUnique").build();
-    val policy2 = Policy.builder().name("PolicyUnique").build();
+    val policy1 = PolicyRequest.builder().name("PolicyUnique").build();
+    val policy2 = PolicyRequest.builder().name("PolicyUnique").build();
 
     val response1 = initStringRequest().endpoint("/policies").body(policy1).post();
 

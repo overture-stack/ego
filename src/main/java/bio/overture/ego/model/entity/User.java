@@ -185,13 +185,17 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
 
   @JsonIgnore
   @Builder.Default
-  @OneToMany(
-      mappedBy = JavaFields.OWNER,
-      fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = JavaFields.OWNER, fetch = FetchType.LAZY)
   private Set<Token> tokens = newHashSet();
 
   @JsonIgnore
-  @ManyToMany(mappedBy = JavaFields.USERS)
+  @ManyToMany(
+      fetch = FetchType.LAZY,
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+  @JoinTable(
+      name = Tables.GROUP_USER,
+      joinColumns = {@JoinColumn(name = SqlFields.GROUPID_JOIN)},
+      inverseJoinColumns = {@JoinColumn(name = SqlFields.USERID_JOIN)})
   private Set<Group> groups = newHashSet();
 
   @JsonIgnore

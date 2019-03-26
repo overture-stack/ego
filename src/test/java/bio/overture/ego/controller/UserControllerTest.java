@@ -18,7 +18,8 @@
 package bio.overture.ego.controller;
 
 import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.dto.CreateUserRequest;
+import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
@@ -90,7 +91,7 @@ public class UserControllerTest extends AbstractControllerTest {
   public void addUser() {
 
     val user =
-        User.builder()
+        CreateUserRequest.builder()
             .firstName("foo")
             .lastName("bar")
             .email("foobar@foo.bar")
@@ -108,7 +109,7 @@ public class UserControllerTest extends AbstractControllerTest {
   @Test
   public void addUniqueUser() {
     val user1 =
-        User.builder()
+        CreateUserRequest.builder()
             .firstName("unique")
             .lastName("unique")
             .email("unique@unique.com")
@@ -117,7 +118,7 @@ public class UserControllerTest extends AbstractControllerTest {
             .status(APPROVED)
             .build();
     val user2 =
-        User.builder()
+        CreateUserRequest.builder()
             .firstName("unique")
             .lastName("unique")
             .email("unique@unique.com")
@@ -209,7 +210,7 @@ public class UserControllerTest extends AbstractControllerTest {
   @Test
   public void updateUser() {
     val user = entityGenerator.setupUser("update test");
-    val update = User.builder().id(user.getId()).status(REJECTED).build();
+    val update = UpdateUserRequest.builder().status(REJECTED).build();
 
     val response = initStringRequest().endpoint("/users/%s", user.getId()).body(update).put();
 

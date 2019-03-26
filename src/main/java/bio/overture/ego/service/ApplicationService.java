@@ -16,14 +16,37 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.JavaFields.GROUPS;
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.TOKENS;
+import static bio.overture.ego.model.enums.JavaFields.USERS;
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
+import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
+import static bio.overture.ego.token.app.AppTokenClaims.SCOPES;
+import static bio.overture.ego.utils.CollectionUtils.setOf;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
+import static java.lang.String.format;
+import static javax.persistence.criteria.JoinType.LEFT;
+import static org.mapstruct.factory.Mappers.getMapper;
+import static org.springframework.data.jpa.domain.Specifications.where;
+
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
 import bio.overture.ego.service.association.FindRequest;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -45,42 +68,15 @@ import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static bio.overture.ego.model.enums.JavaFields.GROUPS;
-import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.TOKEN;
-import static bio.overture.ego.model.enums.JavaFields.TOKENS;
-import static bio.overture.ego.model.enums.JavaFields.USERS;
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
-import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
-import static bio.overture.ego.token.app.AppTokenClaims.SCOPES;
-import static bio.overture.ego.utils.CollectionUtils.setOf;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
-import static java.lang.String.format;
-import static javax.persistence.criteria.JoinType.LEFT;
-import static org.mapstruct.factory.Mappers.getMapper;
-import static org.springframework.data.jpa.domain.Specifications.where;
-
 @Service
 @Slf4j
 public class ApplicationService extends AbstractNamedService<Application, UUID>
     implements ClientDetailsService {
 
-  /**
-   * Constants
-   */
+  /** Constants */
   public static final ApplicationConverter APPLICATION_CONVERTER =
       getMapper(ApplicationConverter.class);
+
   public static final String APP_TOKEN_PREFIX = "Basic ";
 
   /*
@@ -113,8 +109,8 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
   @Override
   public Application getWithRelationships(@NonNull UUID id) {
-    val result = (Optional<Application>)getRepository()
-        .findOne(fetchSpecification(id, true, true, true));
+    val result =
+        (Optional<Application>) getRepository().findOne(fetchSpecification(id, true, true, true));
     checkNotFound(result.isPresent(), "The applicationId '%s' does not exist", id);
     return result.get();
   }
@@ -142,11 +138,13 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
             pageable);
   }
 
-
-  public static Specification<Application> buildFindApplicationByGroupSpecification(@NonNull FindRequest findRequest){
-    val baseSpec = where(ApplicationSpecification.inGroup(findRequest.getId()))
-        .and(ApplicationSpecification.filterBy(findRequest.getFilters()));
-    return findRequest.getQuery()
+  public static Specification<Application> buildFindApplicationByGroupSpecification(
+      @NonNull FindRequest findRequest) {
+    val baseSpec =
+        where(ApplicationSpecification.inGroup(findRequest.getId()))
+            .and(ApplicationSpecification.filterBy(findRequest.getFilters()));
+    return findRequest
+        .getQuery()
         .map(q -> baseSpec.and(ApplicationSpecification.containsText(q)))
         .orElse(baseSpec);
   }
@@ -257,18 +255,19 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     return token.replace(APP_TOKEN_PREFIX, "").trim();
   }
 
-  private static Specification<Application> fetchSpecification(UUID id, boolean fetchGroups, boolean fetchTokens, boolean fetchUsers){
+  private static Specification<Application> fetchSpecification(
+      UUID id, boolean fetchGroups, boolean fetchTokens, boolean fetchUsers) {
     return (fromApplication, query, builder) -> {
-      if (fetchGroups){
+      if (fetchGroups) {
         fromApplication.fetch(GROUPS, LEFT);
       }
-      if (fetchTokens){
+      if (fetchTokens) {
         fromApplication.fetch(TOKENS, LEFT);
       }
-      if(fetchUsers){
+      if (fetchUsers) {
         fromApplication.fetch(USERS, LEFT);
       }
-      return builder.equal(fromApplication.get(ID),id );
+      return builder.equal(fromApplication.get(ID), id);
     };
   }
 

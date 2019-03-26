@@ -1,39 +1,40 @@
 package bio.overture.ego.service.association.impl_old;
 
+import static org.springframework.data.jpa.domain.Specification.where;
+
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.service.association.FindRequest;
+import java.util.Collection;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.data.domain.Page;
-
-import java.util.Collection;
-import java.util.UUID;
-
-import static org.springframework.data.jpa.domain.Specification.where;
 
 public class GroupUserAssociationService extends AbstractManyToManyAssociationService<Group, User> {
 
   private final GroupService groupService;
 
   public GroupUserAssociationService(
-      @NonNull GroupService groupService,
-      @NonNull UserService userService) {
+      @NonNull GroupService groupService, @NonNull UserService userService) {
     super(Group.class, User.class, groupService.getRepository(), userService);
     this.groupService = groupService;
   }
 
   @Override
   public Page<Group> findParentsForChild(FindRequest findRequest) {
-    val baseSpec = where(GroupSpecification.containsUser(findRequest.getId()))
-        .and(GroupSpecification.filterBy(findRequest.getFilters()));
-    val spec = findRequest.getQuery()
-        .map(q -> baseSpec.and(GroupSpecification.containsText(q)))
-        .orElse(baseSpec);
-    return (Page<Group>)groupService.getRepository().findAll(spec, findRequest.getPageable());
+    val baseSpec =
+        where(GroupSpecification.containsUser(findRequest.getId()))
+            .and(GroupSpecification.filterBy(findRequest.getFilters()));
+    val spec =
+        findRequest
+            .getQuery()
+            .map(q -> baseSpec.and(GroupSpecification.containsText(q)))
+            .orElse(baseSpec);
+    return (Page<Group>) groupService.getRepository().findAll(spec, findRequest.getPageable());
   }
 
   @Override
@@ -57,5 +58,4 @@ public class GroupUserAssociationService extends AbstractManyToManyAssociationSe
   protected Group getParentWithChildren(@NonNull UUID id) {
     return groupService.getWithRelationships(id);
   }
-
 }

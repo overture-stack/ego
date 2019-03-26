@@ -16,9 +16,14 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.service.TokenService.fetchSpecification;
+
 import bio.overture.ego.model.dto.CreateTokenRequest;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.repository.TokenStoreRepository;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -27,20 +32,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-import java.util.UUID;
-
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.service.TokenService.fetchSpecification;
-
 @Slf4j
 @Service
 @Transactional
 public class TokenStoreService extends AbstractNamedService<Token, UUID> {
 
-  /**
-   * Dependencies
-   */
+  /** Dependencies */
   private final TokenStoreRepository tokenRepository;
 
   @Autowired
@@ -51,7 +48,8 @@ public class TokenStoreService extends AbstractNamedService<Token, UUID> {
 
   @Override
   public Token getWithRelationships(@NonNull UUID id) {
-    val result =(Optional<Token>)getRepository().findOne(fetchSpecification(id, true, true, true));
+    val result =
+        (Optional<Token>) getRepository().findOne(fetchSpecification(id, true, true, true));
     checkNotFound(result.isPresent(), "The tokenId '%s' does not exist", id);
     return result.get();
   }

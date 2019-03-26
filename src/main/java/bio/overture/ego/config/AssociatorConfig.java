@@ -4,15 +4,14 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.service.association.AssociationService;
-import bio.overture.ego.service.association.ManyToManyAssociationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
+import bio.overture.ego.service.association.AssociationService;
+import bio.overture.ego.service.association.ManyToManyAssociationService;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.UUID;
 
 @Configuration
 public class AssociatorConfig {
@@ -66,8 +65,9 @@ public class AssociatorConfig {
   */
 
   @Bean
-  public AssociationService<Group, Application, UUID> groupApplicationManyToManyAssociationService(){
-    return ManyToManyAssociationService.<Group,Application>builder()
+  public AssociationService<Group, Application, UUID>
+      groupApplicationManyToManyAssociationService() {
+    return ManyToManyAssociationService.<Group, Application>builder()
         .parentType(Group.class)
         .childType(Application.class)
         .parentRepository(groupService.getRepository())
@@ -75,13 +75,15 @@ public class AssociatorConfig {
         .childService(applicationService)
         .getChildrenFromParentFunction(Group::getApplications)
         .getParentsFromChildFunction(Application::getGroups)
-        .parentFindRequestSpecificationCallback(GroupService::buildFindGroupsByApplicationSpecification)
+        .parentFindRequestSpecificationCallback(
+            GroupService::buildFindGroupsByApplicationSpecification)
         .build();
   }
 
   @Bean
-  public AssociationService<Application, Group, UUID> applicationGroupManyToManyAssociationService(){
-    return ManyToManyAssociationService.<Application,Group>builder()
+  public AssociationService<Application, Group, UUID>
+      applicationGroupManyToManyAssociationService() {
+    return ManyToManyAssociationService.<Application, Group>builder()
         .parentType(Application.class)
         .childType(Group.class)
         .parentRepository(applicationService.getRepository())
@@ -89,13 +91,14 @@ public class AssociatorConfig {
         .childService(groupService)
         .getChildrenFromParentFunction(Application::getGroups)
         .getParentsFromChildFunction(Group::getApplications)
-        .parentFindRequestSpecificationCallback(ApplicationService::buildFindApplicationByGroupSpecification)
+        .parentFindRequestSpecificationCallback(
+            ApplicationService::buildFindApplicationByGroupSpecification)
         .build();
   }
 
   @Bean
-  public AssociationService<User, Group, UUID> userGroupManyToManyAssociationService(){
-    return ManyToManyAssociationService.<User,Group>builder()
+  public AssociationService<User, Group, UUID> userGroupManyToManyAssociationService() {
+    return ManyToManyAssociationService.<User, Group>builder()
         .parentType(User.class)
         .childType(Group.class)
         .parentRepository(userService.getRepository())
@@ -108,8 +111,8 @@ public class AssociatorConfig {
   }
 
   @Bean
-  public AssociationService<Group, User, UUID> groupUserManyToManyAssociationService(){
-    return ManyToManyAssociationService.<Group,User>builder()
+  public AssociationService<Group, User, UUID> groupUserManyToManyAssociationService() {
+    return ManyToManyAssociationService.<Group, User>builder()
         .parentType(Group.class)
         .childType(User.class)
         .parentRepository(groupService.getRepository())
@@ -120,6 +123,4 @@ public class AssociatorConfig {
         .parentFindRequestSpecificationCallback(GroupService::buildFindGroupsByUserSpecification)
         .build();
   }
-
-
 }

@@ -17,6 +17,9 @@
 
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.enums.ApplicationType;
@@ -34,9 +37,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static org.assertj.core.api.Assertions.assertThat;
-
 @Slf4j
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
@@ -49,6 +49,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
+
   @Autowired private ApplicationService applicationService;
 
   @Value("${logging.test.controller.enable}")

@@ -26,7 +26,9 @@ import static bio.overture.ego.utils.Joiners.PRETTY_COMMA;
 
 @Builder
 @RequiredArgsConstructor
-public class ManyToManyAssociationService<P extends Identifiable<UUID>, C extends Identifiable<UUID>> implements AssociationService<P, C, UUID> {
+public class ManyToManyAssociationService<
+        P extends Identifiable<UUID>, C extends Identifiable<UUID>>
+    implements AssociationService<P, C, UUID> {
 
   private final Class<P> parentType;
   private final Class<C> childType;
@@ -38,7 +40,7 @@ public class ManyToManyAssociationService<P extends Identifiable<UUID>, C extend
   private final Function<FindRequest, Specification<P>> parentFindRequestSpecificationCallback;
 
   @Override
-  public P associateParentWithChildren(@NonNull UUID parentId, @NonNull Collection<UUID> childIds){
+  public P associateParentWithChildren(@NonNull UUID parentId, @NonNull Collection<UUID> childIds) {
     // check duplicate childIds
     checkDuplicates(childType, childIds);
 
@@ -49,7 +51,8 @@ public class ManyToManyAssociationService<P extends Identifiable<UUID>, C extend
 
     // Check there are no application ids that are already associated with the parent
     val existingAlreadyAssociatedChildIds = intersection(existingAssociatedChildIds, childIds);
-    checkUnique(existingAlreadyAssociatedChildIds.isEmpty(),
+    checkUnique(
+        existingAlreadyAssociatedChildIds.isEmpty(),
         "The following %s ids are already associated with %s '%s': [%s]",
         childType.getSimpleName(),
         parentType.getSimpleName(),
@@ -57,7 +60,7 @@ public class ManyToManyAssociationService<P extends Identifiable<UUID>, C extend
         PRETTY_COMMA.join(existingAlreadyAssociatedChildIds));
 
     // Get all unassociated child ids. If they do not exist, an error is thrown
-    val nonAssociatedChildIds = difference(childIds,existingAssociatedChildIds);
+    val nonAssociatedChildIds = difference(childIds, existingAssociatedChildIds);
     val nonAssociatedChildren = childService.getMany(nonAssociatedChildIds);
 
     // Associate the existing children with the parent
@@ -66,7 +69,8 @@ public class ManyToManyAssociationService<P extends Identifiable<UUID>, C extend
   }
 
   @Override
-  public void disassociateParentFromChildren(@NonNull UUID parentId, @NonNull Collection<UUID> childIds){
+  public void disassociateParentFromChildren(
+      @NonNull UUID parentId, @NonNull Collection<UUID> childIds) {
     // check duplicate childIds
     checkDuplicates(childType, childIds);
 
@@ -75,9 +79,10 @@ public class ManyToManyAssociationService<P extends Identifiable<UUID>, C extend
     val children = getChildrenFromParentFunction.apply(parentWithChildren);
     val existingAssociatedChildIds = convertToIds(children);
 
-    // Get existing and non-existing non-associated child ids. Error out if there are existing and non-existing non-associated child ids
+    // Get existing and non-existing non-associated child ids. Error out if there are existing and
+    // non-existing non-associated child ids
     val nonAssociatedChildIds = difference(childIds, existingAssociatedChildIds);
-    if (!nonAssociatedChildIds.isEmpty()){
+    if (!nonAssociatedChildIds.isEmpty()) {
       childService.checkExistence(nonAssociatedChildIds);
       throw buildNotFoundException(
           "The following existing %s ids cannot be disassociated from %s '%s' "
@@ -85,15 +90,17 @@ public class ManyToManyAssociationService<P extends Identifiable<UUID>, C extend
           childType.getSimpleName(), parentType.getSimpleName(), parentId);
     }
 
-    // Since all child ids exist and are associated with the parent, disassociate them from eachother
+    // Since all child ids exist and are associated with the parent, disassociate them from
+    // eachother
     val childIdsToDisassociate = ImmutableSet.copyOf(childIds);
     disassociate(parentWithChildren, childIdsToDisassociate);
     parentRepository.save(parentWithChildren);
   }
 
-  private void associate(P parentWithChildren, Collection<C> children){
+  private void associate(P parentWithChildren, Collection<C> children) {
     getChildrenFromParentFunction.apply(parentWithChildren).addAll(children);
-    children.stream()
+    children
+        .stream()
         .map(getParentsFromChildFunction)
         .forEach(parents -> parents.add(parentWithChildren));
   }
@@ -105,21 +112,24 @@ public class ManyToManyAssociationService<P extends Identifiable<UUID>, C extend
     return parentRepository.findAll(spec, findRequest.getPageable());
   }
 
-  private void disassociate(P parentWithChildren, Collection<UUID> childIds){
+  private void disassociate(P parentWithChildren, Collection<UUID> childIds) {
     val children = getChildrenFromParentFunction.apply(parentWithChildren);
-    children.stream()
+    children
+        .stream()
         .filter(x -> childIds.contains(x.getId()))
         .map(getParentsFromChildFunction)
         .forEach(x -> x.remove(parentWithChildren));
     children.removeIf(x -> childIds.contains(x.getId()));
   }
 
-  private static <T extends Identifiable<UUID>> void checkDuplicates(Class<T> entityType, Collection<UUID> ids){
+  private static <T extends Identifiable<UUID>> void checkDuplicates(
+      Class<T> entityType, Collection<UUID> ids) {
     // check duplicate childIds
     val duplicateChildIds = findDuplicates(ids);
-    checkMalformedRequest(duplicateChildIds.isEmpty(),
-        "The following %s ids contain duplicates: [%s]" ,
-        entityType.getSimpleName(), PRETTY_COMMA.join(duplicateChildIds));
+    checkMalformedRequest(
+        duplicateChildIds.isEmpty(),
+        "The following %s ids contain duplicates: [%s]",
+        entityType.getSimpleName(),
+        PRETTY_COMMA.join(duplicateChildIds));
   }
-
 }

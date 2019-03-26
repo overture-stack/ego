@@ -18,6 +18,11 @@
 package bio.overture.ego.selenium.driver;
 
 import com.browserstack.local.Local;
+import java.io.FileReader;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -27,12 +32,6 @@ import net.minidev.json.parser.JSONParser;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
-
-import java.io.FileReader;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class WebDriverFactory {
