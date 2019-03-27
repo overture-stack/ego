@@ -1,21 +1,25 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static com.google.common.collect.Sets.difference;
-
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.repository.BaseRepository;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
+import java.util.Collection;
+import java.util.Optional;
+import java.util.Set;
+
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static com.google.common.collect.Sets.difference;
 
 /**
  * Base implementation
@@ -48,6 +52,11 @@ public abstract class AbstractBaseService<T extends Identifiable<ID>, ID>
   public void delete(@NonNull ID id) {
     checkExistence(id);
     getRepository().deleteById(id);
+  }
+
+  @Override
+  public Page<T> findAll(Specification specification, Pageable pageable) {
+    return getRepository().findAll(specification, pageable);
   }
 
   @Override

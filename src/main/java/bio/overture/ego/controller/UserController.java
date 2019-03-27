@@ -33,6 +33,8 @@ import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
+import bio.overture.ego.service.association.FindRequest;
+import bio.overture.ego.service.join.UserGroupJoinService;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.ApiImplicitParam;
@@ -42,6 +44,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -77,17 +80,20 @@ public class UserController {
   private final GroupService groupService;
   private final ApplicationService applicationService;
   private final UserPermissionService userPermissionService;
+  private final UserGroupJoinService userGroupJoinService;
 
   @Autowired
   public UserController(
       @NonNull UserService userService,
       @NonNull GroupService groupService,
       @NonNull UserPermissionService userPermissionService,
+      @NonNull UserGroupJoinService userGroupJoinService,
       @NonNull ApplicationService applicationService) {
     this.userService = userService;
     this.groupService = groupService;
     this.applicationService = applicationService;
     this.userPermissionService = userPermissionService;
+    this.userGroupJoinService = userGroupJoinService;
   }
 
   @AdminScoped
@@ -303,13 +309,14 @@ public class UserController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    // TODO: [rtisma] create tests for this controller logic. This logic should remain in
-    // controller.
-    if (isEmpty(query)) {
-      return new PageDTO<>(groupService.findUserGroups(id, filters, pageable));
-    } else {
-      return new PageDTO<>(groupService.findUserGroups(id, query, filters, pageable));
-    }
+    val findRequest =
+        FindRequest.builder()
+            .id(id)
+            .query(isEmpty(query) ? null : query)
+            .filters(filters)
+            .pageable(pageable)
+            .build();
+    return new PageDTO<>(userGroupJoinService.findGroupsForUser(findRequest));
   }
 
   @AdminScoped
@@ -320,9 +327,7 @@ public class UserController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<UUID> groupIds) {
-    // TODO: [rtisma] put this in once tests are created
-    //    return userGroupAssociatorService.addChildrenToParent(id, groupIds);
-    return userService.addUserToGroups(id, groupIds);
+    return userGroupJoinService.associate(id, groupIds);
   }
 
   @AdminScoped
@@ -332,10 +337,8 @@ public class UserController {
   public void deleteGroupFromUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
-      @PathVariable(value = "groupIDs", required = true) List<UUID> groupIDs) {
-    // TODO: [rtisma] put this in once tests are created
-    //    userGroupAssociatorService.removeChildrenFromParent(id, groupIDs);
-    userService.deleteUserFromGroups(id, groupIDs);
+      @PathVariable(value = "groupIDs", required = true) List<UUID> groupIds) {
+    userGroupJoinService.disassociate(id, groupIds);
   }
 
   /*

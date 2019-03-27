@@ -11,6 +11,7 @@ import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.StatusType;
+import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.repository.GroupPermissionRepository;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.service.ApplicationService;
@@ -48,12 +49,13 @@ import static bio.overture.ego.model.enums.JavaFields.DESCRIPTION;
 import static bio.overture.ego.model.enums.JavaFields.NAME;
 import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
 import static bio.overture.ego.model.enums.JavaFields.STATUS;
-import static bio.overture.ego.model.enums.JavaFields.USERS;
+import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.DISABLED;
 import static bio.overture.ego.model.enums.StatusType.REJECTED;
 import static bio.overture.ego.utils.CollectionUtils.concatToSet;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
 import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
@@ -189,7 +191,8 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     // Check user-group relationship is there
     val userWithGroup = userService.getByName("TempGroupUser@domain.com");
-    assertThat(extractGroupIds(userWithGroup.getGroups())).contains(groupId);
+    val expectedGroups = mapToSet(userWithGroup.getUserGroups(), UserGroup::getGroup);
+    assertThat(extractGroupIds(expectedGroups)).contains(groupId);
 
     // Check app-group relationship is there
     val applicationWithGroup = applicationService.getByClientId("TempGroupApp");
@@ -205,7 +208,8 @@ public class GroupControllerTest extends AbstractControllerTest {
     // Check user-group relationship is also deleted
     val userWithoutGroup = userService.getByName("TempGroupUser@domain.com");
     assertThat(userWithoutGroup).isNotNull();
-    assertThat(extractGroupIds(userWithoutGroup.getGroups())).doesNotContain(groupId);
+    val expectedGroups2 = mapToSet(userWithoutGroup.getUserGroups(), UserGroup::getGroup);
+    assertThat(extractGroupIds(expectedGroups2)).doesNotContain(groupId);
 
     // Check app-group relationship is also deleted
     val applicationWithoutGroup = applicationService.getByClientId("TempGroupApp");
@@ -235,14 +239,15 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     // Check that Group is associated with Users
     val groupWithUsers = groupService.getByName("GroupWithUsers");
-    assertThat(extractIDs(groupWithUsers.getUsers())).contains(userOne.getId(), userTwo.getId());
+    assertThat(extractIDs(mapToSet(groupWithUsers.getUserGroups(), UserGroup::getUser)))
+        .contains(userOne.getId(), userTwo.getId());
 
     // Check that each user is associated with the group
     val userOneWithGroups = userService.getByName("FirstUser@domain.com");
     val userTwoWithGroups = userService.getByName("SecondUser@domain.com");
 
-    assertThat(userOneWithGroups.getGroups()).contains(group);
-    assertThat(userTwoWithGroups.getGroups()).contains(group);
+    assertThat(mapToSet(userOneWithGroups.getUserGroups(), UserGroup::getGroup)).contains(group);
+    assertThat(mapToSet(userTwoWithGroups.getUserGroups(), UserGroup::getGroup)).contains(group);
   }
 
   @Test
@@ -754,7 +759,7 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     // Assert without using a controller, there are no users for the group
     val beforeGroup = groupService.getWithRelationships(group0.getId());
-    assertThat(beforeGroup.getUsers()).isEmpty();
+    assertThat(beforeGroup.getUserGroups()).isEmpty();
 
     // Add users to group
     val r1 = addGroupUserPostRequest(group0, data.getUsers());
@@ -762,7 +767,8 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     // Assert without using a controller, there are users for the group
     val afterGroup = groupService.getWithRelationships(group0.getId());
-    assertThat(afterGroup.getUsers()).containsExactlyInAnyOrderElementsOf(data.getUsers());
+    val expectedUsers = mapToSet(afterGroup.getUserGroups(), UserGroup::getUser);
+    assertThat(expectedUsers).containsExactlyInAnyOrderElementsOf(data.getUsers());
 
     // Get user for a group using a controller
     val r2 = initStringRequest().endpoint("groups/%s/users", group0.getId()).get();
@@ -992,7 +998,7 @@ public class GroupControllerTest extends AbstractControllerTest {
                 .getResponse(),
             Group.class);
     assertThat(updatedGroup1)
-        .isEqualToIgnoringGivenFields(g, NAME, PERMISSIONS, APPLICATIONS, USERS);
+        .isEqualToIgnoringGivenFields(g, NAME, PERMISSIONS, APPLICATIONS, USERGROUPS);
     assertThat(updatedGroup1.getName()).isEqualTo(updateRequest1.getName());
 
     val updateRequest2 =
@@ -1012,7 +1018,7 @@ public class GroupControllerTest extends AbstractControllerTest {
                 .getResponse(),
             Group.class);
     assertThat(updatedGroup2)
-        .isEqualToIgnoringGivenFields(updatedGroup1, STATUS, PERMISSIONS, APPLICATIONS, USERS);
+        .isEqualToIgnoringGivenFields(updatedGroup1, STATUS, PERMISSIONS, APPLICATIONS, USERGROUPS);
     assertThat(updatedGroup2.getStatus()).isEqualTo(updateRequest2.getStatus());
 
     val description = "my description";
@@ -1029,7 +1035,7 @@ public class GroupControllerTest extends AbstractControllerTest {
                 .getResponse(),
             Group.class);
     assertThat(updatedGroup3)
-        .isEqualToIgnoringGivenFields(updatedGroup2, DESCRIPTION, PERMISSIONS, APPLICATIONS, USERS);
+        .isEqualToIgnoringGivenFields(updatedGroup2, DESCRIPTION, PERMISSIONS, APPLICATIONS, USERGROUPS);
     assertThat(updatedGroup3.getDescription()).isEqualTo(updateRequest3.getDescription());
   }
 

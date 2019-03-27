@@ -17,6 +17,11 @@
 
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.controller.AbstractPermissionControllerTest.createMaskJson;
+import static bio.overture.ego.model.enums.AccessLevel.READ;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.service.PolicyService;
@@ -33,11 +38,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import static bio.overture.ego.controller.AbstractPermissionControllerTest.createMaskJson;
-import static bio.overture.ego.model.enums.AccessLevel.READ;
-import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")

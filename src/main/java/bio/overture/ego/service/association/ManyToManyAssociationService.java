@@ -1,20 +1,5 @@
 package bio.overture.ego.service.association;
 
-import bio.overture.ego.model.entity.Identifiable;
-import bio.overture.ego.repository.BaseRepository;
-import bio.overture.ego.service.BaseService;
-import com.google.common.collect.ImmutableSet;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import org.springframework.data.domain.Page;
-import org.springframework.data.jpa.domain.Specification;
-
-import java.util.Collection;
-import java.util.UUID;
-import java.util.function.Function;
-
 import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
@@ -23,6 +8,20 @@ import static bio.overture.ego.utils.CollectionUtils.findDuplicates;
 import static bio.overture.ego.utils.CollectionUtils.intersection;
 import static bio.overture.ego.utils.Converters.convertToIds;
 import static bio.overture.ego.utils.Joiners.PRETTY_COMMA;
+
+import bio.overture.ego.model.entity.Identifiable;
+import bio.overture.ego.repository.BaseRepository;
+import bio.overture.ego.service.BaseService;
+import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
+import java.util.UUID;
+import java.util.function.Function;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 
 @Builder
 @RequiredArgsConstructor

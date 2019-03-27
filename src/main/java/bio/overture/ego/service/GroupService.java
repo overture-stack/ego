@@ -43,7 +43,8 @@ import java.util.UUID;
 import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
 import static bio.overture.ego.model.enums.JavaFields.ID;
 import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
-import static bio.overture.ego.model.enums.JavaFields.USERS;
+import static bio.overture.ego.model.enums.JavaFields.USER;
+import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
@@ -106,29 +107,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         pageable);
   }
 
-  public static Specification<Group> buildFindGroupsByUserSpecification(
-      @NonNull FindRequest findRequest) {
-    val baseSpec =
-        where(GroupSpecification.containsUser(findRequest.getId()))
-            .and(GroupSpecification.filterBy(findRequest.getFilters()));
-    return findRequest
-        .getQuery()
-        .map(q -> baseSpec.and(GroupSpecification.containsText(q)))
-        .orElse(baseSpec);
-  }
-
-  public Page<Group> findUserGroups(
-      @NonNull UUID userId,
-      @NonNull String query,
-      @NonNull List<SearchFilter> filters,
-      @NonNull Pageable pageable) {
-    return groupRepository.findAll(
-        where(GroupSpecification.containsUser(userId))
-            .and(GroupSpecification.containsText(query))
-            .and(GroupSpecification.filterBy(filters)),
-        pageable);
-  }
-
   public Page<Group> findApplicationGroups(
       @NonNull UUID appId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return groupRepository.findAll(
@@ -179,7 +157,8 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         fromGroup.fetch(APPLICATIONS, LEFT);
       }
       if (fetchUsers) {
-        fromGroup.fetch(USERS, LEFT);
+        val fromUserGroup = fromGroup.fetch(USERGROUPS, LEFT);
+        fromUserGroup.fetch(USER, LEFT);
       }
       if (fetchGroupPermissions) {
         fromGroup.fetch(PERMISSIONS, LEFT);

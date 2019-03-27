@@ -20,6 +20,7 @@ package bio.overture.ego.controller;
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.UpdateUserRequest;
+import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
@@ -44,6 +45,7 @@ import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.REJECTED;
 import static bio.overture.ego.model.enums.UserType.USER;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.EntityTools.extractUserIds;
 import static java.util.Arrays.asList;
@@ -367,7 +369,9 @@ public class UserControllerTest extends AbstractControllerTest {
     val addGroupToUserResponseStatus = addGroupToUserResponse.getStatusCode();
     assertThat(addGroupToUserResponseStatus).isEqualTo(HttpStatus.OK);
     // Make sure user-group relationship is there
-    assertThat(extractUserIds(groupService.getByName("GroupOne").getUsers())).contains(userId);
+    val expectedUserGroups = groupService.getByName("GroupOne").getUserGroups();
+    val expectedUsers = mapToSet(expectedUserGroups, UserGroup::getUser);
+    assertThat(extractUserIds(expectedUsers)).contains(userId);
 
     // delete user
     val deleteResponse = initStringRequest().endpoint("/users/%s", userId).delete();
@@ -384,7 +388,7 @@ public class UserControllerTest extends AbstractControllerTest {
 
     // check if user - group is deleted
     val groupWithoutUser = groupService.getByName("GroupOne");
-    assertThat(groupWithoutUser.getUsers()).isEmpty();
+    assertThat(groupWithoutUser.getUserGroups()).isEmpty();
 
     // make sure user - application is deleted
     val appWithoutUser = applicationService.getByClientId("TempGroupApp");

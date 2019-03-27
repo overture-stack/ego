@@ -3,6 +3,9 @@ package bio.overture.ego.service;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import lombok.NonNull;
 import lombok.val;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -32,6 +35,8 @@ public interface BaseService<T, ID> {
   boolean isExist(ID id);
 
   void delete(ID id);
+
+  Page<T> findAll(Specification specification, Pageable pageable);
 
   Set<T> getMany(Collection<ID> ids);
 

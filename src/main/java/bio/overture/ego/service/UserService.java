@@ -27,6 +27,7 @@ import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.UserSpecification;
@@ -59,8 +60,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
-import static bio.overture.ego.model.enums.JavaFields.GROUPS;
+import static bio.overture.ego.model.enums.JavaFields.GROUP;
 import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
 import static bio.overture.ego.model.enums.JavaFields.USERPERMISSIONS;
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
@@ -133,17 +135,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .build());
   }
 
-  public User addUserToGroups(@NonNull UUID id, @NonNull List<UUID> groupIds) {
-    val user = getById(id);
-    val groups = groupService.getMany(groupIds);
-    associateUserWithGroups(user, groups);
-    // TODO: @rtisma test setting groups even if there were existing groups before does not delete
-    // the existing ones. Becuase the PERSIST and MERGE cascade type is used, this should
-    // work
-    // correctly
-    return getRepository().save(user);
-  }
-
   public User addUserToApps(@NonNull UUID id, @NonNull List<UUID> appIds) {
     val user = getById(id);
     val apps = applicationService.getMany(appIds);
@@ -192,30 +183,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
             pageable);
   }
 
-  // Since the User is the owning side of this relationship,
-  // the UserService should drive the association and not the GroupService.
-  // This also removed the cyclical dependency between the User and Group service
-  public Group addUsersToGroup(@NonNull UUID id, @NonNull List<UUID> userIds) {
-    val group = groupService.getById(id);
-    val users = userRepository.findAllByIdIn(userIds);
-    associateUsers(group, users);
-    userRepository.saveAll(users);
-    return group;
-  }
-
-  // TODO @rtisma: add test for checking group exists for user
-  public void deleteUserFromGroups(@NonNull UUID id, @NonNull Collection<UUID> groupIds) {
-    val user = getUserWithRelationshipsById(id);
-    checkGroupsExistForUser(user, groupIds);
-    val groupsToDisassociate =
-        user.getGroups()
-            .stream()
-            .filter(g -> groupIds.contains(g.getId()))
-            .collect(toImmutableSet());
-    disassociateUserFromGroups(user, groupsToDisassociate);
-    getRepository().save(user);
-  }
-
   // TODO @rtisma: add test for all entities to ensure they implement .equals() using only the id
   // field
   // TODO @rtisma: add test for checking user exists
@@ -232,44 +199,12 @@ public class UserService extends AbstractNamedService<User, UUID> {
     getRepository().save(user);
   }
 
-  public Page<User> findGroupUsers(
-      @NonNull UUID groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
-    return getRepository()
-        .findAll(
-            where(UserSpecification.inGroup(groupId)).and(UserSpecification.filterBy(filters)),
-            pageable);
-  }
-
-  public Page<User> findGroupUsers(
-      @NonNull UUID groupId,
-      @NonNull String query,
-      @NonNull List<SearchFilter> filters,
-      @NonNull Pageable pageable) {
-    return getRepository()
-        .findAll(
-            where(UserSpecification.inGroup(groupId))
-                .and(UserSpecification.containsText(query))
-                .and(UserSpecification.filterBy(filters)),
-            pageable);
-  }
-
   public Page<User> findAppUsers(
       @NonNull UUID appId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository()
         .findAll(
             where(UserSpecification.ofApplication(appId)).and(UserSpecification.filterBy(filters)),
             pageable);
-  }
-
-  public static Specification<User> buildFindUserByGroupSpecification(
-      @NonNull FindRequest findRequest) {
-    val baseSpec =
-        where(UserSpecification.inGroup(findRequest.getId()))
-            .and(UserSpecification.filterBy(findRequest.getFilters()));
-    return findRequest
-        .getQuery()
-        .map(q -> baseSpec.and(UserSpecification.containsText(q)))
-        .orElse(baseSpec);
   }
 
   public static Specification<User> buildFindUserByApplicationSpecification(
@@ -301,14 +236,16 @@ public class UserService extends AbstractNamedService<User, UUID> {
     val up = user.getUserPermissions();
     Collection<UserPermission> userPermissions = isNull(up) ? ImmutableList.of() : up;
 
-    val gp = user.getGroups();
+    val userGroups = user.getUserGroups();
+
     Collection<GroupPermission> groupPermissions =
-        isNull(gp)
+        isNull(userGroups)
             ? ImmutableList.of()
-            : gp.stream()
-                .map(Group::getPermissions)
-                .flatMap(Collection::stream)
-                .collect(toImmutableSet());
+            : userGroups.stream()
+            .map(UserGroup::getGroup)
+            .map(Group::getPermissions)
+            .flatMap(Collection::stream)
+            .collect(toImmutableSet());
     return resolveFinalPermissions(userPermissions, groupPermissions);
   }
 
@@ -323,9 +260,10 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
     // Get permissions from the user's groups (stream)
     val userGroupsPermissions =
-        Optional.ofNullable(user.getGroups())
+        Optional.ofNullable(user.getUserGroups())
             .orElse(new HashSet<>())
             .stream()
+            .map(UserGroup::getGroup)
             .map(Group::getPermissions)
             .flatMap(Collection::stream);
 
@@ -357,21 +295,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return mapToSet(resolveUsersPermissions(user), AbstractPermissionService::buildScope);
   }
 
-  public static void associateUserWithGroups(User user, @NonNull Collection<Group> groups) {
-    groups.forEach(g -> associateUserWithGroup(user, g));
-  }
-
-  public static void associateUserWithGroup(@NonNull User user, @NonNull Group group) {
-    user.getGroups().add(group);
-    group.getUsers().add(user);
-  }
-
-  public static void disassociateUserFromGroups(
-      @NonNull User user, @NonNull Collection<Group> groups) {
-    user.getGroups().removeAll(groups);
-    groups.forEach(x -> x.getUsers().remove(user));
-  }
-
   public static void disassociateUserFromApplications(
       @NonNull User user, @NonNull Collection<Application> applications) {
     user.getApplications().removeAll(applications);
@@ -386,24 +309,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
   public static void associateUserWithApplication(@NonNull User user, @NonNull Application app) {
     user.getApplications().add(app);
     app.getUsers().add(user);
-  }
-
-  public static void checkGroupsExistForUser(
-      @NonNull User user, @NonNull Collection<UUID> groupIds) {
-    val existingGroupIds = user.getGroups().stream().map(Group::getId).collect(toImmutableSet());
-    val nonExistentGroupIds =
-        groupIds.stream().filter(x -> !existingGroupIds.contains(x)).collect(toImmutableSet());
-    if (!nonExistentGroupIds.isEmpty()) {
-      throw new NotFoundException(
-          format(
-              "The following groups do not exist for user '%s': %s",
-              user.getId(), COMMA.join(nonExistentGroupIds)));
-    }
-  }
-
-  public static void associateUsers(@NonNull Group group, @NonNull Collection<User> users) {
-    group.getUsers().addAll(users);
-    users.stream().map(User::getGroups).forEach(groups -> groups.add(group));
   }
 
   public static void checkApplicationsExistForUser(
@@ -436,7 +341,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
         fromGroup.fetch(APPLICATIONS, LEFT);
       }
       if (fetchGroups) {
-        fromGroup.fetch(GROUPS, LEFT);
+        val fromUserGroup = fromGroup.fetch(USERGROUPS, LEFT);
+        fromUserGroup.fetch(GROUP, LEFT);
       }
       if (fetchUserPermissions) {
         fromGroup.fetch(USERPERMISSIONS, LEFT);

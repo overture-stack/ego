@@ -23,6 +23,7 @@ import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.model.enums.UserType;
+import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -75,7 +76,7 @@ import static com.google.common.collect.Sets.newHashSet;
 @Data
 @ToString(
     exclude = {
-      LombokFields.groups,
+      LombokFields.userGroups,
       LombokFields.applications,
       LombokFields.userPermissions,
       LombokFields.tokens
@@ -105,14 +106,17 @@ import static com.google.common.collect.Sets.newHashSet;
 @NamedEntityGraph(
     name = "user-entity-with-relationships",
     attributeNodes = {
-      @NamedAttributeNode(value = JavaFields.GROUPS, subgraph = "groups-subgraph"),
+      @NamedAttributeNode(value = JavaFields.USERGROUPS, subgraph = "usergroups-subgraph"),
       @NamedAttributeNode(value = JavaFields.USERPERMISSIONS),
       @NamedAttributeNode(value = JavaFields.APPLICATIONS, subgraph = "applications-subgraph"),
     },
     subgraphs = {
       @NamedSubgraph(
-          name = "groups-subgraph",
-          attributeNodes = {@NamedAttributeNode(JavaFields.USERS)}),
+          name = "usergroups-subgraph",
+          attributeNodes = {
+              @NamedAttributeNode(JavaFields.USER),
+              @NamedAttributeNode(JavaFields.GROUP)
+          }),
       @NamedSubgraph(
           name = "applications-subgraph",
           attributeNodes = {@NamedAttributeNode(JavaFields.USERS)})
@@ -189,14 +193,13 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   private Set<Token> tokens = newHashSet();
 
   @JsonIgnore
-  @ManyToMany(
+  @Builder.Default
+  @OneToMany(
+      mappedBy = JavaFields.USER,
+      cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-  @JoinTable(
-      name = Tables.GROUP_USER,
-      joinColumns = {@JoinColumn(name = SqlFields.GROUPID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = SqlFields.USERID_JOIN)})
-  private Set<Group> groups = newHashSet();
+      orphanRemoval = true)
+  private Set<UserGroup> userGroups = newHashSet();
 
   @JsonIgnore
   @ManyToMany(

@@ -16,9 +16,9 @@
 
 package bio.overture.ego.model.enums;
 
-import static lombok.AccessLevel.PRIVATE;
-
 import lombok.NoArgsConstructor;
+
+import static lombok.AccessLevel.PRIVATE;
 
 @NoArgsConstructor(access = PRIVATE)
 public class JavaFields {
@@ -38,6 +38,7 @@ public class JavaFields {
   public static final String OWNER = "owner";
   public static final String SCOPES = "scopes";
   public static final String GROUPS = "groups";
+  public static final String GROUP = "group";
   public static final String USERS = "users";
   public static final String USER = "user";
   public static final String USERTYPE = "usertype";
@@ -53,4 +54,7 @@ public class JavaFields {
   public static final String CLIENTID = "clientId";
   public static final String CLIENTSECRET = "clientSecret";
   public static final String REDIRECTURI = "redirectUri";
+  public static final String USER_ID = "userId";
+  public static final String GROUP_ID = "groupId";
+  public static final String USERGROUPS = "userGroups" ;
 }

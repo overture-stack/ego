@@ -25,12 +25,11 @@ import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.service.association.AssociationService;
+import bio.overture.ego.service.join.UserGroupJoinService;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
@@ -68,7 +67,7 @@ public class UserServiceTest {
   @Autowired private PolicyService policyService;
   @Autowired private EntityGenerator entityGenerator;
   @Autowired private UserPermissionService userPermissionService;
-  @Autowired private AssociationService<Group, User, UUID> groupUserAssociationService;
+  @Autowired private UserGroupJoinService userGroupJoinService;
 
   @Test
   public void userConverter_UpdateUserRequest_User() {
@@ -116,7 +115,7 @@ public class UserServiceTest {
     assertThat(user.getId()).isEqualTo(id);
     assertThat(user.getApplications()).containsExactlyInAnyOrderElementsOf(applications);
     assertThat(user.getUserPermissions()).isNull();
-    assertThat(user.getGroups()).isEmpty();
+    assertThat(user.getUserGroups()).isEmpty();
   }
 
   @Test
@@ -140,7 +139,7 @@ public class UserServiceTest {
     assertThat(user.getType()).isEqualTo(request.getType());
     assertThat(user.getStatus()).isEqualTo(request.getStatus());
     assertThat(user.getPreferredLanguage()).isEqualTo(request.getPreferredLanguage());
-    assertThat(user.getGroups()).isEmpty();
+    assertThat(user.getUserGroups()).isEmpty();
     assertThat(user.getUserPermissions()).isEmpty();
     assertThat(user.getApplications()).isEmpty();
   }
@@ -282,13 +281,11 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val groupId = groupService.getByName("Group One").getId();
 
-    groupUserAssociationService.associateParentWithChildren(user.getId(), singletonList(groupId));
-    groupUserAssociationService.associateParentWithChildren(
-        userTwo.getId(), singletonList(groupId));
+    userGroupJoinService.associate(user.getId(), singletonList(groupId));
+    userGroupJoinService.associate(userTwo.getId(), singletonList(groupId));
 
     val users =
-        userService.findGroupUsers(
-            groupId, Collections.emptyList(), new PageableResolver().getPageable());
+        userGroupJoinService.listUsersForGroup(groupId, new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(2L);
     assertThat(users.getContent()).contains(user, userTwo);
@@ -302,8 +299,7 @@ public class UserServiceTest {
     val groupId = groupService.getByName("Group One").getId();
 
     val users =
-        userService.findGroupUsers(
-            groupId, Collections.emptyList(), new PageableResolver().getPageable());
+        userGroupJoinService.listUsersForGroup(groupId, new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(0L);
   }
@@ -317,13 +313,13 @@ public class UserServiceTest {
     val userTwo = userService.getByName("SecondUser@domain.com");
     val groupId = groupService.getByName("Group One").getId();
 
-    groupUserAssociationService.associateParentWithChildren(user.getId(), newArrayList(groupId));
-    groupUserAssociationService.associateParentWithChildren(userTwo.getId(), newArrayList(groupId));
+    userGroupJoinService.associate(user.getId(), newArrayList(groupId));
+    userGroupJoinService.associate(userTwo.getId(), newArrayList(groupId));
 
     val userFilters = new SearchFilter("name", "First");
 
     val users =
-        userService.findGroupUsers(
+        userGroupJoinService.findUsersForGroup(
             groupId, newArrayList(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
@@ -339,14 +335,13 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val groupId = groupService.getByName("Group One").getId();
 
-    groupUserAssociationService.associateParentWithChildren(user.getId(), singletonList(groupId));
-    groupUserAssociationService.associateParentWithChildren(
-        userTwo.getId(), singletonList(groupId));
+    userGroupJoinService.associate(user.getId(), singletonList(groupId));
+    userGroupJoinService.associate(userTwo.getId(), singletonList(groupId));
 
     val userFilters = new SearchFilter("name", "First");
 
     val users =
-        userService.findGroupUsers(
+        userGroupJoinService.findUsersForGroup(
             groupId, "Second", singletonList(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(0L);
@@ -361,12 +356,10 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val groupId = groupService.getByName("Group One").getId();
 
-    groupUserAssociationService.associateParentWithChildren(user.getId(), singletonList(groupId));
-    groupUserAssociationService.associateParentWithChildren(
-        userTwo.getId(), singletonList(groupId));
-
+    userGroupJoinService.associate(user.getId(), singletonList(groupId));
+    userGroupJoinService.associate(userTwo.getId(), singletonList(groupId));
     val users =
-        userService.findGroupUsers(
+        userGroupJoinService.findUsersForGroup(
             groupId, "Second", Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
@@ -622,7 +615,7 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId();
 
-    groupUserAssociationService.associateParentWithChildren(userId, asList(groupId, groupTwoId));
+    userGroupJoinService.associate(userId, asList(groupId, groupTwoId));
 
     val groups =
         groupService.findUserGroups(
@@ -641,9 +634,7 @@ public class UserServiceTest {
 
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
-            () ->
-                groupUserAssociationService.associateParentWithChildren(
-                    NON_EXISTENT_USER, singletonList(groupId)));
+            () -> userGroupJoinService.associate(NON_EXISTENT_USER, singletonList(groupId)));
   }
 
   @Test
@@ -655,10 +646,7 @@ public class UserServiceTest {
     val userId = user.getId();
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(
-            () ->
-                groupUserAssociationService.associateParentWithChildren(
-                    userId, ImmutableList.of()));
+        .isThrownBy(() -> userGroupJoinService.associate(userId, ImmutableList.of()));
   }
 
   @Test
@@ -669,7 +657,7 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId();
 
-    groupUserAssociationService.associateParentWithChildren(userId, Collections.emptyList());
+    userGroupJoinService.associate(userId, Collections.emptyList());
 
     val nonUpdated = userService.getByName("FirstUser@domain.com");
     assertThat(nonUpdated).isEqualTo(user);
@@ -774,9 +762,9 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId();
 
-    groupUserAssociationService.associateParentWithChildren(userId, asList(groupId, groupTwoId));
+    userGroupJoinService.associate(userId, asList(groupId, groupTwoId));
 
-    userService.deleteUserFromGroups(userId, singletonList(groupId));
+    userGroupJoinService.disassociate(userId, singletonList(groupId));
 
     val groupWithoutUser =
         groupService.findUserGroups(
@@ -797,11 +785,11 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId();
 
-    groupUserAssociationService.associateParentWithChildren(userId, asList(groupId, groupTwoId));
+    userGroupJoinService.associate(userId, asList(groupId, groupTwoId));
 
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
-            () -> userService.deleteUserFromGroups(NON_EXISTENT_USER, singletonList(groupId)));
+            () -> userGroupJoinService.disassociate(NON_EXISTENT_USER, singletonList(groupId)));
   }
 
   @Test
@@ -814,11 +802,11 @@ public class UserServiceTest {
     val group = groupService.getByName("Group One");
     val groupId = group.getId();
 
-    groupUserAssociationService.associateParentWithChildren(userId, singletonList(groupId));
-    assertThat(user.getGroups().size()).isEqualTo(1);
+    userGroupJoinService.associate(userId, singletonList(groupId));
+    assertThat(user.getUserGroups().size()).isEqualTo(1);
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> userService.deleteUserFromGroups(userId, ImmutableList.of()));
+        .isThrownBy(() -> userGroupJoinService.disassociate(userId, ImmutableList.of()));
   }
 
   // Delete User from App

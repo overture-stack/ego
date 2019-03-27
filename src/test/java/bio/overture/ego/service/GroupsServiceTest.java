@@ -23,6 +23,7 @@ import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.service.association.AssociationService;
 import bio.overture.ego.service.association.FindRequest;
+import bio.overture.ego.service.join.UserGroupJoinService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
 import com.google.common.collect.ImmutableList;
@@ -61,6 +62,7 @@ public class GroupsServiceTest {
   @Autowired private EntityGenerator entityGenerator;
   @Autowired private AssociationService<Group, Application, UUID> groupApplicationAssociatorService;
   @Autowired private AssociationService<Group, User, UUID> groupUserAssociatorService;
+  @Autowired private UserGroupJoinService userGroupJoinService;
 
   // Create
   @Test
@@ -660,7 +662,7 @@ public class GroupsServiceTest {
     val user = entityGenerator.setupUser("foo bar");
     val group = entityGenerator.setupGroup("testGroup");
 
-    val updatedGroup = userService.addUsersToGroup(group.getId(), newArrayList(user.getId()));
+    val updatedGroup = userGroupJoinService.associate(group.getId(), newArrayList(user.getId()));
 
     groupService.delete(updatedGroup.getId());
     assertThat(userService.getById(user.getId())).isNotNull();
