@@ -18,6 +18,7 @@ import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.*;
 import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import lombok.NonNull;
 import lombok.val;
@@ -220,7 +221,8 @@ public class EntityGenerator {
         Token.builder()
             .name(token)
             .owner(user)
-            .issueDate(Date.from(Instant.now().plusSeconds(duration)))
+            .issueDate(Date.from(Instant.now()))
+            .expiryDate(Date.from(Instant.now().plus(365, ChronoUnit.DAYS)))
             .build();
 
     tokenObject.setScopes(scopes);

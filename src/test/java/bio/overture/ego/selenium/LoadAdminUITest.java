@@ -53,18 +53,12 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
             .description("testing")
             .build());
 
-    Thread.sleep(1000);
-
     driver.get("http://localhost:" + uiPort);
     val titleText =
         driver.findElement(By.className("Login")).findElement(By.tagName("h1")).getText();
     assertThat(titleText).isEqualTo("Admin Portal");
 
-    Thread.sleep(2000);
-
     driver.findElement(By.className("fa-facebook")).click();
-
-    Thread.sleep(1000);
 
     val email = driver.findElement(By.id("email"));
     email.sendKeys(facebookUser);

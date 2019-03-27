@@ -5,6 +5,9 @@ jwt:
   secret: testsecretisalsoasecret
   duration: 86400000 #in milliseconds 86400000 = 1day, max = 2147483647
 
+apitoken:
+  duration: 365 # in days
+
 # security
 auth:
   token:
