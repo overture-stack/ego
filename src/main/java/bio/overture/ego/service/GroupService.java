@@ -23,9 +23,7 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupRepository;
-import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
 import lombok.NonNull;
 import lombok.val;
@@ -72,22 +70,16 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   /** Dependencies */
   private final GroupRepository groupRepository;
 
-  private final UserRepository userRepository;
-  private final ApplicationRepository applicationRepository;
   private final ApplicationService applicationService;
   private final TokenEventsPublisher tokenEventsPublisher;
 
   @Autowired
   public GroupService(
       @NonNull GroupRepository groupRepository,
-      @NonNull UserRepository userRepository,
-      @NonNull ApplicationRepository applicationRepository,
       @NonNull ApplicationService applicationService,
       @NonNull TokenEventsPublisher tokenEventsPublisher) {
     super(Group.class, groupRepository);
     this.groupRepository = groupRepository;
-    this.userRepository = userRepository;
-    this.applicationRepository = applicationRepository;
     this.applicationService = applicationService;
     this.tokenEventsPublisher = tokenEventsPublisher;
   }
