@@ -216,11 +216,13 @@ public class EntityGenerator {
     setupPolicies("Study001,Group One", "Study002,Group Two", "Study003,Group Three");
   }
 
-  public Token setupToken(User user, String token, long duration, Set<Scope> scopes) {
+  public Token setupToken(User user, String token, boolean isRevoked, long duration, String description, Set<Scope> scopes) {
     val tokenObject =
         Token.builder()
             .name(token)
+            .isRevoked(isRevoked)
             .owner(user)
+            .description(description)
             .issueDate(Date.from(Instant.now()))
             .expiryDate(Date.from(Instant.now().plus(365, ChronoUnit.DAYS)))
             .build();
