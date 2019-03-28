@@ -27,7 +27,6 @@ import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
-import bio.overture.ego.service.association.FindRequest;
 import lombok.NonNull;
 import lombok.val;
 import org.mapstruct.Mapper;
@@ -120,12 +119,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     tokenEventsPublisher.requestTokenCleanupByUsers(users);
   }
 
-  public Group getGroupWithRelationships(@NonNull UUID id) {
-    val result = groupRepository.findGroupById(id);
-    checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
-    return result.get();
-  }
-
   public Group partialUpdate(@NonNull UUID id, @NonNull GroupRequest r) {
     val group = getById(id);
     validateUpdateRequest(group, r);
@@ -144,30 +137,12 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         pageable);
   }
 
-  public Page<Group> findUserGroups(
-      @NonNull UUID userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
-    return groupRepository.findAll(
-        where(GroupSpecification.containsUser(userId)).and(GroupSpecification.filterBy(filters)),
-        pageable);
-  }
-
   public Page<Group> findApplicationGroups(
       @NonNull UUID appId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return groupRepository.findAll(
         where(GroupSpecification.containsApplication(appId))
             .and(GroupSpecification.filterBy(filters)),
         pageable);
-  }
-
-  public static Specification<Group> buildFindGroupsByApplicationSpecification(
-      @NonNull FindRequest applicationFindRequest) {
-    val baseSpec =
-        where(GroupSpecification.containsApplication(applicationFindRequest.getId()))
-            .and(GroupSpecification.filterBy(applicationFindRequest.getFilters()));
-    return applicationFindRequest
-        .getQuery()
-        .map(q -> baseSpec.and(GroupSpecification.containsText(q)))
-        .orElse(baseSpec);
   }
 
   public Page<Group> findApplicationGroups(

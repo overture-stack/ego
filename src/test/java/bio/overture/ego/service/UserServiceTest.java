@@ -618,7 +618,7 @@ public class UserServiceTest {
     userGroupJoinService.associate(userId, asList(groupId, groupTwoId));
 
     val groups =
-        groupService.findUserGroups(
+        userGroupJoinService.findGroupsForUser(
             userId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(groups.getContent()).contains(group, groupTwo);
@@ -767,7 +767,7 @@ public class UserServiceTest {
     userGroupJoinService.disassociate(userId, singletonList(groupId));
 
     val groupWithoutUser =
-        groupService.findUserGroups(
+        userGroupJoinService.findGroupsForUser(
             userId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(groupWithoutUser.getContent()).containsOnly(groupTwo);
