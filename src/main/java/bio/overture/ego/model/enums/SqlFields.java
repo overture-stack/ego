@@ -29,5 +29,6 @@ public class SqlFields {
   public static final String CLIENTSECRET = "clientsecret";
   public static final String REDIRECTURI = "redirecturi";
   public static final String ISSUEDATE = "issuedate";
+  public static final String EXPIRYDATE = "expirydate";
   public static final String ISREVOKED = "isrevoked";
 }

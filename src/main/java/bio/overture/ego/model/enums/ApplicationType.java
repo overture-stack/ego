@@ -16,8 +16,6 @@
 
 package bio.overture.ego.model.enums;
 
-import lombok.NonNull;
-
 public enum ApplicationType {
   CLIENT,
   ADMIN;
@@ -25,9 +23,5 @@ public enum ApplicationType {
   @Override
   public String toString() {
     return this.name();
-  }
-
-  public static ApplicationType resolveAdminTypeIgnoreCase(@NonNull String adminType) {
-    return valueOf(adminType.toUpperCase());
   }
 }

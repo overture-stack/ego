@@ -54,6 +54,22 @@ import lombok.NonNull;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import static java.util.stream.Collectors.toSet;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import bio.overture.ego.model.dto.*;
+import bio.overture.ego.model.entity.*;
+import bio.overture.ego.model.enums.ApplicationType;
+import bio.overture.ego.model.params.ScopeName;
+import bio.overture.ego.service.*;
+import com.google.common.collect.ImmutableSet;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import lombok.NonNull;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Component
 /**
@@ -144,6 +160,10 @@ public class EntityGenerator {
 
   public void setupTestUsers() {
     setupUsers("First User", "Second User", "Third User");
+  }
+
+  private GroupRequest createGroupRequest(String name) {
+    return GroupRequest.builder().name(name).status(PENDING).description("").build();
   }
 
   public Group setupGroup(String name) {
@@ -324,14 +344,13 @@ public class EntityGenerator {
     setupPolicies("Study001,Group One", "Study002,Group Two", "Study003,Group Three");
   }
 
-  public Token setupToken(
-      User user, String token, long duration, Set<Scope> scopes, Set<Application> applications) {
+  public Token setupToken(User user, String token, long duration, Set<Scope> scopes) {
     val tokenObject =
         Token.builder()
             .name(token)
             .owner(user)
-            .applications(applications == null ? new HashSet<>() : applications)
-            .issueDate(Date.from(Instant.now().plusSeconds(duration)))
+            .issueDate(Date.from(Instant.now()))
+            .expiryDate(Date.from(Instant.now().plus(365, ChronoUnit.DAYS)))
             .build();
 
     tokenObject.setScopes(scopes);
@@ -341,18 +360,18 @@ public class EntityGenerator {
 
   public void addPermissions(User user, Set<Scope> scopes) {
     val userPermissions =
-        scopes
-            .stream()
+        scopes.stream()
             .map(
                 s -> {
                   UserPermission up = new UserPermission();
                   up.setPolicy(s.getPolicy());
                   up.setAccessLevel(s.getAccessLevel());
                   up.setOwner(user);
+                  userPermissionService.getRepository().save(up);
                   return up;
                 })
-            .collect(toList());
-    userPermissions.forEach(p -> userPermissionService.associatePermission(user, p));
+            .collect(toSet());
+    user.getUserPermissions().addAll(userPermissions);
     userService.getRepository().save(user);
   }
 

@@ -1,31 +1,5 @@
 package bio.overture.ego.controller;
 
-import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.Identifiable;
-import bio.overture.ego.model.entity.NameableEntity;
-import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.service.AbstractPermissionService;
-import bio.overture.ego.service.NamedService;
-import bio.overture.ego.service.PolicyService;
-import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.Streams;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Sets;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.junit.Test;
-import org.springframework.http.HttpStatus;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.IntStream;
-
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
@@ -45,6 +19,31 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
+
+import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.entity.AbstractPermission;
+import bio.overture.ego.model.entity.Identifiable;
+import bio.overture.ego.model.entity.NameableEntity;
+import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.service.AbstractPermissionService;
+import bio.overture.ego.service.NamedService;
+import bio.overture.ego.service.PolicyService;
+import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.Streams;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Sets;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.IntStream;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.junit.Test;
+import org.springframework.http.HttpStatus;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 @Slf4j
 public abstract class AbstractPermissionControllerTest<
@@ -330,8 +329,7 @@ public abstract class AbstractPermissionControllerTest<
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Assert that the policy deletion cascaded the delete to the permissions
-    existingPermissionIds
-        .stream()
+    existingPermissionIds.stream()
         .map(UUID::fromString)
         .forEach(x -> assertThat(getPermissionService().isExist(x)).isFalse());
 
@@ -368,14 +366,12 @@ public abstract class AbstractPermissionControllerTest<
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Assert that the owner deletion cascaded the delete to the permissions
-    existingPermissionIds
-        .stream()
+    existingPermissionIds.stream()
         .map(UUID::fromString)
         .forEach(x -> assertThat(getPermissionService().isExist(x)).isFalse());
 
     // Assert that the owner deletion DID NOT cascade past the permission and deleted policies
-    permissionRequests
-        .stream()
+    permissionRequests.stream()
         .map(PermissionRequest::getPolicyId)
         .distinct()
         .forEach(x -> assertThat(getPolicyService().isExist(x)).isTrue());

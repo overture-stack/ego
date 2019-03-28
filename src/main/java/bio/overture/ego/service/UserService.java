@@ -16,7 +16,24 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.UserType.ADMIN;
+import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static java.lang.String.format;
+import static java.util.Collections.reverse;
+import static java.util.Comparator.comparing;
+import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Stream.concat;
+import static org.springframework.data.jpa.domain.Specifications.where;
+
 import bio.overture.ego.config.UserDefaultsConfig;
+import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UpdateUserRequest;
@@ -34,6 +51,14 @@ import bio.overture.ego.repository.queryspecification.UserSpecification;
 import bio.overture.ego.service.association.FindRequest;
 import bio.overture.ego.token.IDToken;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -93,6 +118,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
   /** Dependencies */
   private final GroupService groupService;
 
+  private final TokenEventsPublisher tokenEventsPublisher;
   private final ApplicationService applicationService;
   private final UserRepository userRepository;
 
@@ -104,12 +130,14 @@ public class UserService extends AbstractNamedService<User, UUID> {
       @NonNull UserRepository userRepository,
       @NonNull GroupService groupService,
       @NonNull ApplicationService applicationService,
-      @NonNull UserDefaultsConfig userDefaultsConfig) {
+      @NonNull UserDefaultsConfig userDefaultsConfig,
+      @NonNull TokenEventsPublisher tokenEventsPublisher) {
     super(User.class, userRepository);
     this.userRepository = userRepository;
     this.groupService = groupService;
     this.applicationService = applicationService;
     this.userDefaultsConfig = userDefaultsConfig;
+    this.tokenEventsPublisher = tokenEventsPublisher;
   }
 
   public User create(@NonNull CreateUserRequest request) {
@@ -191,8 +219,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     val user = getUserWithRelationshipsById(id);
     checkApplicationsExistForUser(user, appIds);
     val appsToDisassociate =
-        user.getApplications()
-            .stream()
+        user.getApplications().stream()
             .filter(a -> appIds.contains(a.getId()))
             .collect(toImmutableSet());
     disassociateUserFromApplications(user, appsToDisassociate);

@@ -16,12 +16,27 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static java.lang.String.format;
+import static java.util.UUID.fromString;
+import static org.mapstruct.factory.Mappers.getMapper;
+import static org.springframework.data.jpa.domain.Specifications.where;
+
+import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
 import bio.overture.ego.service.association.FindRequest;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
 import org.mapstruct.Mapper;
@@ -62,10 +77,24 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   /** Dependencies */
   private final GroupRepository groupRepository;
 
+  private final UserRepository userRepository;
+  private final ApplicationRepository applicationRepository;
+  private final ApplicationService applicationService;
+  private final TokenEventsPublisher tokenEventsPublisher;
+
   @Autowired
-  public GroupService(@NonNull GroupRepository groupRepository) {
+  public GroupService(
+      @NonNull GroupRepository groupRepository,
+      @NonNull UserRepository userRepository,
+      @NonNull ApplicationRepository applicationRepository,
+      @NonNull ApplicationService applicationService,
+      @NonNull TokenEventsPublisher tokenEventsPublisher) {
     super(Group.class, groupRepository);
     this.groupRepository = groupRepository;
+    this.userRepository = userRepository;
+    this.applicationRepository = applicationRepository;
+    this.applicationService = applicationService;
+    this.tokenEventsPublisher = tokenEventsPublisher;
   }
 
   @Override
@@ -80,6 +109,36 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     checkNameUnique(request.getName());
     val group = GROUP_CONVERTER.convertToGroup(request);
     return getRepository().save(group);
+  }
+
+  /**
+   * Decorate the delete method for group's users to also trigger a token check after group delete.
+   *
+   * @param groupId The ID of the group to be deleted.
+   */
+  @Override
+  public void delete(@NonNull UUID groupId) {
+    super.checkExistence(groupId);
+
+    val group = getWithRelationships(groupId);
+    val users = group.getUsers();
+    group.getUsers().forEach(x -> x.getGroups().remove(group));
+    group.getUsers().clear();
+
+    group.getApplications().forEach(x -> x.getGroups().remove(group));
+    group.getApplications().clear();
+
+    group.getPermissions().forEach(x -> x.setOwner(null));
+    group.getPermissions().clear();
+
+    super.delete(groupId);
+    tokenEventsPublisher.requestTokenCleanupByUsers(users);
+  }
+
+  public Group getGroupWithRelationships(@NonNull UUID id) {
+    val result = groupRepository.findGroupById(id);
+    checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
+    return result.get();
   }
 
   public Group partialUpdate(@NonNull UUID id, @NonNull GroupRequest r) {

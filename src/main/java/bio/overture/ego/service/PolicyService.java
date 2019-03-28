@@ -9,13 +9,21 @@ import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static javax.persistence.criteria.JoinType.LEFT;
 import static org.mapstruct.factory.Mappers.getMapper;
 
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static org.mapstruct.factory.Mappers.getMapper;
+
+import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.entity.TokenScope;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.PolicyRepository;
 import bio.overture.ego.repository.queryspecification.PolicySpecification;
 import java.util.List;
 import java.util.Optional;
+import bio.overture.ego.utils.Collectors;
+import java.util.List;
 import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -43,10 +51,15 @@ public class PolicyService extends AbstractNamedService<Policy, UUID> {
   /** Dependencies */
   private final PolicyRepository policyRepository;
 
+  private final TokenEventsPublisher tokenEventsPublisher;
+
   @Autowired
-  public PolicyService(@NonNull PolicyRepository policyRepository) {
+  public PolicyService(
+      @NonNull PolicyRepository policyRepository,
+      @NonNull TokenEventsPublisher tokenEventsPublisher) {
     super(Policy.class, policyRepository);
     this.policyRepository = policyRepository;
+    this.tokenEventsPublisher = tokenEventsPublisher;
   }
 
   public Policy create(@NonNull PolicyRequest createRequest) {
@@ -60,6 +73,19 @@ public class PolicyService extends AbstractNamedService<Policy, UUID> {
     val result = (Optional<Policy>) getRepository().findOne(fetchSpecification(id, true, true));
     checkNotFound(result.isPresent(), "The policyId '%s' does not exist", id);
     return result.get();
+  }
+
+  public void delete(@NonNull UUID id) {
+    checkExistence(id);
+    val policy = this.getById(id);
+
+    // For semantic/readability reasons, revoke tokens AFTER policy is deleted.
+    val tokensToRevoke =
+        policy.getTokenScopes().stream()
+            .map(TokenScope::getToken)
+            .collect(Collectors.toImmutableSet());
+    super.delete(id);
+    tokenEventsPublisher.requestTokenCleanup(tokensToRevoke);
   }
 
   public Page<Policy> listPolicies(

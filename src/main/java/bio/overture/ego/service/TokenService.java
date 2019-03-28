@@ -35,13 +35,13 @@ import static org.springframework.util.DigestUtils.md5Digest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
+import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.dto.UserScopesResponse;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.ScopeName;
-import bio.overture.ego.reactor.events.UserEvents;
 import bio.overture.ego.repository.TokenStoreRepository;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.TokenClaims;
@@ -68,6 +68,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -97,7 +98,6 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   private TokenSigner tokenSigner;
   private UserService userService;
   private ApplicationService applicationService;
-  private UserEvents userEvents;
   private TokenStoreService tokenStoreService;
   private PolicyService policyService;
 
@@ -105,11 +105,13 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   @Value("${jwt.duration:86400000}")
   private int DURATION;
 
+  @Value("${apitoken.duration:365}")
+  private int API_TOKEN_DURATION;
+
   public TokenService(
       @NonNull TokenSigner tokenSigner,
       @NonNull UserService userService,
       @NonNull ApplicationService applicationService,
-      @NonNull UserEvents userEvents,
       @NonNull TokenStoreService tokenStoreService,
       @NonNull PolicyService policyService,
       @NonNull TokenStoreRepository tokenStoreRepository) {
@@ -117,7 +119,6 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     this.tokenSigner = tokenSigner;
     this.userService = userService;
     this.applicationService = applicationService;
-    this.userEvents = userEvents;
     this.tokenStoreService = tokenStoreService;
     this.policyService = policyService;
   }
@@ -140,11 +141,8 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       user = userService.createFromIDToken(idToken);
     }
 
-    // Update user.lastLogin in the DB
-    // Use events as these are async:
-    //    the DB call won't block returning the ScopedAccessToken
-    user.setLastLogin(new Date());
-    userEvents.update(user);
+    UpdateUserRequest u = UpdateUserRequest.builder().lastLogin(new Date()).build();
+    userService.partialUpdate(user.getId(), u);
 
     return generateUserToken(user);
   }
@@ -189,11 +187,9 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   }
 
   @SneakyThrows
-  public Token issueToken(
-      UUID user_id, List<ScopeName> scopeNames, List<UUID> apps, String description) {
+  public Token issueToken(UUID user_id, List<ScopeName> scopeNames, String description) {
     log.info(format("Looking for user '%s'", str(user_id)));
     log.info(format("Scopes are '%s'", strList(scopeNames)));
-    log.info(format("Apps are '%s'", strList(apps)));
     log.info(format("Token description is '%s'", description));
 
     val u =
@@ -219,8 +215,15 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     val tokenString = generateTokenString();
     log.info(format("Generated token string '%s'", str(tokenString)));
 
+    val cal = Calendar.getInstance();
+    cal.add(Calendar.DAY_OF_YEAR, API_TOKEN_DURATION);
+    val expiryDate = cal.getTime();
+
+    val today = Calendar.getInstance();
+
     val token = new Token();
-    token.setExpires(DURATION);
+    token.setExpiryDate(expiryDate);
+    token.setIssueDate(today.getTime());
     token.setRevoked(false);
     token.setName(tokenString);
     token.setOwner(u);
@@ -228,14 +231,6 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
 
     for (Scope requestedScope : requestedScopes) {
       token.addScope(requestedScope);
-    }
-
-    if (apps != null) {
-      log.info("Generating apps list");
-      for (val appId : apps) {
-        val app = applicationService.getById(appId);
-        token.addApplication(app);
-      }
     }
 
     log.info("Creating token in token store");
@@ -348,29 +343,20 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       throw new InvalidTokenException("No token field found in POST request");
     }
 
-    log.info(format("token ='%s'", token));
+    log.debug(format("token ='%s'", token));
     val application = applicationService.findByBasicToken(authToken);
 
     val t =
         findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found"));
 
-    if (t.isRevoked()) {
+    if (t.isRevoked())
       throw new InvalidTokenException(
           format("Token \"%s\" has expired or is no longer valid. ", token));
-    }
-
-    val clientId = application.getClientId();
-    val apps = t.getApplications();
-    log.info(format("Applications are %s", apps.toString()));
-    if (apps != null && !apps.isEmpty()) {
-      if (!(apps.stream().anyMatch(app -> app.getClientId().equals(clientId)))) {
-        throw new InvalidTokenException("Token not authorized for this client");
-      }
-    }
 
     // We want to limit the scopes listed in the token to those scopes that the user
     // is allowed to access at the time the token is checked -- we don't assume that
     // they have not changed since the token was issued.
+    val clientId = application.getClientId();
     val owner = t.getOwner();
     val scopes = explicitScopes(effectiveScopes(extractScopes(owner), t.scopes()));
     val names = mapToSet(scopes, Scope::toString);
@@ -440,7 +426,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     }
   }
 
-  private void revoke(String token) {
+  public void revoke(String token) {
     val currentToken =
         findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found."));
     if (currentToken.isRevoked()) {

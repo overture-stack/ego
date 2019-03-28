@@ -1,5 +1,16 @@
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.model.enums.StatusType.PENDING;
+import static bio.overture.ego.utils.EntityTools.extractAppIds;
+import static bio.overture.ego.utils.EntityTools.extractIDs;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.dto.MaskDTO;
@@ -21,6 +32,7 @@ import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import lombok.Builder;
 import lombok.NonNull;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -122,6 +134,26 @@ public class GroupControllerTest extends AbstractControllerTest {
   }
 
   @Test
+  public void addGroup() {
+    val group = Group.builder().name("Wizards").status(PENDING).description("").build();
+
+    val response = initStringRequest().endpoint("/groups").body(group).post();
+
+    val responseStatus = response.getStatusCode();
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+  }
+
+  @Test
+  public void addUniqueGroup() {
+    val group = entityGenerator.setupGroup("SameSame");
+
+    val response = initStringRequest().endpoint("/groups").body(group).post();
+
+    val responseStatus = response.getStatusCode();
+    assertThat(responseStatus).isEqualTo(HttpStatus.CONFLICT);
+  }
+
+  @Test
   public void getGroup() {
     // Groups created in setup
     val groupId = groupService.getByName("Group One").getId();
@@ -178,9 +210,11 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     // Users for test
     val userOne = entityGenerator.setupUser("TempGroup User");
+    val userId = userOne.getId();
 
     // Application for test
     val appOne = entityGenerator.setupApplication("TempGroupApp");
+    val appId = appOne.getId();
 
     // REST to get users/app in group
     val usersBody = singletonList(userOne.getId().toString());
@@ -206,18 +240,18 @@ public class GroupControllerTest extends AbstractControllerTest {
     assertThat(responseStatus).isEqualTo(OK);
 
     // Check user-group relationship is also deleted
-    val userWithoutGroup = userService.getByName("TempGroupUser@domain.com");
-    assertThat(userWithoutGroup).isNotNull();
-    val expectedGroups2 = mapToSet(userWithoutGroup.getUserGroups(), UserGroup::getGroup);
-    assertThat(extractGroupIds(expectedGroups2)).doesNotContain(groupId);
+    val userWithoutGroup = initStringRequest().endpoint("/users/%s/groups", userId).get();
+    assertThat(userWithoutGroup.getBody()).doesNotContain(groupId.toString());
 
-    // Check app-group relationship is also deleted
-    val applicationWithoutGroup = applicationService.getByClientId("TempGroupApp");
-    assertThat(applicationWithoutGroup).isNotNull();
-    assertThat(extractGroupIds(applicationWithoutGroup.getGroups())).doesNotContain(groupId);
+    // Check user-group relationship is also deleted
+    val applicationWithoutGroup =
+        initStringRequest().endpoint("/applications/%s/groups", appId).get();
+    assertThat(applicationWithoutGroup.getBody()).doesNotContain(groupId.toString());
 
     // Check group is deleted
-    assertThat(groupService.findByName("DeleteOne")).isEmpty();
+    val groupResponse = initStringRequest().endpoint("/groups/%s", groupId).get();
+    log.info(groupResponse.getBody());
+    assertThat(groupResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
   }
 
   // TODO: [rtisma] will eventually be fixed when properly using query by Specification, which will

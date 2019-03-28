@@ -39,6 +39,10 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import java.util.UUID;
+import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -74,6 +78,8 @@ public class GroupController {
   /** Dependencies */
   private final GroupService groupService;
 
+  private final ApplicationService applicationService;
+  private final UserService userService;
   private final GroupPermissionService groupPermissionService;
   private final AssociationService<Group, Application, UUID> groupApplicationAssociationService;
   private final AssociationService<Application, Group, UUID> applicationGroupAssociationService;
@@ -298,14 +304,11 @@ public class GroupController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    val findRequest =
-        FindRequest.builder()
-            .id(groupId)
-            .query(isEmpty(query) ? null : query)
-            .filters(filters)
-            .pageable(pageable)
-            .build();
-    return new PageDTO<>(applicationGroupAssociationService.findParentsForChild(findRequest));
+    if (StringUtils.isEmpty(query)) {
+      return new PageDTO<>(applicationService.findGroupApplications(id, filters, pageable));
+    } else {
+      return new PageDTO<>(applicationService.findGroupApplications(id, query, filters, pageable));
+    }
   }
 
   @AdminScoped

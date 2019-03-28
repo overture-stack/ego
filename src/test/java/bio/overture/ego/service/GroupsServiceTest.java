@@ -535,9 +535,7 @@ public class GroupsServiceTest {
     val applicationId = applicationService.getByClientId("111111").getId();
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
-            () ->
-                groupApplicationAssociatorService.associateParentWithChildren(
-                    UUID.randomUUID(), Arrays.asList(applicationId)));
+            () -> groupService.addAppsToGroup(UUID.randomUUID(), Arrays.asList(applicationId)));
   }
 
   @Test
@@ -547,10 +545,7 @@ public class GroupsServiceTest {
 
     val groupId = groupService.getByName("Group One").getId();
     assertThatExceptionOfType(NotFoundException.class)
-        .isThrownBy(
-            () ->
-                groupApplicationAssociatorService.associateParentWithChildren(
-                    groupId, Arrays.asList(UUID.randomUUID())));
+        .isThrownBy(() -> groupService.addAppsToGroup(groupId, Arrays.asList(UUID.randomUUID())));
   }
 
   @Test
@@ -630,8 +625,7 @@ public class GroupsServiceTest {
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(
             () ->
-                groupApplicationAssociatorService.disassociateParentFromChildren(
-                    UUID.randomUUID(), Arrays.asList(applicationId)));
+                groupService.deleteAppsFromGroup(UUID.randomUUID(), Arrays.asList(applicationId)));
   }
 
   @Test
@@ -743,9 +737,7 @@ public class GroupsServiceTest {
     groupPermissionService.addPermissions(firstGroup.getId(), permissions);
 
     val groupPermissionsToRemove =
-        firstGroup
-            .getPermissions()
-            .stream()
+        firstGroup.getPermissions().stream()
             .filter(p -> !p.getPolicy().getName().equals("Study001"))
             .map(AbstractPermission::getId)
             .collect(Collectors.toList());

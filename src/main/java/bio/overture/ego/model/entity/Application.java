@@ -33,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
 import java.util.Set;
 import java.util.UUID;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -65,7 +66,7 @@ import org.hibernate.annotations.TypeDef;
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonView(Views.REST.class)
-@ToString(exclude = {LombokFields.groups, LombokFields.users, LombokFields.tokens})
+@ToString(exclude = {LombokFields.groups, LombokFields.users})
 @EqualsAndHashCode(of = {LombokFields.id})
 @JsonPropertyOrder({
   JavaFields.ID,
@@ -84,15 +85,11 @@ import org.hibernate.annotations.TypeDef;
     name = "application-entity-with-relationships",
     attributeNodes = {
       @NamedAttributeNode(value = JavaFields.USERS, subgraph = "users-subgraph"),
-      @NamedAttributeNode(value = JavaFields.TOKENS, subgraph = "tokens-subgraph"),
       @NamedAttributeNode(value = JavaFields.GROUPS, subgraph = "groups-subgraph")
     },
     subgraphs = {
       @NamedSubgraph(
           name = "groups-subgraph",
-          attributeNodes = {@NamedAttributeNode(JavaFields.APPLICATIONS)}),
-      @NamedSubgraph(
-          name = "tokens-subgraph",
           attributeNodes = {@NamedAttributeNode(JavaFields.APPLICATIONS)}),
       @NamedSubgraph(
           name = "users-subgraph",
@@ -152,8 +149,4 @@ public class Application implements Identifiable<UUID> {
   @ManyToMany(mappedBy = JavaFields.APPLICATIONS, fetch = FetchType.LAZY)
   private Set<User> users = newHashSet();
 
-  @JsonIgnore
-  @Builder.Default
-  @ManyToMany(mappedBy = JavaFields.APPLICATIONS, fetch = FetchType.LAZY)
-  private Set<Token> tokens = newHashSet();
 }

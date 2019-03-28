@@ -17,6 +17,17 @@
 
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.StatusType.REJECTED;
+import static bio.overture.ego.model.enums.UserType.USER;
+import static bio.overture.ego.utils.Collectors.toImmutableList;
+import static bio.overture.ego.utils.EntityTools.extractUserIds;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.UpdateUserRequest;
@@ -27,6 +38,7 @@ import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.Streams;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
