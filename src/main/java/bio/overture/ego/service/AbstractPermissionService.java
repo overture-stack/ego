@@ -9,6 +9,7 @@ import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.repository.PermissionRepository;
 import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -50,30 +51,6 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 import static javax.persistence.criteria.JoinType.LEFT;
 
-import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.dto.PolicyResponse;
-import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.NameableEntity;
-import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.repository.PermissionRepository;
-import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.annotation.Transactional;
-
 @Slf4j
 @Transactional
 public abstract class AbstractPermissionService<
@@ -104,6 +81,7 @@ public abstract class AbstractPermissionService<
 
   protected abstract Collection<P> getPermissionsFromPolicy(Policy policy);
 
+  //TODO: [rtisma] not correctly implemented. Should implement dynamic fetching
   @Override
   public P getWithRelationships(@NonNull UUID id) {
     val result = (Optional<P>) permissionRepository.findOne(fetchSpecification(id, true));

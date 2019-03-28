@@ -28,9 +28,9 @@ import bio.overture.ego.model.exceptions.PostWithIdentifierException;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
+import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.association.AssociationService;
 import bio.overture.ego.service.association.FindRequest;
 import bio.overture.ego.service.join.UserGroupJoinService;
 import bio.overture.ego.view.Views;
@@ -39,10 +39,6 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
-import java.util.UUID;
-import javax.persistence.EntityNotFoundException;
-import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -51,6 +47,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -77,12 +74,9 @@ public class GroupController {
 
   /** Dependencies */
   private final GroupService groupService;
-
   private final ApplicationService applicationService;
-  private final UserService userService;
+
   private final GroupPermissionService groupPermissionService;
-  private final AssociationService<Group, Application, UUID> groupApplicationAssociationService;
-  private final AssociationService<Application, Group, UUID> applicationGroupAssociationService;
   private final UserGroupJoinService userGroupJoinService;
 
   @Autowired
@@ -90,13 +84,11 @@ public class GroupController {
       @NonNull GroupService groupService,
       @NonNull GroupPermissionService groupPermissionService,
       @NonNull UserGroupJoinService userGroupJoinService,
-      @NonNull AssociationService<Group, Application, UUID> groupApplicationAssociationService,
-      @NonNull AssociationService<Application, Group, UUID> applicationGroupAssociationService) {
+      @NonNull ApplicationService applicationService ) {
     this.groupService = groupService;
     this.groupPermissionService = groupPermissionService;
-    this.groupApplicationAssociationService = groupApplicationAssociationService;
-    this.applicationGroupAssociationService = applicationGroupAssociationService;
     this.userGroupJoinService = userGroupJoinService;
+    this.applicationService = applicationService;
   }
 
   @AdminScoped
@@ -232,9 +224,9 @@ public class GroupController {
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<GroupPermission> getGroupPermissionsForGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) UUID groupId,
+      @PathVariable(value = "id", required = true) UUID id,
       Pageable pageable) {
-    return new PageDTO<>(groupPermissionService.getPermissions(groupId, pageable));
+    return new PageDTO<>(groupPermissionService.getPermissions(id, pageable));
   }
 
   @AdminScoped
@@ -300,7 +292,7 @@ public class GroupController {
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Application> getApplicationsForGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) UUID groupId,
+      @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
@@ -319,7 +311,7 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<UUID> appIds) {
-    return groupApplicationAssociationService.associateParentWithChildren(id, appIds);
+    return groupService.addAppsToGroup(id,appIds);
   }
 
   @AdminScoped
@@ -330,7 +322,7 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "appIds", required = true) List<UUID> appIds) {
-    groupApplicationAssociationService.disassociateParentFromChildren(id, appIds);
+    groupService.deleteAppsFromGroup(id, appIds);
   }
 
   /*
@@ -374,13 +366,13 @@ public class GroupController {
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<User> getUsersForGroup(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) UUID groupId,
+      @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
     val findRequest =
         FindRequest.builder()
-            .id(groupId)
+            .id(id)
             .query(isEmpty(query) ? null : query)
             .filters(filters)
             .pageable(pageable)

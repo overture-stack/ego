@@ -16,27 +16,18 @@
 
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static java.lang.String.format;
-import static java.util.UUID.fromString;
-import static org.mapstruct.factory.Mappers.getMapper;
-import static org.springframework.data.jpa.domain.Specifications.where;
-
 import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.GroupRequest;
+import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupRepository;
+import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
 import bio.overture.ego.service.association.FindRequest;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
 import org.mapstruct.Mapper;
@@ -51,6 +42,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -62,7 +54,11 @@ import static bio.overture.ego.model.enums.JavaFields.USER;
 import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static java.lang.String.format;
 import static javax.persistence.criteria.JoinType.LEFT;
 import static org.mapstruct.factory.Mappers.getMapper;
 import static org.springframework.data.jpa.domain.Specifications.where;
@@ -118,19 +114,8 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
    */
   @Override
   public void delete(@NonNull UUID groupId) {
-    super.checkExistence(groupId);
-
     val group = getWithRelationships(groupId);
-    val users = group.getUsers();
-    group.getUsers().forEach(x -> x.getGroups().remove(group));
-    group.getUsers().clear();
-
-    group.getApplications().forEach(x -> x.getGroups().remove(group));
-    group.getApplications().clear();
-
-    group.getPermissions().forEach(x -> x.setOwner(null));
-    group.getPermissions().clear();
-
+    val users = mapToSet(group.getUserGroups(), UserGroup::getUser);
     super.delete(groupId);
     tokenEventsPublisher.requestTokenCleanupByUsers(users);
   }
@@ -197,6 +182,24 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         pageable);
   }
 
+  public Group addAppsToGroup(@NonNull UUID id, @NonNull List<UUID> appIds) {
+    val group = getById(id);
+    val apps = applicationService.getMany(appIds);
+    associateApplications(group, apps);
+    return getRepository().save(group);
+  }
+
+  public void deleteAppsFromGroup(@NonNull UUID id, @NonNull List<UUID> appIds) {
+    val group = getById(id);
+    checkAppsExistForGroup(group, appIds);
+    val appsToDisassociate =
+        group.getApplications().stream()
+            .filter(a -> appIds.contains(a.getId()))
+            .collect(toImmutableSet());
+    disassociateGroupFromApps(group, appsToDisassociate);
+    getRepository().save(group);
+  }
+
   private void validateUpdateRequest(Group originalGroup, GroupRequest updateRequest) {
     onUpdateDetected(
         originalGroup.getName(),
@@ -207,6 +210,20 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   private void checkNameUnique(String name) {
     checkUnique(
         !groupRepository.existsByNameIgnoreCase(name), "A group with same name already exists");
+  }
+
+  public static void checkAppsExistForGroup(
+      @NonNull Group group, @NonNull Collection<UUID> appIds) {
+    val existingAppIds =
+        group.getApplications().stream().map(Application::getId).collect(toImmutableSet());
+    val nonExistentAppIds =
+        appIds.stream().filter(x -> !existingAppIds.contains(x)).collect(toImmutableSet());
+    if (!nonExistentAppIds.isEmpty()) {
+      throw new NotFoundException(
+          format(
+              "The following apps do not exist for group '%s': %s",
+              group.getId(), COMMA.join(nonExistentAppIds)));
+    }
   }
 
   private static Specification<Group> fetchSpecification(
@@ -224,6 +241,18 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
       }
       return builder.equal(fromGroup.get(ID), id);
     };
+  }
+
+  private static void associateApplications(
+      @NonNull Group group, @NonNull Collection<Application> applications) {
+    group.getApplications().addAll(applications);
+    applications.stream().map(Application::getGroups).forEach(groups -> groups.add(group));
+  }
+
+  public static void disassociateGroupFromApps(
+      @NonNull Group group, @NonNull Collection<Application> apps) {
+    group.getApplications().removeAll(apps);
+    apps.forEach(x -> x.getGroups().remove(group));
   }
 
   @Mapper(

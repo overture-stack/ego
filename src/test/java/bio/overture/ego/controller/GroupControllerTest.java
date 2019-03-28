@@ -1,16 +1,5 @@
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.model.enums.StatusType.PENDING;
-import static bio.overture.ego.utils.EntityTools.extractAppIds;
-import static bio.overture.ego.utils.EntityTools.extractIDs;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
-import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.dto.MaskDTO;
@@ -32,7 +21,6 @@ import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import lombok.Builder;
 import lombok.NonNull;
-import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -64,6 +52,7 @@ import static bio.overture.ego.model.enums.JavaFields.STATUS;
 import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.DISABLED;
+import static bio.overture.ego.model.enums.StatusType.PENDING;
 import static bio.overture.ego.model.enums.StatusType.REJECTED;
 import static bio.overture.ego.utils.CollectionUtils.concatToSet;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
@@ -135,7 +124,7 @@ public class GroupControllerTest extends AbstractControllerTest {
 
   @Test
   public void addGroup() {
-    val group = Group.builder().name("Wizards").status(PENDING).description("").build();
+    val group = GroupRequest.builder().name("Wizards").status(PENDING).description("").build();
 
     val response = initStringRequest().endpoint("/groups").body(group).post();
 
@@ -146,8 +135,13 @@ public class GroupControllerTest extends AbstractControllerTest {
   @Test
   public void addUniqueGroup() {
     val group = entityGenerator.setupGroup("SameSame");
+    val groupRequest = GroupRequest.builder()
+        .name(group.getName())
+        .status(group.getStatus())
+        .description(group.getDescription())
+        .build();
 
-    val response = initStringRequest().endpoint("/groups").body(group).post();
+    val response = initStringRequest().endpoint("/groups").body(groupRequest).post();
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.CONFLICT);
@@ -1464,6 +1458,10 @@ public class GroupControllerTest extends AbstractControllerTest {
 
   private ResponseEntity<String> getGroupUsersGetRequest(Group g) {
     return initStringRequest().endpoint("/groups/%s/users", g.getId()).get();
+  }
+
+  private ResponseEntity<String> getGroupsForUserGetRequest(User u) {
+    return initStringRequest().endpoint("/users/%s/group", u.getId()).get();
   }
 
   private ResponseEntity<String> getGroupApplicationsGetRequest(Group g) {

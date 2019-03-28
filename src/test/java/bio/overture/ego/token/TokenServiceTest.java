@@ -17,30 +17,16 @@
 
 package bio.overture.ego.token;
 
-import static bio.overture.ego.utils.CollectionUtils.setOf;
-import static com.google.common.collect.Lists.newArrayList;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
-import bio.overture.ego.service.association.AssociationService;
+import bio.overture.ego.service.join.UserGroupJoinService;
 import bio.overture.ego.utils.CollectionUtils;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.TestData;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Assert;
@@ -57,6 +43,17 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
+import static bio.overture.ego.utils.CollectionUtils.setOf;
+import static com.google.common.collect.Lists.newArrayList;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -71,7 +68,7 @@ public class TokenServiceTest {
 
   @Autowired private TokenService tokenService;
 
-  @Autowired private AssociationService<Group, User, UUID> groupUserAssociationService;
+  @Autowired private UserGroupJoinService userGroupJoinService;
 
   public static TestData test = null;
 
@@ -86,7 +83,8 @@ public class TokenServiceTest {
     val group2 = entityGenerator.setupGroup("testGroup");
     val app2 = entityGenerator.setupApplication("foo");
 
-    groupUserAssociationService.associateParentWithChildren(
+
+    userGroupJoinService.associate(
         user.getId(), newArrayList(group2.getId()));
     userService.addUserToApps(user.getId(), newArrayList(app2.getId()));
 
@@ -104,7 +102,7 @@ public class TokenServiceTest {
     //
     val tokenString = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.WRITE", "id.WRITE", "portal.WRITE");
-    entityGenerator.setupToken(test.user2, tokenString, 1000, scopes, null);
+    entityGenerator.setupToken(test.user2, tokenString, 1000, scopes);
     val result = tokenService.checkToken(test.scoreAuth, tokenString);
     System.err.printf("result='%s'", result.toString());
 
@@ -122,7 +120,7 @@ public class TokenServiceTest {
 
     val tokenString = "591044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.READ", "id.WRITE");
-    entityGenerator.setupToken(test.user2, tokenString, 1000, scopes, null);
+    entityGenerator.setupToken(test.user2, tokenString, 1000, scopes);
 
     val result = tokenService.checkToken(test.songAuth, tokenString);
 
@@ -142,8 +140,7 @@ public class TokenServiceTest {
     // check_token should fail with an InvalidToken exception.
     val tokenString = "691044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.READ");
-    val applications = Collections.singleton(test.score);
-    entityGenerator.setupToken(test.user1, tokenString, 1000, scopes, applications);
+    entityGenerator.setupToken(test.user1, tokenString, 1000, scopes);
 
     assertThatExceptionOfType(InvalidTokenException.class)
         .isThrownBy(() -> tokenService.checkToken(test.songAuth, tokenString));
@@ -159,8 +156,7 @@ public class TokenServiceTest {
     val tokenString = "791044a1-3ffd-4164-a6a0-0e1e666b28dc";
 
     val scopes = test.getScopes("song.WRITE", "id.WRITE");
-    val applications = Collections.singleton(test.score);
-    val tttt = entityGenerator.setupToken(test.user1, tokenString, 1000, scopes, applications);
+    val tttt = entityGenerator.setupToken(test.user1, tokenString, 1000, scopes);
 
     val result = tokenService.checkToken(test.scoreAuth, tokenString);
 
@@ -193,10 +189,9 @@ public class TokenServiceTest {
     // Try to issue a token for a user that does not exist
     val uuid = UUID.randomUUID();
     val scopes = EntityGenerator.scopeNames("collab.READ", "id.READ");
-    val applications = new ArrayList<UUID>();
 
     assertThatExceptionOfType(UsernameNotFoundException.class)
-        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, applications, "new token"));
+        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, "new token"));
   }
 
   @Test
@@ -207,10 +202,9 @@ public class TokenServiceTest {
     // issueToken() should throw an InvalidScope exception
     val uuid = test.user2.getId();
     val scopes = EntityGenerator.scopeNames("collab.WRITE", "song.WRITE");
-    val applications = new ArrayList<UUID>();
 
     assertThatExceptionOfType(InvalidScopeException.class)
-        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, applications, "new token"));
+        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, "new token"));
   }
 
   @Test
@@ -220,8 +214,7 @@ public class TokenServiceTest {
     val tokenString = "891044a1-3ffd-4164-a6a0-0e1e666b28dc";
 
     val scopes = test.getScopes("collab.READ", "id.READ");
-    val applications = Collections.singleton(test.score);
-    entityGenerator.setupToken(test.user1, tokenString, 1000, scopes, applications);
+    entityGenerator.setupToken(test.user1, tokenString, 1000, scopes);
 
     val result = tokenService.checkToken(test.scoreAuth, tokenString);
 
@@ -240,9 +233,8 @@ public class TokenServiceTest {
     // issue_token() should return a token with values we set.
     val uuid = test.user1.getId();
     val scopes = EntityGenerator.scopeNames("collab.READ");
-    val applications = new ArrayList<UUID>();
 
-    val token = tokenService.issueToken(uuid, scopes, applications, "New Token");
+    val token = tokenService.issueToken(uuid, scopes, "New Token");
 
     assertFalse(token.isRevoked());
     Assert.assertEquals(token.getOwner().getId(), uuid);
@@ -266,10 +258,9 @@ public class TokenServiceTest {
 
     val uuid = test.user1.getId();
     val scopes = EntityGenerator.scopeNames("collab.READ", "invalid.WRITE");
-    val applications = new ArrayList<UUID>();
 
     assertThatExceptionOfType(NotFoundException.class)
-        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, applications, "new token"));
+        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, "new token"));
   }
 
   @Test
@@ -280,11 +271,9 @@ public class TokenServiceTest {
 
     val uuid = test.user1.getId();
     val scopes = EntityGenerator.scopeNames("collab.READ");
-    val applications = new ArrayList<UUID>();
-    applications.add(UUID.randomUUID());
 
     assertThatExceptionOfType(InvalidScopeException.class)
-        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, applications, "new token"));
+        .isThrownBy(() -> tokenService.issueToken(uuid, scopes, "new token"));
   }
 
   @Test

@@ -1,19 +1,5 @@
 package bio.overture.ego.utils;
 
-import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static bio.overture.ego.model.enums.StatusType.PENDING;
-import static bio.overture.ego.model.enums.UserType.ADMIN;
-import static bio.overture.ego.utils.CollectionUtils.listOf;
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
-import static bio.overture.ego.utils.Splitters.COMMA_SPLITTER;
-import static com.google.common.collect.Lists.newArrayList;
-import static java.lang.Integer.MAX_VALUE;
-import static java.lang.Math.abs;
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.GroupRequest;
@@ -41,35 +27,35 @@ import bio.overture.ego.service.TokenStoreService;
 import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
 import com.google.common.collect.ImmutableSet;
+import lombok.NonNull;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
-import lombok.NonNull;
-import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+
+import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.StatusType.PENDING;
+import static bio.overture.ego.model.enums.UserType.ADMIN;
+import static bio.overture.ego.utils.CollectionUtils.listOf;
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
+import static bio.overture.ego.utils.Splitters.COMMA_SPLITTER;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.lang.Integer.MAX_VALUE;
+import static java.lang.Math.abs;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import bio.overture.ego.model.dto.*;
-import bio.overture.ego.model.entity.*;
-import bio.overture.ego.model.enums.ApplicationType;
-import bio.overture.ego.model.params.ScopeName;
-import bio.overture.ego.service.*;
-import com.google.common.collect.ImmutableSet;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-import lombok.NonNull;
-import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 @Component
 /**
@@ -160,10 +146,6 @@ public class EntityGenerator {
 
   public void setupTestUsers() {
     setupUsers("First User", "Second User", "Third User");
-  }
-
-  private GroupRequest createGroupRequest(String name) {
-    return GroupRequest.builder().name(name).status(PENDING).description("").build();
   }
 
   public Group setupGroup(String name) {

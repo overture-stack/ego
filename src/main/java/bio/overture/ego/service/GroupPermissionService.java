@@ -5,15 +5,19 @@ import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.repository.GroupPermissionRepository;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
+
+import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 
 @Slf4j
 @Service
@@ -46,7 +50,8 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
   public Group addPermissions(
       @NonNull UUID groupId, @NonNull List<PermissionRequest> permissionRequests) {
     val group = super.addPermissions(groupId, permissionRequests);
-    tokenEventsPublisher.requestTokenCleanupByUsers(group.getUsers());
+    val users = mapToImmutableSet(group.getUserGroups(), UserGroup::getUser);
+    tokenEventsPublisher.requestTokenCleanupByUsers(users);
     return group;
   }
 
@@ -59,8 +64,9 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
   @Override
   public void deletePermissions(@NonNull UUID groupId, @NonNull Collection<UUID> idsToDelete) {
     super.deletePermissions(groupId, idsToDelete);
-    val group = getOwnerWithRelationships(groupId);
-    tokenEventsPublisher.requestTokenCleanupByUsers(group.getUsers());
+    val group = groupService.getWithRelationships(groupId);
+    val users = mapToImmutableSet(group.getUserGroups(), UserGroup::getUser);
+    tokenEventsPublisher.requestTokenCleanupByUsers(users);
   }
 
   @Override

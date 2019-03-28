@@ -1,5 +1,16 @@
 package bio.overture.ego.utils;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import lombok.NonNull;
+import lombok.val;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static java.util.Arrays.asList;
@@ -8,20 +19,14 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.IntStream.range;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import lombok.NonNull;
-import lombok.val;
-
 public class CollectionUtils {
 
   public static <T, U> Set<U> mapToSet(Collection<T> collection, Function<T, U> mapper) {
     return collection.stream().map(mapper).collect(toSet());
+  }
+
+  public static <T, U> Set<U> mapToImmutableSet(Collection<T> collection, Function<T, U> mapper) {
+    return collection.stream().map(mapper).collect(toImmutableSet());
   }
 
   public static <T, U> List<U> mapToList(Collection<T> collection, Function<T, U> mapper) {

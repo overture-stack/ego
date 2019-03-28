@@ -17,10 +17,6 @@
 
 package bio.overture.ego.controller;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.Policy;
@@ -35,12 +31,17 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -50,10 +51,15 @@ import org.springframework.test.context.junit4.SpringRunner;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TokensOnUserAndPolicyDeletes extends AbstractControllerTest {
 
-  private boolean hasRunEntitySetup = false;
+  /**
+   * Config
+   */
+  @Value("${logging.test.controller.enable}")
+  private boolean enableLogging;
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
+
 
   private HttpHeaders tokenHeaders = new HttpHeaders();
 
@@ -62,8 +68,11 @@ public class TokensOnUserAndPolicyDeletes extends AbstractControllerTest {
     entityGenerator.setupApplication("tokenClient", "tokenSecret", ApplicationType.ADMIN);
     tokenHeaders.add(AUTHORIZATION, "Basic dG9rZW5DbGllbnQ6dG9rZW5TZWNyZXQ=");
     tokenHeaders.setContentType(APPLICATION_JSON);
+  }
 
-    hasRunEntitySetup = true;
+  @Override
+  protected boolean enableLogging() {
+    return enableLogging;
   }
 
   /**
