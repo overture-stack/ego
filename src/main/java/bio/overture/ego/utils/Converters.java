@@ -7,7 +7,11 @@ import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Objects.isNull;
 import static lombok.AccessLevel.PRIVATE;
 
+import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Identifiable;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.join.UserGroup;
+import bio.overture.ego.model.join.UserGroupId;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -15,6 +19,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.val;
 
 @NoArgsConstructor(access = PRIVATE)
 public class Converters {
@@ -63,5 +68,10 @@ public class Converters {
     if (!isNull(nullableValue)) {
       consumer.accept(nullableValue);
     }
+  }
+
+  public static UserGroup convertToUserGroup(@NonNull User u, @NonNull Group g) {
+    val id = UserGroupId.builder().groupId(g.getId()).userId(u.getId()).build();
+    return UserGroup.builder().id(id).user(u).group(g).build();
   }
 }

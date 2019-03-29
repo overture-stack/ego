@@ -141,12 +141,17 @@ public class Application implements Identifiable<UUID> {
 
   @JsonIgnore
   @Builder.Default
-  @ManyToMany(mappedBy = JavaFields.APPLICATIONS, fetch = FetchType.LAZY)
+  @ManyToMany(
+      mappedBy = JavaFields.APPLICATIONS,
+      fetch = FetchType.LAZY,
+      cascade = {CascadeType.MERGE, CascadeType.PERSIST})
   private Set<Group> groups = newHashSet();
 
   @JsonIgnore
   @Builder.Default
-  @ManyToMany(mappedBy = JavaFields.APPLICATIONS, fetch = FetchType.LAZY)
+  @ManyToMany(
+      mappedBy = JavaFields.APPLICATIONS,
+      fetch = FetchType.LAZY,
+      cascade = {CascadeType.MERGE, CascadeType.PERSIST})
   private Set<User> users = newHashSet();
-
 }

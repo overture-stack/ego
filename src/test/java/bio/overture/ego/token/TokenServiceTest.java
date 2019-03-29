@@ -17,16 +17,25 @@
 
 package bio.overture.ego.token;
 
+import static bio.overture.ego.utils.CollectionUtils.setOf;
+import static com.google.common.collect.Lists.newArrayList;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
-import bio.overture.ego.service.join.UserGroupJoinService;
 import bio.overture.ego.utils.CollectionUtils;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.TestData;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Assert;
@@ -43,17 +52,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
-
-import static bio.overture.ego.utils.CollectionUtils.setOf;
-import static com.google.common.collect.Lists.newArrayList;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -68,8 +66,6 @@ public class TokenServiceTest {
 
   @Autowired private TokenService tokenService;
 
-  @Autowired private UserGroupJoinService userGroupJoinService;
-
   public static TestData test = null;
 
   @Before
@@ -83,9 +79,7 @@ public class TokenServiceTest {
     val group2 = entityGenerator.setupGroup("testGroup");
     val app2 = entityGenerator.setupApplication("foo");
 
-
-    userGroupJoinService.associate(
-        user.getId(), newArrayList(group2.getId()));
+    userService.associateGroupsWithUser(user.getId(), newArrayList(group2.getId()));
     userService.addUserToApps(user.getId(), newArrayList(app2.getId()));
 
     val token = tokenService.generateUserToken(userService.getById(user.getId()));

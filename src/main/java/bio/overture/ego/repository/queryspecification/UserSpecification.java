@@ -22,12 +22,11 @@ import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.utils.QueryUtils;
+import java.util.UUID;
+import javax.persistence.criteria.Join;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
-
-import javax.persistence.criteria.Join;
-import java.util.UUID;
 
 public class UserSpecification extends SpecificationBase<User> {
 

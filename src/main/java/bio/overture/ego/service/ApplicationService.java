@@ -40,7 +40,6 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
-import bio.overture.ego.service.association.FindRequest;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashSet;
@@ -136,17 +135,6 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
             where(ApplicationSpecification.usedBy(userId))
                 .and(ApplicationSpecification.filterBy(filters)),
             pageable);
-  }
-
-  public static Specification<Application> buildFindApplicationByGroupSpecification(
-      @NonNull FindRequest findRequest) {
-    val baseSpec =
-        where(ApplicationSpecification.inGroup(findRequest.getId()))
-            .and(ApplicationSpecification.filterBy(findRequest.getFilters()));
-    return findRequest
-        .getQuery()
-        .map(q -> baseSpec.and(ApplicationSpecification.containsText(q)))
-        .orElse(baseSpec);
   }
 
   public Page<Application> findUserApps(

@@ -1,5 +1,7 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
+
 import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.Group;
@@ -7,17 +9,14 @@ import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.repository.GroupPermissionRepository;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-
-import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 
 @Slf4j
 @Service

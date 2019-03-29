@@ -1,5 +1,10 @@
 package bio.overture.ego.token;
 
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.UserType.ADMIN;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.TestData;
@@ -17,11 +22,6 @@ import org.springframework.security.oauth2.common.exceptions.InvalidTokenExcepti
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static bio.overture.ego.model.enums.UserType.ADMIN;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 @Slf4j
 @SpringBootTest
@@ -53,8 +53,7 @@ public class RevokeTokenTest {
     test.user1.setStatus(APPROVED);
 
     val randomTokenString = "891044a1-3ffd-4164-a6a0-0e1e666b28dc";
-    val randomToken =
-        entityGenerator.setupToken(test.regularUser, randomTokenString, 1000, scopes);
+    val randomToken = entityGenerator.setupToken(test.regularUser, randomTokenString, 1000, scopes);
 
     // make sure before revoking, randomToken is not revoked.
     assertFalse(randomToken.isRevoked());
@@ -70,8 +69,7 @@ public class RevokeTokenTest {
     val tokenString = "791044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.WRITE", "id.WRITE");
 
-    val adminToken =
-        entityGenerator.setupToken(test.user1, tokenString, 1000, scopes);
+    val adminToken = entityGenerator.setupToken(test.user1, tokenString, 1000, scopes);
     test.user1.setType(ADMIN);
     test.user1.setStatus(APPROVED);
 
@@ -89,8 +87,7 @@ public class RevokeTokenTest {
     // If a non-admin user tries to revoke her own token, the token will be revoked.
     val tokenString = "791044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.WRITE", "id.WRITE");
-    val userToken =
-        entityGenerator.setupToken(test.regularUser, tokenString, 1000, scopes);
+    val userToken = entityGenerator.setupToken(test.regularUser, tokenString, 1000, scopes);
 
     assertFalse(userToken.isRevoked());
 
@@ -109,8 +106,7 @@ public class RevokeTokenTest {
     entityGenerator.setupToken(test.regularUser, tokenString, 1000, scopes);
 
     val randomTokenString = "891044a1-3ffd-4164-a6a0-0e1e666b28dc";
-    val randomToken =
-        entityGenerator.setupToken(test.user1, randomTokenString, 1000, scopes);
+    val randomToken = entityGenerator.setupToken(test.user1, randomTokenString, 1000, scopes);
 
     assertFalse(randomToken.isRevoked());
 

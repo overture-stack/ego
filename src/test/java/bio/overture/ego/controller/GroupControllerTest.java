@@ -1,46 +1,5 @@
 package bio.overture.ego.controller;
 
-import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.dto.GroupRequest;
-import bio.overture.ego.model.dto.MaskDTO;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.GroupPermission;
-import bio.overture.ego.model.entity.Identifiable;
-import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.model.enums.StatusType;
-import bio.overture.ego.model.join.UserGroup;
-import bio.overture.ego.repository.GroupPermissionRepository;
-import bio.overture.ego.repository.GroupRepository;
-import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.service.GroupPermissionService;
-import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.UserService;
-import bio.overture.ego.utils.EntityGenerator;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.apache.commons.lang.NotImplementedException;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
@@ -82,6 +41,47 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
+
+import bio.overture.ego.AuthorizationServiceMain;
+import bio.overture.ego.model.dto.GroupRequest;
+import bio.overture.ego.model.dto.MaskDTO;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.GroupPermission;
+import bio.overture.ego.model.entity.Identifiable;
+import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.enums.StatusType;
+import bio.overture.ego.model.join.UserGroup;
+import bio.overture.ego.repository.GroupPermissionRepository;
+import bio.overture.ego.repository.GroupRepository;
+import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.GroupPermissionService;
+import bio.overture.ego.service.GroupService;
+import bio.overture.ego.service.UserService;
+import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.WebResource.ResponseOption;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.lang.NotImplementedException;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -135,11 +135,12 @@ public class GroupControllerTest extends AbstractControllerTest {
   @Test
   public void addUniqueGroup() {
     val group = entityGenerator.setupGroup("SameSame");
-    val groupRequest = GroupRequest.builder()
-        .name(group.getName())
-        .status(group.getStatus())
-        .description(group.getDescription())
-        .build();
+    val groupRequest =
+        GroupRequest.builder()
+            .name(group.getName())
+            .status(group.getStatus())
+            .description(group.getDescription())
+            .build();
 
     val response = initStringRequest().endpoint("/groups").body(groupRequest).post();
 
@@ -461,8 +462,12 @@ public class GroupControllerTest extends AbstractControllerTest {
     assertThat(r11.getStatusCode()).isEqualTo(NOT_FOUND);
 
     // Assert getGroupApplications returns NotFroup
-    val r12 = getGroupApplicationsGetRequest(group0);
-    assertThat(r12.getStatusCode()).isEqualTo(NOT_FOUND);
+    val r12 =
+        getGroupApplicationsGetRequestAnd(group0)
+            .assertOk()
+            .assertHasBody()
+            .map(x -> extractPageResultSetFromResponse(x, Application.class));
+    assertThat(r12).isEmpty();
 
     // Assert all users still exist
     data.getUsers()
@@ -1063,7 +1068,8 @@ public class GroupControllerTest extends AbstractControllerTest {
                 .getResponse(),
             Group.class);
     assertThat(updatedGroup3)
-        .isEqualToIgnoringGivenFields(updatedGroup2, DESCRIPTION, PERMISSIONS, APPLICATIONS, USERGROUPS);
+        .isEqualToIgnoringGivenFields(
+            updatedGroup2, DESCRIPTION, PERMISSIONS, APPLICATIONS, USERGROUPS);
     assertThat(updatedGroup3.getDescription()).isEqualTo(updateRequest3.getDescription());
   }
 
@@ -1465,7 +1471,11 @@ public class GroupControllerTest extends AbstractControllerTest {
   }
 
   private ResponseEntity<String> getGroupApplicationsGetRequest(Group g) {
-    return initStringRequest().endpoint("/groups/%s/applications", g.getId()).get();
+    return getGroupApplicationsGetRequestAnd(g).getResponse();
+  }
+
+  private ResponseOption<String> getGroupApplicationsGetRequestAnd(Group g) {
+    return initStringRequest().endpoint("/groups/%s/applications", g.getId()).getAnd();
   }
 
   private ResponseEntity<String> getGroupPermissionsGetRequest(Group g) {

@@ -16,9 +16,6 @@
 
 package bio.overture.ego.model.entity;
 
-import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
-import static com.google.common.collect.Sets.newHashSet;
-
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
@@ -30,8 +27,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
-import java.util.Set;
-import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -43,21 +48,14 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-import javax.persistence.NamedAttributeNode;
-import javax.persistence.NamedEntityGraph;
-import javax.persistence.NamedSubgraph;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
+import java.util.Set;
+import java.util.UUID;
+
+import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
+import static com.google.common.collect.Sets.newHashSet;
 
 @Data
 @Entity
@@ -77,27 +75,6 @@ import org.hibernate.annotations.TypeDef;
   JavaFields.APPLICATIONS,
   JavaFields.GROUPPERMISSIONS
 })
-@NamedEntityGraph(
-    name = "group-entity-with-relationships",
-    attributeNodes = {
-      @NamedAttributeNode(value = JavaFields.USERGROUPS, subgraph = "usergroups-subgraph"),
-      @NamedAttributeNode(value = JavaFields.PERMISSIONS, subgraph = "permissions-subgraph"),
-      @NamedAttributeNode(value = JavaFields.APPLICATIONS, subgraph = "applications-subgraph")
-    },
-    subgraphs = {
-      @NamedSubgraph(
-          name = "permissions-subgraph",
-          attributeNodes = {@NamedAttributeNode(JavaFields.POLICY)}),
-      @NamedSubgraph(
-          name = "applications-subgraph",
-          attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)}),
-      @NamedSubgraph(
-          name = "usergroups-subgraph",
-          attributeNodes = {
-              @NamedAttributeNode(JavaFields.GROUP),
-              @NamedAttributeNode(JavaFields.USER)
-          })
-    })
 public class Group implements PolicyOwner, NameableEntity<UUID> {
 
   @Id

@@ -32,11 +32,8 @@ import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
-import bio.overture.ego.service.association.FindRequest;
-import bio.overture.ego.service.join.UserGroupJoinService;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.ApiImplicitParam;
@@ -50,7 +47,6 @@ import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -76,23 +72,17 @@ public class UserController {
   /** Dependencies */
   private final UserService userService;
 
-  private final GroupService groupService;
   private final ApplicationService applicationService;
   private final UserPermissionService userPermissionService;
-  private final UserGroupJoinService userGroupJoinService;
 
   @Autowired
   public UserController(
       @NonNull UserService userService,
-      @NonNull GroupService groupService,
       @NonNull UserPermissionService userPermissionService,
-      @NonNull UserGroupJoinService userGroupJoinService,
       @NonNull ApplicationService applicationService) {
     this.userService = userService;
-    this.groupService = groupService;
     this.applicationService = applicationService;
     this.userPermissionService = userPermissionService;
-    this.userGroupJoinService = userGroupJoinService;
   }
 
   @AdminScoped
@@ -308,14 +298,11 @@ public class UserController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    val findRequest =
-        FindRequest.builder()
-            .id(id)
-            .query(isEmpty(query) ? null : query)
-            .filters(filters)
-            .pageable(pageable)
-            .build();
-    return new PageDTO<>(userGroupJoinService.findGroupsForUser(findRequest));
+    if (isEmpty(query)) {
+      return new PageDTO<>(userService.findGroupsForUser(id, filters, pageable));
+    } else {
+      return new PageDTO<>(userService.findGroupsForUser(id, query, filters, pageable));
+    }
   }
 
   @AdminScoped
@@ -326,7 +313,7 @@ public class UserController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<UUID> groupIds) {
-    return userGroupJoinService.associate(id, groupIds);
+    return userService.associateGroupsWithUser(id, groupIds);
   }
 
   @AdminScoped
@@ -337,7 +324,7 @@ public class UserController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "groupIDs", required = true) List<UUID> groupIds) {
-    userGroupJoinService.disassociate(id, groupIds);
+    userService.disassociateGroupsFromUser(id, groupIds);
   }
 
   /*

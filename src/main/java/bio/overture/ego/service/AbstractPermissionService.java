@@ -81,7 +81,7 @@ public abstract class AbstractPermissionService<
 
   protected abstract Collection<P> getPermissionsFromPolicy(Policy policy);
 
-  //TODO: [rtisma] not correctly implemented. Should implement dynamic fetching
+  // TODO: [rtisma] not correctly implemented. Should implement dynamic fetching
   @Override
   public P getWithRelationships(@NonNull UUID id) {
     val result = (Optional<P>) permissionRepository.findOne(fetchSpecification(id, true));
@@ -303,9 +303,7 @@ public abstract class AbstractPermissionService<
             .flatMap(Collection::stream)
             .filter(x -> !isNull(x.getPolicy()))
             .collect(groupingBy(AbstractPermission::getPolicy));
-    return combinedPermissionAgg
-        .values()
-        .stream()
+    return combinedPermissionAgg.values().stream()
         .map(AbstractPermissionService::resolvePermissions)
         .collect(toImmutableSet());
   }

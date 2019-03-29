@@ -50,9 +50,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-import javax.persistence.NamedAttributeNode;
-import javax.persistence.NamedEntityGraph;
-import javax.persistence.NamedSubgraph;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -102,24 +99,6 @@ import org.hibernate.annotations.TypeDef;
 @NoArgsConstructor
 @JsonView(Views.REST.class)
 @TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
-@NamedEntityGraph(
-    name = "user-entity-with-relationships",
-    attributeNodes = {
-      @NamedAttributeNode(value = JavaFields.USERGROUPS, subgraph = "usergroups-subgraph"),
-      @NamedAttributeNode(value = JavaFields.USERPERMISSIONS),
-      @NamedAttributeNode(value = JavaFields.APPLICATIONS, subgraph = "applications-subgraph"),
-    },
-    subgraphs = {
-      @NamedSubgraph(
-          name = "usergroups-subgraph",
-          attributeNodes = {
-              @NamedAttributeNode(JavaFields.USER),
-              @NamedAttributeNode(JavaFields.GROUP)
-          }),
-      @NamedSubgraph(
-          name = "applications-subgraph",
-          attributeNodes = {@NamedAttributeNode(JavaFields.USERS)})
-    })
 public class User implements PolicyOwner, NameableEntity<UUID> {
 
   // TODO: find JPA equivalent for GenericGenerator

@@ -16,15 +16,42 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
+import static bio.overture.ego.model.enums.JavaFields.USER;
+import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.repository.queryspecification.SpecificationBase.equalsIdPredicate;
+import static bio.overture.ego.repository.queryspecification.SpecificationBase.equalsNameIgnoreCasePredicate;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Converters.convertToUserGroup;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static java.lang.String.format;
+import static javax.persistence.criteria.JoinType.LEFT;
+import static org.mapstruct.factory.Mappers.getMapper;
+import static org.springframework.data.jpa.domain.Specification.where;
+
 import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.GroupRepository;
+import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
+import bio.overture.ego.repository.queryspecification.UserSpecification;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import javax.persistence.criteria.Root;
+import javax.transaction.Transactional;
 import lombok.NonNull;
 import lombok.val;
 import org.mapstruct.Mapper;
@@ -38,28 +65,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
-import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
-import static bio.overture.ego.model.enums.JavaFields.USER;
-import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static java.lang.String.format;
-import static javax.persistence.criteria.JoinType.LEFT;
-import static org.mapstruct.factory.Mappers.getMapper;
-import static org.springframework.data.jpa.domain.Specifications.where;
-
 @Service
 @Transactional
 public class GroupService extends AbstractNamedService<Group, UUID> {
@@ -70,26 +75,46 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   /** Dependencies */
   private final GroupRepository groupRepository;
 
+  private final UserRepository userRepository;
   private final ApplicationService applicationService;
   private final TokenEventsPublisher tokenEventsPublisher;
 
   @Autowired
   public GroupService(
       @NonNull GroupRepository groupRepository,
+      @NonNull UserRepository userRepository,
       @NonNull ApplicationService applicationService,
       @NonNull TokenEventsPublisher tokenEventsPublisher) {
     super(Group.class, groupRepository);
     this.groupRepository = groupRepository;
     this.applicationService = applicationService;
     this.tokenEventsPublisher = tokenEventsPublisher;
+    this.userRepository = userRepository;
+  }
+
+  public Group get(
+      @NonNull UUID id,
+      boolean fetchApplications,
+      boolean fetchUserGroups,
+      boolean fetchGroupPermissions) {
+    val result =
+        (Optional<Group>)
+            getRepository()
+                .findOne(
+                    fetchSpecificationById(
+                        id, fetchApplications, fetchUserGroups, fetchGroupPermissions));
+    checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
+    return result.get();
   }
 
   @Override
-  public Group getWithRelationships(UUID id) {
-    val result =
-        (Optional<Group>) getRepository().findOne(fetchSpecification(id, true, true, true));
-    checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
-    return result.get();
+  public Optional<Group> findByName(@NonNull String name) {
+    return (Optional<Group>)
+        getRepository().findOne(fetchSpecificationByNameIgnoreCase(name, true, true, true));
+  }
+
+  public Group getWithRelationships(@NonNull UUID id) {
+    return get(id, true, true, true);
   }
 
   public Group create(@NonNull GroupRequest request) {
@@ -103,12 +128,32 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
    *
    * @param groupId The ID of the group to be deleted.
    */
-  @Override
   public void delete(@NonNull UUID groupId) {
     val group = getWithRelationships(groupId);
     val users = mapToSet(group.getUserGroups(), UserGroup::getUser);
-    super.delete(groupId);
+    disassociateAllUsersFromGroup(group);
+    disassociateAllApplicationsFromGroup(group);
     tokenEventsPublisher.requestTokenCleanupByUsers(users);
+    super.delete(groupId);
+  }
+
+  public void disassociateUsersFromGroup(@NonNull UUID id, @NonNull Collection<UUID> userIds) {
+    val group = getWithRelationships(id);
+    val users = userRepository.findAllByIdIn(userIds);
+    val userGroups =
+        group.getUserGroups().stream()
+            .filter(ug -> userIds.contains(ug.getId().getUserId()))
+            .collect(toImmutableSet());
+    disassociateUserGroupsFromGroup(group, userGroups);
+    tokenEventsPublisher.requestTokenCleanupByUsers(users);
+  }
+
+  public Group associateUsersWithGroup(@NonNull UUID id, @NonNull Collection<UUID> userIds) {
+    val group = getWithRelationships(id);
+    val users = userRepository.findAllByIdIn(userIds);
+    users.stream().map(u -> convertToUserGroup(u, group)).forEach(UserGroupService::associateSelf);
+    tokenEventsPublisher.requestTokenCleanupByUsers(users);
+    return group;
   }
 
   public Group partialUpdate(@NonNull UUID id, @NonNull GroupRequest r) {
@@ -152,7 +197,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   public Group addAppsToGroup(@NonNull UUID id, @NonNull List<UUID> appIds) {
     val group = getById(id);
     val apps = applicationService.getMany(appIds);
-    associateApplications(group, apps);
+    associateApplicationsWithGroup(group, apps);
     return getRepository().save(group);
   }
 
@@ -163,8 +208,28 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         group.getApplications().stream()
             .filter(a -> appIds.contains(a.getId()))
             .collect(toImmutableSet());
-    disassociateGroupFromApps(group, appsToDisassociate);
+    disassociateApplicationsFromGroup(group, appsToDisassociate);
     getRepository().save(group);
+  }
+
+  public Page<User> findUsersForGroup(
+      @NonNull UUID id, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+    checkExistence(id);
+    return userRepository.findAll(
+        where(UserSpecification.inGroup(id)).and(UserSpecification.filterBy(filters)), pageable);
+  }
+
+  public Page<User> findUsersForGroup(
+      @NonNull UUID id,
+      @NonNull String query,
+      @NonNull List<SearchFilter> filters,
+      @NonNull Pageable pageable) {
+    checkExistence(id);
+    return userRepository.findAll(
+        where(UserSpecification.inGroup(id))
+            .and(UserSpecification.containsText(query))
+            .and(UserSpecification.filterBy(filters)),
+        pageable);
   }
 
   private void validateUpdateRequest(Group originalGroup, GroupRequest updateRequest) {
@@ -179,7 +244,40 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         !groupRepository.existsByNameIgnoreCase(name), "A group with same name already exists");
   }
 
-  public static void checkAppsExistForGroup(
+  public static void disassociateUserGroupsFromGroup(
+      @NonNull Group g, @NonNull Collection<UserGroup> userGroups) {
+    userGroups.forEach(
+        ug -> {
+          ug.getUser().getUserGroups().remove(ug);
+          ug.setUser(null);
+          ug.setGroup(null);
+        });
+    g.getUserGroups().removeAll(userGroups);
+  }
+
+  public static void disassociateAllUsersFromGroup(@NonNull Group g) {
+    val userGroups = g.getUserGroups();
+    disassociateUserGroupsFromGroup(g, userGroups);
+  }
+
+  public static void disassociateAllApplicationsFromGroup(@NonNull Group g) {
+    g.getApplications().forEach(a -> a.getGroups().remove(g));
+    g.getApplications().clear();
+  }
+
+  public static void disassociateApplicationsFromGroup(
+      @NonNull Group group, @NonNull Collection<Application> apps) {
+    group.getApplications().removeAll(apps);
+    apps.forEach(x -> x.getGroups().remove(group));
+  }
+
+  public static void associateApplicationsWithGroup(
+      @NonNull Group group, @NonNull Collection<Application> applications) {
+    group.getApplications().addAll(applications);
+    applications.stream().map(Application::getGroups).forEach(groups -> groups.add(group));
+  }
+
+  private static void checkAppsExistForGroup(
       @NonNull Group group, @NonNull Collection<UUID> appIds) {
     val existingAppIds =
         group.getApplications().stream().map(Application::getId).collect(toImmutableSet());
@@ -193,33 +291,45 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     }
   }
 
-  private static Specification<Group> fetchSpecification(
-      UUID id, boolean fetchApplications, boolean fetchUsers, boolean fetchGroupPermissions) {
+  private static Specification<Group> fetchSpecificationByNameIgnoreCase(
+      String name,
+      boolean fetchApplications,
+      boolean fetchUserGroups,
+      boolean fetchGroupPermissions) {
     return (fromGroup, query, builder) -> {
-      if (fetchApplications) {
-        fromGroup.fetch(APPLICATIONS, LEFT);
-      }
-      if (fetchUsers) {
-        val fromUserGroup = fromGroup.fetch(USERGROUPS, LEFT);
-        fromUserGroup.fetch(USER, LEFT);
-      }
-      if (fetchGroupPermissions) {
-        fromGroup.fetch(PERMISSIONS, LEFT);
-      }
-      return builder.equal(fromGroup.get(ID), id);
+      val root =
+          specifyFetchStrategy(
+              fromGroup, fetchApplications, fetchUserGroups, fetchGroupPermissions);
+      return equalsNameIgnoreCasePredicate(root, builder, name);
     };
   }
 
-  private static void associateApplications(
-      @NonNull Group group, @NonNull Collection<Application> applications) {
-    group.getApplications().addAll(applications);
-    applications.stream().map(Application::getGroups).forEach(groups -> groups.add(group));
+  private static Specification<Group> fetchSpecificationById(
+      UUID id, boolean fetchApplications, boolean fetchUserGroups, boolean fetchGroupPermissions) {
+    return (fromGroup, query, builder) -> {
+      val root =
+          specifyFetchStrategy(
+              fromGroup, fetchApplications, fetchUserGroups, fetchGroupPermissions);
+      return equalsIdPredicate(root, builder, id);
+    };
   }
 
-  public static void disassociateGroupFromApps(
-      @NonNull Group group, @NonNull Collection<Application> apps) {
-    group.getApplications().removeAll(apps);
-    apps.forEach(x -> x.getGroups().remove(group));
+  private static Root<Group> specifyFetchStrategy(
+      Root<Group> fromGroup,
+      boolean fetchApplications,
+      boolean fetchUserGroups,
+      boolean fetchGroupPermissions) {
+    if (fetchApplications) {
+      fromGroup.fetch(APPLICATIONS, LEFT);
+    }
+    if (fetchUserGroups) {
+      val fromUserGroup = fromGroup.fetch(USERGROUPS, LEFT);
+      fromUserGroup.fetch(USER, LEFT);
+    }
+    if (fetchGroupPermissions) {
+      fromGroup.fetch(PERMISSIONS, LEFT);
+    }
+    return fromGroup;
   }
 
   @Mapper(

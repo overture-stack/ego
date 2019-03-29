@@ -16,6 +16,8 @@
 
 package bio.overture.ego.controller;
 
+import static org.springframework.util.StringUtils.isEmpty;
+
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.dto.PermissionRequest;
@@ -31,17 +33,18 @@ import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.association.FindRequest;
-import bio.overture.ego.service.join.UserGroupJoinService;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import java.util.UUID;
+import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -60,13 +63,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
-import javax.persistence.EntityNotFoundException;
-import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.UUID;
-
-import static org.springframework.util.StringUtils.isEmpty;
-
 @Slf4j
 @RestController
 @RequestMapping("/groups")
@@ -74,20 +70,18 @@ public class GroupController {
 
   /** Dependencies */
   private final GroupService groupService;
+
   private final ApplicationService applicationService;
 
   private final GroupPermissionService groupPermissionService;
-  private final UserGroupJoinService userGroupJoinService;
 
   @Autowired
   public GroupController(
       @NonNull GroupService groupService,
       @NonNull GroupPermissionService groupPermissionService,
-      @NonNull UserGroupJoinService userGroupJoinService,
-      @NonNull ApplicationService applicationService ) {
+      @NonNull ApplicationService applicationService) {
     this.groupService = groupService;
     this.groupPermissionService = groupPermissionService;
-    this.userGroupJoinService = userGroupJoinService;
     this.applicationService = applicationService;
   }
 
@@ -311,7 +305,7 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<UUID> appIds) {
-    return groupService.addAppsToGroup(id,appIds);
+    return groupService.addAppsToGroup(id, appIds);
   }
 
   @AdminScoped
@@ -370,14 +364,11 @@ public class GroupController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    val findRequest =
-        FindRequest.builder()
-            .id(id)
-            .query(isEmpty(query) ? null : query)
-            .filters(filters)
-            .pageable(pageable)
-            .build();
-    return new PageDTO<>(userGroupJoinService.findUsersForGroup(findRequest));
+    if (StringUtils.isEmpty(query)) {
+      return new PageDTO<>(groupService.findUsersForGroup(id, filters, pageable));
+    } else {
+      return new PageDTO<>(groupService.findUsersForGroup(id, query, filters, pageable));
+    }
   }
 
   @AdminScoped
@@ -388,7 +379,7 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<UUID> userIds) {
-    return userGroupJoinService.reverseAssociate(id, userIds);
+    return groupService.associateUsersWithGroup(id, userIds);
   }
 
   @AdminScoped
@@ -399,7 +390,7 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "userIds", required = true) List<UUID> userIds) {
-    userGroupJoinService.reverseDisassociate(id, userIds);
+    groupService.disassociateUsersFromGroup(id, userIds);
   }
 
   @ExceptionHandler({EntityNotFoundException.class})

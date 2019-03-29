@@ -9,10 +9,6 @@ import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static javax.persistence.criteria.JoinType.LEFT;
 import static org.mapstruct.factory.Mappers.getMapper;
 
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static org.mapstruct.factory.Mappers.getMapper;
-
 import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.entity.Policy;
@@ -20,10 +16,9 @@ import bio.overture.ego.model.entity.TokenScope;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.PolicyRepository;
 import bio.overture.ego.repository.queryspecification.PolicySpecification;
-import java.util.List;
-import java.util.Optional;
 import bio.overture.ego.utils.Collectors;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;

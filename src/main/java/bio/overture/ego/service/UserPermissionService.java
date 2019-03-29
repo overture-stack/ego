@@ -6,7 +6,6 @@ import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.repository.UserPermissionRepository;
-import java.util.Collection;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.List;
