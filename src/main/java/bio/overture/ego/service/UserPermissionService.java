@@ -74,9 +74,4 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
   protected Collection<UserPermission> getPermissionsFromPolicy(@NonNull Policy policy) {
     return policy.getUserPermissions();
   }
-
-  @Override
-  public User getOwnerWithRelationships(@NonNull UUID ownerId) {
-    return userService.getById(ownerId);
-  }
 }

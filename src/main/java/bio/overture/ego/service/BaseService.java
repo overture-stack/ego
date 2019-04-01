@@ -1,8 +1,5 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Joiners.COMMA;
 import static java.lang.String.format;
 
 import bio.overture.ego.model.exceptions.NotFoundException;
@@ -11,6 +8,9 @@ import java.util.Optional;
 import java.util.Set;
 import lombok.NonNull;
 import lombok.val;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 public interface BaseService<T, ID> {
 
@@ -32,19 +32,13 @@ public interface BaseService<T, ID> {
 
   void delete(ID id);
 
+  Page<T> findAll(Specification specification, Pageable pageable);
+
   Set<T> getMany(Collection<ID> ids);
 
-  default void checkExistence(@NonNull Collection<ID> ids) {
-    val missingIds = ids.stream().filter(x -> !isExist(x)).collect(toImmutableSet());
-    checkNotFound(
-        missingIds.isEmpty(),
-        "The following '%s' entity ids do no exist: %s",
-        getEntityTypeName(),
-        COMMA.join(missingIds));
-  }
+  T getWithRelationships(ID id);
 
-  default void checkExistence(@NonNull ID id) {
-    checkNotFound(
-        isExist(id), "The '%s' entity with id '%s' does not exist", getEntityTypeName(), id);
-  }
+  void checkExistence(Collection<ID> ids);
+
+  void checkExistence(ID id);
 }

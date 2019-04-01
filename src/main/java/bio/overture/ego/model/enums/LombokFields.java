@@ -22,4 +22,5 @@ public class LombokFields {
   public static final String users = "doesn't matter, lombok doesnt use this string";
   public static final String permissions = "doesn't matter, lombok doesnt use this string";
   public static final String tokens = "doesn't matter, lombok doesnt use this string";
+  public static final String userGroups = "doesn't matter, lombok doesnt use this string";
 }

@@ -31,6 +31,7 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
@@ -51,6 +52,9 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
   @Autowired private ApplicationService applicationService;
 
+  @Value("${logging.test.controller.enable}")
+  private boolean enableLogging;
+
   @Override
   protected void beforeTest() {
     // Initial setup of entities (run once
@@ -60,6 +64,11 @@ public class ApplicationControllerTest extends AbstractControllerTest {
       entityGenerator.setupTestGroups();
       hasRunEntitySetup = true;
     }
+  }
+
+  @Override
+  protected boolean enableLogging() {
+    return enableLogging;
   }
 
   @Test

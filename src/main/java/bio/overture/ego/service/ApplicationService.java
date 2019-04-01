@@ -16,6 +16,10 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.JavaFields.GROUPS;
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.TOKENS;
+import static bio.overture.ego.model.enums.JavaFields.USERS;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
@@ -23,17 +27,21 @@ import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
 import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
 import static bio.overture.ego.token.app.AppTokenClaims.SCOPES;
 import static bio.overture.ego.utils.CollectionUtils.setOf;
+import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
 import static java.lang.String.format;
+import static javax.persistence.criteria.JoinType.LEFT;
 import static org.mapstruct.factory.Mappers.getMapper;
-import static org.springframework.data.jpa.domain.Specifications.where;
+import static org.springframework.data.jpa.domain.Specification.where;
 
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
+import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
 import java.util.Arrays;
 import java.util.Base64;
@@ -52,6 +60,7 @@ import org.mapstruct.TargetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -77,14 +86,17 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   */
   private final ApplicationRepository applicationRepository;
   private final PasswordEncoder passwordEncoder;
+  private final GroupRepository groupRepository;
 
   @Autowired
   public ApplicationService(
       @NonNull ApplicationRepository applicationRepository,
+      @NonNull GroupRepository groupRepository,
       @NonNull PasswordEncoder passwordEncoder) {
     super(Application.class, applicationRepository);
     this.applicationRepository = applicationRepository;
     this.passwordEncoder = passwordEncoder;
+    this.groupRepository = groupRepository;
   }
 
   public Application create(@NonNull CreateApplicationRequest request) {
@@ -98,6 +110,14 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     validateUpdateRequest(app, request);
     APPLICATION_CONVERTER.updateApplication(request, app);
     return getRepository().save(app);
+  }
+
+  @Override
+  public Application getWithRelationships(@NonNull UUID id) {
+    val result =
+        (Optional<Application>) getRepository().findOne(fetchSpecification(id, true, true, true));
+    checkNotFound(result.isPresent(), "The applicationId '%s' does not exist", id);
+    return result.get();
   }
 
   public Page<Application> listApps(
@@ -138,6 +158,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
   public Page<Application> findGroupApplications(
       @NonNull UUID groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+    checkEntityExistence(Group.class, groupRepository, groupId);
     return getRepository()
         .findAll(
             where(ApplicationSpecification.inGroup(groupId))
@@ -150,6 +171,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
       @NonNull String query,
       @NonNull List<SearchFilter> filters,
       @NonNull Pageable pageable) {
+    checkEntityExistence(Group.class, groupRepository, groupId);
     return getRepository()
         .findAll(
             where(ApplicationSpecification.inGroup(groupId))
@@ -227,6 +249,22 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
   private static String removeAppTokenPrefix(String token) {
     return token.replace(APP_TOKEN_PREFIX, "").trim();
+  }
+
+  private static Specification<Application> fetchSpecification(
+      UUID id, boolean fetchGroups, boolean fetchTokens, boolean fetchUsers) {
+    return (fromApplication, query, builder) -> {
+      if (fetchGroups) {
+        fromApplication.fetch(GROUPS, LEFT);
+      }
+      if (fetchTokens) {
+        fromApplication.fetch(TOKENS, LEFT);
+      }
+      if (fetchUsers) {
+        fromApplication.fetch(USERS, LEFT);
+      }
+      return builder.equal(fromApplication.get(ID), id);
+    };
   }
 
   @Mapper(

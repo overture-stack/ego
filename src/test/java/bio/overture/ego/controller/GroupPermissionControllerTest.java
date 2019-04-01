@@ -18,6 +18,7 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
@@ -40,6 +41,14 @@ public class GroupPermissionControllerTest
   @Autowired private PolicyService policyService;
   @Autowired private GroupService groupService;
   @Autowired private GroupPermissionService groupPermissionService;
+
+  @Value("${logging.test.controller.enable}")
+  private boolean enableLogging;
+
+  @Override
+  protected boolean enableLogging() {
+    return enableLogging;
+  }
 
   @Override
   protected EntityGenerator getEntityGenerator() {

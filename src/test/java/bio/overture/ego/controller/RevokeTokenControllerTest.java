@@ -36,20 +36,17 @@ import org.springframework.web.context.WebApplicationContext;
 @ActiveProfiles("test")
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(
-        classes = AuthorizationServiceMain.class,
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+    classes = AuthorizationServiceMain.class,
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration
 @Transactional
 public class RevokeTokenControllerTest {
 
-  @Autowired
-  private TokenService tokenService;
+  @Autowired private TokenService tokenService;
 
-  @Autowired
-  private EntityGenerator entityGenerator;
+  @Autowired private EntityGenerator entityGenerator;
 
-  @Autowired
-  private WebApplicationContext webApplicationContext;
+  @Autowired private WebApplicationContext webApplicationContext;
 
   private MockMvc mockMvc;
 
@@ -58,10 +55,10 @@ public class RevokeTokenControllerTest {
   private static final String ACCESS_TOKEN = "TestToken";
 
   @Before
-  public void initTest(){
+  public void initTest() {
     test = new TestData(entityGenerator);
-    this.mockMvc = MockMvcBuilders
-            .webAppContextSetup(webApplicationContext)
+    this.mockMvc =
+        MockMvcBuilders.webAppContextSetup(webApplicationContext)
             .apply(springSecurity())
             .alwaysDo(print())
             .build();
@@ -70,7 +67,7 @@ public class RevokeTokenControllerTest {
   @WithMockCustomUser
   @SneakyThrows
   @Test
-  public void revokeAnyTokenAsAdminUser(){
+  public void revokeAnyTokenAsAdminUser() {
     // Admin users can revoke other users' tokens.
 
     val randomTokenName = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
@@ -78,17 +75,23 @@ public class RevokeTokenControllerTest {
     val scopes = test.getScopes("song.READ");
     val randomScopes = test.getScopes("song.READ");
 
-    val randomToken = entityGenerator.setupToken(test.regularUser, randomTokenName, false, 1000, "random token", randomScopes);
-    entityGenerator.setupToken(test.adminUser, adminTokenName, false,1000, "test token", scopes);
+    val randomToken =
+        entityGenerator.setupToken(
+            test.regularUser, randomTokenName, false, 1000, "random token", randomScopes);
+    entityGenerator.setupToken(test.adminUser, adminTokenName, false, 1000, "test token", scopes);
 
     assertThat(randomToken.isRevoked()).isFalse();
 
-    mockMvc.perform(MockMvcRequestBuilders.delete("/o/token")
-            .param("token", randomTokenName)
-            .header(AUTHORIZATION, ACCESS_TOKEN ))
-            .andExpect(status().isOk());
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.delete("/o/token")
+                .param("token", randomTokenName)
+                .header(AUTHORIZATION, ACCESS_TOKEN))
+        .andExpect(status().isOk());
 
-    val revokedToken = tokenService.findByTokenString(randomTokenName)
+    val revokedToken =
+        tokenService
+            .findByTokenString(randomTokenName)
             .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
     assertThat(revokedToken.isRevoked()).isTrue();
   }
@@ -96,21 +99,26 @@ public class RevokeTokenControllerTest {
   @WithMockCustomUser
   @SneakyThrows
   @Test
-  public void revokeOwnTokenAsAdminUser(){
-    //Admin users can revoke their own tokens.
+  public void revokeOwnTokenAsAdminUser() {
+    // Admin users can revoke their own tokens.
 
     val tokenName = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.READ", "collab.READ", "id.WRITE");
-    val token = entityGenerator.setupToken(test.adminUser, tokenName, false,1000, "test token", scopes);
+    val token =
+        entityGenerator.setupToken(test.adminUser, tokenName, false, 1000, "test token", scopes);
 
     assertThat(token.isRevoked()).isFalse();
 
-    mockMvc.perform(MockMvcRequestBuilders.delete("/o/token")
-            .param("token", tokenName)
-            .header(AUTHORIZATION, ACCESS_TOKEN ))
-            .andExpect(status().isOk());
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.delete("/o/token")
+                .param("token", tokenName)
+                .header(AUTHORIZATION, ACCESS_TOKEN))
+        .andExpect(status().isOk());
 
-    val revokedToken = tokenService.findByTokenString(tokenName)
+    val revokedToken =
+        tokenService
+            .findByTokenString(tokenName)
             .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
     assertThat(revokedToken.isRevoked()).isTrue();
   }
@@ -118,20 +126,25 @@ public class RevokeTokenControllerTest {
   @WithMockCustomUser(firstName = "Regular", lastName = "User", type = USER)
   @SneakyThrows
   @Test
-  public void revokeAnyTokenAsRegularUser(){
+  public void revokeAnyTokenAsRegularUser() {
     // Regular user cannot revoke other people's token
 
     val tokenName = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("id.WRITE");
-    val token = entityGenerator.setupToken(test.user1, tokenName, false,1000, "test token", scopes);
+    val token =
+        entityGenerator.setupToken(test.user1, tokenName, false, 1000, "test token", scopes);
 
     assertThat(token.isRevoked()).isFalse();
 
-    mockMvc.perform(MockMvcRequestBuilders.delete("/o/token")
-            .param("token", tokenName)
-            .header(AUTHORIZATION, ACCESS_TOKEN ))
-            .andExpect(status().isBadRequest());
-    val revokedToken = tokenService.findByTokenString(tokenName)
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.delete("/o/token")
+                .param("token", tokenName)
+                .header(AUTHORIZATION, ACCESS_TOKEN))
+        .andExpect(status().isBadRequest());
+    val revokedToken =
+        tokenService
+            .findByTokenString(tokenName)
             .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
     assertThat(revokedToken.isRevoked()).isFalse();
   }
@@ -139,21 +152,26 @@ public class RevokeTokenControllerTest {
   @WithMockCustomUser(firstName = "Regular", lastName = "User", type = USER)
   @SneakyThrows
   @Test
-  public void revokeOwnTokenAsRegularUser(){
+  public void revokeOwnTokenAsRegularUser() {
     // Regular users can only revoke tokens that belong to them.
 
     val tokenName = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.READ");
-    val token = entityGenerator.setupToken(test.regularUser, tokenName, false,1000, "test token", scopes);
+    val token =
+        entityGenerator.setupToken(test.regularUser, tokenName, false, 1000, "test token", scopes);
 
     assertThat(token.isRevoked()).isFalse();
 
-    mockMvc.perform(MockMvcRequestBuilders.delete("/o/token")
-            .param("token", tokenName)
-            .header(AUTHORIZATION, ACCESS_TOKEN ))
-            .andExpect(status().isOk());
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.delete("/o/token")
+                .param("token", tokenName)
+                .header(AUTHORIZATION, ACCESS_TOKEN))
+        .andExpect(status().isOk());
 
-    val revokedToken = tokenService.findByTokenString(tokenName)
+    val revokedToken =
+        tokenService
+            .findByTokenString(tokenName)
             .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
     assertThat(revokedToken.isRevoked()).isTrue();
   }
@@ -161,41 +179,54 @@ public class RevokeTokenControllerTest {
   @WithMockCustomApplication
   @SneakyThrows
   @Test
-  public void revokeAnyTokenAsAdminApp(){
+  public void revokeAnyTokenAsAdminApp() {
     val tokenName = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.READ");
-    val token = entityGenerator.setupToken(test.regularUser, tokenName, false,1000, "test token", scopes);
+    val token =
+        entityGenerator.setupToken(test.regularUser, tokenName, false, 1000, "test token", scopes);
 
     assertThat(token.isRevoked()).isFalse();
 
-    mockMvc.perform(MockMvcRequestBuilders.delete("/o/token")
-            .param("token", tokenName)
-            .header(AUTHORIZATION, ACCESS_TOKEN ))
-            .andExpect(status().isOk());
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.delete("/o/token")
+                .param("token", tokenName)
+                .header(AUTHORIZATION, ACCESS_TOKEN))
+        .andExpect(status().isOk());
 
-    val revokedToken = tokenService.findByTokenString(tokenName)
+    val revokedToken =
+        tokenService
+            .findByTokenString(tokenName)
             .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
     assertThat(revokedToken.isRevoked()).isTrue();
   }
 
-  @WithMockCustomApplication(name = "song", clientId = "song", clientSecret = "La la la!;", type = CLIENT)
+  @WithMockCustomApplication(
+      name = "song",
+      clientId = "song",
+      clientSecret = "La la la!;",
+      type = CLIENT)
   @SneakyThrows
   @Test
-  public void revokeTokenAsClientApp(){
+  public void revokeTokenAsClientApp() {
     val tokenName = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.READ");
-    val token = entityGenerator.setupToken(test.regularUser, tokenName, false,1000, "test token", scopes);
+    val token =
+        entityGenerator.setupToken(test.regularUser, tokenName, false, 1000, "test token", scopes);
 
     assertThat(token.isRevoked()).isFalse();
 
-    mockMvc.perform(MockMvcRequestBuilders.delete("/o/token")
-            .param("token", tokenName)
-            .header(AUTHORIZATION, ACCESS_TOKEN ))
-            .andExpect(status().isBadRequest());
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.delete("/o/token")
+                .param("token", tokenName)
+                .header(AUTHORIZATION, ACCESS_TOKEN))
+        .andExpect(status().isBadRequest());
 
-    val revokedToken = tokenService.findByTokenString(tokenName)
+    val revokedToken =
+        tokenService
+            .findByTokenString(tokenName)
             .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
     assertThat(revokedToken.isRevoked()).isFalse();
   }
-
 }

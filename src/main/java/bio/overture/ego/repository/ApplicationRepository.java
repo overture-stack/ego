@@ -46,7 +46,9 @@ public interface ApplicationRepository extends NamedRepository<Application, UUID
 
   Set<Application> findAllByIdIn(List<UUID> ids);
 
+  /** Refer to NamedRepository.findByName Deprecation note */
   @Override
+  @Deprecated
   default Optional<Application> findByName(String name) {
     return getApplicationByNameIgnoreCase(name);
   }

@@ -35,6 +35,7 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -50,7 +51,9 @@ import org.springframework.test.context.junit4.SpringRunner;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TokensOnUserAndPolicyDeletes extends AbstractControllerTest {
 
-  private boolean hasRunEntitySetup = false;
+  /** Config */
+  @Value("${logging.test.controller.enable}")
+  private boolean enableLogging;
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
@@ -62,8 +65,11 @@ public class TokensOnUserAndPolicyDeletes extends AbstractControllerTest {
     entityGenerator.setupApplication("tokenClient", "tokenSecret", ApplicationType.ADMIN);
     tokenHeaders.add(AUTHORIZATION, "Basic dG9rZW5DbGllbnQ6dG9rZW5TZWNyZXQ=");
     tokenHeaders.setContentType(APPLICATION_JSON);
+  }
 
-    hasRunEntitySetup = true;
+  @Override
+  protected boolean enableLogging() {
+    return enableLogging;
   }
 
   /**

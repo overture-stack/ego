@@ -24,6 +24,7 @@ import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.Tables;
+import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -42,9 +43,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-import javax.persistence.NamedAttributeNode;
-import javax.persistence.NamedEntityGraph;
-import javax.persistence.NamedSubgraph;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -67,7 +65,7 @@ import org.hibernate.annotations.TypeDef;
 @JsonView(Views.REST.class)
 @EqualsAndHashCode(of = {LombokFields.id})
 @TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
-@ToString(exclude = {LombokFields.users, LombokFields.applications, LombokFields.permissions})
+@ToString(exclude = {LombokFields.userGroups, LombokFields.applications, LombokFields.permissions})
 @JsonPropertyOrder({
   JavaFields.ID,
   JavaFields.NAME,
@@ -76,24 +74,6 @@ import org.hibernate.annotations.TypeDef;
   JavaFields.APPLICATIONS,
   JavaFields.GROUPPERMISSIONS
 })
-@NamedEntityGraph(
-    name = "group-entity-with-relationships",
-    attributeNodes = {
-      @NamedAttributeNode(value = JavaFields.USERS, subgraph = "users-subgraph"),
-      @NamedAttributeNode(value = JavaFields.PERMISSIONS, subgraph = "permissions-subgraph"),
-      @NamedAttributeNode(value = JavaFields.APPLICATIONS, subgraph = "applications-subgraph")
-    },
-    subgraphs = {
-      @NamedSubgraph(
-          name = "permissions-subgraph",
-          attributeNodes = {@NamedAttributeNode(JavaFields.POLICY)}),
-      @NamedSubgraph(
-          name = "applications-subgraph",
-          attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)}),
-      @NamedSubgraph(
-          name = "users-subgraph",
-          attributeNodes = {@NamedAttributeNode(JavaFields.GROUPS)})
-    })
 public class Group implements PolicyOwner, NameableEntity<UUID> {
 
   @Id
@@ -128,7 +108,7 @@ public class Group implements PolicyOwner, NameableEntity<UUID> {
 
   @ManyToMany(
       fetch = FetchType.LAZY,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
   @JoinTable(
       name = Tables.GROUP_APPLICATION,
       joinColumns = {@JoinColumn(name = SqlFields.GROUPID_JOIN)},
@@ -137,14 +117,12 @@ public class Group implements PolicyOwner, NameableEntity<UUID> {
   @Builder.Default
   private Set<Application> applications = newHashSet();
 
-  @ManyToMany(
-      fetch = FetchType.LAZY,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-  @JoinTable(
-      name = Tables.GROUP_USER,
-      joinColumns = {@JoinColumn(name = SqlFields.GROUPID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = SqlFields.USERID_JOIN)})
   @JsonIgnore
   @Builder.Default
-  private Set<User> users = newHashSet();
+  @OneToMany(
+      mappedBy = JavaFields.GROUP,
+      cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      orphanRemoval = true)
+  private Set<UserGroup> userGroups = newHashSet();
 }

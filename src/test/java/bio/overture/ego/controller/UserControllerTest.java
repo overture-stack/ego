@@ -21,6 +21,7 @@ import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.REJECTED;
 import static bio.overture.ego.model.enums.UserType.USER;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.EntityTools.extractUserIds;
 import static java.util.Arrays.asList;
@@ -29,7 +30,9 @@ import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.dto.CreateUserRequest;
+import bio.overture.ego.model.dto.UpdateUserRequest;
+import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
@@ -43,6 +46,7 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
@@ -65,6 +69,14 @@ public class UserControllerTest extends AbstractControllerTest {
   @Autowired private ApplicationService applicationService;
   @Autowired private GroupService groupService;
 
+  @Value("${logging.test.controller.enable}")
+  private boolean enableLogging;
+
+  @Override
+  protected boolean enableLogging() {
+    return enableLogging;
+  }
+
   @Override
   protected void beforeTest() {
     // Initial setup of entities (run once
@@ -80,7 +92,7 @@ public class UserControllerTest extends AbstractControllerTest {
   public void addUser() {
 
     val user =
-        User.builder()
+        CreateUserRequest.builder()
             .firstName("foo")
             .lastName("bar")
             .email("foobar@foo.bar")
@@ -98,7 +110,7 @@ public class UserControllerTest extends AbstractControllerTest {
   @Test
   public void addUniqueUser() {
     val user1 =
-        User.builder()
+        CreateUserRequest.builder()
             .firstName("unique")
             .lastName("unique")
             .email("unique@unique.com")
@@ -107,7 +119,7 @@ public class UserControllerTest extends AbstractControllerTest {
             .status(APPROVED)
             .build();
     val user2 =
-        User.builder()
+        CreateUserRequest.builder()
             .firstName("unique")
             .lastName("unique")
             .email("unique@unique.com")
@@ -199,7 +211,7 @@ public class UserControllerTest extends AbstractControllerTest {
   @Test
   public void updateUser() {
     val user = entityGenerator.setupUser("update test");
-    val update = User.builder().id(user.getId()).status(REJECTED).build();
+    val update = UpdateUserRequest.builder().status(REJECTED).build();
 
     val response = initStringRequest().endpoint("/users/%s", user.getId()).body(update).put();
 
@@ -356,7 +368,9 @@ public class UserControllerTest extends AbstractControllerTest {
     val addGroupToUserResponseStatus = addGroupToUserResponse.getStatusCode();
     assertThat(addGroupToUserResponseStatus).isEqualTo(HttpStatus.OK);
     // Make sure user-group relationship is there
-    assertThat(extractUserIds(groupService.getByName("GroupOne").getUsers())).contains(userId);
+    val expectedUserGroups = groupService.getByName("GroupOne").getUserGroups();
+    val expectedUsers = mapToSet(expectedUserGroups, UserGroup::getUser);
+    assertThat(extractUserIds(expectedUsers)).contains(userId);
 
     // delete user
     val deleteResponse = initStringRequest().endpoint("/users/%s", userId).delete();
@@ -373,7 +387,7 @@ public class UserControllerTest extends AbstractControllerTest {
 
     // check if user - group is deleted
     val groupWithoutUser = groupService.getByName("GroupOne");
-    assertThat(groupWithoutUser.getUsers()).isEmpty();
+    assertThat(groupWithoutUser.getUserGroups()).isEmpty();
 
     // make sure user - application is deleted
     val appWithoutUser = applicationService.getByClientId("TempGroupApp");

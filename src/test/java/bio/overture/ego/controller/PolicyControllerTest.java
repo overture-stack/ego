@@ -23,7 +23,7 @@ import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -33,6 +33,7 @@ import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
@@ -53,6 +54,14 @@ public class PolicyControllerTest extends AbstractControllerTest {
 
   @Autowired private PolicyService policyService;
 
+  @Value("${logging.test.controller.enable}")
+  private boolean enableLogging;
+
+  @Override
+  protected boolean enableLogging() {
+    return enableLogging;
+  }
+
   @Override
   protected void beforeTest() {
     // Initial setup of entities (run once
@@ -67,7 +76,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
   @Test
   @SneakyThrows
   public void addpolicy_Success() {
-    val policy = Policy.builder().name("AddPolicy").build();
+    val policy = PolicyRequest.builder().name("AddPolicy").build();
 
     val response = initStringRequest().endpoint("/policies").body(policy).post();
 
@@ -83,8 +92,8 @@ public class PolicyControllerTest extends AbstractControllerTest {
   @Test
   @SneakyThrows
   public void addDuplicatePolicy_Conflict() {
-    val policy1 = Policy.builder().name("PolicyUnique").build();
-    val policy2 = Policy.builder().name("PolicyUnique").build();
+    val policy1 = PolicyRequest.builder().name("PolicyUnique").build();
+    val policy2 = PolicyRequest.builder().name("PolicyUnique").build();
 
     val response1 = initStringRequest().endpoint("/policies").body(policy1).post();
 

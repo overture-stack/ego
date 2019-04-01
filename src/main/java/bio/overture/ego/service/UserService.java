@@ -17,11 +17,12 @@
 package bio.overture.ego.service;
 
 import static bio.overture.ego.model.enums.UserType.ADMIN;
-import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Converters.convertToUserGroup;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static java.lang.String.format;
@@ -30,7 +31,7 @@ import static java.util.Comparator.comparing;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.concat;
-import static org.springframework.data.jpa.domain.Specifications.where;
+import static org.springframework.data.jpa.domain.Specification.where;
 
 import bio.overture.ego.config.UserDefaultsConfig;
 import bio.overture.ego.event.token.TokenEventsPublisher;
@@ -44,9 +45,13 @@ import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.UserRepository;
+import bio.overture.ego.repository.queryspecification.GroupSpecification;
 import bio.overture.ego.repository.queryspecification.UserSpecification;
+import bio.overture.ego.repository.queryspecification.builder.UserSpecificationBuilder;
 import bio.overture.ego.token.IDToken;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -57,6 +62,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import javax.transaction.Transactional;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -71,7 +77,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -82,7 +87,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
   public static final UserConverter USER_CONVERTER = Mappers.getMapper(UserConverter.class);
 
   /** Dependencies */
-  private final GroupService groupService;
+  private final GroupRepository groupRepository;
 
   private final TokenEventsPublisher tokenEventsPublisher;
   private final ApplicationService applicationService;
@@ -94,22 +99,61 @@ public class UserService extends AbstractNamedService<User, UUID> {
   @Autowired
   public UserService(
       @NonNull UserRepository userRepository,
-      @NonNull GroupService groupService,
+      @NonNull GroupRepository groupRepository,
       @NonNull ApplicationService applicationService,
       @NonNull UserDefaultsConfig userDefaultsConfig,
       @NonNull TokenEventsPublisher tokenEventsPublisher) {
     super(User.class, userRepository);
     this.userRepository = userRepository;
-    this.groupService = groupService;
+    this.groupRepository = groupRepository;
     this.applicationService = applicationService;
     this.userDefaultsConfig = userDefaultsConfig;
     this.tokenEventsPublisher = tokenEventsPublisher;
+  }
+
+  @Override
+  public void delete(@NonNull UUID id) {
+    val user = getWithRelationships(id);
+    disassociateAllGroupsFromUser(user);
+    disassociateAllApplicationsFromUser(user);
+    tokenEventsPublisher.requestTokenCleanupByUsers(ImmutableSet.of(user));
+    super.delete(id);
   }
 
   public User create(@NonNull CreateUserRequest request) {
     checkEmailUnique(request.getEmail());
     val user = USER_CONVERTER.convertToUser(request);
     return getRepository().save(user);
+  }
+
+  @Override
+  public Optional<User> findByName(String name) {
+    return (Optional<User>)
+        getRepository()
+            .findOne(
+                new UserSpecificationBuilder()
+                    .fetchApplications(true)
+                    .fetchUserGroups(true)
+                    .fetchUserPermissions(true)
+                    .buildByNameIgnoreCase(name));
+  }
+
+  public User get(
+      @NonNull UUID id,
+      boolean fetchUserPermissions,
+      boolean fetchUserGroups,
+      boolean fetchApplications) {
+    val result =
+        (Optional<User>)
+            getRepository()
+                .findOne(
+                    new UserSpecificationBuilder()
+                        .fetchUserPermissions(fetchUserPermissions)
+                        .fetchUserGroups(fetchUserGroups)
+                        .fetchApplications(fetchApplications)
+                        .buildById(id));
+    checkNotFound(result.isPresent(), "The userId '%s' does not exist", id);
+    return result.get();
   }
 
   public User createFromIDToken(IDToken idToken) {
@@ -123,17 +167,25 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .build());
   }
 
-  public User addUserToGroups(@NonNull UUID id, @NonNull List<UUID> groupIds) {
-    val user = getById(id);
-    val groups = groupService.getMany(groupIds);
-    associateUserWithGroups(user, groups);
-    // TODO: @rtisma test setting groups even if there were existing groups before does not delete
-    // the existing ones. Becuase the PERSIST and MERGE cascade type is used, this should
-    // work
-    // correctly
-    val retUser = getRepository().save(user);
-    tokenEventsPublisher.requestTokenCleanupByUsers(ImmutableSet.of(retUser));
-    return retUser;
+  public Page<Group> findGroupsForUser(
+      @NonNull UUID id, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+    checkExistence(id);
+    return groupRepository.findAll(
+        where(GroupSpecification.containsUser(id)).and(GroupSpecification.filterBy(filters)),
+        pageable);
+  }
+
+  public Page<Group> findGroupsForUser(
+      @NonNull UUID id,
+      @NonNull String query,
+      @NonNull List<SearchFilter> filters,
+      @NonNull Pageable pageable) {
+    checkExistence(id);
+    return groupRepository.findAll(
+        where(GroupSpecification.containsUser(id))
+            .and(GroupSpecification.containsText(query))
+            .and(GroupSpecification.filterBy(filters)),
+        pageable);
   }
 
   public User addUserToApps(@NonNull UUID id, @NonNull List<UUID> appIds) {
@@ -146,10 +198,9 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
-  private User getUserWithRelationshipsById(@NonNull UUID id) {
-    return userRepository
-        .getUserById(id)
-        .orElseThrow(() -> buildNotFoundException("The user could not be found"));
+  @Override
+  public User getWithRelationships(@NonNull UUID id) {
+    return get(id, true, true, true);
   }
 
   /**
@@ -177,17 +228,22 @@ public class UserService extends AbstractNamedService<User, UUID> {
             pageable);
   }
 
-  // TODO @rtisma: add test for checking group exists for user
-  public void deleteUserFromGroups(@NonNull UUID id, @NonNull Collection<UUID> groupIds) {
-    val user = getUserWithRelationshipsById(id);
-    checkGroupsExistForUser(user, groupIds);
-    val groupsToDisassociate =
-        user.getGroups().stream()
-            .filter(g -> groupIds.contains(g.getId()))
+  public void disassociateGroupsFromUser(@NonNull UUID id, @NonNull Collection<UUID> groupIds) {
+    val userWithRelationships = get(id, false, true, false);
+    val userGroupsToDisassociate =
+        userWithRelationships.getUserGroups().stream()
+            .filter(x -> groupIds.contains(x.getId().getGroupId()))
             .collect(toImmutableSet());
-    disassociateUserFromGroups(user, groupsToDisassociate);
-    getRepository().save(user);
+    disassociateUserGroupsFromUser(userWithRelationships, userGroupsToDisassociate);
+    tokenEventsPublisher.requestTokenCleanupByUsers(ImmutableSet.of(userWithRelationships));
+  }
+
+  public User associateGroupsWithUser(@NonNull UUID id, @NonNull Collection<UUID> groupIds) {
+    val user = getWithRelationships(id);
+    val groups = groupRepository.findAllByIdIn(groupIds);
+    groups.stream().map(g -> convertToUserGroup(user, g)).forEach(UserGroupService::associateSelf);
     tokenEventsPublisher.requestTokenCleanupByUsers(ImmutableSet.of(user));
+    return user;
   }
 
   // TODO @rtisma: add test for all entities to ensure they implement .equals() using only the id
@@ -195,7 +251,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
   // TODO @rtisma: add test for checking user exists
   // TODO @rtisma: add test for checking application exists for a user
   public void deleteUserFromApps(@NonNull UUID id, @NonNull Collection<UUID> appIds) {
-    val user = getUserWithRelationshipsById(id);
+    val user = getWithRelationships(id);
     checkApplicationsExistForUser(user, appIds);
     val appsToDisassociate =
         user.getApplications().stream()
@@ -203,27 +259,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .collect(toImmutableSet());
     disassociateUserFromApplications(user, appsToDisassociate);
     getRepository().save(user);
-  }
-
-  public Page<User> findGroupUsers(
-      @NonNull UUID groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
-    return getRepository()
-        .findAll(
-            where(UserSpecification.inGroup(groupId)).and(UserSpecification.filterBy(filters)),
-            pageable);
-  }
-
-  public Page<User> findGroupUsers(
-      @NonNull UUID groupId,
-      @NonNull String query,
-      @NonNull List<SearchFilter> filters,
-      @NonNull Pageable pageable) {
-    return getRepository()
-        .findAll(
-            where(UserSpecification.inGroup(groupId))
-                .and(UserSpecification.containsText(query))
-                .and(UserSpecification.filterBy(filters)),
-            pageable);
   }
 
   public Page<User> findAppUsers(
@@ -247,16 +282,27 @@ public class UserService extends AbstractNamedService<User, UUID> {
             pageable);
   }
 
+  private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
+    onUpdateDetected(originalUser.getEmail(), r.getEmail(), () -> checkEmailUnique(r.getEmail()));
+  }
+
+  private void checkEmailUnique(String email) {
+    checkUnique(
+        !userRepository.existsByEmailIgnoreCase(email), "A user with same email already exists");
+  }
+
   // TODO [rtisma]: ensure that the user contains all its relationships
   public static Set<AbstractPermission> resolveUsersPermissions(User user) {
     val up = user.getUserPermissions();
     Collection<UserPermission> userPermissions = isNull(up) ? ImmutableList.of() : up;
 
-    val gp = user.getGroups();
+    val userGroups = user.getUserGroups();
+
     Collection<GroupPermission> groupPermissions =
-        isNull(gp)
+        isNull(userGroups)
             ? ImmutableList.of()
-            : gp.stream()
+            : userGroups.stream()
+                .map(UserGroup::getGroup)
                 .map(Group::getPermissions)
                 .flatMap(Collection::stream)
                 .collect(toImmutableSet());
@@ -274,7 +320,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
     // Get permissions from the user's groups (stream)
     val userGroupsPermissions =
-        Optional.ofNullable(user.getGroups()).orElse(new HashSet<>()).stream()
+        Optional.ofNullable(user.getUserGroups()).orElse(new HashSet<>()).stream()
+            .map(UserGroup::getGroup)
             .map(Group::getPermissions)
             .flatMap(Collection::stream);
 
@@ -306,21 +353,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return mapToSet(resolveUsersPermissions(user), AbstractPermissionService::buildScope);
   }
 
-  public static void associateUserWithGroups(User user, @NonNull Collection<Group> groups) {
-    groups.forEach(g -> associateUserWithGroup(user, g));
-  }
-
-  public static void associateUserWithGroup(@NonNull User user, @NonNull Group group) {
-    user.getGroups().add(group);
-    group.getUsers().add(user);
-  }
-
-  public static void disassociateUserFromGroups(
-      @NonNull User user, @NonNull Collection<Group> groups) {
-    user.getGroups().removeAll(groups);
-    groups.forEach(x -> x.getUsers().remove(user));
-  }
-
   public static void disassociateUserFromApplications(
       @NonNull User user, @NonNull Collection<Application> applications) {
     user.getApplications().removeAll(applications);
@@ -328,7 +360,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   public static void associateUserWithApplications(
-      User user, @NonNull Collection<Application> apps) {
+      @NonNull User user, @NonNull Collection<Application> apps) {
     apps.forEach(a -> associateUserWithApplication(user, a));
   }
 
@@ -337,17 +369,24 @@ public class UserService extends AbstractNamedService<User, UUID> {
     app.getUsers().add(user);
   }
 
-  public static void checkGroupsExistForUser(
-      @NonNull User user, @NonNull Collection<UUID> groupIds) {
-    val existingGroupIds = user.getGroups().stream().map(Group::getId).collect(toImmutableSet());
-    val nonExistentGroupIds =
-        groupIds.stream().filter(x -> !existingGroupIds.contains(x)).collect(toImmutableSet());
-    if (!nonExistentGroupIds.isEmpty()) {
-      throw new NotFoundException(
-          format(
-              "The following groups do not exist for user '%s': %s",
-              user.getId(), COMMA.join(nonExistentGroupIds)));
-    }
+  public static void disassociateAllApplicationsFromUser(@NonNull User user) {
+    user.getApplications().forEach(x -> x.getUsers().remove(user));
+    user.getApplications().clear();
+  }
+
+  public static void disassociateAllGroupsFromUser(@NonNull User userWithRelationships) {
+    disassociateUserGroupsFromUser(userWithRelationships, userWithRelationships.getUserGroups());
+  }
+
+  public static void disassociateUserGroupsFromUser(
+      @NonNull User user, @NonNull Collection<UserGroup> userGroups) {
+    userGroups.forEach(
+        ug -> {
+          ug.getGroup().getUserGroups().remove(ug);
+          ug.setUser(null);
+          ug.setGroup(null);
+        });
+    user.getUserGroups().removeAll(userGroups);
   }
 
   public static void checkApplicationsExistForUser(
@@ -362,15 +401,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
               "The following applications do not exist for user '%s': %s",
               user.getId(), COMMA.join(nonExistentAppIds)));
     }
-  }
-
-  private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
-    onUpdateDetected(originalUser.getEmail(), r.getEmail(), () -> checkEmailUnique(r.getEmail()));
-  }
-
-  private void checkEmailUnique(String email) {
-    checkUnique(
-        !userRepository.existsByEmailIgnoreCase(email), "A user with same email already exists");
   }
 
   @Mapper(

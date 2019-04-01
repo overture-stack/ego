@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.junit.Before;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
@@ -22,13 +23,14 @@ public abstract class AbstractControllerTest {
 
   private static final String ACCESS_TOKEN = "TestToken";
 
+  /** Config */
+
   /** State */
   @LocalServerPort private int port;
 
   private TestRestTemplate restTemplate = new TestRestTemplate();
 
-  @Getter
-  private HttpHeaders headers = new HttpHeaders();
+  @Getter private HttpHeaders headers = new HttpHeaders();
 
   @Before
   public void setup() {
@@ -40,8 +42,11 @@ public abstract class AbstractControllerTest {
   /** Additional setup before each test */
   protected abstract void beforeTest();
 
+  protected abstract boolean enableLogging();
+
   public WebResource<String> initStringRequest() {
-    return initRequest(String.class);
+    val out = initRequest(String.class);
+    return enableLogging() ? out.prettyLogging() : out;
   }
 
   public WebResource<String> initStringRequest(HttpHeaders headers) {

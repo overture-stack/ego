@@ -61,11 +61,11 @@ public class TestData {
 
     user1 = entityGenerator.setupUser("User One");
     // user1.addNewGroup(developers);
-//    entityGenerator.addPermissions(
-//        user1, getScopes("id.WRITE", "song.WRITE", "collab.WRITE", "portal.READ"));
+    //    entityGenerator.addPermissions(
+    //        user1, getScopes("id.WRITE", "song.WRITE", "collab.WRITE", "portal.READ"));
 
     user2 = entityGenerator.setupUser("User Two");
-//    entityGenerator.addPermissions(user2, getScopes("song.READ", "collab.READ", "id.WRITE"));
+    //    entityGenerator.addPermissions(user2, getScopes("song.READ", "collab.READ", "id.WRITE"));
 
     user3 = entityGenerator.setupUser("User Three");
 

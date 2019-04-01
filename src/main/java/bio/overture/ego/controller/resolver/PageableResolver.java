@@ -26,6 +26,12 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 public class PageableResolver implements HandlerMethodArgumentResolver {
+
+  public static final String SORT = "sort";
+  public static final String SORTORDER = "sortOrder";
+  public static final String OFFSET = "offset";
+  public static final String LIMIT = "limit";
+
   @Override
   public boolean supportsParameter(MethodParameter methodParameter) {
     return methodParameter.getParameterType().equals(Pageable.class);
@@ -39,10 +45,10 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
       WebDataBinderFactory webDataBinderFactory)
       throws Exception {
     // get paging parameters
-    String limit = nativeWebRequest.getParameter("limit");
-    String offset = nativeWebRequest.getParameter("offset");
-    String sort = nativeWebRequest.getParameter("sort");
-    String sortOrder = nativeWebRequest.getParameter("sortOrder");
+    String limit = nativeWebRequest.getParameter(LIMIT);
+    String offset = nativeWebRequest.getParameter(OFFSET);
+    String sort = nativeWebRequest.getParameter(SORT);
+    String sortOrder = nativeWebRequest.getParameter(SORTORDER);
 
     return getPageable(limit, offset, sort, sortOrder);
   }

@@ -19,13 +19,21 @@ package bio.overture.ego.service;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.utils.CollectionUtils.difference;
+import static bio.overture.ego.utils.CollectionUtils.intersection;
+import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Converters.convertToIds;
+import static bio.overture.ego.utils.Converters.convertToUserGroup;
+import static bio.overture.ego.utils.EntityServices.getManyEntities;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Ids.checkDuplicates;
 import static bio.overture.ego.utils.Joiners.COMMA;
+import static bio.overture.ego.utils.Joiners.PRETTY_COMMA;
 import static java.lang.String.format;
-import static java.util.UUID.fromString;
 import static org.mapstruct.factory.Mappers.getMapper;
-import static org.springframework.data.jpa.domain.Specifications.where;
+import static org.springframework.data.jpa.domain.Specification.where;
 
 import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.GroupRequest;
@@ -33,14 +41,20 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
+import bio.overture.ego.repository.queryspecification.UserSpecification;
+import bio.overture.ego.repository.queryspecification.builder.GroupSpecificationBuilder;
+import bio.overture.ego.utils.EntityServices;
+import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import javax.transaction.Transactional;
 import lombok.NonNull;
 import lombok.val;
 import org.mapstruct.Mapper;
@@ -54,6 +68,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 public class GroupService extends AbstractNamedService<Group, UUID> {
 
   /** Constants */
@@ -63,7 +78,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   private final GroupRepository groupRepository;
 
   private final UserRepository userRepository;
-  private final ApplicationRepository applicationRepository;
   private final ApplicationService applicationService;
   private final TokenEventsPublisher tokenEventsPublisher;
 
@@ -71,15 +85,25 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   public GroupService(
       @NonNull GroupRepository groupRepository,
       @NonNull UserRepository userRepository,
-      @NonNull ApplicationRepository applicationRepository,
       @NonNull ApplicationService applicationService,
       @NonNull TokenEventsPublisher tokenEventsPublisher) {
     super(Group.class, groupRepository);
     this.groupRepository = groupRepository;
-    this.userRepository = userRepository;
-    this.applicationRepository = applicationRepository;
     this.applicationService = applicationService;
     this.tokenEventsPublisher = tokenEventsPublisher;
+    this.userRepository = userRepository;
+  }
+
+  @Override
+  public Optional<Group> findByName(@NonNull String name) {
+    return (Optional<Group>)
+        getRepository()
+            .findOne(
+                new GroupSpecificationBuilder()
+                    .fetchApplications(true)
+                    .fetchUserGroups(true)
+                    .fetchGroupPermissions(true)
+                    .buildByNameIgnoreCase(name));
   }
 
   public Group create(@NonNull GroupRequest request) {
@@ -93,46 +117,84 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
    *
    * @param groupId The ID of the group to be deleted.
    */
-  @Override
   public void delete(@NonNull UUID groupId) {
-    super.checkExistence(groupId);
-
-    val group = getGroupWithRelationships(groupId);
-    val users = group.getUsers();
-    group.getUsers().forEach(x -> x.getGroups().remove(group));
-    group.getUsers().clear();
-
-    group.getApplications().forEach(x -> x.getGroups().remove(group));
-    group.getApplications().clear();
-
-    group.getPermissions().forEach(x -> x.setOwner(null));
-    group.getPermissions().clear();
-
+    val group = getWithRelationships(groupId);
+    val users = mapToSet(group.getUserGroups(), UserGroup::getUser);
+    disassociateAllUsersFromGroup(group);
+    disassociateAllApplicationsFromGroup(group);
+    tokenEventsPublisher.requestTokenCleanupByUsers(users);
     super.delete(groupId);
+  }
+
+  public Group getWithRelationships(@NonNull UUID id) {
+    return get(id, true, true, true);
+  }
+
+  private Group getWithUserGroups(@NonNull UUID id) {
+    return get(id, false, true, false);
+  }
+
+  public void disassociateUsersFromGroup(@NonNull UUID id, @NonNull Collection<UUID> userIds) {
+    // check duplicate userIds
+    checkDuplicates(User.class, userIds);
+
+    // Get existing associated child ids with the parent
+    val groupWithUserGroups = getWithUserGroups(id);
+    val users = mapToImmutableSet(groupWithUserGroups.getUserGroups(), UserGroup::getUser);
+    val existingAssociatedUserIds = convertToIds(users);
+
+    // Get existing and non-existing non-associated user ids. Error out if there are existing and
+    // non-existing non-associated user ids
+    val nonAssociatedUserIds = difference(userIds, existingAssociatedUserIds);
+    if (!nonAssociatedUserIds.isEmpty()) {
+      EntityServices.checkEntityExistence(User.class, userRepository, nonAssociatedUserIds);
+      throw buildNotFoundException(
+          "The following existing %s ids cannot be disassociated from %s '%s' "
+              + "because they are not associated with it",
+          User.class.getSimpleName(), getEntityTypeName(), id);
+    }
+
+    // Since all user ids exist and are associated with the group, disassociate them from
+    // eachother
+    val userIdsToDisassociate = ImmutableSet.copyOf(userIds);
+    val userGroupsToDisassociate =
+        groupWithUserGroups.getUserGroups().stream()
+            .filter(ug -> userIdsToDisassociate.contains(ug.getId().getUserId()))
+            .collect(toImmutableSet());
+
+    disassociateUserGroupsFromGroup(groupWithUserGroups, userGroupsToDisassociate);
     tokenEventsPublisher.requestTokenCleanupByUsers(users);
   }
 
-  public Group getGroupWithRelationships(@NonNull UUID id) {
-    val result = groupRepository.findGroupById(id);
-    checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
-    return result.get();
-  }
+  public Group associateUsersWithGroup(@NonNull UUID id, @NonNull Collection<UUID> userIds) {
+    // check duplicate userIds
+    checkDuplicates(User.class, userIds);
 
-  public Group addAppsToGroup(@NonNull UUID id, @NonNull List<UUID> appIds) {
-    val group = getById(id);
-    val apps = applicationService.getMany(appIds);
-    associateApplications(group, apps);
-    return getRepository().save(group);
-  }
+    // Get existing associated user ids with the group
+    val groupWithUserGroups = getWithUserGroups(id);
+    val users = mapToImmutableSet(groupWithUserGroups.getUserGroups(), UserGroup::getUser);
+    val existingAssociatedUserIds = convertToIds(users);
 
-  // TODO: [rtisma] need to validate userIds all exist. Cannot use userService as it causes circular
-  // dependency
-  public Group addUsersToGroup(@NonNull UUID id, @NonNull List<UUID> userIds) {
-    val group = getById(id);
-    val users = userRepository.findAllByIdIn(userIds);
-    associateUsers(group, users);
+    // Check there are no user ids that are already associated with the group
+    val existingAlreadyAssociatedUserIds = intersection(existingAssociatedUserIds, userIds);
+    checkUnique(
+        existingAlreadyAssociatedUserIds.isEmpty(),
+        "The following %s ids are already associated with %s '%s': [%s]",
+        User.class.getSimpleName(),
+        getEntityTypeName(),
+        id,
+        PRETTY_COMMA.join(existingAlreadyAssociatedUserIds));
+
+    // Get all unassociated user ids. If they do not exist, an error is thrown
+    val nonAssociatedUserIds = difference(userIds, existingAssociatedUserIds);
+    val nonAssociatedUsers = getManyEntities(User.class, userRepository, nonAssociatedUserIds);
+
+    // Associate the existing users with the group
+    nonAssociatedUsers.stream()
+        .map(u -> convertToUserGroup(u, groupWithUserGroups))
+        .forEach(UserGroupService::associateSelf);
     tokenEventsPublisher.requestTokenCleanupByUsers(users);
-    return groupRepository.save(group);
+    return groupWithUserGroups;
   }
 
   public Group partialUpdate(@NonNull UUID id, @NonNull GroupRequest r) {
@@ -150,25 +212,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
       @NonNull String query, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return groupRepository.findAll(
         where(GroupSpecification.containsText(query)).and(GroupSpecification.filterBy(filters)),
-        pageable);
-  }
-
-  public Page<Group> findUserGroups(
-      @NonNull UUID userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
-    return groupRepository.findAll(
-        where(GroupSpecification.containsUser(userId)).and(GroupSpecification.filterBy(filters)),
-        pageable);
-  }
-
-  public Page<Group> findUserGroups(
-      @NonNull UUID userId,
-      @NonNull String query,
-      @NonNull List<SearchFilter> filters,
-      @NonNull Pageable pageable) {
-    return groupRepository.findAll(
-        where(GroupSpecification.containsUser(userId))
-            .and(GroupSpecification.containsText(query))
-            .and(GroupSpecification.filterBy(filters)),
         pageable);
   }
 
@@ -192,6 +235,13 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         pageable);
   }
 
+  public Group addAppsToGroup(@NonNull UUID id, @NonNull List<UUID> appIds) {
+    val group = getById(id);
+    val apps = applicationService.getMany(appIds);
+    associateApplicationsWithGroup(group, apps);
+    return getRepository().save(group);
+  }
+
   public void deleteAppsFromGroup(@NonNull UUID id, @NonNull List<UUID> appIds) {
     val group = getById(id);
     checkAppsExistForGroup(group, appIds);
@@ -199,21 +249,43 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         group.getApplications().stream()
             .filter(a -> appIds.contains(a.getId()))
             .collect(toImmutableSet());
-    val apps = appIds.stream().map(this::retrieveApplication).collect(toImmutableSet());
-    disassociateGroupFromApps(group, appsToDisassociate);
+    disassociateApplicationsFromGroup(group, appsToDisassociate);
     getRepository().save(group);
   }
 
-  public void deleteUsersFromGroup(@NonNull UUID id, @NonNull List<UUID> userIds) {
-    val group = getById(id);
-    checkUsersExistForGroup(group, userIds);
-    val usersToDisassociate =
-        group.getUsers().stream()
-            .filter(u -> userIds.contains(u.getId()))
-            .collect(toImmutableSet());
-    disassociateGroupFromUsers(group, usersToDisassociate);
-    getRepository().save(group);
-    tokenEventsPublisher.requestTokenCleanupByUsers(usersToDisassociate);
+  public Page<User> findUsersForGroup(
+      @NonNull UUID id, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+    checkExistence(id);
+    return userRepository.findAll(
+        where(UserSpecification.inGroup(id)).and(UserSpecification.filterBy(filters)), pageable);
+  }
+
+  public Page<User> findUsersForGroup(
+      @NonNull UUID id,
+      @NonNull String query,
+      @NonNull List<SearchFilter> filters,
+      @NonNull Pageable pageable) {
+    checkExistence(id);
+    return userRepository.findAll(
+        where(UserSpecification.inGroup(id))
+            .and(UserSpecification.containsText(query))
+            .and(UserSpecification.filterBy(filters)),
+        pageable);
+  }
+
+  private Group get(
+      UUID id, boolean fetchApplications, boolean fetchUserGroups, boolean fetchGroupPermissions) {
+    val result =
+        (Optional<Group>)
+            getRepository()
+                .findOne(
+                    new GroupSpecificationBuilder()
+                        .fetchGroupPermissions(fetchGroupPermissions)
+                        .fetchUserGroups(fetchUserGroups)
+                        .fetchApplications(fetchApplications)
+                        .buildById(id));
+    checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
+    return result.get();
   }
 
   private void validateUpdateRequest(Group originalGroup, GroupRequest updateRequest) {
@@ -228,40 +300,40 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         !groupRepository.existsByNameIgnoreCase(name), "A group with same name already exists");
   }
 
-  private Application retrieveApplication(UUID appId) {
-    // using applicationRepository since using applicationService causes cyclic dependency error
-    return applicationRepository
-        .findById(appId)
-        .orElseThrow(() -> buildNotFoundException("Could not find Application with ID: %s", appId));
+  public static void disassociateUserGroupsFromGroup(
+      @NonNull Group g, @NonNull Collection<UserGroup> userGroups) {
+    userGroups.forEach(
+        ug -> {
+          ug.getUser().getUserGroups().remove(ug);
+          ug.setUser(null);
+          ug.setGroup(null);
+        });
+    g.getUserGroups().removeAll(userGroups);
   }
 
-  private User retrieveUser(String userId) {
-    // using applicationRepository since using applicationService causes cyclic dependency error
-    return userRepository
-        .findById(fromString(userId))
-        .orElseThrow(() -> buildNotFoundException("Could not find User with ID: %s", userId));
+  public static void disassociateAllUsersFromGroup(@NonNull Group g) {
+    val userGroups = g.getUserGroups();
+    disassociateUserGroupsFromGroup(g, userGroups);
   }
 
-  public static void checkUsersExistForGroup(
-      @NonNull Group group, @NonNull Collection<UUID> userIds) {
-    val existingUserIds = group.getUsers().stream().map(User::getId).collect(toImmutableSet());
-    val nonExistentUserIds =
-        userIds.stream().filter(x -> !existingUserIds.contains(x)).collect(toImmutableSet());
-    if (!nonExistentUserIds.isEmpty()) {
-      throw new NotFoundException(
-          format(
-              "The following users do not exist for group '%s': %s",
-              group.getId(), COMMA.join(nonExistentUserIds)));
-    }
+  public static void disassociateAllApplicationsFromGroup(@NonNull Group g) {
+    g.getApplications().forEach(a -> a.getGroups().remove(g));
+    g.getApplications().clear();
   }
 
-  public static void disassociateGroupFromUsers(
-      @NonNull Group group, @NonNull Collection<User> users) {
-    group.getUsers().removeAll(users);
-    users.forEach(x -> x.getGroups().remove(group));
+  public static void disassociateApplicationsFromGroup(
+      @NonNull Group group, @NonNull Collection<Application> apps) {
+    group.getApplications().removeAll(apps);
+    apps.forEach(x -> x.getGroups().remove(group));
   }
 
-  public static void checkAppsExistForGroup(
+  public static void associateApplicationsWithGroup(
+      @NonNull Group group, @NonNull Collection<Application> applications) {
+    group.getApplications().addAll(applications);
+    applications.stream().map(Application::getGroups).forEach(groups -> groups.add(group));
+  }
+
+  private static void checkAppsExistForGroup(
       @NonNull Group group, @NonNull Collection<UUID> appIds) {
     val existingAppIds =
         group.getApplications().stream().map(Application::getId).collect(toImmutableSet());
@@ -273,23 +345,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
               "The following apps do not exist for group '%s': %s",
               group.getId(), COMMA.join(nonExistentAppIds)));
     }
-  }
-
-  public static void disassociateGroupFromApps(
-      @NonNull Group group, @NonNull Collection<Application> apps) {
-    group.getApplications().removeAll(apps);
-    apps.forEach(x -> x.getGroups().remove(group));
-  }
-
-  private static void associateUsers(@NonNull Group group, @NonNull Collection<User> users) {
-    group.getUsers().addAll(users);
-    users.stream().map(User::getGroups).forEach(groups -> groups.add(group));
-  }
-
-  private static void associateApplications(
-      @NonNull Group group, @NonNull Collection<Application> applications) {
-    group.getApplications().addAll(applications);
-    applications.stream().map(Application::getGroups).forEach(groups -> groups.add(group));
   }
 
   @Mapper(

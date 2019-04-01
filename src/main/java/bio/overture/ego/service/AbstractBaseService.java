@@ -1,21 +1,19 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static com.google.common.collect.Sets.difference;
+import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
+import static bio.overture.ego.utils.EntityServices.getManyEntities;
 
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.repository.BaseRepository;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 /**
  * Base implementation
@@ -51,18 +49,22 @@ public abstract class AbstractBaseService<T extends Identifiable<ID>, ID>
   }
 
   @Override
+  public Page<T> findAll(Specification specification, Pageable pageable) {
+    return getRepository().findAll(specification, pageable);
+  }
+
+  @Override
   public Set<T> getMany(@NonNull Collection<ID> ids) {
-    val entities = repository.findAllByIdIn(ImmutableList.copyOf(ids));
+    return getManyEntities(entityType, repository, ids);
+  }
 
-    val requestedIds = ImmutableSet.copyOf(ids);
-    val existingIds = entities.stream().map(Identifiable::getId).collect(toImmutableSet());
-    val nonExistingIds = difference(requestedIds, existingIds);
+  @Override
+  public void checkExistence(Collection<ID> ids) {
+    checkEntityExistence(getEntityType(), getRepository(), ids);
+  }
 
-    checkNotFound(
-        nonExistingIds.isEmpty(),
-        "Entities of entityType '%s' were not found for the following ids: %s",
-        getEntityTypeName(),
-        COMMA.join(nonExistingIds));
-    return entities;
+  @Override
+  public void checkExistence(ID id) {
+    checkEntityExistence(getEntityType(), getRepository(), id);
   }
 }

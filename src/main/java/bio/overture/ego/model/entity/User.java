@@ -28,6 +28,7 @@ import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.model.enums.UserType;
+import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -49,9 +50,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-import javax.persistence.NamedAttributeNode;
-import javax.persistence.NamedEntityGraph;
-import javax.persistence.NamedSubgraph;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -74,7 +72,7 @@ import org.hibernate.annotations.TypeDef;
 @Data
 @ToString(
     exclude = {
-      LombokFields.groups,
+      LombokFields.userGroups,
       LombokFields.applications,
       LombokFields.userPermissions,
       LombokFields.tokens
@@ -101,21 +99,6 @@ import org.hibernate.annotations.TypeDef;
 @NoArgsConstructor
 @JsonView(Views.REST.class)
 @TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
-@NamedEntityGraph(
-    name = "user-entity-with-relationships",
-    attributeNodes = {
-      @NamedAttributeNode(value = JavaFields.GROUPS, subgraph = "groups-subgraph"),
-      @NamedAttributeNode(value = JavaFields.USERPERMISSIONS),
-      @NamedAttributeNode(value = JavaFields.APPLICATIONS, subgraph = "applications-subgraph"),
-    },
-    subgraphs = {
-      @NamedSubgraph(
-          name = "groups-subgraph",
-          attributeNodes = {@NamedAttributeNode(JavaFields.USERS)}),
-      @NamedSubgraph(
-          name = "applications-subgraph",
-          attributeNodes = {@NamedAttributeNode(JavaFields.USERS)})
-    })
 public class User implements PolicyOwner, NameableEntity<UUID> {
 
   // TODO: find JPA equivalent for GenericGenerator
@@ -192,15 +175,13 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   private Set<Token> tokens = newHashSet();
 
   @JsonIgnore
-  @ManyToMany(
-      fetch = FetchType.LAZY,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-  @JoinTable(
-      name = Tables.GROUP_USER,
-      joinColumns = {@JoinColumn(name = SqlFields.USERID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = SqlFields.GROUPID_JOIN)})
   @Builder.Default
-  private Set<Group> groups = newHashSet();
+  @OneToMany(
+      mappedBy = JavaFields.USER,
+      cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      orphanRemoval = true)
+  private Set<UserGroup> userGroups = newHashSet();
 
   @JsonIgnore
   @ManyToMany(

@@ -13,7 +13,7 @@ public class Tables {
   public static final String GROUP = "egogroup";
   public static final String TOKEN = "token";
   public static final String GROUP_APPLICATION = "groupapplication";
-  public static final String GROUP_USER = "usergroup";
+  public static final String USER_GROUP = "usergroup";
   public static final String EGOUSER = "egouser";
   public static final String USER_APPLICATION = "userapplication";
   public static final String USER_PERMISSION = "userpermission";

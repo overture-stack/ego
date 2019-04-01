@@ -16,9 +16,14 @@
 
 package bio.overture.ego.repository.queryspecification;
 
+import static bio.overture.ego.model.enums.JavaFields.GROUP;
+import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
+
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.JavaFields;
+import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.utils.QueryUtils;
 import java.util.UUID;
 import javax.persistence.criteria.Join;
@@ -41,8 +46,9 @@ public class UserSpecification extends SpecificationBase<User> {
   public static Specification<User> inGroup(@NonNull UUID groupId) {
     return (root, query, builder) -> {
       query.distinct(true);
-      Join<User, Group> groupJoin = root.join("groups");
-      return builder.equal(groupJoin.<Integer>get("id"), groupId);
+      Join<User, UserGroup> userJoin = root.join(USERGROUPS);
+      Join<UserGroup, Group> groupJoin = userJoin.join(GROUP);
+      return builder.equal(groupJoin.<Integer>get(JavaFields.ID), groupId);
     };
   }
 

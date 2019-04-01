@@ -144,7 +144,7 @@ public class Application implements Identifiable<UUID> {
   @ManyToMany(
       mappedBy = JavaFields.APPLICATIONS,
       fetch = FetchType.LAZY,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+      cascade = {CascadeType.MERGE, CascadeType.PERSIST})
   private Set<Group> groups = newHashSet();
 
   @JsonIgnore
@@ -152,6 +152,6 @@ public class Application implements Identifiable<UUID> {
   @ManyToMany(
       mappedBy = JavaFields.APPLICATIONS,
       fetch = FetchType.LAZY,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+      cascade = {CascadeType.MERGE, CascadeType.PERSIST})
   private Set<User> users = newHashSet();
 }

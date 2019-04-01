@@ -18,8 +18,10 @@ import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.repository.join.UserGroupRepository;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
+import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
@@ -53,6 +55,7 @@ public class GroupsServiceTest {
   @Autowired private PolicyService policyService;
 
   @Autowired private EntityGenerator entityGenerator;
+  @Autowired private UserGroupRepository userGroupRepository;
 
   // Create
   @Test
@@ -210,12 +213,12 @@ public class GroupsServiceTest {
     val userTwoId = userService.getByName("SecondUser@domain.com").getId();
     val groupId = groupService.getByName("Group One").getId();
 
-    userService.addUserToGroups(userId, Arrays.asList(groupId));
-    userService.addUserToGroups(userTwoId, Arrays.asList(groupId));
+    userService.associateGroupsWithUser(userId, Arrays.asList(groupId));
+    userService.associateGroupsWithUser(userTwoId, Arrays.asList(groupId));
 
     val groups =
-        groupService.findUserGroups(
-            userId, Collections.emptyList(), new PageableResolver().getPageable());
+        userService.findGroupsForUser(
+            userId, ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(1L);
     assertThat(groups.getContent().get(0).getName()).isEqualTo("Group One");
@@ -229,8 +232,8 @@ public class GroupsServiceTest {
     val userId = userService.getByName("FirstUser@domain.com").getId();
 
     val groups =
-        groupService.findUserGroups(
-            userId, Collections.emptyList(), new PageableResolver().getPageable());
+        userService.findGroupsForUser(
+            userId, ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(0L);
   }
@@ -244,13 +247,13 @@ public class GroupsServiceTest {
     val groupId = groupService.getByName("Group One").getId();
     val groupTwoId = groupService.getByName("Group Two").getId();
 
-    userService.addUserToGroups(userId, Arrays.asList(groupId, groupTwoId));
+    userService.associateGroupsWithUser(userId, Arrays.asList(groupId, groupTwoId));
 
     val groupsFilters = new SearchFilter("name", "Group One");
 
     val groups =
-        groupService.findUserGroups(
-            userId, Arrays.asList(groupsFilters), new PageableResolver().getPageable());
+        userService.findGroupsForUser(
+            userId, ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(1L);
     assertThat(groups.getContent().get(0).getName()).isEqualTo("Group One");
@@ -265,13 +268,13 @@ public class GroupsServiceTest {
     val groupId = groupService.getByName("Group One").getId();
     val groupTwoId = groupService.getByName("Group Two").getId();
 
-    userService.addUserToGroups(userId, Arrays.asList(groupId, groupTwoId));
+    userService.associateGroupsWithUser(userId, Arrays.asList(groupId, groupTwoId));
 
     val groupsFilters = new SearchFilter("name", "Group One");
 
     val groups =
-        groupService.findUserGroups(
-            userId, "Two", Arrays.asList(groupsFilters), new PageableResolver().getPageable());
+        userService.findGroupsForUser(
+            userId, "Two", ImmutableList.of(groupsFilters), new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(0L);
   }
@@ -285,11 +288,11 @@ public class GroupsServiceTest {
     val groupId = groupService.getByName("Group One").getId();
     val groupTwoId = groupService.getByName("Group Two").getId();
 
-    userService.addUserToGroups(userId, Arrays.asList(groupId, groupTwoId));
+    userService.associateGroupsWithUser(userId, Arrays.asList(groupId, groupTwoId));
 
     val groups =
-        groupService.findUserGroups(
-            userId, "Two", Collections.emptyList(), new PageableResolver().getPageable());
+        userService.findGroupsForUser(
+            userId, "Two", ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(1L);
     assertThat(groups.getContent().get(0).getName()).isEqualTo("Group Two");
@@ -311,7 +314,7 @@ public class GroupsServiceTest {
 
     val groups =
         groupService.findApplicationGroups(
-            applicationId, Collections.emptyList(), new PageableResolver().getPageable());
+            applicationId, ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(extractGroupNames(groups.getContent())).contains("Group One");
     assertThat(extractGroupNames(groups.getContent())).doesNotContain("Group Two");
@@ -326,7 +329,7 @@ public class GroupsServiceTest {
 
     val groups =
         groupService.findApplicationGroups(
-            applicationId, Collections.emptyList(), new PageableResolver().getPageable());
+            applicationId, ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(0L);
   }
@@ -351,7 +354,7 @@ public class GroupsServiceTest {
 
     val groups =
         groupService.findApplicationGroups(
-            applicationId, Arrays.asList(groupsFilters), new PageableResolver().getPageable());
+            applicationId, ImmutableList.of(groupsFilters), new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(1L);
     assertThat(groups.getContent().get(0).getName())
@@ -382,7 +385,7 @@ public class GroupsServiceTest {
         groupService.findApplicationGroups(
             applicationId,
             "Two",
-            Arrays.asList(groupsFilters),
+            ImmutableList.of(groupsFilters),
             new PageableResolver().getPageable());
 
     assertThat(groups.getTotalElements()).isEqualTo(0L);
@@ -402,11 +405,7 @@ public class GroupsServiceTest {
 
     val groups =
         groupService.findApplicationGroups(
-            applicationId,
-            "Group One",
-            Collections.emptyList(),
-            new PageableResolver().getPageable());
-
+            applicationId, "Group One", ImmutableList.of(), new PageableResolver().getPageable());
     assertThat(groups.getTotalElements()).isEqualTo(1L);
     assertThat(groups.getContent().get(0).getName()).isEqualTo("Group One");
   }
@@ -589,7 +588,8 @@ public class GroupsServiceTest {
     val user = entityGenerator.setupUser("foo bar");
     val group = entityGenerator.setupGroup("testGroup");
 
-    val updatedGroup = groupService.addUsersToGroup(group.getId(), newArrayList(user.getId()));
+    val updatedGroup =
+        userService.associateGroupsWithUser(group.getId(), newArrayList(user.getId()));
 
     groupService.delete(updatedGroup.getId());
     assertThat(userService.getById(user.getId())).isNotNull();

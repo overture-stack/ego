@@ -9,5 +9,7 @@ import lombok.NoArgsConstructor;
 public class Joiners {
 
   public static final Joiner COMMA = Joiner.on(",");
+  public static final Joiner PRETTY_COMMA = Joiner.on(" , ");
   public static final Joiner PATH = Joiner.on("/");
+  public static final Joiner AMPERSAND = Joiner.on("&");
 }
