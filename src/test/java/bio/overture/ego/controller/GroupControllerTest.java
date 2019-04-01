@@ -1,5 +1,47 @@
 package bio.overture.ego.controller;
 
+import bio.overture.ego.AuthorizationServiceMain;
+import bio.overture.ego.model.dto.GroupRequest;
+import bio.overture.ego.model.dto.MaskDTO;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.GroupPermission;
+import bio.overture.ego.model.entity.Identifiable;
+import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.enums.StatusType;
+import bio.overture.ego.model.join.UserGroup;
+import bio.overture.ego.repository.GroupPermissionRepository;
+import bio.overture.ego.repository.GroupRepository;
+import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.GroupPermissionService;
+import bio.overture.ego.service.GroupService;
+import bio.overture.ego.service.UserService;
+import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.WebResource.ResponseOption;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.lang.NotImplementedException;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
@@ -41,47 +83,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
-
-import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.dto.GroupRequest;
-import bio.overture.ego.model.dto.MaskDTO;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.GroupPermission;
-import bio.overture.ego.model.entity.Identifiable;
-import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.model.enums.StatusType;
-import bio.overture.ego.model.join.UserGroup;
-import bio.overture.ego.repository.GroupPermissionRepository;
-import bio.overture.ego.repository.GroupRepository;
-import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.service.GroupPermissionService;
-import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.UserService;
-import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.WebResource.ResponseOption;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.apache.commons.lang.NotImplementedException;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -412,35 +413,35 @@ public class GroupControllerTest extends AbstractControllerTest {
     val group0 = data.getGroups().get(0);
 
     // Add Applications to Group0
-    val r1 = addGroupApplicationsPostRequest(group0, data.getApplications());
+    val r1 = addApplicationsToGroupPostRequest(group0, data.getApplications());
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Assert the applications were add to Group0
-    val r2 = getGroupApplicationsGetRequest(group0);
+    val r2 = getApplicationsForGroupGetRequest(group0);
     assertThat(r2.getStatusCode()).isEqualTo(OK);
     val actualApplications = extractPageResultSetFromResponse(r2, Application.class);
     assertThat(actualApplications).isNotNull();
     assertThat(actualApplications).hasSize(data.getApplications().size());
 
     // Add Users to Group0
-    val r3 = addGroupUserPostRequest(group0, data.getUsers());
+    val r3 = addUsersToGroupPostRequest(group0, data.getUsers());
     assertThat(r3.getStatusCode()).isEqualTo(OK);
 
     // Assert the users were added to Group0
-    val r4 = getGroupUsersGetRequest(group0);
+    val r4 = getUsersForGroupGetRequest(group0);
     assertThat(r4.getStatusCode()).isEqualTo(OK);
     val actualUsers = extractPageResultSetFromResponse(r4, User.class);
     assertThat(actualUsers).isNotNull();
     assertThat(actualUsers).hasSize(data.getUsers().size());
 
     // Add Permissions to Group0
-    val r5 = addGroupPermissionPostRequest(group0, data.getPolicies().get(0), DENY);
+    val r5 = addGroupPermissionToGroupPostRequest(group0, data.getPolicies().get(0), DENY);
     assertThat(r5.getStatusCode()).isEqualTo(OK);
-    val r6 = addGroupPermissionPostRequest(group0, data.getPolicies().get(1), WRITE);
+    val r6 = addGroupPermissionToGroupPostRequest(group0, data.getPolicies().get(1), WRITE);
     assertThat(r6.getStatusCode()).isEqualTo(OK);
 
     // Assert the permissions were added to Group0
-    val r7 = getGroupPermissionsGetRequest(group0);
+    val r7 = getGroupPermissionsForGroupGetRequest(group0);
     assertThat(r7.getStatusCode()).isEqualTo(OK);
     val actualGroupPermissions = extractPageResultSetFromResponse(r7, GroupPermission.class);
     assertThat(actualGroupPermissions).hasSize(2);
@@ -458,17 +459,17 @@ public class GroupControllerTest extends AbstractControllerTest {
     assertThat(results).hasSize(0);
 
     // Assert getGroupUsers returns NOT_FOUND
-    val r11 = getGroupUsersGetRequest(group0);
+    val r11 = getUsersForGroupGetRequest(group0);
     assertThat(r11.getStatusCode()).isEqualTo(NOT_FOUND);
 
     // Assert getGroupApplications returns NotFound
-    getGroupApplicationsGetRequestAnd(group0).assertNotFound();
+    getApplicationsForGroupGetRequestAnd(group0).assertNotFound();
 
     // Assert all users still exist
     data.getUsers()
         .forEach(
             u -> {
-              val r13 = getUserGetRequest(u);
+              val r13 = getUserEntityGetRequest(u);
               assertThat(r13.getStatusCode()).isEqualTo(OK);
             });
 
@@ -631,7 +632,7 @@ public class GroupControllerTest extends AbstractControllerTest {
     val data = generateUniqueTestGroupData();
     val nonExistentId = generateNonExistentId(groupService);
     val nonExistentGroup = Group.builder().id(nonExistentId).build();
-    val r1 = addGroupUserPostRequest(nonExistentGroup, data.getUsers());
+    val r1 = addUsersToGroupPostRequest(nonExistentGroup, data.getUsers());
     assertThat(r1.getStatusCode()).isEqualTo(NOT_FOUND);
   }
 
@@ -642,17 +643,17 @@ public class GroupControllerTest extends AbstractControllerTest {
     val group0 = data.getGroups().get(0);
 
     // Assert there are no users for the group
-    val r0 = getGroupUsersGetRequest(group0);
+    val r0 = getUsersForGroupGetRequest(group0);
     assertThat(r0.getStatusCode()).isEqualTo(OK);
     val actualUsersBefore = extractPageResultSetFromResponse(r0, User.class);
     assertThat(actualUsersBefore).isEmpty();
 
     // Add the users to the group
-    val r1 = addGroupUserPostRequest(group0, data.getUsers());
+    val r1 = addUsersToGroupPostRequest(group0, data.getUsers());
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Assert the users were added
-    val r2 = getGroupUsersGetRequest(group0);
+    val r2 = getUsersForGroupGetRequest(group0);
     assertThat(r2.getStatusCode()).isEqualTo(OK);
     val actualUsersAfter = extractPageResultSetFromResponse(r2, User.class);
     assertThat(actualUsersAfter).containsExactlyInAnyOrderElementsOf(data.getUsers());
@@ -679,18 +680,18 @@ public class GroupControllerTest extends AbstractControllerTest {
     val group0 = data.getGroups().get(0);
 
     // Assert there are no users for the group
-    val r0 = getGroupUsersGetRequest(group0);
+    val r0 = getUsersForGroupGetRequest(group0);
     assertThat(r0.getStatusCode()).isEqualTo(OK);
     val actualUsersBefore = extractPageResultSetFromResponse(r0, User.class);
     assertThat(actualUsersBefore).isEmpty();
 
     // Add some new unassociated users
     val someUsers = newArrayList(data.getUsers().get(0));
-    val r1 = addGroupUserPostRequest(group0, someUsers);
+    val r1 = addUsersToGroupPostRequest(group0, someUsers);
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Assert that adding already associated users returns a conflict
-    val r2 = addGroupUserPostRequest(group0, data.getUsers());
+    val r2 = addUsersToGroupPostRequest(group0, data.getUsers());
     assertThat(r2.getStatusCode()).isEqualTo(CONFLICT);
   }
 
@@ -700,13 +701,13 @@ public class GroupControllerTest extends AbstractControllerTest {
     val group0 = data.getGroups().get(0);
 
     // Assert there are no users for the group
-    val r0 = getGroupUsersGetRequest(group0);
+    val r0 = getUsersForGroupGetRequest(group0);
     assertThat(r0.getStatusCode()).isEqualTo(OK);
     val actualUsersBefore = extractPageResultSetFromResponse(r0, User.class);
     assertThat(actualUsersBefore).isEmpty();
 
     // Add users to group
-    val r1 = addGroupUserPostRequest(group0, data.getUsers());
+    val r1 = addUsersToGroupPostRequest(group0, data.getUsers());
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Delete all users
@@ -714,7 +715,7 @@ public class GroupControllerTest extends AbstractControllerTest {
     assertThat(r2.getStatusCode()).isEqualTo(OK);
 
     // Assert there are no users for the group
-    val r3 = getGroupUsersGetRequest(group0);
+    val r3 = getUsersForGroupGetRequest(group0);
     assertThat(r3.getStatusCode()).isEqualTo(OK);
     val actualUsersAfter = extractPageResultSetFromResponse(r3, User.class);
     assertThat(actualUsersAfter).isEmpty();
@@ -726,13 +727,13 @@ public class GroupControllerTest extends AbstractControllerTest {
     val group0 = data.getGroups().get(0);
 
     // Assert there are no users for the group
-    val r0 = getGroupUsersGetRequest(group0);
+    val r0 = getUsersForGroupGetRequest(group0);
     assertThat(r0.getStatusCode()).isEqualTo(OK);
     val actualUsersBefore = extractPageResultSetFromResponse(r0, User.class);
     assertThat(actualUsersBefore).isEmpty();
 
     // Add some users to group
-    val r1 = addGroupUserPostRequest(group0, newArrayList(data.getUsers().get(0)));
+    val r1 = addUsersToGroupPostRequest(group0, newArrayList(data.getUsers().get(0)));
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Delete all users
@@ -746,13 +747,13 @@ public class GroupControllerTest extends AbstractControllerTest {
     val group0 = data.getGroups().get(0);
 
     // Assert there are no users for the group
-    val r0 = getGroupUsersGetRequest(group0);
+    val r0 = getUsersForGroupGetRequest(group0);
     assertThat(r0.getStatusCode()).isEqualTo(OK);
     val actualUsersBefore = extractPageResultSetFromResponse(r0, User.class);
     assertThat(actualUsersBefore).isEmpty();
 
     // Add all users to group
-    val r1 = addGroupUserPostRequest(group0, data.getUsers());
+    val r1 = addUsersToGroupPostRequest(group0, data.getUsers());
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Create list of userIds to delete, including one non existent id
@@ -790,7 +791,7 @@ public class GroupControllerTest extends AbstractControllerTest {
     assertThat(beforeGroup.getUserGroups()).isEmpty();
 
     // Add users to group
-    val r1 = addGroupUserPostRequest(group0, data.getUsers());
+    val r1 = addUsersToGroupPostRequest(group0, data.getUsers());
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     // Assert without using a controller, there are users for the group
@@ -827,7 +828,7 @@ public class GroupControllerTest extends AbstractControllerTest {
     u3.setStatus(DISABLED);
 
     // Add users to group
-    val r1 = addGroupUserPostRequest(g1, newArrayList(u1, u2, u3));
+    val r1 = addUsersToGroupPostRequest(g1, newArrayList(u1, u2, u3));
     assertThat(r1.getStatusCode()).isEqualTo(OK);
 
     val numGroups = groupRepository.count();
@@ -961,10 +962,10 @@ public class GroupControllerTest extends AbstractControllerTest {
         .postAnd()
         .assertBadRequest();
 
-    val r2 = addGroupPermissionPostRequest(group0, data.getPolicies().get(0), READ);
+    val r2 = addGroupPermissionToGroupPostRequest(group0, data.getPolicies().get(0), READ);
     assertThat(r2.getStatusCode()).isEqualTo(OK);
 
-    val r3 = getGroupPermissionsGetRequest(group0);
+    val r3 = getGroupPermissionsForGroupGetRequest(group0);
     val actualPermissions = extractPageResultSetFromResponse(r3, GroupPermission.class);
     assertThat(actualPermissions).hasSize(1);
     val existingPermissionId = actualPermissions.get(0).getId();
@@ -1163,7 +1164,7 @@ public class GroupControllerTest extends AbstractControllerTest {
         .forEach(
             p -> {
               val randomMask = randomEnum(AccessLevel.class);
-              val r1 = addGroupPermissionPostRequest(group0, p, randomMask);
+              val r1 = addGroupPermissionToGroupPostRequest(group0, p, randomMask);
               assertThat(r1.getStatusCode()).isEqualTo(OK);
             });
 
@@ -1413,77 +1414,130 @@ public class GroupControllerTest extends AbstractControllerTest {
   }
 
   @SneakyThrows
-  private ResponseEntity<String> addGroupPermissionPostRequest(
+  private ResponseOption<String> addGroupPermissionToGroupPostRequestAnd(
       Group g, Policy p, AccessLevel mask) {
     val body = MaskDTO.builder().mask(mask).build();
     return initStringRequest()
         .endpoint("/policies/%s/permission/group/%s", p.getId(), g.getId())
         .body(body)
-        .post();
+        .postAnd();
   }
 
-  private ResponseEntity<String> addGroupApplicationsPostRequest(
+  private ResponseOption<String> addApplicationsToGroupPostRequestAnd(
       Group g, Collection<Application> applications) {
     val appIds = convertToIds(applications);
-    return initStringRequest().endpoint("/groups/%s/applications", g.getId()).body(appIds).post();
+    return initStringRequest().endpoint("/groups/%s/applications", g.getId()).body(appIds).postAnd();
   }
 
-  private ResponseEntity<String> addGroupUserPostRequest(Group g, Collection<User> users) {
-    val userIds = convertToIds(users);
-    return initStringRequest().endpoint("/groups/%s/users", g.getId()).body(userIds).post();
+  private ResponseOption<String> getGroupsForUserGetRequestAnd(User u) {
+    return initStringRequest().endpoint("/users/%s/group", u.getId()).getAnd();
   }
 
-  private ResponseEntity<String> getGroupUsersGetRequest(Group g) {
-    return initStringRequest().endpoint("/groups/%s/users", g.getId()).get();
-  }
-
-  private ResponseEntity<String> getGroupsForUserGetRequest(User u) {
-    return initStringRequest().endpoint("/users/%s/group", u.getId()).get();
-  }
-
-  private ResponseEntity<String> getGroupApplicationsGetRequest(Group g) {
-    return getGroupApplicationsGetRequestAnd(g).getResponse();
-  }
-
-  private ResponseOption<String> getGroupApplicationsGetRequestAnd(Group g) {
-    return initStringRequest().endpoint("/groups/%s/applications", g.getId()).getAnd();
-  }
-
-  private ResponseEntity<String> getGroupPermissionsGetRequest(Group g) {
-    return initStringRequest().endpoint("/groups/%s/permissions", g.getId()).get();
-  }
-
-  private ResponseEntity<String> deleteUsersFromGroupDeleteRequest(
+  private ResponseOption<String> deleteUsersFromGroupDeleteRequestAnd(
       Group g, Collection<User> users) {
     val userIds = convertToIds(users);
     return initStringRequest()
         .endpoint("/groups/%s/users/%s", g.getId(), COMMA.join(userIds))
-        .delete();
+        .deleteAnd();
+  }
+
+  private ResponseOption<String> getGroupPermissionsForGroupGetRequestAnd(Group g) {
+    return initStringRequest().endpoint("/groups/%s/permissions", g.getId()).getAnd();
+  }
+
+  private ResponseOption<String> addUsersToGroupPostRequestAnd(Group g, Collection<User> users) {
+    val userIds = convertToIds(users);
+    return initStringRequest().endpoint("/groups/%s/users", g.getId()).body(userIds).postAnd();
+  }
+
+  private ResponseOption<String> getApplicationsForGroupGetRequestAnd(Group g) {
+    return initStringRequest().endpoint("/groups/%s/applications", g.getId()).getAnd();
+  }
+
+  private ResponseOption<String> getUsersForGroupGetRequestAnd(Group g) {
+    return initStringRequest().endpoint("/groups/%s/users", g.getId()).getAnd();
+  }
+
+  private ResponseOption<String> deleteGroupDeleteRequestAnd(Group g) {
+    return initStringRequest().endpoint("/groups/%s", g.getId()).deleteAnd();
+  }
+
+  private ResponseOption<String> getGroupEntityGetRequestAnd(Group g) {
+    return initStringRequest().endpoint("/groups/%s", g.getId()).getAnd();
+  }
+
+  private ResponseOption<String> createGroupPostRequestAnd(GroupRequest g) {
+    return initStringRequest().endpoint("/groups").body(g).postAnd();
+  }
+
+  private ResponseOption<String> getUserEntityGetRequestAnd(User u) {
+    return initStringRequest().endpoint("/users/%s", u.getId()).getAnd();
+  }
+
+  private ResponseOption<String> getApplicationGetRequestAnd(Application a) {
+    return initStringRequest().endpoint("/applications/%s", a.getId()).getAnd();
+  }
+
+  private ResponseOption<String> getPolicyGetRequestAnd(Policy p) {
+    return initStringRequest().endpoint("/policies/%s", p.getId()).getAnd();
+  }
+
+  private ResponseEntity<String> addApplicationsToGroupPostRequest(
+      Group g, Collection<Application> applications) {
+    return addApplicationsToGroupPostRequestAnd(g, applications).getResponse();
+  }
+
+  private ResponseEntity<String> addUsersToGroupPostRequest(Group g, Collection<User> users) {
+    return addUsersToGroupPostRequestAnd(g, users).getResponse();
+  }
+
+  private ResponseEntity<String> getUsersForGroupGetRequest(Group g) {
+    return getUsersForGroupGetRequestAnd(g).getResponse();
+  }
+
+
+  private ResponseEntity<String> getApplicationsForGroupGetRequest(Group g) {
+    return getApplicationsForGroupGetRequestAnd(g).getResponse();
+  }
+
+  private ResponseEntity<String> getGroupPermissionsForGroupGetRequest(Group g) {
+    return getGroupPermissionsForGroupGetRequestAnd(g).getResponse();
+  }
+
+  private ResponseEntity<String> deleteUsersFromGroupDeleteRequest(
+      Group g, Collection<User> users) {
+    return deleteUsersFromGroupDeleteRequestAnd(g, users).getResponse();
   }
 
   private ResponseEntity<String> deleteGroupDeleteRequest(Group g) {
-    return initStringRequest().endpoint("/groups/%s", g.getId()).delete();
+    return deleteGroupDeleteRequestAnd(g).getResponse();
   }
 
   private ResponseEntity<String> getGroupEntityGetRequest(Group g) {
-    return initStringRequest().endpoint("/groups/%s", g.getId()).get();
+    return getGroupEntityGetRequestAnd(g).getResponse();
   }
 
   private ResponseEntity<String> createGroupPostRequest(GroupRequest g) {
-    return initStringRequest().endpoint("/groups").body(g).post();
+    return createGroupPostRequestAnd(g).getResponse();
   }
 
-  private ResponseEntity<String> getUserGetRequest(User u) {
-    return initStringRequest().endpoint("/users/%s", u.getId()).get();
+  private ResponseEntity<String> getUserEntityGetRequest(User u) {
+    return getUserEntityGetRequestAnd(u).getResponse();
   }
 
   private ResponseEntity<String> getApplicationGetRequest(Application a) {
-    return initStringRequest().endpoint("/applications/%s", a.getId()).get();
+    return getApplicationGetRequestAnd(a).getResponse();
   }
 
   private ResponseEntity<String> getPolicyGetRequest(Policy p) {
-    return initStringRequest().endpoint("/policies/%s", p.getId()).get();
+    return getPolicyGetRequestAnd(p).getResponse();
   }
+
+  private ResponseEntity<String> addGroupPermissionToGroupPostRequest(
+      Group g, Policy p, AccessLevel mask) {
+    return addGroupPermissionToGroupPostRequestAnd(g, p, mask).getResponse();
+  }
+
 
   @lombok.Value
   @Builder
