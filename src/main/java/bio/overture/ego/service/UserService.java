@@ -16,15 +16,9 @@
 
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
-import static bio.overture.ego.model.enums.JavaFields.GROUP;
-import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
-import static bio.overture.ego.model.enums.JavaFields.USERPERMISSIONS;
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.repository.queryspecification.SpecificationBase.equalsIdPredicate;
-import static bio.overture.ego.repository.queryspecification.SpecificationBase.equalsNameIgnoreCasePredicate;
 import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
@@ -37,7 +31,6 @@ import static java.util.Comparator.comparing;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.concat;
-import static javax.persistence.criteria.JoinType.LEFT;
 import static org.springframework.data.jpa.domain.Specification.where;
 
 import bio.overture.ego.config.UserDefaultsConfig;
@@ -58,6 +51,7 @@ import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
 import bio.overture.ego.repository.queryspecification.UserSpecification;
+import bio.overture.ego.repository.queryspecification.builder.UserSpecificationBuilder;
 import bio.overture.ego.token.IDToken;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -68,7 +62,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -83,7 +76,6 @@ import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -137,7 +129,13 @@ public class UserService extends AbstractNamedService<User, UUID> {
   @Override
   public Optional<User> findByName(String name) {
     return (Optional<User>)
-        getRepository().findOne(fetchSpecificationByNameIgnoreCase(name, true, true, true));
+        getRepository()
+            .findOne(
+                new UserSpecificationBuilder()
+                    .fetchApplications(true)
+                    .fetchUserGroups(true)
+                    .fetchUserPermissions(true)
+                    .buildByNameIgnoreCase(name));
   }
 
   public User get(
@@ -149,8 +147,11 @@ public class UserService extends AbstractNamedService<User, UUID> {
         (Optional<User>)
             getRepository()
                 .findOne(
-                    fetchSpecificationById(
-                        id, fetchUserPermissions, fetchUserGroups, fetchApplications));
+                    new UserSpecificationBuilder()
+                        .fetchUserPermissions(fetchUserPermissions)
+                        .fetchUserGroups(fetchUserGroups)
+                        .fetchApplications(fetchApplications)
+                        .buildById(id));
     checkNotFound(result.isPresent(), "The userId '%s' does not exist", id);
     return result.get();
   }
@@ -400,45 +401,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
               "The following applications do not exist for user '%s': %s",
               user.getId(), COMMA.join(nonExistentAppIds)));
     }
-  }
-
-  private static Specification<User> fetchSpecificationByNameIgnoreCase(
-      String name,
-      boolean fetchUserPermissions,
-      boolean fetchUserGroups,
-      boolean fetchApplications) {
-    return (fromUser, query, builder) -> {
-      val root =
-          specifyFetchStrategy(fromUser, fetchUserPermissions, fetchUserGroups, fetchApplications);
-      return equalsNameIgnoreCasePredicate(root, builder, name);
-    };
-  }
-
-  private static Specification<User> fetchSpecificationById(
-      UUID id, boolean fetchUserPermissions, boolean fetchUserGroups, boolean fetchApplications) {
-    return (fromUser, query, builder) -> {
-      val root =
-          specifyFetchStrategy(fromUser, fetchUserPermissions, fetchUserGroups, fetchApplications);
-      return equalsIdPredicate(root, builder, id);
-    };
-  }
-
-  private static Root<User> specifyFetchStrategy(
-      Root<User> fromUser,
-      boolean fetchUserPermissions,
-      boolean fetchUserGroups,
-      boolean fetchApplications) {
-    if (fetchApplications) {
-      fromUser.fetch(APPLICATIONS, LEFT);
-    }
-    if (fetchUserGroups) {
-      val fromUserGroup = fromUser.fetch(USERGROUPS, LEFT);
-      fromUserGroup.fetch(GROUP, LEFT);
-    }
-    if (fetchUserPermissions) {
-      fromUser.fetch(USERPERMISSIONS, LEFT);
-    }
-    return fromUser;
   }
 
   @Mapper(

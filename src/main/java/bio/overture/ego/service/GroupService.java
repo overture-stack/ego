@@ -16,49 +16,9 @@
 
 package bio.overture.ego.service;
 
-import bio.overture.ego.event.token.TokenEventsPublisher;
-import bio.overture.ego.model.dto.GroupRequest;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.exceptions.NotFoundException;
-import bio.overture.ego.model.join.UserGroup;
-import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.repository.GroupRepository;
-import bio.overture.ego.repository.UserRepository;
-import bio.overture.ego.repository.queryspecification.GroupSpecification;
-import bio.overture.ego.repository.queryspecification.UserSpecification;
-import bio.overture.ego.utils.EntityServices;
-import com.google.common.collect.ImmutableSet;
-import lombok.NonNull;
-import lombok.val;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValueCheckStrategy;
-import org.mapstruct.ReportingPolicy;
-import org.mapstruct.TargetType;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-
-import javax.persistence.criteria.Root;
-import javax.transaction.Transactional;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
-import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
-import static bio.overture.ego.model.enums.JavaFields.USER;
-import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.repository.queryspecification.SpecificationBase.equalsIdPredicate;
-import static bio.overture.ego.repository.queryspecification.SpecificationBase.equalsNameIgnoreCasePredicate;
 import static bio.overture.ego.utils.CollectionUtils.difference;
 import static bio.overture.ego.utils.CollectionUtils.intersection;
 import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
@@ -72,9 +32,40 @@ import static bio.overture.ego.utils.Ids.checkDuplicates;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.Joiners.PRETTY_COMMA;
 import static java.lang.String.format;
-import static javax.persistence.criteria.JoinType.LEFT;
 import static org.mapstruct.factory.Mappers.getMapper;
 import static org.springframework.data.jpa.domain.Specification.where;
+
+import bio.overture.ego.event.token.TokenEventsPublisher;
+import bio.overture.ego.model.dto.GroupRequest;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.join.UserGroup;
+import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.repository.GroupRepository;
+import bio.overture.ego.repository.UserRepository;
+import bio.overture.ego.repository.queryspecification.GroupSpecification;
+import bio.overture.ego.repository.queryspecification.UserSpecification;
+import bio.overture.ego.repository.queryspecification.builder.GroupSpecificationBuilder;
+import bio.overture.ego.utils.EntityServices;
+import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import javax.transaction.Transactional;
+import lombok.NonNull;
+import lombok.val;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValueCheckStrategy;
+import org.mapstruct.ReportingPolicy;
+import org.mapstruct.TargetType;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
@@ -106,7 +97,13 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   @Override
   public Optional<Group> findByName(@NonNull String name) {
     return (Optional<Group>)
-        getRepository().findOne(fetchSpecificationByNameIgnoreCase(name, true, true, true));
+        getRepository()
+            .findOne(
+                new GroupSpecificationBuilder()
+                    .fetchApplications(true)
+                    .fetchUserGroups(true)
+                    .fetchGroupPermissions(true)
+                    .buildByNameIgnoreCase(name));
   }
 
   public Group create(@NonNull GroupRequest request) {
@@ -282,8 +279,11 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         (Optional<Group>)
             getRepository()
                 .findOne(
-                    fetchSpecificationById(
-                        id, fetchApplications, fetchUserGroups, fetchGroupPermissions));
+                    new GroupSpecificationBuilder()
+                        .fetchGroupPermissions(fetchGroupPermissions)
+                        .fetchUserGroups(fetchUserGroups)
+                        .fetchApplications(fetchApplications)
+                        .buildById(id));
     checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
     return result.get();
   }
@@ -345,47 +345,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
               "The following apps do not exist for group '%s': %s",
               group.getId(), COMMA.join(nonExistentAppIds)));
     }
-  }
-
-  private static Specification<Group> fetchSpecificationByNameIgnoreCase(
-      String name,
-      boolean fetchApplications,
-      boolean fetchUserGroups,
-      boolean fetchGroupPermissions) {
-    return (fromGroup, query, builder) -> {
-      val root =
-          specifyFetchStrategy(
-              fromGroup, fetchApplications, fetchUserGroups, fetchGroupPermissions);
-      return equalsNameIgnoreCasePredicate(root, builder, name);
-    };
-  }
-
-  private static Specification<Group> fetchSpecificationById(
-      UUID id, boolean fetchApplications, boolean fetchUserGroups, boolean fetchGroupPermissions) {
-    return (fromGroup, query, builder) -> {
-      val root =
-          specifyFetchStrategy(
-              fromGroup, fetchApplications, fetchUserGroups, fetchGroupPermissions);
-      return equalsIdPredicate(root, builder, id);
-    };
-  }
-
-  private static Root<Group> specifyFetchStrategy(
-      Root<Group> fromGroup,
-      boolean fetchApplications,
-      boolean fetchUserGroups,
-      boolean fetchGroupPermissions) {
-    if (fetchApplications) {
-      fromGroup.fetch(APPLICATIONS, LEFT);
-    }
-    if (fetchUserGroups) {
-      val fromUserGroup = fromGroup.fetch(USERGROUPS, LEFT);
-      fromUserGroup.fetch(USER, LEFT);
-    }
-    if (fetchGroupPermissions) {
-      fromGroup.fetch(PERMISSIONS, LEFT);
-    }
-    return fromGroup;
   }
 
   @Mapper(

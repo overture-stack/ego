@@ -16,20 +16,17 @@
 
 package bio.overture.ego.repository.queryspecification;
 
-import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.NAME;
-
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.QueryUtils;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import java.util.Arrays;
+import java.util.List;
 
 public class SpecificationBase<T> {
   protected static <T> Predicate[] getQueryPredicates(
@@ -40,16 +37,6 @@ public class SpecificationBase<T> {
     return Arrays.stream(params)
         .map(p -> filterByField(builder, root, p, queryText))
         .toArray(Predicate[]::new);
-  }
-
-  public static <T> Predicate equalsIdPredicate(
-      @NonNull Root<T> root, @NonNull CriteriaBuilder builder, @NonNull UUID id) {
-    return builder.equal(root.get(ID), id);
-  }
-
-  public static <T> Predicate equalsNameIgnoreCasePredicate(
-      @NonNull Root<T> root, @NonNull CriteriaBuilder builder, @NonNull String name) {
-    return builder.equal(builder.upper(root.get(NAME)), builder.upper(builder.literal(name)));
   }
 
   public static <T> Predicate filterByField(

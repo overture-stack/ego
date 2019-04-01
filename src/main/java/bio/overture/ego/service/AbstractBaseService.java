@@ -1,20 +1,19 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
+import static bio.overture.ego.utils.EntityServices.getManyEntities;
+
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.repository.BaseRepository;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.Set;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
-
-import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
-import static bio.overture.ego.utils.EntityServices.getManyEntities;
 
 /**
  * Base implementation
