@@ -1,5 +1,9 @@
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.utils.WebResource.createWebResource;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+
 import bio.overture.ego.utils.WebResource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NonNull;
@@ -9,10 +13,6 @@ import org.junit.Before;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
-
-import static bio.overture.ego.utils.WebResource.createWebResource;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Slf4j
 public abstract class AbstractControllerTest {

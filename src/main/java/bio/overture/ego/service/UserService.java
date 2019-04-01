@@ -16,6 +16,23 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.UserType.ADMIN;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Converters.convertToUserGroup;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static java.lang.String.format;
+import static java.util.Collections.reverse;
+import static java.util.Comparator.comparing;
+import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Stream.concat;
+import static org.springframework.data.jpa.domain.Specification.where;
+
 import bio.overture.ego.config.UserDefaultsConfig;
 import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.CreateUserRequest;
@@ -38,6 +55,14 @@ import bio.overture.ego.repository.queryspecification.builder.UserSpecificationB
 import bio.overture.ego.token.IDToken;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import javax.transaction.Transactional;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -53,32 +78,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-
-import static bio.overture.ego.model.enums.UserType.ADMIN;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Converters.convertToUserGroup;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static java.lang.String.format;
-import static java.util.Collections.reverse;
-import static java.util.Comparator.comparing;
-import static java.util.Objects.isNull;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Stream.concat;
-import static org.springframework.data.jpa.domain.Specification.where;
-
 @Slf4j
 @Service
 @Transactional
@@ -89,6 +88,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   /** Dependencies */
   private final GroupRepository groupRepository;
+
   private final TokenEventsPublisher tokenEventsPublisher;
   private final ApplicationService applicationService;
   private final UserRepository userRepository;

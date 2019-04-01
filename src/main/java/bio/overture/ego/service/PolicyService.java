@@ -7,8 +7,6 @@ import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static javax.persistence.criteria.JoinType.LEFT;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static org.mapstruct.factory.Mappers.getMapper;
 
 import bio.overture.ego.event.token.TokenEventsPublisher;
