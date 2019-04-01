@@ -16,24 +16,6 @@
 
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
-import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
-import static bio.overture.ego.model.enums.JavaFields.USER;
-import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.repository.queryspecification.SpecificationBase.equalsIdPredicate;
-import static bio.overture.ego.repository.queryspecification.SpecificationBase.equalsNameIgnoreCasePredicate;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Converters.convertToUserGroup;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static java.lang.String.format;
-import static javax.persistence.criteria.JoinType.LEFT;
-import static org.mapstruct.factory.Mappers.getMapper;
-import static org.springframework.data.jpa.domain.Specification.where;
-
 import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.entity.Application;
@@ -46,12 +28,8 @@ import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
 import bio.overture.ego.repository.queryspecification.UserSpecification;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import javax.persistence.criteria.Root;
-import javax.transaction.Transactional;
+import bio.overture.ego.utils.EntityServices;
+import com.google.common.collect.ImmutableSet;
 import lombok.NonNull;
 import lombok.val;
 import org.mapstruct.Mapper;
@@ -64,6 +42,39 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
+import javax.persistence.criteria.Root;
+import javax.transaction.Transactional;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
+import static bio.overture.ego.model.enums.JavaFields.USER;
+import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
+import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.repository.queryspecification.SpecificationBase.equalsIdPredicate;
+import static bio.overture.ego.repository.queryspecification.SpecificationBase.equalsNameIgnoreCasePredicate;
+import static bio.overture.ego.utils.CollectionUtils.difference;
+import static bio.overture.ego.utils.CollectionUtils.intersection;
+import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Converters.convertToIds;
+import static bio.overture.ego.utils.Converters.convertToUserGroup;
+import static bio.overture.ego.utils.EntityServices.getManyEntities;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Ids.checkDuplicates;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static bio.overture.ego.utils.Joiners.PRETTY_COMMA;
+import static java.lang.String.format;
+import static javax.persistence.criteria.JoinType.LEFT;
+import static org.mapstruct.factory.Mappers.getMapper;
+import static org.springframework.data.jpa.domain.Specification.where;
 
 @Service
 @Transactional
@@ -92,29 +103,10 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     this.userRepository = userRepository;
   }
 
-  public Group get(
-      @NonNull UUID id,
-      boolean fetchApplications,
-      boolean fetchUserGroups,
-      boolean fetchGroupPermissions) {
-    val result =
-        (Optional<Group>)
-            getRepository()
-                .findOne(
-                    fetchSpecificationById(
-                        id, fetchApplications, fetchUserGroups, fetchGroupPermissions));
-    checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
-    return result.get();
-  }
-
   @Override
   public Optional<Group> findByName(@NonNull String name) {
     return (Optional<Group>)
         getRepository().findOne(fetchSpecificationByNameIgnoreCase(name, true, true, true));
-  }
-
-  public Group getWithRelationships(@NonNull UUID id) {
-    return get(id, true, true, true);
   }
 
   public Group create(@NonNull GroupRequest request) {
@@ -137,23 +129,75 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     super.delete(groupId);
   }
 
+  public Group getWithRelationships(@NonNull UUID id) {
+    return get(id, true, true, true);
+  }
+
+  private Group getWithUserGroups(@NonNull UUID id) {
+    return get(id, false, true, false);
+  }
+
   public void disassociateUsersFromGroup(@NonNull UUID id, @NonNull Collection<UUID> userIds) {
-    val group = getWithRelationships(id);
-    val users = userRepository.findAllByIdIn(userIds);
-    val userGroups =
-        group.getUserGroups().stream()
-            .filter(ug -> userIds.contains(ug.getId().getUserId()))
+    // check duplicate userIds
+    checkDuplicates(User.class, userIds);
+
+    // Get existing associated child ids with the parent
+    val groupWithUserGroups = getWithUserGroups(id);
+    val users = mapToImmutableSet(groupWithUserGroups.getUserGroups(), UserGroup::getUser);
+    val existingAssociatedUserIds = convertToIds(users);
+
+    // Get existing and non-existing non-associated user ids. Error out if there are existing and
+    // non-existing non-associated user ids
+    val nonAssociatedUserIds = difference(userIds, existingAssociatedUserIds);
+    if (!nonAssociatedUserIds.isEmpty()) {
+      EntityServices.checkEntityExistence(User.class, userRepository, nonAssociatedUserIds);
+      throw buildNotFoundException(
+          "The following existing %s ids cannot be disassociated from %s '%s' "
+              + "because they are not associated with it",
+          User.class.getSimpleName(), getEntityTypeName(), id);
+    }
+
+    // Since all user ids exist and are associated with the group, disassociate them from
+    // eachother
+    val userIdsToDisassociate = ImmutableSet.copyOf(userIds);
+    val userGroupsToDisassociate =
+        groupWithUserGroups.getUserGroups().stream()
+            .filter(ug -> userIdsToDisassociate.contains(ug.getId().getUserId()))
             .collect(toImmutableSet());
-    disassociateUserGroupsFromGroup(group, userGroups);
+
+    disassociateUserGroupsFromGroup(groupWithUserGroups, userGroupsToDisassociate);
     tokenEventsPublisher.requestTokenCleanupByUsers(users);
   }
 
   public Group associateUsersWithGroup(@NonNull UUID id, @NonNull Collection<UUID> userIds) {
-    val group = getWithRelationships(id);
-    val users = userRepository.findAllByIdIn(userIds);
-    users.stream().map(u -> convertToUserGroup(u, group)).forEach(UserGroupService::associateSelf);
+    // check duplicate userIds
+    checkDuplicates(User.class, userIds);
+
+    // Get existing associated user ids with the group
+    val groupWithUserGroups = getWithUserGroups(id);
+    val users = mapToImmutableSet(groupWithUserGroups.getUserGroups(), UserGroup::getUser);
+    val existingAssociatedUserIds = convertToIds(users);
+
+    // Check there are no user ids that are already associated with the group
+    val existingAlreadyAssociatedUserIds = intersection(existingAssociatedUserIds, userIds);
+    checkUnique(
+        existingAlreadyAssociatedUserIds.isEmpty(),
+        "The following %s ids are already associated with %s '%s': [%s]",
+        User.class.getSimpleName(),
+        getEntityTypeName(),
+        id,
+        PRETTY_COMMA.join(existingAlreadyAssociatedUserIds));
+
+    // Get all unassociated user ids. If they do not exist, an error is thrown
+    val nonAssociatedUserIds = difference(userIds, existingAssociatedUserIds);
+    val nonAssociatedUsers = getManyEntities(User.class, userRepository, nonAssociatedUserIds);
+
+    // Associate the existing users with the group
+    nonAssociatedUsers.stream()
+        .map(u -> convertToUserGroup(u, groupWithUserGroups))
+        .forEach(UserGroupService::associateSelf);
     tokenEventsPublisher.requestTokenCleanupByUsers(users);
-    return group;
+    return groupWithUserGroups;
   }
 
   public Group partialUpdate(@NonNull UUID id, @NonNull GroupRequest r) {
@@ -230,6 +274,18 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
             .and(UserSpecification.containsText(query))
             .and(UserSpecification.filterBy(filters)),
         pageable);
+  }
+
+  private Group get(
+      UUID id, boolean fetchApplications, boolean fetchUserGroups, boolean fetchGroupPermissions) {
+    val result =
+        (Optional<Group>)
+            getRepository()
+                .findOne(
+                    fetchSpecificationById(
+                        id, fetchApplications, fetchUserGroups, fetchGroupPermissions));
+    checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
+    return result.get();
   }
 
   private void validateUpdateRequest(Group originalGroup, GroupRequest updateRequest) {

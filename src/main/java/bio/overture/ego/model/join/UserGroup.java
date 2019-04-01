@@ -7,13 +7,6 @@ import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
 import javax.persistence.CascadeType;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
@@ -22,12 +15,18 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
 import javax.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Data
 @Entity
 @Table(name = Tables.USER_GROUP)
 @Builder
-@EqualsAndHashCode(of = { LombokFields.id})
+@EqualsAndHashCode(of = {LombokFields.id})
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {JavaFields.USER, JavaFields.GROUP})

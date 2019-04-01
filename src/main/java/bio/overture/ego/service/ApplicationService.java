@@ -27,6 +27,7 @@ import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
 import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
 import static bio.overture.ego.token.app.AppTokenClaims.SCOPES;
 import static bio.overture.ego.utils.CollectionUtils.setOf;
+import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
 import static java.lang.String.format;
@@ -37,8 +38,10 @@ import static org.springframework.data.jpa.domain.Specifications.where;
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
+import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
 import java.util.Arrays;
 import java.util.Base64;
@@ -83,14 +86,17 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   */
   private final ApplicationRepository applicationRepository;
   private final PasswordEncoder passwordEncoder;
+  private final GroupRepository groupRepository;
 
   @Autowired
   public ApplicationService(
       @NonNull ApplicationRepository applicationRepository,
+      @NonNull GroupRepository groupRepository,
       @NonNull PasswordEncoder passwordEncoder) {
     super(Application.class, applicationRepository);
     this.applicationRepository = applicationRepository;
     this.passwordEncoder = passwordEncoder;
+    this.groupRepository = groupRepository;
   }
 
   public Application create(@NonNull CreateApplicationRequest request) {
@@ -152,6 +158,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
   public Page<Application> findGroupApplications(
       @NonNull UUID groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+    checkEntityExistence(Group.class, groupRepository, groupId);
     return getRepository()
         .findAll(
             where(ApplicationSpecification.inGroup(groupId))
@@ -164,6 +171,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
       @NonNull String query,
       @NonNull List<SearchFilter> filters,
       @NonNull Pageable pageable) {
+    checkEntityExistence(Group.class, groupRepository, groupId);
     return getRepository()
         .findAll(
             where(ApplicationSpecification.inGroup(groupId))

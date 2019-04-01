@@ -461,13 +461,8 @@ public class GroupControllerTest extends AbstractControllerTest {
     val r11 = getGroupUsersGetRequest(group0);
     assertThat(r11.getStatusCode()).isEqualTo(NOT_FOUND);
 
-    // Assert getGroupApplications returns NotFroup
-    val r12 =
-        getGroupApplicationsGetRequestAnd(group0)
-            .assertOk()
-            .assertHasBody()
-            .map(x -> extractPageResultSetFromResponse(x, Application.class));
-    assertThat(r12).isEmpty();
+    // Assert getGroupApplications returns NotFound
+    getGroupApplicationsGetRequestAnd(group0).assertNotFound();
 
     // Assert all users still exist
     data.getUsers()
@@ -1246,30 +1241,6 @@ public class GroupControllerTest extends AbstractControllerTest {
         .body(appIdsToAssociate)
         .postAnd()
         .assertNotFound();
-  }
-
-  @Test
-  public void addAppsToGroup_AllExsitingAppsButSomeNotAssociated_Conflict() {
-    // Setup data
-    val data = generateUniqueTestGroupData();
-    val group0 = data.getGroups().get(0);
-    val app0Id = data.getApplications().get(0).getId();
-    val app1Id = data.getApplications().get(1).getId();
-
-    // Add app0 to the group0
-    initStringRequest()
-        .endpoint("/groups/%s/applications", group0.getId())
-        .body(newArrayList(app0Id))
-        .postAnd()
-        .assertOk();
-
-    // Add app0 and app1 to the group0, where app0 was previously allready associated, however all
-    // apps exist
-    initStringRequest()
-        .endpoint("/groups/%s/applications", group0.getId())
-        .body(newArrayList(app0Id, app1Id))
-        .postAnd()
-        .assertConflict();
   }
 
   @Test
