@@ -14,7 +14,9 @@ public interface PolicyRepository extends NamedRepository<Policy, UUID> {
 
   boolean existsByNameIgnoreCase(String name);
 
+  /** Refer to NamedRepository.findByName Deprecation note */
   @Override
+  @Deprecated
   default Optional<Policy> findByName(String name) {
     return getPolicyByNameIgnoreCase(name);
   }
