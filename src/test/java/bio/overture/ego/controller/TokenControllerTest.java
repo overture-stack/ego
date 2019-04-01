@@ -30,6 +30,15 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
+import java.util.UUID;
+
+import static bio.overture.ego.model.enums.AccessLevel.DENY;
+import static bio.overture.ego.model.enums.AccessLevel.READ;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static java.util.Arrays.asList;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -39,8 +48,8 @@ import org.springframework.util.LinkedMultiValueMap;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TokenControllerTest extends AbstractControllerTest {
 
-  /** Dependencies */
-  @Autowired private EntityGenerator entityGenerator;
+  @Autowired
+  private PolicyService policyService;
 
   @Autowired private UserService userService;
 
@@ -149,7 +158,9 @@ public class TokenControllerTest extends AbstractControllerTest {
 
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-    val response = initStringRequest().endpoint("o/token").body(params).post();
+    val response = initStringRequest().endpoint("o/token")
+            .body(params)
+            .post();
     val statusCode = response.getStatusCode();
 
     assertThat(statusCode).isEqualTo(HttpStatus.OK);
@@ -174,7 +185,9 @@ public class TokenControllerTest extends AbstractControllerTest {
     val study002id = study002.getId();
 
     val permissions =
-        asList(new PermissionRequest(study001id, READ), new PermissionRequest(study002id, READ));
+            asList(
+                    new PermissionRequest(study001id, READ),
+                    new PermissionRequest(study002id, READ));
 
     userPermissionService.addPermissions(user.getId(), permissions);
 

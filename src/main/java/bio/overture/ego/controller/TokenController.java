@@ -143,10 +143,10 @@ public class TokenController {
 
   @ExceptionHandler({InvalidRequestException.class})
   public ResponseEntity<Object> handleInvalidRequestException(
-      HttpServletRequest req, InvalidRequestException ex) {
+          HttpServletRequest req, InvalidRequestException ex) {
     log.error(format("Invalid request: %s", ex.getMessage()));
     return new ResponseEntity<>(
-        "{\"error\": \"%s\"}".format(ex.getMessage()), HttpStatus.BAD_REQUEST);
+            "{\"error\": \"%s\"}".format(ex.getMessage()), HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler({UsernameNotFoundException.class})
