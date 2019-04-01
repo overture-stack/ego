@@ -34,13 +34,6 @@ import static bio.overture.ego.utils.Joiners.PRETTY_COMMA;
 import static java.lang.String.format;
 import static org.mapstruct.factory.Mappers.getMapper;
 import static org.springframework.data.jpa.domain.Specification.where;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static java.lang.String.format;
-import static java.util.UUID.fromString;
-import static org.mapstruct.factory.Mappers.getMapper;
-import static org.springframework.data.jpa.domain.Specifications.where;
 
 import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.GroupRequest;
@@ -62,9 +55,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import javax.transaction.Transactional;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
 import lombok.NonNull;
 import lombok.val;
 import org.mapstruct.Mapper;
@@ -135,7 +125,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     tokenEventsPublisher.requestTokenCleanupByUsers(users);
     super.delete(groupId);
   }
-
 
   public Group getWithRelationships(@NonNull UUID id) {
     return get(id, true, true, true);

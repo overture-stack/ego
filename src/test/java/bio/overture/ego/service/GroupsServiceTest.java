@@ -10,19 +10,13 @@ import static bio.overture.ego.utils.EntityTools.extractGroupNames;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.util.DateUtil.now;
 
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
-import bio.overture.ego.model.join.UserGroup;
-import bio.overture.ego.model.join.UserGroupId;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.join.UserGroupRepository;
 import bio.overture.ego.utils.EntityGenerator;
@@ -62,36 +56,6 @@ public class GroupsServiceTest {
 
   @Autowired private EntityGenerator entityGenerator;
   @Autowired private UserGroupRepository userGroupRepository;
-
-  @Test
-  public void testRob() {
-    val g = Group.builder().name("group").status(PENDING).build();
-    groupService.getRepository().save(g);
-
-    val u =
-        User.builder()
-            .firstName("rob")
-            .lastName("tisma")
-            .email("rtisma@gmail.com")
-            .name("rtisma@gmail.com")
-            .status(PENDING)
-            .type(UserType.ADMIN)
-            .createdAt(now())
-            .build();
-    userService.getRepository().save(u);
-
-    val ug =
-        UserGroup.builder()
-            .id(UserGroupId.builder().userId(u.getId()).groupId(g.getId()).build())
-            .group(g)
-            .user(u)
-            .build();
-
-    g.getUserGroups().add(ug);
-    u.getUserGroups().add(ug);
-    //    userGroupRepository.save(ug);
-    assertThat(userGroupRepository.existsById(ug.getId())).isTrue();
-  }
 
   // Create
   @Test

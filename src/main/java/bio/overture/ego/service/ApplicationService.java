@@ -32,9 +32,6 @@ import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
 import static java.lang.String.format;
 import static javax.persistence.criteria.JoinType.LEFT;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
-import static java.lang.String.format;
 import static org.mapstruct.factory.Mappers.getMapper;
 import static org.springframework.data.jpa.domain.Specifications.where;
 

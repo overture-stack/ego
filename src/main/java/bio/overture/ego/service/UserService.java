@@ -18,7 +18,6 @@ package bio.overture.ego.service;
 
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
@@ -32,7 +31,6 @@ import static java.util.Comparator.comparing;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Stream.concat;
-import static org.springframework.data.jpa.domain.Specification.where;
 import static org.springframework.data.jpa.domain.Specifications.where;
 
 import bio.overture.ego.config.UserDefaultsConfig;
@@ -79,7 +77,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
