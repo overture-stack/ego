@@ -17,9 +17,6 @@
 
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.enums.ApplicationType;
@@ -28,6 +25,7 @@ import bio.overture.ego.utils.EntityGenerator;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.lang.NotImplementedException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +34,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -138,4 +139,91 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     assertThat(responseJson.get("name").asText()).isEqualTo("Application 111111");
     assertThat(responseJson.get("type").asText()).isEqualTo("CLIENT");
   }
+
+	@Test
+	public void getApplications_FindAllQuery_Success(){
+		throw new NotImplementedException("need to implement the test 'getApplications_FindAllQuery_Success'");
+	}
+
+	@Test
+	public void getApplications_FindSomeQuery_Success(){
+		throw new NotImplementedException("need to implement the test 'getApplications_FindSomeQuery_Success'");
+	}
+
+	@Test
+	public void createApplication_NonExisting_Success(){
+		throw new NotImplementedException("need to implement the test 'createApplication_NonExisting_Success'");
+	}
+
+	@Test
+	public void createApplication_NameAlreadyExists_Conflict(){
+		throw new NotImplementedException("need to implement the test 'createApplication_NameAlreadyExists_Conflict'");
+	}
+
+	@Test
+	public void deleteApplication_NonExisting_Conflict(){
+		throw new NotImplementedException("need to implement the test 'deleteApplication_NonExisting_Conflict'");
+	}
+
+	@Test
+	public void deleteApplicationAndRelationshipsOnly_AlreadyExisting_Success(){
+		throw new NotImplementedException("need to implement the test 'deleteApplicationAndRelationshipsOnly_AlreadyExisting_Success'");
+	}
+
+	@Test
+	public void getApplication_ExistingApplication_Success(){
+		throw new NotImplementedException("need to implement the test 'getApplication_ExistingApplication_Success'");
+	}
+
+	@Test
+	public void getApplication_NonExistentApplication_NotFound(){
+		throw new NotImplementedException("need to implement the test 'getApplication_NonExistentApplication_NotFound'");
+	}
+
+	@Test
+	public void UUIDValidation_MalformedUUID_Conflict(){
+		throw new NotImplementedException("need to implement the test 'UUIDValidation_MalformedUUID_Conflict'");
+	}
+
+	@Test
+	public void updateApplication_ExistingApplication_Success(){
+		throw new NotImplementedException("need to implement the test 'updateApplication_ExistingApplication_Success'");
+	}
+
+	@Test
+	public void updateApplication_NonExistentApplication_NotFound(){
+		throw new NotImplementedException("need to implement the test 'updateApplication_NonExistentApplication_NotFound'");
+	}
+
+	@Test
+	public void updateApplication_NameAlreadyExists_Conflict(){
+		throw new NotImplementedException("need to implement the test 'updateApplication_NameAlreadyExists_Conflict'");
+	}
+
+	@Test
+	public void statusValidation_MalformedStatus_Conflict(){
+		throw new NotImplementedException("need to implement the test 'statusValidation_MalformedStatus_Conflict'");
+	}
+
+	@Test
+	public void getGroupsFromApplication_FindAllQuery_Success(){
+		throw new NotImplementedException("need to implement the test 'getGroupsFromApplication_FindAllQuery_Success'");
+	}
+
+	@Test
+	public void getGroupsFromApplication_NonExistentGroup_NotFound(){
+		throw new NotImplementedException("need to implement the test 'getGroupsFromApplication_NonExistentGroup_NotFound'");
+	}
+
+	@Test
+	public void getUsersFromApplication_FindAllQuery_Success(){
+		throw new NotImplementedException("need to implement the test 'getUsersFromApplication_FindAllQuery_Success'");
+	}
+
+	@Test
+	public void getUsersFromApplication_NonExistentGroup_NotFound(){
+		throw new NotImplementedException("need to implement the test 'getUsersFromApplication_NonExistentGroup_NotFound'");
+	}
+
+
 }
