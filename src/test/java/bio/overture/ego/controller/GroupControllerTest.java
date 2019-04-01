@@ -2,7 +2,6 @@ package bio.overture.ego.controller;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.GroupRequest;
-import bio.overture.ego.model.dto.MaskDTO;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
@@ -19,7 +18,6 @@ import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.WebResource.ResponseOption;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -39,7 +37,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
@@ -59,7 +56,6 @@ import static bio.overture.ego.utils.CollectionUtils.concatToSet;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
-import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.convertToIds;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
@@ -1372,33 +1368,6 @@ public class GroupControllerTest extends AbstractControllerTest {
   }
 
   @SneakyThrows
-  private <T> List<T> extractPageResultSetFromResponse(ResponseEntity<String> r, Class<T> tClass) {
-    assertThat(r.getStatusCode()).isEqualTo(OK);
-    assertThat(r.getBody()).isNotNull();
-    val page = MAPPER.readTree(r.getBody());
-    assertThat(page).isNotNull();
-    return stream(page.path("resultSet").iterator())
-        .map(x -> MAPPER.convertValue(x, tClass))
-        .collect(toImmutableList());
-  }
-
-  @SneakyThrows
-  private <T> T extractOneEntityFromResponse(ResponseEntity<String> r, Class<T> tClass) {
-    assertThat(r.getStatusCode()).isEqualTo(OK);
-    assertThat(r.getBody()).isNotNull();
-    return MAPPER.readValue(r.getBody(), tClass);
-  }
-
-  @SneakyThrows
-  private <T> Set<T> extractManyEntitiesFromResponse(ResponseEntity<String> r, Class<T> tClass) {
-    assertThat(r.getStatusCode()).isEqualTo(OK);
-    assertThat(r.getBody()).isNotNull();
-    return stream(MAPPER.readTree(r.getBody()).iterator())
-        .map(x -> MAPPER.convertValue(x, tClass))
-        .collect(toImmutableSet());
-  }
-
-  @SneakyThrows
   private TestGroupData generateUniqueTestGroupData() {
     val groups = repeatedCallsOf(() -> entityGenerator.generateRandomGroup(), 2);
     val applications = repeatedCallsOf(() -> entityGenerator.generateRandomApplication(), 2);
@@ -1411,75 +1380,6 @@ public class GroupControllerTest extends AbstractControllerTest {
         .users(users)
         .policies(policies)
         .build();
-  }
-
-  @SneakyThrows
-  private ResponseOption<String> addGroupPermissionToGroupPostRequestAnd(
-      Group g, Policy p, AccessLevel mask) {
-    val body = MaskDTO.builder().mask(mask).build();
-    return initStringRequest()
-        .endpoint("/policies/%s/permission/group/%s", p.getId(), g.getId())
-        .body(body)
-        .postAnd();
-  }
-
-  private ResponseOption<String> addApplicationsToGroupPostRequestAnd(
-      Group g, Collection<Application> applications) {
-    val appIds = convertToIds(applications);
-    return initStringRequest().endpoint("/groups/%s/applications", g.getId()).body(appIds).postAnd();
-  }
-
-  private ResponseOption<String> getGroupsForUserGetRequestAnd(User u) {
-    return initStringRequest().endpoint("/users/%s/group", u.getId()).getAnd();
-  }
-
-  private ResponseOption<String> deleteUsersFromGroupDeleteRequestAnd(
-      Group g, Collection<User> users) {
-    val userIds = convertToIds(users);
-    return initStringRequest()
-        .endpoint("/groups/%s/users/%s", g.getId(), COMMA.join(userIds))
-        .deleteAnd();
-  }
-
-  private ResponseOption<String> getGroupPermissionsForGroupGetRequestAnd(Group g) {
-    return initStringRequest().endpoint("/groups/%s/permissions", g.getId()).getAnd();
-  }
-
-  private ResponseOption<String> addUsersToGroupPostRequestAnd(Group g, Collection<User> users) {
-    val userIds = convertToIds(users);
-    return initStringRequest().endpoint("/groups/%s/users", g.getId()).body(userIds).postAnd();
-  }
-
-  private ResponseOption<String> getApplicationsForGroupGetRequestAnd(Group g) {
-    return initStringRequest().endpoint("/groups/%s/applications", g.getId()).getAnd();
-  }
-
-  private ResponseOption<String> getUsersForGroupGetRequestAnd(Group g) {
-    return initStringRequest().endpoint("/groups/%s/users", g.getId()).getAnd();
-  }
-
-  private ResponseOption<String> deleteGroupDeleteRequestAnd(Group g) {
-    return initStringRequest().endpoint("/groups/%s", g.getId()).deleteAnd();
-  }
-
-  private ResponseOption<String> getGroupEntityGetRequestAnd(Group g) {
-    return initStringRequest().endpoint("/groups/%s", g.getId()).getAnd();
-  }
-
-  private ResponseOption<String> createGroupPostRequestAnd(GroupRequest g) {
-    return initStringRequest().endpoint("/groups").body(g).postAnd();
-  }
-
-  private ResponseOption<String> getUserEntityGetRequestAnd(User u) {
-    return initStringRequest().endpoint("/users/%s", u.getId()).getAnd();
-  }
-
-  private ResponseOption<String> getApplicationGetRequestAnd(Application a) {
-    return initStringRequest().endpoint("/applications/%s", a.getId()).getAnd();
-  }
-
-  private ResponseOption<String> getPolicyGetRequestAnd(Policy p) {
-    return initStringRequest().endpoint("/policies/%s", p.getId()).getAnd();
   }
 
   private ResponseEntity<String> addApplicationsToGroupPostRequest(
