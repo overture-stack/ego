@@ -42,6 +42,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -136,6 +137,14 @@ public class TokenController {
   public ResponseEntity<Object> handleInvalidScopeException(
       HttpServletRequest req, InvalidTokenException ex) {
     log.error(format("Invalid PolicyIdStringWithMaskName: %s", ex.getMessage()));
+    return new ResponseEntity<>(
+        "{\"error\": \"%s\"}".format(ex.getMessage()), HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler({InvalidRequestException.class})
+  public ResponseEntity<Object> handleInvalidRequestException(
+      HttpServletRequest req, InvalidRequestException ex) {
+    log.error(format("Invalid request: %s", ex.getMessage()));
     return new ResponseEntity<>(
         "{\"error\": \"%s\"}".format(ex.getMessage()), HttpStatus.BAD_REQUEST);
   }

@@ -15,13 +15,11 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import bio.overture.ego.model.dto.*;
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
@@ -34,7 +32,6 @@ import bio.overture.ego.model.enums.LanguageType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.model.params.ScopeName;
-import bio.overture.ego.service.*;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.BaseService;
 import bio.overture.ego.service.GroupService;
@@ -47,7 +44,6 @@ import bio.overture.ego.service.UserService;
 import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -329,11 +325,19 @@ public class EntityGenerator {
     setupPolicies("Study001,Group One", "Study002,Group Two", "Study003,Group Three");
   }
 
-  public Token setupToken(User user, String token, long duration, Set<Scope> scopes) {
+  public Token setupToken(
+      User user,
+      String token,
+      boolean isRevoked,
+      long duration,
+      String description,
+      Set<Scope> scopes) {
     val tokenObject =
         Token.builder()
             .name(token)
+            .isRevoked(isRevoked)
             .owner(user)
+            .description(description)
             .issueDate(Date.from(Instant.now()))
             .expiryDate(Date.from(Instant.now().plus(365, ChronoUnit.DAYS)))
             .build();

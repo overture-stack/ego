@@ -1,6 +1,7 @@
 package bio.overture.ego.utils;
 
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.enums.UserType.USER;
 import static bio.overture.ego.utils.CollectionUtils.listOf;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
@@ -26,9 +27,11 @@ public class TestData {
   public Application score;
   public String scoreAuth;
 
+  public Application adminApp;
+
   private Map<String, Policy> policyMap;
 
-  public User user1, user2, regularUser;
+  public User user1, user2, user3, regularUser, adminUser;
 
   public TestData(EntityGenerator entityGenerator) {
     songId = "song";
@@ -44,6 +47,10 @@ public class TestData {
     score = entityGenerator.setupApplication(scoreId, scoreSecret, ApplicationType.CLIENT);
     val developers = entityGenerator.setupGroup("developers");
 
+    val adminAppId = "Admin-App-ID";
+    val adminAppSecret = "Admin-App-Secret";
+    adminApp = entityGenerator.setupApplication(adminAppId, adminAppSecret, ApplicationType.ADMIN);
+
     val allPolicies = listOf("song", "id", "collab", "aws", "portal");
 
     policyMap = new HashMap<>();
@@ -54,16 +61,23 @@ public class TestData {
 
     user1 = entityGenerator.setupUser("User One");
     // user1.addNewGroup(developers);
-    entityGenerator.addPermissions(
-        user1, getScopes("id.WRITE", "song.WRITE", "collab.WRITE", "portal.READ"));
+    //    entityGenerator.addPermissions(
+    //        user1, getScopes("id.WRITE", "song.WRITE", "collab.WRITE", "portal.READ"));
 
     user2 = entityGenerator.setupUser("User Two");
-    entityGenerator.addPermissions(user2, getScopes("song.READ", "collab.READ", "id.WRITE"));
+    //    entityGenerator.addPermissions(user2, getScopes("song.READ", "collab.READ", "id.WRITE"));
+
+    user3 = entityGenerator.setupUser("User Three");
 
     regularUser = entityGenerator.setupUser("Regular User");
     regularUser.setType(USER);
     regularUser.setStatus(APPROVED);
     entityGenerator.addPermissions(regularUser, getScopes("song.READ", "collab.READ"));
+
+    adminUser = entityGenerator.setupUser("Admin User");
+    adminUser.setType(ADMIN);
+    adminUser.setStatus(APPROVED);
+    entityGenerator.addPermissions(adminUser, getScopes("song.READ", "collab.READ", "id.WRITE"));
   }
 
   public Set<Scope> getScopes(String... scopeNames) {

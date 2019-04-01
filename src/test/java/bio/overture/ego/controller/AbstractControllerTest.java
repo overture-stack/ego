@@ -6,6 +6,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import bio.overture.ego.utils.WebResource;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -28,7 +29,8 @@ public abstract class AbstractControllerTest {
   @LocalServerPort private int port;
 
   private TestRestTemplate restTemplate = new TestRestTemplate();
-  private HttpHeaders headers = new HttpHeaders();
+
+  @Getter private HttpHeaders headers = new HttpHeaders();
 
   @Before
   public void setup() {

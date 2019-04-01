@@ -30,7 +30,9 @@ public interface UserRepository extends NamedRepository<User, UUID> {
 
   Set<User> findAllByIdIn(Collection<UUID> userIds);
 
-  //TODO: [rtisma] deprecated because this should be implemented at the service layer using dynamic fetching and not entity graph. Leaving this for now. Once all services are implementing findByName, this can be removed from the NameRepository interface
+  // TODO: [rtisma] deprecated because this should be implemented at the service layer using dynamic
+  // fetching and not entity graph. Leaving this for now. Once all services are implementing
+  // findByName, this can be removed from the NameRepository interface
   @Override
   @Deprecated
   default Optional<User> findByName(String name) {

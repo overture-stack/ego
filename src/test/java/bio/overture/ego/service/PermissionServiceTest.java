@@ -9,6 +9,7 @@ import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.utils.EntityGenerator;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Transactional
+@Ignore("replace with controller tests.")
 public class PermissionServiceTest {
   @Autowired private UserService userService;
 
@@ -85,7 +87,6 @@ public class PermissionServiceTest {
             new PolicyResponse(user2.getId().toString(), name2, READ));
 
     val actual = userPermissionService.findByPolicy(policy.getId());
-    ;
     System.out.printf("%s", actual.get(0).toString());
     assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
   }
