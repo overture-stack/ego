@@ -59,6 +59,22 @@ import lombok.NonNull;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import static java.util.stream.Collectors.toSet;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import bio.overture.ego.model.dto.*;
+import bio.overture.ego.model.entity.*;
+import bio.overture.ego.model.enums.ApplicationType;
+import bio.overture.ego.model.params.ScopeName;
+import bio.overture.ego.service.*;
+import com.google.common.collect.ImmutableSet;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import lombok.NonNull;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Component
 /**
