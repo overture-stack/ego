@@ -70,6 +70,7 @@ import springfox.documentation.annotations.ApiIgnore;
 public class UserController {
 
   /** Dependencies */
+
   private final UserService userService;
   private final ApplicationService applicationService;
   private final UserPermissionService userPermissionService;
