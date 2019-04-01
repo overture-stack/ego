@@ -1,13 +1,5 @@
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.model.enums.AccessLevel.DENY;
-import static bio.overture.ego.model.enums.AccessLevel.READ;
-import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static java.util.Arrays.asList;
-import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.service.PolicyService;
@@ -16,7 +8,6 @@ import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.TestData;
-import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -30,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
+
 import java.util.UUID;
 
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
@@ -48,14 +40,13 @@ import static org.assertj.core.api.Assertions.assertThat;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TokenControllerTest extends AbstractControllerTest {
 
-  @Autowired
-  private PolicyService policyService;
+  @Autowired private PolicyService policyService;
 
   @Autowired private UserService userService;
 
-  @Autowired private PolicyService policyService;
-
   @Autowired private UserPermissionService userPermissionService;
+
+  @Autowired private EntityGenerator entityGenerator;
 
   @Autowired private TokenService tokenService;
 
@@ -158,9 +149,7 @@ public class TokenControllerTest extends AbstractControllerTest {
 
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-    val response = initStringRequest().endpoint("o/token")
-            .body(params)
-            .post();
+    val response = initStringRequest().endpoint("o/token").body(params).post();
     val statusCode = response.getStatusCode();
 
     assertThat(statusCode).isEqualTo(HttpStatus.OK);
@@ -185,9 +174,7 @@ public class TokenControllerTest extends AbstractControllerTest {
     val study002id = study002.getId();
 
     val permissions =
-            asList(
-                    new PermissionRequest(study001id, READ),
-                    new PermissionRequest(study002id, READ));
+        asList(new PermissionRequest(study001id, READ), new PermissionRequest(study002id, READ));
 
     userPermissionService.addPermissions(user.getId(), permissions);
 
