@@ -26,6 +26,7 @@ public interface GroupRepository extends NamedRepository<Group, UUID> {
 
   boolean existsByNameIgnoreCase(String name);
 
+  //TODO: [rtisma] deprecated because this should be implemented at the service layer using dynamic fetching and not entity graph. Leaving this for now. Once all services are implementing findByName, this can be removed from the NameRepository interface
   @Override
   @Deprecated
   default Optional<Group> findByName(String name) {
