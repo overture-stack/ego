@@ -9,8 +9,8 @@ import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.utils.web.StringResponseOption;
-import bio.overture.ego.utils.web.WebResource;
-import bio.overture.ego.utils.web.second.StringWebResource;
+import bio.overture.ego.utils.web.BasicWebResource;
+import bio.overture.ego.utils.web.StringWebResource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.NonNull;
@@ -27,7 +27,6 @@ import java.util.UUID;
 
 import static bio.overture.ego.utils.Converters.convertToIds;
 import static bio.overture.ego.utils.Joiners.COMMA;
-import static bio.overture.ego.utils.web.WebResource.createWebResource;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
@@ -69,12 +68,12 @@ public abstract class AbstractControllerTest {
     return new StringWebResource(restTemplate, getServerUrl()).headers(headers);
   }
 
-  public <T> WebResource<T> initRequest(@NonNull Class<T> responseType) {
+  public <T> BasicWebResource<T> initRequest(@NonNull Class<T> responseType) {
     return initRequest(responseType, this.headers);
   }
 
-  public <T> WebResource<T> initRequest(@NonNull Class<T> responseType, HttpHeaders headers) {
-    return createWebResource(restTemplate, getServerUrl(), responseType).headers(headers);
+  public <T> BasicWebResource<T> initRequest(@NonNull Class<T> responseType, HttpHeaders headers) {
+    return new BasicWebResource<>(restTemplate, getServerUrl(), responseType).headers(headers);
   }
 
   public String getServerUrl() {

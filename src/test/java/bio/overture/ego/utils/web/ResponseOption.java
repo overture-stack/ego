@@ -26,27 +26,24 @@ public class ResponseOption<T> {
   }
 
   public ResponseOption<T> assertOk() {
-    assertStatusCode(OK);
-    return this;
+    return assertStatusCode(OK);
   }
 
   public ResponseOption<T> assertNotFound() {
-    assertStatusCode(NOT_FOUND);
-    return this;
+    return assertStatusCode(NOT_FOUND);
   }
 
   public ResponseOption<T> assertConflict() {
-    assertStatusCode(CONFLICT);
-    return this;
+    return assertStatusCode(CONFLICT);
   }
 
   public ResponseOption<T> assertBadRequest() {
-    assertStatusCode(BAD_REQUEST);
-    return this;
+   return assertStatusCode(BAD_REQUEST);
   }
 
   public ResponseOption<T> assertHasBody() {
     assertThat(response.hasBody()).isTrue();
+    assertThat(response.getBody()).isNotNull();
     return this;
   }
 

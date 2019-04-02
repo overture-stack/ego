@@ -1,6 +1,5 @@
-package bio.overture.ego.utils.web.second;
+package bio.overture.ego.utils.web;
 
-import bio.overture.ego.utils.web.StringResponseOption;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 

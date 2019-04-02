@@ -26,7 +26,7 @@ import static java.util.Objects.isNull;
 
 @Slf4j
 @RequiredArgsConstructor
-public class WebResource<T> {
+public abstract class AbstractWebResource<T,  R extends ResponseOption<T>, W extends AbstractWebResource<T, R, W> > {
 
   private static final ObjectMapper REGULAR_MAPPER = new ObjectMapper();
   private static final ObjectMapper PRETTY_MAPPER = new ObjectMapper();
@@ -46,32 +46,44 @@ public class WebResource<T> {
   private boolean enableLogging = false;
   private boolean pretty = false;
 
-  public WebResource<T> endpoint(String formattedEndpoint, Object... args) {
+  protected abstract R createResponseOption(ResponseEntity<T> responseEntity);
+
+  private W thisInstance(){
+    return (W)this;
+  }
+
+  public W endpoint(String formattedEndpoint, Object... args) {
     this.endpoint = format(formattedEndpoint, args);
-    return this;
+    return thisInstance();
   }
 
-  public WebResource<T> body(Object body) {
+  public W body(Object body) {
     this.body = body;
-    return this;
+    return thisInstance();
   }
 
-  public WebResource<T> headers(HttpHeaders httpHeaders) {
+  public W headers(HttpHeaders httpHeaders) {
     this.headers = httpHeaders;
-    return this;
+    return thisInstance();
   }
 
-  public WebResource<T> logging() {
+  public W logging() {
     return configLogging(true, false);
   }
 
-  public WebResource<T> prettyLogging() {
+  public W prettyLogging() {
     return configLogging(true, true);
   }
 
-  public WebResource<T> queryParam(String key, Object... values) {
+  public W queryParam(String key, Object... values) {
     queryParams.add(createQueryParam(key, values));
-    return this;
+    return thisInstance();
+  }
+
+  private W configLogging(boolean enable, boolean pretty) {
+    this.enableLogging = enable;
+    this.pretty = pretty;
+    return thisInstance();
   }
 
   public ResponseEntity<T> get() {
@@ -90,31 +102,20 @@ public class WebResource<T> {
     return doRequest(null, HttpMethod.DELETE);
   }
 
-  public ResponseOption<T> deleteAnd() {
+  public R deleteAnd() {
     return createResponseOption(delete());
   }
 
-  public ResponseOption<T> getAnd() {
-      return createResponseOption(get());
+  public R getAnd() {
+    return createResponseOption(get());
   }
 
-  public ResponseOption<T> putAnd() {
+  public R putAnd() {
     return createResponseOption(put());
   }
 
-  public ResponseOption<T> postAnd() {
+  public R postAnd() {
     return createResponseOption(post());
-  }
-
-  protected ResponseOption<T> createResponseOption(ResponseEntity<T> responseEntity){
-    return createResponseOption(responseEntity);
-  }
-
-
-  private WebResource<T> configLogging(boolean enable, boolean pretty) {
-    this.enableLogging = enable;
-    this.pretty = pretty;
-    return this;
   }
 
   private Optional<String> getQuery() {
@@ -134,11 +135,6 @@ public class WebResource<T> {
             getUrl(), httpMethod, new HttpEntity<>(body, this.headers), this.responseType);
     logResponse(enableLogging, pretty, response);
     return response;
-  }
-
-  public static <T> WebResource<T> createWebResource(
-      TestRestTemplate restTemplate, String serverUrl, Class<T> responseType) {
-    return new WebResource<>(restTemplate, serverUrl, responseType);
   }
 
   @SneakyThrows
