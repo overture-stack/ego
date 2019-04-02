@@ -6,6 +6,7 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.assertj.core.api.ListAssert;
+import org.assertj.core.api.ObjectAssert;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -30,6 +31,10 @@ public class StringResponseOption extends ResponseOption<String, StringResponseO
 
   public <R> ListAssert<R> assertPageResultsOfType(Class<R> entityClass){
     return assertThat(extractPageResults(entityClass));
+  }
+
+  public <R> ObjectAssert<R> assertEntityOfType(Class<R> entityClass){
+    return assertThat(extractOneEntity(entityClass));
   }
 
   public <R> List<R> extractPageResults(@NonNull Class<R> entityClass){

@@ -421,7 +421,7 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     // Assert all applications still exist
     data.getApplications()
-        .forEach( a -> getApplicationGetRequestAnd(a).assertOk() );
+        .forEach( a -> getApplicationEntityGetRequestAnd(a).assertOk() );
 
     // Assert all policies still exist
     data.getPolicies()

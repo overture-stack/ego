@@ -42,6 +42,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 
+import static bio.overture.ego.model.enums.JavaFields.GROUPS;
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.USERS;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
 import static bio.overture.ego.utils.EntityGenerator.randomApplicationType;
@@ -163,6 +166,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
 	@Test
 	public void createApplication_NonExisting_Success(){
+  	// Create application request
   	val createRequest = CreateApplicationRequest.builder()
 				.clientId(randomStringNoSpaces(6))
 				.clientSecret(randomStringNoSpaces(6))
@@ -170,10 +174,16 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 				.status(randomStatusType())
         .type(randomApplicationType())
         .build();
-    createApplicationPostRequestAnd(createRequest)
-				.assertOk()
-				.assertHasBody();
-		throw new NotImplementedException("need to implement the test 'createApplication_NonExisting_Success'");
+
+  	// Create the application using the request
+    val app = createApplicationPostRequestAnd(createRequest)
+        .extractOneEntity(Application.class);
+		assertThat(app).isEqualToIgnoringGivenFields(createRequest, ID, GROUPS, USERS );
+
+    // Get the application
+		getApplicationEntityGetRequestAnd(app)
+				.assertEntityOfType(Application.class)
+				.isEqualToIgnoringGivenFields(createRequest, ID, GROUPS, USERS);
 	}
 
 	@Test

@@ -171,7 +171,7 @@ public abstract class AbstractControllerTest {
     return initStringRequest().endpoint("/users/%s", u.getId()).getAnd();
   }
 
-  protected StringResponseOption getApplicationGetRequestAnd(Application a) {
+  protected StringResponseOption getApplicationEntityGetRequestAnd(Application a) {
     return initStringRequest().endpoint("/applications/%s", a.getId()).getAnd();
   }
 
