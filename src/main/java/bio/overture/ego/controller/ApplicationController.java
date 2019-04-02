@@ -119,7 +119,7 @@ public class ApplicationController {
   })
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Applications")})
   @JsonView(Views.REST.class)
-  public @ResponseBody PageDTO<Application> listApplications(
+  public @ResponseBody PageDTO<Application> findApplications(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,

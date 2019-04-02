@@ -27,6 +27,7 @@ import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.utils.EntityGenerator;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -44,6 +45,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 
+import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
+import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
 import static bio.overture.ego.model.enums.JavaFields.GROUPS;
 import static bio.overture.ego.model.enums.JavaFields.ID;
 import static bio.overture.ego.model.enums.JavaFields.NAME;
@@ -59,6 +62,7 @@ import static bio.overture.ego.utils.EntityGenerator.randomEnumExcluding;
 import static bio.overture.ego.utils.EntityGenerator.randomStatusType;
 import static bio.overture.ego.utils.EntityGenerator.randomStringNoSpaces;
 import static bio.overture.ego.utils.EntityGenerator.randomStringWithSpaces;
+import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -160,7 +164,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
   }
 
 	@Test
-	public void listApplications_FindAllQuery_Success(){
+	public void findApplications_FindAllQuery_Success(){
   	// Generate data
   	val data = generateUniqueTestApplicationData();
 
@@ -180,7 +184,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	public void listApplications_FindSomeQuery_Success(){
+	public void findApplications_FindSomeQuery_Success(){
 		throw new NotImplementedException("need to implement the test 'getApplications_FindSomeQuery_Success'");
 	}
 
@@ -395,37 +399,155 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
 	@Test
 	public void updateApplication_NonExistentApplication_NotFound(){
-		throw new NotImplementedException("need to implement the test 'updateApplication_NonExistentApplication_NotFound'");
+  	// Generate a non-existing applicaiton Id
+    val nonExistentId = generateNonExistentId(applicationService);
+
+    // Assert that updating a non-existing application results in NOT_FOUND error
+    partialUpdateApplicationPutRequestAnd(nonExistentId, UpdateApplicationRequest.builder().build()).assertNotFound();
 	}
 
 	@Test
 	public void updateApplication_NameAlreadyExists_Conflict(){
-		throw new NotImplementedException("need to implement the test 'updateApplication_NameAlreadyExists_Conflict'");
+  	// Generate data
+  	val data = generateUniqueTestApplicationData();
+  	val app0 = data.getApplications().get(0);
+		val app1 = data.getApplications().get(1);
+
+  	// Create update request with the same name as app1
+  	val updateRequest =  UpdateApplicationRequest.builder().name(app1.getName()).build();
+
+  	// Update app0 with the same name as app1, and assert a CONFLICT
+  	partialUpdateApplicationPutRequestAnd(app0.getId(), updateRequest).assertConflict();
 	}
 
 	@Test
-	public void statusValidation_MalformedStatus_Conflict(){
-		throw new NotImplementedException("need to implement the test 'statusValidation_MalformedStatus_Conflict'");
+	public void statusValidation_MalformedStatus_BadRequest(){
+  	// Assert the invalid status is actually invalid
+  	val invalidStatus = "something123";
+		val match = stream(StatusType.values()).anyMatch(x -> x.toString().equals(invalidStatus));
+		assertThat(match).isFalse();
+
+		// Generate data
+		val data = generateUniqueTestApplicationData();
+		val app0 = data.getApplications().get(0);
+
+		// Build application create request with invalid status
+		val createRequest = CreateApplicationRequest.builder()
+				.name(randomStringNoSpaces(7))
+				.clientId(randomStringNoSpaces(7))
+				.clientSecret(randomStringNoSpaces(7))
+				.type(randomEnum(ApplicationType.class))
+				.build();
+		val createRequestJson = (ObjectNode)MAPPER.valueToTree(createRequest);
+		createRequestJson.put("status", invalidStatus);
+
+		// Create application with invalid request, and assert BAD_REQUEST
+		initStringRequest()
+				.endpoint("/applications")
+				.body(createRequestJson)
+				.postAnd()
+				.assertBadRequest();
+
+		// Build application update request with invalid status
+		val updateRequestJson = MAPPER.createObjectNode().put("status", invalidStatus);
+		initStringRequest()
+				.endpoint("/applications/%s", app0.getId())
+				.body(updateRequestJson)
+				.putAnd()
+				.assertBadRequest();
+	}
+
+	@Test
+	public void applicationTypeValidation_MalformedApplicationType_BadRequest(){
+		// Assert the invalid status is actually invalid
+		val invalidApplicationType = "something123";
+		val match = stream(ApplicationType.values()).anyMatch(x -> x.toString().equals(invalidApplicationType));
+		assertThat(match).isFalse();
+
+		// Generate data
+		val data = generateUniqueTestApplicationData();
+		val app0 = data.getApplications().get(0);
+
+		// Build application create request with invalid application Type
+		val createRequest = CreateApplicationRequest.builder()
+				.name(randomStringNoSpaces(7))
+				.clientId(randomStringNoSpaces(7))
+				.clientSecret(randomStringNoSpaces(7))
+				.status(randomEnum(StatusType.class))
+				.build();
+		val createRequestJson = (ObjectNode)MAPPER.valueToTree(createRequest);
+		createRequestJson.put("type", invalidApplicationType);
+
+		// Create application with invalid request, and assert BAD_REQUEST
+		initStringRequest()
+				.endpoint("/applications")
+				.body(createRequestJson)
+				.postAnd()
+				.assertBadRequest();
+
+		// Build application update request with invalid status
+		val updateRequestJson = MAPPER.createObjectNode().put("type", invalidApplicationType);
+		initStringRequest()
+				.endpoint("/applications/%s", app0.getId())
+				.body(updateRequestJson)
+				.putAnd()
+				.assertBadRequest();
 	}
 
 	@Test
 	public void getGroupsFromApplication_FindAllQuery_Success(){
-		throw new NotImplementedException("need to implement the test 'getGroupsFromApplication_FindAllQuery_Success'");
+		// Generate data
+		val data = generateUniqueTestApplicationData();
+		val app0 = data.getApplications().get(0);
+		val groups = data.getGroups();
+
+		// Add groups to app0
+		groups.forEach(g -> addApplicationsToGroupPostRequestAnd(g, newArrayList(app0)).assertOk());
+
+		// Assert all associated groups with the application can be read
+		getGroupsForApplicationEndpoint(app0.getId())
+				.queryParam(OFFSET, 0)
+				.queryParam(LIMIT, groups.size()+100)
+				.getAnd()
+				.assertPageResultsOfType(Group.class)
+				.containsExactlyInAnyOrderElementsOf(groups);
 	}
 
 	@Test
-	public void getGroupsFromApplication_NonExistentGroup_NotFound(){
-		throw new NotImplementedException("need to implement the test 'getGroupsFromApplication_NonExistentGroup_NotFound'");
+	public void getGroupsFromApplication_NonExistentApplication_NotFound(){
+  	// Generate non existing applicaition id
+    val nonExistentId = generateNonExistentId(applicationService);
+
+    // Read non existing application id and assert its NOT_FOUND
+    getGroupsForApplicationGetRequestAnd(nonExistentId).assertNotFound();
 	}
 
 	@Test
 	public void getUsersFromApplication_FindAllQuery_Success(){
-		throw new NotImplementedException("need to implement the test 'getUsersFromApplication_FindAllQuery_Success'");
+  	// Generate data
+    val data = generateUniqueTestApplicationData();
+    val app0 = data.getApplications().get(0);
+    val users = data.getUsers();
+
+    // Add users to app0
+    users.forEach(u -> addApplicationsToUserPostRequestAnd(u, newArrayList(app0)).assertOk());
+
+    // Assert all associated users with the application can be read
+		getUsersForApplicationEndpoint(app0.getId())
+				.queryParam(OFFSET, 0)
+				.queryParam(LIMIT, users.size()+100)
+				.getAnd()
+				.assertPageResultsOfType(User.class)
+				.containsExactlyInAnyOrderElementsOf(users);
 	}
 
 	@Test
 	public void getUsersFromApplication_NonExistentGroup_NotFound(){
-		throw new NotImplementedException("need to implement the test 'getUsersFromApplication_NonExistentGroup_NotFound'");
+		// Generate non existing applicaition id
+		val nonExistentId = generateNonExistentId(applicationService);
+
+		// Read non existing application id and assert its NOT_FOUND
+		getUsersForApplicationGetRequestAnd(nonExistentId).assertNotFound();
 	}
 
 	@SneakyThrows

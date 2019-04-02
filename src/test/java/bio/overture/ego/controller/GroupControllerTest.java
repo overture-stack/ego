@@ -926,7 +926,7 @@ public class GroupControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  public void statusValidation_MalformedStatus_Conflict() {
+  public void statusValidation_MalformedStatus_BadRequest() {
     val invalidStatus = "something123";
     val match = stream(StatusType.values()).anyMatch(x -> x.toString().equals(invalidStatus));
     assertThat(match).isFalse();

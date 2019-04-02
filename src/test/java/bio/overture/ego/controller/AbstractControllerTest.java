@@ -140,8 +140,16 @@ public abstract class AbstractControllerTest {
     return initStringRequest().endpoint("/users/%s/applications", u.getId()).getAnd();
   }
 
+  protected StringWebResource getUsersForApplicationEndpoint(UUID appId){
+    return initStringRequest().endpoint("/applications/%s/users", appId);
+  }
+
+  protected StringResponseOption getUsersForApplicationGetRequestAnd(UUID appId) {
+    return getUsersForApplicationEndpoint(appId).getAnd();
+  }
+
   protected StringResponseOption getUsersForApplicationGetRequestAnd(Application a) {
-    return initStringRequest().endpoint("/applications/%s/users", a.getId()).getAnd();
+    return getUsersForApplicationGetRequestAnd(a.getId());
   }
 
   protected StringResponseOption getApplicationsForGroupGetRequestAnd(Group g) {
@@ -210,8 +218,16 @@ public abstract class AbstractControllerTest {
     return initStringRequest().endpoint("/users/%s/groups", u.getId()).getAnd();
   }
 
+  protected StringWebResource getGroupsForApplicationEndpoint(UUID appId) {
+    return initStringRequest().endpoint("/applications/%s/groups", appId);
+  }
+
+  protected StringResponseOption getGroupsForApplicationGetRequestAnd(UUID appId) {
+    return getGroupsForApplicationEndpoint(appId).getAnd();
+  }
+
   protected StringResponseOption getGroupsForApplicationGetRequestAnd(Application a) {
-    return initStringRequest().endpoint("/applications/%s/groups", a.getId()).getAnd();
+    return getGroupsForApplicationGetRequestAnd(a.getId());
   }
 
   protected  StringResponseOption deleteApplicationFromGroupDeleteRequestAnd(Group g, Application a){
