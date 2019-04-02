@@ -18,10 +18,15 @@
 package bio.overture.ego.controller;
 
 import bio.overture.ego.AuthorizationServiceMain;
+import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.utils.EntityGenerator;
+import lombok.Builder;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -35,7 +40,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.List;
+
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
+import static bio.overture.ego.utils.EntityGenerator.randomApplicationType;
+import static bio.overture.ego.utils.EntityGenerator.randomStatusType;
+import static bio.overture.ego.utils.EntityGenerator.randomStringNoSpaces;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
@@ -152,6 +163,16 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
 	@Test
 	public void createApplication_NonExisting_Success(){
+  	val createRequest = CreateApplicationRequest.builder()
+				.clientId(randomStringNoSpaces(6))
+				.clientSecret(randomStringNoSpaces(6))
+        .name(randomStringNoSpaces(6))
+				.status(randomStatusType())
+        .type(randomApplicationType())
+        .build();
+    createApplicationPostRequestAnd(createRequest)
+				.assertOk()
+				.assertHasBody();
 		throw new NotImplementedException("need to implement the test 'createApplication_NonExisting_Success'");
 	}
 
@@ -225,5 +246,25 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 		throw new NotImplementedException("need to implement the test 'getUsersFromApplication_NonExistentGroup_NotFound'");
 	}
 
+	@SneakyThrows
+	private TestApplicationData generateUniqueTestApplicationData() {
+		val applications = repeatedCallsOf(() -> entityGenerator.generateRandomApplication(), 2);
+		val groups = repeatedCallsOf(() -> entityGenerator.generateRandomGroup(), 3);
+		val users = repeatedCallsOf(() -> entityGenerator.generateRandomUser(), 3);
+
+		return TestApplicationData.builder()
+				.applications(applications)
+				.users(users)
+        .groups(groups)
+				.build();
+	}
+
+	@lombok.Value
+	@Builder
+	public static class TestApplicationData {
+		@NonNull private final List<Group> groups;
+		@NonNull private final List<Application> applications;
+		@NonNull private final List<User> users;
+	}
 
 }

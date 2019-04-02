@@ -1,35 +1,28 @@
-package bio.overture.ego.utils;
-
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Joiners.AMPERSAND;
-import static bio.overture.ego.utils.Joiners.PATH;
-import static bio.overture.ego.utils.QueryParam.createQueryParam;
-import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
-import static com.google.common.collect.Sets.newHashSet;
-import static java.lang.String.format;
-import static java.util.Objects.isNull;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.OK;
+package bio.overture.ego.utils.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import java.util.Optional;
+import java.util.Set;
+
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Joiners.AMPERSAND;
+import static bio.overture.ego.utils.Joiners.PATH;
+import static bio.overture.ego.utils.web.QueryParam.createQueryParam;
+import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
+import static com.google.common.collect.Sets.newHashSet;
+import static java.lang.String.format;
+import static java.util.Objects.isNull;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -98,20 +91,25 @@ public class WebResource<T> {
   }
 
   public ResponseOption<T> deleteAnd() {
-    return new ResponseOption<>(delete());
+    return createResponseOption(delete());
   }
 
   public ResponseOption<T> getAnd() {
-    return new ResponseOption<>(get());
+      return createResponseOption(get());
   }
 
   public ResponseOption<T> putAnd() {
-    return new ResponseOption<>(put());
+    return createResponseOption(put());
   }
 
   public ResponseOption<T> postAnd() {
-    return new ResponseOption<>(post());
+    return createResponseOption(post());
   }
+
+  protected ResponseOption<T> createResponseOption(ResponseEntity<T> responseEntity){
+    return createResponseOption(responseEntity);
+  }
+
 
   private WebResource<T> configLogging(boolean enable, boolean pretty) {
     this.enableLogging = enable;
@@ -178,42 +176,4 @@ public class WebResource<T> {
     }
   }
 
-  @Value
-  public static class ResponseOption<T> {
-    @NonNull private final ResponseEntity<T> response;
-
-    public ResponseOption<T> assertStatusCode(HttpStatus code) {
-      assertThat(response.getStatusCode()).isEqualTo(code);
-      return this;
-    }
-
-    public ResponseOption<T> assertOk() {
-      assertStatusCode(OK);
-      return this;
-    }
-
-    public ResponseOption<T> assertNotFound() {
-      assertStatusCode(NOT_FOUND);
-      return this;
-    }
-
-    public ResponseOption<T> assertConflict() {
-      assertStatusCode(CONFLICT);
-      return this;
-    }
-
-    public ResponseOption<T> assertBadRequest() {
-      assertStatusCode(BAD_REQUEST);
-      return this;
-    }
-
-    public ResponseOption<T> assertHasBody() {
-      assertThat(response.hasBody()).isTrue();
-      return this;
-    }
-
-    public <R> R map(Function<ResponseEntity<T>, R> transformingFunction) {
-      return transformingFunction.apply(getResponse());
-    }
-  }
 }

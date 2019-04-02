@@ -1,11 +1,11 @@
-package bio.overture.ego.utils;
-
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static java.lang.String.format;
+package bio.overture.ego.utils.web;
 
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
+
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static java.lang.String.format;
 
 @Value
 @Builder
