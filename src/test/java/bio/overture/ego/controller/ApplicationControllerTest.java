@@ -47,9 +47,11 @@ import static bio.overture.ego.model.enums.JavaFields.ID;
 import static bio.overture.ego.model.enums.JavaFields.USERS;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static bio.overture.ego.utils.EntityGenerator.randomApplicationType;
 import static bio.overture.ego.utils.EntityGenerator.randomStatusType;
 import static bio.overture.ego.utils.EntityGenerator.randomStringNoSpaces;
+import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
@@ -143,20 +145,30 @@ public class ApplicationControllerTest extends AbstractControllerTest {
   @Test
   @SneakyThrows
   public void getApplication_Success() {
-    val applicationId = applicationService.getByClientId("111111").getId();
-    val response = initStringRequest().endpoint("/applications/%s", applicationId).get();
-
-    val responseStatus = response.getStatusCode();
-    val responseJson = MAPPER.readTree(response.getBody());
-
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
-    assertThat(responseJson.get("name").asText()).isEqualTo("Application 111111");
-    assertThat(responseJson.get("type").asText()).isEqualTo("CLIENT");
+		val application = applicationService.getByClientId("111111");
+    getApplicationEntityGetRequestAnd(application)
+				.assertEntityOfType(Application.class)
+				.isEqualToComparingFieldByField(application);
   }
 
 	@Test
 	public void getApplications_FindAllQuery_Success(){
-		throw new NotImplementedException("need to implement the test 'getApplications_FindAllQuery_Success'");
+  	// Generate data
+  	val data = generateUniqueTestApplicationData();
+
+  	// Get total count of applications
+  	val totalApplications = (int)applicationService.getRepository().count();
+
+  	// List all applications
+  	val actualApps = listApplicationsEndpointAnd()
+				.queryParam("offset", 0)
+				.queryParam("limit", totalApplications)
+				.getAnd()
+				.extractPageResults(Application.class);
+
+  	// Assert the generated applications are included in the list
+  	assertThat(actualApps).hasSize(totalApplications);
+  	assertThat(actualApps).containsAll(data.getApplications());
 	}
 
 	@Test
@@ -188,17 +200,89 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
 	@Test
 	public void createApplication_NameAlreadyExists_Conflict(){
-		throw new NotImplementedException("need to implement the test 'createApplication_NameAlreadyExists_Conflict'");
+		// Create application request
+		val createRequest = CreateApplicationRequest.builder()
+				.clientId(randomStringNoSpaces(6))
+				.clientSecret(randomStringNoSpaces(6))
+				.name(randomStringNoSpaces(6))
+				.status(randomStatusType())
+				.type(randomApplicationType())
+				.build();
+
+		// Create the application using the request
+		val expectedApp = createApplicationPostRequestAnd(createRequest)
+				.extractOneEntity(Application.class);
+
+		// Assert app exists
+		getApplicationEntityGetRequestAnd(expectedApp).assertOk();
+
+		// Create another create request with the same name
+		val createRequest2 = CreateApplicationRequest.builder()
+				.clientId(randomStringNoSpaces(6))
+				.clientSecret(randomStringNoSpaces(6))
+				.name(createRequest.getName())
+				.status(randomStatusType())
+				.type(randomApplicationType())
+				.build();
+
+		// Assert that creating an application with an existing name, results in a CONFLICT
+		createApplicationPostRequestAnd(createRequest2).assertConflict();
 	}
 
 	@Test
-	public void deleteApplication_NonExisting_Conflict(){
-		throw new NotImplementedException("need to implement the test 'deleteApplication_NonExisting_Conflict'");
+	public void deleteApplication_NonExisting_NotFound(){
+  	// Create an non-existing application Id
+    val nonExistentId = generateNonExistentId(applicationService);
+
+    // Assert that deleting a non-existing applicationId results in NOT_FOUND error
+    deleteApplicationDeleteRequestAnd(nonExistentId).assertNotFound();
 	}
 
 	@Test
 	public void deleteApplicationAndRelationshipsOnly_AlreadyExisting_Success(){
-		throw new NotImplementedException("need to implement the test 'deleteApplicationAndRelationshipsOnly_AlreadyExisting_Success'");
+  	// Generate data
+    val data = generateUniqueTestApplicationData();
+    val group0 = data.getGroups().get(0);
+    val app0 =  data.getApplications().get(0);
+    val user0 = data.getUsers().get(0);
+
+    // Add Applications to Group0
+		addApplicationsToGroupPostRequestAnd(group0, newArrayList(app0)).assertOk();
+
+		// Assert group0 was added to app0
+		getGroupsForApplicationGetRequestAnd(app0)
+				.assertPageResultsOfType(Group.class)
+				.containsExactly(group0);
+
+		// Add user0 to app0
+		addApplicationsToUserPostRequestAnd(user0, newArrayList(app0)).assertOk();
+
+		// Assert user0 was added to app0
+		getUsersForApplicationGetRequestAnd(app0)
+				.assertPageResultsOfType(User.class)
+				.containsExactly(user0);
+
+		// Delete App0
+		deleteApplicationDeleteRequestAnd(app0).assertOk();
+
+		// Assert app0 was deleted
+		getApplicationEntityGetRequestAnd(app0).assertNotFound();
+
+		// Assert user0 still exists
+		getUserEntityGetRequestAnd(user0).assertOk();
+
+		// Assert group0 still exists
+		getGroupEntityGetRequestAnd(group0).assertOk();
+
+		// Assert user0 is associated with 0 applications
+		getApplicationsForUserGetRequestAnd(user0)
+				.assertPageResultsOfType(Application.class)
+				.isEmpty();
+
+		// Assert group0 is associated with 0 applications
+		getApplicationsForGroupGetRequestAnd(group0)
+				.assertPageResultsOfType(Group.class)
+				.isEmpty();
 	}
 
 	@Test

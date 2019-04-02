@@ -135,8 +135,26 @@ public abstract class AbstractControllerTest {
     return addUsersToGroupPostRequestAnd(g.getId(), userIds);
   }
 
+  protected StringResponseOption getApplicationsForUserGetRequestAnd(User u) {
+    return initStringRequest().endpoint("/users/%s/applications", u.getId()).getAnd();
+  }
+
+  protected StringResponseOption getUsersForApplicationGetRequestAnd(Application a) {
+    return initStringRequest().endpoint("/applications/%s/users", a.getId()).getAnd();
+  }
+
   protected StringResponseOption getApplicationsForGroupGetRequestAnd(Group g) {
     return initStringRequest().endpoint("/groups/%s/applications", g.getId()).getAnd();
+  }
+
+  protected StringResponseOption addApplicationsToUserPostRequestAnd(UUID userId, Collection<UUID> appIds){
+    return initStringRequest().endpoint("/users/%s/applications", userId)
+        .body(appIds)
+        .postAnd();
+  }
+
+  protected StringResponseOption addApplicationsToUserPostRequestAnd(User u, Collection<Application> apps){
+    return addApplicationsToUserPostRequestAnd(u.getId(), convertToIds(apps));
   }
 
   protected StringResponseOption getUsersForGroupGetRequestAnd(UUID groupId) {
@@ -192,6 +210,14 @@ public abstract class AbstractControllerTest {
         .deleteAnd();
   }
 
+  protected  StringResponseOption deleteApplicationDeleteRequestAnd(Application a){
+    return deleteApplicationDeleteRequestAnd(a.getId());
+  }
+
+  protected  StringResponseOption deleteApplicationDeleteRequestAnd(UUID applicationId){
+    return initStringRequest().endpoint("/applications/%s", applicationId).deleteAnd();
+  }
+
   protected  StringResponseOption deleteApplicationsFromGroupDeleteRequestAnd(Group g, Collection<Application> apps){
     val appIdsToDelete = convertToIds(apps);
     return deleteApplicationsFromGroupDeleteRequestAnd(g.getId(), appIdsToDelete);
@@ -205,6 +231,10 @@ public abstract class AbstractControllerTest {
 
   protected StringWebResource listGroupsEndpointAnd() {
     return initStringRequest().endpoint("/groups");
+  }
+
+  protected StringWebResource listApplicationsEndpointAnd() {
+    return initStringRequest().endpoint("/applications");
   }
 
 
