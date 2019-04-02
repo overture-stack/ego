@@ -3,6 +3,7 @@ package bio.overture.ego.controller;
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.dto.MaskDTO;
+import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
@@ -177,6 +178,10 @@ public abstract class AbstractControllerTest {
     return initStringRequest().endpoint("/groups/%s", groupId).body(updateRequest).putAnd();
   }
 
+  protected StringResponseOption partialUpdateApplicationPutRequestAnd(UUID applicationId, UpdateApplicationRequest updateRequest) {
+    return initStringRequest().endpoint("/applications/%s", applicationId).body(updateRequest).putAnd();
+  }
+
   protected StringResponseOption getGroupEntityGetRequestAnd(Group g) {
     return initStringRequest().endpoint("/groups/%s", g.getId()).getAnd();
   }
@@ -189,8 +194,12 @@ public abstract class AbstractControllerTest {
     return initStringRequest().endpoint("/users/%s", u.getId()).getAnd();
   }
 
+  protected StringResponseOption getApplicationEntityGetRequestAnd(UUID appId) {
+    return initStringRequest().endpoint("/applications/%s", appId).getAnd();
+  }
+
   protected StringResponseOption getApplicationEntityGetRequestAnd(Application a) {
-    return initStringRequest().endpoint("/applications/%s", a.getId()).getAnd();
+    return getApplicationEntityGetRequestAnd(a.getId());
   }
 
   protected StringResponseOption getPolicyGetRequestAnd(Policy p) {

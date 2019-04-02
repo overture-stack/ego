@@ -774,7 +774,7 @@ public class GroupControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  public void UUIDValidation_MalformedUUID_Conflict() {
+  public void UUIDValidation_MalformedUUID_BadRequest() {
     val data = generateUniqueTestGroupData();
     val group0 = data.getGroups().get(0);
     val badUUID = "123sksk";

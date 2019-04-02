@@ -19,10 +19,12 @@ package bio.overture.ego.controller;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.CreateApplicationRequest;
+import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.ApplicationType;
+import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.utils.EntityGenerator;
 import lombok.Builder;
@@ -44,13 +46,19 @@ import java.util.List;
 
 import static bio.overture.ego.model.enums.JavaFields.GROUPS;
 import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.NAME;
+import static bio.overture.ego.model.enums.JavaFields.STATUS;
 import static bio.overture.ego.model.enums.JavaFields.USERS;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentName;
 import static bio.overture.ego.utils.EntityGenerator.randomApplicationType;
+import static bio.overture.ego.utils.EntityGenerator.randomEnum;
+import static bio.overture.ego.utils.EntityGenerator.randomEnumExcluding;
 import static bio.overture.ego.utils.EntityGenerator.randomStatusType;
 import static bio.overture.ego.utils.EntityGenerator.randomStringNoSpaces;
+import static bio.overture.ego.utils.EntityGenerator.randomStringWithSpaces;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -152,7 +160,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
   }
 
 	@Test
-	public void getApplications_FindAllQuery_Success(){
+	public void listApplications_FindAllQuery_Success(){
   	// Generate data
   	val data = generateUniqueTestApplicationData();
 
@@ -172,7 +180,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	public void getApplications_FindSomeQuery_Success(){
+	public void listApplications_FindSomeQuery_Success(){
 		throw new NotImplementedException("need to implement the test 'getApplications_FindSomeQuery_Success'");
 	}
 
@@ -287,22 +295,102 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
 	@Test
 	public void getApplication_ExistingApplication_Success(){
-		throw new NotImplementedException("need to implement the test 'getApplication_ExistingApplication_Success'");
+  	val data = generateUniqueTestApplicationData();
+  	val app0 = data.getApplications().get(0);
+
+  	// Assert app0 can be read
+		getApplicationEntityGetRequestAnd(app0)
+				.assertEntityOfType(Application.class)
+				.isEqualToComparingFieldByField(app0);
 	}
 
 	@Test
 	public void getApplication_NonExistentApplication_NotFound(){
-		throw new NotImplementedException("need to implement the test 'getApplication_NonExistentApplication_NotFound'");
+  	// Create non-existing application id
+    val nonExistingId = generateNonExistentId(applicationService);
+
+    // Assert that the id cannot be read and throws a NOT_FOUND error
+    getApplicationEntityGetRequestAnd(nonExistingId).assertNotFound();
 	}
 
 	@Test
-	public void UUIDValidation_MalformedUUID_Conflict(){
-		throw new NotImplementedException("need to implement the test 'UUIDValidation_MalformedUUID_Conflict'");
+	public void UUIDValidation_MalformedUUID_BadRequest(){
+    val badUUID = "123sksk";
+
+    initStringRequest()
+				.endpoint("/applications/%s", badUUID)
+				.deleteAnd()
+				.assertBadRequest();
+
+		initStringRequest()
+				.endpoint("/applications/%s", badUUID)
+        .getAnd()
+				.assertBadRequest();
+
+		val dummyUpdateRequest = UpdateApplicationRequest.builder().build();
+		initStringRequest()
+				.endpoint("/applications/%s", badUUID)
+				.body(dummyUpdateRequest)
+				.putAnd()
+				.assertBadRequest();
+
+		initStringRequest()
+				.endpoint("/applications/%s/groups", badUUID)
+				.getAnd()
+				.assertBadRequest();
+
+		initStringRequest()
+				.endpoint("/applications/%s/users", badUUID)
+				.getAnd()
+				.assertBadRequest();
+	}
+
+	private UpdateApplicationRequest randomUpdateApplicationRequest(){
+    val name = generateNonExistentName(applicationService);
+		return UpdateApplicationRequest.builder()
+				.name(name)
+				.status(randomEnum(StatusType.class))
+				.clientId(randomStringNoSpaces(7))
+				.clientSecret(randomStringNoSpaces(7))
+				.redirectUri(randomStringNoSpaces(7))
+				.description(randomStringWithSpaces(100))
+				.type(randomEnum(ApplicationType.class))
+				.build();
 	}
 
 	@Test
 	public void updateApplication_ExistingApplication_Success(){
-		throw new NotImplementedException("need to implement the test 'updateApplication_ExistingApplication_Success'");
+  	// Generate data
+    val data = generateUniqueTestApplicationData();
+    val app0 = data.getApplications().get(0);
+
+    // Create updateRequest1
+    val updateRequest1 = UpdateApplicationRequest.builder()
+				.name(generateNonExistentName(applicationService))
+				.build();
+    assertThat(app0.getName()).isNotEqualTo(updateRequest1.getName());
+
+		// Update app0 with updateRequest1, and assert the name changed
+		val app0_before0 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
+		partialUpdateApplicationPutRequestAnd(app0.getId(), updateRequest1).assertOk();
+		val app0_after0 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
+		assertThat(app0_before0).isEqualToIgnoringGivenFields(app0_after0,ID, GROUPS, USERS, NAME);
+
+		// Update app0 with empty update request, and assert nothing changed
+		val app0_before1 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
+		partialUpdateApplicationPutRequestAnd(app0.getId(), UpdateApplicationRequest.builder().build()).assertOk();
+		val app0_after1 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
+		assertThat(app0_before1).isEqualTo(app0_after1);
+
+		// Update the status field, and assert only that was updated
+		val updateRequest2 = UpdateApplicationRequest.builder()
+				.status(randomEnumExcluding(StatusType.class, updateRequest1.getStatus()))
+        .build();
+		val app0_before2 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
+		partialUpdateApplicationPutRequestAnd(app0.getId(), updateRequest2).assertOk();
+		val app0_after2 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
+		assertThat(app0_before2).isEqualToIgnoringGivenFields(app0_after2,ID, GROUPS, USERS, STATUS);
+		assertThat(app0_before2.getStatus()).isNotEqualTo(app0_after2.getStatus());
 	}
 
 	@Test
