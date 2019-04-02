@@ -8,6 +8,7 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.utils.web.ResponseOption;
 import bio.overture.ego.utils.web.StringResponseOption;
 import bio.overture.ego.utils.web.BasicWebResource;
 import bio.overture.ego.utils.web.StringWebResource;
@@ -68,12 +69,12 @@ public abstract class AbstractControllerTest {
     return new StringWebResource(restTemplate, getServerUrl()).headers(headers);
   }
 
-  public <T> BasicWebResource<T> initRequest(@NonNull Class<T> responseType) {
+  public <T, O extends ResponseOption<T, O>> BasicWebResource<T, O> initRequest(@NonNull Class<T> responseType) {
     return initRequest(responseType, this.headers);
   }
 
-  public <T> BasicWebResource<T> initRequest(@NonNull Class<T> responseType, HttpHeaders headers) {
-    return new BasicWebResource<>(restTemplate, getServerUrl(), responseType).headers(headers);
+  public <T, O extends ResponseOption<T, O>> BasicWebResource<T, O> initRequest(@NonNull Class<T> responseType, HttpHeaders headers) {
+    return new BasicWebResource<T, O>(restTemplate, getServerUrl(), responseType).headers(headers);
   }
 
   public String getServerUrl() {

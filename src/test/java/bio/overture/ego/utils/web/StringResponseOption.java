@@ -16,7 +16,7 @@ import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Streams.stream;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class StringResponseOption extends ResponseOption<String>{
+public class StringResponseOption extends ResponseOption<String, StringResponseOption>{
 
   public static final ObjectMapper MAPPER = new ObjectMapper();
 

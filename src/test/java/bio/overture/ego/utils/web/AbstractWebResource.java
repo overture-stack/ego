@@ -26,7 +26,7 @@ import static java.util.Objects.isNull;
 
 @Slf4j
 @RequiredArgsConstructor
-public abstract class AbstractWebResource<T,  R extends ResponseOption<T>, W extends AbstractWebResource<T, R, W> > {
+public abstract class AbstractWebResource<T,  O extends ResponseOption<T, O>, W extends AbstractWebResource<T, O, W> > {
 
   private static final ObjectMapper REGULAR_MAPPER = new ObjectMapper();
   private static final ObjectMapper PRETTY_MAPPER = new ObjectMapper();
@@ -46,7 +46,7 @@ public abstract class AbstractWebResource<T,  R extends ResponseOption<T>, W ext
   private boolean enableLogging = false;
   private boolean pretty = false;
 
-  protected abstract R createResponseOption(ResponseEntity<T> responseEntity);
+  protected abstract O createResponseOption(ResponseEntity<T> responseEntity);
 
   private W thisInstance(){
     return (W)this;
@@ -102,19 +102,19 @@ public abstract class AbstractWebResource<T,  R extends ResponseOption<T>, W ext
     return doRequest(null, HttpMethod.DELETE);
   }
 
-  public R deleteAnd() {
+  public O deleteAnd() {
     return createResponseOption(delete());
   }
 
-  public R getAnd() {
+  public O getAnd() {
     return createResponseOption(get());
   }
 
-  public R putAnd() {
+  public O putAnd() {
     return createResponseOption(put());
   }
 
-  public R postAnd() {
+  public O postAnd() {
     return createResponseOption(post());
   }
 
