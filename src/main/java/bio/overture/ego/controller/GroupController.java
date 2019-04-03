@@ -306,7 +306,7 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<UUID> appIds) {
-    return groupService.addAppsToGroup(id, appIds);
+    return groupService.associateApplicationsWithGroup(id, appIds);
   }
 
   @AdminScoped
@@ -317,7 +317,7 @@ public class GroupController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "appIds", required = true) List<UUID> appIds) {
-    groupService.deleteAppsFromGroup(id, appIds);
+    groupService.disassociateApplicationsFromGroup(id, appIds);
   }
 
   /*

@@ -30,7 +30,11 @@ spring:
   flyway:
     enabled: false
   jackson:
-    deserialization.FAIL_ON_UNKNOWN_PROPERTIES: true
+    deserialization:
+      FAIL_ON_UNKNOWN_PROPERTIES: true
+      FAIL_ON_NULL_FOR_PRIMITIVES: true
+      FAIL_ON_NUMBERS_FOR_ENUMS: true
+      FAIL_ON_READING_DUP_TREE_KEY: true
 
 
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368

@@ -23,13 +23,15 @@ import lombok.NonNull;
 import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
 
+import static bio.overture.ego.model.enums.JavaFields.NAME;
+
 public class PolicySpecification extends SpecificationBase<User> {
 
   public static Specification<Policy> containsText(@NonNull String text) {
     val finalText = QueryUtils.prepareForQuery(text);
     return (root, query, builder) -> {
       query.distinct(true);
-      return builder.or(getQueryPredicates(builder, root, finalText, "name"));
+      return builder.or(getQueryPredicates(builder, root, finalText, NAME));
     };
   }
 }

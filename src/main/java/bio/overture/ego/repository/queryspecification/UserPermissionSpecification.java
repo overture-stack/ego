@@ -18,26 +18,31 @@ package bio.overture.ego.repository.queryspecification;
 
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.UserPermission;
-import java.util.UUID;
-import javax.persistence.criteria.Join;
 import lombok.NonNull;
 import org.springframework.data.jpa.domain.Specification;
+
+import javax.persistence.criteria.Join;
+import java.util.UUID;
+
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.OWNER;
+import static bio.overture.ego.model.enums.JavaFields.POLICY;
 
 public class UserPermissionSpecification extends SpecificationBase<UserPermission> {
 
   public static Specification<UserPermission> withPolicy(@NonNull UUID policyId) {
     return (root, query, builder) -> {
       query.distinct(true);
-      Join<UserPermission, Policy> applicationJoin = root.join("policy");
-      return builder.equal(applicationJoin.<Integer>get("id"), policyId);
+      Join<UserPermission, Policy> applicationJoin = root.join(POLICY);
+      return builder.equal(applicationJoin.<Integer>get(ID), policyId);
     };
   }
 
   public static Specification<UserPermission> withUser(@NonNull UUID userId) {
     return (root, query, builder) -> {
       query.distinct(true);
-      Join<UserPermission, Policy> applicationJoin = root.join("owner");
-      return builder.equal(applicationJoin.<Integer>get("id"), userId);
+      Join<UserPermission, Policy> applicationJoin = root.join(OWNER);
+      return builder.equal(applicationJoin.<Integer>get(ID), userId);
     };
   }
 }

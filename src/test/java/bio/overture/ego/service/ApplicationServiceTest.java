@@ -6,7 +6,6 @@ import static bio.overture.ego.model.enums.StatusType.PENDING;
 import static bio.overture.ego.model.enums.StatusType.REJECTED;
 import static bio.overture.ego.service.ApplicationService.APPLICATION_CONVERTER;
 import static bio.overture.ego.utils.CollectionUtils.setOf;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.singletonList;
@@ -18,7 +17,6 @@ import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
@@ -28,7 +26,6 @@ import bio.overture.ego.utils.EntityGenerator;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
-import java.util.stream.IntStream;
 import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -68,19 +65,12 @@ public class ApplicationServiceTest {
     val name = randomUUID().toString();
     val status = PENDING;
 
-    val groups =
-        IntStream.range(0, 3)
-            .boxed()
-            .map(x -> Group.builder().id(randomUUID()).build())
-            .collect(toImmutableSet());
-
     val app =
         Application.builder()
             .id(id)
             .clientId(clientId)
             .clientSecret(clientSecret)
             .name(name)
-            .groups(groups)
             .status(status)
             .redirectUri(null)
             .users(null)
@@ -97,7 +87,7 @@ public class ApplicationServiceTest {
     APPLICATION_CONVERTER.updateApplication(partialAppUpdateRequest, app);
 
     assertThat(app.getDescription()).isNull();
-    assertThat(app.getGroups()).containsExactlyInAnyOrderElementsOf(groups);
+    assertThat(app.getGroupApplications()).isEmpty();
     assertThat(app.getClientSecret()).isEqualTo(clientSecret);
     assertThat(app.getClientId()).isEqualTo(clientId);
     assertThat(app.getRedirectUri()).isNotNull();
@@ -119,7 +109,7 @@ public class ApplicationServiceTest {
             .build();
     val app = APPLICATION_CONVERTER.convertToApplication(req);
     assertThat(app.getId()).isNull();
-    assertThat(app.getGroups()).isEmpty();
+    assertThat(app.getGroupApplications()).isEmpty();
     assertThat(app.getClientId()).isEqualTo(req.getClientId());
     assertThat(app.getName()).isEqualTo(req.getName());
     assertThat(app.getUsers()).isEmpty();
@@ -127,7 +117,6 @@ public class ApplicationServiceTest {
     assertThat(app.getStatus()).isEqualTo(req.getStatus());
     assertThat(app.getDescription()).isNull();
     assertThat(app.getRedirectUri()).isEqualTo("");
-    assertThat(app.getGroups()).isEmpty();
   }
 
   // Create
@@ -352,8 +341,9 @@ public class ApplicationServiceTest {
 
     val application = applicationService.getByClientId("111111");
 
-    group.getApplications().add(application);
-    groupTwo.getApplications().add(application);
+    groupService.associateApplicationsWithGroup(group.getId(), newArrayList(application.getId()));
+    groupService.associateApplicationsWithGroup(
+        groupTwo.getId(), newArrayList(application.getId()));
 
     val applications =
         applicationService.findGroupApplications(
@@ -385,8 +375,8 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("222222");
     val applicationTwo = applicationService.getByClientId("333333");
 
-    group.getApplications().add(applicationOne);
-    group.getApplications().add(applicationTwo);
+    groupService.associateApplicationsWithGroup(
+        group.getId(), newArrayList(applicationOne.getId(), applicationTwo.getId()));
 
     val clientIdFilter = new SearchFilter("clientId", "333333");
 
@@ -407,8 +397,8 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("333333");
     val applicationTwo = applicationService.getByClientId("444444");
 
-    group.getApplications().add(applicationOne);
-    group.getApplications().add(applicationTwo);
+    groupService.associateApplicationsWithGroup(
+        group.getId(), newArrayList(applicationOne.getId(), applicationTwo.getId()));
 
     val clientIdFilter = new SearchFilter("clientId", "333333");
 
@@ -431,8 +421,8 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("444444");
     val applicationTwo = applicationService.getByClientId("555555");
 
-    group.getApplications().add(applicationOne);
-    group.getApplications().add(applicationTwo);
+    groupService.associateApplicationsWithGroup(
+        group.getId(), newArrayList(applicationOne.getId(), applicationTwo.getId()));
 
     val applications =
         applicationService.findGroupApplications(

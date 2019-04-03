@@ -16,36 +16,18 @@
 
 package bio.overture.ego.model.entity;
 
-import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
-import static com.google.common.collect.Sets.newHashSet;
-
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.Tables;
+import bio.overture.ego.model.join.GroupApplication;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
-import java.util.Set;
-import java.util.UUID;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -56,6 +38,23 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import java.util.Set;
+import java.util.UUID;
+
+import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
+import static com.google.common.collect.Sets.newHashSet;
+
 @Data
 @Entity
 @Builder
@@ -65,13 +64,14 @@ import org.hibernate.annotations.TypeDef;
 @JsonView(Views.REST.class)
 @EqualsAndHashCode(of = {LombokFields.id})
 @TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
-@ToString(exclude = {LombokFields.userGroups, LombokFields.applications, LombokFields.permissions})
+@ToString(
+    exclude = {LombokFields.userGroups, LombokFields.groupApplications, LombokFields.permissions})
 @JsonPropertyOrder({
   JavaFields.ID,
   JavaFields.NAME,
   JavaFields.DESCRIPTION,
   JavaFields.STATUS,
-  JavaFields.APPLICATIONS,
+  JavaFields.GROUPAPPLICATIONS,
   JavaFields.GROUPPERMISSIONS
 })
 public class Group implements PolicyOwner, NameableEntity<UUID> {
@@ -106,16 +106,14 @@ public class Group implements PolicyOwner, NameableEntity<UUID> {
       fetch = FetchType.LAZY)
   private Set<GroupPermission> permissions = newHashSet();
 
-  @ManyToMany(
-      fetch = FetchType.LAZY,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
-  @JoinTable(
-      name = Tables.GROUP_APPLICATION,
-      joinColumns = {@JoinColumn(name = SqlFields.GROUPID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = SqlFields.APPID_JOIN)})
   @JsonIgnore
   @Builder.Default
-  private Set<Application> applications = newHashSet();
+  @OneToMany(
+      mappedBy = JavaFields.GROUP,
+      cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      orphanRemoval = true)
+  private Set<GroupApplication> groupApplications = newHashSet();
 
   @JsonIgnore
   @Builder.Default

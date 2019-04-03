@@ -7,9 +7,12 @@ import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Objects.isNull;
 import static lombok.AccessLevel.PRIVATE;
 
+import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.join.GroupApplication;
+import bio.overture.ego.model.join.GroupApplicationId;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.join.UserGroupId;
 import java.util.Collection;
@@ -73,5 +76,11 @@ public class Converters {
   public static UserGroup convertToUserGroup(@NonNull User u, @NonNull Group g) {
     val id = UserGroupId.builder().groupId(g.getId()).userId(u.getId()).build();
     return UserGroup.builder().id(id).user(u).group(g).build();
+  }
+
+  public static GroupApplication convertToGroupApplication(
+      @NonNull Group g, @NonNull Application a) {
+    val id = GroupApplicationId.builder().applicationId(a.getId()).groupId(g.getId()).build();
+    return GroupApplication.builder().id(id).group(g).application(a).build();
   }
 }

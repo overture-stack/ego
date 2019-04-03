@@ -3,7 +3,8 @@ package bio.overture.ego.utils.web;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 
-public class StringWebResource extends AbstractWebResource<String, StringResponseOption, StringWebResource> {
+public class StringWebResource
+    extends AbstractWebResource<String, StringResponseOption, StringWebResource> {
 
   public StringWebResource(TestRestTemplate restTemplate, String serverUrl) {
     super(restTemplate, serverUrl, String.class);
@@ -13,5 +14,4 @@ public class StringWebResource extends AbstractWebResource<String, StringRespons
   protected StringResponseOption createResponseOption(ResponseEntity<String> responseEntity) {
     return new StringResponseOption(responseEntity);
   }
-
 }

@@ -10,6 +10,7 @@ import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.StatusType;
+import bio.overture.ego.model.join.GroupApplication;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.repository.GroupPermissionRepository;
 import bio.overture.ego.repository.GroupRepository;
@@ -38,8 +39,8 @@ import java.util.UUID;
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
 import static bio.overture.ego.model.enums.JavaFields.DESCRIPTION;
+import static bio.overture.ego.model.enums.JavaFields.GROUPAPPLICATIONS;
 import static bio.overture.ego.model.enums.JavaFields.NAME;
 import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
 import static bio.overture.ego.model.enums.JavaFields.STATUS;
@@ -49,6 +50,7 @@ import static bio.overture.ego.model.enums.StatusType.DISABLED;
 import static bio.overture.ego.model.enums.StatusType.PENDING;
 import static bio.overture.ego.model.enums.StatusType.REJECTED;
 import static bio.overture.ego.utils.CollectionUtils.concatToSet;
+import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
@@ -113,9 +115,9 @@ public class GroupControllerTest extends AbstractControllerTest {
 
   @Test
   public void addGroup() {
-    val groupRequest = GroupRequest.builder().name("Wizards").status(PENDING).description("").build();
-    createGroupPostRequestAnd(groupRequest)
-        .assertOk();
+    val groupRequest =
+        GroupRequest.builder().name("Wizards").status(PENDING).description("").build();
+    createGroupPostRequestAnd(groupRequest).assertOk();
   }
 
   @Test
@@ -128,8 +130,7 @@ public class GroupControllerTest extends AbstractControllerTest {
             .description(group.getDescription())
             .build();
 
-    createGroupPostRequestAnd(groupRequest)
-        .assertConflict();
+    createGroupPostRequestAnd(groupRequest).assertConflict();
   }
 
   @Test
@@ -138,11 +139,8 @@ public class GroupControllerTest extends AbstractControllerTest {
     val group = groupService.getByName("Group One");
     val groupId = group.getId();
 
-    val actualBody = getGroupEntityGetRequestAnd(group)
-        .assertOk()
-        .assertHasBody()
-        .getResponse()
-        .getBody();
+    val actualBody =
+        getGroupEntityGetRequestAnd(group).assertOk().assertHasBody().getResponse().getBody();
 
     val expectedBody =
         format(
@@ -154,10 +152,7 @@ public class GroupControllerTest extends AbstractControllerTest {
 
   @Test
   public void getGroupNotFound() {
-    initStringRequest()
-        .endpoint("/groups/%s", UUID.randomUUID())
-        .getAnd()
-        .assertNotFound();
+    initStringRequest().endpoint("/groups/%s", UUID.randomUUID()).getAnd().assertNotFound();
   }
 
   @Test
@@ -167,15 +162,15 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     // Get all groups
 
-    val actualBody = listGroupsEndpointAnd()
-        .queryParam("offset", 0)
-        .queryParam("limit", totalGroups)
-        .getAnd()
-        .assertOk()
-        .assertHasBody()
-        .getResponse()
-        .getBody();
-
+    val actualBody =
+        listGroupsEndpointAnd()
+            .queryParam("offset", 0)
+            .queryParam("limit", totalGroups)
+            .getAnd()
+            .assertOk()
+            .assertHasBody()
+            .getResponse()
+            .getBody();
 
     val expectedBody =
         format(
@@ -215,24 +210,24 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     // Check app-group relationship is there
     val applicationWithGroup = applicationService.getByClientId("TempGroupApp");
-    assertThat(extractGroupIds(applicationWithGroup.getGroups())).contains(groupId);
+    val groups =
+        mapToImmutableSet(applicationWithGroup.getGroupApplications(), GroupApplication::getGroup);
+    assertThat(extractGroupIds(groups)).contains(groupId);
 
     deleteGroupDeleteRequestAnd(group).assertOk();
 
     // Check user-group relationship is also deleted
-    val usersWithoutGroupBody = getGroupsForUserGetRequestAnd(userOne)
-        .assertOk()
-        .assertHasBody()
-        .getResponse()
-        .getBody();
+    val usersWithoutGroupBody =
+        getGroupsForUserGetRequestAnd(userOne).assertOk().assertHasBody().getResponse().getBody();
     assertThat(usersWithoutGroupBody).doesNotContain(groupId.toString());
 
     // Check user-application relationship is also deleted
-    val applicationWithoutGroupBody = getGroupsForApplicationGetRequestAnd(appOne)
-        .assertOk()
-        .assertHasBody()
-        .getResponse()
-        .getBody();
+    val applicationWithoutGroupBody =
+        getGroupsForApplicationGetRequestAnd(appOne)
+            .assertOk()
+            .assertHasBody()
+            .getResponse()
+            .getBody();
     assertThat(applicationWithoutGroupBody).doesNotContain(groupId.toString());
 
     // Check group is deleted
@@ -269,22 +264,18 @@ public class GroupControllerTest extends AbstractControllerTest {
   @SneakyThrows
   public void deleteUserFromGroup() {
     val group = entityGenerator.setupGroup("RemoveGroupUsers");
-    val groupId = group.getId();
     val deleteUser = entityGenerator.setupUser("Delete This");
     val remainUser = entityGenerator.setupUser("Keep This");
 
     val body = asList(deleteUser, remainUser);
 
-    addUsersToGroupPostRequestAnd(group, body  ).assertOk();
+    addUsersToGroupPostRequestAnd(group, body).assertOk();
 
-    getUsersForGroupGetRequestAnd(group)
-        .assertPageResultsOfType(User.class)
-        .hasSize(2);
+    getUsersForGroupGetRequestAnd(group).assertPageResultsOfType(User.class).hasSize(2);
 
     deleteUsersFromGroupDeleteRequestAnd(group, asList(deleteUser)).assertOk();
 
-    val actualUsersForGroup = getUsersForGroupGetRequestAnd(group)
-        .extractPageResults(User.class);
+    val actualUsersForGroup = getUsersForGroupGetRequestAnd(group).extractPageResults(User.class);
     assertThat(actualUsersForGroup).hasSize(1);
     assertThat(actualUsersForGroup.stream().findAny().get().getId()).isEqualTo(remainUser.getId());
   }
@@ -302,15 +293,20 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     // Check that Group is associated with Users
     val groupWithApps = groupService.getByName("GroupWithApps");
-    assertThat(extractAppIds(groupWithApps.getApplications()))
-        .contains(appOne.getId(), appTwo.getId());
+    val applications =
+        mapToImmutableSet(groupWithApps.getGroupApplications(), GroupApplication::getApplication);
+    assertThat(extractAppIds(applications)).contains(appOne.getId(), appTwo.getId());
 
     // Check that each user is associated with the group
     val appOneWithGroups = applicationService.getByClientId("111111");
     val appTwoWithGroups = applicationService.getByClientId("222222");
 
-    assertThat(appOneWithGroups.getGroups()).contains(group);
-    assertThat(appTwoWithGroups.getGroups()).contains(group);
+    assertThat(
+            mapToImmutableSet(appOneWithGroups.getGroupApplications(), GroupApplication::getGroup))
+        .contains(group);
+    assertThat(
+            mapToImmutableSet(appTwoWithGroups.getGroupApplications(), GroupApplication::getGroup))
+        .contains(group);
   }
 
   @Test
@@ -330,25 +326,20 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     deleteApplicationFromGroupDeleteRequestAnd(group, deleteApp).assertOk();
 
-    val actualApps = getApplicationsForGroupGetRequestAnd(group)
-        .extractPageResults(Application.class);
+    val actualApps =
+        getApplicationsForGroupGetRequestAnd(group).extractPageResults(Application.class);
     assertThat(actualApps).hasSize(1);
     assertThat(actualApps.stream().findAny().get().getId()).isEqualTo(remainApp.getId());
   }
 
   @Test
   public void createGroup_NonExisting_Success() {
-    val r = GroupRequest.builder()
-        .name(generateNonExistentName(groupService))
-        .status(APPROVED)
-        .build();
+    val r =
+        GroupRequest.builder().name(generateNonExistentName(groupService)).status(APPROVED).build();
 
-    val group1 = createGroupPostRequestAnd(r)
-        .extractOneEntity(Group.class);
+    val group1 = createGroupPostRequestAnd(r).extractOneEntity(Group.class);
 
-    getGroupEntityGetRequestAnd(group1)
-        .assertOk()
-        .assertHasBody();
+    getGroupEntityGetRequestAnd(group1).assertOk().assertHasBody();
 
     assertThat(r).isEqualToComparingFieldByField(group1);
   }
@@ -416,16 +407,13 @@ public class GroupControllerTest extends AbstractControllerTest {
     getApplicationsForGroupGetRequestAnd(group0).assertNotFound();
 
     // Assert all users still exist
-    data.getUsers()
-        .forEach( u -> getUserEntityGetRequestAnd(u).assertOk());
+    data.getUsers().forEach(u -> getUserEntityGetRequestAnd(u).assertOk());
 
     // Assert all applications still exist
-    data.getApplications()
-        .forEach( a -> getApplicationEntityGetRequestAnd(a).assertOk() );
+    data.getApplications().forEach(a -> getApplicationEntityGetRequestAnd(a).assertOk());
 
     // Assert all policies still exist
-    data.getPolicies()
-        .forEach( p -> getPolicyGetRequestAnd(p).assertOk() );
+    data.getPolicies().forEach(p -> getPolicyGetRequestAnd(p).assertOk());
   }
 
   @Test
@@ -442,7 +430,8 @@ public class GroupControllerTest extends AbstractControllerTest {
 
   @Test
   public void getGroups_FindSomeQuery_Success() {
-    val g1 = createGroupPostRequestAnd(
+    val g1 =
+        createGroupPostRequestAnd(
                 GroupRequest.builder()
                     .name("abc11")
                     .status(APPROVED)
@@ -450,32 +439,33 @@ public class GroupControllerTest extends AbstractControllerTest {
                     .build())
             .extractOneEntity(Group.class);
 
-    val g2 = createGroupPostRequestAnd(
+    val g2 =
+        createGroupPostRequestAnd(
                 GroupRequest.builder()
                     .name("abc21")
                     .status(APPROVED)
                     .description("blueberry orange")
                     .build())
-                .extractOneEntity(Group.class);
+            .extractOneEntity(Group.class);
 
-
-    val g3 = createGroupPostRequestAnd(
+    val g3 =
+        createGroupPostRequestAnd(
                 GroupRequest.builder()
                     .name("abc22")
                     .status(REJECTED)
                     .description("orange banana")
                     .build())
-                .extractOneEntity( Group.class);
+            .extractOneEntity(Group.class);
 
     val numGroups = groupPermissionRepository.count();
 
     listGroupsEndpointAnd()
-            .queryParam("query", "abc")
-            .queryParam("offset", 0)
-            .queryParam("length", numGroups)
-            .getAnd()
-            .assertPageResultsOfType(Group.class)
-            .containsExactlyInAnyOrder(g1, g2, g3);
+        .queryParam("query", "abc")
+        .queryParam("offset", 0)
+        .queryParam("length", numGroups)
+        .getAnd()
+        .assertPageResultsOfType(Group.class)
+        .containsExactlyInAnyOrder(g1, g2, g3);
 
     listGroupsEndpointAnd()
         .queryParam("query", "abc2")
@@ -485,17 +475,17 @@ public class GroupControllerTest extends AbstractControllerTest {
         .assertPageResultsOfType(Group.class)
         .containsExactlyInAnyOrder(g3, g2);
 
-    val r3 = listGroupsEndpointAnd()
-        .queryParam("query", "abc")
-        .queryParam("status", REJECTED)
-        .queryParam("offset", 0)
-        .queryParam("length", numGroups)
-        .getAnd()
-        .extractPageResults(Group.class);
+    val r3 =
+        listGroupsEndpointAnd()
+            .queryParam("query", "abc")
+            .queryParam("status", REJECTED)
+            .queryParam("offset", 0)
+            .queryParam("length", numGroups)
+            .getAnd()
+            .extractPageResults(Group.class);
     val rejectedGroups =
         r3.stream().filter(x -> x.getStatus() == REJECTED).collect(toImmutableSet());
     assertThat(rejectedGroups.size()).isGreaterThanOrEqualTo(1);
-
 
     listGroupsEndpointAnd()
         .queryParam("query", "blueberry")
@@ -546,9 +536,7 @@ public class GroupControllerTest extends AbstractControllerTest {
     val group0 = data.getGroups().get(0);
 
     // Assert there are no users for the group
-    getUsersForGroupGetRequestAnd(group0)
-        .assertPageResultsOfType(User.class)
-        .isEmpty();
+    getUsersForGroupGetRequestAnd(group0).assertPageResultsOfType(User.class).isEmpty();
 
     // Add the users to the group
     addUsersToGroupPostRequestAnd(group0, data.getUsers()).assertOk();
@@ -579,9 +567,7 @@ public class GroupControllerTest extends AbstractControllerTest {
     val group0 = data.getGroups().get(0);
 
     // Assert there are no users for the group
-    getUsersForGroupGetRequestAnd(group0)
-        .assertPageResultsOfType(User.class)
-        .isEmpty();
+    getUsersForGroupGetRequestAnd(group0).assertPageResultsOfType(User.class).isEmpty();
 
     // Add some new unassociated users
     val someUsers = newArrayList(data.getUsers().get(0));
@@ -597,9 +583,8 @@ public class GroupControllerTest extends AbstractControllerTest {
     val group0 = data.getGroups().get(0);
 
     // Assert there are no users for the group
-    getUsersForGroupGetRequestAnd(group0)
-        .assertPageResultsOfType(User.class)
-        .isEmpty();;
+    getUsersForGroupGetRequestAnd(group0).assertPageResultsOfType(User.class).isEmpty();
+    ;
 
     // Add users to group
     addUsersToGroupPostRequestAnd(group0, data.getUsers()).assertOk();
@@ -608,9 +593,7 @@ public class GroupControllerTest extends AbstractControllerTest {
     deleteUsersFromGroupDeleteRequestAnd(group0, data.getUsers()).assertOk();
 
     // Assert there are no users for the group
-    getUsersForGroupGetRequestAnd(group0)
-        .assertPageResultsOfType(User.class)
-        .isEmpty();
+    getUsersForGroupGetRequestAnd(group0).assertPageResultsOfType(User.class).isEmpty();
   }
 
   @Test
@@ -619,9 +602,7 @@ public class GroupControllerTest extends AbstractControllerTest {
     val group0 = data.getGroups().get(0);
 
     // Assert there are no users for the group
-    getUsersForGroupGetRequestAnd(group0)
-        .assertPageResultsOfType(User.class)
-        .isEmpty();
+    getUsersForGroupGetRequestAnd(group0).assertPageResultsOfType(User.class).isEmpty();
 
     // Add some users to group
     addUsersToGroupPostRequestAnd(group0, newArrayList(data.getUsers().get(0))).assertOk();
@@ -636,9 +617,7 @@ public class GroupControllerTest extends AbstractControllerTest {
     val group0 = data.getGroups().get(0);
 
     // Assert there are no users for the group
-    getUsersForGroupGetRequestAnd(group0)
-        .assertPageResultsOfType(User.class)
-        .isEmpty();
+    getUsersForGroupGetRequestAnd(group0).assertPageResultsOfType(User.class).isEmpty();
 
     // Add all users to group
     addUsersToGroupPostRequestAnd(group0, data.getUsers()).assertOk();
@@ -767,10 +746,7 @@ public class GroupControllerTest extends AbstractControllerTest {
   @Test
   public void getGroup_NonExistentGroup_Success() {
     val nonExistentId = generateNonExistentId(groupService);
-    val r1 = initStringRequest()
-        .endpoint("groups/%s", nonExistentId)
-        .getAnd()
-        .assertNotFound();
+    val r1 = initStringRequest().endpoint("groups/%s", nonExistentId).getAnd().assertNotFound();
   }
 
   @Test
@@ -829,8 +805,8 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     addGroupPermissionToGroupPostRequestAnd(group0, data.getPolicies().get(0), READ).assertOk();
 
-    val actualPermissions = getGroupPermissionsForGroupGetRequestAnd(group0)
-        .extractPageResults(GroupPermission.class);
+    val actualPermissions =
+        getGroupPermissionsForGroupGetRequestAnd(group0).extractPageResults(GroupPermission.class);
     assertThat(actualPermissions).hasSize(1);
     val existingPermissionId = actualPermissions.get(0).getId();
 
@@ -880,10 +856,10 @@ public class GroupControllerTest extends AbstractControllerTest {
             .description(null)
             .build();
 
-    val updatedGroup1 = partialUpdateGroupPutRequestAnd(g.getId(), updateRequest1)
-        .extractOneEntity(Group.class);
+    val updatedGroup1 =
+        partialUpdateGroupPutRequestAnd(g.getId(), updateRequest1).extractOneEntity(Group.class);
     assertThat(updatedGroup1)
-        .isEqualToIgnoringGivenFields(g, NAME, PERMISSIONS, APPLICATIONS, USERGROUPS);
+        .isEqualToIgnoringGivenFields(g, NAME, PERMISSIONS, GROUPAPPLICATIONS, USERGROUPS);
     assertThat(updatedGroup1.getName()).isEqualTo(updateRequest1.getName());
 
     val updateRequest2 =
@@ -892,20 +868,20 @@ public class GroupControllerTest extends AbstractControllerTest {
             .status(randomEnumExcluding(StatusType.class, g.getStatus()))
             .description(null)
             .build();
-    val updatedGroup2 = partialUpdateGroupPutRequestAnd(g.getId(), updateRequest2)
-        .extractOneEntity(Group.class);
+    val updatedGroup2 =
+        partialUpdateGroupPutRequestAnd(g.getId(), updateRequest2).extractOneEntity(Group.class);
     assertThat(updatedGroup2)
-        .isEqualToIgnoringGivenFields(updatedGroup1, STATUS, PERMISSIONS, APPLICATIONS, USERGROUPS);
+        .isEqualToIgnoringGivenFields(updatedGroup1, STATUS, PERMISSIONS, GROUPAPPLICATIONS, USERGROUPS);
     assertThat(updatedGroup2.getStatus()).isEqualTo(updateRequest2.getStatus());
 
     val description = "my description";
     val updateRequest3 =
         GroupRequest.builder().name(null).status(null).description(description).build();
-    val updatedGroup3 = partialUpdateGroupPutRequestAnd(g.getId(), updateRequest3)
-        .extractOneEntity(Group.class);
+    val updatedGroup3 =
+        partialUpdateGroupPutRequestAnd(g.getId(), updateRequest3).extractOneEntity(Group.class);
     assertThat(updatedGroup3)
         .isEqualToIgnoringGivenFields(
-            updatedGroup2, DESCRIPTION, PERMISSIONS, APPLICATIONS, USERGROUPS);
+            updatedGroup2, DESCRIPTION, PERMISSIONS, GROUPAPPLICATIONS, USERGROUPS);
     assertThat(updatedGroup3.getDescription()).isEqualTo(updateRequest3.getDescription());
   }
 
@@ -941,11 +917,7 @@ public class GroupControllerTest extends AbstractControllerTest {
             .put("name", generateNonExistentName(groupService))
             .put("status", invalidStatus);
 
-    initStringRequest()
-        .endpoint("/groups")
-        .body(createRequest)
-        .postAnd()
-        .assertBadRequest();
+    initStringRequest().endpoint("/groups").body(createRequest).postAnd().assertBadRequest();
 
     // updateGroup:  PUT /groups
     val updateRequest = MAPPER.createObjectNode().put("status", invalidStatus);
@@ -1011,15 +983,16 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     // Assert without using the controller, that the group is not associated with any apps
     val beforeGroup = groupService.getWithRelationships(group0.getId());
-    assertThat(beforeGroup.getApplications()).isEmpty();
+    assertThat(beforeGroup.getGroupApplications()).isEmpty();
 
     // Add applications to the group
     addApplicationsToGroupPostRequestAnd(group0, data.getApplications()).assertOk();
 
     // Assert without usign the controller, that the group IS associated with all the apps
     val afterGroup = groupService.getWithRelationships(group0.getId());
-    assertThat(afterGroup.getApplications())
-        .containsExactlyInAnyOrderElementsOf(data.getApplications());
+    val expectedApplications =
+        mapToImmutableSet(afterGroup.getGroupApplications(), GroupApplication::getApplication);
+    assertThat(expectedApplications).containsExactlyInAnyOrderElementsOf(data.getApplications());
   }
 
   @Test
@@ -1090,7 +1063,8 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     // Attempt to disassociate existing associated apps and non-exisiting apps from the group, and
     // fail
-    deleteApplicationsFromGroupDeleteRequestAnd(group0.getId(), appIdsToDisassociate).assertNotFound();
+    deleteApplicationsFromGroupDeleteRequestAnd(group0.getId(), appIdsToDisassociate)
+        .assertNotFound();
   }
 
   @Test
@@ -1100,7 +1074,8 @@ public class GroupControllerTest extends AbstractControllerTest {
     val existingApplicationIds = convertToIds(data.getApplications());
 
     // Assert that the group does not exist
-    deleteApplicationsFromGroupDeleteRequestAnd(nonExistentId, existingApplicationIds).assertNotFound();
+    deleteApplicationsFromGroupDeleteRequestAnd(nonExistentId, existingApplicationIds)
+        .assertNotFound();
   }
 
   @Test
@@ -1151,5 +1126,4 @@ public class GroupControllerTest extends AbstractControllerTest {
     @NonNull private final List<User> users;
     @NonNull private final List<Policy> policies;
   }
-
 }

@@ -1,6 +1,17 @@
 package bio.overture.ego.utils.web;
 
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Joiners.AMPERSAND;
+import static bio.overture.ego.utils.Joiners.PATH;
+import static bio.overture.ego.utils.web.QueryParam.createQueryParam;
+import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
+import static com.google.common.collect.Sets.newHashSet;
+import static java.lang.String.format;
+import static java.util.Objects.isNull;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Optional;
+import java.util.Set;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -12,21 +23,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 
-import java.util.Optional;
-import java.util.Set;
-
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Joiners.AMPERSAND;
-import static bio.overture.ego.utils.Joiners.PATH;
-import static bio.overture.ego.utils.web.QueryParam.createQueryParam;
-import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
-import static com.google.common.collect.Sets.newHashSet;
-import static java.lang.String.format;
-import static java.util.Objects.isNull;
-
 @Slf4j
 @RequiredArgsConstructor
-public abstract class AbstractWebResource<T,  O extends ResponseOption<T, O>, W extends AbstractWebResource<T, O, W> > {
+public abstract class AbstractWebResource<
+    T, O extends ResponseOption<T, O>, W extends AbstractWebResource<T, O, W>> {
 
   private static final ObjectMapper REGULAR_MAPPER = new ObjectMapper();
   private static final ObjectMapper PRETTY_MAPPER = new ObjectMapper();
@@ -48,8 +48,8 @@ public abstract class AbstractWebResource<T,  O extends ResponseOption<T, O>, W 
 
   protected abstract O createResponseOption(ResponseEntity<T> responseEntity);
 
-  private W thisInstance(){
-    return (W)this;
+  private W thisInstance() {
+    return (W) this;
   }
 
   public W endpoint(String formattedEndpoint, Object... args) {
@@ -171,5 +171,4 @@ public abstract class AbstractWebResource<T,  O extends ResponseOption<T, O>, W 
       }
     }
   }
-
 }

@@ -16,33 +16,17 @@
 
 package bio.overture.ego.repository;
 
-import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
-
 import bio.overture.ego.model.entity.Application;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface ApplicationRepository extends NamedRepository<Application, UUID> {
 
-  Application findOneByClientIdIgnoreCase(String clientId);
-
   Optional<Application> getApplicationByNameIgnoreCase(String name);
 
-  @EntityGraph(value = "application-entity-with-relationships", type = FETCH)
-  Optional<Application> getApplicationByClientIdIgnoreCase(String clientId);
-
   boolean existsByClientIdIgnoreCase(String clientId);
-
-  Application findOneByNameIgnoreCase(String name);
-
-  Application findOneByName(String name);
-
-  Page<Application> findAllByStatusIgnoreCase(String status, Pageable pageable);
 
   Set<Application> findAllByIdIn(List<UUID> ids);
 

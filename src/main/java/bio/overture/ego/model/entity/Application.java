@@ -22,6 +22,7 @@ import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.Tables;
+import bio.overture.ego.model.join.GroupApplication;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -48,9 +49,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-import javax.persistence.NamedAttributeNode;
-import javax.persistence.NamedEntityGraph;
-import javax.persistence.NamedSubgraph;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import java.util.Set;
@@ -67,7 +66,7 @@ import static com.google.common.collect.Sets.newHashSet;
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonView(Views.REST.class)
-@ToString(exclude = {LombokFields.groups, LombokFields.users})
+@ToString(exclude = {LombokFields.groupApplications, LombokFields.users})
 @EqualsAndHashCode(of = {LombokFields.id})
 @JsonPropertyOrder({
   JavaFields.ID,
@@ -82,20 +81,6 @@ import static com.google.common.collect.Sets.newHashSet;
 @TypeDef(name = "application_type_enum", typeClass = PostgreSQLEnumType.class)
 @TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
 @JsonInclude(JsonInclude.Include.CUSTOM)
-@NamedEntityGraph(
-    name = "application-entity-with-relationships",
-    attributeNodes = {
-      @NamedAttributeNode(value = JavaFields.USERS, subgraph = "users-subgraph"),
-      @NamedAttributeNode(value = JavaFields.GROUPS, subgraph = "groups-subgraph")
-    },
-    subgraphs = {
-      @NamedSubgraph(
-          name = "groups-subgraph",
-          attributeNodes = {@NamedAttributeNode(JavaFields.APPLICATIONS)}),
-      @NamedSubgraph(
-          name = "users-subgraph",
-          attributeNodes = {@NamedAttributeNode(JavaFields.APPLICATIONS)})
-    })
 public class Application implements Identifiable<UUID> {
 
   @Id
@@ -106,7 +91,7 @@ public class Application implements Identifiable<UUID> {
 
   @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = SqlFields.NAME, nullable = false)
+  @Column(name = SqlFields.NAME, nullable = false, unique = true)
   private String name;
 
   @NotNull
@@ -142,11 +127,12 @@ public class Application implements Identifiable<UUID> {
 
   @JsonIgnore
   @Builder.Default
-  @ManyToMany(
-      mappedBy = JavaFields.APPLICATIONS,
+  @OneToMany(
+      mappedBy = JavaFields.APPLICATION,
+      cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
-      cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-  private Set<Group> groups = newHashSet();
+      orphanRemoval = true)
+  private Set<GroupApplication> groupApplications = newHashSet();
 
   @JsonIgnore
   @Builder.Default

@@ -16,25 +16,6 @@
 
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.enums.JavaFields.GROUPS;
-import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.TOKENS;
-import static bio.overture.ego.model.enums.JavaFields.USERS;
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
-import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
-import static bio.overture.ego.token.app.AppTokenClaims.SCOPES;
-import static bio.overture.ego.utils.CollectionUtils.setOf;
-import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
-import static java.lang.String.format;
-import static javax.persistence.criteria.JoinType.LEFT;
-import static org.mapstruct.factory.Mappers.getMapper;
-import static org.springframework.data.jpa.domain.Specification.where;
-
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
@@ -43,12 +24,7 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import bio.overture.ego.repository.queryspecification.builder.ApplicationSpecificationBuilder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -69,6 +45,32 @@ import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static bio.overture.ego.model.enums.JavaFields.GROUPS;
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.TOKENS;
+import static bio.overture.ego.model.enums.JavaFields.USERS;
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
+import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
+import static bio.overture.ego.token.app.AppTokenClaims.SCOPES;
+import static bio.overture.ego.utils.CollectionUtils.setOf;
+import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
+import static java.lang.String.format;
+import static javax.persistence.criteria.JoinType.LEFT;
+import static org.mapstruct.factory.Mappers.getMapper;
+import static org.springframework.data.jpa.domain.Specification.where;
 
 @Service
 @Slf4j
@@ -99,6 +101,17 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     this.groupRepository = groupRepository;
   }
 
+  @Override
+  public Optional<Application> findByName(@NonNull String name) {
+    return (Optional<Application>)
+        getRepository()
+            .findOne(
+                new ApplicationSpecificationBuilder()
+                    .fetchGroups(true)
+                    .fetchUsers(true)
+                    .buildByNameIgnoreCase(name));
+  }
+
   public Application create(@NonNull CreateApplicationRequest request) {
     checkClientIdUnique(request.getClientId());
     val application = APPLICATION_CONVERTER.convertToApplication(request);
@@ -114,10 +127,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
   @Override
   public Application getWithRelationships(@NonNull UUID id) {
-    val result =
-        (Optional<Application>) getRepository().findOne(fetchSpecification(id, true, true, true));
-    checkNotFound(result.isPresent(), "The applicationId '%s' does not exist", id);
-    return result.get();
+    return get(id, true, true);
   }
 
   public Page<Application> listApps(
@@ -180,8 +190,15 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
             pageable);
   }
 
+  // TODO: [rtisma] add this to testplan and creat tests
   public Optional<Application> findByClientId(@NonNull String clientId) {
-    return applicationRepository.getApplicationByClientIdIgnoreCase(clientId);
+    return (Optional<Application>)
+        getRepository()
+            .findOne(
+                new ApplicationSpecificationBuilder()
+                    .fetchGroups(true)
+                    .fetchUsers(true)
+                    .buildByClientIdIgnoreCase(clientId));
   }
 
   public Application getByClientId(@NonNull String clientId) {
@@ -245,6 +262,19 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     checkUnique(
         !applicationRepository.existsByClientIdIgnoreCase(clientId),
         "An application with the same clientId already exists");
+  }
+
+  private Application get(UUID id, boolean fetchUsers, boolean fetchGroups) {
+    val result =
+        (Optional<Application>)
+            getRepository()
+                .findOne(
+                    new ApplicationSpecificationBuilder()
+                        .fetchUsers(fetchUsers)
+                        .fetchGroups(fetchGroups)
+                        .buildById(id));
+    checkNotFound(result.isPresent(), "The applicationId '%s' does not exist", id);
+    return result.get();
   }
 
   private static String removeAppTokenPrefix(String token) {
