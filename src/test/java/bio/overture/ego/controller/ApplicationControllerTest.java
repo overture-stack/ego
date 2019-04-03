@@ -305,7 +305,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     // Assert app0 can be read
     getApplicationEntityGetRequestAnd(app0)
         .assertEntityOfType(Application.class)
-        .isEqualToComparingFieldByField(app0);
+        .isEqualToIgnoringGivenFields(app0, GROUPAPPLICATIONS, USERS);
   }
 
   @Test
