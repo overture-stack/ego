@@ -95,7 +95,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be revoked
-    assertThat(checkTokenAfterDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(checkTokenAfterDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -157,7 +157,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     val statusCode = checkTokenAfterUpgradeResponse.getStatusCode();
 
     // Should be revoked
-    assertThat(statusCode).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(statusCode).isEqualTo(HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -188,7 +188,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     val statusCode = checkTokenAfterUpgradeResponse.getStatusCode();
 
     // Should be revoked
-    assertThat(statusCode).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(statusCode).isEqualTo(HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -220,7 +220,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be revoked
-    assertThat(checkTokenAfterDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(checkTokenAfterDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -281,7 +281,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be revoked
-    assertThat(checkTokenAfterUpgradeResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(checkTokenAfterUpgradeResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -311,7 +311,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be revoked
-    assertThat(checkTokenAfterUpgradeResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(checkTokenAfterUpgradeResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -337,7 +337,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be revoked
-    assertThat(checkTokenAfterUpgradeResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(checkTokenAfterUpgradeResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -376,7 +376,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be revoked
-    assertThat(checkTokenAfterUpgradeResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(checkTokenAfterUpgradeResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -442,7 +442,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
 
     // Should be revoked
     assertThat(checkTokenAfterGroupDeleteResponse.getStatusCode())
-        .isEqualTo(HttpStatus.BAD_REQUEST);
+        .isEqualTo(HttpStatus.UNAUTHORIZED);
   }
 
   /**
