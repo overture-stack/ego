@@ -1,5 +1,36 @@
 package bio.overture.ego.service;
 
+import bio.overture.ego.controller.resolver.PageableResolver;
+import bio.overture.ego.model.dto.CreateUserRequest;
+import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.dto.UpdateUserRequest;
+import bio.overture.ego.model.entity.AbstractPermission;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.exceptions.UniqueViolationException;
+import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.token.IDToken;
+import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.PolicyPermissionUtils;
+import com.google.common.collect.ImmutableList;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.Date;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
@@ -18,36 +49,6 @@ import static java.util.Collections.singletonList;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
-import bio.overture.ego.controller.resolver.PageableResolver;
-import bio.overture.ego.model.dto.CreateUserRequest;
-import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.dto.UpdateUserRequest;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.exceptions.NotFoundException;
-import bio.overture.ego.model.exceptions.UniqueViolationException;
-import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.token.IDToken;
-import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.PolicyPermissionUtils;
-import com.google.common.collect.ImmutableList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @SpringBootTest
@@ -283,7 +284,7 @@ public class UserServiceTest {
     userService.associateGroupsWithUser(userTwo.getId(), singletonList(groupId));
 
     val users =
-        groupService.findUsersForGroup(
+        userService.findUsersForGroup(
             groupId, ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(2L);
@@ -298,7 +299,7 @@ public class UserServiceTest {
     val groupId = groupService.getByName("Group One").getId();
 
     val users =
-        groupService.findUsersForGroup(
+        userService.findUsersForGroup(
             groupId, ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(0L);
@@ -319,7 +320,7 @@ public class UserServiceTest {
     val userFilters = new SearchFilter("name", "First");
 
     val users =
-        groupService.findUsersForGroup(
+        userService.findUsersForGroup(
             groupId, ImmutableList.of(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
@@ -341,7 +342,7 @@ public class UserServiceTest {
     val userFilters = new SearchFilter("name", "First");
 
     val users =
-        groupService.findUsersForGroup(
+        userService.findUsersForGroup(
             groupId, "Second", ImmutableList.of(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(0L);
@@ -359,7 +360,7 @@ public class UserServiceTest {
     userService.associateGroupsWithUser(user.getId(), singletonList(groupId));
     userService.associateGroupsWithUser(userTwo.getId(), singletonList(groupId));
     val users =
-        groupService.findUsersForGroup(
+        userService.findUsersForGroup(
             groupId, "Second", ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
@@ -381,7 +382,7 @@ public class UserServiceTest {
     userService.addUserToApps(userTwo.getId(), singletonList(appId));
 
     val users =
-        userService.findAppUsers(
+        userService.findUsersForApplication(
             appId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(2L);
@@ -396,7 +397,7 @@ public class UserServiceTest {
     val appId = applicationService.getByClientId("111111").getId();
 
     val users =
-        userService.findAppUsers(
+        userService.findUsersForApplication(
             appId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(0L);
@@ -417,7 +418,7 @@ public class UserServiceTest {
     val userFilters = new SearchFilter("name", "First");
 
     val users =
-        userService.findAppUsers(
+        userService.findUsersForApplication(
             appId, singletonList(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
@@ -439,7 +440,7 @@ public class UserServiceTest {
     val userFilters = new SearchFilter("name", "First");
 
     val users =
-        userService.findAppUsers(
+        userService.findUsersForApplication(
             appId, "Second", singletonList(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(0L);
@@ -458,7 +459,7 @@ public class UserServiceTest {
     userService.addUserToApps(userTwo.getId(), singletonList(appId));
 
     val users =
-        userService.findAppUsers(
+        userService.findUsersForApplication(
             appId, "First", Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
@@ -618,7 +619,7 @@ public class UserServiceTest {
     userService.associateGroupsWithUser(userId, asList(groupId, groupTwoId));
 
     val groups =
-        userService.findGroupsForUser(
+        groupService.findGroupsForUser(
             userId, ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(groups.getContent()).contains(group, groupTwo);
@@ -679,7 +680,7 @@ public class UserServiceTest {
     userService.addUserToApps(userId, asList(appId, appTwoId));
 
     val apps =
-        applicationService.findUserApps(
+        applicationService.findApplicationsForUser(
             userId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(apps.getContent()).contains(app, appTwo);
@@ -767,7 +768,7 @@ public class UserServiceTest {
     userService.disassociateGroupsFromUser(userId, singletonList(groupId));
 
     val groupWithoutUser =
-        userService.findGroupsForUser(
+        groupService.findGroupsForUser(
             userId, ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(groupWithoutUser.getContent()).containsOnly(groupTwo);
@@ -828,7 +829,7 @@ public class UserServiceTest {
     userService.deleteUserFromApps(userId, singletonList(appId));
 
     val groupWithoutUser =
-        applicationService.findUserApps(
+        applicationService.findApplicationsForUser(
             userId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(groupWithoutUser.getContent()).containsOnly(appTwo);

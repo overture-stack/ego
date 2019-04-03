@@ -160,7 +160,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     val application = applicationService.getByClientId("111111");
     getApplicationEntityGetRequestAnd(application)
         .assertEntityOfType(Application.class)
-        .isEqualToComparingFieldByField(application);
+        .isEqualToIgnoringGivenFields(application, GROUPAPPLICATIONS, USERS);
   }
 
   @Test

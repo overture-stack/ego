@@ -16,8 +16,6 @@
 
 package bio.overture.ego.controller;
 
-import static org.springframework.util.StringUtils.isEmpty;
-
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.dto.PermissionRequest;
@@ -32,6 +30,7 @@ import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.view.Views;
@@ -41,10 +40,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
-import java.util.UUID;
-import javax.persistence.EntityNotFoundException;
-import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +59,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
+import javax.persistence.EntityNotFoundException;
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.UUID;
+
+import static org.springframework.util.StringUtils.isEmpty;
+
 @Slf4j
 @RestController
 @RequestMapping("/users")
@@ -71,16 +73,18 @@ public class UserController {
 
   /** Dependencies */
   private final UserService userService;
-
+  private final GroupService groupService;
   private final ApplicationService applicationService;
   private final UserPermissionService userPermissionService;
 
   @Autowired
   public UserController(
       @NonNull UserService userService,
+      @NonNull GroupService groupService,
       @NonNull UserPermissionService userPermissionService,
       @NonNull ApplicationService applicationService) {
     this.userService = userService;
+    this.groupService = groupService;
     this.applicationService = applicationService;
     this.userPermissionService = userPermissionService;
   }
@@ -299,9 +303,9 @@ public class UserController {
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
     if (isEmpty(query)) {
-      return new PageDTO<>(userService.findGroupsForUser(id, filters, pageable));
+      return new PageDTO<>(groupService.findGroupsForUser(id, filters, pageable));
     } else {
-      return new PageDTO<>(userService.findGroupsForUser(id, query, filters, pageable));
+      return new PageDTO<>(groupService.findGroupsForUser(id, query, filters, pageable));
     }
   }
 
@@ -375,9 +379,9 @@ public class UserController {
     // TODO: [rtisma] create tests for this controller logic. This logic should remain in
     // controller.
     if (isEmpty(query)) {
-      return new PageDTO<>(applicationService.findUserApps(id, filters, pageable));
+      return new PageDTO<>(applicationService.findApplicationsForUser(id, filters, pageable));
     } else {
-      return new PageDTO<>(applicationService.findUserApps(id, query, filters, pageable));
+      return new PageDTO<>(applicationService.findApplicationsForUser(id, query, filters, pageable));
     }
   }
 

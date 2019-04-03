@@ -1,18 +1,5 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static bio.overture.ego.model.enums.StatusType.DISABLED;
-import static bio.overture.ego.model.enums.StatusType.PENDING;
-import static bio.overture.ego.model.enums.StatusType.REJECTED;
-import static bio.overture.ego.service.ApplicationService.APPLICATION_CONVERTER;
-import static bio.overture.ego.utils.CollectionUtils.setOf;
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
-import static com.google.common.collect.Lists.newArrayList;
-import static java.util.Collections.singletonList;
-import static java.util.UUID.randomUUID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
@@ -23,10 +10,6 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.token.app.AppTokenClaims;
 import bio.overture.ego.utils.EntityGenerator;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -39,6 +22,24 @@ import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityNotFoundException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.StatusType.DISABLED;
+import static bio.overture.ego.model.enums.StatusType.PENDING;
+import static bio.overture.ego.model.enums.StatusType.REJECTED;
+import static bio.overture.ego.service.ApplicationService.APPLICATION_CONVERTER;
+import static bio.overture.ego.utils.CollectionUtils.setOf;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Collections.singletonList;
+import static java.util.UUID.randomUUID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -245,7 +246,7 @@ public class ApplicationServiceTest {
     userService.addUserToApps(userTwo.getId(), newArrayList(application.getId()));
 
     val applications =
-        applicationService.findUserApps(
+        applicationService.findApplicationsForUser(
             user.getId(), Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
@@ -259,7 +260,7 @@ public class ApplicationServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val applications =
-        applicationService.findUserApps(
+        applicationService.findApplicationsForUser(
             user.getId(), Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(0L);
@@ -280,7 +281,7 @@ public class ApplicationServiceTest {
     val clientIdFilter = new SearchFilter("clientId", "111111");
 
     val applications =
-        applicationService.findUserApps(
+        applicationService.findApplicationsForUser(
             user.getId(), singletonList(clientIdFilter), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
@@ -302,7 +303,7 @@ public class ApplicationServiceTest {
     val clientIdFilter = new SearchFilter("clientId", "333333");
 
     val applications =
-        applicationService.findUserApps(
+        applicationService.findApplicationsForUser(
             user.getId(),
             "444444",
             singletonList(clientIdFilter),
@@ -324,7 +325,7 @@ public class ApplicationServiceTest {
         user.getId(), newArrayList(applicationOne.getId(), applicationTwo.getId()));
 
     val applications =
-        applicationService.findUserApps(
+        applicationService.findApplicationsForUser(
             user.getId(), "222222", Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
@@ -346,7 +347,7 @@ public class ApplicationServiceTest {
         groupTwo.getId(), newArrayList(application.getId()));
 
     val applications =
-        applicationService.findGroupApplications(
+        applicationService.findApplicationsForGroup(
             group.getId(), Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
@@ -360,7 +361,7 @@ public class ApplicationServiceTest {
 
     val group = groupService.getByName("Group One");
     val applications =
-        applicationService.findGroupApplications(
+        applicationService.findApplicationsForGroup(
             group.getId(), Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(0L);
@@ -381,7 +382,7 @@ public class ApplicationServiceTest {
     val clientIdFilter = new SearchFilter("clientId", "333333");
 
     val applications =
-        applicationService.findGroupApplications(
+        applicationService.findApplicationsForGroup(
             group.getId(), singletonList(clientIdFilter), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
@@ -403,7 +404,7 @@ public class ApplicationServiceTest {
     val clientIdFilter = new SearchFilter("clientId", "333333");
 
     val applications =
-        applicationService.findGroupApplications(
+        applicationService.findApplicationsForGroup(
             group.getId(),
             "444444",
             singletonList(clientIdFilter),
@@ -425,7 +426,7 @@ public class ApplicationServiceTest {
         group.getId(), newArrayList(applicationOne.getId(), applicationTwo.getId()));
 
     val applications =
-        applicationService.findGroupApplications(
+        applicationService.findApplicationsForGroup(
             group.getId(), "555555", Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);

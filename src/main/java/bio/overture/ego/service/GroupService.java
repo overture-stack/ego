@@ -27,7 +27,6 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.GroupSpecification;
-import bio.overture.ego.repository.queryspecification.UserSpecification;
 import bio.overture.ego.repository.queryspecification.builder.GroupSpecificationBuilder;
 import bio.overture.ego.utils.EntityServices;
 import com.google.common.collect.ImmutableSet;
@@ -60,6 +59,7 @@ import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.convertToGroupApplication;
 import static bio.overture.ego.utils.Converters.convertToIds;
 import static bio.overture.ego.utils.Converters.convertToUserGroup;
+import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
 import static bio.overture.ego.utils.EntityServices.getManyEntities;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Ids.checkDuplicates;
@@ -209,30 +209,54 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   }
 
   public Page<Group> listGroups(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
-    return groupRepository.findAll(GroupSpecification.filterBy(filters), pageable);
+    return getRepository().findAll(GroupSpecification.filterBy(filters), pageable);
   }
 
   public Page<Group> findGroups(
       @NonNull String query, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
-    return groupRepository.findAll(
+    return getRepository().findAll(
         where(GroupSpecification.containsText(query)).and(GroupSpecification.filterBy(filters)),
         pageable);
   }
 
-  public Page<Group> findApplicationGroups(
+  public Page<Group> findGroupsForUser(
+      @NonNull UUID userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+    checkEntityExistence(User.class, userRepository, userId);
+    return getRepository().findAll(
+        where(GroupSpecification.containsUser(userId))
+            .and(GroupSpecification.filterBy(filters)),
+        pageable);
+  }
+
+  public Page<Group> findGroupsForUser(
+      @NonNull UUID userId,
+      @NonNull String query,
+      @NonNull List<SearchFilter> filters,
+      @NonNull Pageable pageable) {
+    checkEntityExistence(User.class, userRepository, userId);
+    return getRepository().findAll(
+        where(GroupSpecification.containsUser(userId))
+            .and(GroupSpecification.containsText(query))
+            .and(GroupSpecification.filterBy(filters)),
+        pageable);
+  }
+
+  public Page<Group> findGroupsForApplication(
       @NonNull UUID appId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
-    return groupRepository.findAll(
+    applicationService.checkExistence(appId);
+    return getRepository().findAll(
         where(GroupSpecification.containsApplication(appId))
             .and(GroupSpecification.filterBy(filters)),
         pageable);
   }
 
-  public Page<Group> findApplicationGroups(
+  public Page<Group> findGroupsForApplication(
       @NonNull UUID appId,
       @NonNull String query,
       @NonNull List<SearchFilter> filters,
       @NonNull Pageable pageable) {
-    return groupRepository.findAll(
+    applicationService.checkExistence(appId);
+    return getRepository().findAll(
         where(GroupSpecification.containsApplication(appId))
             .and(GroupSpecification.containsText(query))
             .and(GroupSpecification.filterBy(filters)),
@@ -308,25 +332,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     disassociateGroupApplicationsFromGroup(groupWithApplications, groupApplicationsToDisassociate);
   }
 
-  public Page<User> findUsersForGroup(
-      @NonNull UUID id, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
-    checkExistence(id);
-    return userRepository.findAll(
-        where(UserSpecification.inGroup(id)).and(UserSpecification.filterBy(filters)), pageable);
-  }
-
-  public Page<User> findUsersForGroup(
-      @NonNull UUID id,
-      @NonNull String query,
-      @NonNull List<SearchFilter> filters,
-      @NonNull Pageable pageable) {
-    checkExistence(id);
-    return userRepository.findAll(
-        where(UserSpecification.inGroup(id))
-            .and(UserSpecification.containsText(query))
-            .and(UserSpecification.filterBy(filters)),
-        pageable);
-  }
 
   private Group get(
       UUID id, boolean fetchApplications, boolean fetchUserGroups, boolean fetchGroupPermissions) {

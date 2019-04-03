@@ -16,8 +16,6 @@
 
 package bio.overture.ego.controller;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
@@ -25,7 +23,6 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.Fields;
-import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.PostWithIdentifierException;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
@@ -39,17 +36,12 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
-import java.util.UUID;
-import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -60,6 +52,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
+
+import java.util.List;
+import java.util.UUID;
+
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 @Slf4j
 @RestController
@@ -229,9 +226,9 @@ public class ApplicationController {
       Pageable pageable) {
     // TODO: [rtisma] create tests for this business logic. This logic should remain in controller.
     if (isEmpty(query)) {
-      return new PageDTO<>(userService.findAppUsers(id, filters, pageable));
+      return new PageDTO<>(userService.findUsersForApplication(id, filters, pageable));
     } else {
-      return new PageDTO<>(userService.findAppUsers(id, query, filters, pageable));
+      return new PageDTO<>(userService.findUsersForApplication(id, query, filters, pageable));
     }
   }
 
@@ -282,17 +279,10 @@ public class ApplicationController {
       Pageable pageable) {
     // TODO: [rtisma] create tests for this business logic. This logic should remain in controller.
     if (isEmpty(query)) {
-      return new PageDTO<>(groupService.findApplicationGroups(id, filters, pageable));
+      return new PageDTO<>(groupService.findGroupsForApplication(id, filters, pageable));
     } else {
-      return new PageDTO<>(groupService.findApplicationGroups(id, query, filters, pageable));
+      return new PageDTO<>(groupService.findGroupsForApplication(id, query, filters, pageable));
     }
   }
 
-  @ExceptionHandler({NotFoundException.class})
-  public ResponseEntity<Object> handleNotFoundException(
-      HttpServletRequest req, NotFoundException ex) {
-    log.error("Application ID not found.");
-    return new ResponseEntity<Object>(
-        "Invalid Application ID provided.", new HttpHeaders(), HttpStatus.BAD_REQUEST);
-  }
 }

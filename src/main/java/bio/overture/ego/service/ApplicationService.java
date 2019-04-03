@@ -20,9 +20,11 @@ import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupRepository;
+import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
 import bio.overture.ego.repository.queryspecification.builder.ApplicationSpecificationBuilder;
 import lombok.NonNull;
@@ -89,16 +91,19 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   private final ApplicationRepository applicationRepository;
   private final PasswordEncoder passwordEncoder;
   private final GroupRepository groupRepository;
+  private final UserRepository userRepository;
 
   @Autowired
   public ApplicationService(
       @NonNull ApplicationRepository applicationRepository,
       @NonNull GroupRepository groupRepository,
+      @NonNull UserRepository userRepository,
       @NonNull PasswordEncoder passwordEncoder) {
     super(Application.class, applicationRepository);
     this.applicationRepository = applicationRepository;
     this.passwordEncoder = passwordEncoder;
     this.groupRepository = groupRepository;
+    this.userRepository = userRepository;
   }
 
   @Override
@@ -144,8 +149,9 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
             pageable);
   }
 
-  public Page<Application> findUserApps(
+  public Page<Application> findApplicationsForUser(
       @NonNull UUID userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+    checkEntityExistence(User.class, userRepository, userId);
     return getRepository()
         .findAll(
             where(ApplicationSpecification.usedBy(userId))
@@ -153,11 +159,12 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
             pageable);
   }
 
-  public Page<Application> findUserApps(
+  public Page<Application> findApplicationsForUser(
       @NonNull UUID userId,
       @NonNull String query,
       @NonNull List<SearchFilter> filters,
       @NonNull Pageable pageable) {
+    checkEntityExistence(User.class, userRepository, userId);
     return getRepository()
         .findAll(
             where(ApplicationSpecification.usedBy(userId))
@@ -166,7 +173,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
             pageable);
   }
 
-  public Page<Application> findGroupApplications(
+  public Page<Application> findApplicationsForGroup(
       @NonNull UUID groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     checkEntityExistence(Group.class, groupRepository, groupId);
     return getRepository()
@@ -176,7 +183,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
             pageable);
   }
 
-  public Page<Application> findGroupApplications(
+  public Page<Application> findApplicationsForGroup(
       @NonNull UUID groupId,
       @NonNull String query,
       @NonNull List<SearchFilter> filters,
