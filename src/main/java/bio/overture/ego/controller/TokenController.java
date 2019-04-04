@@ -128,8 +128,6 @@ public class TokenController {
       HttpServletRequest req, InvalidTokenException ex) {
     log.error(format("ID ScopedAccessToken not found.:%s", ex.toString()));
     return errorResponse(HttpStatus.UNAUTHORIZED, "Invalid token: %s", ex);
-    // return new ResponseEntity<>(
-    //  "{\"error\": \"Invalid Token\"}", new HttpHeaders(), HttpStatus.UNAUTHORIZED);
   }
 
   @ExceptionHandler({InvalidScopeException.class})
