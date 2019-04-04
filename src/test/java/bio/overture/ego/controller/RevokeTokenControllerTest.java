@@ -2,6 +2,7 @@ package bio.overture.ego.controller;
 
 import static bio.overture.ego.model.enums.ApplicationType.CLIENT;
 import static bio.overture.ego.model.enums.UserType.USER;
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -70,8 +71,8 @@ public class RevokeTokenControllerTest {
   public void revokeAnyTokenAsAdminUser() {
     // Admin users can revoke other users' tokens.
 
-    val randomTokenName = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
-    val adminTokenName = "891044a1-3ffd-4164-a6a0-0e1e666b28dc";
+    val randomTokenName = randomUUID().toString();
+    val adminTokenName = randomUUID().toString();
     val scopes = test.getScopes("song.READ");
     val randomScopes = test.getScopes("song.READ");
 
@@ -102,7 +103,7 @@ public class RevokeTokenControllerTest {
   public void revokeOwnTokenAsAdminUser() {
     // Admin users can revoke their own tokens.
 
-    val tokenName = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
+    val tokenName = randomUUID().toString();
     val scopes = test.getScopes("song.READ", "collab.READ", "id.WRITE");
     val token =
         entityGenerator.setupToken(test.adminUser, tokenName, false, 1000, "test token", scopes);
@@ -129,7 +130,7 @@ public class RevokeTokenControllerTest {
   public void revokeAnyTokenAsRegularUser() {
     // Regular user cannot revoke other people's token
 
-    val tokenName = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
+    val tokenName = randomUUID().toString();
     val scopes = test.getScopes("id.WRITE");
     val token =
         entityGenerator.setupToken(test.user1, tokenName, false, 1000, "test token", scopes);
@@ -141,7 +142,7 @@ public class RevokeTokenControllerTest {
             MockMvcRequestBuilders.delete("/o/token")
                 .param("token", tokenName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
-        .andExpect(status().isBadRequest());
+        .andExpect(status().isUnauthorized());
     val revokedToken =
         tokenService
             .findByTokenString(tokenName)
@@ -155,7 +156,7 @@ public class RevokeTokenControllerTest {
   public void revokeOwnTokenAsRegularUser() {
     // Regular users can only revoke tokens that belong to them.
 
-    val tokenName = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
+    val tokenName = randomUUID().toString();
     val scopes = test.getScopes("song.READ");
     val token =
         entityGenerator.setupToken(test.regularUser, tokenName, false, 1000, "test token", scopes);
@@ -180,7 +181,7 @@ public class RevokeTokenControllerTest {
   @SneakyThrows
   @Test
   public void revokeAnyTokenAsAdminApp() {
-    val tokenName = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
+    val tokenName = randomUUID().toString();
     val scopes = test.getScopes("song.READ");
     val token =
         entityGenerator.setupToken(test.regularUser, tokenName, false, 1000, "test token", scopes);
@@ -209,7 +210,7 @@ public class RevokeTokenControllerTest {
   @SneakyThrows
   @Test
   public void revokeTokenAsClientApp() {
-    val tokenName = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
+    val tokenName = randomUUID().toString();
     val scopes = test.getScopes("song.READ");
     val token =
         entityGenerator.setupToken(test.regularUser, tokenName, false, 1000, "test token", scopes);
