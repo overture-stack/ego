@@ -124,7 +124,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     disassociateAllUsersFromGroup(group);
     disassociateAllApplicationsFromGroup(group);
     tokenEventsPublisher.requestTokenCleanupByUsers(users);
-    super.delete(groupId);
+    getRepository().delete(group);
   }
 
   public Group getWithRelationships(@NonNull UUID id) {

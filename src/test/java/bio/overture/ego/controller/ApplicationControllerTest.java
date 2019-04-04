@@ -34,6 +34,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang.NotImplementedException;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +55,7 @@ import static bio.overture.ego.model.enums.JavaFields.STATUS;
 import static bio.overture.ego.model.enums.JavaFields.USERS;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentClientId;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentName;
 import static bio.overture.ego.utils.EntityGenerator.randomApplicationType;
@@ -185,6 +187,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
   }
 
   @Test
+  @Ignore
   public void findApplications_FindSomeQuery_Success() {
     throw new NotImplementedException(
         "need to implement the test 'getApplications_FindSomeQuery_Success'");
@@ -214,12 +217,13 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
   @Test
   public void createApplication_NameAlreadyExists_Conflict() {
+    val name = generateNonExistentName(applicationService);
     // Create application request
     val createRequest =
         CreateApplicationRequest.builder()
             .clientId(randomStringNoSpaces(6))
             .clientSecret(randomStringNoSpaces(6))
-            .name(randomStringNoSpaces(6))
+            .name(name)
             .status(randomStatusType())
             .type(randomApplicationType())
             .build();
@@ -234,14 +238,50 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     // Create another create request with the same name
     val createRequest2 =
         CreateApplicationRequest.builder()
-            .clientId(randomStringNoSpaces(6))
+            .clientId(randomStringNoSpaces(2))
             .clientSecret(randomStringNoSpaces(6))
-            .name(createRequest.getName())
+            .name(name)
             .status(randomStatusType())
             .type(randomApplicationType())
             .build();
 
     // Assert that creating an application with an existing name, results in a CONFLICT
+    createApplicationPostRequestAnd(createRequest2).assertConflict();
+  }
+
+  @Test
+  public void createApplication_ClientIdAlreadyExists_Conflict() {
+    val clientId = generateNonExistentClientId(applicationService);
+    val name1 = generateNonExistentName(applicationService);
+    // Create application request
+    val createRequest =
+        CreateApplicationRequest.builder()
+            .clientId(clientId)
+            .clientSecret(randomStringNoSpaces(6))
+            .name(name1)
+            .status(randomStatusType())
+            .type(randomApplicationType())
+            .build();
+
+    // Create the application using the request
+    val expectedApp =
+        createApplicationPostRequestAnd(createRequest).extractOneEntity(Application.class);
+
+    // Assert app exists
+    getApplicationEntityGetRequestAnd(expectedApp).assertOk();
+
+    val name2 = generateNonExistentName(applicationService);
+    // Create another create request with the same name
+    val createRequest2 =
+        CreateApplicationRequest.builder()
+            .clientId(clientId)
+            .clientSecret(randomStringNoSpaces(6))
+            .name(name2)
+            .status(randomStatusType())
+            .type(randomApplicationType())
+            .build();
+
+    // Assert that creating an application with an existing clientId, results in a CONFLICT
     createApplicationPostRequestAnd(createRequest2).assertConflict();
   }
 
@@ -377,15 +417,16 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     assertThat(app0_before1).isEqualTo(app0_after1);
 
     // Update the status field, and assert only that was updated
+    val app0_before2 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
     val updateRequest2 =
         UpdateApplicationRequest.builder()
-            .status(randomEnumExcluding(StatusType.class, updateRequest1.getStatus()))
+            .status(randomEnumExcluding(StatusType.class, app0_before2.getStatus()))
             .build();
-    val app0_before2 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
     partialUpdateApplicationPutRequestAnd(app0.getId(), updateRequest2).assertOk();
     val app0_after2 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
     assertThat(app0_before2).isEqualToIgnoringGivenFields(app0_after2, ID, GROUPAPPLICATIONS, USERS, STATUS);
     assertThat(app0_before2.getStatus()).isNotEqualTo(app0_after2.getStatus());
+    assertThat(app0_after2.getStatus()).isEqualTo(updateRequest2.getStatus());
   }
 
   @Test
@@ -409,6 +450,20 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     val updateRequest = UpdateApplicationRequest.builder().name(app1.getName()).build();
 
     // Update app0 with the same name as app1, and assert a CONFLICT
+    partialUpdateApplicationPutRequestAnd(app0.getId(), updateRequest).assertConflict();
+  }
+
+  @Test
+  public void updateApplication_ClientIdAlreadyExists_Conflict() {
+    // Generate data
+    val data = generateUniqueTestApplicationData();
+    val app0 = data.getApplications().get(0);
+    val app1 = data.getApplications().get(1);
+
+    // Create update request with the same name as app1
+    val updateRequest = UpdateApplicationRequest.builder().clientId(app1.getClientId()).build();
+
+    // Update app0 with the same clientId as app1, and assert a CONFLICT
     partialUpdateApplicationPutRequestAnd(app0.getId(), updateRequest).assertConflict();
   }
 

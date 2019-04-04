@@ -21,7 +21,7 @@ import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.join.UserGroup;
+import bio.overture.ego.model.join.GroupApplication;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupRepository;
@@ -39,7 +39,6 @@ import org.mapstruct.TargetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -51,15 +50,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static bio.overture.ego.model.enums.JavaFields.GROUPS;
-import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.TOKENS;
-import static bio.overture.ego.model.enums.JavaFields.USERS;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
@@ -71,7 +67,6 @@ import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
 import static java.lang.String.format;
-import static javax.persistence.criteria.JoinType.LEFT;
 import static org.mapstruct.factory.Mappers.getMapper;
 import static org.springframework.data.jpa.domain.Specification.where;
 
@@ -109,12 +104,10 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
   @Override
   public void delete(@NonNull UUID groupId) {
-    val group = getWithRelationships(groupId);
-    val users = mapToSet(group.getUserGroups(), UserGroup::getUser);
-    disassociateAllUsersFromGroup(group);
-    disassociateAllApplicationsFromGroup(group);
-    tokenEventsPublisher.requestTokenCleanupByUsers(users);
-    super.delete(groupId);
+    val application = getWithRelationships(groupId);
+    disassociateAllGroupsFromApplication(application);
+    disassociateAllUsersFromApplication(application);
+    getRepository().delete(application);
   }
 
   @Override
@@ -129,7 +122,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   }
 
   public Application create(@NonNull CreateApplicationRequest request) {
-    checkClientIdUnique(request.getClientId());
+    validateCreateRequest(request);
     val application = APPLICATION_CONVERTER.convertToApplication(request);
     return getRepository().save(application);
   }
@@ -274,12 +267,27 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
         originalApplication.getClientId(),
         r.getClientId(),
         () -> checkClientIdUnique(r.getClientId()));
+    onUpdateDetected(
+        originalApplication.getName(),
+        r.getName(),
+        () -> checkNameUnique(r.getName()));
+  }
+
+  private void validateCreateRequest(CreateApplicationRequest r) {
+    checkNameUnique(r.getName());
+    checkClientIdUnique(r.getClientId());
   }
 
   private void checkClientIdUnique(String clientId) {
     checkUnique(
         !applicationRepository.existsByClientIdIgnoreCase(clientId),
         "An application with the same clientId already exists");
+  }
+
+  private void checkNameUnique(String name) {
+    checkUnique(
+        !applicationRepository.existsByNameIgnoreCase(name),
+        "An application with the same name already exists");
   }
 
   private Application get(UUID id, boolean fetchUsers, boolean fetchGroups) {
@@ -295,24 +303,37 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     return result.get();
   }
 
-  private static String removeAppTokenPrefix(String token) {
-    return token.replace(APP_TOKEN_PREFIX, "").trim();
+  public static void disassociateAllGroupsFromApplication(@NonNull Application a) {
+    val groupApplications = a.getGroupApplications();
+    disassociateGroupApplicationsFromApplication(a, groupApplications);
   }
 
-  private static Specification<Application> fetchSpecification(
-      UUID id, boolean fetchGroups, boolean fetchTokens, boolean fetchUsers) {
-    return (fromApplication, query, builder) -> {
-      if (fetchGroups) {
-        fromApplication.fetch(GROUPS, LEFT);
-      }
-      if (fetchTokens) {
-        fromApplication.fetch(TOKENS, LEFT);
-      }
-      if (fetchUsers) {
-        fromApplication.fetch(USERS, LEFT);
-      }
-      return builder.equal(fromApplication.get(ID), id);
-    };
+  public static void disassociateAllUsersFromApplication(@NonNull Application a) {
+    val users = a.getUsers();
+    disassociateUsersFromApplication(a, users);
+  }
+
+  public static void disassociateUsersFromApplication(
+      @NonNull Application application, @NonNull Collection<User> users) {
+    users.forEach(u -> {
+      u.getApplications().remove(application);
+      application.getUsers().remove(u);
+    });
+  }
+
+  public static void disassociateGroupApplicationsFromApplication(
+      @NonNull Application application, @NonNull Collection<GroupApplication> groupApplications) {
+    groupApplications.forEach(
+        ga -> {
+          ga.getGroup().getGroupApplications().remove(ga);
+          ga.setGroup(null);
+          ga.setApplication(null);
+        });
+    application.getGroupApplications().removeAll(groupApplications);
+  }
+
+  private static String removeAppTokenPrefix(String token) {
+    return token.replace(APP_TOKEN_PREFIX, "").trim();
   }
 
   @Mapper(

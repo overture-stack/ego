@@ -1,20 +1,5 @@
 package bio.overture.ego.utils;
 
-import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static bio.overture.ego.model.enums.StatusType.PENDING;
-import static bio.overture.ego.model.enums.UserType.ADMIN;
-import static bio.overture.ego.utils.CollectionUtils.listOf;
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
-import static bio.overture.ego.utils.Splitters.COMMA_SPLITTER;
-import static com.google.common.collect.Lists.newArrayList;
-import static java.lang.Integer.MAX_VALUE;
-import static java.lang.Math.abs;
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.GroupRequest;
@@ -42,6 +27,11 @@ import bio.overture.ego.service.TokenStoreService;
 import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
 import com.google.common.collect.ImmutableSet;
+import lombok.NonNull;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -51,10 +41,21 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
-import lombok.NonNull;
-import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+
+import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.StatusType.PENDING;
+import static bio.overture.ego.model.enums.UserType.ADMIN;
+import static bio.overture.ego.utils.CollectionUtils.listOf;
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
+import static bio.overture.ego.utils.Splitters.COMMA_SPLITTER;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.lang.Integer.MAX_VALUE;
+import static java.lang.Math.abs;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Component
 /**
@@ -407,7 +408,7 @@ public class EntityGenerator {
     return mapToList(listOf(strings), ScopeName::new);
   }
 
-  public static <E extends Enum<E>> E randomEnumExcluding(Class<E> enumClass, E enumToExclude) {
+  public static <E extends Enum<E>> E randomEnumExcluding(@NonNull Class<E> enumClass, @NonNull E enumToExclude) {
     val list =
         stream(enumClass.getEnumConstants()).filter(x -> x != enumToExclude).collect(toList());
     return randomElementOf(list);
@@ -432,6 +433,18 @@ public class EntityGenerator {
 
   public static <T> T randomElementOf(T... objects) {
     return objects[randomBoundedInt(objects.length)];
+  }
+
+  public static String generateNonExistentClientId(NamedService<Application, UUID> applicationService) {
+    val r = new Random();
+    String clientId = generateRandomName(r, 15);
+    Optional<Application> result = applicationService.findByName(clientId);
+
+    while (result.isPresent()) {
+      clientId = generateRandomName(r, 15);
+      result = applicationService.findByName(clientId);
+    }
+    return clientId;
   }
 
   public static <T> String generateNonExistentName(NamedService<T, UUID> namedService) {
