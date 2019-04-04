@@ -1,5 +1,17 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.AccessLevel.DENY;
+import static bio.overture.ego.model.enums.AccessLevel.READ;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.StatusType.PENDING;
+import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
+import static bio.overture.ego.utils.EntityTools.extractGroupNames;
+import static com.google.common.collect.Lists.newArrayList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.dto.PermissionRequest;
@@ -12,6 +24,11 @@ import bio.overture.ego.repository.join.UserGroupRepository;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
 import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -22,24 +39,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.EntityNotFoundException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static bio.overture.ego.model.enums.AccessLevel.DENY;
-import static bio.overture.ego.model.enums.AccessLevel.READ;
-import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static bio.overture.ego.model.enums.StatusType.PENDING;
-import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
-import static bio.overture.ego.utils.EntityTools.extractGroupNames;
-import static com.google.common.collect.Lists.newArrayList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest

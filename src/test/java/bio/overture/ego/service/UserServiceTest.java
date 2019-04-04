@@ -1,36 +1,5 @@
 package bio.overture.ego.service;
 
-import bio.overture.ego.controller.resolver.PageableResolver;
-import bio.overture.ego.model.dto.CreateUserRequest;
-import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.dto.UpdateUserRequest;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.exceptions.NotFoundException;
-import bio.overture.ego.model.exceptions.UniqueViolationException;
-import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.token.IDToken;
-import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.PolicyPermissionUtils;
-import com.google.common.collect.ImmutableList;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collections;
-import java.util.Date;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
@@ -49,6 +18,36 @@ import static java.util.Collections.singletonList;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
+import bio.overture.ego.controller.resolver.PageableResolver;
+import bio.overture.ego.model.dto.CreateUserRequest;
+import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.dto.UpdateUserRequest;
+import bio.overture.ego.model.entity.AbstractPermission;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.model.exceptions.UniqueViolationException;
+import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.token.IDToken;
+import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.PolicyPermissionUtils;
+import com.google.common.collect.ImmutableList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @SpringBootTest
@@ -560,7 +559,6 @@ public class UserServiceTest {
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> userService.partialUpdate(nonExistentId, updateRequest));
   }
-
 
   // Add User to Groups
   @Test

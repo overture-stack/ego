@@ -1,5 +1,8 @@
 package bio.overture.ego.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.entity.Group;
@@ -7,6 +10,10 @@ import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.EntityGenerator;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
@@ -18,14 +25,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
