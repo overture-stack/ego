@@ -110,6 +110,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     getRepository().delete(application);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Optional<Application> findByName(@NonNull String name) {
     return (Optional<Application>)
@@ -139,11 +140,13 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     return get(id, true, true);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<Application> listApps(
       @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository().findAll(ApplicationSpecification.filterBy(filters), pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<Application> findApps(
       @NonNull String query, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository()
@@ -153,6 +156,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
             pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<Application> findApplicationsForUser(
       @NonNull UUID userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     checkEntityExistence(User.class, userRepository, userId);
@@ -163,6 +167,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
             pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<Application> findApplicationsForUser(
       @NonNull UUID userId,
       @NonNull String query,
@@ -177,6 +182,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
             pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<Application> findApplicationsForGroup(
       @NonNull UUID groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     checkEntityExistence(Group.class, groupRepository, groupId);
@@ -187,6 +193,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
             pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<Application> findApplicationsForGroup(
       @NonNull UUID groupId,
       @NonNull String query,
@@ -201,6 +208,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
             pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Optional<Application> findByClientId(@NonNull String clientId) {
     return (Optional<Application>)
         getRepository()
@@ -288,6 +296,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
         "An application with the same name already exists");
   }
 
+  @SuppressWarnings("unchecked")
   private Application get(UUID id, boolean fetchUsers, boolean fetchGroups) {
     val result =
         (Optional<Application>)

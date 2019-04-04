@@ -94,6 +94,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     this.userRepository = userRepository;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Optional<Group> findByName(@NonNull String name) {
     return (Optional<Group>)
@@ -209,10 +210,12 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     return getRepository().save(group);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<Group> listGroups(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository().findAll(GroupSpecification.filterBy(filters), pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<Group> findGroups(
       @NonNull String query, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository()
@@ -221,6 +224,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
             pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<Group> findGroupsForUser(
       @NonNull UUID userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     checkEntityExistence(User.class, userRepository, userId);
@@ -231,6 +235,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
             pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<Group> findGroupsForUser(
       @NonNull UUID userId,
       @NonNull String query,
@@ -245,6 +250,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
             pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<Group> findGroupsForApplication(
       @NonNull UUID appId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     applicationService.checkExistence(appId);
@@ -255,6 +261,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
             pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<Group> findGroupsForApplication(
       @NonNull UUID appId,
       @NonNull String query,
@@ -338,6 +345,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     disassociateGroupApplicationsFromGroup(groupWithApplications, groupApplicationsToDisassociate);
   }
 
+  @SuppressWarnings("unchecked")
   private Group get(
       UUID id, boolean fetchApplications, boolean fetchUserGroups, boolean fetchGroupPermissions) {
     val result =
