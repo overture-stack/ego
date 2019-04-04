@@ -21,6 +21,7 @@ import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupRepository;
@@ -104,6 +105,16 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     this.passwordEncoder = passwordEncoder;
     this.groupRepository = groupRepository;
     this.userRepository = userRepository;
+  }
+
+  @Override
+  public void delete(@NonNull UUID groupId) {
+    val group = getWithRelationships(groupId);
+    val users = mapToSet(group.getUserGroups(), UserGroup::getUser);
+    disassociateAllUsersFromGroup(group);
+    disassociateAllApplicationsFromGroup(group);
+    tokenEventsPublisher.requestTokenCleanupByUsers(users);
+    super.delete(groupId);
   }
 
   @Override

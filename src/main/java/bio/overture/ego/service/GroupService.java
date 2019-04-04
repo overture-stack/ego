@@ -117,6 +117,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
    *
    * @param groupId The ID of the group to be deleted.
    */
+  @Override
   public void delete(@NonNull UUID groupId) {
     val group = getWithRelationships(groupId);
     val users = mapToSet(group.getUserGroups(), UserGroup::getUser);
