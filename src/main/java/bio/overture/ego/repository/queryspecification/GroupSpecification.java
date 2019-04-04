@@ -16,19 +16,6 @@
 
 package bio.overture.ego.repository.queryspecification;
 
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.join.GroupApplication;
-import bio.overture.ego.model.join.UserGroup;
-import bio.overture.ego.utils.QueryUtils;
-import lombok.NonNull;
-import lombok.val;
-import org.springframework.data.jpa.domain.Specification;
-
-import javax.persistence.criteria.Join;
-import java.util.UUID;
-
 import static bio.overture.ego.model.enums.JavaFields.APPLICATION;
 import static bio.overture.ego.model.enums.JavaFields.DESCRIPTION;
 import static bio.overture.ego.model.enums.JavaFields.GROUPAPPLICATIONS;
@@ -37,6 +24,18 @@ import static bio.overture.ego.model.enums.JavaFields.NAME;
 import static bio.overture.ego.model.enums.JavaFields.STATUS;
 import static bio.overture.ego.model.enums.JavaFields.USER;
 import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
+
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.join.GroupApplication;
+import bio.overture.ego.model.join.UserGroup;
+import bio.overture.ego.utils.QueryUtils;
+import java.util.UUID;
+import javax.persistence.criteria.Join;
+import lombok.NonNull;
+import lombok.val;
+import org.springframework.data.jpa.domain.Specification;
 
 public class GroupSpecification extends SpecificationBase<Group> {
   public static Specification<Group> containsText(@NonNull String text) {

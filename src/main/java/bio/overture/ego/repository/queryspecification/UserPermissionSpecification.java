@@ -16,17 +16,16 @@
 
 package bio.overture.ego.repository.queryspecification;
 
-import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.entity.UserPermission;
-import lombok.NonNull;
-import org.springframework.data.jpa.domain.Specification;
-
-import javax.persistence.criteria.Join;
-import java.util.UUID;
-
 import static bio.overture.ego.model.enums.JavaFields.ID;
 import static bio.overture.ego.model.enums.JavaFields.OWNER;
 import static bio.overture.ego.model.enums.JavaFields.POLICY;
+
+import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.entity.UserPermission;
+import java.util.UUID;
+import javax.persistence.criteria.Join;
+import lombok.NonNull;
+import org.springframework.data.jpa.domain.Specification;
 
 public class UserPermissionSpecification extends SpecificationBase<UserPermission> {
 

@@ -158,7 +158,6 @@ public class ApplicationServiceTest {
   @Test
   @Ignore
   public void testGetByNameNotFound() {
-    // TODO Currently returning null, should throw exception (EntityNotFoundException?)
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> applicationService.getByName("Application 123456"));
   }
@@ -173,7 +172,6 @@ public class ApplicationServiceTest {
   @Test
   @Ignore
   public void testGetByClientIdNotFound() {
-    // TODO Currently returning null, should throw exception (EntityNotFoundException?)
     assertThatExceptionOfType(EntityNotFoundException.class)
         .isThrownBy(() -> applicationService.getByClientId("123456"));
   }
@@ -504,28 +502,6 @@ public class ApplicationServiceTest {
     assertThat(a2.getClientId()).isNotEqualTo(ur3.getClientId());
     assertThatExceptionOfType(UniqueViolationException.class)
         .isThrownBy(() -> applicationService.partialUpdate(a2.getId(), ur3));
-  }
-
-  @Test
-  @Ignore
-  public void testUpdateClientIdNotAllowed() {
-    //    entityGenerator.setupTestApplications();
-    //    val application = applicationService.getByClientId("111111");
-    //    application.setClientId("222222");
-    //    val updated = applicationService.update(application);
-    assertThat(1).isEqualTo(2);
-    // TODO Check for uniqueness in application, currently only SQL
-  }
-
-  @Test
-  @Ignore
-  public void testUpdateStatusNotInAllowedEnum() {
-    //    entityGenerator.setupTestApplications();
-    //    val application = applicationService.getByClientId("111111");
-    //    application.setStatus("Junk");
-    //    val updated = applicationService.update(application);
-    assertThat(1).isEqualTo(2);
-    // TODO Check for uniqueness in application, currently only SQL
   }
 
   // Delete

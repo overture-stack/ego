@@ -27,6 +27,7 @@ public interface ApplicationRepository extends NamedRepository<Application, UUID
   Optional<Application> getApplicationByNameIgnoreCase(String name);
 
   boolean existsByClientIdIgnoreCase(String clientId);
+
   boolean existsByNameIgnoreCase(String name);
 
   Set<Application> findAllByIdIn(List<UUID> ids);

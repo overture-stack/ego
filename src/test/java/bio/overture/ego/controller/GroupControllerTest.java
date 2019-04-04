@@ -1,41 +1,5 @@
 package bio.overture.ego.controller;
 
-import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.dto.GroupRequest;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.GroupPermission;
-import bio.overture.ego.model.entity.Identifiable;
-import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.model.enums.StatusType;
-import bio.overture.ego.model.join.GroupApplication;
-import bio.overture.ego.model.join.UserGroup;
-import bio.overture.ego.repository.GroupPermissionRepository;
-import bio.overture.ego.repository.GroupRepository;
-import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.UserService;
-import bio.overture.ego.utils.EntityGenerator;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.apache.commons.lang.NotImplementedException;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.List;
-import java.util.UUID;
-
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
@@ -74,6 +38,41 @@ import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_ARRAY_ITEMS;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import bio.overture.ego.AuthorizationServiceMain;
+import bio.overture.ego.model.dto.GroupRequest;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.GroupPermission;
+import bio.overture.ego.model.entity.Identifiable;
+import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.enums.StatusType;
+import bio.overture.ego.model.join.GroupApplication;
+import bio.overture.ego.model.join.UserGroup;
+import bio.overture.ego.repository.GroupPermissionRepository;
+import bio.overture.ego.repository.GroupRepository;
+import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.GroupService;
+import bio.overture.ego.service.UserService;
+import bio.overture.ego.utils.EntityGenerator;
+import java.util.List;
+import java.util.UUID;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.lang.NotImplementedException;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -234,8 +233,6 @@ public class GroupControllerTest extends AbstractControllerTest {
     getGroupEntityGetRequestAnd(group).assertNotFound();
   }
 
-  // TODO: [rtisma] will eventually be fixed when properly using query by Specification, which will
-  // allow for runtime base queries. This will allow us to define fetch strategy at run time
   @Test
   public void addUsersToGroup() {
 
@@ -353,7 +350,7 @@ public class GroupControllerTest extends AbstractControllerTest {
     createGroupPostRequestAnd(createRequest).assertConflict();
   }
 
-  public void createGroup_NullValueButRequired_BadRequest(){
+  public void createGroup_NullValueButRequired_BadRequest() {
     // Create an empty createRequest for groups
     val createRequest = GroupRequest.builder().build();
 
@@ -879,7 +876,8 @@ public class GroupControllerTest extends AbstractControllerTest {
     val updatedGroup2 =
         partialUpdateGroupPutRequestAnd(g.getId(), updateRequest2).extractOneEntity(Group.class);
     assertThat(updatedGroup2)
-        .isEqualToIgnoringGivenFields(updatedGroup1, STATUS, PERMISSIONS, GROUPAPPLICATIONS, USERGROUPS);
+        .isEqualToIgnoringGivenFields(
+            updatedGroup1, STATUS, PERMISSIONS, GROUPAPPLICATIONS, USERGROUPS);
     assertThat(updatedGroup2.getStatus()).isEqualTo(updateRequest2.getStatus());
 
     val description = "my description";

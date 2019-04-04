@@ -16,18 +16,6 @@
 
 package bio.overture.ego.repository.queryspecification;
 
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.join.GroupApplication;
-import bio.overture.ego.utils.QueryUtils;
-import lombok.NonNull;
-import lombok.val;
-import org.springframework.data.jpa.domain.Specification;
-
-import javax.persistence.criteria.Join;
-import java.util.UUID;
-
 import static bio.overture.ego.model.enums.JavaFields.CLIENTID;
 import static bio.overture.ego.model.enums.JavaFields.CLIENTSECRET;
 import static bio.overture.ego.model.enums.JavaFields.DESCRIPTION;
@@ -38,6 +26,17 @@ import static bio.overture.ego.model.enums.JavaFields.NAME;
 import static bio.overture.ego.model.enums.JavaFields.STATUS;
 import static bio.overture.ego.model.enums.JavaFields.USERS;
 
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.join.GroupApplication;
+import bio.overture.ego.utils.QueryUtils;
+import java.util.UUID;
+import javax.persistence.criteria.Join;
+import lombok.NonNull;
+import lombok.val;
+import org.springframework.data.jpa.domain.Specification;
+
 public class ApplicationSpecification extends SpecificationBase<Application> {
   public static Specification<Application> containsText(@NonNull String text) {
     val finalText = QueryUtils.prepareForQuery(text);
@@ -45,14 +44,7 @@ public class ApplicationSpecification extends SpecificationBase<Application> {
       query.distinct(true);
       return builder.or(
           getQueryPredicates(
-              builder,
-              root,
-              finalText,
-              NAME,
-              CLIENTID,
-              CLIENTSECRET,
-              DESCRIPTION,
-              STATUS));
+              builder, root, finalText, NAME, CLIENTID, CLIENTSECRET, DESCRIPTION, STATUS));
     };
   }
 

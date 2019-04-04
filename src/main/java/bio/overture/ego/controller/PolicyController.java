@@ -1,5 +1,10 @@
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
+import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
+import static bio.overture.ego.controller.resolver.PageableResolver.SORT;
+import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
+
 import bio.overture.ego.model.dto.GenericResponse;
 import bio.overture.ego.model.dto.MaskDTO;
 import bio.overture.ego.model.dto.PageDTO;
@@ -77,31 +82,31 @@ public class PolicyController {
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiImplicitParams({
     @ApiImplicitParam(
-        name = "limit",
-        required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Number of results to retrieve"),
-    @ApiImplicitParam(
-        name = "offset",
-        required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
         name = Fields.ID,
         required = false,
         dataType = "string",
         paramType = "query",
         value = "Search for ids containing this text"),
     @ApiImplicitParam(
-        name = "sort",
+        name = LIMIT,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Number of results to retrieve"),
+    @ApiImplicitParam(
+        name = OFFSET,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Index of first result to retrieve"),
+    @ApiImplicitParam(
+        name = SORT,
         required = false,
         dataType = "string",
         paramType = "query",
         value = "Field to sort on"),
     @ApiImplicitParam(
-        name = "sortOrder",
+        name = SORTORDER,
         required = false,
         dataType = "string",
         paramType = "query",

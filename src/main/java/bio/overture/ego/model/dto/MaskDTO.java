@@ -1,13 +1,12 @@
 package bio.overture.ego.model.dto;
 
 import bio.overture.ego.model.enums.AccessLevel;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
@@ -15,9 +14,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 public class MaskDTO {
 
-  @NotNull
-  @NonNull
-  private AccessLevel mask;
+  @NotNull @NonNull private AccessLevel mask;
 
   public static MaskDTO createMaskDTO(AccessLevel mask) {
     return new MaskDTO(mask);

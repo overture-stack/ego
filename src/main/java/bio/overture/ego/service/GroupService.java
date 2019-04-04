@@ -16,38 +16,6 @@
 
 package bio.overture.ego.service;
 
-import bio.overture.ego.event.token.TokenEventsPublisher;
-import bio.overture.ego.model.dto.GroupRequest;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.join.GroupApplication;
-import bio.overture.ego.model.join.UserGroup;
-import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.repository.GroupRepository;
-import bio.overture.ego.repository.UserRepository;
-import bio.overture.ego.repository.queryspecification.GroupSpecification;
-import bio.overture.ego.repository.queryspecification.builder.GroupSpecificationBuilder;
-import bio.overture.ego.utils.EntityServices;
-import com.google.common.collect.ImmutableSet;
-import lombok.NonNull;
-import lombok.val;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValueCheckStrategy;
-import org.mapstruct.ReportingPolicy;
-import org.mapstruct.TargetType;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
-import javax.transaction.Transactional;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
@@ -67,6 +35,37 @@ import static bio.overture.ego.utils.Ids.checkDuplicates;
 import static bio.overture.ego.utils.Joiners.PRETTY_COMMA;
 import static org.mapstruct.factory.Mappers.getMapper;
 import static org.springframework.data.jpa.domain.Specification.where;
+
+import bio.overture.ego.event.token.TokenEventsPublisher;
+import bio.overture.ego.model.dto.GroupRequest;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.join.GroupApplication;
+import bio.overture.ego.model.join.UserGroup;
+import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.repository.GroupRepository;
+import bio.overture.ego.repository.UserRepository;
+import bio.overture.ego.repository.queryspecification.GroupSpecification;
+import bio.overture.ego.repository.queryspecification.builder.GroupSpecificationBuilder;
+import bio.overture.ego.utils.EntityServices;
+import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import javax.transaction.Transactional;
+import lombok.NonNull;
+import lombok.val;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValueCheckStrategy;
+import org.mapstruct.ReportingPolicy;
+import org.mapstruct.TargetType;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
@@ -216,18 +215,20 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
 
   public Page<Group> findGroups(
       @NonNull String query, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
-    return getRepository().findAll(
-        where(GroupSpecification.containsText(query)).and(GroupSpecification.filterBy(filters)),
-        pageable);
+    return getRepository()
+        .findAll(
+            where(GroupSpecification.containsText(query)).and(GroupSpecification.filterBy(filters)),
+            pageable);
   }
 
   public Page<Group> findGroupsForUser(
       @NonNull UUID userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     checkEntityExistence(User.class, userRepository, userId);
-    return getRepository().findAll(
-        where(GroupSpecification.containsUser(userId))
-            .and(GroupSpecification.filterBy(filters)),
-        pageable);
+    return getRepository()
+        .findAll(
+            where(GroupSpecification.containsUser(userId))
+                .and(GroupSpecification.filterBy(filters)),
+            pageable);
   }
 
   public Page<Group> findGroupsForUser(
@@ -236,20 +237,22 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
       @NonNull List<SearchFilter> filters,
       @NonNull Pageable pageable) {
     checkEntityExistence(User.class, userRepository, userId);
-    return getRepository().findAll(
-        where(GroupSpecification.containsUser(userId))
-            .and(GroupSpecification.containsText(query))
-            .and(GroupSpecification.filterBy(filters)),
-        pageable);
+    return getRepository()
+        .findAll(
+            where(GroupSpecification.containsUser(userId))
+                .and(GroupSpecification.containsText(query))
+                .and(GroupSpecification.filterBy(filters)),
+            pageable);
   }
 
   public Page<Group> findGroupsForApplication(
       @NonNull UUID appId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     applicationService.checkExistence(appId);
-    return getRepository().findAll(
-        where(GroupSpecification.containsApplication(appId))
-            .and(GroupSpecification.filterBy(filters)),
-        pageable);
+    return getRepository()
+        .findAll(
+            where(GroupSpecification.containsApplication(appId))
+                .and(GroupSpecification.filterBy(filters)),
+            pageable);
   }
 
   public Page<Group> findGroupsForApplication(
@@ -258,11 +261,12 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
       @NonNull List<SearchFilter> filters,
       @NonNull Pageable pageable) {
     applicationService.checkExistence(appId);
-    return getRepository().findAll(
-        where(GroupSpecification.containsApplication(appId))
-            .and(GroupSpecification.containsText(query))
-            .and(GroupSpecification.filterBy(filters)),
-        pageable);
+    return getRepository()
+        .findAll(
+            where(GroupSpecification.containsApplication(appId))
+                .and(GroupSpecification.containsText(query))
+                .and(GroupSpecification.filterBy(filters)),
+            pageable);
   }
 
   public Group associateApplicationsWithGroup(
@@ -333,7 +337,6 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
 
     disassociateGroupApplicationsFromGroup(groupWithApplications, groupApplicationsToDisassociate);
   }
-
 
   private Group get(
       UUID id, boolean fetchApplications, boolean fetchUserGroups, boolean fetchGroupPermissions) {

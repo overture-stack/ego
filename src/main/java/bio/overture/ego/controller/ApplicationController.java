@@ -16,6 +16,12 @@
 
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
+import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
+import static bio.overture.ego.controller.resolver.PageableResolver.SORT;
+import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
@@ -36,6 +42,8 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,11 +60,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
-
-import java.util.List;
-import java.util.UUID;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 @Slf4j
 @RestController
@@ -83,31 +86,25 @@ public class ApplicationController {
   @RequestMapping(method = RequestMethod.GET, value = "")
   @ApiImplicitParams({
     @ApiImplicitParam(
-        name = "limit",
+        name = LIMIT,
         required = false,
         dataType = "string",
         paramType = "query",
         value = "Number of results to retrieve"),
     @ApiImplicitParam(
-        name = "offset",
+        name = OFFSET,
         required = false,
         dataType = "string",
         paramType = "query",
         value = "Index of first result to retrieve"),
     @ApiImplicitParam(
-        name = Fields.ID,
-        required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Search for ids containing this text"),
-    @ApiImplicitParam(
-        name = "sort",
+        name = SORT,
         required = false,
         dataType = "string",
         paramType = "query",
         value = "Field to sort on"),
     @ApiImplicitParam(
-        name = "sortOrder",
+        name = SORTORDER,
         required = false,
         dataType = "string",
         paramType = "query",
@@ -120,7 +117,6 @@ public class ApplicationController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    // TODO: [rtisma] create tests for this business logic. This logic should remain in controller.
     if (isEmpty(query)) {
       return new PageDTO<>(applicationService.listApps(filters, pageable));
     } else {
@@ -186,13 +182,13 @@ public class ApplicationController {
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
   @ApiImplicitParams({
     @ApiImplicitParam(
-        name = "limit",
+        name = LIMIT,
         required = false,
         dataType = "string",
         paramType = "query",
         value = "Number of results to retrieve"),
     @ApiImplicitParam(
-        name = "offset",
+        name = OFFSET,
         required = false,
         dataType = "string",
         paramType = "query",
@@ -204,13 +200,13 @@ public class ApplicationController {
         paramType = "query",
         value = "Search for ids containing this text"),
     @ApiImplicitParam(
-        name = "sort",
+        name = SORT,
         required = false,
         dataType = "string",
         paramType = "query",
         value = "Field to sort on"),
     @ApiImplicitParam(
-        name = "sortOrder",
+        name = SORTORDER,
         required = false,
         dataType = "string",
         paramType = "query",
@@ -224,7 +220,6 @@ public class ApplicationController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    // TODO: [rtisma] create tests for this business logic. This logic should remain in controller.
     if (isEmpty(query)) {
       return new PageDTO<>(userService.findUsersForApplication(id, filters, pageable));
     } else {
@@ -239,13 +234,13 @@ public class ApplicationController {
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
   @ApiImplicitParams({
     @ApiImplicitParam(
-        name = "limit",
+        name = LIMIT,
         required = false,
         dataType = "string",
         paramType = "query",
         value = "Number of results to retrieve"),
     @ApiImplicitParam(
-        name = "offset",
+        name = OFFSET,
         required = false,
         dataType = "string",
         paramType = "query",
@@ -257,13 +252,13 @@ public class ApplicationController {
         paramType = "query",
         value = "Search for ids containing this text"),
     @ApiImplicitParam(
-        name = "sort",
+        name = SORT,
         required = false,
         dataType = "string",
         paramType = "query",
         value = "Field to sort on"),
     @ApiImplicitParam(
-        name = "sortOrder",
+        name = SORTORDER,
         required = false,
         dataType = "string",
         paramType = "query",
@@ -277,12 +272,10 @@ public class ApplicationController {
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
-    // TODO: [rtisma] create tests for this business logic. This logic should remain in controller.
     if (isEmpty(query)) {
       return new PageDTO<>(groupService.findGroupsForApplication(id, filters, pageable));
     } else {
       return new PageDTO<>(groupService.findGroupsForApplication(id, query, filters, pageable));
     }
   }
-
 }

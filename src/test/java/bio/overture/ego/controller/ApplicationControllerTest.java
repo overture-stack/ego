@@ -17,35 +17,6 @@
 
 package bio.overture.ego.controller;
 
-import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.dto.CreateApplicationRequest;
-import bio.overture.ego.model.dto.UpdateApplicationRequest;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.ApplicationType;
-import bio.overture.ego.model.enums.StatusType;
-import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.utils.EntityGenerator;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.apache.commons.lang.NotImplementedException;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.List;
-
 import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
 import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
 import static bio.overture.ego.model.enums.JavaFields.GROUPAPPLICATIONS;
@@ -67,6 +38,34 @@ import static bio.overture.ego.utils.EntityGenerator.randomStringWithSpaces;
 import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import bio.overture.ego.AuthorizationServiceMain;
+import bio.overture.ego.model.dto.CreateApplicationRequest;
+import bio.overture.ego.model.dto.UpdateApplicationRequest;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.ApplicationType;
+import bio.overture.ego.model.enums.StatusType;
+import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.utils.EntityGenerator;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.List;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.lang.NotImplementedException;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -193,20 +192,22 @@ public class ApplicationControllerTest extends AbstractControllerTest {
         "need to implement the test 'getApplications_FindSomeQuery_Success'");
   }
 
-	@Test
+  @Test
   @Ignore("Should be tested")
-	public void getGroupsFromApplication_FindSomeQuery_Success(){
-		throw new NotImplementedException("need to implement the test 'getGroupsFromApplication_FindSomeQuery_Success'");
-	}
-
-	@Test
-  @Ignore("Should be tested")
-	public void getUsersFromApplication_FindSomeQuery_Success(){
-		throw new NotImplementedException("need to implement the test 'getUsersFromApplication_FindSomeQuery_Success'");
-	}
+  public void getGroupsFromApplication_FindSomeQuery_Success() {
+    throw new NotImplementedException(
+        "need to implement the test 'getGroupsFromApplication_FindSomeQuery_Success'");
+  }
 
   @Test
-  public void createApplication_NullValuesForRequiredFields_BadRequest(){
+  @Ignore("Should be tested")
+  public void getUsersFromApplication_FindSomeQuery_Success() {
+    throw new NotImplementedException(
+        "need to implement the test 'getUsersFromApplication_FindSomeQuery_Success'");
+  }
+
+  @Test
+  public void createApplication_NullValuesForRequiredFields_BadRequest() {
     // Create with null values
     val r1 = CreateApplicationRequest.builder().build();
 
@@ -428,7 +429,8 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     val app0_before0 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
     partialUpdateApplicationPutRequestAnd(app0.getId(), updateRequest1).assertOk();
     val app0_after0 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
-    assertThat(app0_before0).isEqualToIgnoringGivenFields(app0_after0, ID, GROUPAPPLICATIONS, USERS, NAME);
+    assertThat(app0_before0)
+        .isEqualToIgnoringGivenFields(app0_after0, ID, GROUPAPPLICATIONS, USERS, NAME);
 
     // Update app0 with empty update request, and assert nothing changed
     val app0_before1 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
@@ -445,7 +447,8 @@ public class ApplicationControllerTest extends AbstractControllerTest {
             .build();
     partialUpdateApplicationPutRequestAnd(app0.getId(), updateRequest2).assertOk();
     val app0_after2 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
-    assertThat(app0_before2).isEqualToIgnoringGivenFields(app0_after2, ID, GROUPAPPLICATIONS, USERS, STATUS);
+    assertThat(app0_before2)
+        .isEqualToIgnoringGivenFields(app0_after2, ID, GROUPAPPLICATIONS, USERS, STATUS);
     assertThat(app0_before2.getStatus()).isNotEqualTo(app0_after2.getStatus());
     assertThat(app0_after2.getStatus()).isEqualTo(updateRequest2.getStatus());
   }

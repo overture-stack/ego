@@ -16,14 +16,14 @@
 
 package bio.overture.ego.repository.queryspecification;
 
+import static bio.overture.ego.model.enums.JavaFields.NAME;
+
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.utils.QueryUtils;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
-
-import static bio.overture.ego.model.enums.JavaFields.NAME;
 
 public class PolicySpecification extends SpecificationBase<User> {
 

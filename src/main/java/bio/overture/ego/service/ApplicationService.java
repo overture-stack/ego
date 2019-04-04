@@ -16,6 +16,21 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
+import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
+import static bio.overture.ego.token.app.AppTokenClaims.SCOPES;
+import static bio.overture.ego.utils.CollectionUtils.setOf;
+import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
+import static java.lang.String.format;
+import static org.mapstruct.factory.Mappers.getMapper;
+import static org.springframework.data.jpa.domain.Specification.where;
+
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
@@ -28,6 +43,13 @@ import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
 import bio.overture.ego.repository.queryspecification.builder.ApplicationSpecificationBuilder;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -47,29 +69,6 @@ import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.security.oauth2.provider.client.BaseClientDetails;
 import org.springframework.stereotype.Service;
-
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
-import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
-import static bio.overture.ego.token.app.AppTokenClaims.SCOPES;
-import static bio.overture.ego.utils.CollectionUtils.setOf;
-import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
-import static java.lang.String.format;
-import static org.mapstruct.factory.Mappers.getMapper;
-import static org.springframework.data.jpa.domain.Specification.where;
 
 @Service
 @Slf4j
@@ -202,7 +201,6 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
             pageable);
   }
 
-  // TODO: [rtisma] add this to testplan and creat tests
   public Optional<Application> findByClientId(@NonNull String clientId) {
     return (Optional<Application>)
         getRepository()
@@ -269,9 +267,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
         r.getClientId(),
         () -> checkClientIdUnique(r.getClientId()));
     onUpdateDetected(
-        originalApplication.getName(),
-        r.getName(),
-        () -> checkNameUnique(r.getName()));
+        originalApplication.getName(), r.getName(), () -> checkNameUnique(r.getName()));
   }
 
   private void validateCreateRequest(CreateApplicationRequest r) {
@@ -317,10 +313,11 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
   public static void disassociateUsersFromApplication(
       @NonNull Application application, @NonNull Collection<User> users) {
-    users.forEach(u -> {
-      u.getApplications().remove(application);
-      application.getUsers().remove(u);
-    });
+    users.forEach(
+        u -> {
+          u.getApplications().remove(application);
+          application.getUsers().remove(u);
+        });
   }
 
   public static void disassociateGroupApplicationsFromApplication(

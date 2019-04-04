@@ -1,22 +1,21 @@
 package bio.overture.ego.repository.queryspecification.builder;
 
-import bio.overture.ego.model.entity.Application;
-import lombok.NonNull;
-import lombok.Setter;
-import lombok.experimental.Accessors;
-import lombok.val;
-import org.springframework.data.jpa.domain.Specification;
-
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import java.util.UUID;
-
 import static bio.overture.ego.model.enums.JavaFields.CLIENTID;
 import static bio.overture.ego.model.enums.JavaFields.GROUP;
 import static bio.overture.ego.model.enums.JavaFields.GROUPAPPLICATIONS;
 import static bio.overture.ego.model.enums.JavaFields.USERS;
 import static javax.persistence.criteria.JoinType.LEFT;
+
+import bio.overture.ego.model.entity.Application;
+import java.util.UUID;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import lombok.val;
+import org.springframework.data.jpa.domain.Specification;
 
 @Setter
 @Accessors(fluent = true, chain = true)

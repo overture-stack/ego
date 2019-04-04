@@ -17,12 +17,11 @@
 package bio.overture.ego.model.dto;
 
 import bio.overture.ego.model.enums.StatusType;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

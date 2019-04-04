@@ -169,8 +169,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .build());
   }
 
-
-
   public User addUserToApps(@NonNull UUID id, @NonNull List<UUID> appIds) {
     val user = getById(id);
     val apps = applicationService.getMany(appIds);
@@ -248,8 +246,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
       @NonNull UUID groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     checkEntityExistence(Group.class, groupRepository, groupId);
     return userRepository.findAll(
-        where(UserSpecification.inGroup(groupId))
-            .and(UserSpecification.filterBy(filters)), pageable);
+        where(UserSpecification.inGroup(groupId)).and(UserSpecification.filterBy(filters)),
+        pageable);
   }
 
   public Page<User> findUsersForGroup(
@@ -288,7 +286,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
             pageable);
   }
 
-  private void validateCreateRequest(CreateUserRequest r ) {
+  private void validateCreateRequest(CreateUserRequest r) {
     checkRequestValid(r);
     checkEmailUnique(r.getEmail());
   }
@@ -302,7 +300,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
         !userRepository.existsByEmailIgnoreCase(email), "A user with same email already exists");
   }
 
-  // TODO [rtisma]: ensure that the user contains all its relationships
   public static Set<AbstractPermission> resolveUsersPermissions(User user) {
     val up = user.getUserPermissions();
     Collection<UserPermission> userPermissions = isNull(up) ? ImmutableList.of() : up;

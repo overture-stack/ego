@@ -100,17 +100,6 @@ public class GroupsServiceTest {
         .isThrownBy(() -> groupService.partialUpdate(g2.getId(), ur3));
   }
 
-  @Test
-  @Ignore
-  public void testCreateUniqueName() {
-    //    groupService.create(entityGenerator.createGroup("Group One"));
-    //    groupService.create(entityGenerator.createGroup("Group Two"));
-    //    assertThatExceptionOfType(DataIntegrityViolationException.class)
-    //        .isThrownBy(() -> groupService.create(entityGenerator.createGroup("Group One")));
-    assertThat(1).isEqualTo(2);
-    // TODO Check for uniqueness in application, currently only SQL
-  }
-
   // Get
   @Test
   public void testGet() {
@@ -142,7 +131,6 @@ public class GroupsServiceTest {
   @Test
   @Ignore
   public void testGetByNameNotFound() {
-    // TODO Currently returning null, should throw exception (EntityNotFoundException?)
     assertThatExceptionOfType(EntityNotFoundException.class)
         .isThrownBy(() -> groupService.getByName("Group One"));
   }
@@ -429,28 +417,6 @@ public class GroupsServiceTest {
         GroupRequest.builder().name("NonExistent").status(PENDING).description("").build();
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> groupService.partialUpdate(nonExistentId, nonExistentEntity));
-  }
-
-  @Test
-  @Ignore
-  public void testUpdateNameNotAllowed() {
-    //    entityGenerator.setupTestGroups();
-    //    val group = groupService.getByName("Group One");
-    //    group.setName("New Name");
-    //    val updated = groupService.update(group);
-    assertThat(1).isEqualTo(2);
-    // TODO Check for uniqueness in application, currently only SQL
-  }
-
-  @Test
-  @Ignore
-  public void testUpdateStatusNotInAllowedEnum() {
-    //    entityGenerator.setupTestGroups();
-    //    val group = groupService.getByName("Group One");
-    //    group.setStatus("Junk");
-    //    val updated = groupService.update(group);
-    assertThat(1).isEqualTo(2);
-    // TODO Check for uniqueness in application, currently only SQL
   }
 
   // Add Apps to Group

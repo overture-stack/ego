@@ -1,8 +1,5 @@
 package bio.overture.ego.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.entity.Group;
@@ -10,10 +7,6 @@ import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.EntityGenerator;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
@@ -25,6 +18,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -50,21 +51,6 @@ public class PolicyServiceTest {
   public void testCreate() {
     val policy = entityGenerator.setupPolicy("Study001,Group One");
     assertThat(policy.getName()).isEqualTo("Study001");
-  }
-
-  @Test
-  @Ignore
-  public void testCreateUniqueName() {
-    //    policyService.create(entityGenerator.createPolicy(Pair.of("Study001",
-    // groups.get(0).getId())));
-    //    policyService.create(entityGenerator.createPolicy(Pair.of("Study002",
-    // groups.get(0).getId())));
-    //    assertThatExceptionOfType(DataIntegrityViolationException.class)
-    //        .isThrownBy(() ->
-    // policyService.create(entityGenerator.createPolicy(Pair.of("Study001",
-    // groups.get(0).getId()))));
-    assertThat(1).isEqualTo(2);
-    // TODO Check for uniqueness in application, currently only SQL
   }
 
   // Read

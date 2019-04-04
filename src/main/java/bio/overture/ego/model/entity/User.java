@@ -64,8 +64,6 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
-// TODO: simplify annotations. Find common annotations for Ego entities, and put them all under a
-// single annotation
 @Slf4j
 @Entity
 @Table(name = Tables.EGOUSER)
@@ -155,7 +153,6 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   private LanguageType preferredLanguage;
 
-  // TODO: [rtisma] test that always initialized with empty set
   @JsonIgnore
   @OneToMany(
       mappedBy = JavaFields.OWNER,
