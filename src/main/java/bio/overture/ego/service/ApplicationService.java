@@ -58,6 +58,7 @@ import java.util.UUID;
 
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
 import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
@@ -274,6 +275,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   }
 
   private void validateCreateRequest(CreateApplicationRequest r) {
+    checkRequestValid(r);
     checkNameUnique(r.getName());
     checkClientIdUnique(r.getClientId());
   }

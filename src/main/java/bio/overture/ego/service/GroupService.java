@@ -50,6 +50,7 @@ import java.util.UUID;
 
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.utils.CollectionUtils.difference;
 import static bio.overture.ego.utils.CollectionUtils.intersection;
@@ -107,7 +108,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
   }
 
   public Group create(@NonNull GroupRequest request) {
-    checkNameUnique(request.getName());
+    validateCreateRequest(request);
     val group = GROUP_CONVERTER.convertToGroup(request);
     return getRepository().save(group);
   }
@@ -347,6 +348,11 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
                         .buildById(id));
     checkNotFound(result.isPresent(), "The groupId '%s' does not exist", id);
     return result.get();
+  }
+
+  private void validateCreateRequest(GroupRequest createRequest) {
+    checkRequestValid(createRequest);
+    checkNameUnique(createRequest.getName());
   }
 
   private void validateUpdateRequest(Group originalGroup, GroupRequest updateRequest) {

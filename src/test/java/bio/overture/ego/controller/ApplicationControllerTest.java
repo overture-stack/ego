@@ -187,18 +187,32 @@ public class ApplicationControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @Ignore
+  @Ignore("Should be tested")
   public void findApplications_FindSomeQuery_Success() {
     throw new NotImplementedException(
         "need to implement the test 'getApplications_FindSomeQuery_Success'");
   }
 
-  @Test
-  public void nullValidation_NonExistentApplication_BadRequest(){
-    throw new NotImplementedException(
-        "need to implement the test 'nullValidation_NonExistentApplication_BadRequest'");
-  }
+	@Test
+  @Ignore("Should be tested")
+	public void getGroupsFromApplication_FindSomeQuery_Success(){
+		throw new NotImplementedException("need to implement the test 'getGroupsFromApplication_FindSomeQuery_Success'");
+	}
 
+	@Test
+  @Ignore("Should be tested")
+	public void getUsersFromApplication_FindSomeQuery_Success(){
+		throw new NotImplementedException("need to implement the test 'getUsersFromApplication_FindSomeQuery_Success'");
+	}
+
+  @Test
+  public void createApplication_NullValuesForRequiredFields_BadRequest(){
+    // Create with null values
+    val r1 = CreateApplicationRequest.builder().build();
+
+    // Assert that a bad request is returned
+    createApplicationPostRequestAnd(r1).assertBadRequest();
+  }
 
   @Test
   public void createApplication_NonExisting_Success() {

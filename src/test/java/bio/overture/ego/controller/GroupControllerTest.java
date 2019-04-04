@@ -353,6 +353,14 @@ public class GroupControllerTest extends AbstractControllerTest {
     createGroupPostRequestAnd(createRequest).assertConflict();
   }
 
+  public void createGroup_NullValueButRequired_BadRequest(){
+    // Create an empty createRequest for groups
+    val createRequest = GroupRequest.builder().build();
+
+    // Assert that an empty request results in a badrequest
+    createGroupPostRequestAnd(createRequest).assertBadRequest();
+  }
+
   @Test
   public void deleteGroup_NonExisting_Conflict() {
     val nonExistingId = generateNonExistentId(groupService);
@@ -956,7 +964,7 @@ public class GroupControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @Ignore
+  @Ignore("should be tested")
   public void getScopes_FindSomeQuery_Success() {
     throw new NotImplementedException(
         "need to implement the test 'getScopes_FindSomeQuery_Success'");
@@ -1079,7 +1087,7 @@ public class GroupControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @Ignore
+  @Ignore("should be tested")
   public void getAppsFromGroup_FindAllQuery_Success() {
     throw new NotImplementedException(
         "need to implement the test 'getAppsFromGroup_FindAllQuery_Success'");
@@ -1097,7 +1105,7 @@ public class GroupControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @Ignore
+  @Ignore("should be tested")
   public void getAppsFromGroup_FindSomeQuery_Success() {
     throw new NotImplementedException(
         "need to implement the test 'getAppsFromGroup_FindSomeQuery_Success'");

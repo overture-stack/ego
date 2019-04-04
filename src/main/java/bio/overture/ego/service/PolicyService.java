@@ -1,14 +1,5 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
-import static bio.overture.ego.model.enums.JavaFields.USERPERMISSIONS;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static javax.persistence.criteria.JoinType.LEFT;
-import static org.mapstruct.factory.Mappers.getMapper;
-
 import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.entity.Policy;
@@ -17,9 +8,6 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.PolicyRepository;
 import bio.overture.ego.repository.queryspecification.PolicySpecification;
 import bio.overture.ego.utils.Collectors;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -34,6 +22,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
+import static bio.overture.ego.model.enums.JavaFields.USERPERMISSIONS;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static javax.persistence.criteria.JoinType.LEFT;
+import static org.mapstruct.factory.Mappers.getMapper;
 
 @Slf4j
 @Service
@@ -58,7 +60,7 @@ public class PolicyService extends AbstractNamedService<Policy, UUID> {
   }
 
   public Policy create(@NonNull PolicyRequest createRequest) {
-    checkNameUnique(createRequest.getName());
+    validateCreateRequest(createRequest);
     val policy = POLICY_CONVERTER.convertToPolicy(createRequest);
     return getRepository().save(policy);
   }
@@ -93,6 +95,11 @@ public class PolicyService extends AbstractNamedService<Policy, UUID> {
     validateUpdateRequest(policy, updateRequest);
     POLICY_CONVERTER.updatePolicy(updateRequest, policy);
     return getRepository().save(policy);
+  }
+
+  private void validateCreateRequest(PolicyRequest createRequest) {
+    checkRequestValid(createRequest);
+    checkNameUnique(createRequest.getName());
   }
 
   private void validateUpdateRequest(Policy originalPolicy, PolicyRequest updateRequest) {

@@ -7,13 +7,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
+import javax.validation.constraints.NotNull;
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class MaskDTO {
 
-  @NonNull private AccessLevel mask;
+  @NotNull
+  @NonNull
+  private AccessLevel mask;
 
   public static MaskDTO createMaskDTO(AccessLevel mask) {
     return new MaskDTO(mask);

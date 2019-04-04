@@ -63,6 +63,7 @@ import java.util.UUID;
 
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
@@ -122,7 +123,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   public User create(@NonNull CreateUserRequest request) {
-    checkEmailUnique(request.getEmail());
+    validateCreateRequest(request);
     val user = USER_CONVERTER.convertToUser(request);
     return getRepository().save(user);
   }
@@ -285,6 +286,11 @@ public class UserService extends AbstractNamedService<User, UUID> {
                 .and(UserSpecification.containsText(query))
                 .and(UserSpecification.filterBy(filters)),
             pageable);
+  }
+
+  private void validateCreateRequest(CreateUserRequest r ) {
+    checkRequestValid(r);
+    checkEmailUnique(r.getEmail());
   }
 
   private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {

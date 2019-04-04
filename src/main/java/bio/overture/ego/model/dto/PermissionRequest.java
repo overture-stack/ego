@@ -1,12 +1,14 @@
 package bio.overture.ego.model.dto;
 
 import bio.overture.ego.model.enums.AccessLevel;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+
+import javax.validation.constraints.NotNull;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -14,9 +16,13 @@ import lombok.NonNull;
 @AllArgsConstructor
 public class PermissionRequest {
 
-  @NonNull private UUID policyId;
+  @NotNull
+  @NonNull
+  private UUID policyId;
 
-  @NonNull private AccessLevel mask;
+  @NotNull
+  @NonNull
+  private AccessLevel mask;
 
   @Override
   public String toString() {
