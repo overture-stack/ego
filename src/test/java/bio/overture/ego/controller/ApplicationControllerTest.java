@@ -194,6 +194,13 @@ public class ApplicationControllerTest extends AbstractControllerTest {
   }
 
   @Test
+  public void nullValidation_NonExistentApplication_BadRequest(){
+    throw new NotImplementedException(
+        "need to implement the test 'nullValidation_NonExistentApplication_BadRequest'");
+  }
+
+
+  @Test
   public void createApplication_NonExisting_Success() {
     // Create application request
     val createRequest =
