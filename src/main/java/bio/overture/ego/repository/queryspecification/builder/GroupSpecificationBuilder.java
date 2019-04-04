@@ -23,7 +23,7 @@ public class GroupSpecificationBuilder extends AbstractSpecificationBuilder<Grou
   private boolean fetchUserGroups;
   private boolean fetchGroupPermissions;
 
-  @SuppressWarnings("Duplicates") @Override
+  @Override
   protected Root<Group> setupFetchStrategy(Root<Group> root) {
     if (fetchApplications) {
       val fromGroupApplications = root.fetch(GROUPAPPLICATIONS, LEFT);
