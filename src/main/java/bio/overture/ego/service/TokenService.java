@@ -340,6 +340,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   @SneakyThrows
   public TokenScopeResponse checkToken(String authToken, String token) {
     if (token == null) {
+      log.debug("Null token");
       throw new InvalidTokenException("No token field found in POST request");
     }
 
