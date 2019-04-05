@@ -16,12 +16,6 @@
 
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
-import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
-import static bio.overture.ego.controller.resolver.PageableResolver.SORT;
-import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
@@ -29,7 +23,6 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.Fields;
-import bio.overture.ego.model.exceptions.PostWithIdentifierException;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
@@ -42,24 +35,34 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
-import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
+
+import java.util.List;
+import java.util.UUID;
+
+import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
+import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
+import static bio.overture.ego.controller.resolver.PageableResolver.SORT;
+import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
+import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 @Slf4j
 @RestController
@@ -83,7 +86,7 @@ public class ApplicationController {
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.GET, value = "")
+  @RequestMapping(method = GET, value = "")
   @ApiImplicitParams({
     @ApiImplicitParam(
         name = LIMIT,
@@ -113,7 +116,7 @@ public class ApplicationController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Applications")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Application> findApplications(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
@@ -125,61 +128,54 @@ public class ApplicationController {
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.POST, value = "")
+  @RequestMapping(method = POST, value = "")
   @ApiResponses(
       value = {
-        @ApiResponse(code = 200, message = "New Application", response = Application.class),
-        @ApiResponse(
-            code = 400,
-            message = PostWithIdentifierException.reason,
-            response = Application.class)
+        @ApiResponse(code = 200, message = "New Application", response = Application.class)
       })
-  public @ResponseBody Application create(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+  public @ResponseBody Application createApplication(
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @RequestBody(required = true) CreateApplicationRequest request) {
     return applicationService.create(request);
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.GET, value = "/{id}")
+  @RequestMapping(method = GET, value = "/{id}")
   @ApiResponses(
       value = {
         @ApiResponse(code = 200, message = "Application Details", response = Application.class)
       })
   @JsonView(Views.REST.class)
-  public @ResponseBody Application get(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+  public @ResponseBody Application getApplication(
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id) {
     return applicationService.getById(id);
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
+  @RequestMapping(method = PUT, value = "/{id}")
   @ApiResponses(
       value = {
         @ApiResponse(code = 200, message = "Updated application info", response = Application.class)
       })
   public @ResponseBody Application updateApplication(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(name = "id", required = true) UUID id,
       @RequestBody(required = true) UpdateApplicationRequest updateRequest) {
     return applicationService.partialUpdate(id, updateRequest);
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}")
+  @RequestMapping(method = DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteApplication(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id) {
     applicationService.delete(id);
   }
 
-  /*
-  Users related endpoints
-   */
   @AdminScoped
-  @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
+  @RequestMapping(method = GET, value = "/{id}/users")
   @ApiImplicitParams({
     @ApiImplicitParam(
         name = LIMIT,
@@ -214,8 +210,8 @@ public class ApplicationController {
   })
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Users for an Application")})
   @JsonView(Views.REST.class)
-  public @ResponseBody PageDTO<User> getApplicationUsers(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+  public @ResponseBody PageDTO<User> getUsersForApplication(
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
@@ -227,11 +223,8 @@ public class ApplicationController {
     }
   }
 
-  /*
-  Groups related endpoints
-   */
   @AdminScoped
-  @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
+  @RequestMapping(method = GET, value = "/{id}/groups")
   @ApiImplicitParams({
     @ApiImplicitParam(
         name = LIMIT,
@@ -266,8 +259,8 @@ public class ApplicationController {
   })
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Groups for an Application")})
   @JsonView(Views.REST.class)
-  public @ResponseBody PageDTO<Group> getApplicationsGroups(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+  public @ResponseBody PageDTO<Group> getGroupsForApplication(
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,

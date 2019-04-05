@@ -27,14 +27,24 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @Slf4j
 @RestController
@@ -58,8 +68,8 @@ public class AuthController {
     this.tokenSigner = tokenSigner;
   }
 
-  @RequestMapping(method = RequestMethod.GET, value = "/google/token")
-  @ResponseStatus(value = HttpStatus.OK)
+  @RequestMapping(method = GET, value = "/google/token")
+  @ResponseStatus(value = OK)
   @SneakyThrows
   public @ResponseBody String exchangeGoogleTokenForAuth(
       @RequestHeader(value = "token") final String idToken) {
@@ -69,8 +79,8 @@ public class AuthController {
     return tokenService.generateUserToken(authInfo);
   }
 
-  @RequestMapping(method = RequestMethod.GET, value = "/facebook/token")
-  @ResponseStatus(value = HttpStatus.OK)
+  @RequestMapping(method = GET, value = "/facebook/token")
+  @ResponseStatus(value = OK)
   @SneakyThrows
   public @ResponseBody String exchangeFacebookTokenForAuth(
       @RequestHeader(value = "token") final String idToken) {
@@ -84,8 +94,8 @@ public class AuthController {
     }
   }
 
-  @RequestMapping(method = RequestMethod.GET, value = "/token/verify")
-  @ResponseStatus(value = HttpStatus.OK)
+  @RequestMapping(method = GET, value = "/token/verify")
+  @ResponseStatus(value = OK)
   @SneakyThrows
   public @ResponseBody boolean verifyJWToken(@RequestHeader(value = "token") final String token) {
     if (StringUtils.isEmpty(token)) {
@@ -98,23 +108,23 @@ public class AuthController {
     return true;
   }
 
-  @RequestMapping(method = RequestMethod.GET, value = "/token/public_key")
-  @ResponseStatus(value = HttpStatus.OK)
+  @RequestMapping(method = GET, value = "/token/public_key")
+  @ResponseStatus(value = OK)
   public @ResponseBody String getPublicKey() {
     val pubKey = tokenSigner.getEncodedPublicKey();
     return pubKey.orElse("");
   }
 
   @RequestMapping(
-      method = {RequestMethod.GET, RequestMethod.POST},
+      method = { GET, POST},
       value = "/ego-token")
   @SneakyThrows
   public ResponseEntity<String> user(OAuth2Authentication authentication) {
     if (authentication == null)
-      return new ResponseEntity<>("Please login", HttpStatus.UNAUTHORIZED);
+      return new ResponseEntity<>("Please login", UNAUTHORIZED);
     String token = tokenService.generateUserToken((IDToken) authentication.getPrincipal());
     SecurityContextHolder.getContext().setAuthentication(null);
-    return new ResponseEntity<>(token, HttpStatus.OK);
+    return new ResponseEntity<>(token, OK);
   }
 
   @ExceptionHandler({InvalidTokenException.class})
@@ -122,13 +132,13 @@ public class AuthController {
     log.error(String.format("InvalidTokenException: %s", ex.getMessage()));
     log.error("ID ScopedAccessToken not found.");
     return new ResponseEntity<>(
-        "Invalid ID ScopedAccessToken provided.", new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        "Invalid ID ScopedAccessToken provided.", new HttpHeaders(), BAD_REQUEST);
   }
 
   @ExceptionHandler({InvalidScopeException.class})
   public ResponseEntity<Object> handleInvalidScopeException(InvalidTokenException ex) {
     log.error(String.format("Invalid ScopeName: %s", ex.getMessage()));
     return new ResponseEntity<>(
-        String.format("{\"error\": \"%s\"}", ex.getMessage()), HttpStatus.BAD_REQUEST);
+        String.format("{\"error\": \"%s\"}", ex.getMessage()), BAD_REQUEST);
   }
 }

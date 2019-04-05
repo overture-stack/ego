@@ -1,10 +1,5 @@
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
-import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
-import static bio.overture.ego.controller.resolver.PageableResolver.SORT;
-import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
-
 import bio.overture.ego.model.dto.GenericResponse;
 import bio.overture.ego.model.dto.MaskDTO;
 import bio.overture.ego.model.dto.PageDTO;
@@ -14,7 +9,6 @@ import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.enums.Fields;
-import bio.overture.ego.model.exceptions.PostWithIdentifierException;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
@@ -28,23 +22,32 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
-import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
+
+import java.util.List;
+import java.util.UUID;
+
+import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
+import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
+import static bio.overture.ego.controller.resolver.PageableResolver.SORT;
+import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
+import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 @Slf4j
 @RestController
@@ -68,18 +71,18 @@ public class PolicyController {
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.GET, value = "/{id}")
+  @RequestMapping(method = GET, value = "/{id}")
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Get policy by id", response = Policy.class)})
   @JsonView(Views.REST.class)
   public @ResponseBody Policy get(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id) {
     return policyService.getById(id);
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.GET, value = "")
+  @RequestMapping(method = GET, value = "")
   @ApiImplicitParams({
     @ApiImplicitParam(
         name = Fields.ID,
@@ -115,55 +118,51 @@ public class PolicyController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Policies")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Policy> getPolicies(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
     return new PageDTO<>(policyService.listPolicies(filters, pageable));
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.POST, value = "")
+  @RequestMapping(method = POST, value = "")
   @ApiResponses(
       value = {
         @ApiResponse(code = 200, message = "New Policy", response = Policy.class),
-        @ApiResponse(
-            code = 400,
-            message = PostWithIdentifierException.reason,
-            response = Policy.class)
       })
   public @ResponseBody Policy create(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @RequestBody(required = true) PolicyRequest createRequest) {
     return policyService.create(createRequest);
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
+  @RequestMapping(method = PUT, value = "/{id}")
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Updated Policy", response = Policy.class)})
   public @ResponseBody Policy update(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id") UUID id,
       @RequestBody(required = true) PolicyRequest updatedRequst) {
     return policyService.partialUpdate(id, updatedRequst);
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}")
+  @RequestMapping(method = DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void delete(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id) {
     policyService.delete(id);
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.POST, value = "/{id}/permission/group/{group_id}")
+  @RequestMapping(method = POST, value = "/{id}/permission/group/{group_id}")
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Add group permission", response = String.class)})
   @JsonView(Views.REST.class)
   public @ResponseBody Group createGroupPermission(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "group_id", required = true) UUID groupId,
       @RequestBody(required = true) MaskDTO maskDTO) {
@@ -172,7 +171,7 @@ public class PolicyController {
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/permission/group/{group_id}")
+  @RequestMapping(method = DELETE, value = "/{id}/permission/group/{group_id}")
   @ApiResponses(
       value = {
         @ApiResponse(
@@ -181,7 +180,7 @@ public class PolicyController {
             response = GenericResponse.class)
       })
   public @ResponseBody GenericResponse deleteGroupPermission(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "group_id", required = true) UUID groupId) {
     groupPermissionService.deleteByPolicyAndOwner(id, groupId);
@@ -189,11 +188,11 @@ public class PolicyController {
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.POST, value = "/{id}/permission/user/{user_id}")
+  @RequestMapping(method = POST, value = "/{id}/permission/user/{user_id}")
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Add user permission", response = String.class)})
   public @ResponseBody String createUserPermission(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "user_id", required = true) UUID userId,
       @RequestBody(required = true) MaskDTO maskDTO) {
@@ -204,7 +203,7 @@ public class PolicyController {
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/permission/user/{user_id}")
+  @RequestMapping(method = DELETE, value = "/{id}/permission/user/{user_id}")
   @ApiResponses(
       value = {
         @ApiResponse(
@@ -213,7 +212,7 @@ public class PolicyController {
             response = GenericResponse.class)
       })
   public @ResponseBody GenericResponse deleteUserPermission(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "user_id", required = true) UUID userId) {
 
@@ -222,7 +221,7 @@ public class PolicyController {
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.GET, value = "/{id}/users")
+  @RequestMapping(method = GET, value = "/{id}/users")
   @ApiResponses(
       value = {
         @ApiResponse(
@@ -231,13 +230,13 @@ public class PolicyController {
             response = String.class)
       })
   public @ResponseBody List<PolicyResponse> findUserIds(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id) {
     return userPermissionService.findByPolicy(id);
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups")
+  @RequestMapping(method = GET, value = "/{id}/groups")
   @ApiResponses(
       value = {
         @ApiResponse(
@@ -246,7 +245,7 @@ public class PolicyController {
             response = String.class)
       })
   public @ResponseBody List<PolicyResponse> findGroupIds(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id) {
     return groupPermissionService.findByPolicy(id);
   }

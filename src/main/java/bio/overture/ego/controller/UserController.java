@@ -16,12 +16,6 @@
 
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
-import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
-import static bio.overture.ego.controller.resolver.PageableResolver.SORT;
-import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
-import static org.springframework.util.StringUtils.isEmpty;
-
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.dto.PermissionRequest;
@@ -31,7 +25,6 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.enums.Fields;
-import bio.overture.ego.model.exceptions.PostWithIdentifierException;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
@@ -46,18 +39,12 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
-import java.util.UUID;
-import javax.persistence.EntityNotFoundException;
-import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -68,6 +55,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
+
+import java.util.List;
+import java.util.UUID;
+
+import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
+import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
+import static bio.overture.ego.controller.resolver.PageableResolver.SORT;
+import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
+import static org.springframework.util.StringUtils.isEmpty;
 
 @Slf4j
 @RestController
@@ -129,7 +125,7 @@ public class UserController {
   })
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Users")})
   @JsonView(Views.REST.class)
-  public @ResponseBody PageDTO<User> getUsersList(
+  public @ResponseBody PageDTO<User> findUsers(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @ApiParam(
               value =
@@ -151,12 +147,8 @@ public class UserController {
   @ApiResponses(
       value = {
         @ApiResponse(code = 200, message = "Create new user", response = User.class),
-        @ApiResponse(
-            code = 400,
-            message = PostWithIdentifierException.reason,
-            response = User.class)
       })
-  public @ResponseBody User create(
+  public @ResponseBody User createUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @RequestBody(required = true) CreateUserRequest request) {
     return userService.create(request);
@@ -250,7 +242,7 @@ public class UserController {
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/permissions/{permissionIds}")
-  @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete user permissions")})
+  @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete User permissions")})
   @ResponseStatus(value = HttpStatus.OK)
   public void deletePermissions(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
@@ -298,7 +290,7 @@ public class UserController {
   })
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Groups for a User")})
   @JsonView(Views.REST.class)
-  public @ResponseBody PageDTO<Group> getUsersGroups(
+  public @ResponseBody PageDTO<Group> getGroupsFromUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
@@ -326,7 +318,7 @@ public class UserController {
   @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/groups/{groupIDs}")
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete Groups from User")})
   @ResponseStatus(value = HttpStatus.OK)
-  public void deleteGroupFromUser(
+  public void deleteGroupsFromUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "groupIDs", required = true) List<UUID> groupIds) {
@@ -372,7 +364,7 @@ public class UserController {
   })
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Applications for a User")})
   @JsonView(Views.REST.class)
-  public @ResponseBody PageDTO<Application> getUsersApplications(
+  public @ResponseBody PageDTO<Application> getApplicationsFromUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
@@ -390,9 +382,9 @@ public class UserController {
   @RequestMapping(method = RequestMethod.POST, value = "/{id}/applications")
   @ApiResponses(
       value = {
-        @ApiResponse(code = 200, message = "Add Applications to user", response = User.class)
+        @ApiResponse(code = 200, message = "Add Applications to User", response = User.class)
       })
-  public @ResponseBody User addAppsToUser(
+  public @ResponseBody User addApplicationsToUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<UUID> appIds) {
@@ -403,18 +395,11 @@ public class UserController {
   @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/applications/{appIds}")
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete Applications from User")})
   @ResponseStatus(value = HttpStatus.OK)
-  public void deleteAppFromUser(
+  public void deleteApplicationsFromUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "appIds", required = true) List<UUID> appIds) {
     userService.deleteUserFromApps(id, appIds);
   }
 
-  @ExceptionHandler({EntityNotFoundException.class})
-  public ResponseEntity<Object> handleEntityNotFoundException(
-      HttpServletRequest req, EntityNotFoundException ex) {
-    log.error("User ID not found.");
-    return new ResponseEntity<Object>(
-        "Invalid User ID provided.", new HttpHeaders(), HttpStatus.BAD_REQUEST);
-  }
 }
