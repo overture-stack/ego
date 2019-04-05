@@ -319,7 +319,7 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/check_token").body(params).post();
 
     val statusCode = response.getStatusCode();
-    assertThat(statusCode).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(statusCode).isEqualTo(HttpStatus.UNAUTHORIZED);
   }
 
   @SneakyThrows
@@ -354,7 +354,7 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/check_token").body(params).post();
 
     val statusCode = response.getStatusCode();
-    assertThat(statusCode).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(statusCode).isEqualTo(HttpStatus.UNAUTHORIZED);
   }
 
   @SneakyThrows

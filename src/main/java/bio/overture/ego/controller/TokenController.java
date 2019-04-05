@@ -21,10 +21,12 @@ import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.MULTI_STATUS;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
@@ -45,6 +47,8 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
@@ -131,17 +135,15 @@ public class TokenController {
   public ResponseEntity<Object> handleInvalidTokenException(
       HttpServletRequest req, InvalidTokenException ex) {
     log.error(format("ID ScopedAccessToken not found.:%s", ex.toString()));
-    return new ResponseEntity<>(
-        format("{\"error\": \"Invalid ID ScopedAccessToken provided:'%s'\"}", ex.toString()),
-        new HttpHeaders(),
-        BAD_REQUEST);
+    return errorResponse(UNAUTHORIZED, "Invalid token: %s", ex);
   }
 
   @ExceptionHandler({InvalidScopeException.class})
   public ResponseEntity<Object> handleInvalidScopeException(
       HttpServletRequest req, InvalidTokenException ex) {
     log.error(format("Invalid PolicyIdStringWithMaskName: %s", ex.getMessage()));
-    return new ResponseEntity<>("{\"error\": \"%s\"}".format(ex.getMessage()), BAD_REQUEST);
+    return new ResponseEntity<>(
+        "{\"error\": \"Invalid Scope\"}", new HttpHeaders(), UNAUTHORIZED);
   }
 
   @ExceptionHandler({InvalidRequestException.class})
@@ -155,6 +157,18 @@ public class TokenController {
   public ResponseEntity<Object> handleUserNotFoundException(
       HttpServletRequest req, InvalidTokenException ex) {
     log.error(format("User not found: %s", ex.getMessage()));
-    return new ResponseEntity<>("{\"error\": \"%s\"}".format(ex.getMessage()), BAD_REQUEST);
+    return new ResponseEntity<>("{\"error\": \"User not found\"}", UNAUTHORIZED);
+  }
+
+  private String jsonEscape(String text) {
+    return text.replace("\"", "\\\"");
+  }
+
+  private ResponseEntity<Object> errorResponse(HttpStatus status, String fmt, Exception ex) {
+    log.error(format(fmt, ex.getMessage()));
+    val headers = new HttpHeaders();
+    headers.setContentType(APPLICATION_JSON);
+    val msg = format("{\"error\": \"%s\"}", jsonEscape(ex.getMessage()));
+    return new ResponseEntity<>(msg, status);
   }
 }

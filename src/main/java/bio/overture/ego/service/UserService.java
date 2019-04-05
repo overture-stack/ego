@@ -127,6 +127,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Optional<User> findByName(String name) {
     return (Optional<User>)
@@ -139,6 +140,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
                     .buildByNameIgnoreCase(name));
   }
 
+  @SuppressWarnings("unchecked")
   public User get(
       @NonNull UUID id,
       boolean fetchUserPermissions,
@@ -196,10 +198,12 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<User> listUsers(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository().findAll(UserSpecification.filterBy(filters), pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<User> findUsers(
       @NonNull String query, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository()
@@ -241,6 +245,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     getRepository().save(user);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<User> findUsersForGroup(
       @NonNull UUID groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     checkEntityExistence(Group.class, groupRepository, groupId);
@@ -249,6 +254,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
         pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<User> findUsersForGroup(
       @NonNull UUID groupId,
       @NonNull String query,
@@ -262,6 +268,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
         pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<User> findUsersForApplication(
       @NonNull UUID appId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     applicationService.checkExistence(appId);
@@ -271,6 +278,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
             pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<User> findUsersForApplication(
       @NonNull UUID appId,
       @NonNull String query,
@@ -299,6 +307,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
         !userRepository.existsByEmailIgnoreCase(email), "A user with same email already exists");
   }
 
+  @SuppressWarnings("unchecked")
   public static Set<AbstractPermission> resolveUsersPermissions(User user) {
     val up = user.getUserPermissions();
     Collection<UserPermission> userPermissions = isNull(up) ? ImmutableList.of() : up;
