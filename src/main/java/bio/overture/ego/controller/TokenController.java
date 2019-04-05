@@ -16,6 +16,16 @@
 
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static java.lang.String.format;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.MULTI_STATUS;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
+
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
@@ -24,6 +34,11 @@ import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.security.ApplicationScoped;
 import bio.overture.ego.service.TokenService;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -42,22 +57,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static java.lang.String.format;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.MULTI_STATUS;
-import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @Slf4j
 @RestController
@@ -142,23 +141,20 @@ public class TokenController {
   public ResponseEntity<Object> handleInvalidScopeException(
       HttpServletRequest req, InvalidTokenException ex) {
     log.error(format("Invalid PolicyIdStringWithMaskName: %s", ex.getMessage()));
-    return new ResponseEntity<>(
-        "{\"error\": \"%s\"}".format(ex.getMessage()), BAD_REQUEST);
+    return new ResponseEntity<>("{\"error\": \"%s\"}".format(ex.getMessage()), BAD_REQUEST);
   }
 
   @ExceptionHandler({InvalidRequestException.class})
   public ResponseEntity<Object> handleInvalidRequestException(
       HttpServletRequest req, InvalidRequestException ex) {
     log.error(format("Invalid request: %s", ex.getMessage()));
-    return new ResponseEntity<>(
-        "{\"error\": \"%s\"}".format(ex.getMessage()), BAD_REQUEST);
+    return new ResponseEntity<>("{\"error\": \"%s\"}".format(ex.getMessage()), BAD_REQUEST);
   }
 
   @ExceptionHandler({UsernameNotFoundException.class})
   public ResponseEntity<Object> handleUserNotFoundException(
       HttpServletRequest req, InvalidTokenException ex) {
     log.error(format("User not found: %s", ex.getMessage()));
-    return new ResponseEntity<>(
-        "{\"error\": \"%s\"}".format(ex.getMessage()), BAD_REQUEST);
+    return new ResponseEntity<>("{\"error\": \"%s\"}".format(ex.getMessage()), BAD_REQUEST);
   }
 }

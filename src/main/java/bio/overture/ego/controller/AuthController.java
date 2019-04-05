@@ -16,6 +16,12 @@
 
 package bio.overture.ego.controller;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
+
 import bio.overture.ego.provider.facebook.FacebookTokenService;
 import bio.overture.ego.provider.google.GoogleTokenService;
 import bio.overture.ego.service.TokenService;
@@ -39,12 +45,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @Slf4j
 @RestController
@@ -116,12 +116,11 @@ public class AuthController {
   }
 
   @RequestMapping(
-      method = { GET, POST},
+      method = {GET, POST},
       value = "/ego-token")
   @SneakyThrows
   public ResponseEntity<String> user(OAuth2Authentication authentication) {
-    if (authentication == null)
-      return new ResponseEntity<>("Please login", UNAUTHORIZED);
+    if (authentication == null) return new ResponseEntity<>("Please login", UNAUTHORIZED);
     String token = tokenService.generateUserToken((IDToken) authentication.getPrincipal());
     SecurityContextHolder.getContext().setAuthentication(null);
     return new ResponseEntity<>(token, OK);
@@ -138,7 +137,6 @@ public class AuthController {
   @ExceptionHandler({InvalidScopeException.class})
   public ResponseEntity<Object> handleInvalidScopeException(InvalidTokenException ex) {
     log.error(String.format("Invalid ScopeName: %s", ex.getMessage()));
-    return new ResponseEntity<>(
-        String.format("{\"error\": \"%s\"}", ex.getMessage()), BAD_REQUEST);
+    return new ResponseEntity<>(String.format("{\"error\": \"%s\"}", ex.getMessage()), BAD_REQUEST);
   }
 }
