@@ -21,12 +21,12 @@ import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.MULTI_STATUS;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
@@ -48,7 +48,6 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
@@ -142,8 +141,7 @@ public class TokenController {
   public ResponseEntity<Object> handleInvalidScopeException(
       HttpServletRequest req, InvalidTokenException ex) {
     log.error(format("Invalid PolicyIdStringWithMaskName: %s", ex.getMessage()));
-    return new ResponseEntity<>(
-        "{\"error\": \"Invalid Scope\"}", new HttpHeaders(), UNAUTHORIZED);
+    return new ResponseEntity<>("{\"error\": \"Invalid Scope\"}", new HttpHeaders(), UNAUTHORIZED);
   }
 
   @ExceptionHandler({InvalidRequestException.class})
