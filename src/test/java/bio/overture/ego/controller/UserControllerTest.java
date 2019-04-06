@@ -17,21 +17,17 @@
 
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static bio.overture.ego.model.enums.StatusType.REJECTED;
-import static bio.overture.ego.model.enums.UserType.USER;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static bio.overture.ego.utils.Collectors.toImmutableList;
-import static bio.overture.ego.utils.EntityTools.extractUserIds;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.UpdateUserRequest;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.Identifiable;
+import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.LanguageType;
+import bio.overture.ego.model.enums.StatusType;
+import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
@@ -39,10 +35,13 @@ import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.Streams;
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.UUID;
+import lombok.Builder;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.lang.NotImplementedException;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +50,36 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.List;
+import java.util.UUID;
+
+import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
+import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
+import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.NAME;
+import static bio.overture.ego.model.enums.JavaFields.TOKENS;
+import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
+import static bio.overture.ego.model.enums.JavaFields.USERPERMISSIONS;
+import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.StatusType.REJECTED;
+import static bio.overture.ego.model.enums.UserType.USER;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
+import static bio.overture.ego.utils.Collectors.toImmutableList;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static bio.overture.ego.utils.Converters.convertToIds;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentName;
+import static bio.overture.ego.utils.EntityGenerator.randomEnum;
+import static bio.overture.ego.utils.EntityGenerator.randomStringNoSpaces;
+import static bio.overture.ego.utils.EntityTools.extractUserIds;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -393,4 +422,356 @@ public class UserControllerTest extends AbstractControllerTest {
     val appWithoutUser = applicationService.getByClientId("TempGroupApp");
     assertThat(appWithoutUser.getUsers()).isEmpty();
   }
+
+	@Test
+	public void findUsers_FindAllQuery_Success(){
+    // Generate data
+    val data = generateUniqueTestUserData();
+
+    val numUsers = userService.getRepository().count();
+
+    // Assert that you can page users that were created
+    listUsersEndpointAnd()
+        .queryParam(LIMIT, numUsers )
+        .queryParam(OFFSET, 0)
+        .getAnd()
+        .assertPageResultsOfType(User.class)
+        .containsAll(data.getUsers());
+	}
+
+	@Test
+  @Ignore
+	public void findUsers_FindSomeQuery_Success(){
+		throw new NotImplementedException("need to implement the test 'findUsers_FindSomeQuery_Success'");
+	}
+
+	@Test
+	public void createUser_NonExisting_Success(){
+    // Create unique name
+    val name = generateNonExistentName(userService);
+
+    // Create request
+    val r = CreateUserRequest.builder()
+        .email(name+"@gmail.com")
+        .status(randomEnum(StatusType.class))
+        .type(randomEnum(UserType.class))
+        .preferredLanguage(randomEnum(LanguageType.class))
+        .firstName(randomStringNoSpaces(10))
+        .lastName(randomStringNoSpaces(10))
+        .build();
+
+    // Create the user
+    val user = createUserPostRequestAnd(r)
+        .extractOneEntity(User.class);
+    assertThat(user).isEqualToIgnoringGivenFields(r, ID, APPLICATIONS, USERPERMISSIONS, USERGROUPS, TOKENS, NAME);
+
+
+    // Assert the user can be read and matches the request data
+    val r1 = getUserEntityGetRequestAnd(user)
+        .extractOneEntity(User.class);
+    assertThat(r1).isEqualToIgnoringGivenFields(r, ID, APPLICATIONS, USERPERMISSIONS, USERGROUPS, TOKENS, NAME);
+    assertThat(r1).isEqualToIgnoringGivenFields(user);
+	}
+
+	@Test
+	public void createUser_EmailAlreadyExists_Conflict(){
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Get an existing name
+    val existingName = getUserEntityGetRequestAnd(user0)
+        .extractOneEntity(User.class)
+        .getName();
+
+    // Create a request with an existing name
+    val r = CreateUserRequest.builder()
+        .email(existingName)
+        .status(randomEnum(StatusType.class))
+        .type(randomEnum(UserType.class))
+        .preferredLanguage(randomEnum(LanguageType.class))
+        .firstName(randomStringNoSpaces(10))
+        .lastName(randomStringNoSpaces(10))
+        .build();
+
+
+    // Create the user and assert a conflict
+    createUserPostRequestAnd(r).assertConflict();
+	}
+
+	@Test
+	public void createUser_FutureCreatedAtDate_BadRequest(){
+		throw new NotImplementedException("need to implement the test 'createUser_FutureCreatedAtDate_BadRequest'");
+	}
+
+	@Test
+	public void deleteUser_NonExisting_NotFound(){
+    // Create non existent user id
+    val nonExistentId = generateNonExistentId(userService);
+
+    // Assert that you cannot delete a non-existent id
+    deleteGroupDeleteRequestAnd(nonExistentId).assertNotFound();
+	}
+
+	@Test
+	public void deleteUserAndRelationshipsOnly_AlreadyExisting_Success(){
+		throw new NotImplementedException("need to implement the test 'deleteUserAndRelationshipsOnly_AlreadyExisting_Success'");
+	}
+
+	@Test
+	public void getUser_ExistingUser_Success(){
+		throw new NotImplementedException("need to implement the test 'getUser_ExistingUser_Success'");
+	}
+
+	@Test
+	public void getUser_NonExistentUser_NotFound(){
+    // Create non existent user id
+    val nonExistentId = generateNonExistentId(userService);
+
+    // Assert that you cannot get a non-existent id
+    getUserEntityGetRequestAnd(nonExistentId).assertNotFound();
+	}
+
+	@Test
+	public void UUIDValidation_MalformedUUID_BadRequest(){
+		throw new NotImplementedException("need to implement the test 'UUIDValidation_MalformedUUID_BadRequest'");
+	}
+
+	@Test
+	public void updateUser_ExistingUser_Success(){
+		throw new NotImplementedException("need to implement the test 'updateUser_ExistingUser_Success'");
+	}
+
+	@Test
+	public void updateUser_NonExistentUser_NotFound(){
+    // Create non existent user id
+    val nonExistentId = generateNonExistentId(userService);
+
+    val dummyUpdateUserRequest = UpdateUserRequest.builder().build();
+
+    // Assert that you cannot get a non-existent id
+    partialUpdateUserPutRequestAnd(nonExistentId, dummyUpdateUserRequest).assertNotFound();
+	}
+
+	@Test
+	public void updateUser_EmailAlreadyExists_Conflict(){
+		throw new NotImplementedException("need to implement the test 'updateUser_EmailAlreadyExists_Conflict'");
+	}
+
+	@Test
+	public void updateUser_FutureLastLoginDate_BadRequest(){
+		throw new NotImplementedException("need to implement the test 'updateUser_FutureLastLoginDate_BadRequest'");
+	}
+
+	@Test
+	public void updateUser_LastLoginBeforeCreatedAtDate_BadRequest(){
+		throw new NotImplementedException("need to implement the test 'updateUser_LastLoginBeforeCreatedAtDate_BadRequest'");
+	}
+
+	@Test
+	public void statusValidation_MalformedStatus_BadRequest(){
+		throw new NotImplementedException("need to implement the test 'statusValidation_MalformedStatus_BadRequest'");
+	}
+
+	@Test
+	public void typeValidation_MalformedType_BadRequest(){
+		throw new NotImplementedException("need to implement the test 'typeValidation_MalformedType_BadRequest'");
+	}
+
+	@Test
+	public void preferredLanguageValidation_MalformedPreferredLanguage_BadRequest(){
+		throw new NotImplementedException("need to implement the test 'preferredLanguageValidation_MalformedPreferredLanguage_BadRequest'");
+	}
+
+	@Test
+	public void getApplicationsFromUser_FindAllQuery_Success(){
+		throw new NotImplementedException("need to implement the test 'getApplicationsFromUser_FindAllQuery_Success'");
+	}
+
+	@Test
+	public void getApplicationsFromUser_NonExistentUser_NotFound(){
+    // Create non existent user id
+    val nonExistentId = generateNonExistentId(userService);
+
+    // Assert that getting the applicaitons for a non-existent user id results in a NOT_FOUND error
+    getApplicationsForUserGetRequestAnd(nonExistentId).assertNotFound();
+	}
+
+	@Test
+	public void getApplicationsFromUser_FindSomeQuery_Success(){
+		throw new NotImplementedException("need to implement the test 'getApplicationsFromUser_FindSomeQuery_Success'");
+	}
+
+	@Test
+	public void addApplicationsToUser_NonExistentUser_NotFound(){
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val existingApplicationIds = convertToIds(data.getApplications());
+
+    // Create non existent user id
+    val nonExistentId = generateNonExistentId(userService);
+
+    // Assert NOT_FOUND thrown when adding existing applications to a non-existing user
+    addApplicationsToUserPostRequestAnd(nonExistentId, existingApplicationIds).assertNotFound();
+	}
+
+	@Test
+	public void addApplicationsToUser_AllExistingUnassociatedApplications_Success(){
+		throw new NotImplementedException("need to implement the test 'addApplicationsToUser_AllExistingUnassociatedApplications_Success'");
+	}
+
+	@Test
+	public void addApplicationsToUser_SomeExistingApplicationsButAllUnassociated_NotFound(){
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Assert NOT_FOUND thrown when adding non-existing applications to an existing user
+    val someExistingApplicationIds = mapToSet(data.getApplications(), Identifiable::getId);
+    val nonExistingApplicationIds = repeatedCallsOf(() -> generateNonExistentId(applicationService), 10).stream().collect(toImmutableSet());
+    someExistingApplicationIds.addAll(nonExistingApplicationIds);
+
+    addApplicationsToUserPostRequestAnd(user0.getId(), someExistingApplicationIds).assertNotFound();
+	}
+
+	@Test
+	public void addApplicationsToUser_AllExsitingApplicationsButSomeAlreadyAssociated_Conflict(){
+		throw new NotImplementedException("need to implement the test 'addApplicationsToUser_AllExsitingApplicationsButSomeAlreadyAssociated_Conflict'");
+	}
+
+	@Test
+	public void removeApplicationsFromUser_AllExistingAssociatedApplications_Success(){
+		throw new NotImplementedException("need to implement the test 'removeApplicationsFromUser_AllExistingAssociatedApplications_Success'");
+	}
+
+	@Test
+	public void removeApplicationsFromUser_AllExistingApplicationsButSomeNotAssociated_NotFound(){
+    throw new NotImplementedException("sdf");
+	}
+
+	@Test
+	public void removeApplicationsFromUser_SomeNonExistingApplicationsButAllAssociated_NotFound(){
+    throw new NotImplementedException("sdf");
+	}
+
+	@Test
+	public void removeApplicationsFromUser_NonExistentUser_NotFound(){
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val existingApplicationIds = convertToIds(data.getApplications());
+
+    // Create non existent user id
+    val nonExistentId = generateNonExistentId(userService);
+
+    // Assert NOT_FOUND thrown when deleting applications to a non-existing user
+    deleteApplicationsFromUserDeleteRequestAnd(nonExistentId, existingApplicationIds).assertNotFound();
+	}
+
+	@Test
+	public void getGroupsFromUser_FindAllQuery_Success(){
+		throw new NotImplementedException("need to implement the test 'getGroupsFromUser_FindAllQuery_Success'");
+	}
+
+	@Test
+	public void getGroupsFromUser_NonExistentUser_NotFound(){
+    // Create non existent user id
+    val nonExistentId = generateNonExistentId(userService);
+
+    // Assert that a NOT_FOUND error is thrown when attempting to all groups for a non-existent user
+    getGroupsForUserGetRequestAnd(nonExistentId).assertNotFound();
+	}
+
+	@Test
+	public void getGroupsFromUser_FindSomeQuery_Success(){
+		throw new NotImplementedException("need to implement the test 'getGroupsFromUser_FindSomeQuery_Success'");
+	}
+
+	@Test
+	public void addGroupsToUser_NonExistentUser_NotFound(){
+    val data = generateUniqueTestUserData();
+    val existingGroupIds = convertToIds(data.getGroups());
+
+    // Create non existent user id
+    val nonExistentId = generateNonExistentId(userService);
+
+    // Assert that a NOT_FOUND error is thrown when attempting to add existing groups to a non-existing user
+    addGroupsToUserPostRequestAnd(nonExistentId, existingGroupIds).assertNotFound();
+	}
+
+	@Test
+	public void addGroupsToUser_AllExistingUnassociatedGroups_Success(){
+		throw new NotImplementedException("need to implement the test 'addGroupsToUser_AllExistingUnassociatedGroups_Success'");
+	}
+
+	@Test
+	public void addGroupsToUser_SomeExistingGroupsButAllUnassociated_NotFound(){
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Assert NOT_FOUND thrown when adding a mix of existing and non-existing applications to an existing user
+    val someExistingGroupIds = mapToSet(data.getGroups(), Identifiable::getId);
+    val nonExistingGroupIds = repeatedCallsOf(() -> generateNonExistentId(groupService), 10).stream().collect(toImmutableSet());
+    someExistingGroupIds.addAll(nonExistingGroupIds);
+
+    addGroupsToUserPostRequestAnd(user0.getId(), someExistingGroupIds).assertNotFound();
+	}
+
+	@Test
+	public void addGroupsToUser_AllExsitingGroupsButSomeAlreadyAssociated_Conflict(){
+		throw new NotImplementedException("need to implement the test 'addGroupsToUser_AllExsitingGroupsButSomeAlreadyAssociated_Conflict'");
+	}
+
+	@Test
+	public void removeGroupsFromUser_AllExistingAssociatedGroups_Success(){
+		throw new NotImplementedException("need to implement the test 'removeGroupsFromUser_AllExistingAssociatedGroups_Success'");
+	}
+
+	@Test
+	public void removeGroupsFromUser_AllExistingGroupsButSomeNotAssociated_NotFound(){
+		throw new NotImplementedException("need to implement the test 'removeGroupsFromUser_AllExistingGroupsButSomeNotAssociated_NotFound'");
+	}
+
+	@Test
+	public void removeGroupsFromUser_SomeNonExistingGroupsButAllAssociated_NotFound(){
+		throw new NotImplementedException("need to implement the test 'removeGroupsFromUser_SomeNonExistingGroupsButAllAssociated_NotFound'");
+	}
+
+	@Test
+	public void removeGroupsFromUser_NonExistentUser_NotFound(){
+    // Setup data
+    val data = generateUniqueTestUserData();
+    val groupIds = convertToIds(data.getGroups());
+
+    // Create non existent user id
+    val nonExistentId = generateNonExistentId(userService);
+
+    // Assert that a NOT_FOUND error is returned when trying to delete groups from a non-existent user
+    deleteGroupsFromUserDeleteRequestAnd(nonExistentId, groupIds).assertNotFound();
+	}
+
+  @SneakyThrows
+  private TestUserData generateUniqueTestUserData() {
+    val groups = repeatedCallsOf(() -> entityGenerator.generateRandomGroup(), 2);
+    val applications = repeatedCallsOf(() -> entityGenerator.generateRandomApplication(), 2);
+    val policies = repeatedCallsOf(() -> entityGenerator.generateRandomPolicy(), 2);
+    val users = repeatedCallsOf(() -> entityGenerator.generateRandomUser(), 2);
+
+    return TestUserData.builder()
+        .users(users)
+        .groups(groups)
+        .applications(applications)
+        .policies(policies)
+        .build();
+  }
+
+  @lombok.Value
+  @Builder
+  public static class TestUserData {
+    @NonNull private final List<User> users;
+    @NonNull private final List<Group> groups;
+    @NonNull private final List<Application> applications;
+    @NonNull private final List<Policy> policies;
+  }
+
 }
