@@ -23,7 +23,7 @@ import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.TokenService;
 import java.util.Set;
 import lombok.NonNull;
@@ -82,11 +82,10 @@ public class CleanupTokenListener implements ApplicationListener<CleanupUserToke
   }
 
   private Scope convertStringToScope(@NonNull String stringScope) {
-    val parts = stringScope.split("\\.");
+    val s = new ScopeName(stringScope);
 
     val policy = new Policy();
-    policy.setName(parts[0]);
-
-    return new Scope(policy, AccessLevel.fromValue(parts[1]));
+    policy.setName(s.getName());
+    return new Scope(policy, s.getAccessLevel());
   }
 }
