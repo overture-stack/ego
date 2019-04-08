@@ -35,6 +35,7 @@ import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Sets;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -87,6 +88,7 @@ import static bio.overture.ego.utils.EntityGenerator.randomStringNoSpaces;
 import static bio.overture.ego.utils.EntityTools.extractUserIds;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.Streams.stream;
+import static com.google.common.collect.Lists.newArrayList;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -856,7 +858,18 @@ public class UserControllerTest extends AbstractControllerTest {
 
 	@Test
 	public void addApplicationsToUser_AllExistingUnassociatedApplications_Success(){
-		throw new NotImplementedException("need to implement the test 'addApplicationsToUser_AllExistingUnassociatedApplications_Success'");
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Assert the user has no applications
+    getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
+
+    // Add applications to user and assert the response is equal to the user
+    addApplicationsToUserPostRequestAnd(user0, data.getApplications()).assertEntityOfType(User.class).isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+
+    // Assert the user has all the applications
+    getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).containsExactlyInAnyOrderElementsOf(data.getApplications());
 	}
 
 	@Test
@@ -874,23 +887,115 @@ public class UserControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	public void addApplicationsToUser_AllExsitingApplicationsButSomeAlreadyAssociated_Conflict(){
-		throw new NotImplementedException("need to implement the test 'addApplicationsToUser_AllExsitingApplicationsButSomeAlreadyAssociated_Conflict'");
+	public void addApplicationsToUser_AllExistingApplicationsButSomeAlreadyAssociated_Conflict(){
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+    val app0 = data.getApplications().get(0);
+    val app1 = data.getApplications().get(1);
+
+    // Assert the user has no applications
+    getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
+
+    // Add app00 to user and assert the response is equal to the user
+    addApplicationsToUserPostRequestAnd(user0, newArrayList(app0)).assertEntityOfType(User.class).isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+
+    // Assert the user has app0
+    getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).containsExactlyInAnyOrder(app0);
+
+    // Add app0 and app1 to user and assert a CONFLICT error is returned since app0 was already associated
+    addApplicationsToUserPostRequestAnd(user0, newArrayList(app0, app1)).assertConflict();
 	}
 
 	@Test
 	public void removeApplicationsFromUser_AllExistingAssociatedApplications_Success(){
-		throw new NotImplementedException("need to implement the test 'removeApplicationsFromUser_AllExistingAssociatedApplications_Success'");
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Assert the user has no applications
+    getApplicationsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Application.class)
+        .isEmpty();
+
+    // Add apps to user and assert user is returned
+    addApplicationsToUserPostRequestAnd(user0, data.getApplications())
+        .assertEntityOfType(User.class)
+        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+
+    // Assert the user has all the applications
+    getApplicationsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Application.class)
+        .containsExactlyInAnyOrderElementsOf(data.getApplications());
+
+    // Delete applications from user
+    deleteApplicationsFromUserDeleteRequestAnd(user0,data.getApplications()).assertOk();
+
+    // Assert the user has no applications
+    getApplicationsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Application.class)
+        .isEmpty();
 	}
 
 	@Test
 	public void removeApplicationsFromUser_AllExistingApplicationsButSomeNotAssociated_NotFound(){
-    throw new NotImplementedException("sdf");
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+    val app0 = data.getApplications().get(0);
+    val app1 = data.getApplications().get(1);
+
+    // Assert the user has no applications
+    getApplicationsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Application.class)
+        .isEmpty();
+
+    // Add apps to user and assert user is returned
+    addApplicationsToUserPostRequestAnd(user0, newArrayList(app0))
+        .assertEntityOfType(User.class)
+        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+
+    // Assert the user is associated with app0
+    getApplicationsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Application.class)
+        .containsExactlyInAnyOrder(app0);
+
+    // Delete applications from user
+    deleteApplicationsFromUserDeleteRequestAnd(user0, newArrayList(app0, app1)).assertNotFound();
 	}
 
 	@Test
 	public void removeApplicationsFromUser_SomeNonExistingApplicationsButAllAssociated_NotFound(){
-    throw new NotImplementedException("sdf");
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Assert the user has no applications
+    getApplicationsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Application.class)
+        .isEmpty();
+
+    // Add all apps to user
+    addApplicationsToUserPostRequestAnd(user0, data.getApplications())
+        .assertEntityOfType(User.class)
+        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+
+    // Assert the apps were added
+    getApplicationsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Application.class)
+        .containsExactlyInAnyOrderElementsOf(data.getApplications());
+
+    // Create non existing application id
+    val nonExistingApplicationId = generateNonExistentId(applicationService);
+    getApplicationEntityGetRequestAnd(nonExistingApplicationId).assertNotFound();
+
+    // Create a list of application ids with some not existing
+    val someExistingApplicationsIds = Sets.<UUID>newHashSet();
+    someExistingApplicationsIds.addAll(convertToIds(data.getApplications()));
+    someExistingApplicationsIds.add(nonExistingApplicationId);
+
+    // Delete applications from user and assert a NOT_FOUND error was returned due to the non-existing application id
+    deleteApplicationsFromUserDeleteRequestAnd(user0.getId(), someExistingApplicationsIds).assertNotFound();
 	}
 
 	@Test
@@ -908,8 +1013,23 @@ public class UserControllerTest extends AbstractControllerTest {
 
 	@Test
 	public void getGroupsFromUser_FindAllQuery_Success(){
-		throw new NotImplementedException("need to implement the test 'getGroupsFromUser_FindAllQuery_Success'");
-	}
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Assert no groups are associated with the user
+    getGroupsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Group.class)
+        .isEmpty();
+
+    // Add groups to the user
+    addGroupsToUserPostRequestAnd(user0, data.getGroups()).assertOk();
+
+    // Assert all the groups are associated with the user
+    getGroupsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Group.class)
+        .containsExactlyInAnyOrderElementsOf(data.getGroups());
+  }
 
 	@Test
 	public void getGroupsFromUser_NonExistentUser_NotFound(){
