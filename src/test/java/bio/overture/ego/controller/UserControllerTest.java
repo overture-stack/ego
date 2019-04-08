@@ -33,8 +33,8 @@ import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.Streams;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -51,19 +51,27 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
 import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
 import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.CREATEDAT;
 import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.LASTNAME;
 import static bio.overture.ego.model.enums.JavaFields.NAME;
+import static bio.overture.ego.model.enums.JavaFields.PREFERREDLANGUAGE;
+import static bio.overture.ego.model.enums.JavaFields.STATUS;
 import static bio.overture.ego.model.enums.JavaFields.TOKENS;
+import static bio.overture.ego.model.enums.JavaFields.TYPE;
 import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
 import static bio.overture.ego.model.enums.JavaFields.USERPERMISSIONS;
 import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.StatusType.DISABLED;
 import static bio.overture.ego.model.enums.StatusType.REJECTED;
 import static bio.overture.ego.model.enums.UserType.USER;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
@@ -74,8 +82,12 @@ import static bio.overture.ego.utils.Converters.convertToIds;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentName;
 import static bio.overture.ego.utils.EntityGenerator.randomEnum;
+import static bio.overture.ego.utils.EntityGenerator.randomEnumExcluding;
 import static bio.overture.ego.utils.EntityGenerator.randomStringNoSpaces;
 import static bio.overture.ego.utils.EntityTools.extractUserIds;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static bio.overture.ego.utils.Streams.stream;
+import static java.time.temporal.ChronoUnit.DAYS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
@@ -215,7 +227,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // Verify that the returned Users are the ones from the setup.
     Iterable<JsonNode> resultSetIterable = () -> responseJson.get("resultSet").iterator();
     val actualUserNames =
-        Streams.stream(resultSetIterable)
+        stream(resultSetIterable)
             .map(j -> j.get("name").asText())
             .collect(toImmutableList());
     assertThat(actualUserNames)
@@ -500,6 +512,7 @@ public class UserControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+  @Ignore("test not possible as CreateUSerRequest does not have defineable date field")
 	public void createUser_FutureCreatedAtDate_BadRequest(){
 		throw new NotImplementedException("need to implement the test 'createUser_FutureCreatedAtDate_BadRequest'");
 	}
@@ -515,12 +528,41 @@ public class UserControllerTest extends AbstractControllerTest {
 
 	@Test
 	public void deleteUserAndRelationshipsOnly_AlreadyExisting_Success(){
-		throw new NotImplementedException("need to implement the test 'deleteUserAndRelationshipsOnly_AlreadyExisting_Success'");
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Add applications to user
+    addApplicationsToUserPostRequestAnd(user0, data.getApplications()).assertOk();
+
+    // Check applications were added
+    getApplicationsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Application.class)
+        .containsExactlyInAnyOrderElementsOf(data.getApplications());
+
+    // Delete user
+    deleteUserDeleteRequestAnd(user0).assertOk();
+
+    // Check user was deleted
+    getUserEntityGetRequestAnd(user0).assertNotFound();
+
+    // Check applications exist
+    data.getApplications().forEach(application -> getApplicationEntityGetRequestAnd(application).assertOk());
+
+    // Check no users associated with applications
+    data.getApplications().forEach(a -> getUsersForApplicationGetRequestAnd(a).assertPageResultsOfType(User.class).isEmpty());
 	}
 
 	@Test
 	public void getUser_ExistingUser_Success(){
-		throw new NotImplementedException("need to implement the test 'getUser_ExistingUser_Success'");
+    // Generate user
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Assert actual and expected user are the same
+    getUserEntityGetRequestAnd(user0.getId())
+        .assertEntityOfType(User.class)
+        .isEqualTo(user0);
 	}
 
 	@Test
@@ -534,12 +576,70 @@ public class UserControllerTest extends AbstractControllerTest {
 
 	@Test
 	public void UUIDValidation_MalformedUUID_BadRequest(){
-		throw new NotImplementedException("need to implement the test 'UUIDValidation_MalformedUUID_BadRequest'");
+    val data = generateUniqueTestUserData();
+    val badUUID = "123sksk";
+    val applicationIds = convertToIds(data.getApplications());
+    val groupIds = convertToIds(data.getGroups());
+    val randomPermIds = repeatedCallsOf(UUID::randomUUID, 3);
+
+    initStringRequest().endpoint("/users/%s", badUUID).deleteAnd().assertBadRequest();
+    initStringRequest().endpoint("/users/%s", badUUID).getAnd().assertBadRequest();
+    initStringRequest().endpoint("/users/%s", badUUID).putAnd().assertBadRequest();
+
+    initStringRequest().endpoint("/users/%s/applications", badUUID).getAnd().assertBadRequest();
+    initStringRequest().endpoint("/users/%s/applications", badUUID).postAnd().assertBadRequest();
+    initStringRequest().endpoint("/users/%s/applications/%s", badUUID, COMMA.join(applicationIds)).deleteAnd().assertBadRequest();
+
+    initStringRequest().endpoint("/users/%s/groups", badUUID).getAnd().assertBadRequest();
+    initStringRequest().endpoint("/users/%s/groups", badUUID).postAnd().assertBadRequest();
+    initStringRequest().endpoint("/users/%s/groups/%s", badUUID, COMMA.join(groupIds)).deleteAnd().assertBadRequest();
+
+    initStringRequest().endpoint("/users/%s/permissions", badUUID).getAnd().assertBadRequest();
+    initStringRequest().endpoint("/users/%s/permissions", badUUID).postAnd().assertBadRequest();
+    initStringRequest().endpoint("/users/%s/permissions/%s", badUUID, COMMA.join(randomPermIds)).deleteAnd().assertBadRequest();
 	}
 
 	@Test
 	public void updateUser_ExistingUser_Success(){
-		throw new NotImplementedException("need to implement the test 'updateUser_ExistingUser_Success'");
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // create update request 1
+    val uniqueName = generateNonExistentName(userService);
+    val email = uniqueName+"@xyz.com";
+    val r1 = UpdateUserRequest.builder()
+        .firstName("aNewFirstName")
+        .email(email)
+        .build();
+
+    // Update user
+    partialUpdateUserPutRequestAnd(user0.getId(), r1).assertOk();
+
+    // Assert update was correct
+    val actualUser1 = getUserEntityGetRequestAnd(user0)
+        .extractOneEntity(User.class);
+    assertThat(actualUser1).isEqualToIgnoringGivenFields(r1, TYPE, STATUS, NAME, LASTNAME, PREFERREDLANGUAGE,ID, CREATEDAT, USERPERMISSIONS, APPLICATIONS, USERGROUPS, TOKENS);
+    assertThat(actualUser1.getFirstName()).isEqualTo(r1.getFirstName());
+    assertThat(actualUser1.getEmail()).isEqualTo(r1.getEmail());
+    assertThat(actualUser1.getName()).isEqualTo(r1.getEmail());
+
+    // create update request 2
+    val r2 = UpdateUserRequest.builder()
+        .status(randomEnumExcluding(StatusType.class, user0.getStatus()))
+        .type(randomEnumExcluding(UserType.class, user0.getType()))
+        .preferredLanguage(randomEnumExcluding(LanguageType.class, user0.getPreferredLanguage()))
+        .build();
+
+    // Update user
+    partialUpdateUserPutRequestAnd(user0.getId(), r2).assertOk();
+
+    // Assert update was correct
+    val actualUser2 = getUserEntityGetRequestAnd(user0)
+        .extractOneEntity(User.class);
+    assertThat(actualUser2.getStatus()).isEqualTo(r2.getStatus());
+    assertThat(actualUser2.getType()).isEqualTo(r2.getType());
+    assertThat(actualUser2.getPreferredLanguage()).isEqualTo(r2.getPreferredLanguage());
 	}
 
 	@Test
@@ -555,37 +655,175 @@ public class UserControllerTest extends AbstractControllerTest {
 
 	@Test
 	public void updateUser_EmailAlreadyExists_Conflict(){
-		throw new NotImplementedException("need to implement the test 'updateUser_EmailAlreadyExists_Conflict'");
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+    val user1 = data.getUsers().get(1);
+
+    // Assumptions
+    assertThat(user0.getName()).isEqualTo(user0.getEmail());
+    assertThat(user1.getName()).isEqualTo(user1.getEmail());
+
+    // Create update request with same email
+    val r1 = UpdateUserRequest.builder()
+        .email(user1.getName())
+        .status(randomEnumExcluding(StatusType.class, user0.getStatus()))
+        .build();
+
+    // Assert that a CONFLICT error occurs when trying to update a user with a name that already exists
+    partialUpdateUserPutRequestAnd(user0.getId(), r1).assertConflict();
 	}
 
 	@Test
 	public void updateUser_FutureLastLoginDate_BadRequest(){
-		throw new NotImplementedException("need to implement the test 'updateUser_FutureLastLoginDate_BadRequest'");
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Create update request with same email
+    val futureDate = Date.from(Instant.now().plus(1, DAYS));
+    val r1 = UpdateUserRequest.builder().lastLogin(futureDate).build();
+
+    // Assert that updating with a future last login results in a BAD_REQUEST error
+    partialUpdateUserPutRequestAnd(user0.getId(), r1).assertBadRequest();
 	}
 
 	@Test
 	public void updateUser_LastLoginBeforeCreatedAtDate_BadRequest(){
-		throw new NotImplementedException("need to implement the test 'updateUser_LastLoginBeforeCreatedAtDate_BadRequest'");
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Create update request with same email
+    val timeTravelDate = Date.from(user0.getCreatedAt().toInstant().minus(1, DAYS));
+    assertThat(user0.getCreatedAt().after(timeTravelDate)).isTrue();
+    val r1 = UpdateUserRequest.builder().lastLogin(timeTravelDate).build();
+
+    // Assert that updating with a last login before the created at data results in a BAD_REQUEST error
+    partialUpdateUserPutRequestAnd(user0.getId(), r1).assertBadRequest();
 	}
 
 	@Test
 	public void statusValidation_MalformedStatus_BadRequest(){
-		throw new NotImplementedException("need to implement the test 'statusValidation_MalformedStatus_BadRequest'");
+    val invalidStatus = "something123";
+    val match = stream(StatusType.values()).anyMatch(x -> x.toString().equals(invalidStatus));
+    assertThat(match).isFalse();
+
+    val data = generateUniqueTestUserData();
+    val user = data.getUsers().get(0);
+
+    // Assert createUsers
+    val templateR1 = CreateUserRequest.builder()
+        .email(generateNonExistentName(userService)+"@xyz.com")
+        .type(USER)
+        .preferredLanguage(ENGLISH)
+        .build();
+    val r1 = ((ObjectNode)MAPPER.valueToTree(templateR1)).put(STATUS, invalidStatus);
+    initStringRequest()
+        .endpoint("/users")
+        .body(r1)
+        .postAnd()
+        .assertBadRequest();
+
+    // Assert updateUser
+    val templateR2 = UpdateUserRequest.builder()
+        .email(generateNonExistentName(userService)+"@xyz.com")
+        .type(USER)
+        .preferredLanguage(ENGLISH)
+        .build();
+    val r2 = ((ObjectNode)MAPPER.valueToTree(templateR2)).put(STATUS, invalidStatus);
+    initStringRequest()
+        .endpoint("/users/%s", user.getId())
+        .body(r2)
+        .putAnd()
+        .assertBadRequest();
 	}
 
 	@Test
 	public void typeValidation_MalformedType_BadRequest(){
-		throw new NotImplementedException("need to implement the test 'typeValidation_MalformedType_BadRequest'");
+    val invalidType = "something123";
+    val match = stream(UserType.values()).anyMatch(x -> x.toString().equals(invalidType));
+    assertThat(match).isFalse();
+
+    val data = generateUniqueTestUserData();
+    val user = data.getUsers().get(0);
+
+    // Assert createUsers
+    val templateR1 = CreateUserRequest.builder()
+        .email(generateNonExistentName(userService)+"@xyz.com")
+        .status(APPROVED)
+        .preferredLanguage(ENGLISH)
+        .build();
+    val r1 = ((ObjectNode)MAPPER.valueToTree(templateR1)).put(TYPE, invalidType);
+    initStringRequest()
+        .endpoint("/users")
+        .body(r1)
+        .postAnd()
+        .assertBadRequest();
+
+    // Assert updateUser
+    val templateR2 = UpdateUserRequest.builder()
+        .email(generateNonExistentName(userService)+"@xyz.com")
+        .status(DISABLED)
+        .preferredLanguage(ENGLISH)
+        .build();
+    val r2 = ((ObjectNode)MAPPER.valueToTree(templateR2)).put(TYPE, invalidType);
+    initStringRequest()
+        .endpoint("/users/%s", user.getId())
+        .body(r2)
+        .putAnd()
+        .assertBadRequest();
 	}
 
 	@Test
 	public void preferredLanguageValidation_MalformedPreferredLanguage_BadRequest(){
-		throw new NotImplementedException("need to implement the test 'preferredLanguageValidation_MalformedPreferredLanguage_BadRequest'");
+    val invalidLanguage = "something123";
+    val match = stream(LanguageType.values()).anyMatch(x -> x.toString().equals(invalidLanguage));
+    assertThat(match).isFalse();
+
+    val data = generateUniqueTestUserData();
+    val user = data.getUsers().get(0);
+
+    // Assert createUsers
+    val templateR1 = CreateUserRequest.builder()
+        .email(generateNonExistentName(userService)+"@xyz.com")
+        .status(APPROVED)
+        .type(USER)
+        .build();
+    val r1 = ((ObjectNode)MAPPER.valueToTree(templateR1)).put(PREFERREDLANGUAGE, invalidLanguage);
+    initStringRequest()
+        .endpoint("/users")
+        .body(r1)
+        .postAnd()
+        .assertBadRequest();
+
+    // Assert updateUser
+    val templateR2 = UpdateUserRequest.builder()
+        .email(generateNonExistentName(userService)+"@xyz.com")
+        .status(DISABLED)
+        .type(USER)
+        .build();
+    val r2 = ((ObjectNode)MAPPER.valueToTree(templateR2)).put(PREFERREDLANGUAGE, invalidLanguage);
+    initStringRequest()
+        .endpoint("/users/%s", user.getId())
+        .body(r2)
+        .putAnd()
+        .assertBadRequest();
 	}
 
 	@Test
 	public void getApplicationsFromUser_FindAllQuery_Success(){
-		throw new NotImplementedException("need to implement the test 'getApplicationsFromUser_FindAllQuery_Success'");
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Associate applications with user
+    addApplicationsToUserPostRequestAnd(user0, data.getApplications()).assertOk();
+
+    // get Applications for user, and assert it has the expected applications
+    getApplicationsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Application.class)
+        .containsExactlyInAnyOrderElementsOf(data.getApplications());
 	}
 
 	@Test
@@ -598,6 +836,7 @@ public class UserControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+  @Ignore
 	public void getApplicationsFromUser_FindSomeQuery_Success(){
 		throw new NotImplementedException("need to implement the test 'getApplicationsFromUser_FindSomeQuery_Success'");
 	}
