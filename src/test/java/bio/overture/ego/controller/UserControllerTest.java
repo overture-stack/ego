@@ -89,6 +89,7 @@ import static bio.overture.ego.utils.EntityTools.extractUserIds;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -477,7 +478,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // Create the user
     val user = createUserPostRequestAnd(r)
         .extractOneEntity(User.class);
-    assertThat(user).isEqualToIgnoringGivenFields(r, ID, APPLICATIONS, USERPERMISSIONS, USERGROUPS, TOKENS, NAME);
+    assertThat(user).isEqualToIgnoringGivenFields(r, ID, APPLICATIONS, USERPERMISSIONS, USERGROUPS, TOKENS, NAME, CREATEDAT);
 
 
     // Assert the user can be read and matches the request data
@@ -1041,6 +1042,7 @@ public class UserControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+  @Ignore("should test this")
 	public void getGroupsFromUser_FindSomeQuery_Success(){
 		throw new NotImplementedException("need to implement the test 'getGroupsFromUser_FindSomeQuery_Success'");
 	}
@@ -1059,7 +1061,24 @@ public class UserControllerTest extends AbstractControllerTest {
 
 	@Test
 	public void addGroupsToUser_AllExistingUnassociatedGroups_Success(){
-		throw new NotImplementedException("need to implement the test 'addGroupsToUser_AllExistingUnassociatedGroups_Success'");
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Assert user has no groups
+    getGroupsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Group.class)
+        .isEmpty();
+
+    // Add groups to user and asser response is a user
+    addGroupsToUserPostRequestAnd(user0, data.getGroups())
+        .assertEntityOfType(User.class)
+        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+
+    // Get groups for user and assert they are associated
+    getGroupsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Group.class)
+        .containsExactlyInAnyOrderElementsOf(data.getGroups());
 	}
 
 	@Test
@@ -1077,23 +1096,105 @@ public class UserControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-	public void addGroupsToUser_AllExsitingGroupsButSomeAlreadyAssociated_Conflict(){
-		throw new NotImplementedException("need to implement the test 'addGroupsToUser_AllExsitingGroupsButSomeAlreadyAssociated_Conflict'");
+	public void addGroupsToUser_AllExistingGroupsButSomeAlreadyAssociated_Conflict(){
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+    val group0 = data.getGroups().get(0);
+    val group1 = data.getGroups().get(1);
+
+    // Assert user has no groups
+    getGroupsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Group.class)
+        .isEmpty();
+
+    // Add group0 to user and assert response is a user
+    addGroupsToUserPostRequestAnd(user0, newArrayList(group0))
+        .assertEntityOfType(User.class)
+        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+
+    // Get groups for user and assert they are associated only to group0
+    getGroupsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Group.class)
+        .containsExactlyInAnyOrderElementsOf(newArrayList(group0));
+
+    // Add group0 and group1 to user and assert CONFLICT
+    addGroupsToUserPostRequestAnd(user0, newArrayList(group0, group1)).assertConflict();
 	}
 
 	@Test
 	public void removeGroupsFromUser_AllExistingAssociatedGroups_Success(){
-		throw new NotImplementedException("need to implement the test 'removeGroupsFromUser_AllExistingAssociatedGroups_Success'");
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Add groups to user and assert response is a user
+    addGroupsToUserPostRequestAnd(user0, data.getGroups())
+        .assertEntityOfType(User.class)
+        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+
+    // Assert groups were added
+    getGroupsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Group.class)
+        .containsExactlyInAnyOrderElementsOf(data.getGroups());
+
+    // Delete groups from user
+    deleteGroupsFromUserDeleteRequestAnd(user0, data.getGroups()).assertOk();
+
+    // Assert user does not have any groups associated
+    getGroupsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Group.class)
+        .isEmpty();
 	}
 
 	@Test
 	public void removeGroupsFromUser_AllExistingGroupsButSomeNotAssociated_NotFound(){
-		throw new NotImplementedException("need to implement the test 'removeGroupsFromUser_AllExistingGroupsButSomeNotAssociated_NotFound'");
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+    val group0 = data.getGroups().get(0);
+    val group1 = data.getGroups().get(1);
+
+    // Assert user has no groups
+    getGroupsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Group.class)
+        .isEmpty();
+
+    // Add group0 only to user
+    addGroupsToUserPostRequestAnd(user0, newArrayList(group0)).assertOk();
+
+    // Assert group0 was added to user
+    getGroupsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Group.class)
+        .containsExactlyInAnyOrder(group0);
+
+    // Attempt to delete group0 and group1 from user, and assert NOT_FOUND error
+    deleteGroupsFromUserDeleteRequestAnd(user0, newArrayList(group0, group1)).assertNotFound();
 	}
 
 	@Test
 	public void removeGroupsFromUser_SomeNonExistingGroupsButAllAssociated_NotFound(){
-		throw new NotImplementedException("need to implement the test 'removeGroupsFromUser_SomeNonExistingGroupsButAllAssociated_NotFound'");
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Assert no groups for user
+    getGroupsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Group.class)
+        .isEmpty();
+
+    // Add all groups to user
+    addGroupsToUserPostRequestAnd(user0, data.getGroups()).assertOk();
+
+    // Assert groups were added to user
+    getGroupsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Group.class)
+        .containsExactlyInAnyOrderElementsOf(data.getGroups());
+
+    // delete all groups plus some that dont exist and assert NOT_FOUND error
+    val groupIdsToDelete = newHashSet(convertToIds(data.getGroups()));
+    groupIdsToDelete.add(generateNonExistentId(groupService));
+    deleteGroupsFromUserDeleteRequestAnd(user0.getId(), groupIdsToDelete).assertNotFound();
 	}
 
 	@Test
