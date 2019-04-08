@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "bio.overture.ego.grpc";
+option java_outer_classname = "EgoProto";
+
+package bio.overture.ego.grpc;
+
+service UserService {
+    rpc Get (GetUserRequest) returns (User) {}
+    rpc List (ListUsersRequest) returns (ListUsersResponse) {}
+}
+
+message GetUserRequest {
+    string id = 1;
+}
+
+message ListUsersRequest {
+    // Pagination and Sort by Google standard design pattern: https://cloud.google.com/apis/design/design_patterns
+
+    string page_token = 1;
+    int32 page_size = 2;
+
+    string query = 3;
+    string order_by = 4; //ex. "foo" or "bar desc"
+}
+
+message ListUsersResponse {
+    string next_page_token = 1;
+
+    repeated User users = 2;
+}
+
+message User {
+    string id = 1;
+    string email = 2;
+    string firstName = 3;
+    string lastName = 4;
+
+    string createdAt = 5;
+    string lastLogin = 6;
+    string name = 7;
+    string preferredLanguage = 8;
+    string status = 9;
+    string type = 10;
+
+    repeated string permissions = 11;
+}
