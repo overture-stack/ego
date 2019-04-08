@@ -92,7 +92,7 @@ public class TokensOnUserAndPolicyDeletes extends AbstractControllerTest {
 
     val checkTokenAfterDeleteResponse = checkToken(tokenToDelete);
     // Should be revoked
-    assertThat(checkTokenAfterDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(checkTokenAfterDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
     val checkTokenRemainedAfterDeleteResponse = checkToken(tokenToKeep);
     // Should be valid
@@ -121,7 +121,7 @@ public class TokensOnUserAndPolicyDeletes extends AbstractControllerTest {
 
     val checkTokenAfterDeleteResponse = checkToken(tokenToDelete);
     // Should be revoked
-    assertThat(checkTokenAfterDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(checkTokenAfterDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
     val checkTokenRemainedAfterDeleteResponse = checkToken(tokenToKeep);
     // Should be valid
