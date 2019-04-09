@@ -1,4 +1,4 @@
-package bio.overture.ego.utils;
+package bio.overture.ego.utils.web;
 
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static java.lang.String.format;

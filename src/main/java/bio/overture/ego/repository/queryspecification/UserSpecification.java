@@ -16,7 +16,14 @@
 
 package bio.overture.ego.repository.queryspecification;
 
+import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.EMAIL;
+import static bio.overture.ego.model.enums.JavaFields.FIRSTNAME;
 import static bio.overture.ego.model.enums.JavaFields.GROUP;
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.LASTNAME;
+import static bio.overture.ego.model.enums.JavaFields.NAME;
+import static bio.overture.ego.model.enums.JavaFields.STATUS;
 import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
 
 import bio.overture.ego.model.entity.Application;
@@ -38,8 +45,7 @@ public class UserSpecification extends SpecificationBase<User> {
     return (root, query, builder) -> {
       query.distinct(true);
       return builder.or(
-          getQueryPredicates(
-              builder, root, finalText, "name", "email", "firstName", "lastName", "status"));
+          getQueryPredicates(builder, root, finalText, NAME, EMAIL, FIRSTNAME, LASTNAME, STATUS));
     };
   }
 
@@ -55,8 +61,8 @@ public class UserSpecification extends SpecificationBase<User> {
   public static Specification<User> ofApplication(@NonNull UUID appId) {
     return (root, query, builder) -> {
       query.distinct(true);
-      Join<User, Application> applicationJoin = root.join("applications");
-      return builder.equal(applicationJoin.<Integer>get("id"), appId);
+      Join<User, Application> applicationJoin = root.join(APPLICATIONS);
+      return builder.equal(applicationJoin.<Integer>get(ID), appId);
     };
   }
 }

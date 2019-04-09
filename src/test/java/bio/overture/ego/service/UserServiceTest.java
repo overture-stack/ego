@@ -283,7 +283,7 @@ public class UserServiceTest {
     userService.associateGroupsWithUser(userTwo.getId(), singletonList(groupId));
 
     val users =
-        groupService.findUsersForGroup(
+        userService.findUsersForGroup(
             groupId, ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(2L);
@@ -298,7 +298,7 @@ public class UserServiceTest {
     val groupId = groupService.getByName("Group One").getId();
 
     val users =
-        groupService.findUsersForGroup(
+        userService.findUsersForGroup(
             groupId, ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(0L);
@@ -319,7 +319,7 @@ public class UserServiceTest {
     val userFilters = new SearchFilter("name", "First");
 
     val users =
-        groupService.findUsersForGroup(
+        userService.findUsersForGroup(
             groupId, ImmutableList.of(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
@@ -341,7 +341,7 @@ public class UserServiceTest {
     val userFilters = new SearchFilter("name", "First");
 
     val users =
-        groupService.findUsersForGroup(
+        userService.findUsersForGroup(
             groupId, "Second", ImmutableList.of(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(0L);
@@ -359,7 +359,7 @@ public class UserServiceTest {
     userService.associateGroupsWithUser(user.getId(), singletonList(groupId));
     userService.associateGroupsWithUser(userTwo.getId(), singletonList(groupId));
     val users =
-        groupService.findUsersForGroup(
+        userService.findUsersForGroup(
             groupId, "Second", ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
@@ -381,7 +381,7 @@ public class UserServiceTest {
     userService.addUserToApps(userTwo.getId(), singletonList(appId));
 
     val users =
-        userService.findAppUsers(
+        userService.findUsersForApplication(
             appId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(2L);
@@ -396,7 +396,7 @@ public class UserServiceTest {
     val appId = applicationService.getByClientId("111111").getId();
 
     val users =
-        userService.findAppUsers(
+        userService.findUsersForApplication(
             appId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(0L);
@@ -417,7 +417,7 @@ public class UserServiceTest {
     val userFilters = new SearchFilter("name", "First");
 
     val users =
-        userService.findAppUsers(
+        userService.findUsersForApplication(
             appId, singletonList(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
@@ -439,7 +439,7 @@ public class UserServiceTest {
     val userFilters = new SearchFilter("name", "First");
 
     val users =
-        userService.findAppUsers(
+        userService.findUsersForApplication(
             appId, "Second", singletonList(userFilters), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(0L);
@@ -458,7 +458,7 @@ public class UserServiceTest {
     userService.addUserToApps(userTwo.getId(), singletonList(appId));
 
     val users =
-        userService.findAppUsers(
+        userService.findUsersForApplication(
             appId, "First", Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(users.getTotalElements()).isEqualTo(1L);
@@ -560,48 +560,6 @@ public class UserServiceTest {
         .isThrownBy(() -> userService.partialUpdate(nonExistentId, updateRequest));
   }
 
-  @Test
-  @Ignore
-  public void testUpdateNameNotAllowed() {
-    //    val user = userService.create(entityGenerator.createUser(Pair.of("First", "User")));
-    //    user.setName("NewName");
-    //    val updated = userService.update(user);
-    assertThat(1).isEqualTo(2);
-    // TODO Check for uniqueness in application, currently only SQL
-  }
-
-  @Test
-  @Ignore
-  public void testUpdateEmailNotAllowed() {
-    //    val user = userService.create(entityGenerator.createUser(Pair.of("First", "User")));
-    //    user.setEmail("NewName@domain.com");
-    //    val updated = userService.update(user);
-    assertThat(1).isEqualTo(2);
-    // TODO Check for uniqueness in application, currently only SQL
-  }
-
-  @Test
-  @Ignore
-  public void testUpdateStatusNotInAllowedEnum() {
-    //    entityGenerator.setupTestUsers();
-    //    val user = userService.getByName("FirstUser@domain.com");
-    //    user.setStatus("Junk");
-    //    val updated = userService.update(user);
-    assertThat(1).isEqualTo(2);
-    // TODO Check for uniqueness in application, currently only SQL
-  }
-
-  @Test
-  @Ignore
-  public void testUpdateLanguageNotInAllowedEnum() {
-    //    entityGenerator.setupTestUsers();
-    //    val user = userService.getByName("FirstUser@domain.com");
-    //    user.setPreferredLanguage("Klingon");
-    //    val updated = userService.update(user);
-    assertThat(1).isEqualTo(2);
-    // TODO Check for uniqueness in application, currently only SQL
-  }
-
   // Add User to Groups
   @Test
   public void addUserToGroups() {
@@ -618,7 +576,7 @@ public class UserServiceTest {
     userService.associateGroupsWithUser(userId, asList(groupId, groupTwoId));
 
     val groups =
-        userService.findGroupsForUser(
+        groupService.findGroupsForUser(
             userId, ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(groups.getContent()).contains(group, groupTwo);
@@ -679,7 +637,7 @@ public class UserServiceTest {
     userService.addUserToApps(userId, asList(appId, appTwoId));
 
     val apps =
-        applicationService.findUserApps(
+        applicationService.findApplicationsForUser(
             userId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(apps.getContent()).contains(app, appTwo);
@@ -767,7 +725,7 @@ public class UserServiceTest {
     userService.disassociateGroupsFromUser(userId, singletonList(groupId));
 
     val groupWithoutUser =
-        userService.findGroupsForUser(
+        groupService.findGroupsForUser(
             userId, ImmutableList.of(), new PageableResolver().getPageable());
 
     assertThat(groupWithoutUser.getContent()).containsOnly(groupTwo);
@@ -828,7 +786,7 @@ public class UserServiceTest {
     userService.deleteUserFromApps(userId, singletonList(appId));
 
     val groupWithoutUser =
-        applicationService.findUserApps(
+        applicationService.findApplicationsForUser(
             userId, Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(groupWithoutUser.getContent()).containsOnly(appTwo);

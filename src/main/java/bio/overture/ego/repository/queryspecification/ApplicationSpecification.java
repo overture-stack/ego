@@ -16,9 +16,20 @@
 
 package bio.overture.ego.repository.queryspecification;
 
+import static bio.overture.ego.model.enums.JavaFields.CLIENTID;
+import static bio.overture.ego.model.enums.JavaFields.CLIENTSECRET;
+import static bio.overture.ego.model.enums.JavaFields.DESCRIPTION;
+import static bio.overture.ego.model.enums.JavaFields.GROUP;
+import static bio.overture.ego.model.enums.JavaFields.GROUPAPPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.NAME;
+import static bio.overture.ego.model.enums.JavaFields.STATUS;
+import static bio.overture.ego.model.enums.JavaFields.USERS;
+
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.join.GroupApplication;
 import bio.overture.ego.utils.QueryUtils;
 import java.util.UUID;
 import javax.persistence.criteria.Join;
@@ -33,30 +44,24 @@ public class ApplicationSpecification extends SpecificationBase<Application> {
       query.distinct(true);
       return builder.or(
           getQueryPredicates(
-              builder,
-              root,
-              finalText,
-              "name",
-              "clientId",
-              "clientSecret",
-              "description",
-              "status"));
+              builder, root, finalText, NAME, CLIENTID, CLIENTSECRET, DESCRIPTION, STATUS));
     };
   }
 
   public static Specification<Application> inGroup(@NonNull UUID groupId) {
     return (root, query, builder) -> {
       query.distinct(true);
-      Join<Application, Group> groupJoin = root.join("groups");
-      return builder.equal(groupJoin.<Integer>get("id"), groupId);
+      Join<Application, GroupApplication> applicationJoin = root.join(GROUPAPPLICATIONS);
+      Join<GroupApplication, Group> groupJoin = applicationJoin.join(GROUP);
+      return builder.equal(groupJoin.<Integer>get(ID), groupId);
     };
   }
 
   public static Specification<Application> usedBy(@NonNull UUID userId) {
     return (root, query, builder) -> {
       query.distinct(true);
-      Join<Application, User> applicationUserJoin = root.join("users");
-      return builder.equal(applicationUserJoin.<Integer>get("id"), userId);
+      Join<Application, User> applicationUserJoin = root.join(USERS);
+      return builder.equal(applicationUserJoin.<Integer>get(ID), userId);
     };
   }
 }

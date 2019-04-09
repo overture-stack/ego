@@ -4,6 +4,7 @@ import static bio.overture.ego.model.enums.JavaFields.ID;
 import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
 import static bio.overture.ego.model.enums.JavaFields.USERPERMISSIONS;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static javax.persistence.criteria.JoinType.LEFT;
@@ -58,7 +59,7 @@ public class PolicyService extends AbstractNamedService<Policy, UUID> {
   }
 
   public Policy create(@NonNull PolicyRequest createRequest) {
-    checkNameUnique(createRequest.getName());
+    validateCreateRequest(createRequest);
     val policy = POLICY_CONVERTER.convertToPolicy(createRequest);
     return getRepository().save(policy);
   }
@@ -93,6 +94,11 @@ public class PolicyService extends AbstractNamedService<Policy, UUID> {
     validateUpdateRequest(policy, updateRequest);
     POLICY_CONVERTER.updatePolicy(updateRequest, policy);
     return getRepository().save(policy);
+  }
+
+  private void validateCreateRequest(PolicyRequest createRequest) {
+    checkRequestValid(createRequest);
+    checkNameUnique(createRequest.getName());
   }
 
   private void validateUpdateRequest(Policy originalPolicy, PolicyRequest updateRequest) {

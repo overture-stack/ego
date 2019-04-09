@@ -52,21 +52,6 @@ public class PolicyServiceTest {
     assertThat(policy.getName()).isEqualTo("Study001");
   }
 
-  @Test
-  @Ignore
-  public void testCreateUniqueName() {
-    //    policyService.create(entityGenerator.createPolicy(Pair.of("Study001",
-    // groups.get(0).getId())));
-    //    policyService.create(entityGenerator.createPolicy(Pair.of("Study002",
-    // groups.get(0).getId())));
-    //    assertThatExceptionOfType(DataIntegrityViolationException.class)
-    //        .isThrownBy(() ->
-    // policyService.create(entityGenerator.createPolicy(Pair.of("Study001",
-    // groups.get(0).getId()))));
-    assertThat(1).isEqualTo(2);
-    // TODO Check for uniqueness in application, currently only SQL
-  }
-
   // Read
   @Test
   public void testGet() {

@@ -1,6 +1,7 @@
 package bio.overture.ego.repository.queryspecification.builder;
 
-import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.APPLICATION;
+import static bio.overture.ego.model.enums.JavaFields.GROUPAPPLICATIONS;
 import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
 import static bio.overture.ego.model.enums.JavaFields.USER;
 import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
@@ -24,7 +25,8 @@ public class GroupSpecificationBuilder extends AbstractSpecificationBuilder<Grou
   @Override
   protected Root<Group> setupFetchStrategy(Root<Group> root) {
     if (fetchApplications) {
-      root.fetch(APPLICATIONS, LEFT);
+      val fromGroupApplications = root.fetch(GROUPAPPLICATIONS, LEFT);
+      fromGroupApplications.fetch(APPLICATION, LEFT);
     }
     if (fetchUserGroups) {
       val fromUserGroup = root.fetch(USERGROUPS, LEFT);

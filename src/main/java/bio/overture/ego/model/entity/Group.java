@@ -24,6 +24,7 @@ import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.Tables;
+import bio.overture.ego.model.join.GroupApplication;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -40,9 +41,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -65,13 +63,14 @@ import org.hibernate.annotations.TypeDef;
 @JsonView(Views.REST.class)
 @EqualsAndHashCode(of = {LombokFields.id})
 @TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
-@ToString(exclude = {LombokFields.userGroups, LombokFields.applications, LombokFields.permissions})
+@ToString(
+    exclude = {LombokFields.userGroups, LombokFields.groupApplications, LombokFields.permissions})
 @JsonPropertyOrder({
   JavaFields.ID,
   JavaFields.NAME,
   JavaFields.DESCRIPTION,
   JavaFields.STATUS,
-  JavaFields.APPLICATIONS,
+  JavaFields.GROUPAPPLICATIONS,
   JavaFields.GROUPPERMISSIONS
 })
 public class Group implements PolicyOwner, NameableEntity<UUID> {
@@ -106,16 +105,14 @@ public class Group implements PolicyOwner, NameableEntity<UUID> {
       fetch = FetchType.LAZY)
   private Set<GroupPermission> permissions = newHashSet();
 
-  @ManyToMany(
-      fetch = FetchType.LAZY,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
-  @JoinTable(
-      name = Tables.GROUP_APPLICATION,
-      joinColumns = {@JoinColumn(name = SqlFields.GROUPID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = SqlFields.APPID_JOIN)})
   @JsonIgnore
   @Builder.Default
-  private Set<Application> applications = newHashSet();
+  @OneToMany(
+      mappedBy = JavaFields.GROUP,
+      cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      orphanRemoval = true)
+  private Set<GroupApplication> groupApplications = newHashSet();
 
   @JsonIgnore
   @Builder.Default

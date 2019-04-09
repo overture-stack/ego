@@ -40,7 +40,6 @@ import bio.overture.ego.model.dto.UserScopesResponse;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.repository.TokenStoreRepository;
 import bio.overture.ego.token.IDToken;
@@ -59,8 +58,8 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.security.InvalidKeyException;
-import java.util.*;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -132,18 +131,18 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   }
 
   public String generateUserToken(IDToken idToken) {
-    User user;
     val userName = idToken.getEmail();
-    try { // TODO: Replace this with Optional for better control flow.
-      user = userService.getByName(userName);
-    } catch (NotFoundException e) {
-      log.info("User not found, creating.");
-      user = userService.createFromIDToken(idToken);
-    }
+    val user =
+        userService
+            .findByName(userName)
+            .orElseGet(
+                () -> {
+                  log.info("User not found, creating.");
+                  return userService.createFromIDToken(idToken);
+                });
 
-    UpdateUserRequest u = UpdateUserRequest.builder().lastLogin(new Date()).build();
+    val u = UpdateUserRequest.builder().lastLogin(new Date()).build();
     userService.partialUpdate(user.getId(), u);
-
     return generateUserToken(user);
   }
 

@@ -1,4 +1,4 @@
-package bio.overture.ego.utils;
+package bio.overture.ego.utils.web;
 
 import lombok.Builder;
 import lombok.NonNull;

@@ -16,6 +16,8 @@
 
 package bio.overture.ego.repository.queryspecification;
 
+import static bio.overture.ego.model.enums.JavaFields.NAME;
+
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.utils.QueryUtils;
@@ -29,7 +31,7 @@ public class PolicySpecification extends SpecificationBase<User> {
     val finalText = QueryUtils.prepareForQuery(text);
     return (root, query, builder) -> {
       query.distinct(true);
-      return builder.or(getQueryPredicates(builder, root, finalText, "name"));
+      return builder.or(getQueryPredicates(builder, root, finalText, NAME));
     };
   }
 }

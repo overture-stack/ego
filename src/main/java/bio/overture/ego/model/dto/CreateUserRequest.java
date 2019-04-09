@@ -19,6 +19,7 @@ package bio.overture.ego.model.dto;
 import bio.overture.ego.model.enums.LanguageType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,10 +30,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateUserRequest {
-  private String email;
-  private UserType type;
-  private StatusType status;
+
+  @NotNull private String email;
+
+  @NotNull private UserType type;
+
+  @NotNull private StatusType status;
+
   private String firstName;
+
   private String lastName;
-  private LanguageType preferredLanguage;
+
+  @NotNull private LanguageType preferredLanguage;
 }

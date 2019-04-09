@@ -17,6 +17,7 @@
 package bio.overture.ego.model.dto;
 
 import bio.overture.ego.model.enums.StatusType;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +29,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GroupRequest {
 
-  private String name;
+  @NotNull private String name;
+
   private String description;
-  private StatusType status;
+
+  @NotNull private StatusType status;
 }

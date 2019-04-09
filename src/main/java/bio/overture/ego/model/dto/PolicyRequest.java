@@ -1,5 +1,6 @@
 package bio.overture.ego.model.dto;
 
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,5 +12,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PolicyRequest {
 
-  private String name;
+  @NotNull private String name;
 }

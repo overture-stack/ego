@@ -1,39 +1,32 @@
-package bio.overture.ego.utils;
+package bio.overture.ego.utils.web;
 
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Joiners.AMPERSAND;
 import static bio.overture.ego.utils.Joiners.PATH;
-import static bio.overture.ego.utils.QueryParam.createQueryParam;
+import static bio.overture.ego.utils.web.QueryParam.createQueryParam;
 import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.OK;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 @Slf4j
 @RequiredArgsConstructor
-public class WebResource<T> {
+public abstract class AbstractWebResource<
+    T, O extends ResponseOption<T, O>, W extends AbstractWebResource<T, O, W>> {
 
   private static final ObjectMapper REGULAR_MAPPER = new ObjectMapper();
   private static final ObjectMapper PRETTY_MAPPER = new ObjectMapper();
@@ -53,32 +46,44 @@ public class WebResource<T> {
   private boolean enableLogging = false;
   private boolean pretty = false;
 
-  public WebResource<T> endpoint(String formattedEndpoint, Object... args) {
+  protected abstract O createResponseOption(ResponseEntity<T> responseEntity);
+
+  private W thisInstance() {
+    return (W) this;
+  }
+
+  public W endpoint(String formattedEndpoint, Object... args) {
     this.endpoint = format(formattedEndpoint, args);
-    return this;
+    return thisInstance();
   }
 
-  public WebResource<T> body(Object body) {
+  public W body(Object body) {
     this.body = body;
-    return this;
+    return thisInstance();
   }
 
-  public WebResource<T> headers(HttpHeaders httpHeaders) {
+  public W headers(HttpHeaders httpHeaders) {
     this.headers = httpHeaders;
-    return this;
+    return thisInstance();
   }
 
-  public WebResource<T> logging() {
+  public W logging() {
     return configLogging(true, false);
   }
 
-  public WebResource<T> prettyLogging() {
+  public W prettyLogging() {
     return configLogging(true, true);
   }
 
-  public WebResource<T> queryParam(String key, Object... values) {
+  public W queryParam(String key, Object... values) {
     queryParams.add(createQueryParam(key, values));
-    return this;
+    return thisInstance();
+  }
+
+  private W configLogging(boolean enable, boolean pretty) {
+    this.enableLogging = enable;
+    this.pretty = pretty;
+    return thisInstance();
   }
 
   public ResponseEntity<T> get() {
@@ -97,26 +102,20 @@ public class WebResource<T> {
     return doRequest(null, HttpMethod.DELETE);
   }
 
-  public ResponseOption<T> deleteAnd() {
-    return new ResponseOption<>(delete());
+  public O deleteAnd() {
+    return createResponseOption(delete());
   }
 
-  public ResponseOption<T> getAnd() {
-    return new ResponseOption<>(get());
+  public O getAnd() {
+    return createResponseOption(get());
   }
 
-  public ResponseOption<T> putAnd() {
-    return new ResponseOption<>(put());
+  public O putAnd() {
+    return createResponseOption(put());
   }
 
-  public ResponseOption<T> postAnd() {
-    return new ResponseOption<>(post());
-  }
-
-  private WebResource<T> configLogging(boolean enable, boolean pretty) {
-    this.enableLogging = enable;
-    this.pretty = pretty;
-    return this;
+  public O postAnd() {
+    return createResponseOption(post());
   }
 
   private Optional<String> getQuery() {
@@ -136,11 +135,6 @@ public class WebResource<T> {
             getUrl(), httpMethod, new HttpEntity<>(body, this.headers), this.responseType);
     logResponse(enableLogging, pretty, response);
     return response;
-  }
-
-  public static <T> WebResource<T> createWebResource(
-      TestRestTemplate restTemplate, String serverUrl, Class<T> responseType) {
-    return new WebResource<>(restTemplate, serverUrl, responseType);
   }
 
   @SneakyThrows
@@ -175,45 +169,6 @@ public class WebResource<T> {
       } else {
         log.info("[RESPONSE] > {}", REGULAR_MAPPER.writeValueAsString(output));
       }
-    }
-  }
-
-  @Value
-  public static class ResponseOption<T> {
-    @NonNull private final ResponseEntity<T> response;
-
-    public ResponseOption<T> assertStatusCode(HttpStatus code) {
-      assertThat(response.getStatusCode()).isEqualTo(code);
-      return this;
-    }
-
-    public ResponseOption<T> assertOk() {
-      assertStatusCode(OK);
-      return this;
-    }
-
-    public ResponseOption<T> assertNotFound() {
-      assertStatusCode(NOT_FOUND);
-      return this;
-    }
-
-    public ResponseOption<T> assertConflict() {
-      assertStatusCode(CONFLICT);
-      return this;
-    }
-
-    public ResponseOption<T> assertBadRequest() {
-      assertStatusCode(BAD_REQUEST);
-      return this;
-    }
-
-    public ResponseOption<T> assertHasBody() {
-      assertThat(response.hasBody()).isTrue();
-      return this;
-    }
-
-    public <R> R map(Function<ResponseEntity<T>, R> transformingFunction) {
-      return transformingFunction.apply(getResponse());
     }
   }
 }

@@ -407,7 +407,8 @@ public class EntityGenerator {
     return mapToList(listOf(strings), ScopeName::new);
   }
 
-  public static <E extends Enum<E>> E randomEnumExcluding(Class<E> enumClass, E enumToExclude) {
+  public static <E extends Enum<E>> E randomEnumExcluding(
+      @NonNull Class<E> enumClass, @NonNull E enumToExclude) {
     val list =
         stream(enumClass.getEnumConstants()).filter(x -> x != enumToExclude).collect(toList());
     return randomElementOf(list);
@@ -432,6 +433,19 @@ public class EntityGenerator {
 
   public static <T> T randomElementOf(T... objects) {
     return objects[randomBoundedInt(objects.length)];
+  }
+
+  public static String generateNonExistentClientId(
+      NamedService<Application, UUID> applicationService) {
+    val r = new Random();
+    String clientId = generateRandomName(r, 15);
+    Optional<Application> result = applicationService.findByName(clientId);
+
+    while (result.isPresent()) {
+      clientId = generateRandomName(r, 15);
+      result = applicationService.findByName(clientId);
+    }
+    return clientId;
   }
 
   public static <T> String generateNonExistentName(NamedService<T, UUID> namedService) {

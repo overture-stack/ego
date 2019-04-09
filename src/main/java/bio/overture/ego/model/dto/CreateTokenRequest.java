@@ -1,10 +1,12 @@
 package bio.overture.ego.model.dto;
 
 import java.util.Date;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 @Data
 @Builder
@@ -12,7 +14,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateTokenRequest {
 
-  private String token;
-  private Date issueDate;
-  private boolean isRevoked;
+  @NotNull private String token;
+
+  @NonNull private Date issueDate;
+
+  @NotNull private boolean isRevoked;
 }

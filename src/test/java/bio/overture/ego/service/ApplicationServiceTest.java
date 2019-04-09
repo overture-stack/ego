@@ -6,7 +6,6 @@ import static bio.overture.ego.model.enums.StatusType.PENDING;
 import static bio.overture.ego.model.enums.StatusType.REJECTED;
 import static bio.overture.ego.service.ApplicationService.APPLICATION_CONVERTER;
 import static bio.overture.ego.utils.CollectionUtils.setOf;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.singletonList;
@@ -18,7 +17,6 @@ import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
 import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
@@ -28,8 +26,6 @@ import bio.overture.ego.utils.EntityGenerator;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
-import java.util.stream.IntStream;
-import javax.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -68,19 +64,12 @@ public class ApplicationServiceTest {
     val name = randomUUID().toString();
     val status = PENDING;
 
-    val groups =
-        IntStream.range(0, 3)
-            .boxed()
-            .map(x -> Group.builder().id(randomUUID()).build())
-            .collect(toImmutableSet());
-
     val app =
         Application.builder()
             .id(id)
             .clientId(clientId)
             .clientSecret(clientSecret)
             .name(name)
-            .groups(groups)
             .status(status)
             .redirectUri(null)
             .users(null)
@@ -97,7 +86,7 @@ public class ApplicationServiceTest {
     APPLICATION_CONVERTER.updateApplication(partialAppUpdateRequest, app);
 
     assertThat(app.getDescription()).isNull();
-    assertThat(app.getGroups()).containsExactlyInAnyOrderElementsOf(groups);
+    assertThat(app.getGroupApplications()).isEmpty();
     assertThat(app.getClientSecret()).isEqualTo(clientSecret);
     assertThat(app.getClientId()).isEqualTo(clientId);
     assertThat(app.getRedirectUri()).isNotNull();
@@ -119,7 +108,7 @@ public class ApplicationServiceTest {
             .build();
     val app = APPLICATION_CONVERTER.convertToApplication(req);
     assertThat(app.getId()).isNull();
-    assertThat(app.getGroups()).isEmpty();
+    assertThat(app.getGroupApplications()).isEmpty();
     assertThat(app.getClientId()).isEqualTo(req.getClientId());
     assertThat(app.getName()).isEqualTo(req.getName());
     assertThat(app.getUsers()).isEmpty();
@@ -127,7 +116,6 @@ public class ApplicationServiceTest {
     assertThat(app.getStatus()).isEqualTo(req.getStatus());
     assertThat(app.getDescription()).isNull();
     assertThat(app.getRedirectUri()).isEqualTo("");
-    assertThat(app.getGroups()).isEmpty();
   }
 
   // Create
@@ -168,7 +156,6 @@ public class ApplicationServiceTest {
   @Test
   @Ignore
   public void testGetByNameNotFound() {
-    // TODO Currently returning null, should throw exception (EntityNotFoundException?)
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> applicationService.getByName("Application 123456"));
   }
@@ -183,8 +170,7 @@ public class ApplicationServiceTest {
   @Test
   @Ignore
   public void testGetByClientIdNotFound() {
-    // TODO Currently returning null, should throw exception (EntityNotFoundException?)
-    assertThatExceptionOfType(EntityNotFoundException.class)
+    assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(() -> applicationService.getByClientId("123456"));
   }
 
@@ -256,7 +242,7 @@ public class ApplicationServiceTest {
     userService.addUserToApps(userTwo.getId(), newArrayList(application.getId()));
 
     val applications =
-        applicationService.findUserApps(
+        applicationService.findApplicationsForUser(
             user.getId(), Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
@@ -270,7 +256,7 @@ public class ApplicationServiceTest {
 
     val user = userService.getByName("FirstUser@domain.com");
     val applications =
-        applicationService.findUserApps(
+        applicationService.findApplicationsForUser(
             user.getId(), Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(0L);
@@ -291,7 +277,7 @@ public class ApplicationServiceTest {
     val clientIdFilter = new SearchFilter("clientId", "111111");
 
     val applications =
-        applicationService.findUserApps(
+        applicationService.findApplicationsForUser(
             user.getId(), singletonList(clientIdFilter), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
@@ -313,7 +299,7 @@ public class ApplicationServiceTest {
     val clientIdFilter = new SearchFilter("clientId", "333333");
 
     val applications =
-        applicationService.findUserApps(
+        applicationService.findApplicationsForUser(
             user.getId(),
             "444444",
             singletonList(clientIdFilter),
@@ -335,7 +321,7 @@ public class ApplicationServiceTest {
         user.getId(), newArrayList(applicationOne.getId(), applicationTwo.getId()));
 
     val applications =
-        applicationService.findUserApps(
+        applicationService.findApplicationsForUser(
             user.getId(), "222222", Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
@@ -352,11 +338,12 @@ public class ApplicationServiceTest {
 
     val application = applicationService.getByClientId("111111");
 
-    group.getApplications().add(application);
-    groupTwo.getApplications().add(application);
+    groupService.associateApplicationsWithGroup(group.getId(), newArrayList(application.getId()));
+    groupService.associateApplicationsWithGroup(
+        groupTwo.getId(), newArrayList(application.getId()));
 
     val applications =
-        applicationService.findGroupApplications(
+        applicationService.findApplicationsForGroup(
             group.getId(), Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
@@ -370,7 +357,7 @@ public class ApplicationServiceTest {
 
     val group = groupService.getByName("Group One");
     val applications =
-        applicationService.findGroupApplications(
+        applicationService.findApplicationsForGroup(
             group.getId(), Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(0L);
@@ -385,13 +372,13 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("222222");
     val applicationTwo = applicationService.getByClientId("333333");
 
-    group.getApplications().add(applicationOne);
-    group.getApplications().add(applicationTwo);
+    groupService.associateApplicationsWithGroup(
+        group.getId(), newArrayList(applicationOne.getId(), applicationTwo.getId()));
 
     val clientIdFilter = new SearchFilter("clientId", "333333");
 
     val applications =
-        applicationService.findGroupApplications(
+        applicationService.findApplicationsForGroup(
             group.getId(), singletonList(clientIdFilter), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
@@ -407,13 +394,13 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("333333");
     val applicationTwo = applicationService.getByClientId("444444");
 
-    group.getApplications().add(applicationOne);
-    group.getApplications().add(applicationTwo);
+    groupService.associateApplicationsWithGroup(
+        group.getId(), newArrayList(applicationOne.getId(), applicationTwo.getId()));
 
     val clientIdFilter = new SearchFilter("clientId", "333333");
 
     val applications =
-        applicationService.findGroupApplications(
+        applicationService.findApplicationsForGroup(
             group.getId(),
             "444444",
             singletonList(clientIdFilter),
@@ -431,11 +418,11 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("444444");
     val applicationTwo = applicationService.getByClientId("555555");
 
-    group.getApplications().add(applicationOne);
-    group.getApplications().add(applicationTwo);
+    groupService.associateApplicationsWithGroup(
+        group.getId(), newArrayList(applicationOne.getId(), applicationTwo.getId()));
 
     val applications =
-        applicationService.findGroupApplications(
+        applicationService.findApplicationsForGroup(
             group.getId(), "555555", Collections.emptyList(), new PageableResolver().getPageable());
 
     assertThat(applications.getTotalElements()).isEqualTo(1L);
@@ -513,28 +500,6 @@ public class ApplicationServiceTest {
     assertThat(a2.getClientId()).isNotEqualTo(ur3.getClientId());
     assertThatExceptionOfType(UniqueViolationException.class)
         .isThrownBy(() -> applicationService.partialUpdate(a2.getId(), ur3));
-  }
-
-  @Test
-  @Ignore
-  public void testUpdateClientIdNotAllowed() {
-    //    entityGenerator.setupTestApplications();
-    //    val application = applicationService.getByClientId("111111");
-    //    application.setClientId("222222");
-    //    val updated = applicationService.update(application);
-    assertThat(1).isEqualTo(2);
-    // TODO Check for uniqueness in application, currently only SQL
-  }
-
-  @Test
-  @Ignore
-  public void testUpdateStatusNotInAllowedEnum() {
-    //    entityGenerator.setupTestApplications();
-    //    val application = applicationService.getByClientId("111111");
-    //    application.setStatus("Junk");
-    //    val updated = applicationService.update(application);
-    assertThat(1).isEqualTo(2);
-    // TODO Check for uniqueness in application, currently only SQL
   }
 
   // Delete

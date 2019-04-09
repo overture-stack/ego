@@ -35,6 +35,7 @@ public class JavaFields {
   public static final String LASTLOGIN = "lastLogin";
   public static final String PREFERREDLANGUAGE = "preferredLanguage";
   public static final String APPLICATIONS = "applications";
+  public static final String APPLICATION = "application";
   public static final String OWNER = "owner";
   public static final String SCOPES = "scopes";
   public static final String GROUPS = "groups";
@@ -57,4 +58,6 @@ public class JavaFields {
   public static final String USER_ID = "userId";
   public static final String GROUP_ID = "groupId";
   public static final String USERGROUPS = "userGroups";
+  public static final String APPLICATION_ID = "applicationId";
+  public static final String GROUPAPPLICATIONS = "groupApplications";
 }

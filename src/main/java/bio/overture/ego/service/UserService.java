@@ -18,11 +18,13 @@ package bio.overture.ego.service;
 
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.convertToUserGroup;
+import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static java.lang.String.format;
@@ -49,7 +51,6 @@ import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.UserRepository;
-import bio.overture.ego.repository.queryspecification.GroupSpecification;
 import bio.overture.ego.repository.queryspecification.UserSpecification;
 import bio.overture.ego.repository.queryspecification.builder.UserSpecificationBuilder;
 import bio.overture.ego.token.IDToken;
@@ -121,11 +122,12 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   public User create(@NonNull CreateUserRequest request) {
-    checkEmailUnique(request.getEmail());
+    validateCreateRequest(request);
     val user = USER_CONVERTER.convertToUser(request);
     return getRepository().save(user);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Optional<User> findByName(String name) {
     return (Optional<User>)
@@ -138,6 +140,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
                     .buildByNameIgnoreCase(name));
   }
 
+  @SuppressWarnings("unchecked")
   public User get(
       @NonNull UUID id,
       boolean fetchUserPermissions,
@@ -165,27 +168,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .status(userDefaultsConfig.getDefaultUserStatus())
             .type(userDefaultsConfig.getDefaultUserType())
             .build());
-  }
-
-  public Page<Group> findGroupsForUser(
-      @NonNull UUID id, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
-    checkExistence(id);
-    return groupRepository.findAll(
-        where(GroupSpecification.containsUser(id)).and(GroupSpecification.filterBy(filters)),
-        pageable);
-  }
-
-  public Page<Group> findGroupsForUser(
-      @NonNull UUID id,
-      @NonNull String query,
-      @NonNull List<SearchFilter> filters,
-      @NonNull Pageable pageable) {
-    checkExistence(id);
-    return groupRepository.findAll(
-        where(GroupSpecification.containsUser(id))
-            .and(GroupSpecification.containsText(query))
-            .and(GroupSpecification.filterBy(filters)),
-        pageable);
   }
 
   public User addUserToApps(@NonNull UUID id, @NonNull List<UUID> appIds) {
@@ -216,10 +198,12 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<User> listUsers(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository().findAll(UserSpecification.filterBy(filters), pageable);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<User> findUsers(
       @NonNull String query, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     return getRepository()
@@ -261,25 +245,57 @@ public class UserService extends AbstractNamedService<User, UUID> {
     getRepository().save(user);
   }
 
-  public Page<User> findAppUsers(
+  @SuppressWarnings("unchecked")
+  public Page<User> findUsersForGroup(
+      @NonNull UUID groupId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+    checkEntityExistence(Group.class, groupRepository, groupId);
+    return userRepository.findAll(
+        where(UserSpecification.inGroup(groupId)).and(UserSpecification.filterBy(filters)),
+        pageable);
+  }
+
+  @SuppressWarnings("unchecked")
+  public Page<User> findUsersForGroup(
+      @NonNull UUID groupId,
+      @NonNull String query,
+      @NonNull List<SearchFilter> filters,
+      @NonNull Pageable pageable) {
+    checkEntityExistence(Group.class, groupRepository, groupId);
+    return userRepository.findAll(
+        where(UserSpecification.inGroup(groupId))
+            .and(UserSpecification.containsText(query))
+            .and(UserSpecification.filterBy(filters)),
+        pageable);
+  }
+
+  @SuppressWarnings("unchecked")
+  public Page<User> findUsersForApplication(
       @NonNull UUID appId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+    applicationService.checkExistence(appId);
     return getRepository()
         .findAll(
             where(UserSpecification.ofApplication(appId)).and(UserSpecification.filterBy(filters)),
             pageable);
   }
 
-  public Page<User> findAppUsers(
+  @SuppressWarnings("unchecked")
+  public Page<User> findUsersForApplication(
       @NonNull UUID appId,
       @NonNull String query,
       @NonNull List<SearchFilter> filters,
       @NonNull Pageable pageable) {
+    applicationService.checkExistence(appId);
     return getRepository()
         .findAll(
             where(UserSpecification.ofApplication(appId))
                 .and(UserSpecification.containsText(query))
                 .and(UserSpecification.filterBy(filters)),
             pageable);
+  }
+
+  private void validateCreateRequest(CreateUserRequest r) {
+    checkRequestValid(r);
+    checkEmailUnique(r.getEmail());
   }
 
   private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
@@ -291,7 +307,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
         !userRepository.existsByEmailIgnoreCase(email), "A user with same email already exists");
   }
 
-  // TODO [rtisma]: ensure that the user contains all its relationships
+  @SuppressWarnings("unchecked")
   public static Set<AbstractPermission> resolveUsersPermissions(User user) {
     val up = user.getUserPermissions();
     Collection<UserPermission> userPermissions = isNull(up) ? ImmutableList.of() : up;
