@@ -1,16 +1,23 @@
 package bio.overture.ego.grpc;
 
+import bio.overture.ego.grpc.service.UserServiceImpl;
 import io.grpc.*;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@Profile("grpc")
 public class GrpcServer implements CommandLineRunner, DisposableBean {
+
+  @Value("${grpc.port}")
+  private int port;
 
   private Server server;
 
@@ -23,7 +30,6 @@ public class GrpcServer implements CommandLineRunner, DisposableBean {
 
   @Override
   public void run(String... args) throws Exception {
-    int port = 50051;
 
     server =
         ServerBuilder.forPort(port)
