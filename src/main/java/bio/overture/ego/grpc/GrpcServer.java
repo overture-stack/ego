@@ -1,6 +1,6 @@
 package bio.overture.ego.grpc;
 
-import bio.overture.ego.grpc.service.UserServiceImpl;
+import bio.overture.ego.grpc.service.GrpcUserServiceImpl;
 import io.grpc.*;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +21,10 @@ public class GrpcServer implements CommandLineRunner, DisposableBean {
 
   private Server server;
 
-  private final UserServiceImpl userServiceImpl;
+  private final GrpcUserServiceImpl userServiceImpl;
 
   @Autowired
-  public GrpcServer(UserServiceImpl userServiceImpl) {
+  public GrpcServer(GrpcUserServiceImpl userServiceImpl) {
     this.userServiceImpl = userServiceImpl;
   }
 
