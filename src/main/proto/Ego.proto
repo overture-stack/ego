@@ -45,4 +45,5 @@ message User {
     string type = 10;
 
     repeated string permissions = 11;
+    repeated string groups = 12;
 }
