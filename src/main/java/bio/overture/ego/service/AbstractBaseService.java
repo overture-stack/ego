@@ -1,19 +1,28 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
-import static bio.overture.ego.utils.EntityServices.getManyEntities;
-
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.repository.BaseRepository;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
+import bio.overture.ego.repository.queryspecification.builder.AbstractSpecificationBuilder;
+import com.google.common.collect.ImmutableSet;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.utils.CollectionUtils.difference;
+import static bio.overture.ego.utils.Converters.convertToIds;
+import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
+import static bio.overture.ego.utils.EntityServices.getManyEntities;
+import static bio.overture.ego.utils.Joiners.COMMA;
 
 /**
  * Base implementation
@@ -49,8 +58,33 @@ public abstract class AbstractBaseService<T extends Identifiable<ID>, ID>
   }
 
   @Override
-  public Page<T> findAll(Specification specification, Pageable pageable) {
+  @SuppressWarnings("unchecked")
+  public Page<T> findAll(@NonNull Specification specification, @NonNull Pageable pageable) {
     return getRepository().findAll(specification, pageable);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public Page<T> findAll(@NonNull AbstractSpecificationBuilder<T, ID> specificationBuilder, @NonNull Pageable pageable) {
+    return getRepository().findAll(specificationBuilder.listAll(), pageable);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public List<T> getMany(@NonNull Collection<ID> ids, @NonNull AbstractSpecificationBuilder<T, ID> specificationBuilder) {
+    val entities = (List<T>)getRepository().findAll(
+        specificationBuilder
+            .buildByIds(ids));
+    val requestedIds = ImmutableSet.copyOf(ids);
+    val existingIds = convertToIds(entities);
+    val nonExistingIds = difference(requestedIds, existingIds);
+    checkNotFound(
+        nonExistingIds.isEmpty(),
+        "Entities of entityType '%s' were not found for the following ids: %s",
+        getEntityTypeName(),
+        COMMA.join(nonExistingIds));
+    return entities;
+
   }
 
   @Override
