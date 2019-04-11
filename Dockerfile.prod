@@ -4,6 +4,6 @@ ADD . .
 RUN ./mvnw package -Dmaven.test.skip=true
 
 FROM java:8-alpine
-COPY --from=0 /usr/src/app/target/ego-*-SNAPSHOT-exec.jar /usr/bin/ego.jar
+COPY --from=0 /usr/src/app/target/ego-*-exec.jar /usr/bin/ego.jar
 ENTRYPOINT ["java", "-jar", "/usr/bin/ego.jar"]
 EXPOSE 8081/tcp
