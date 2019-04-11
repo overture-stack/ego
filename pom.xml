@@ -3,9 +3,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.overture</groupId>
+    <groupId>bio.overture</groupId>
     <artifactId>ego</artifactId>
-    <version>1.2.3-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
 
     <name>ego</name>
     <description>OAuth 2.0 Authorization service that supports multiple OpenID Connect Providers</description>
@@ -21,6 +21,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
+        <mapstruct.version>1.2.0.Final</mapstruct.version>
     </properties>
 
     <dependencies>
@@ -31,7 +32,12 @@
         <dependency>
             <groupId>org.springframework.security.oauth</groupId>
             <artifactId>spring-security-oauth2</artifactId>
-            <version>2.0.16.RELEASE</version>
+            <version>2.0.17.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security.oauth.boot</groupId>
+            <artifactId>spring-security-oauth2-autoconfigure</artifactId>
+            <version>2.0.2.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -56,6 +62,12 @@
             <artifactId>springfox-swagger2</artifactId>
             <version>2.6.1</version>
             <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.mapstruct</groupId>
+                    <artifactId>mapstruct</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.springfox</groupId>
@@ -81,6 +93,7 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-jwt</artifactId>
+            <version>1.0.8.RELEASE</version>
         </dependency>
 
         <!-- JDBC -->
@@ -142,7 +155,7 @@
         <dependency>
             <groupId>com.google.api-client</groupId>
             <artifactId>google-api-client</artifactId>
-            <version>1.22.0</version>
+            <version>1.23.0</version>
         </dependency>
 
         <!-- Json Web Tokens -->
@@ -155,7 +168,37 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.9.5</version>
+            <version>2.9.8</version>
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.11.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.json-unit</groupId>
+            <artifactId>json-unit-fluent</artifactId>
+            <version>2.1.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ca.andricdu</groupId>
+            <artifactId>selenium-shaded</artifactId>
+            <version>3.141.59</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-exec</artifactId>
+            <version>1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.browserstack</groupId>
+            <artifactId>browserstack-local-java</artifactId>
+            <version>0.1.0</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- Vault -->
@@ -180,27 +223,39 @@
             </exclusions>
         </dependency>
 
-        <!-- Reactor -->
+        <!-- Mapstruct - automated pojo mapping -->
         <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-bus</artifactId>
-            <version>2.0.8.RELEASE</version>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-jdk8</artifactId>
+            <version>${mapstruct.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-core</artifactId>
-            <version>2.0.8.RELEASE</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-jwt</artifactId>
-            <version>1.0.8.RELEASE</version>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+            <version>${mapstruct.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>com.coveo</groupId>
+                <artifactId>fmt-maven-plugin</artifactId>
+                <version>2.8</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>format</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -257,6 +312,10 @@
         </dependencies>
     </dependencyManagement>
     <repositories>
+        <repository>
+            <id>dcc-dependencies</id>
+            <url>https://artifacts.oicr.on.ca/artifactory/dcc-dependencies</url>
+        </repository>
         <repository>
             <id>spring-snapshots</id>
             <name>Spring Snapshots</name>

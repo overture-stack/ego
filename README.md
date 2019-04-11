@@ -8,6 +8,7 @@
   <a href="http://www.overture.bio/products/ego" target="_blank"><img alt="General Availability" title="General Availability" src="http://www.overture.bio/img/progress-horizontal-GA.svg" width="320" /></a>
 </p>
 
+[![BrowserStack Status](https://www.browserstack.com/automate/badge.svg?badge_key=U3dLZnRFNWI2MWNFY2NGcXVtVTB3WDcyU2dPVjlVeEFYUEdxUnpYZlhrUT0tLTFzY0taYTA0MVFEa3ErNkRZdTBRWVE9PQ==--690f89a41a0eedf7b4975bd7df2eac162e04e775% )](https://www.browserstack.com/automate/public-build/U3dLZnRFNWI2MWNFY2NGcXVtVTB3WDcyU2dPVjlVeEFYUEdxUnpYZlhrUT0tLTFzY0taYTA0MVFEa3ErNkRZdTBRWVE9PQ==--690f89a41a0eedf7b4975bd7df2eac162e04e775%)
 [![Build Status](https://travis-ci.org/overture-stack/ego.svg?branch=master)](https://travis-ci.org/overture-stack/ego)
 [![CircleCI](https://circleci.com/gh/overture-stack/ego/tree/develop.svg?style=svg)](https://circleci.com/gh/overture-stack/ego/tree/develop)
 [![Slack](http://slack.overture.bio/badge.svg)](http://slack.overture.bio)
@@ -23,6 +24,8 @@
   - [Step 2 - Run](#step-2---run)
 - [Tech Specifications](#tech-specification)
 - [Usage](#usage)
+- [Shoutouts](#shoutouts)
+  - [Browserstack](#browserstack)
 
 ## Introduction
 
@@ -91,13 +94,13 @@ Database migrations and versioning is managed by [flyway](https://flywaydb.org/)
 Get current version information:
 
 ```bash
-./flyway -configFiles=<path_to_ego>/ego/src/main/resources/flyway/conf/flyway.conf -locations=filesystem:<path_to_ego>/ego/src/main/resources/flyway/sql info
+./fly
 ```
 
 Run outstanding migrations:
 
 ```bash
-./flyway -configFiles=<path_to_ego>/ego/src/main/resources/flyway/conf/flyway.conf -locations=filesystem:<path_to_ego>/ego/src/main/resources/flyway/sql migrate
+./fly migrate
 ```
 
 To see the migration naming convention, [click here.](https://flywaydb.org/documentation/migrations#naming)
@@ -163,7 +166,6 @@ An example ego JWT is mentioned below:
 ```
 
 #### Notes
-
 - "aud" field can contain one or more client IDs. This field indicates the client services that are authorized to use this JWT.
 - "groups" will differ based on the domain of client services - each domain of service should get list of groups from that domain's ego service.
 - "permissions" will differ based on domain of client service - each domain of service should get list of permissions from that domain's ego service.
@@ -204,3 +206,11 @@ curl example:
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -d 'grant_type=client_credentials&client_id=my-app-id&client_secret=secretpassword'
 ```
+
+## Shoutouts
+
+### Browserstack
+Many thanks to [Browserstack](https://www.browserstack.com/) for giving our test capabilities a powerup!
+![Browserstack](https://p14.zdusercontent.com/attachment/1015988/qyPFNKIZXCbr4qKjd5oxrayZc?token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..-yKqMwgZKdCDJZmW2kcVYw.IKGbK6GBbU3uZ3B7Vapw8uZeQ-uhXDV9kANtz5OOOBl0Ceg6Oi1gS5wqBnStOsCKgb3CibgGIrYjk-odWPwaL9Ei0u3OIDuBldkxF6aJ6eGtC9G4LfbDLGtOnYkUiANvx5HNPb7HZa3QyivKxCcX_MjO5U01F0WbmJajfYBsFVHHLtO0dBqFz-eWZMmLB0yfjZEaVPAUfLk9H1TO4c6Vw91Or29FrzaoGDQmvmcP7Pg00LMoxuaLxGJuuOiUlEe6OunidzxRd_elUZxMJ_caonvHEjSCkq_yHilG67tGewY.IV6Qg9p5vE0TGk59pqZtRg)
+
+

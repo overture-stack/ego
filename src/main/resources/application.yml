@@ -1,22 +1,27 @@
 server:
-  port: 8081
+  port: 8088
 
 jwt:
   secret: testsecretisalsoasecret
   duration: 86400000 #in milliseconds 86400000 = 1day, max = 2147483647
+
+apitoken:
+  duration: 365 # in days
 
 # security
 auth:
   token:
     prefix:
 
+spring.main.allow-bean-definition-overriding: true
+
 # Datasource
 spring.datasource:
   driver-class-name: org.postgresql.Driver
-  url: jdbc:postgresql://localhost:5432/ego?stringtype=unspecified
+  url: jdbc:postgresql://localhost:8432/ego?stringtype=unspecified
 
   username: postgres
-  password:
+  password: password
   max-active: 10
   max-idle: 1
   min-idle: 1
@@ -24,27 +29,76 @@ spring.datasource:
 spring:
   flyway:
     enabled: false
+  jackson:
+    deserialization:
+      FAIL_ON_UNKNOWN_PROPERTIES: true
+      FAIL_ON_NULL_FOR_PRIMITIVES: true
+      FAIL_ON_NUMBERS_FOR_ENUMS: true
+      FAIL_ON_READING_DUP_TREE_KEY: true
+
 
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
 spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
+log4j:
+  logger:
+    org:
+      hibernate: TRACE
 
-# Facebook Connection Details
+
+oauth:
+  redirectFrontendUri: http://localhost:3501
+
 facebook:
   client:
-    id: 140524976574963
-    secret: 2439abe7ae008bda7ab5cfdf706b4d66
+    clientId:
+    clientSecret:
     accessTokenUri: https://graph.facebook.com/oauth/access_token
+    userAuthorizationUri: https://www.facebook.com/dialog/oauth
     tokenValidateUri: https://graph.facebook.com/debug_token
+    tokenName: oauth_token
+    authenticationScheme: query
+    clientAuthenticationScheme: form
+    scope:
+      - email
     timeout:
       connect: 5000
       read: 5000
+    user-authorization-uri: https://www.facebook.com/dialog/oauth
   resource:
-    userInfoUri: https://graph.facebook.com/me
+    userInfoUri: https://graph.facebook.com/me?fields=email,first_name,last_name
 
-# Google Connection Details
 google:
   client:
-    Ids: 144611473365-k1aarg8qs6rlh67r3t7dssi1e34b6061.apps.googleusercontent.com
+    clientId: 144611473365-k1aarg8qs6rlh67r3t7dssi1e34b6061.apps.googleusercontent.com
+    clientSecret:
+    accessTokenUri: https://www.googleapis.com/oauth2/v4/token
+    userAuthorizationUri: https://accounts.google.com/o/oauth2/v2/auth
+    clientAuthenticationScheme: form
+    scope:
+      - email
+  resource:
+    userInfoUri: https://www.googleapis.com/oauth2/v3/userinfo
+
+linkedIn:
+  client:
+    clientID: 
+    clientSecret: 
+    accessTokenUri: https://www.linkedin.com/oauth/v2/accessToken
+    userAuthorizationUri: https://www.linkedin.com/oauth/v2/authorization
+    clientAuthenticationScheme: query
+  resource:
+    userInfoUri: https://api.linkedin.com/v1/people/~:(email-address,first-name,last-name)?format=json
+
+github:
+  client:
+    clientId: 
+    clientSecret: 
+    accessTokenUri: https://github.com/login/oauth/access_token
+    userAuthorizationUri: https://github.com/login/oauth/authorize
+    clientAuthenticationScheme: form
+    scope: "user:email"
+  resource:
+    userInfoUri: https://api.github.com/user
 
 # Logging settings.
 logging:
@@ -55,9 +109,19 @@ logging:
     "org.skife.jdbi.v2": TRACE
   level:
     root: ERROR
-    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
-    org.springframework.boot: INFO
-    org.overture.ego: INFO
+    #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    #org.springframework.boot: INFO
+    bio.overture.ego: INFO
+
+# Hibernate SQL Debugging
+#spring.jpa.properties.hibernate.format_sql: true
+#logging.level.org.hibernate.SQL: DEBUG
+#logging.level.org.hibernate.type.descriptor.sql: TRACE
+
+
+# When you are desperate, use this...
+#logging.level.org.hibernate: TRACE
 
 token:
   private-key: MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDSU6oy48sJW6xzqzOSU1dAvUUeFKQSBHsCf7wGWUGpOxEczhtFiiyx4YUJtg+fyvwWxa4wO3GnQLBPIxBHY8JsnvjQN2lsTUoLqMB9nGpwF617uA/S2igm1u+cDpfi82kbi6SG1Sg30PM047R6oxTRGDLLkeMRF1gRaTBM0HfSL0j6ccU5KPgwYsFLE2We6jeR56iYJGC2KYLH4v8rcc2jRAdMbUntHMtUByF9BPSW7elQnyQH5Qzr/o0b59XLKwnJFn2Bp2yviC8cdyTDyhQGna0e+oESQR1j6u3Ux/mOmm3slRXscA8sH+pHmOEAtjYVf/ww36U8uZv+ctBCJyFVAgMBAAECggEBALrEeJqAFUfWFCkSmdUSFKT0bW/svFUTjXgGnZy1ncz9GpENpMH3lQDQVibteKpYwcom+Cr0XlQ66VUcudPrDjcOY7vhuMfnSh1YWLYyM4IeRHtcUxDVkFoM+vEFNHLf2zIOqqbgmboW3iDVIurT7iRO7KxAe/YtWJL9aVqMtBn7Lu7S7OvAU4ji5iLIBxjl82JYA+9lu/aQ6YGaoZuSO7bcU8Sivi+DKAahqN9XMKiB1XpC+PpaS/aec2S7xIlTdzoDGxEALRGlMe+xBEeQTBVJHBWrRIDPoHLTREeRC/9Pp+1Y4Dz8hd5Bi0n8/5r/q0liD+0vtmjsdU4E2QrktYECgYEA73qWvhCYHPMREAFtwz1mpp9ZhDCW6SF+njG7fBKcjz8OLcy15LXiTGc268ewtQqTMjPQlm1n2C6hGccGAIlMibQJo3KZHlTs125FUzDpTVgdlei6vU7M+gmfRSZed00J6jC04/qMR1tnV3HME3np7eRTKTA6Ts+zBwEvkbCetSkCgYEA4NY5iSBO1ybouIecDdD15uI2ItLPCBNMzu7IiK7IygIzuf+SyKyjhtFSR4vEi0gScOM7UMlwCMOVU10e4nMDknIWCDG9iFvmIEkGHGxgRrN5hX1Wrq74wF212lvvagH1IVWSHa8cVpMe+UwKu5Q1h4yzuYt6Q9wPQ7Qtn5emBE0CgYB2syispMUA9GnsqQii0Xhj9nAEWaEzhOqhtrzbTs5TIkoA4Yr3BkBY5oAOdjhcRBWZuJ0XMrtaKCKqCEAtW+CYEKkGXvMOWcHbNkkeZwv8zkQ73dNRqhFnjgVn3RDNyV20uteueK23YNLkQP+KV89fnuCpdcIw9joiqq/NYuIHoQKBgB5WaZ8KH/lCA8babYEjv/pubZWXUl4plISbja17wBYZ4/bl+F1hhhMr7Wk//743dF2NG7TT6W0VTvHXr9IoaMP65uQmKgfbNpsGn294ZClGEFClz+t0KpZyTpZvL0fjibr8u+GLfkxkP5qt2wjif7KRlrKjklTTva+KAVn2cW1FAoGBAMkX9ekIwhx/7uY6ndxKl8ZMDerjr6MhV0b08hHp3RxHbYVbcpN0UKspoYvZVgHwP18xlDij8yWRE2fapwgi4m82ZmYlg0qqJmyqIU9vBB3Jow903h1KPQrkmQEZxJ/4H8yrbgVf2HT+WUfjTFgaDZRl01bI3YkydCw91/Ub9HU6
@@ -66,8 +130,8 @@ token:
 # Default values available for creation of entities
 default:
   user:
-    role: USER
-    status: Approved
+    type: USER
+    status: APPROVED
 ---
 ###############################################################################
 # Profile - "jks"
@@ -108,19 +172,19 @@ logging:
 spring:
   profiles: demo
 
-# demo flag
-demo: false
-
 ---
 ###############################################################################
 # Profile - "test"
 ###############################################################################
 spring:
   profiles: test
+logging.test.controller.enable: true
+
+
 
 spring.datasource:
   driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-  url: jdbc:tc:postgresql:9.5.13://localhost:5432/ego?TC_INITFUNCTION=org.overture.ego.test.FlywayInit::initTestContainers
+  url: jdbc:tc:postgresql:9.5.13://localhost:5432/ego?TC_INITFUNCTION=bio.overture.ego.test.FlywayInit::initTestContainers
 
   username: postgres
   password:
