@@ -1,4 +1,5 @@
 syntax = "proto3";
+import "google/protobuf/wrappers.proto";
 
 option java_multiple_files = true;
 option java_package = "bio.overture.ego.grpc";
@@ -11,39 +12,47 @@ service UserService {
     rpc List (ListUsersRequest) returns (ListUsersResponse) {}
 }
 
+message PagedRequest {
+    uint32 page_number = 1;
+    uint32 page_size = 2;
+}
+
+message PagedResponse {
+    uint32 max_results = 1;
+    string next_page_token = 2;
+}
+
 message GetUserRequest {
     string id = 1;
 }
 
 message ListUsersRequest {
-    // Pagination and Sort by Google standard design pattern: https://cloud.google.com/apis/design/design_patterns
+    PagedRequest page = 1;
 
-    string page_token = 1;
-    int32 page_size = 2;
-
-    string query = 3;
-    string order_by = 4; //ex. "foo" or "bar desc"
+    string query = 2;
+    string order_by = 3;
 }
 
 message ListUsersResponse {
-    string next_page_token = 1;
+    PagedResponse page = 1;
 
     repeated User users = 2;
 }
 
 message User {
-    string id = 1;
-    string email = 2;
-    string firstName = 3;
-    string lastName = 4;
+    google.protobuf.StringValue id = 1;
+    google.protobuf.StringValue email = 2;
+    google.protobuf.StringValue first_name = 3;
+    google.protobuf.StringValue last_name = 4;
 
-    string createdAt = 5;
-    string lastLogin = 6;
-    string name = 7;
-    string preferredLanguage = 8;
-    string status = 9;
-    string type = 10;
+    google.protobuf.StringValue created_at = 5;
+    google.protobuf.StringValue last_login = 6;
+    google.protobuf.StringValue name = 7;
+    google.protobuf.StringValue preferred_language = 8;
+    google.protobuf.StringValue status = 9;
+    google.protobuf.StringValue type = 10;
 
-    repeated string permissions = 11;
-    repeated string groups = 12;
+    repeated google.protobuf.StringValue applications = 11;
+    repeated google.protobuf.StringValue groups = 12;
+    repeated google.protobuf.StringValue permissions = 13;
 }
