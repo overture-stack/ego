@@ -41,5 +41,5 @@ public class CreateUserRequest {
 
   private String lastName;
 
-  @NotNull private LanguageType preferredLanguage;
+  private LanguageType preferredLanguage;
 }
