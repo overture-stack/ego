@@ -16,9 +16,6 @@
 
 package bio.overture.ego.model.entity;
 
-import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
-import static com.google.common.collect.Sets.newHashSet;
-
 import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LombokFields;
@@ -26,26 +23,13 @@ import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.model.join.GroupApplication;
+import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
-import java.util.Set;
-import java.util.UUID;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -56,6 +40,23 @@ import lombok.experimental.Accessors;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import java.util.Set;
+import java.util.UUID;
+
+import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
+import static com.google.common.collect.Sets.newHashSet;
 
 @Entity
 @Table(name = Tables.APPLICATION)
@@ -135,9 +136,10 @@ public class Application implements Identifiable<UUID> {
 
   @JsonIgnore
   @Builder.Default
-  @ManyToMany(
-      mappedBy = JavaFields.APPLICATIONS,
+  @OneToMany(
+      mappedBy = JavaFields.APPLICATION,
+      cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
-      cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-  private Set<User> users = newHashSet();
+      orphanRemoval = true)
+  private Set<UserApplication> userApplications = newHashSet();
 }

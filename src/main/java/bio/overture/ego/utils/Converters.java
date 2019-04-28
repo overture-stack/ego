@@ -1,28 +1,31 @@
 package bio.overture.ego.utils;
 
-import static bio.overture.ego.utils.Collectors.toImmutableList;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.collect.Sets.newHashSet;
-import static java.util.Objects.isNull;
-import static lombok.AccessLevel.PRIVATE;
-
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.join.GroupApplication;
 import bio.overture.ego.model.join.GroupApplicationId;
+import bio.overture.ego.model.join.UserApplication;
+import bio.overture.ego.model.join.UserApplicationId;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.join.UserGroupId;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.val;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.val;
+
+import static bio.overture.ego.utils.Collectors.toImmutableList;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
+import static java.util.Objects.isNull;
+import static lombok.AccessLevel.PRIVATE;
 
 @NoArgsConstructor(access = PRIVATE)
 public class Converters {
@@ -71,6 +74,11 @@ public class Converters {
     if (!isNull(nullableValue)) {
       consumer.accept(nullableValue);
     }
+  }
+
+  public static UserApplication convertToUserApplication(@NonNull User u, @NonNull Application a) {
+    val id = UserApplicationId.builder().applicationId(a.getId()).userId(u.getId()).build();
+    return UserApplication.builder().id(id).user(u).application(a).build();
   }
 
   public static UserGroup convertToUserGroup(@NonNull User u, @NonNull Group g) {

@@ -1,18 +1,5 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static bio.overture.ego.model.enums.StatusType.DISABLED;
-import static bio.overture.ego.model.enums.StatusType.PENDING;
-import static bio.overture.ego.model.enums.StatusType.REJECTED;
-import static bio.overture.ego.service.ApplicationService.APPLICATION_CONVERTER;
-import static bio.overture.ego.utils.CollectionUtils.setOf;
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
-import static com.google.common.collect.Lists.newArrayList;
-import static java.util.Collections.singletonList;
-import static java.util.UUID.randomUUID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 import bio.overture.ego.controller.resolver.PageableResolver;
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
@@ -23,9 +10,6 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.token.app.AppTokenClaims;
 import bio.overture.ego.utils.EntityGenerator;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Ignore;
@@ -38,6 +22,23 @@ import org.springframework.security.oauth2.provider.ClientRegistrationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.StatusType.DISABLED;
+import static bio.overture.ego.model.enums.StatusType.PENDING;
+import static bio.overture.ego.model.enums.StatusType.REJECTED;
+import static bio.overture.ego.service.ApplicationService.APPLICATION_CONVERTER;
+import static bio.overture.ego.utils.CollectionUtils.setOf;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Collections.singletonList;
+import static java.util.UUID.randomUUID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @SpringBootTest
@@ -72,7 +73,6 @@ public class ApplicationServiceTest {
             .name(name)
             .status(status)
             .redirectUri(null)
-            .users(null)
             .build();
 
     val newName = randomUUID().toString();
@@ -93,7 +93,7 @@ public class ApplicationServiceTest {
     assertThat(app.getStatus()).isEqualTo(APPROVED);
     assertThat(app.getId()).isEqualTo(id);
     assertThat(app.getName()).isEqualTo(newName);
-    assertThat(app.getUsers()).isNull();
+    assertThat(app.getUserApplications()).isNull();
   }
 
   @Test
@@ -111,7 +111,7 @@ public class ApplicationServiceTest {
     assertThat(app.getGroupApplications()).isEmpty();
     assertThat(app.getClientId()).isEqualTo(req.getClientId());
     assertThat(app.getName()).isEqualTo(req.getName());
-    assertThat(app.getUsers()).isEmpty();
+    assertThat(app.getUserApplications()).isEmpty();
     assertThat(app.getClientSecret()).isEqualTo(req.getClientSecret());
     assertThat(app.getStatus()).isEqualTo(req.getStatus());
     assertThat(app.getDescription()).isNull();
@@ -238,8 +238,8 @@ public class ApplicationServiceTest {
 
     val application = applicationService.getByClientId("444444");
 
-    userService.addUserToApps(user.getId(), newArrayList(application.getId()));
-    userService.addUserToApps(userTwo.getId(), newArrayList(application.getId()));
+    userService.associateApplicationsWithUser(user.getId(), newArrayList(application.getId()));
+    userService.associateApplicationsWithUser(userTwo.getId(), newArrayList(application.getId()));
 
     val applications =
         applicationService.findApplicationsForUser(
@@ -271,7 +271,7 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("111111");
     val applicationTwo = applicationService.getByClientId("555555");
 
-    userService.addUserToApps(
+    userService.associateApplicationsWithUser(
         user.getId(), newArrayList(applicationOne.getId(), applicationTwo.getId()));
 
     val clientIdFilter = new SearchFilter("clientId", "111111");
@@ -293,7 +293,7 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("333333");
     val applicationTwo = applicationService.getByClientId("444444");
 
-    userService.addUserToApps(
+    userService.associateApplicationsWithUser(
         user.getId(), newArrayList(applicationOne.getId(), applicationTwo.getId()));
 
     val clientIdFilter = new SearchFilter("clientId", "333333");
@@ -317,7 +317,7 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("222222");
     val applicationTwo = applicationService.getByClientId("444444");
 
-    userService.addUserToApps(
+    userService.associateApplicationsWithUser(
         user.getId(), newArrayList(applicationOne.getId(), applicationTwo.getId()));
 
     val applications =

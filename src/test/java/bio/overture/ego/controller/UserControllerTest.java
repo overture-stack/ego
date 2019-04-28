@@ -28,7 +28,6 @@ import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.LanguageType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
-import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
@@ -42,7 +41,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang.NotImplementedException;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,21 +57,21 @@ import java.util.UUID;
 
 import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
 import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
-import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
 import static bio.overture.ego.model.enums.JavaFields.CREATEDAT;
 import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.LASTLOGIN;
 import static bio.overture.ego.model.enums.JavaFields.LASTNAME;
 import static bio.overture.ego.model.enums.JavaFields.NAME;
 import static bio.overture.ego.model.enums.JavaFields.PREFERREDLANGUAGE;
 import static bio.overture.ego.model.enums.JavaFields.STATUS;
 import static bio.overture.ego.model.enums.JavaFields.TOKENS;
 import static bio.overture.ego.model.enums.JavaFields.TYPE;
+import static bio.overture.ego.model.enums.JavaFields.USERAPPLICATIONS;
 import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
 import static bio.overture.ego.model.enums.JavaFields.USERPERMISSIONS;
 import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.DISABLED;
-import static bio.overture.ego.model.enums.StatusType.REJECTED;
 import static bio.overture.ego.model.enums.UserType.USER;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
@@ -85,15 +83,11 @@ import static bio.overture.ego.utils.EntityGenerator.generateNonExistentName;
 import static bio.overture.ego.utils.EntityGenerator.randomEnum;
 import static bio.overture.ego.utils.EntityGenerator.randomEnumExcluding;
 import static bio.overture.ego.utils.EntityGenerator.randomStringNoSpaces;
-import static bio.overture.ego.utils.EntityTools.extractUserIds;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.time.temporal.ChronoUnit.DAYS;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
@@ -130,85 +124,6 @@ public class UserControllerTest extends AbstractControllerTest {
       entityGenerator.setupTestGroups();
       hasRunEntitySetup = true;
     }
-  }
-
-  @Test
-  public void addUser() {
-
-    val user =
-        CreateUserRequest.builder()
-            .firstName("foo")
-            .lastName("bar")
-            .email("foobar@foo.bar")
-            .preferredLanguage(ENGLISH)
-            .type(USER)
-            .status(APPROVED)
-            .build();
-
-    val response = initStringRequest().endpoint("/users").body(user).post();
-
-    val responseStatus = response.getStatusCode();
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
-  }
-
-  @Test
-  public void addUniqueUser() {
-    val user1 =
-        CreateUserRequest.builder()
-            .firstName("unique")
-            .lastName("unique")
-            .email("unique@unique.com")
-            .preferredLanguage(ENGLISH)
-            .type(USER)
-            .status(APPROVED)
-            .build();
-    val user2 =
-        CreateUserRequest.builder()
-            .firstName("unique")
-            .lastName("unique")
-            .email("unique@unique.com")
-            .preferredLanguage(ENGLISH)
-            .type(USER)
-            .status(APPROVED)
-            .build();
-
-    val response1 = initStringRequest().endpoint("/users").body(user1).post();
-    val responseStatus1 = response1.getStatusCode();
-
-    assertThat(responseStatus1).isEqualTo(HttpStatus.OK);
-
-    // Return a 409 conflict because email already exists for a registered user.
-    val response2 = initStringRequest().endpoint("/users").body(user2).post();
-    val responseStatus2 = response2.getStatusCode();
-    assertThat(responseStatus2).isEqualTo(HttpStatus.CONFLICT);
-  }
-
-  @Test
-  @SneakyThrows
-  public void getUser() {
-
-    // Users created in setup
-    val userId = userService.getByName("FirstUser@domain.com").getId();
-    val response = initStringRequest().endpoint("/users/%s", userId).get();
-
-    val responseStatus = response.getStatusCode();
-    val responseJson = MAPPER.readTree(response.getBody());
-
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
-    assertThat(responseJson.get("firstName").asText()).isEqualTo("First");
-    assertThat(responseJson.get("lastName").asText()).isEqualTo("User");
-    assertThat(responseJson.get("name").asText()).isEqualTo("FirstUser@domain.com");
-    assertThat(responseJson.get("preferredLanguage").asText()).isEqualTo(ENGLISH.toString());
-    assertThat(responseJson.get("status").asText()).isEqualTo(APPROVED.toString());
-    assertThat(responseJson.get("id").asText()).isEqualTo(userId.toString());
-  }
-
-  @Test
-  public void getUser404() {
-    val response = initStringRequest().endpoint("/users/%s", UUID.randomUUID().toString()).get();
-
-    val responseStatus = response.getStatusCode();
-    assertThat(responseStatus).isEqualTo(HttpStatus.NOT_FOUND);
   }
 
   @Test
@@ -252,192 +167,6 @@ public class UserControllerTest extends AbstractControllerTest {
         .isEqualTo("FirstUser@domain.com");
   }
 
-  @Test
-  public void updateUser() {
-    val user = entityGenerator.setupUser("update test");
-    val update = UpdateUserRequest.builder().status(REJECTED).build();
-
-    val response = initStringRequest().endpoint("/users/%s", user.getId()).body(update).put();
-
-    val responseBody = response.getBody();
-
-    HttpStatus responseStatus = response.getStatusCode();
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
-    assertThatJson(responseBody).node("id").isEqualTo(user.getId());
-    assertThatJson(responseBody).node("status").isEqualTo(REJECTED.toString());
-  }
-
-  @Test
-  @SneakyThrows
-  public void addGroupToUser() {
-    val userId = entityGenerator.setupUser("Group1 User").getId();
-    val groupId = entityGenerator.setupGroup("Addone Group").getId().toString();
-
-    val response =
-        initStringRequest()
-            .endpoint("/users/%s/groups", userId)
-            .body(singletonList(groupId))
-            .post();
-
-    val responseStatus = response.getStatusCode();
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
-
-    val groupResponse = initStringRequest().endpoint("/users/%s/groups", userId).get();
-
-    val groupResponseStatus = groupResponse.getStatusCode();
-    assertThat(groupResponseStatus).isEqualTo(HttpStatus.OK);
-
-    val groupResponseJson = MAPPER.readTree(groupResponse.getBody());
-    assertThat(groupResponseJson.get("count").asInt()).isEqualTo(1);
-    assertThat(groupResponseJson.get("resultSet").elements().next().get("id").asText())
-        .isEqualTo(groupId);
-  }
-
-  @Test
-  @SneakyThrows
-  public void deleteGroupFromUser() {
-    val userId = entityGenerator.setupUser("DeleteGroup User").getId();
-    val deleteGroup = entityGenerator.setupGroup("Delete One Group").getId().toString();
-    val remainGroup = entityGenerator.setupGroup("Don't Delete This One").getId().toString();
-
-    initStringRequest()
-        .endpoint("/users/%s/groups", userId)
-        .body(asList(deleteGroup, remainGroup))
-        .post();
-
-    val groupResponse = initStringRequest().endpoint("/users/%s/groups", userId).get();
-
-    val groupResponseStatus = groupResponse.getStatusCode();
-    assertThat(groupResponseStatus).isEqualTo(HttpStatus.OK);
-    val groupResponseJson = MAPPER.readTree(groupResponse.getBody());
-    assertThat(groupResponseJson.get("count").asInt()).isEqualTo(2);
-
-    val deleteResponse =
-        initStringRequest().endpoint("/users/%s/groups/%s", userId, deleteGroup).delete();
-
-    val deleteResponseStatus = deleteResponse.getStatusCode();
-    assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
-
-    val secondGetResponse = initStringRequest().endpoint("/users/%s/groups", userId).get();
-    val secondGetResponseStatus = deleteResponse.getStatusCode();
-    assertThat(secondGetResponseStatus).isEqualTo(HttpStatus.OK);
-    val secondGetResponseJson = MAPPER.readTree(secondGetResponse.getBody());
-    assertThat(secondGetResponseJson.get("count").asInt()).isEqualTo(1);
-    assertThat(secondGetResponseJson.get("resultSet").elements().next().get("id").asText())
-        .isEqualTo(remainGroup);
-  }
-
-  @Test
-  @SneakyThrows
-  public void addApplicationToUser() {
-    val userId = entityGenerator.setupUser("AddApp1 User").getId();
-    val appId = entityGenerator.setupApplication("app1").getId().toString();
-
-    val response =
-        initStringRequest()
-            .endpoint("/users/%s/applications", userId)
-            .body(singletonList(appId))
-            .post();
-
-    val responseStatus = response.getStatusCode();
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
-
-    val appResponse = initStringRequest().endpoint("/users/%s/applications", userId).get();
-
-    val appResponseStatus = appResponse.getStatusCode();
-    assertThat(appResponseStatus).isEqualTo(HttpStatus.OK);
-
-    val groupResponseJson = MAPPER.readTree(appResponse.getBody());
-    assertThat(groupResponseJson.get("count").asInt()).isEqualTo(1);
-    assertThat(groupResponseJson.get("resultSet").elements().next().get("id").asText())
-        .isEqualTo(appId);
-  }
-
-  @Test
-  @SneakyThrows
-  public void deleteApplicationFromUser() {
-    val userId = entityGenerator.setupUser("App2 User").getId();
-    val deleteApp = entityGenerator.setupApplication("deleteApp").getId().toString();
-    val remainApp = entityGenerator.setupApplication("remainApp").getId().toString();
-
-    val appResponse =
-        initStringRequest()
-            .endpoint("/users/%s/applications", userId)
-            .body(asList(deleteApp, remainApp))
-            .post();
-
-    log.info(appResponse.getBody());
-
-    val appResponseStatus = appResponse.getStatusCode();
-    assertThat(appResponseStatus).isEqualTo(HttpStatus.OK);
-
-    val deleteResponse =
-        initStringRequest().endpoint("/users/%s/applications/%s", userId, deleteApp).delete();
-
-    val deleteResponseStatus = deleteResponse.getStatusCode();
-    assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
-
-    val secondGetResponse = initStringRequest().endpoint("/users/%s/applications", userId).get();
-
-    val secondGetResponseStatus = deleteResponse.getStatusCode();
-    assertThat(secondGetResponseStatus).isEqualTo(HttpStatus.OK);
-    val secondGetResponseJson = MAPPER.readTree(secondGetResponse.getBody());
-    assertThat(secondGetResponseJson.get("count").asInt()).isEqualTo(1);
-    assertThat(secondGetResponseJson.get("resultSet").elements().next().get("id").asText())
-        .isEqualTo(remainApp);
-  }
-
-  @Test
-  @SneakyThrows
-  public void deleteUser() {
-    val userId = entityGenerator.setupUser("User ToDelete").getId();
-
-    // Add application to user
-    val appOne = entityGenerator.setupApplication("TempGroupApp");
-    val appBody = singletonList(appOne.getId().toString());
-    val addAppToUserResponse =
-        initStringRequest().endpoint("/users/%s/applications", userId).body(appBody).post();
-    val addAppToUserResponseStatus = addAppToUserResponse.getStatusCode();
-    assertThat(addAppToUserResponseStatus).isEqualTo(HttpStatus.OK);
-
-    // Make sure user-application relationship is there
-    val appWithUser = applicationService.getByClientId("TempGroupApp");
-    assertThat(extractUserIds(appWithUser.getUsers())).contains(userId);
-
-    // Add group to user
-    val groupOne = entityGenerator.setupGroup("GroupOne");
-    val groupBody = singletonList(groupOne.getId().toString());
-    val addGroupToUserResponse =
-        initStringRequest().endpoint("/users/%s/groups", userId).body(groupBody).post();
-    val addGroupToUserResponseStatus = addGroupToUserResponse.getStatusCode();
-    assertThat(addGroupToUserResponseStatus).isEqualTo(HttpStatus.OK);
-    // Make sure user-group relationship is there
-    val expectedUserGroups = groupService.getByName("GroupOne").getUserGroups();
-    val expectedUsers = mapToSet(expectedUserGroups, UserGroup::getUser);
-    assertThat(extractUserIds(expectedUsers)).contains(userId);
-
-    // delete user
-    val deleteResponse = initStringRequest().endpoint("/users/%s", userId).delete();
-    val deleteResponseStatus = deleteResponse.getStatusCode();
-    assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
-
-    // verify if user is deleted
-    val getUserResponse = initStringRequest().endpoint("/users/%s", userId).get();
-    val getUserResponseStatus = getUserResponse.getStatusCode();
-    assertThat(getUserResponseStatus).isEqualTo(HttpStatus.NOT_FOUND);
-    val jsonResponse = MAPPER.readTree(getUserResponse.getBody());
-    assertThat(jsonResponse.get("error").asText())
-        .isEqualTo(HttpStatus.NOT_FOUND.getReasonPhrase());
-
-    // check if user - group is deleted
-    val groupWithoutUser = groupService.getByName("GroupOne");
-    assertThat(groupWithoutUser.getUserGroups()).isEmpty();
-
-    // make sure user - application is deleted
-    val appWithoutUser = applicationService.getByClientId("TempGroupApp");
-    assertThat(appWithoutUser.getUsers()).isEmpty();
-  }
-
 	@Test
 	public void findUsers_FindAllQuery_Success(){
     // Generate data
@@ -455,7 +184,6 @@ public class UserControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-  @Ignore
 	public void findUsers_FindSomeQuery_Success(){
 		throw new NotImplementedException("need to implement the test 'findUsers_FindSomeQuery_Success'");
 	}
@@ -478,13 +206,13 @@ public class UserControllerTest extends AbstractControllerTest {
     // Create the user
     val user = createUserPostRequestAnd(r)
         .extractOneEntity(User.class);
-    assertThat(user).isEqualToIgnoringGivenFields(r, ID, APPLICATIONS, USERPERMISSIONS, USERGROUPS, TOKENS, NAME, CREATEDAT);
+    assertThat(user).isEqualToIgnoringGivenFields(r, ID, USERAPPLICATIONS, USERPERMISSIONS, USERGROUPS, TOKENS, NAME, CREATEDAT, LASTLOGIN);
 
 
     // Assert the user can be read and matches the request data
     val r1 = getUserEntityGetRequestAnd(user)
         .extractOneEntity(User.class);
-    assertThat(r1).isEqualToIgnoringGivenFields(r, ID, APPLICATIONS, USERPERMISSIONS, USERGROUPS, TOKENS, NAME);
+    assertThat(r1).isEqualToIgnoringGivenFields(r, ID, USERAPPLICATIONS, USERPERMISSIONS, USERGROUPS, TOKENS, NAME, CREATEDAT);
     assertThat(r1).isEqualToIgnoringGivenFields(user);
 	}
 
@@ -515,12 +243,6 @@ public class UserControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-  @Ignore("test not possible as CreateUSerRequest does not have defineable date field")
-	public void createUser_FutureCreatedAtDate_BadRequest(){
-		throw new NotImplementedException("need to implement the test 'createUser_FutureCreatedAtDate_BadRequest'");
-	}
-
-	@Test
 	public void deleteUser_NonExisting_NotFound(){
     // Create non existent user id
     val nonExistentId = generateNonExistentId(userService);
@@ -538,10 +260,18 @@ public class UserControllerTest extends AbstractControllerTest {
     // Add applications to user
     addApplicationsToUserPostRequestAnd(user0, data.getApplications()).assertOk();
 
+    // Add groups to user
+    addGroupsToUserPostRequestAnd(user0, data.getGroups()).assertOk();
+
     // Check applications were added
     getApplicationsForUserGetRequestAnd(user0)
         .assertPageResultsOfType(Application.class)
         .containsExactlyInAnyOrderElementsOf(data.getApplications());
+
+    // Check groups were added
+    getGroupsForUserGetRequestAnd(user0)
+        .assertPageResultsOfType(Group.class)
+        .containsExactlyInAnyOrderElementsOf(data.getGroups());
 
     // Delete user
     deleteUserDeleteRequestAnd(user0).assertOk();
@@ -552,8 +282,14 @@ public class UserControllerTest extends AbstractControllerTest {
     // Check applications exist
     data.getApplications().forEach(application -> getApplicationEntityGetRequestAnd(application).assertOk());
 
+    // Check groups exist
+    data.getGroups().forEach(group -> getGroupEntityGetRequestAnd(group).assertOk());
+
     // Check no users associated with applications
     data.getApplications().forEach(a -> getUsersForApplicationGetRequestAnd(a).assertPageResultsOfType(User.class).isEmpty());
+
+    // Check no users associated with groups
+    data.getGroups().forEach(g -> getUsersForGroupGetRequestAnd(g).assertPageResultsOfType(User.class).isEmpty());
 	}
 
 	@Test
@@ -622,7 +358,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // Assert update was correct
     val actualUser1 = getUserEntityGetRequestAnd(user0)
         .extractOneEntity(User.class);
-    assertThat(actualUser1).isEqualToIgnoringGivenFields(r1, TYPE, STATUS, NAME, LASTNAME, PREFERREDLANGUAGE,ID, CREATEDAT, USERPERMISSIONS, APPLICATIONS, USERGROUPS, TOKENS);
+    assertThat(actualUser1).isEqualToIgnoringGivenFields(r1, TYPE, STATUS, NAME, LASTNAME, PREFERREDLANGUAGE,ID, CREATEDAT, USERPERMISSIONS, USERAPPLICATIONS, USERGROUPS, TOKENS);
     assertThat(actualUser1.getFirstName()).isEqualTo(r1.getFirstName());
     assertThat(actualUser1.getEmail()).isEqualTo(r1.getEmail());
     assertThat(actualUser1.getName()).isEqualTo(r1.getEmail());
@@ -834,12 +570,11 @@ public class UserControllerTest extends AbstractControllerTest {
     // Create non existent user id
     val nonExistentId = generateNonExistentId(userService);
 
-    // Assert that getting the applicaitons for a non-existent user id results in a NOT_FOUND error
+    // Assert that getting the applications for a non-existent user id results in a NOT_FOUND error
     getApplicationsForUserGetRequestAnd(nonExistentId).assertNotFound();
 	}
 
 	@Test
-  @Ignore
 	public void getApplicationsFromUser_FindSomeQuery_Success(){
 		throw new NotImplementedException("need to implement the test 'getApplicationsFromUser_FindSomeQuery_Success'");
 	}
@@ -867,7 +602,7 @@ public class UserControllerTest extends AbstractControllerTest {
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
 
     // Add applications to user and assert the response is equal to the user
-    addApplicationsToUserPostRequestAnd(user0, data.getApplications()).assertEntityOfType(User.class).isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+    addApplicationsToUserPostRequestAnd(user0, data.getApplications()).assertEntityOfType(User.class).isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, USERAPPLICATIONS);
 
     // Assert the user has all the applications
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).containsExactlyInAnyOrderElementsOf(data.getApplications());
@@ -899,7 +634,7 @@ public class UserControllerTest extends AbstractControllerTest {
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
 
     // Add app00 to user and assert the response is equal to the user
-    addApplicationsToUserPostRequestAnd(user0, newArrayList(app0)).assertEntityOfType(User.class).isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+    addApplicationsToUserPostRequestAnd(user0, newArrayList(app0)).assertEntityOfType(User.class).isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, USERAPPLICATIONS);
 
     // Assert the user has app0
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).containsExactlyInAnyOrder(app0);
@@ -922,7 +657,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // Add apps to user and assert user is returned
     addApplicationsToUserPostRequestAnd(user0, data.getApplications())
         .assertEntityOfType(User.class)
-        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, USERAPPLICATIONS);
 
     // Assert the user has all the applications
     getApplicationsForUserGetRequestAnd(user0)
@@ -954,7 +689,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // Add apps to user and assert user is returned
     addApplicationsToUserPostRequestAnd(user0, newArrayList(app0))
         .assertEntityOfType(User.class)
-        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, USERAPPLICATIONS);
 
     // Assert the user is associated with app0
     getApplicationsForUserGetRequestAnd(user0)
@@ -979,7 +714,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // Add all apps to user
     addApplicationsToUserPostRequestAnd(user0, data.getApplications())
         .assertEntityOfType(User.class)
-        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, USERAPPLICATIONS);
 
     // Assert the apps were added
     getApplicationsForUserGetRequestAnd(user0)
@@ -1042,7 +777,6 @@ public class UserControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
-  @Ignore("should test this")
 	public void getGroupsFromUser_FindSomeQuery_Success(){
 		throw new NotImplementedException("need to implement the test 'getGroupsFromUser_FindSomeQuery_Success'");
 	}
@@ -1073,7 +807,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // Add groups to user and asser response is a user
     addGroupsToUserPostRequestAnd(user0, data.getGroups())
         .assertEntityOfType(User.class)
-        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, USERAPPLICATIONS);
 
     // Get groups for user and assert they are associated
     getGroupsForUserGetRequestAnd(user0)
@@ -1111,7 +845,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // Add group0 to user and assert response is a user
     addGroupsToUserPostRequestAnd(user0, newArrayList(group0))
         .assertEntityOfType(User.class)
-        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, USERAPPLICATIONS);
 
     // Get groups for user and assert they are associated only to group0
     getGroupsForUserGetRequestAnd(user0)
@@ -1131,7 +865,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // Add groups to user and assert response is a user
     addGroupsToUserPostRequestAnd(user0, data.getGroups())
         .assertEntityOfType(User.class)
-        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, APPLICATIONS);
+        .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, USERAPPLICATIONS);
 
     // Assert groups were added
     getGroupsForUserGetRequestAnd(user0)

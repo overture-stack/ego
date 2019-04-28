@@ -16,22 +16,6 @@
 
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.dto.Scope.effectiveScopes;
-import static bio.overture.ego.model.dto.Scope.explicitScopes;
-import static bio.overture.ego.model.enums.ApplicationType.ADMIN;
-import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
-import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.SCOPES;
-import static bio.overture.ego.model.enums.JavaFields.USERS;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.service.UserService.extractScopes;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
-import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
-import static java.lang.String.format;
-import static java.util.UUID.fromString;
-import static javax.persistence.criteria.JoinType.LEFT;
-import static org.springframework.util.DigestUtils.md5Digest;
-
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
@@ -57,18 +41,6 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import java.security.InvalidKeyException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -81,6 +53,35 @@ import org.springframework.security.oauth2.common.exceptions.InvalidRequestExcep
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
+
+import java.security.InvalidKeyException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static bio.overture.ego.model.dto.Scope.effectiveScopes;
+import static bio.overture.ego.model.dto.Scope.explicitScopes;
+import static bio.overture.ego.model.enums.ApplicationType.ADMIN;
+import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.ID;
+import static bio.overture.ego.model.enums.JavaFields.SCOPES;
+import static bio.overture.ego.model.enums.JavaFields.USERS;
+import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.service.UserService.extractScopes;
+import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
+import static java.lang.String.format;
+import static java.util.UUID.fromString;
+import static javax.persistence.criteria.JoinType.LEFT;
+import static org.springframework.util.DigestUtils.md5Digest;
 
 @Slf4j
 @Service
@@ -148,7 +149,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
 
   @SneakyThrows
   public String generateUserToken(User u) {
-    Set<String> permissionNames = mapToSet(extractScopes(u), p -> p.toString());
+    Set<String> permissionNames = mapToSet(extractScopes(u), Scope::toString);
     return generateUserToken(u, permissionNames);
   }
 

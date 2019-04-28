@@ -17,10 +17,6 @@
 
 package bio.overture.ego.controller;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.Policy;
@@ -42,6 +38,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -92,7 +92,7 @@ public class TokensOnUserAndPolicyDeletes extends AbstractControllerTest {
 
     val checkTokenAfterDeleteResponse = checkToken(tokenToDelete);
     // Should be revoked
-    assertThat(checkTokenAfterDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(checkTokenAfterDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
     val checkTokenRemainedAfterDeleteResponse = checkToken(tokenToKeep);
     // Should be valid
@@ -121,7 +121,7 @@ public class TokensOnUserAndPolicyDeletes extends AbstractControllerTest {
 
     val checkTokenAfterDeleteResponse = checkToken(tokenToDelete);
     // Should be revoked
-    assertThat(checkTokenAfterDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(checkTokenAfterDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
     val checkTokenRemainedAfterDeleteResponse = checkToken(tokenToKeep);
     // Should be valid

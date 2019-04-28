@@ -16,6 +16,19 @@
 
 package bio.overture.ego.repository.queryspecification;
 
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.join.GroupApplication;
+import bio.overture.ego.model.join.UserApplication;
+import bio.overture.ego.utils.QueryUtils;
+import lombok.NonNull;
+import lombok.val;
+import org.springframework.data.jpa.domain.Specification;
+
+import javax.persistence.criteria.Join;
+import java.util.UUID;
+
 import static bio.overture.ego.model.enums.JavaFields.CLIENTID;
 import static bio.overture.ego.model.enums.JavaFields.CLIENTSECRET;
 import static bio.overture.ego.model.enums.JavaFields.DESCRIPTION;
@@ -24,18 +37,8 @@ import static bio.overture.ego.model.enums.JavaFields.GROUPAPPLICATIONS;
 import static bio.overture.ego.model.enums.JavaFields.ID;
 import static bio.overture.ego.model.enums.JavaFields.NAME;
 import static bio.overture.ego.model.enums.JavaFields.STATUS;
-import static bio.overture.ego.model.enums.JavaFields.USERS;
-
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.join.GroupApplication;
-import bio.overture.ego.utils.QueryUtils;
-import java.util.UUID;
-import javax.persistence.criteria.Join;
-import lombok.NonNull;
-import lombok.val;
-import org.springframework.data.jpa.domain.Specification;
+import static bio.overture.ego.model.enums.JavaFields.USER;
+import static bio.overture.ego.model.enums.JavaFields.USERAPPLICATIONS;
 
 public class ApplicationSpecification extends SpecificationBase<Application> {
   public static Specification<Application> containsText(@NonNull String text) {
@@ -60,8 +63,9 @@ public class ApplicationSpecification extends SpecificationBase<Application> {
   public static Specification<Application> usedBy(@NonNull UUID userId) {
     return (root, query, builder) -> {
       query.distinct(true);
-      Join<Application, User> applicationUserJoin = root.join(USERS);
-      return builder.equal(applicationUserJoin.<Integer>get(ID), userId);
+      Join<Application, UserApplication> applicationJoin = root.join(USERAPPLICATIONS);
+      Join<UserApplication, User> userJoin = applicationJoin.join(USER);
+      return builder.equal(userJoin.<Integer>get(ID), userId);
     };
   }
 }

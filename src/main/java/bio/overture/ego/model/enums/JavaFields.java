@@ -61,4 +61,5 @@ public class JavaFields {
   public static final String USERGROUPS = "userGroups";
   public static final String APPLICATION_ID = "applicationId";
   public static final String GROUPAPPLICATIONS = "groupApplications";
+  public static final String USERAPPLICATIONS = "userApplications";
 }

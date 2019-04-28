@@ -1,21 +1,23 @@
 package bio.overture.ego.repository.queryspecification.builder;
 
-import static bio.overture.ego.model.enums.JavaFields.CLIENTID;
-import static bio.overture.ego.model.enums.JavaFields.GROUP;
-import static bio.overture.ego.model.enums.JavaFields.GROUPAPPLICATIONS;
-import static bio.overture.ego.model.enums.JavaFields.USERS;
-import static javax.persistence.criteria.JoinType.LEFT;
-
 import bio.overture.ego.model.entity.Application;
-import java.util.UUID;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import java.util.UUID;
+
+import static bio.overture.ego.model.enums.JavaFields.CLIENTID;
+import static bio.overture.ego.model.enums.JavaFields.GROUP;
+import static bio.overture.ego.model.enums.JavaFields.GROUPAPPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.USER;
+import static bio.overture.ego.model.enums.JavaFields.USERAPPLICATIONS;
+import static javax.persistence.criteria.JoinType.LEFT;
 
 @Setter
 @Accessors(fluent = true, chain = true)
@@ -41,11 +43,12 @@ public class ApplicationSpecificationBuilder
   @Override
   protected Root<Application> setupFetchStrategy(Root<Application> root) {
     if (fetchGroups) {
-      val fromGroupApplications = root.fetch(GROUPAPPLICATIONS, LEFT);
-      fromGroupApplications.fetch(GROUP, LEFT);
+      root.fetch(GROUPAPPLICATIONS, LEFT)
+      .fetch(GROUP, LEFT);
     }
     if (fetchUsers) {
-      root.fetch(USERS, LEFT);
+      root.fetch(USERAPPLICATIONS, LEFT)
+          .fetch(USER, LEFT);
     }
     return root;
   }
