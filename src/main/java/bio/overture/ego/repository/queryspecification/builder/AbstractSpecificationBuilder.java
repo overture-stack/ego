@@ -1,16 +1,15 @@
 package bio.overture.ego.repository.queryspecification.builder;
 
-import bio.overture.ego.model.enums.JavaFields;
-import lombok.NonNull;
-import lombok.val;
-import org.springframework.data.jpa.domain.Specification;
+import static bio.overture.ego.model.enums.JavaFields.NAME;
 
+import bio.overture.ego.model.enums.JavaFields;
+import java.util.Collection;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import java.util.Collection;
-
-import static bio.overture.ego.model.enums.JavaFields.NAME;
+import lombok.NonNull;
+import lombok.val;
+import org.springframework.data.jpa.domain.Specification;
 
 public abstract class AbstractSpecificationBuilder<T, ID> {
 
@@ -23,10 +22,10 @@ public abstract class AbstractSpecificationBuilder<T, ID> {
     };
   }
 
-  public Specification<T> listAll(){
+  public Specification<T> listAll() {
     return (fromUser, query, builder) -> {
       val root = setupFetchStrategy(fromUser);
-      return builder.isNotNull(root.get(JavaFields.ID));
+      return null;
     };
   }
 
