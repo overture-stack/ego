@@ -29,8 +29,8 @@ message GetUserRequest {
 message ListUsersRequest {
     PagedRequest page = 1;
 
-    google.protobuf.StringValue order_by = 2;
-    google.protobuf.StringValue query = 3;
+    string order_by = 2;
+    string query = 3;
     repeated string groups = 4;
 }
 
