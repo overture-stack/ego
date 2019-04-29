@@ -1,16 +1,19 @@
 package bio.overture.ego.grpc.service;
 
+import static bio.overture.ego.grpc.ProtoUtils.createPagedResponse;
+import static bio.overture.ego.grpc.ProtoUtils.getPageable;
+
 import bio.overture.ego.grpc.*;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.CollectionUtils;
 import io.grpc.stub.StreamObserver;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -31,13 +34,11 @@ public class GrpcUserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
     try {
       val id = UUID.fromString(request.getId());
 
-      try {
-        val user = userService.get(id, true, true, true);
-        output = user.toProto();
+      val user = userService.get(id, true, true, true);
+      output = user.toProto();
 
-      } catch (NotFoundException e) {
-        log.debug("gRPC Get UserService could not find user with requested ID:", e.getMessage());
-      }
+    } catch (NotFoundException e) {
+      log.debug("gRPC Get UserService could not find user with requested ID:", e.getMessage());
     } catch (IllegalArgumentException e) {
       log.info("gRPC Get UserService received invalid ID:", e.getMessage());
     }
@@ -50,14 +51,38 @@ public class GrpcUserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
   public void list(ListUsersRequest request, StreamObserver<ListUsersResponse> responseObserver) {
     val output = ListUsersResponse.newBuilder();
 
-    val userResults =
-        userService.listUsers(Collections.EMPTY_LIST, ProtoUtils.getPageable(request.getPage()));
+    // Find Page of users (filtered by groups if provided)
+    val userPage = findUsersForListRequest(request);
 
-    List<bio.overture.ego.model.entity.User> users = userResults.getContent();
+    if (userPage.hasContent()) {
+      val userIds = CollectionUtils.mapToImmutableSet(userPage.getContent(), user -> user.getId());
 
-    output.addAllUsers(CollectionUtils.mapToImmutableSet(users, user -> user.toProto()));
+      // Only run this fetch if we have at least 1 user ID, filtering by empty list throws error
+      val users = userService.getMany(userIds, true, true, true);
+
+      output.addAllUsers(CollectionUtils.mapToImmutableSet(users, user -> user.toProto()));
+    }
+
+    output.setPage(createPagedResponse(userPage, request.getPage().getPageNumber()));
 
     responseObserver.onNext(output.build());
     responseObserver.onCompleted();
+  }
+
+  private Page<bio.overture.ego.model.entity.User> findUsersForListRequest(
+      ListUsersRequest request) {
+    val query = request.getQuery().getValue();
+    val groups = request.getGroupsList();
+    val pageable = getPageable(request.getPage());
+
+    val order = request.getOrderBy().getValue();
+
+    if (groups.isEmpty()) {
+      return userService.findUsers(query, Collections.EMPTY_LIST, pageable);
+
+    } else {
+      val groupIds = CollectionUtils.mapToImmutableSet(groups, group -> UUID.fromString(group));
+      return userService.findUsersForGroups(groupIds, query, Collections.EMPTY_LIST, pageable);
+    }
   }
 }
