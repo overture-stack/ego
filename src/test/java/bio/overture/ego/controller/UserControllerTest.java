@@ -21,7 +21,9 @@ import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.REJECTED;
 import static bio.overture.ego.model.enums.UserType.USER;
+import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
 import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.EntityTools.extractUserIds;
 import static java.util.Arrays.asList;
@@ -165,6 +167,49 @@ public class UserControllerTest extends AbstractControllerTest {
 
     val responseStatus = response.getStatusCode();
     assertThat(responseStatus).isEqualTo(HttpStatus.NOT_FOUND);
+  }
+
+  @Test
+  @SneakyThrows
+  public void getManyUsers_noRelations() {
+
+    final int testUserCount = 3;
+
+    // Creating new users cause we need their Ids as inputs in this test
+    val users = repeatedCallsOf(() -> entityGenerator.generateRandomUser(), testUserCount);
+    val userIds = mapToImmutableSet(users, user -> user.getId());
+
+    val results = userService.getMany(userIds, false, false, false);
+
+    assertThat(results.size()).isEqualTo(testUserCount);
+  }
+
+  @Test
+  @SneakyThrows
+  public void getManyUsers_withRelations() {
+
+    final int testUserCount = 3;
+
+    // Creating new users cause we need their Ids as inputs in this test
+    val users = repeatedCallsOf(() -> entityGenerator.generateRandomUser(), testUserCount);
+    val userIds = mapToImmutableSet(users, user -> user.getId());
+
+    val results = userService.getMany(userIds, true, true, true);
+
+    assertThat(results.size()).isEqualTo(testUserCount);
+
+    results
+        .iterator()
+        .forEachRemaining(
+            user -> {
+              try {
+                assertThat(user.getUserGroups()).isNotNull();
+                assertThat(user.getUserPermissions()).isNotNull();
+                assertThat(user.getApplications()).isNotNull();
+              } catch (Exception e) {
+                e.printStackTrace();
+              }
+            });
   }
 
   @Test
