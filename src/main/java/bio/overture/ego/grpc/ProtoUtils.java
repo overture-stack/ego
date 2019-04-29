@@ -19,10 +19,12 @@ public class ProtoUtils {
   }
 
   public static Pageable getPageable(PagedRequest pagedRequest) {
-    val limit = pagedRequest.getPageSize();
+    final int DEFAULT_LIMIT = 20;
+
+    val limit = pagedRequest.getPageSize() == 0 ? DEFAULT_LIMIT : pagedRequest.getPageSize();
+
     val pageNumber = pagedRequest.getPageNumber();
     return new Pageable() {
-      private final int DEFAULT_LIMIT = 20;
 
       @Override
       public int getPageNumber() {
@@ -31,18 +33,18 @@ public class ProtoUtils {
 
       @Override
       public int getPageSize() {
-        return limit == 0 ? DEFAULT_LIMIT : limit;
+        return limit;
       }
 
       @Override
       public long getOffset() {
-        return pageNumber;
+        return pageNumber * limit;
       }
 
       @Override
       public Sort getSort() {
         // Sort results by creation time, ensure static order for the page_token to refer to
-        return new Sort(Sort.Direction.ASC, "createdat");
+        return new Sort(Sort.Direction.ASC, "createdAt");
       }
 
       @Override
