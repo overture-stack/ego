@@ -1,10 +1,15 @@
 package bio.overture.ego.grpc;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.protobuf.StringValue;
+import java.util.Arrays;
+import java.util.Optional;
 import lombok.val;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.util.StringUtils;
 
 public class ProtoUtils {
 
@@ -31,12 +36,18 @@ public class ProtoUtils {
     return pageBuilder.build();
   }
 
-  public static Pageable getPageable(PagedRequest pagedRequest) {
-    final int DEFAULT_LIMIT = 20;
+  static final String DEFAULT_SORT_FIELD = "createdAt";
+  static final int DEFAULT_LIMIT = 20;
+  static final int MAX_LIMIT = 1000;
 
-    val limit = pagedRequest.getPageSize() == 0 ? DEFAULT_LIMIT : pagedRequest.getPageSize();
+  public static Pageable getPageable(PagedRequest pagedRequest, String sort) {
+
+    val pageSize = pagedRequest.getPageSize();
+
+    val limit = pageSize == 0 ? DEFAULT_LIMIT : pageSize > MAX_LIMIT ? MAX_LIMIT : pageSize;
 
     val pageNumber = pagedRequest.getPageNumber();
+
     return new Pageable() {
 
       @Override
@@ -56,8 +67,18 @@ public class ProtoUtils {
 
       @Override
       public Sort getSort() {
-        // Sort results by creation time, ensure static order for the page_token to refer to
-        return new Sort(Sort.Direction.ASC, "createdAt");
+        if (StringUtils.isEmpty(sort)) {
+          // Sort results by creation time, ensure static order for the page_token to refer to
+          return new Sort(Sort.Direction.ASC, "createdAt");
+        } else {
+          val orders =
+              Arrays.stream(sort.split(","))
+                  .map(ProtoUtils::convertToSortOrder)
+                  .filter(optional -> optional.isPresent())
+                  .map(optional -> optional.get())
+                  .collect(toList());
+          return new Sort(orders);
+        }
       }
 
       @Override
@@ -80,5 +101,37 @@ public class ProtoUtils {
         return false;
       }
     };
+  }
+
+  private static Optional<Sort.Order> convertToSortOrder(String sort) {
+
+    val split = sort.split(" ");
+    switch (split.length) {
+      case 1:
+        // Example: "id"
+        if (sort.equalsIgnoreCase(Sort.Direction.DESC.name())) {
+          // Special case, sort value is exactly "desc"
+          return Optional.of(new Sort.Order(Sort.Direction.DESC, DEFAULT_SORT_FIELD));
+
+        } else {
+          return Optional.of(new Sort.Order(Sort.Direction.ASC, split[0]));
+        }
+
+      case 2:
+        // Example: "name desc"
+        if (split[1].equalsIgnoreCase(Sort.Direction.DESC.name())) {
+          return Optional.of(new Sort.Order(Sort.Direction.DESC, split[0]));
+
+        } else if (split[1].equalsIgnoreCase(Sort.Direction.ASC.name())) {
+          return Optional.of(new Sort.Order(Sort.Direction.ASC, split[0]));
+        }
+        break;
+
+      default:
+        // sort string length was 0 or longer than 2
+        return Optional.empty();
+    }
+    // Fall through - nothing matching expected formatting
+    return Optional.empty();
   }
 }

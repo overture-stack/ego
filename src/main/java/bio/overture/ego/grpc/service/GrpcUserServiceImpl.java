@@ -60,7 +60,8 @@ public class GrpcUserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
       // Only run this fetch if we have at least 1 user ID, filtering by empty list throws error
       val users = userService.getMany(userIds, true, true, true);
 
-      output.addAllUsers(CollectionUtils.mapToImmutableSet(users, user -> user.toProto()));
+      // Add to output in order from first query
+      userIds.stream().forEach(id -> users.stream().filter(user->user.getId().equals(id)).findFirst().ifPresent(user->output.addUsers(user.toProto())));
     }
 
     output.setPage(createPagedResponse(userPage, request.getPage().getPageNumber()));
@@ -73,7 +74,7 @@ public class GrpcUserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
       ListUsersRequest request) {
     val query = request.getQuery();
     val groups = request.getGroupsList();
-    val pageable = getPageable(request.getPage());
+    val pageable = getPageable(request.getPage(), request.getOrderBy());
 
     if (groups.isEmpty()) {
       return userService.findUsers(query, Collections.EMPTY_LIST, pageable);
