@@ -2,6 +2,7 @@ package bio.overture.ego.grpc;
 
 import com.google.protobuf.StringValue;
 import lombok.val;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
@@ -16,6 +17,18 @@ public class ProtoUtils {
    */
   public static StringValue toProtoString(Object value) {
     return value == null ? DEFAULT_STRING : StringValue.of(value.toString());
+  }
+
+  public static PagedResponse createPagedResponse(Page page, int currentPageNum) {
+    val pageBuilder =
+        PagedResponse.newBuilder().setMaxResults(Long.valueOf(page.getTotalElements()).intValue());
+
+    if (page.hasNext()) {
+      val nextToken = StringValue.of(String.valueOf(currentPageNum + 1));
+      pageBuilder.setNextPageToken(nextToken);
+    }
+
+    return pageBuilder.build();
   }
 
   public static Pageable getPageable(PagedRequest pagedRequest) {
