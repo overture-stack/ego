@@ -19,7 +19,7 @@ message PagedRequest {
 
 message PagedResponse {
     uint32 max_results = 1;
-    string next_page_token = 2;
+    google.protobuf.StringValue next_page_token = 2;
 }
 
 message GetUserRequest {
@@ -29,8 +29,9 @@ message GetUserRequest {
 message ListUsersRequest {
     PagedRequest page = 1;
 
-    string query = 2;
-    string order_by = 3;
+    google.protobuf.StringValue order_by = 2;
+    google.protobuf.StringValue query = 3;
+    repeated string groups = 4;
 }
 
 message ListUsersResponse {
