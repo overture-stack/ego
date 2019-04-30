@@ -446,4 +446,35 @@ public class TokenControllerTest extends AbstractControllerTest {
     assertThat(statusCode).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isEqualTo("[]");
   }
+
+  @SneakyThrows
+  @Test
+  public void tokenShouldHaveNonZeroExpiry() {
+    val user = entityGenerator.setupUser("NonZero User");
+    entityGenerator.setupSinglePolicy("NonZeroExpiryPolicy");
+    entityGenerator.addPermissions(user, entityGenerator.getScopes("NonZeroExpiryPolicy.READ"));
+
+    val scopes = "NonZeroExpiryPolicy.READ";
+    val params = new LinkedMultiValueMap<String, Object>();
+    params.add("user_id", user.getId().toString());
+    params.add("scopes", scopes);
+    params.add("description", DESCRIPTION);
+    super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+    val response = initStringRequest().endpoint("o/token").body(params).post();
+    val responseStatus = response.getStatusCode();
+
+    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+
+    val listResponse =
+        initStringRequest().endpoint("o/token?user_id=%s", user.getId().toString()).get();
+    val listStatusCode = listResponse.getStatusCode();
+    assertThat(listStatusCode).isEqualTo(HttpStatus.OK);
+
+    log.info(listResponse.getBody());
+    val responseJson = MAPPER.readTree(listResponse.getBody());
+    val exp = responseJson.get(0).get("exp").asInt();
+    assertThat(exp).isNotZero();
+    assertThat(exp).isPositive();
+  }
 }

@@ -142,6 +142,7 @@ public class SecureServerConfig {
               "/configuration/**",
               "/v2/api**",
               "/webjars/**",
+              "/actuator/**",
               "/oauth/token/verify",
               "/oauth/token/public_key")
           .permitAll()
