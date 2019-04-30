@@ -17,6 +17,10 @@
 
 package bio.overture.ego.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.Policy;
@@ -38,10 +42,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Slf4j
 @ActiveProfiles("test")

@@ -17,35 +17,6 @@
 
 package bio.overture.ego.controller;
 
-import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.dto.CreateApplicationRequest;
-import bio.overture.ego.model.dto.UpdateApplicationRequest;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.ApplicationType;
-import bio.overture.ego.model.enums.StatusType;
-import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.utils.EntityGenerator;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.apache.commons.lang.NotImplementedException;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.List;
-
 import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
 import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
 import static bio.overture.ego.model.enums.JavaFields.GROUPAPPLICATIONS;
@@ -67,6 +38,34 @@ import static bio.overture.ego.utils.EntityGenerator.randomStringWithSpaces;
 import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import bio.overture.ego.AuthorizationServiceMain;
+import bio.overture.ego.model.dto.CreateApplicationRequest;
+import bio.overture.ego.model.dto.UpdateApplicationRequest;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.ApplicationType;
+import bio.overture.ego.model.enums.StatusType;
+import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.utils.EntityGenerator;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.List;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.lang.NotImplementedException;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -230,7 +229,8 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
     // Create the application using the request
     val app = createApplicationPostRequestAnd(createRequest).extractOneEntity(Application.class);
-    assertThat(app).isEqualToIgnoringGivenFields(createRequest, ID, GROUPAPPLICATIONS, USERAPPLICATIONS);
+    assertThat(app)
+        .isEqualToIgnoringGivenFields(createRequest, ID, GROUPAPPLICATIONS, USERAPPLICATIONS);
 
     // Get the application
     getApplicationEntityGetRequestAnd(app)

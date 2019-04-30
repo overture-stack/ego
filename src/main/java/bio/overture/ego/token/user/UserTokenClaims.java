@@ -21,14 +21,13 @@ import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.token.TokenClaims;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.springframework.util.StringUtils;
-
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor

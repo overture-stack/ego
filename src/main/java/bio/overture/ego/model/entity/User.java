@@ -16,6 +16,11 @@
 
 package bio.overture.ego.model.entity;
 
+import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
+import static bio.overture.ego.service.UserService.resolveUsersPermissions;
+import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
+import static com.google.common.collect.Sets.newHashSet;
+
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LanguageType;
 import bio.overture.ego.model.enums.LombokFields;
@@ -31,17 +36,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -56,15 +54,16 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
-import static bio.overture.ego.service.UserService.resolveUsersPermissions;
-import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
-import static com.google.common.collect.Sets.newHashSet;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
 
 @Slf4j
 @Entity
@@ -202,10 +201,7 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   }
 
   @PrePersist
-  private void onCreate(){
+  private void onCreate() {
     this.createdAt = new Date();
   }
-
-
-
 }

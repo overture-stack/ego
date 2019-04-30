@@ -16,50 +16,6 @@
 
 package bio.overture.ego.service;
 
-import bio.overture.ego.config.UserDefaultsConfig;
-import bio.overture.ego.event.token.TokenEventsPublisher;
-import bio.overture.ego.model.dto.CreateUserRequest;
-import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.dto.UpdateUserRequest;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.GroupPermission;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.entity.UserPermission;
-import bio.overture.ego.model.join.UserApplication;
-import bio.overture.ego.model.join.UserGroup;
-import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.repository.GroupRepository;
-import bio.overture.ego.repository.UserRepository;
-import bio.overture.ego.repository.queryspecification.UserSpecification;
-import bio.overture.ego.repository.queryspecification.builder.UserSpecificationBuilder;
-import bio.overture.ego.token.IDToken;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.mapstruct.AfterMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValueCheckStrategy;
-import org.mapstruct.ReportingPolicy;
-import org.mapstruct.TargetType;
-import org.mapstruct.factory.Mappers;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
-import javax.transaction.Transactional;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
@@ -81,6 +37,49 @@ import static bio.overture.ego.utils.Ids.checkDuplicates;
 import static bio.overture.ego.utils.Joiners.PRETTY_COMMA;
 import static java.util.Objects.isNull;
 import static org.springframework.data.jpa.domain.Specification.where;
+
+import bio.overture.ego.config.UserDefaultsConfig;
+import bio.overture.ego.event.token.TokenEventsPublisher;
+import bio.overture.ego.model.dto.CreateUserRequest;
+import bio.overture.ego.model.dto.Scope;
+import bio.overture.ego.model.dto.UpdateUserRequest;
+import bio.overture.ego.model.entity.AbstractPermission;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.GroupPermission;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.entity.UserPermission;
+import bio.overture.ego.model.join.UserApplication;
+import bio.overture.ego.model.join.UserGroup;
+import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.repository.GroupRepository;
+import bio.overture.ego.repository.UserRepository;
+import bio.overture.ego.repository.queryspecification.UserSpecification;
+import bio.overture.ego.repository.queryspecification.builder.UserSpecificationBuilder;
+import bio.overture.ego.token.IDToken;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import javax.transaction.Transactional;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValueCheckStrategy;
+import org.mapstruct.ReportingPolicy;
+import org.mapstruct.TargetType;
+import org.mapstruct.factory.Mappers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -164,14 +163,15 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .build());
   }
 
-  public User getUserByToken(@NonNull IDToken idToken){
+  public User getUserByToken(@NonNull IDToken idToken) {
     val userName = idToken.getEmail();
-    val user = findByName(userName)
-        .orElseGet(
-            () -> {
-              log.info("User not found, creating.");
-              return createFromIDToken(idToken);
-            });
+    val user =
+        findByName(userName)
+            .orElseGet(
+                () -> {
+                  log.info("User not found, creating.");
+                  return createFromIDToken(idToken);
+                });
     user.setLastLogin(new Date());
     return user;
   }
@@ -181,11 +181,11 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return get(id, true, true, true);
   }
 
-  public User getWithApplications(@NonNull UUID id){
+  public User getWithApplications(@NonNull UUID id) {
     return get(id, false, false, true);
   }
 
-  public User getWithGroups(@NonNull UUID id){
+  public User getWithGroups(@NonNull UUID id) {
     return get(id, false, true, false);
   }
 
@@ -217,17 +217,21 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   @SuppressWarnings("Duplicates")
-  public User associateApplicationsWithUser(@NonNull UUID id, @NonNull Collection<UUID> applicationIds) {
+  public User associateApplicationsWithUser(
+      @NonNull UUID id, @NonNull Collection<UUID> applicationIds) {
     // check duplicate applicationIds
     checkDuplicates(Application.class, applicationIds);
 
     // Get existing associated application ids with the user
     val userWithUserApplications = getWithApplications(id);
-    val applications = mapToImmutableSet(userWithUserApplications.getUserApplications(), UserApplication::getApplication);
+    val applications =
+        mapToImmutableSet(
+            userWithUserApplications.getUserApplications(), UserApplication::getApplication);
     val existingAssociatedApplicationIds = convertToIds(applications);
 
     // Check there are no application ids that are already associated with the user
-    val existingAlreadyAssociatedApplicationIds = intersection(existingAssociatedApplicationIds, applicationIds);
+    val existingAlreadyAssociatedApplicationIds =
+        intersection(existingAssociatedApplicationIds, applicationIds);
     checkUnique(
         existingAlreadyAssociatedApplicationIds.isEmpty(),
         "The following %s ids are already associated with %s '%s': [%s]",
@@ -315,16 +319,13 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   @SuppressWarnings("Duplicates")
-  public void disassociateGroupsFromUser(
-      @NonNull UUID id, @NonNull Collection<UUID> groupIds) {
+  public void disassociateGroupsFromUser(@NonNull UUID id, @NonNull Collection<UUID> groupIds) {
     // check duplicate groupIds
     checkDuplicates(Group.class, groupIds);
 
     // Get existing associated child ids with the parent
     val userWithGroups = getWithGroups(id);
-    val groups =
-        mapToImmutableSet(
-            userWithGroups.getUserGroups(), UserGroup::getGroup);
+    val groups = mapToImmutableSet(userWithGroups.getUserGroups(), UserGroup::getGroup);
     val existingAssociatedGroupIds = convertToIds(groups);
 
     // Get existing and non-existing non-associated group ids. Error out if there are existing

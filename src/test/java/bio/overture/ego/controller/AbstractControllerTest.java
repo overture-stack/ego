@@ -1,5 +1,10 @@
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.utils.Converters.convertToIds;
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.GroupRequest;
@@ -16,6 +21,8 @@ import bio.overture.ego.utils.web.ResponseOption;
 import bio.overture.ego.utils.web.StringResponseOption;
 import bio.overture.ego.utils.web.StringWebResource;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Collection;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -25,14 +32,6 @@ import org.junit.Before;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
-
-import java.util.Collection;
-import java.util.UUID;
-
-import static bio.overture.ego.utils.Converters.convertToIds;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Slf4j
 public abstract class AbstractControllerTest {
@@ -174,8 +173,7 @@ public abstract class AbstractControllerTest {
     return initStringRequest().endpoint("/users/%s/groups", userId).body(groupIds).postAnd();
   }
 
-  protected StringResponseOption addGroupsToUserPostRequestAnd(
-      User u, Collection<Group> groups) {
+  protected StringResponseOption addGroupsToUserPostRequestAnd(User u, Collection<Group> groups) {
     return addGroupsToUserPostRequestAnd(u.getId(), convertToIds(groups));
   }
 
