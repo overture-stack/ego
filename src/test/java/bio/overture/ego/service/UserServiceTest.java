@@ -556,7 +556,6 @@ public class UserServiceTest {
             .lastName("Exist")
             .status(APPROVED)
             .preferredLanguage(ENGLISH)
-            .lastLogin(null)
             .type(ADMIN)
             .build();
     assertThatExceptionOfType(NotFoundException.class)

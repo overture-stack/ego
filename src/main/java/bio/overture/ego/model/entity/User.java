@@ -51,7 +51,10 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
@@ -140,10 +143,12 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.CREATEDAT)
+  @Temporal(value = TemporalType.TIMESTAMP)
   private Date createdAt;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.LASTLOGIN)
+  @Temporal(value = TemporalType.TIMESTAMP)
   private Date lastLogin;
 
   @Type(type = EGO_ENUM)
@@ -195,4 +200,12 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   public List<String> getPermissions() {
     return extractPermissionStrings(resolveUsersPermissions(this));
   }
+
+  @PrePersist
+  private void onCreate(){
+    this.createdAt = new Date();
+  }
+
+
+
 }

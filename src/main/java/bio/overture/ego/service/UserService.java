@@ -164,6 +164,18 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .build());
   }
 
+  public User getUserByToken(@NonNull IDToken idToken){
+    val userName = idToken.getEmail();
+    val user = findByName(userName)
+        .orElseGet(
+            () -> {
+              log.info("User not found, creating.");
+              return createFromIDToken(idToken);
+            });
+    user.setLastLogin(new Date());
+    return user;
+  }
+
   @Override
   public User getWithRelationships(@NonNull UUID id) {
     return get(id, true, true, true);
