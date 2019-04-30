@@ -41,6 +41,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang.NotImplementedException;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,8 +51,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -87,7 +86,6 @@ import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
-import static java.time.temporal.ChronoUnit.DAYS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
@@ -183,7 +181,8 @@ public class UserControllerTest extends AbstractControllerTest {
         .containsAll(data.getUsers());
 	}
 
-	@Test
+  @Test
+  @Ignore("low prority, but should be implemented")
 	public void findUsers_FindSomeQuery_Success(){
 		throw new NotImplementedException("need to implement the test 'findUsers_FindSomeQuery_Success'");
 	}
@@ -212,7 +211,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // Assert the user can be read and matches the request data
     val r1 = getUserEntityGetRequestAnd(user)
         .extractOneEntity(User.class);
-    assertThat(r1).isEqualToIgnoringGivenFields(r, ID, USERAPPLICATIONS, USERPERMISSIONS, USERGROUPS, TOKENS, NAME, CREATEDAT);
+    assertThat(r1).isEqualToIgnoringGivenFields(r, ID, USERAPPLICATIONS, USERPERMISSIONS, USERGROUPS, TOKENS, NAME, CREATEDAT, LASTLOGIN);
     assertThat(r1).isEqualToIgnoringGivenFields(user);
 	}
 
@@ -358,7 +357,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // Assert update was correct
     val actualUser1 = getUserEntityGetRequestAnd(user0)
         .extractOneEntity(User.class);
-    assertThat(actualUser1).isEqualToIgnoringGivenFields(r1, TYPE, STATUS, NAME, LASTNAME, PREFERREDLANGUAGE,ID, CREATEDAT, USERPERMISSIONS, USERAPPLICATIONS, USERGROUPS, TOKENS);
+    assertThat(actualUser1).isEqualToIgnoringGivenFields(r1, TYPE, STATUS, NAME, LASTNAME, PREFERREDLANGUAGE,ID, CREATEDAT, LASTLOGIN, USERPERMISSIONS, USERAPPLICATIONS, USERGROUPS, TOKENS);
     assertThat(actualUser1.getFirstName()).isEqualTo(r1.getFirstName());
     assertThat(actualUser1.getEmail()).isEqualTo(r1.getEmail());
     assertThat(actualUser1.getName()).isEqualTo(r1.getEmail());
@@ -411,35 +410,6 @@ public class UserControllerTest extends AbstractControllerTest {
 
     // Assert that a CONFLICT error occurs when trying to update a user with a name that already exists
     partialUpdateUserPutRequestAnd(user0.getId(), r1).assertConflict();
-	}
-
-	@Test
-	public void updateUser_FutureLastLoginDate_BadRequest(){
-    // Generate data
-    val data = generateUniqueTestUserData();
-    val user0 = data.getUsers().get(0);
-
-    // Create update request with same email
-    val futureDate = Date.from(Instant.now().plus(1, DAYS));
-    val r1 = UpdateUserRequest.builder().lastLogin(futureDate).build();
-
-    // Assert that updating with a future last login results in a BAD_REQUEST error
-    partialUpdateUserPutRequestAnd(user0.getId(), r1).assertBadRequest();
-	}
-
-	@Test
-	public void updateUser_LastLoginBeforeCreatedAtDate_BadRequest(){
-    // Generate data
-    val data = generateUniqueTestUserData();
-    val user0 = data.getUsers().get(0);
-
-    // Create update request with same email
-    val timeTravelDate = Date.from(user0.getCreatedAt().toInstant().minus(1, DAYS));
-    assertThat(user0.getCreatedAt().after(timeTravelDate)).isTrue();
-    val r1 = UpdateUserRequest.builder().lastLogin(timeTravelDate).build();
-
-    // Assert that updating with a last login before the created at data results in a BAD_REQUEST error
-    partialUpdateUserPutRequestAnd(user0.getId(), r1).assertBadRequest();
 	}
 
 	@Test
@@ -575,8 +545,9 @@ public class UserControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+  @Ignore("low priority, but should be implemented")
 	public void getApplicationsFromUser_FindSomeQuery_Success(){
-		throw new NotImplementedException("need to implement the test 'getApplicationsFromUser_FindSomeQuery_Success'");
+    throw new NotImplementedException("need to implement");
 	}
 
 	@Test
@@ -777,6 +748,7 @@ public class UserControllerTest extends AbstractControllerTest {
 	}
 
 	@Test
+  @Ignore("low priority, but should be implemented")
 	public void getGroupsFromUser_FindSomeQuery_Success(){
 		throw new NotImplementedException("need to implement the test 'getGroupsFromUser_FindSomeQuery_Success'");
 	}
