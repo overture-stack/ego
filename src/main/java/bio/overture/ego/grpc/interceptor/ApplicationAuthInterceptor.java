@@ -25,9 +25,10 @@ public class ApplicationAuthInterceptor implements AuthInterceptor {
       Metadata.Key.of("jwt", ASCII_STRING_MARSHALLER);
   public static final Context.Key<Claims> JWT_CONTEXT_KEY = Context.key("jwt");
 
-  private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener(){};
+  private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {};
 
-  @Autowired  public ApplicationAuthInterceptor() {}
+  @Autowired
+  public ApplicationAuthInterceptor() {}
 
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
@@ -42,11 +43,14 @@ public class ApplicationAuthInterceptor implements AuthInterceptor {
       }
 
       if (!checkAuthorization(token)) {
-        call.close(Status.PERMISSION_DENIED.withDescription("This application is not authorized to access Ego data."), metadata);
+        call.close(
+            Status.PERMISSION_DENIED.withDescription(
+                "This application is not authorized to access Ego data."),
+            metadata);
         return NOOP_LISTENER;
       }
 
-      Context context = Context.current();//.withValue(JWT_CONTEXT_KEY, claims);
+      Context context = Context.current(); // .withValue(JWT_CONTEXT_KEY, claims);
       return Contexts.interceptCall(context, call, metadata, next);
 
     } catch (IllegalArgumentException e) {
@@ -61,7 +65,7 @@ public class ApplicationAuthInterceptor implements AuthInterceptor {
 
   private boolean checkAuthorization(String token) {
     val claims = tokenService.getTokenAppInfo(token);
-    if(claims == null) {
+    if (claims == null) {
       return false;
     }
 
@@ -69,6 +73,4 @@ public class ApplicationAuthInterceptor implements AuthInterceptor {
 
     return application.getType().equals(ApplicationType.ADMIN);
   }
-
-
 }
