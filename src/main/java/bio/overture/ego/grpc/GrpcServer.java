@@ -1,9 +1,11 @@
 package bio.overture.ego.grpc;
 
+import bio.overture.ego.grpc.interceptor.AuthInterceptor;
 import bio.overture.ego.grpc.service.GrpcUserServiceImpl;
 import io.grpc.*;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,19 +23,25 @@ public class GrpcServer implements CommandLineRunner, DisposableBean {
 
   private Server server;
 
+  private final AuthInterceptor authInterceptor;
   private final GrpcUserServiceImpl userServiceImpl;
 
   @Autowired
-  public GrpcServer(GrpcUserServiceImpl userServiceImpl) {
+  public GrpcServer(AuthInterceptor authInterceptor, GrpcUserServiceImpl userServiceImpl) {
+
+    this.authInterceptor = authInterceptor;
+
     this.userServiceImpl = userServiceImpl;
   }
 
   @Override
   public void run(String... args) throws Exception {
 
+    val userService = ServerInterceptors.intercept(userServiceImpl, authInterceptor);
+
     server =
         ServerBuilder.forPort(port)
-            .addService(this.userServiceImpl)
+            .addService(userService)
             //            .addService(ProtoReflectionService.newInstance())
             .build()
             .start();
