@@ -9,7 +9,6 @@ import lombok.val;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.util.StringUtils;
 
 public class ProtoUtils {
 
@@ -37,7 +36,7 @@ public class ProtoUtils {
   }
 
   static final String DEFAULT_SORT_FIELD = "createdAt";
-  static final int DEFAULT_LIMIT = 20;
+  static final int DEFAULT_LIMIT = 100;
   static final int MAX_LIMIT = 1000;
 
   public static Pageable getPageable(PagedRequest pagedRequest, String sort) {
@@ -67,18 +66,7 @@ public class ProtoUtils {
 
       @Override
       public Sort getSort() {
-        if (StringUtils.isEmpty(sort)) {
-          // Sort results by creation time, ensure static order for the page_token to refer to
-          return new Sort(Sort.Direction.ASC, "createdAt");
-        } else {
-          val orders =
-              Arrays.stream(sort.split(","))
-                  .map(ProtoUtils::convertToSortOrder)
-                  .filter(optional -> optional.isPresent())
-                  .map(optional -> optional.get())
-                  .collect(toList());
-          return new Sort(orders);
-        }
+        return parseSort(sort);
       }
 
       @Override
@@ -103,33 +91,54 @@ public class ProtoUtils {
     };
   }
 
-  private static Optional<Sort.Order> convertToSortOrder(String sort) {
+  public static Sort parseSort(String sort) {
+    if (sort.isEmpty()) {
+      // Sort results by creation time, ensure static order for the page_token to refer to
+      return new Sort(Sort.Direction.ASC, "createdAt");
+    } else {
+      val orders =
+          Arrays.stream(sort.split(","))
+              .map(ProtoUtils::parseSortOrder)
+              .filter(optional -> optional.isPresent())
+              .map(optional -> optional.get())
+              .collect(toList());
+      return Sort.by(orders);
+    }
+  }
 
-    val split = sort.split(" ");
-    switch (split.length) {
-      case 1:
-        // Example: "id"
-        if (sort.equalsIgnoreCase(Sort.Direction.DESC.name())) {
-          // Special case, sort value is exactly "desc"
-          return Optional.of(new Sort.Order(Sort.Direction.DESC, DEFAULT_SORT_FIELD));
+  private static Optional<Sort.Order> parseSortOrder(String sort) {
 
-        } else {
-          return Optional.of(new Sort.Order(Sort.Direction.ASC, split[0]));
-        }
+    if (!sort.isEmpty()) {
+      val split = sort.trim().split(" ");
+      switch (split.length) {
+        case 1:
+          // Example: "id"
+          if (sort.equalsIgnoreCase(Sort.Direction.DESC.name())) {
+            // Special case, sort value is exactly "desc"
+            return Optional.of(new Sort.Order(Sort.Direction.DESC, DEFAULT_SORT_FIELD));
 
-      case 2:
-        // Example: "name desc"
-        if (split[1].equalsIgnoreCase(Sort.Direction.DESC.name())) {
-          return Optional.of(new Sort.Order(Sort.Direction.DESC, split[0]));
+          } else if (sort.equalsIgnoreCase(Sort.Direction.ASC.name())) {
+            // Special case, sort value is exactly "asc"
+            return Optional.of(new Sort.Order(Sort.Direction.ASC, DEFAULT_SORT_FIELD));
 
-        } else if (split[1].equalsIgnoreCase(Sort.Direction.ASC.name())) {
-          return Optional.of(new Sort.Order(Sort.Direction.ASC, split[0]));
-        }
-        break;
+          } else {
+            return Optional.of(new Sort.Order(Sort.Direction.ASC, split[0]));
+          }
 
-      default:
-        // sort string length was 0 or longer than 2
-        return Optional.empty();
+        case 2:
+          // Example: "name desc"
+          if (split[1].equalsIgnoreCase(Sort.Direction.DESC.name())) {
+            return Optional.of(new Sort.Order(Sort.Direction.DESC, split[0]));
+
+          } else if (split[1].equalsIgnoreCase(Sort.Direction.ASC.name())) {
+            return Optional.of(new Sort.Order(Sort.Direction.ASC, split[0]));
+          }
+          break;
+
+        default:
+          // sort string length was 0 or longer than 2
+          return Optional.empty();
+      }
     }
     // Fall through - nothing matching expected formatting
     return Optional.empty();

@@ -1,0 +1,186 @@
+package bio.overture.ego.grpc;
+
+import static bio.overture.ego.grpc.ProtoUtils.*;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.google.protobuf.StringValue;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.lang.StringUtils;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Sort;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.Arrays;
+
+@Slf4j
+@SpringBootTest
+@RunWith(SpringRunner.class)
+public class ProtoUtilsTest {
+
+  /**
+   * Proto String conversion convenience method
+   **/
+
+  @Test
+  public void toProtoStringNullValue() {
+    val result = toProtoString(null);
+    assertThat(result).isNotNull();
+    assertThat(result.getValue()).isEqualTo(StringUtils.EMPTY);
+  }
+
+  @Test
+  public void toProtoStringWithValue() {
+    // using Sort for test object since we already have this in the test class for use in other tests
+    val testObject = Sort.by(new Sort.Order(Sort.Direction.ASC, "createdAt"));
+    val result = toProtoString(testObject);
+    assertThat(result).isNotNull();
+    assertThat(result.getValue()).isEqualTo(testObject.toString());
+  }
+
+
+  /**
+   * Create Paged Response from Page
+   **/
+
+  @Test
+  public void createPagedResponseForEmptyPage() {
+    val result = createPagedResponse(Page.empty(),0);
+    assertThat(result.hasNextPageToken()).isFalse();
+    assertThat(result.getMaxResults()).isEqualTo(0);
+  }
+
+  @Test
+  public void createPagedResponseForCompleteSet() {
+    val dataList = Arrays.asList("1", "2", "3");
+    val page = new PageImpl<String>(dataList);
+    val result = createPagedResponse(page,0);
+    assertThat(result.hasNextPageToken()).isFalse();
+    assertThat(result.getMaxResults()).isEqualTo(dataList.size());
+  }
+
+  @Test
+  public void createPagedResponseForPartialSet() {
+    val dataList = Arrays.asList("1", "2", "3");
+    val pageable = getPageable(PagedRequest.newBuilder().setPageNumber(0).setPageSize(2).build(),StringUtils.EMPTY);
+    val page = new PageImpl<String>(dataList, pageable, Integer.valueOf(dataList.size()).longValue());
+
+    val result = createPagedResponse(page,0);
+
+    assertThat(result.hasNextPageToken()).isTrue();
+    assertThat(result.getNextPageToken().getValue()).isEqualTo(Integer.valueOf(1).toString());
+    assertThat(result.getMaxResults()).isEqualTo(dataList.size());
+  }
+
+  @Test
+  public void createPagedResponseForPartialSetWithDifferentPageNumber() {
+    val dataList = Arrays.asList("1", "2", "3");
+    val pageable = getPageable(PagedRequest.newBuilder().setPageNumber(0).setPageSize(2).build(),StringUtils.EMPTY);
+    val page = new PageImpl<String>(dataList, pageable, Integer.valueOf(dataList.size()).longValue());
+
+    val result = createPagedResponse(page,3);
+
+    assertThat(result.hasNextPageToken()).isTrue();
+    assertThat(result.getNextPageToken().getValue()).isEqualTo(Integer.valueOf(4).toString());
+  }
+
+
+  /**
+   * Pageable Resolution
+   **/
+
+  @Test
+  public void getPageableForEmptyInput() {
+    val input = PagedRequest.newBuilder().setPageNumber(0).setPageSize(0).build();
+    val result = getPageable(input, StringUtils.EMPTY);
+
+    assertThat(result.getSort()).isEqualTo(Sort.by(new Sort.Order(Sort.Direction.ASC, "createdAt")));
+    assertThat(result.getOffset()).isEqualTo(0);
+    assertThat(result.getPageSize()).isEqualTo(100);
+  }
+
+  @Test
+  public void getPageableForSpecificInput() {
+    int page = 10;
+    int size = 30;
+
+    val input = PagedRequest.newBuilder().setPageNumber(page).setPageSize(size).build();
+    val result = getPageable(input, "id desc, lastLogin, name asc");
+
+    val expectedSort =
+        Sort.by(
+            new Sort.Order(Sort.Direction.DESC, "id"),
+            new Sort.Order(Sort.Direction.ASC, "lastLogin"),
+            new Sort.Order(Sort.Direction.ASC, "name"));
+
+    assertThat(result.getSort()).isEqualTo(expectedSort);
+    assertThat(result.getOffset()).isEqualTo(page*size);
+    assertThat(result.getPageSize()).isEqualTo(30);
+  }
+
+  @Test
+  public void getPageableWithSizeOverLimit() {
+    int size = 9001;
+
+    val input = PagedRequest.newBuilder().setPageNumber(0).setPageSize(size).build();
+    val result = getPageable(input, StringUtils.EMPTY);
+
+    assertThat(result.getPageSize()).isEqualTo(1000);
+  }
+
+
+  /**
+   * Parse Sort Tests
+   **/
+
+  @Test
+  public void parseSortWithEmptyInput() {
+    val sort = StringUtils.EMPTY;
+    val result = parseSort(sort);
+
+    val expected = Sort.by(new Sort.Order(Sort.Direction.ASC, "createdAt"));
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  public void parseSortWithDirectionOnly() {
+    // Test asc
+    val sortUp = "asc";
+    val sortUpResult = parseSort(sortUp);
+
+    val sortUpExpected = Sort.by(new Sort.Order(Sort.Direction.ASC, "createdAt"));
+    assertThat(sortUpResult).isEqualTo(sortUpExpected);
+
+    // Test desc
+    val sortDown = "desc";
+    val sortDownResult = parseSort(sortDown);
+
+    val sortDownExpected = Sort.by(new Sort.Order(Sort.Direction.DESC, "createdAt"));
+    assertThat(sortDownResult).isEqualTo(sortDownExpected);
+  }
+
+  @Test
+  public void parseSortWithMultipleInputs() {
+    val expected =
+        Sort.by(
+            new Sort.Order(Sort.Direction.DESC, "id"),
+            new Sort.Order(Sort.Direction.ASC, "lastLogin"),
+            new Sort.Order(Sort.Direction.ASC, "name"));
+
+
+    // comma separated list with all direction indicators (asc, desc, no direction indicated)
+    val sort = "id desc, lastLogin, name asc";
+    val result = parseSort(sort);
+    assertThat(result).isEqualTo(expected);
+
+    // double check spacing variation, trailing commas, empty clauses
+    val sortCompact = "id desc,lastLogin,,name asc,";
+    val resultCompact = parseSort(sort);
+    assertThat(resultCompact).isEqualTo(expected);
+  }
+
+}
