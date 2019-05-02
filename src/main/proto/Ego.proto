@@ -19,7 +19,7 @@ message PagedRequest {
 
 message PagedResponse {
     uint32 max_results = 1;
-    google.protobuf.StringValue next_page_token = 2;
+    google.protobuf.UInt32Value next_page = 2;
 }
 
 message GetUserRequest {

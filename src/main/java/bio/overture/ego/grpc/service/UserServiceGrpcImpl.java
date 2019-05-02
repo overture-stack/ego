@@ -18,12 +18,12 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class GrpcUserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
+public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
 
   private final UserService userService;
 
   @Autowired
-  public GrpcUserServiceImpl(UserService userService) {
+  public UserServiceGrpcImpl(UserService userService) {
     this.userService = userService;
   }
 

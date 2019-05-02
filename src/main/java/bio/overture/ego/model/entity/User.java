@@ -40,10 +40,7 @@ import com.google.protobuf.StringValue;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -243,9 +240,7 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
 
     try {
       final Set<StringValue> permissions =
-          mapToImmutableSet(
-              this.getUserPermissions(),
-              permission -> toProtoString(permission.getPolicy().getName()));
+          mapToImmutableSet(resolveUsersPermissions(this), permission -> toProtoString(permission));
       builder.addAllPermissions(permissions);
 
     } catch (LazyInitializationException e) {

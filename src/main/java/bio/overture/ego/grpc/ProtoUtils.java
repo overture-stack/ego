@@ -3,6 +3,7 @@ package bio.overture.ego.grpc;
 import static java.util.stream.Collectors.toList;
 
 import com.google.protobuf.StringValue;
+import com.google.protobuf.UInt32Value;
 import java.util.Arrays;
 import java.util.Optional;
 import lombok.val;
@@ -28,8 +29,8 @@ public class ProtoUtils {
         PagedResponse.newBuilder().setMaxResults(Long.valueOf(page.getTotalElements()).intValue());
 
     if (page.hasNext()) {
-      val nextToken = StringValue.of(String.valueOf(currentPageNum + 1));
-      pageBuilder.setNextPageToken(nextToken);
+      val nextPage = UInt32Value.of(currentPageNum + 1);
+      pageBuilder.setNextPage(nextPage);
     }
 
     return pageBuilder.build();

@@ -3,7 +3,7 @@ package bio.overture.ego.grpc;
 import static bio.overture.ego.grpc.ProtoUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.protobuf.StringValue;
+import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang.StringUtils;
@@ -15,17 +15,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Arrays;
-
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
 public class ProtoUtilsTest {
 
-  /**
-   * Proto String conversion convenience method
-   **/
-
+  /** Proto String conversion convenience method */
   @Test
   public void toProtoStringNullValue() {
     val result = toProtoString(null);
@@ -35,22 +30,19 @@ public class ProtoUtilsTest {
 
   @Test
   public void toProtoStringWithValue() {
-    // using Sort for test object since we already have this in the test class for use in other tests
+    // using Sort for test object since we already have this in the test class for use in other
+    // tests
     val testObject = Sort.by(new Sort.Order(Sort.Direction.ASC, "createdAt"));
     val result = toProtoString(testObject);
     assertThat(result).isNotNull();
     assertThat(result.getValue()).isEqualTo(testObject.toString());
   }
 
-
-  /**
-   * Create Paged Response from Page
-   **/
-
+  /** Create Paged Response from Page */
   @Test
   public void createPagedResponseForEmptyPage() {
-    val result = createPagedResponse(Page.empty(),0);
-    assertThat(result.hasNextPageToken()).isFalse();
+    val result = createPagedResponse(Page.empty(), 0);
+    assertThat(result.hasNextPage()).isFalse();
     assertThat(result.getMaxResults()).isEqualTo(0);
   }
 
@@ -58,47 +50,50 @@ public class ProtoUtilsTest {
   public void createPagedResponseForCompleteSet() {
     val dataList = Arrays.asList("1", "2", "3");
     val page = new PageImpl<String>(dataList);
-    val result = createPagedResponse(page,0);
-    assertThat(result.hasNextPageToken()).isFalse();
+    val result = createPagedResponse(page, 0);
+    assertThat(result.hasNextPage()).isFalse();
     assertThat(result.getMaxResults()).isEqualTo(dataList.size());
   }
 
   @Test
   public void createPagedResponseForPartialSet() {
     val dataList = Arrays.asList("1", "2", "3");
-    val pageable = getPageable(PagedRequest.newBuilder().setPageNumber(0).setPageSize(2).build(),StringUtils.EMPTY);
-    val page = new PageImpl<String>(dataList, pageable, Integer.valueOf(dataList.size()).longValue());
+    val pageable =
+        getPageable(
+            PagedRequest.newBuilder().setPageNumber(0).setPageSize(2).build(), StringUtils.EMPTY);
+    val page =
+        new PageImpl<String>(dataList, pageable, Integer.valueOf(dataList.size()).longValue());
 
-    val result = createPagedResponse(page,0);
+    val result = createPagedResponse(page, 0);
 
-    assertThat(result.hasNextPageToken()).isTrue();
-    assertThat(result.getNextPageToken().getValue()).isEqualTo(Integer.valueOf(1).toString());
+    assertThat(result.hasNextPage()).isTrue();
+    assertThat(result.getNextPage().getValue()).isEqualTo(1);
     assertThat(result.getMaxResults()).isEqualTo(dataList.size());
   }
 
   @Test
   public void createPagedResponseForPartialSetWithDifferentPageNumber() {
     val dataList = Arrays.asList("1", "2", "3");
-    val pageable = getPageable(PagedRequest.newBuilder().setPageNumber(0).setPageSize(2).build(),StringUtils.EMPTY);
-    val page = new PageImpl<String>(dataList, pageable, Integer.valueOf(dataList.size()).longValue());
+    val pageable =
+        getPageable(
+            PagedRequest.newBuilder().setPageNumber(0).setPageSize(2).build(), StringUtils.EMPTY);
+    val page =
+        new PageImpl<String>(dataList, pageable, Integer.valueOf(dataList.size()).longValue());
 
-    val result = createPagedResponse(page,3);
+    val result = createPagedResponse(page, 3);
 
-    assertThat(result.hasNextPageToken()).isTrue();
-    assertThat(result.getNextPageToken().getValue()).isEqualTo(Integer.valueOf(4).toString());
+    assertThat(result.hasNextPage()).isTrue();
+    assertThat(result.getNextPage().getValue()).isEqualTo(4);
   }
 
-
-  /**
-   * Pageable Resolution
-   **/
-
+  /** Pageable Resolution */
   @Test
   public void getPageableForEmptyInput() {
     val input = PagedRequest.newBuilder().setPageNumber(0).setPageSize(0).build();
     val result = getPageable(input, StringUtils.EMPTY);
 
-    assertThat(result.getSort()).isEqualTo(Sort.by(new Sort.Order(Sort.Direction.ASC, "createdAt")));
+    assertThat(result.getSort())
+        .isEqualTo(Sort.by(new Sort.Order(Sort.Direction.ASC, "createdAt")));
     assertThat(result.getOffset()).isEqualTo(0);
     assertThat(result.getPageSize()).isEqualTo(100);
   }
@@ -118,7 +113,7 @@ public class ProtoUtilsTest {
             new Sort.Order(Sort.Direction.ASC, "name"));
 
     assertThat(result.getSort()).isEqualTo(expectedSort);
-    assertThat(result.getOffset()).isEqualTo(page*size);
+    assertThat(result.getOffset()).isEqualTo(page * size);
     assertThat(result.getPageSize()).isEqualTo(30);
   }
 
@@ -132,11 +127,7 @@ public class ProtoUtilsTest {
     assertThat(result.getPageSize()).isEqualTo(1000);
   }
 
-
-  /**
-   * Parse Sort Tests
-   **/
-
+  /** Parse Sort Tests */
   @Test
   public void parseSortWithEmptyInput() {
     val sort = StringUtils.EMPTY;
@@ -171,7 +162,6 @@ public class ProtoUtilsTest {
             new Sort.Order(Sort.Direction.ASC, "lastLogin"),
             new Sort.Order(Sort.Direction.ASC, "name"));
 
-
     // comma separated list with all direction indicators (asc, desc, no direction indicated)
     val sort = "id desc, lastLogin, name asc";
     val result = parseSort(sort);
@@ -179,8 +169,7 @@ public class ProtoUtilsTest {
 
     // double check spacing variation, trailing commas, empty clauses
     val sortCompact = "id desc,lastLogin,,name asc,";
-    val resultCompact = parseSort(sort);
+    val resultCompact = parseSort(sortCompact);
     assertThat(resultCompact).isEqualTo(expected);
   }
-
 }

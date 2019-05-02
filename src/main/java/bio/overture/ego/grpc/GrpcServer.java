@@ -1,7 +1,7 @@
 package bio.overture.ego.grpc;
 
 import bio.overture.ego.grpc.interceptor.AuthInterceptor;
-import bio.overture.ego.grpc.service.GrpcUserServiceImpl;
+import bio.overture.ego.grpc.service.UserServiceGrpcImpl;
 import io.grpc.*;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +24,10 @@ public class GrpcServer implements CommandLineRunner, DisposableBean {
   private Server server;
 
   private final AuthInterceptor authInterceptor;
-  private final GrpcUserServiceImpl userServiceImpl;
+  private final UserServiceGrpcImpl userServiceImpl;
 
   @Autowired
-  public GrpcServer(AuthInterceptor authInterceptor, GrpcUserServiceImpl userServiceImpl) {
+  public GrpcServer(AuthInterceptor authInterceptor, UserServiceGrpcImpl userServiceImpl) {
 
     this.authInterceptor = authInterceptor;
 
