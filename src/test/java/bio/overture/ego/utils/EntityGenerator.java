@@ -15,11 +15,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import bio.overture.ego.model.dto.CreateApplicationRequest;
-import bio.overture.ego.model.dto.CreateUserRequest;
-import bio.overture.ego.model.dto.GroupRequest;
-import bio.overture.ego.model.dto.PolicyRequest;
-import bio.overture.ego.model.dto.Scope;
+import bio.overture.ego.model.dto.*;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
@@ -32,24 +28,11 @@ import bio.overture.ego.model.enums.LanguageType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.model.params.ScopeName;
-import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.service.BaseService;
-import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.NamedService;
-import bio.overture.ego.service.PolicyService;
-import bio.overture.ego.service.TokenService;
-import bio.overture.ego.service.TokenStoreService;
-import bio.overture.ego.service.UserPermissionService;
-import bio.overture.ego.service.UserService;
+import bio.overture.ego.service.*;
 import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 import lombok.NonNull;
 import lombok.val;
@@ -75,6 +58,7 @@ public class EntityGenerator {
   @Autowired private UserService userService;
 
   @Autowired private GroupService groupService;
+  @Autowired private GroupPermissionService groupPermissionService;
 
   @Autowired private PolicyService policyService;
 
@@ -127,6 +111,14 @@ public class EntityGenerator {
             });
   }
 
+  public Application addUsersToApplication(Collection<User> users, Application app) {
+    val appIdList = Arrays.asList(app.getId());
+
+    users.stream().forEach(user -> userService.addUserToApps(user.getId(), appIdList));
+
+    return applicationService.getById(app.getId());
+  }
+
   public User setupUser(String name) {
     val names = name.split(" ", 2);
     val userName = String.format("%s%s@domain.com", names[0], names[1]);
@@ -155,6 +147,11 @@ public class EntityGenerator {
               val group = createGroupRequest(name);
               return groupService.create(group);
             });
+  }
+
+  public Group addUsersToGroup(Collection<User> users, Group group) {
+    val userIds = users.stream().map(user -> user.getId()).collect(toList());
+    return groupService.associateUsersWithGroup(group.getId(), userIds);
   }
 
   private CreateUserRequest createUser(String firstName, String lastName) {
@@ -299,26 +296,25 @@ public class EntityGenerator {
             });
   }
 
-  public Policy setupPolicy(String name, String groupName) {
-    return policyService
-        .findByName(name)
-        .orElseGet(
-            () -> {
-              val createRequest = createPolicyRequest(name);
-              return policyService.create(createRequest);
-            });
+  public Policy setupGroupPermission(Group group, Policy policy, AccessLevel level) {
+
+    val permission = PermissionRequest.builder().mask(level).policyId(policy.getId()).build();
+
+    groupPermissionService.addPermissions(group.getId(), Arrays.asList(permission));
+
+    return policy;
   }
 
   public Policy setupPolicy(@NonNull String csv) {
     val args = newArrayList(COMMA_SPLITTER.split(csv));
     assertThat(args).hasSize(2);
     val name = args.get(0);
-    val groupName = args.get(1);
-    return setupPolicy(name, groupName);
+
+    return setupSinglePolicy(name);
   }
 
   public List<Policy> setupPolicies(String... names) {
-    return mapToList(listOf(names), this::setupPolicy);
+    return mapToList(listOf(names), this::setupSinglePolicy);
   }
 
   public void setupTestPolicies() {
@@ -362,6 +358,13 @@ public class EntityGenerator {
             .collect(toSet());
     user.getUserPermissions().addAll(userPermissions);
     userService.getRepository().save(user);
+  }
+
+  public void addPermissionToUsers(Collection<User> users, Policy policy, AccessLevel level) {
+    val permission = PermissionRequest.builder().mask(level).policyId(policy.getId()).build();
+    users.stream()
+        .forEach(
+            user -> userPermissionService.addPermissions(user.getId(), Arrays.asList(permission)));
   }
 
   public String generateNonExistentUserName() {

@@ -10,12 +10,14 @@ import static bio.overture.ego.model.enums.StatusType.PENDING;
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.enums.UserType.USER;
 import static bio.overture.ego.service.UserService.USER_CONVERTER;
+import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -26,6 +28,7 @@ import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
@@ -54,7 +57,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Transactional
-@Ignore("replace with controller tests.")
+// @Ignore("replace with controller tests.")
 public class UserServiceTest {
 
   private static final UUID NON_EXISTENT_USER =
@@ -923,5 +926,48 @@ public class UserServiceTest {
         userPermissionService.getPermissions(user.getId(), new PageableResolver().getPageable());
 
     assertThat(pagedUserPermissions.getTotalElements()).isEqualTo(3L);
+  }
+
+  @Test
+  public void testGetManyUsersWithRelations() {
+    int numUsers = 3;
+
+    val users = repeatedCallsOf(() -> entityGenerator.generateRandomUser(), numUsers);
+
+    // Create a group and add it to first few users
+    val group = entityGenerator.setupGroup("UserServiceTestGroup");
+    val groupWithUsers = entityGenerator.addUsersToGroup(users.stream().collect(toList()), group);
+
+    // Create application and add it to last few users
+    val application = entityGenerator.setupApplication("UserServiceTestApplicaiton");
+    val appWithUsers =
+        entityGenerator.addUsersToApplication(users.stream().collect(toList()), application);
+
+    // Create policy and add permission to users
+    val policy = entityGenerator.setupSinglePolicy("UserServiceTestPolicy");
+    entityGenerator.setupGroupPermission(groupWithUsers, policy, AccessLevel.WRITE);
+
+    // Update testUsers now that they have relations
+    val reply =
+        userService.getMany(
+            users.stream().map(user -> user.getId()).collect(toList()), true, true, true);
+
+    assertThat(reply.size()).isEqualTo(numUsers);
+
+    reply.stream()
+        .forEach(
+            user -> {
+              assertThat(user.getUserGroups().size()).isEqualTo(1);
+              assertThat(user.getUserGroups().iterator().next().getGroup().getName())
+                  .isEqualTo(group.getName());
+
+              assertThat(user.getApplications().size()).isEqualTo(1);
+              assertThat(user.getApplications().iterator().next().getName())
+                  .isEqualTo(application.getName());
+
+              assertThat(user.getPermissions().size()).isEqualTo(1);
+              assertThat(user.getPermissions().iterator().next())
+                  .isEqualTo("UserServiceTestPolicy.WRITE");
+            });
   }
 }
