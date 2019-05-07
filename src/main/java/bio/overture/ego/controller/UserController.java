@@ -386,18 +386,18 @@ public class UserController {
   public @ResponseBody User addApplicationsToUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
-      @RequestBody(required = true) List<UUID> appIds) {
-    return userService.addUserToApps(id, appIds);
+      @RequestBody(required = true) List<UUID> applicationIds) {
+    return userService.associateApplicationsWithUser(id, applicationIds);
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/applications/{appIds}")
+  @RequestMapping(method = RequestMethod.DELETE, value = "/{id}/applications/{applicationIds}")
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete Applications from User")})
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteApplicationsFromUser(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
-      @PathVariable(value = "appIds", required = true) List<UUID> appIds) {
-    userService.deleteUserFromApps(id, appIds);
+      @PathVariable(value = "applicationIds", required = true) List<UUID> applicationIds) {
+    userService.disassociateApplicationsFromUser(id, applicationIds);
   }
 }

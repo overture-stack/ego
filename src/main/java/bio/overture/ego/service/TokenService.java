@@ -35,7 +35,6 @@ import static org.springframework.util.DigestUtils.md5Digest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
-import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.dto.UserScopesResponse;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
@@ -61,7 +60,6 @@ import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -131,24 +129,13 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   }
 
   public String generateUserToken(IDToken idToken) {
-    val userName = idToken.getEmail();
-    val user =
-        userService
-            .findByName(userName)
-            .orElseGet(
-                () -> {
-                  log.info("User not found, creating.");
-                  return userService.createFromIDToken(idToken);
-                });
-
-    val u = UpdateUserRequest.builder().lastLogin(new Date()).build();
-    userService.partialUpdate(user.getId(), u);
+    val user = userService.getUserByToken(idToken);
     return generateUserToken(user);
   }
 
   @SneakyThrows
   public String generateUserToken(User u) {
-    Set<String> permissionNames = mapToSet(extractScopes(u), p -> p.toString());
+    Set<String> permissionNames = mapToSet(extractScopes(u), Scope::toString);
     return generateUserToken(u, permissionNames);
   }
 

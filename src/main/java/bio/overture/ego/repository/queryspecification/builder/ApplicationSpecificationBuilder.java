@@ -3,7 +3,8 @@ package bio.overture.ego.repository.queryspecification.builder;
 import static bio.overture.ego.model.enums.JavaFields.CLIENTID;
 import static bio.overture.ego.model.enums.JavaFields.GROUP;
 import static bio.overture.ego.model.enums.JavaFields.GROUPAPPLICATIONS;
-import static bio.overture.ego.model.enums.JavaFields.USERS;
+import static bio.overture.ego.model.enums.JavaFields.USER;
+import static bio.overture.ego.model.enums.JavaFields.USERAPPLICATIONS;
 import static javax.persistence.criteria.JoinType.LEFT;
 
 import bio.overture.ego.model.entity.Application;
@@ -41,11 +42,10 @@ public class ApplicationSpecificationBuilder
   @Override
   protected Root<Application> setupFetchStrategy(Root<Application> root) {
     if (fetchGroups) {
-      val fromGroupApplications = root.fetch(GROUPAPPLICATIONS, LEFT);
-      fromGroupApplications.fetch(GROUP, LEFT);
+      root.fetch(GROUPAPPLICATIONS, LEFT).fetch(GROUP, LEFT);
     }
     if (fetchUsers) {
-      root.fetch(USERS, LEFT);
+      root.fetch(USERAPPLICATIONS, LEFT).fetch(USER, LEFT);
     }
     return root;
   }

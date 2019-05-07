@@ -114,7 +114,8 @@ public class EntityGenerator {
   public Application addUsersToApplication(Collection<User> users, Application app) {
     val appIdList = Arrays.asList(app.getId());
 
-    users.stream().forEach(user -> userService.addUserToApps(user.getId(), appIdList));
+    users.stream()
+        .forEach(user -> userService.associateApplicationsWithUser(user.getId(), appIdList));
 
     return applicationService.getById(app.getId());
   }

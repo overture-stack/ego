@@ -30,6 +30,7 @@ import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.model.enums.UserType;
+import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -49,11 +50,11 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -139,10 +140,12 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.CREATEDAT)
+  @Temporal(value = TemporalType.TIMESTAMP)
   private Date createdAt;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.LASTLOGIN)
+  @Temporal(value = TemporalType.TIMESTAMP)
   private Date lastLogin;
 
   @Type(type = EGO_ENUM)
@@ -179,17 +182,16 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   private Set<UserGroup> userGroups = newHashSet();
 
   @JsonIgnore
-  @ManyToMany(
-      fetch = FetchType.LAZY,
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-  @JoinTable(
-      name = Tables.USER_APPLICATION,
-      joinColumns = {@JoinColumn(name = SqlFields.USERID_JOIN)},
-      inverseJoinColumns = {@JoinColumn(name = SqlFields.APPID_JOIN)})
   @Builder.Default
-  private Set<Application> applications = newHashSet();
+  @OneToMany(
+      mappedBy = JavaFields.USER,
+      cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      orphanRemoval = true)
+  private Set<UserApplication> userApplications = newHashSet();
 
-  // TODO: [rtisma] move getPermissions to UserService once DTO task is complete. JsonViews creates
+  // TODO: [rtisma] move getPermissions to UserService once DTO task is complete.
+  // JsonViews creates
   // a dependency for this method. For now, using a UserService static method.
   // Creates permissions in JWTAccessToken::context::user
   @JsonView(Views.JWTAccessToken.class)
@@ -197,9 +199,11 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
     return extractPermissionStrings(resolveUsersPermissions(this));
   }
 
-  /* ===========================
+  /*
+   * ===========================
    * Protobuf Conversion Methods
-   * =========================== */
+   * ===========================
+   */
 
   public bio.overture.ego.grpc.User toProto() {
 
@@ -219,7 +223,8 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
     try {
       final Set<StringValue> applications =
           mapToImmutableSet(
-              this.getApplications(), application -> toProtoString(application.getId()));
+              this.getUserApplications(),
+              userApplication -> toProtoString(userApplication.getApplication().getId()));
       builder.addAllApplications(applications);
 
     } catch (LazyInitializationException e) {
@@ -326,4 +331,9 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   }
 
   private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
+  @PrePersist
+  private void onCreate() {
+    this.createdAt = new Date();
+  }
 }

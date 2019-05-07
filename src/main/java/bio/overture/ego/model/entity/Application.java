@@ -26,6 +26,7 @@ import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.model.join.GroupApplication;
+import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -42,7 +43,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -135,9 +135,10 @@ public class Application implements Identifiable<UUID> {
 
   @JsonIgnore
   @Builder.Default
-  @ManyToMany(
-      mappedBy = JavaFields.APPLICATIONS,
+  @OneToMany(
+      mappedBy = JavaFields.APPLICATION,
+      cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
-      cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-  private Set<User> users = newHashSet();
+      orphanRemoval = true)
+  private Set<UserApplication> userApplications = newHashSet();
 }

@@ -6,7 +6,6 @@ import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.TokenService;
 import io.grpc.*;
-import io.jsonwebtoken.Claims;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;

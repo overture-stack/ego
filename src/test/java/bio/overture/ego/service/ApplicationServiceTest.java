@@ -72,7 +72,6 @@ public class ApplicationServiceTest {
             .name(name)
             .status(status)
             .redirectUri(null)
-            .users(null)
             .build();
 
     val newName = randomUUID().toString();
@@ -93,7 +92,7 @@ public class ApplicationServiceTest {
     assertThat(app.getStatus()).isEqualTo(APPROVED);
     assertThat(app.getId()).isEqualTo(id);
     assertThat(app.getName()).isEqualTo(newName);
-    assertThat(app.getUsers()).isNull();
+    assertThat(app.getUserApplications()).isNull();
   }
 
   @Test
@@ -111,7 +110,7 @@ public class ApplicationServiceTest {
     assertThat(app.getGroupApplications()).isEmpty();
     assertThat(app.getClientId()).isEqualTo(req.getClientId());
     assertThat(app.getName()).isEqualTo(req.getName());
-    assertThat(app.getUsers()).isEmpty();
+    assertThat(app.getUserApplications()).isEmpty();
     assertThat(app.getClientSecret()).isEqualTo(req.getClientSecret());
     assertThat(app.getStatus()).isEqualTo(req.getStatus());
     assertThat(app.getDescription()).isNull();
@@ -238,8 +237,8 @@ public class ApplicationServiceTest {
 
     val application = applicationService.getByClientId("444444");
 
-    userService.addUserToApps(user.getId(), newArrayList(application.getId()));
-    userService.addUserToApps(userTwo.getId(), newArrayList(application.getId()));
+    userService.associateApplicationsWithUser(user.getId(), newArrayList(application.getId()));
+    userService.associateApplicationsWithUser(userTwo.getId(), newArrayList(application.getId()));
 
     val applications =
         applicationService.findApplicationsForUser(
@@ -271,7 +270,7 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("111111");
     val applicationTwo = applicationService.getByClientId("555555");
 
-    userService.addUserToApps(
+    userService.associateApplicationsWithUser(
         user.getId(), newArrayList(applicationOne.getId(), applicationTwo.getId()));
 
     val clientIdFilter = new SearchFilter("clientId", "111111");
@@ -293,7 +292,7 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("333333");
     val applicationTwo = applicationService.getByClientId("444444");
 
-    userService.addUserToApps(
+    userService.associateApplicationsWithUser(
         user.getId(), newArrayList(applicationOne.getId(), applicationTwo.getId()));
 
     val clientIdFilter = new SearchFilter("clientId", "333333");
@@ -317,7 +316,7 @@ public class ApplicationServiceTest {
     val applicationOne = applicationService.getByClientId("222222");
     val applicationTwo = applicationService.getByClientId("444444");
 
-    userService.addUserToApps(
+    userService.associateApplicationsWithUser(
         user.getId(), newArrayList(applicationOne.getId(), applicationTwo.getId()));
 
     val applications =

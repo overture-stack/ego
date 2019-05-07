@@ -23,7 +23,7 @@ import static bio.overture.ego.model.enums.JavaFields.GROUPAPPLICATIONS;
 import static bio.overture.ego.model.enums.JavaFields.ID;
 import static bio.overture.ego.model.enums.JavaFields.NAME;
 import static bio.overture.ego.model.enums.JavaFields.STATUS;
-import static bio.overture.ego.model.enums.JavaFields.USERS;
+import static bio.overture.ego.model.enums.JavaFields.USERAPPLICATIONS;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentClientId;
@@ -161,7 +161,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     val application = applicationService.getByClientId("111111");
     getApplicationEntityGetRequestAnd(application)
         .assertEntityOfType(Application.class)
-        .isEqualToIgnoringGivenFields(application, GROUPAPPLICATIONS, USERS);
+        .isEqualToIgnoringGivenFields(application, GROUPAPPLICATIONS, USERAPPLICATIONS);
   }
 
   @Test
@@ -229,12 +229,13 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
     // Create the application using the request
     val app = createApplicationPostRequestAnd(createRequest).extractOneEntity(Application.class);
-    assertThat(app).isEqualToIgnoringGivenFields(createRequest, ID, GROUPAPPLICATIONS, USERS);
+    assertThat(app)
+        .isEqualToIgnoringGivenFields(createRequest, ID, GROUPAPPLICATIONS, USERAPPLICATIONS);
 
     // Get the application
     getApplicationEntityGetRequestAnd(app)
         .assertEntityOfType(Application.class)
-        .isEqualToIgnoringGivenFields(createRequest, ID, GROUPAPPLICATIONS, USERS);
+        .isEqualToIgnoringGivenFields(createRequest, ID, GROUPAPPLICATIONS, USERAPPLICATIONS);
   }
 
   @Test
@@ -367,7 +368,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     // Assert app0 can be read
     getApplicationEntityGetRequestAnd(app0)
         .assertEntityOfType(Application.class)
-        .isEqualToIgnoringGivenFields(app0, GROUPAPPLICATIONS, USERS);
+        .isEqualToIgnoringGivenFields(app0, GROUPAPPLICATIONS, USERAPPLICATIONS);
   }
 
   @Test
@@ -430,7 +431,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     partialUpdateApplicationPutRequestAnd(app0.getId(), updateRequest1).assertOk();
     val app0_after0 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
     assertThat(app0_before0)
-        .isEqualToIgnoringGivenFields(app0_after0, ID, GROUPAPPLICATIONS, USERS, NAME);
+        .isEqualToIgnoringGivenFields(app0_after0, ID, GROUPAPPLICATIONS, USERAPPLICATIONS, NAME);
 
     // Update app0 with empty update request, and assert nothing changed
     val app0_before1 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
@@ -448,7 +449,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     partialUpdateApplicationPutRequestAnd(app0.getId(), updateRequest2).assertOk();
     val app0_after2 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
     assertThat(app0_before2)
-        .isEqualToIgnoringGivenFields(app0_after2, ID, GROUPAPPLICATIONS, USERS, STATUS);
+        .isEqualToIgnoringGivenFields(app0_after2, ID, GROUPAPPLICATIONS, USERAPPLICATIONS, STATUS);
     assertThat(app0_before2.getStatus()).isNotEqualTo(app0_after2.getStatus());
     assertThat(app0_after2.getStatus()).isEqualTo(updateRequest2.getStatus());
   }

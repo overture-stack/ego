@@ -31,7 +31,7 @@ spring:
     enabled: false
   jackson:
     deserialization:
-      FAIL_ON_UNKNOWN_PROPERTIES: true
+      FAIL_ON_UNKNOWN_PROPERTIES: false
       FAIL_ON_NULL_FOR_PRIMITIVES: true
       FAIL_ON_NUMBERS_FOR_ENUMS: true
       FAIL_ON_READING_DUP_TREE_KEY: true

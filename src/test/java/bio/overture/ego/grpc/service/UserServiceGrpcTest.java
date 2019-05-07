@@ -115,7 +115,8 @@ public class UserServiceGrpcTest {
     // Test with the user that has a group and application
     val testUser =
         testUsers.stream()
-            .filter(user -> user.getUserGroups().size() > 0 && user.getApplications().size() > 0)
+            .filter(
+                user -> user.getUserGroups().size() > 0 && user.getUserApplications().size() > 0)
             .findFirst()
             .get();
 

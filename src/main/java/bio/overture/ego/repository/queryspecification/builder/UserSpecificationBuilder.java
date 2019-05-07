@@ -20,7 +20,7 @@ public class UserSpecificationBuilder extends AbstractSpecificationBuilder<User,
   @Override
   protected Root<User> setupFetchStrategy(Root<User> root) {
     if (fetchApplications) {
-      root.fetch(APPLICATIONS, LEFT);
+      root.fetch(USERAPPLICATIONS, LEFT).fetch(APPLICATION, LEFT);
     }
     if (fetchUserGroups) {
       root.fetch(USERGROUPS, LEFT).fetch(GROUP, LEFT);

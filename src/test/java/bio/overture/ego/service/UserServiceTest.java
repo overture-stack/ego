@@ -28,11 +28,11 @@ import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.token.IDToken;
+import bio.overture.ego.utils.Converters;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.PolicyPermissionUtils;
 import com.google.common.collect.ImmutableList;
@@ -81,12 +81,6 @@ public class UserServiceTest {
     val id = randomUUID();
     val createdAt = new Date();
 
-    val applications =
-        IntStream.range(0, 3)
-            .boxed()
-            .map(x -> Application.builder().id(randomUUID()).build())
-            .collect(toImmutableSet());
-
     val user =
         User.builder()
             .email(email)
@@ -97,9 +91,16 @@ public class UserServiceTest {
             .preferredLanguage(preferredLanguage)
             .id(id)
             .createdAt(createdAt)
-            .applications(applications)
             .userPermissions(null)
             .build();
+
+    val userApplications =
+        IntStream.range(0, 3)
+            .boxed()
+            .map(x -> Application.builder().id(randomUUID()).build())
+            .map(x -> Converters.convertToUserApplication(user, x))
+            .collect(toImmutableSet());
+    user.setUserApplications(userApplications);
 
     val partialUserUpdateRequest =
         UpdateUserRequest.builder().firstName("Rob").status(DISABLED).build();
@@ -114,7 +115,7 @@ public class UserServiceTest {
     assertThat(user.getFirstName()).isEqualTo("Rob");
     assertThat(user.getType()).isEqualTo(userType);
     assertThat(user.getId()).isEqualTo(id);
-    assertThat(user.getApplications()).containsExactlyInAnyOrderElementsOf(applications);
+    assertThat(user.getUserApplications()).containsExactlyInAnyOrderElementsOf(userApplications);
     assertThat(user.getUserPermissions()).isNull();
     assertThat(user.getUserGroups()).isEmpty();
   }
@@ -142,7 +143,7 @@ public class UserServiceTest {
     assertThat(user.getPreferredLanguage()).isEqualTo(request.getPreferredLanguage());
     assertThat(user.getUserGroups()).isEmpty();
     assertThat(user.getUserPermissions()).isEmpty();
-    assertThat(user.getApplications()).isEmpty();
+    assertThat(user.getUserApplications()).isEmpty();
   }
 
   // Create
@@ -380,8 +381,8 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val appId = applicationService.getByClientId("111111").getId();
 
-    userService.addUserToApps(user.getId(), singletonList(appId));
-    userService.addUserToApps(userTwo.getId(), singletonList(appId));
+    userService.associateApplicationsWithUser(user.getId(), singletonList(appId));
+    userService.associateApplicationsWithUser(userTwo.getId(), singletonList(appId));
 
     val users =
         userService.findUsersForApplication(
@@ -414,8 +415,8 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val appId = applicationService.getByClientId("111111").getId();
 
-    userService.addUserToApps(user.getId(), singletonList(appId));
-    userService.addUserToApps(userTwo.getId(), singletonList(appId));
+    userService.associateApplicationsWithUser(user.getId(), singletonList(appId));
+    userService.associateApplicationsWithUser(userTwo.getId(), singletonList(appId));
 
     val userFilters = new SearchFilter("name", "First");
 
@@ -436,8 +437,8 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val appId = applicationService.getByClientId("111111").getId();
 
-    userService.addUserToApps(user.getId(), singletonList(appId));
-    userService.addUserToApps(userTwo.getId(), singletonList(appId));
+    userService.associateApplicationsWithUser(user.getId(), singletonList(appId));
+    userService.associateApplicationsWithUser(userTwo.getId(), singletonList(appId));
 
     val userFilters = new SearchFilter("name", "First");
 
@@ -457,8 +458,8 @@ public class UserServiceTest {
     val userTwo = (userService.getByName("SecondUser@domain.com"));
     val appId = applicationService.getByClientId("111111").getId();
 
-    userService.addUserToApps(user.getId(), singletonList(appId));
-    userService.addUserToApps(userTwo.getId(), singletonList(appId));
+    userService.associateApplicationsWithUser(user.getId(), singletonList(appId));
+    userService.associateApplicationsWithUser(userTwo.getId(), singletonList(appId));
 
     val users =
         userService.findUsersForApplication(
@@ -556,7 +557,6 @@ public class UserServiceTest {
             .lastName("Exist")
             .status(APPROVED)
             .preferredLanguage(ENGLISH)
-            .lastLogin(null)
             .type(ADMIN)
             .build();
     assertThatExceptionOfType(NotFoundException.class)
@@ -626,7 +626,7 @@ public class UserServiceTest {
 
   // Add User to Apps
   @Test
-  public void addUserToApps() {
+  public void associateApplicationsWithUser() {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
@@ -637,7 +637,7 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId();
 
-    userService.addUserToApps(userId, asList(appId, appTwoId));
+    userService.associateApplicationsWithUser(userId, asList(appId, appTwoId));
 
     val apps =
         applicationService.findApplicationsForUser(
@@ -647,7 +647,7 @@ public class UserServiceTest {
   }
 
   @Test
-  public void addUserToAppsNoUser() {
+  public void associateApplicationsWithUserNoUser() {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
@@ -655,11 +655,13 @@ public class UserServiceTest {
     val appId = app.getId();
 
     assertThatExceptionOfType(NotFoundException.class)
-        .isThrownBy(() -> userService.addUserToApps(NON_EXISTENT_USER, singletonList(appId)));
+        .isThrownBy(
+            () ->
+                userService.associateApplicationsWithUser(NON_EXISTENT_USER, singletonList(appId)));
   }
 
   @Test
-  public void addUserToAppsWithAppsListOneEmptyString() {
+  public void associateApplicationsWithUserWithAppsListOneEmptyString() {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
@@ -667,18 +669,18 @@ public class UserServiceTest {
     val userId = user.getId();
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> userService.addUserToApps(userId, ImmutableList.of()));
+        .isThrownBy(() -> userService.associateApplicationsWithUser(userId, ImmutableList.of()));
   }
 
   @Test
-  public void addUserToAppsEmptyAppsList() {
+  public void associateApplicationsWithUserEmptyAppsList() {
     entityGenerator.setupTestUsers();
     entityGenerator.setupTestApplications();
 
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId();
 
-    userService.addUserToApps(userId, Collections.emptyList());
+    userService.associateApplicationsWithUser(userId, Collections.emptyList());
 
     val nonUpdated = userService.getByName("FirstUser@domain.com");
     assertThat(nonUpdated).isEqualTo(user);
@@ -784,9 +786,9 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId();
 
-    userService.addUserToApps(userId, asList(appId, appTwoId));
+    userService.associateApplicationsWithUser(userId, asList(appId, appTwoId));
 
-    userService.deleteUserFromApps(userId, singletonList(appId));
+    userService.disassociateApplicationsFromUser(userId, singletonList(appId));
 
     val groupWithoutUser =
         applicationService.findApplicationsForUser(
@@ -807,10 +809,13 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId();
 
-    userService.addUserToApps(userId, asList(appId, appTwoId));
+    userService.associateApplicationsWithUser(userId, asList(appId, appTwoId));
 
     assertThatExceptionOfType(NotFoundException.class)
-        .isThrownBy(() -> userService.deleteUserFromApps(NON_EXISTENT_USER, singletonList(appId)));
+        .isThrownBy(
+            () ->
+                userService.disassociateApplicationsFromUser(
+                    NON_EXISTENT_USER, singletonList(appId)));
   }
 
   @Test
@@ -825,10 +830,10 @@ public class UserServiceTest {
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId();
 
-    userService.addUserToApps(userId, asList(appId, appTwoId));
+    userService.associateApplicationsWithUser(userId, asList(appId, appTwoId));
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> userService.deleteUserFromApps(userId, ImmutableList.of()));
+        .isThrownBy(() -> userService.disassociateApplicationsFromUser(userId, ImmutableList.of()));
   }
 
   @Test
@@ -953,20 +958,19 @@ public class UserServiceTest {
 
     assertThat(reply.size()).isEqualTo(numUsers);
 
-    reply
-        .forEach(
-            user -> {
-              assertThat(user.getUserGroups().size()).isEqualTo(1);
-              assertThat(user.getUserGroups().iterator().next().getGroup().getName())
-                  .isEqualTo(group.getName());
+    reply.forEach(
+        user -> {
+          assertThat(user.getUserGroups().size()).isEqualTo(1);
+          assertThat(user.getUserGroups().iterator().next().getGroup().getName())
+              .isEqualTo(group.getName());
 
-              assertThat(user.getApplications().size()).isEqualTo(1);
-              assertThat(user.getApplications().iterator().next().getName())
-                  .isEqualTo(application.getName());
+          assertThat(user.getUserApplications().size()).isEqualTo(1);
+          assertThat(user.getUserApplications().iterator().next().getApplication().getName())
+              .isEqualTo(application.getName());
 
-              assertThat(user.getPermissions().size()).isEqualTo(1);
-              assertThat(user.getPermissions().iterator().next())
-                  .isEqualTo("UserServiceTestPolicy.WRITE");
-            });
+          assertThat(user.getPermissions().size()).isEqualTo(1);
+          assertThat(user.getPermissions().iterator().next())
+              .isEqualTo("UserServiceTestPolicy.WRITE");
+        });
   }
 }
