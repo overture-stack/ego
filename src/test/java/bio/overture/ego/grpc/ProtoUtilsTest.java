@@ -60,7 +60,11 @@ public class ProtoUtilsTest {
     val dataList = Arrays.asList("1", "2", "3");
     val pageable =
         getPageable(
-            PagedRequest.newBuilder().setPageNumber(0).setPageSize(2).build(), StringUtils.EMPTY);
+            PagedRequest.newBuilder()
+                .setPageNumber(0)
+                .setPageSize(2)
+                .setOrderBy(StringUtils.EMPTY)
+                .build());
     val page =
         new PageImpl<String>(dataList, pageable, Integer.valueOf(dataList.size()).longValue());
 
@@ -76,7 +80,11 @@ public class ProtoUtilsTest {
     val dataList = Arrays.asList("1", "2", "3");
     val pageable =
         getPageable(
-            PagedRequest.newBuilder().setPageNumber(0).setPageSize(2).build(), StringUtils.EMPTY);
+            PagedRequest.newBuilder()
+                .setPageNumber(0)
+                .setPageSize(2)
+                .setOrderBy(StringUtils.EMPTY)
+                .build());
     val page =
         new PageImpl<String>(dataList, pageable, Integer.valueOf(dataList.size()).longValue());
 
@@ -89,8 +97,13 @@ public class ProtoUtilsTest {
   /** Pageable Resolution */
   @Test
   public void getPageableForEmptyInput() {
-    val input = PagedRequest.newBuilder().setPageNumber(0).setPageSize(0).build();
-    val result = getPageable(input, StringUtils.EMPTY);
+    val input =
+        PagedRequest.newBuilder()
+            .setPageNumber(0)
+            .setPageSize(0)
+            .setOrderBy(StringUtils.EMPTY)
+            .build();
+    val result = getPageable(input);
 
     assertThat(result.getSort())
         .isEqualTo(Sort.by(new Sort.Order(Sort.Direction.ASC, "createdAt")));
@@ -103,8 +116,13 @@ public class ProtoUtilsTest {
     int page = 10;
     int size = 30;
 
-    val input = PagedRequest.newBuilder().setPageNumber(page).setPageSize(size).build();
-    val result = getPageable(input, "id desc, lastLogin, name asc");
+    val input =
+        PagedRequest.newBuilder()
+            .setPageNumber(page)
+            .setPageSize(size)
+            .setOrderBy("id desc, lastLogin, name asc")
+            .build();
+    val result = getPageable(input);
 
     val expectedSort =
         Sort.by(
@@ -121,8 +139,13 @@ public class ProtoUtilsTest {
   public void getPageableWithSizeOverLimit() {
     int size = 9001;
 
-    val input = PagedRequest.newBuilder().setPageNumber(0).setPageSize(size).build();
-    val result = getPageable(input, StringUtils.EMPTY);
+    val input =
+        PagedRequest.newBuilder()
+            .setPageNumber(0)
+            .setPageSize(size)
+            .setOrderBy(StringUtils.EMPTY)
+            .build();
+    val result = getPageable(input);
 
     assertThat(result.getPageSize()).isEqualTo(1000);
   }
