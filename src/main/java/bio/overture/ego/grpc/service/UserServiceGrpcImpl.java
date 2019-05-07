@@ -61,13 +61,12 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
       val users = userService.getMany(userIds, true, true, true);
 
       // Add to output in order from first query
-      userIds.stream()
-          .forEach(
-              id ->
-                  users.stream()
-                      .filter(user -> user.getId().equals(id))
-                      .findFirst()
-                      .ifPresent(user -> output.addUsers(user.toProto())));
+      userIds.forEach(
+          id ->
+              users.stream()
+                  .filter(user -> user.getId().equals(id))
+                  .findFirst()
+                  .ifPresent(user -> output.addUsers(user.toProto())));
     }
 
     output.setPage(createPagedResponse(userPage, request.getPage().getPageNumber()));

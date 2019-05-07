@@ -39,12 +39,7 @@ public class GrpcServer implements CommandLineRunner, DisposableBean {
 
     val userService = ServerInterceptors.intercept(userServiceImpl, authInterceptor);
 
-    server =
-        ServerBuilder.forPort(port)
-            .addService(userService)
-            //            .addService(ProtoReflectionService.newInstance())
-            .build()
-            .start();
+    server = ServerBuilder.forPort(port).addService(userService).build().start();
 
     log.info("gRPC Server started, listening on " + port);
     startDaemonAwaitThread();
