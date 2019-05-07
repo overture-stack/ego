@@ -15,6 +15,7 @@ service UserService {
 message PagedRequest {
     uint32 page_number = 1;
     uint32 page_size = 2;
+    string order_by = 3;
 }
 
 message PagedResponse {
@@ -29,9 +30,8 @@ message GetUserRequest {
 message ListUsersRequest {
     PagedRequest page = 1;
 
-    string order_by = 2;
-    string query = 3;
-    repeated string groups = 4;
+    string query = 2;
+    repeated string groups = 3;
 }
 
 message ListUsersResponse {

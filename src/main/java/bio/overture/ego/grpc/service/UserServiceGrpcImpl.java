@@ -79,7 +79,7 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
       ListUsersRequest request) {
     val query = request.getQuery();
     val groups = request.getGroupsList();
-    val pageable = getPageable(request.getPage(), request.getOrderBy());
+    val pageable = getPageable(request.getPage());
 
     if (groups.isEmpty()) {
       return userService.findUsers(query, Collections.EMPTY_LIST, pageable);

@@ -40,10 +40,10 @@ public class ProtoUtils {
     return pageBuilder.build();
   }
 
-
-  public static Pageable getPageable(PagedRequest pagedRequest, String sort) {
+  public static Pageable getPageable(PagedRequest pagedRequest) {
 
     val pageSize = pagedRequest.getPageSize();
+    val sort = pagedRequest.getOrderBy();
 
     val limit = pageSize == 0 ? DEFAULT_LIMIT : pageSize > MAX_LIMIT ? MAX_LIMIT : pageSize;
 
