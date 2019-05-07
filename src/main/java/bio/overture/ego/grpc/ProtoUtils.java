@@ -15,6 +15,10 @@ public class ProtoUtils {
 
   public static final StringValue DEFAULT_STRING = StringValue.of("");
 
+  private static final String DEFAULT_SORT_FIELD = "createdAt";
+  private static final int DEFAULT_LIMIT = 100;
+  private static final int MAX_LIMIT = 1000;
+
   /* toProtoString
    * Use this to convert a potentially null value into a String for a protobuf value
    *
@@ -36,9 +40,6 @@ public class ProtoUtils {
     return pageBuilder.build();
   }
 
-  static final String DEFAULT_SORT_FIELD = "createdAt";
-  static final int DEFAULT_LIMIT = 100;
-  static final int MAX_LIMIT = 1000;
 
   public static Pageable getPageable(PagedRequest pagedRequest, String sort) {
 

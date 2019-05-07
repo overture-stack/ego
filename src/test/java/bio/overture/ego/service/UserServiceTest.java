@@ -940,12 +940,11 @@ public class UserServiceTest {
 
     // Create application and add it to last few users
     val application = entityGenerator.setupApplication("UserServiceTestApplicaiton");
-    val appWithUsers =
-        entityGenerator.addUsersToApplication(users.stream().collect(toList()), application);
+    entityGenerator.addUsersToApplication(users.stream().collect(toList()), application);
 
     // Create policy and add permission to users
     val policy = entityGenerator.setupSinglePolicy("UserServiceTestPolicy");
-    entityGenerator.setupGroupPermission(groupWithUsers, policy, AccessLevel.WRITE);
+    entityGenerator.setupGroupPermission(groupWithUsers, policy, WRITE);
 
     // Update testUsers now that they have relations
     val reply =
@@ -954,7 +953,7 @@ public class UserServiceTest {
 
     assertThat(reply.size()).isEqualTo(numUsers);
 
-    reply.stream()
+    reply
         .forEach(
             user -> {
               assertThat(user.getUserGroups().size()).isEqualTo(1);

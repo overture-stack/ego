@@ -23,12 +23,8 @@ public class ApplicationAuthInterceptor implements AuthInterceptor {
 
   public static final Metadata.Key<String> JWT_METADATA_KEY =
       Metadata.Key.of("jwt", ASCII_STRING_MARSHALLER);
-  public static final Context.Key<Claims> JWT_CONTEXT_KEY = Context.key("jwt");
 
   private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {};
-
-  @Autowired
-  public ApplicationAuthInterceptor() {}
 
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
