@@ -17,6 +17,7 @@
 package bio.overture.ego.token.user;
 
 import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.token.TokenClaims;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -48,7 +49,8 @@ public class UserTokenClaims extends TokenClaims {
   }
 
   public List<String> getAud() {
-    return this.context.getUserInfo().getApplications().stream()
+    return this.context.getUserInfo().getUserApplications().stream()
+        .map(UserApplication::getApplication)
         .map(Application::getName)
         .collect(Collectors.toList());
   }

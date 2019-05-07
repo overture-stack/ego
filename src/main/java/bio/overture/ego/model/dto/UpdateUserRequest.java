@@ -19,7 +19,6 @@ package bio.overture.ego.model.dto;
 import bio.overture.ego.model.enums.LanguageType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
-import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -37,5 +36,4 @@ public class UpdateUserRequest {
   private String firstName;
   private String lastName;
   private LanguageType preferredLanguage;
-  private Date lastLogin;
 }

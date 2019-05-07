@@ -37,6 +37,7 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.join.GroupApplication;
+import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.GroupRepository;
@@ -316,17 +317,19 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   }
 
   public static void disassociateAllUsersFromApplication(@NonNull Application a) {
-    val users = a.getUsers();
-    disassociateUsersFromApplication(a, users);
+    val userApplications = a.getUserApplications();
+    disassociateUserApplicationsFromApplication(a, userApplications);
   }
 
-  public static void disassociateUsersFromApplication(
-      @NonNull Application application, @NonNull Collection<User> users) {
-    users.forEach(
-        u -> {
-          u.getApplications().remove(application);
-          application.getUsers().remove(u);
+  public static void disassociateUserApplicationsFromApplication(
+      @NonNull Application application, @NonNull Collection<UserApplication> userApplications) {
+    userApplications.forEach(
+        ua -> {
+          ua.getUser().getUserApplications().remove(ua);
+          ua.setUser(null);
+          ua.setApplication(null);
         });
+    application.getUserApplications().removeAll(userApplications);
   }
 
   public static void disassociateGroupApplicationsFromApplication(
