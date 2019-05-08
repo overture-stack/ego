@@ -120,7 +120,7 @@ public class UserServiceGrpcTest {
             .findFirst()
             .get();
 
-    val reply = stub.get(GetUserRequest.newBuilder().setId(testUser.getId().toString()).build());
+    val reply = stub.getUser(GetUserRequest.newBuilder().setId(testUser.getId().toString()).build());
 
     // Ensure all fields populated and value matches expected
     assertThat(reply.getId().getValue()).isEqualTo(testUser.getId().toString());
@@ -144,7 +144,7 @@ public class UserServiceGrpcTest {
   public void listUser_emptyRequest() {
     val request = ListUsersRequest.newBuilder().build();
 
-    val reply = stub.list(request);
+    val reply = stub.listUsers(request);
 
     // Ensure response includes pagination data
     assertThat(reply.hasPage()).isTrue();
@@ -161,7 +161,7 @@ public class UserServiceGrpcTest {
     val pagedRequest1 = PagedRequest.newBuilder().setPageNumber(0).setPageSize(2);
     val request1 = ListUsersRequest.newBuilder().setPage(pagedRequest1).build();
 
-    val reply1 = stub.list(request1);
+    val reply1 = stub.listUsers(request1);
 
     // Correct number of users
     assertThat(reply1.getUsersCount()).isEqualTo(2);
@@ -180,7 +180,7 @@ public class UserServiceGrpcTest {
             .setPageSize(2);
     val request2 = ListUsersRequest.newBuilder().setPage(pagedRequest2).build();
 
-    val reply2 = stub.list(request2);
+    val reply2 = stub.listUsers(request2);
 
     // Correct pagination info
     assertThat(reply2.hasPage()).isTrue();
@@ -197,7 +197,7 @@ public class UserServiceGrpcTest {
     val pagedRequest = PagedRequest.newBuilder().setPageNumber(0).setPageSize(1000000);
     val request = ListUsersRequest.newBuilder().setPage(pagedRequest).build();
 
-    val reply = stub.list(request);
+    val reply = stub.listUsers(request);
 
     // Correct number of users
     assertThat(reply.getUsersCount()).isGreaterThanOrEqualTo(7);
@@ -209,7 +209,7 @@ public class UserServiceGrpcTest {
     val pagedRequest = PagedRequest.newBuilder().setPageNumber(100000).setPageSize(1000000);
     val request = ListUsersRequest.newBuilder().setPage(pagedRequest).build();
 
-    val reply = stub.list(request);
+    val reply = stub.listUsers(request);
 
     // Correct number of users
     assertThat(reply.getUsersCount()).isEqualTo(0);

@@ -28,7 +28,7 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
   }
 
   @Override
-  public void get(GetUserRequest request, StreamObserver<User> responseObserver) {
+  public void getUser(GetUserRequest request, StreamObserver<User> responseObserver) {
     User output = User.getDefaultInstance();
 
     try {
@@ -48,7 +48,8 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
   }
 
   @Override
-  public void list(ListUsersRequest request, StreamObserver<ListUsersResponse> responseObserver) {
+  public void listUsers(
+      ListUsersRequest request, StreamObserver<ListUsersResponse> responseObserver) {
     val output = ListUsersResponse.newBuilder();
 
     // Find Page of users (filtered by groups if provided)

@@ -2,6 +2,7 @@ package bio.overture.ego.grpc;
 
 import static java.util.stream.Collectors.toList;
 
+import bio.overture.ego.model.enums.JavaFields;
 import com.google.protobuf.StringValue;
 import com.google.protobuf.UInt32Value;
 import java.util.Arrays;
@@ -96,7 +97,7 @@ public class ProtoUtils {
   public static Sort parseSort(String sort) {
     if (sort.isEmpty()) {
       // Sort results by creation time, ensure static order for the page_token to refer to
-      return new Sort(Sort.Direction.ASC, "createdAt");
+      return new Sort(Sort.Direction.ASC, JavaFields.CREATEDAT);
     } else {
       val orders =
           Arrays.stream(sort.split(","))

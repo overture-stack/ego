@@ -246,7 +246,8 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
 
     try {
       final Set<StringValue> permissions =
-          mapToImmutableSet(resolveUsersPermissions(this), permission -> toProtoString(new Scope(permission)));
+          mapToImmutableSet(
+              resolveUsersPermissions(this), permission -> toProtoString(new Scope(permission)));
       builder.addAllScopes(permissions);
 
     } catch (LazyInitializationException e) {
