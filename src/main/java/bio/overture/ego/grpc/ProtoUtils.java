@@ -32,7 +32,7 @@ public class ProtoUtils {
     val pageBuilder =
         PagedResponse.newBuilder().setMaxResults(Long.valueOf(page.getTotalElements()).intValue());
 
-    if (page.hasNext()) {
+    if (page.getTotalPages() > currentPageNum) {
       val nextPage = UInt32Value.of(currentPageNum + 1);
       pageBuilder.setNextPage(nextPage);
     }
