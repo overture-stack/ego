@@ -30,8 +30,8 @@ message GetUserRequest {
 message ListUsersRequest {
     PagedRequest page = 1;
 
-    string query = 2;
-    repeated string groups = 3;
+    google.protobuf.StringValue query = 2;
+    repeated string group_ids = 3;
 }
 
 message ListUsersResponse {

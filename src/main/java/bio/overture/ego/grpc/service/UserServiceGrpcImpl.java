@@ -78,8 +78,8 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
 
   private Page<bio.overture.ego.model.entity.User> findUsersForListRequest(
       ListUsersRequest request) {
-    val query = request.getQuery();
-    val groups = request.getGroupsList();
+    val query = request.hasQuery() ? request.getQuery().getValue() : "";
+    val groups = request.getGroupIdsList();
     val pageable = getPageable(request.getPage());
 
     if (groups.isEmpty()) {
