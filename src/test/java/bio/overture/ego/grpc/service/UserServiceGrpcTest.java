@@ -120,7 +120,8 @@ public class UserServiceGrpcTest {
             .findFirst()
             .get();
 
-    val reply = stub.getUser(GetUserRequest.newBuilder().setId(testUser.getId().toString()).build());
+    val reply =
+        stub.getUser(GetUserRequest.newBuilder().setId(testUser.getId().toString()).build());
 
     // Ensure all fields populated and value matches expected
     assertThat(reply.getId().getValue()).isEqualTo(testUser.getId().toString());
