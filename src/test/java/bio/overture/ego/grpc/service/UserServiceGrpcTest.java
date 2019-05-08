@@ -137,7 +137,7 @@ public class UserServiceGrpcTest {
 
     assertThat(reply.getApplicationsList().size()).isEqualTo(1);
     assertThat(reply.getGroupsList().size()).isEqualTo(1);
-    assertThat(reply.getPermissionsList().size()).isEqualTo(2);
+    assertThat(reply.getScopesList().size()).isEqualTo(2);
   }
 
   @Test

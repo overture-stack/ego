@@ -23,6 +23,7 @@ import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
 import static com.google.common.collect.Sets.newHashSet;
 
+import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LanguageType;
 import bio.overture.ego.model.enums.LombokFields;
@@ -245,8 +246,8 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
 
     try {
       final Set<StringValue> permissions =
-          mapToImmutableSet(resolveUsersPermissions(this), permission -> toProtoString(permission));
-      builder.addAllPermissions(permissions);
+          mapToImmutableSet(resolveUsersPermissions(this), permission -> toProtoString(new Scope(permission)));
+      builder.addAllScopes(permissions);
 
     } catch (LazyInitializationException e) {
       log.error(

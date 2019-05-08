@@ -55,5 +55,5 @@ message User {
 
     repeated google.protobuf.StringValue applications = 11;
     repeated google.protobuf.StringValue groups = 12;
-    repeated google.protobuf.StringValue permissions = 13;
+    repeated google.protobuf.StringValue scopes = 13;
 }
