@@ -1,8 +1,10 @@
 package bio.overture.ego.grpc;
 
 import static bio.overture.ego.grpc.ProtoUtils.*;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import bio.overture.ego.model.enums.JavaFields;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -65,8 +67,10 @@ public class ProtoUtilsTest {
                 .setPageSize(2)
                 .setOrderBy(StringUtils.EMPTY)
                 .build());
+
+    val pageData = dataList.stream().limit(2).collect(toList());
     val page =
-        new PageImpl<String>(dataList, pageable, Integer.valueOf(dataList.size()).longValue());
+        new PageImpl<String>(pageData, pageable, Integer.valueOf(dataList.size()).longValue());
 
     val result = createPagedResponse(page, 0);
 
@@ -77,21 +81,23 @@ public class ProtoUtilsTest {
 
   @Test
   public void createPagedResponseForPartialSetWithDifferentPageNumber() {
-    val dataList = Arrays.asList("1", "2", "3");
+    val dataList = Arrays.asList("1", "2", "3", "4", "5");
     val pageable =
         getPageable(
             PagedRequest.newBuilder()
-                .setPageNumber(0)
+                .setPageNumber(1)
                 .setPageSize(2)
                 .setOrderBy(StringUtils.EMPTY)
                 .build());
-    val page =
-        new PageImpl<String>(dataList, pageable, Integer.valueOf(dataList.size()).longValue());
 
-    val result = createPagedResponse(page, 3);
+    val pageData = dataList.stream().limit(2).collect(toList());
+    val page =
+        new PageImpl<String>(pageData, pageable, Integer.valueOf(dataList.size()).longValue());
+
+    val result = createPagedResponse(page, 1);
 
     assertThat(result.hasNextPage()).isTrue();
-    assertThat(result.getNextPage().getValue()).isEqualTo(4);
+    assertThat(result.getNextPage().getValue()).isEqualTo(2);
   }
 
   /** Pageable Resolution */
@@ -106,9 +112,10 @@ public class ProtoUtilsTest {
     val result = getPageable(input);
 
     assertThat(result.getSort())
-        .isEqualTo(Sort.by(new Sort.Order(Sort.Direction.ASC, "createdAt")));
+        .isEqualTo(Sort.by(new Sort.Order(Sort.Direction.ASC, JavaFields.CREATEDAT)));
     assertThat(result.getOffset()).isEqualTo(0);
-    assertThat(result.getPageSize()).isEqualTo(100);
+    assertThat(result.getPageSize())
+        .isEqualTo(100); // default page size value (set in ProtoUtils.getPageable)
   }
 
   @Test
@@ -147,7 +154,8 @@ public class ProtoUtilsTest {
             .build();
     val result = getPageable(input);
 
-    assertThat(result.getPageSize()).isEqualTo(1000);
+    assertThat(result.getPageSize())
+        .isEqualTo(1000); // default max page size value (set in ProtoUtils.getPageable)
   }
 
   /** Parse Sort Tests */

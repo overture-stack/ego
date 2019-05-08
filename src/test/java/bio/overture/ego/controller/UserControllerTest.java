@@ -428,8 +428,11 @@ public class UserControllerTest extends AbstractControllerTest {
             user -> {
               try {
                 assertThat(user.getUserGroups()).isNotNull();
+                assertThat(user.getUserGroups().isEmpty()).isTrue();
                 assertThat(user.getUserPermissions()).isNotNull();
+                assertThat(user.getUserPermissions().isEmpty()).isTrue();
                 assertThat(user.getUserApplications()).isNotNull();
+                assertThat(user.getUserApplications().isEmpty()).isTrue();
               } catch (Exception e) {
                 e.printStackTrace();
               }
