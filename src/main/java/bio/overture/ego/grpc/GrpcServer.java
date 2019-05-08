@@ -2,8 +2,9 @@ package bio.overture.ego.grpc;
 
 import bio.overture.ego.grpc.interceptor.AuthInterceptor;
 import bio.overture.ego.grpc.service.UserServiceGrpcImpl;
-import io.grpc.*;
-import java.util.Optional;
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.ServerInterceptors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.DisposableBean;
@@ -12,6 +13,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+
+import javax.validation.constraints.NotNull;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -26,8 +30,9 @@ public class GrpcServer implements CommandLineRunner, DisposableBean {
   private final AuthInterceptor authInterceptor;
   private final UserServiceGrpcImpl userServiceImpl;
 
+  @NotNull
   @Autowired
-  public GrpcServer(AuthInterceptor authInterceptor, UserServiceGrpcImpl userServiceImpl) {
+  public GrpcServer( AuthInterceptor authInterceptor, UserServiceGrpcImpl userServiceImpl) {
 
     this.authInterceptor = authInterceptor;
 
