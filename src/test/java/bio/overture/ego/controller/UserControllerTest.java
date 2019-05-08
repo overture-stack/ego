@@ -51,6 +51,7 @@ import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.CreateUserRequest;
@@ -78,6 +79,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang.NotImplementedException;
+import org.hibernate.LazyInitializationException;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -381,6 +383,29 @@ public class UserControllerTest extends AbstractControllerTest {
     val results = userService.getMany(userIds, false, false, false);
 
     assertThat(results.size()).isEqualTo(testUserCount);
+
+    val testUser = results.iterator().next();
+
+    try {
+      testUser.getUserGroups().iterator().next().getId();
+      fail("No exception thrown accessing groups that were not fetched for user.");
+    } catch (Exception e) {
+      assertThat(e).isInstanceOf(LazyInitializationException.class);
+    }
+
+    try {
+      testUser.getUserApplications().iterator().next().getId();
+      fail("No exception thrown accessing applications that were not fetched for user.");
+    } catch (Exception e) {
+      assertThat(e).isInstanceOf(LazyInitializationException.class);
+    }
+
+    try {
+      testUser.getUserPermissions().iterator().next().getId();
+      fail("No exception thrown accessing permissions that were not fetched for user.");
+    } catch (Exception e) {
+      assertThat(e).isInstanceOf(LazyInitializationException.class);
+    }
   }
 
   @Test
