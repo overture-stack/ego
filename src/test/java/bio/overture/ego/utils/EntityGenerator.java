@@ -319,7 +319,7 @@ public class EntityGenerator {
   }
 
   public void setupTestPolicies() {
-    setupPolicies("Study001,Group One", "Study002,Group Two", "Study003,Group Three");
+    setupPolicies("Study001", "Study002", "Study003");
   }
 
   public Token setupToken(
