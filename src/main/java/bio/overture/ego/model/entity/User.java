@@ -71,7 +71,7 @@ import org.hibernate.annotations.TypeDef;
 @ToString(
     exclude = {
       LombokFields.userGroups,
-      LombokFields.applications,
+      LombokFields.userApplications,
       LombokFields.userPermissions,
       LombokFields.tokens
     })
@@ -81,8 +81,8 @@ import org.hibernate.annotations.TypeDef;
   JavaFields.EMAIL,
   JavaFields.USERTYPE,
   JavaFields.STATUS,
-  JavaFields.GROUPS,
-  JavaFields.APPLICATIONS,
+  JavaFields.USERGROUPS,
+  JavaFields.USERAPPLICATIONS,
   JavaFields.USERPERMISSIONS,
   JavaFields.FIRSTNAME,
   JavaFields.LASTNAME,
