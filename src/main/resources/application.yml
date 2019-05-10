@@ -1,5 +1,5 @@
 server:
-  port: 8088
+  port: 8081
 
 jwt:
   secret: testsecretisalsoasecret
@@ -18,7 +18,7 @@ spring.main.allow-bean-definition-overriding: true
 # Datasource
 spring.datasource:
   driver-class-name: org.postgresql.Driver
-  url: jdbc:postgresql://localhost:8432/ego?stringtype=unspecified
+  url: jdbc:postgresql://localhost:5432/ego?stringtype=unspecified
 
   username: postgres
   password: password
@@ -164,6 +164,16 @@ logging:
     threshold: ALL
   loggers:
     "org.skife.jdbi.v2": TRACE
+
+---
+###############################################################################
+# Profile - "demo"
+###############################################################################
+spring:
+  profiles: grpc
+
+grpc:
+  port: 50051
 
 ---
 ###############################################################################

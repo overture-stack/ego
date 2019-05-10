@@ -55,7 +55,7 @@ public class TestData {
 
     policyMap = new HashMap<>();
     for (val p : allPolicies) {
-      val policy = entityGenerator.setupPolicy(p, "admin");
+      val policy = entityGenerator.setupSinglePolicy(p);
       policyMap.put(p, policy);
     }
 

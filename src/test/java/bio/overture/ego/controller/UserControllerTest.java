@@ -35,6 +35,7 @@ import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.DISABLED;
 import static bio.overture.ego.model.enums.UserType.USER;
+import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
 import static bio.overture.ego.utils.Collectors.toImmutableList;
@@ -50,6 +51,7 @@ import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.CreateUserRequest;
@@ -77,6 +79,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang.NotImplementedException;
+import org.hibernate.LazyInitializationException;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -128,7 +131,8 @@ public class UserControllerTest extends AbstractControllerTest {
   public void listUsersNoFilter() {
     val numUsers = userService.getRepository().count();
 
-    // Since previous test may introduce new users. If there are more users than the default page
+    // Since previous test may introduce new users. If there are more users than the
+    // default page
     // size, only a subset will be returned and could cause a test failure.
     val response = initStringRequest().endpoint("/users?offset=0&limit=%s", numUsers).get();
 
@@ -367,6 +371,76 @@ public class UserControllerTest extends AbstractControllerTest {
   }
 
   @Test
+  @SneakyThrows
+  public void getManyUsers_noRelations() {
+
+    final int testUserCount = 3;
+
+    // Creating new users cause we need their Ids as inputs in this test
+    val users = repeatedCallsOf(() -> entityGenerator.generateRandomUser(), testUserCount);
+    val userIds = mapToImmutableSet(users, user -> user.getId());
+
+    val results = userService.getMany(userIds, false, false, false);
+
+    assertThat(results.size()).isEqualTo(testUserCount);
+
+    val testUser = results.iterator().next();
+
+    try {
+      testUser.getUserGroups().iterator().next().getId();
+      fail("No exception thrown accessing groups that were not fetched for user.");
+    } catch (Exception e) {
+      assertThat(e).isInstanceOf(LazyInitializationException.class);
+    }
+
+    try {
+      testUser.getUserApplications().iterator().next().getId();
+      fail("No exception thrown accessing applications that were not fetched for user.");
+    } catch (Exception e) {
+      assertThat(e).isInstanceOf(LazyInitializationException.class);
+    }
+
+    try {
+      testUser.getUserPermissions().iterator().next().getId();
+      fail("No exception thrown accessing permissions that were not fetched for user.");
+    } catch (Exception e) {
+      assertThat(e).isInstanceOf(LazyInitializationException.class);
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  public void getManyUsers_withRelations() {
+
+    final int testUserCount = 3;
+
+    // Creating new users cause we need their Ids as inputs in this test
+    val users = repeatedCallsOf(() -> entityGenerator.generateRandomUser(), testUserCount);
+    val userIds = mapToImmutableSet(users, user -> user.getId());
+
+    val results = userService.getMany(userIds, true, true, true);
+
+    assertThat(results.size()).isEqualTo(testUserCount);
+
+    results
+        .iterator()
+        .forEachRemaining(
+            user -> {
+              try {
+                assertThat(user.getUserGroups()).isNotNull();
+                assertThat(user.getUserGroups().isEmpty()).isTrue();
+                assertThat(user.getUserPermissions()).isNotNull();
+                assertThat(user.getUserPermissions().isEmpty()).isTrue();
+                assertThat(user.getUserApplications()).isNotNull();
+                assertThat(user.getUserApplications().isEmpty()).isTrue();
+              } catch (Exception e) {
+                e.printStackTrace();
+              }
+            });
+  }
+
+  @Test
+  @SneakyThrows
   public void updateUser_ExistingUser_Success() {
     // Generate data
     val data = generateUniqueTestUserData();
@@ -449,7 +523,8 @@ public class UserControllerTest extends AbstractControllerTest {
             .status(randomEnumExcluding(StatusType.class, user0.getStatus()))
             .build();
 
-    // Assert that a CONFLICT error occurs when trying to update a user with a name that already
+    // Assert that a CONFLICT error occurs when trying to update a user with a name
+    // that already
     // exists
     partialUpdateUserPutRequestAnd(user0.getId(), r1).assertConflict();
   }
@@ -564,7 +639,8 @@ public class UserControllerTest extends AbstractControllerTest {
     // Create non existent user id
     val nonExistentId = generateNonExistentId(userService);
 
-    // Assert that getting the applications for a non-existent user id results in a NOT_FOUND error
+    // Assert that getting the applications for a non-existent user id results in a
+    // NOT_FOUND error
     getApplicationsForUserGetRequestAnd(nonExistentId).assertNotFound();
   }
 
@@ -583,7 +659,8 @@ public class UserControllerTest extends AbstractControllerTest {
     // Create non existent user id
     val nonExistentId = generateNonExistentId(userService);
 
-    // Assert NOT_FOUND thrown when adding existing applications to a non-existing user
+    // Assert NOT_FOUND thrown when adding existing applications to a non-existing
+    // user
     addApplicationsToUserPostRequestAnd(nonExistentId, existingApplicationIds).assertNotFound();
   }
 
@@ -613,7 +690,8 @@ public class UserControllerTest extends AbstractControllerTest {
     val data = generateUniqueTestUserData();
     val user0 = data.getUsers().get(0);
 
-    // Assert NOT_FOUND thrown when adding non-existing applications to an existing user
+    // Assert NOT_FOUND thrown when adding non-existing applications to an existing
+    // user
     val someExistingApplicationIds = mapToSet(data.getApplications(), Identifiable::getId);
     val nonExistingApplicationIds =
         repeatedCallsOf(() -> generateNonExistentId(applicationService), 10).stream()
@@ -644,7 +722,8 @@ public class UserControllerTest extends AbstractControllerTest {
         .assertPageResultsOfType(Application.class)
         .containsExactlyInAnyOrder(app0);
 
-    // Add app0 and app1 to user and assert a CONFLICT error is returned since app0 was already
+    // Add app0 and app1 to user and assert a CONFLICT error is returned since app0
+    // was already
     // associated
     addApplicationsToUserPostRequestAnd(user0, newArrayList(app0, app1)).assertConflict();
   }
@@ -728,7 +807,8 @@ public class UserControllerTest extends AbstractControllerTest {
     someExistingApplicationsIds.addAll(convertToIds(data.getApplications()));
     someExistingApplicationsIds.add(nonExistingApplicationId);
 
-    // Delete applications from user and assert a NOT_FOUND error was returned due to the
+    // Delete applications from user and assert a NOT_FOUND error was returned due
+    // to the
     // non-existing application id
     deleteApplicationsFromUserDeleteRequestAnd(user0.getId(), someExistingApplicationsIds)
         .assertNotFound();
@@ -771,7 +851,8 @@ public class UserControllerTest extends AbstractControllerTest {
     // Create non existent user id
     val nonExistentId = generateNonExistentId(userService);
 
-    // Assert that a NOT_FOUND error is thrown when attempting to all groups for a non-existent user
+    // Assert that a NOT_FOUND error is thrown when attempting to all groups for a
+    // non-existent user
     getGroupsForUserGetRequestAnd(nonExistentId).assertNotFound();
   }
 
@@ -790,7 +871,8 @@ public class UserControllerTest extends AbstractControllerTest {
     // Create non existent user id
     val nonExistentId = generateNonExistentId(userService);
 
-    // Assert that a NOT_FOUND error is thrown when attempting to add existing groups to a
+    // Assert that a NOT_FOUND error is thrown when attempting to add existing
+    // groups to a
     // non-existing user
     addGroupsToUserPostRequestAnd(nonExistentId, existingGroupIds).assertNotFound();
   }
@@ -821,7 +903,8 @@ public class UserControllerTest extends AbstractControllerTest {
     val data = generateUniqueTestUserData();
     val user0 = data.getUsers().get(0);
 
-    // Assert NOT_FOUND thrown when adding a mix of existing and non-existing applications to an
+    // Assert NOT_FOUND thrown when adding a mix of existing and non-existing
+    // applications to an
     // existing user
     val someExistingGroupIds = mapToSet(data.getGroups(), Identifiable::getId);
     val nonExistingGroupIds =
@@ -935,7 +1018,8 @@ public class UserControllerTest extends AbstractControllerTest {
     // Create non existent user id
     val nonExistentId = generateNonExistentId(userService);
 
-    // Assert that a NOT_FOUND error is returned when trying to delete groups from a non-existent
+    // Assert that a NOT_FOUND error is returned when trying to delete groups from a
+    // non-existent
     // user
     deleteGroupsFromUserDeleteRequestAnd(nonExistentId, groupIds).assertNotFound();
   }

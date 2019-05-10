@@ -22,14 +22,9 @@ import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
-import static bio.overture.ego.utils.CollectionUtils.difference;
-import static bio.overture.ego.utils.CollectionUtils.intersection;
-import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.CollectionUtils.*;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.Converters.convertToIds;
-import static bio.overture.ego.utils.Converters.convertToUserApplication;
-import static bio.overture.ego.utils.Converters.convertToUserGroup;
+import static bio.overture.ego.utils.Converters.*;
 import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
 import static bio.overture.ego.utils.EntityServices.getManyEntities;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
@@ -43,12 +38,7 @@ import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UpdateUserRequest;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.GroupPermission;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.entity.UserPermission;
+import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
@@ -59,22 +49,12 @@ import bio.overture.ego.repository.queryspecification.builder.UserSpecificationB
 import bio.overture.ego.token.IDToken;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import javax.transaction.Transactional;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.mapstruct.AfterMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValueCheckStrategy;
-import org.mapstruct.ReportingPolicy;
-import org.mapstruct.TargetType;
+import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -152,6 +132,19 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return result.get();
   }
 
+  public Collection<User> getMany(
+      @NonNull Collection<UUID> ids,
+      boolean fetchUserPermissions,
+      boolean fetchUserGroups,
+      boolean fetchApplications) {
+    val spec =
+        new UserSpecificationBuilder()
+            .fetchUserPermissions(fetchUserPermissions)
+            .fetchUserGroups(fetchUserGroups)
+            .fetchApplications(fetchApplications);
+    return getMany(ids, spec);
+  }
+
   public User createFromIDToken(IDToken idToken) {
     return create(
         CreateUserRequest.builder()
@@ -202,9 +195,9 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
-  @SuppressWarnings("unchecked")
   public Page<User> listUsers(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
-    return getRepository().findAll(UserSpecification.filterBy(filters), pageable);
+    val spec = UserSpecification.filterBy(filters);
+    return getRepository().findAll(spec, pageable);
   }
 
   @SuppressWarnings("unchecked")
@@ -376,11 +369,29 @@ public class UserService extends AbstractNamedService<User, UUID> {
       @NonNull List<SearchFilter> filters,
       @NonNull Pageable pageable) {
     checkEntityExistence(Group.class, groupRepository, groupId);
-    return userRepository.findAll(
+
+    val spec =
         where(UserSpecification.inGroup(groupId))
             .and(UserSpecification.containsText(query))
-            .and(UserSpecification.filterBy(filters)),
-        pageable);
+            .and(UserSpecification.filterBy(filters));
+
+    return userRepository.findAll(where(spec), pageable);
+  }
+
+  @SuppressWarnings("unchecked")
+  public Page<User> findUsersForGroups(
+      @NonNull Collection<UUID> groupIds,
+      @NonNull String query,
+      @NonNull List<SearchFilter> filters,
+      @NonNull Pageable pageable) {
+    checkEntityExistence(Group.class, groupRepository, groupIds);
+
+    val spec =
+        where(UserSpecification.inGroups(groupIds))
+            .and(UserSpecification.containsText(query))
+            .and(UserSpecification.filterBy(filters));
+
+    return userRepository.findAll(spec, pageable);
   }
 
   @SuppressWarnings("unchecked")

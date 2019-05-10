@@ -1,0 +1,59 @@
+syntax = "proto3";
+import "google/protobuf/wrappers.proto";
+
+option java_multiple_files = true;
+option java_package = "bio.overture.ego.grpc";
+option java_outer_classname = "EgoProto";
+
+package bio.overture.ego.grpc;
+
+service UserService {
+    rpc GetUser (GetUserRequest) returns (User) {}
+    rpc ListUsers (ListUsersRequest) returns (ListUsersResponse) {}
+}
+
+message PagedRequest {
+    uint32 page_number = 1;
+    uint32 page_size = 2;
+    string order_by = 3;
+}
+
+message PagedResponse {
+    uint32 max_results = 1;
+    google.protobuf.UInt32Value next_page = 2;
+}
+
+message GetUserRequest {
+    string id = 1;
+}
+
+message ListUsersRequest {
+    PagedRequest page = 1;
+
+    google.protobuf.StringValue query = 2;
+    repeated string group_ids = 3;
+}
+
+message ListUsersResponse {
+    PagedResponse page = 1;
+
+    repeated User users = 2;
+}
+
+message User {
+    google.protobuf.StringValue id = 1;
+    google.protobuf.StringValue email = 2;
+    google.protobuf.StringValue first_name = 3;
+    google.protobuf.StringValue last_name = 4;
+
+    google.protobuf.StringValue created_at = 5;
+    google.protobuf.StringValue last_login = 6;
+    google.protobuf.StringValue name = 7;
+    google.protobuf.StringValue preferred_language = 8;
+    google.protobuf.StringValue status = 9;
+    google.protobuf.StringValue type = 10;
+
+    repeated google.protobuf.StringValue applications = 11;
+    repeated google.protobuf.StringValue groups = 12;
+    repeated google.protobuf.StringValue scopes = 13;
+}

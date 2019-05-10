@@ -34,6 +34,7 @@ import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.utils.QueryUtils;
+import java.util.Collection;
 import java.util.UUID;
 import javax.persistence.criteria.Join;
 import lombok.NonNull;
@@ -57,6 +58,16 @@ public class UserSpecification extends SpecificationBase<User> {
       Join<User, UserGroup> userJoin = root.join(USERGROUPS);
       Join<UserGroup, Group> groupJoin = userJoin.join(GROUP);
       return builder.equal(groupJoin.<Integer>get(JavaFields.ID), groupId);
+    };
+  }
+
+  public static Specification<User> inGroups(@NonNull Collection<UUID> groupIds) {
+    return (root, query, builder) -> {
+      query.distinct(true);
+      Join<User, UserGroup> userJoin = root.join(USERGROUPS);
+      Join<UserGroup, Group> groupJoin = userJoin.join(GROUP);
+
+      return builder.isTrue(groupJoin.<Integer>get(JavaFields.ID).in(groupIds));
     };
   }
 

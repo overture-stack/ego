@@ -25,7 +25,7 @@ public abstract class AbstractSpecificationBuilder<T, ID> {
   public Specification<T> listAll() {
     return (fromUser, query, builder) -> {
       val root = setupFetchStrategy(fromUser);
-      return builder.isNotNull(root.get(JavaFields.ID));
+      return null;
     };
   }
 

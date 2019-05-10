@@ -1,10 +1,6 @@
 package bio.overture.ego.repository.queryspecification.builder;
 
-import static bio.overture.ego.model.enums.JavaFields.APPLICATION;
-import static bio.overture.ego.model.enums.JavaFields.GROUP;
-import static bio.overture.ego.model.enums.JavaFields.USERAPPLICATIONS;
-import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
-import static bio.overture.ego.model.enums.JavaFields.USERPERMISSIONS;
+import static bio.overture.ego.model.enums.JavaFields.*;
 import static javax.persistence.criteria.JoinType.LEFT;
 
 import bio.overture.ego.model.entity.User;
@@ -30,7 +26,8 @@ public class UserSpecificationBuilder extends AbstractSpecificationBuilder<User,
       root.fetch(USERGROUPS, LEFT).fetch(GROUP, LEFT);
     }
     if (fetchUserPermissions) {
-      root.fetch(USERPERMISSIONS, LEFT);
+      root.fetch(USERPERMISSIONS, LEFT).fetch(POLICY, LEFT);
+      root.fetch(USERGROUPS, LEFT).fetch(GROUP, LEFT).fetch(PERMISSIONS, LEFT).fetch(POLICY, LEFT);
     }
     return root;
   }
