@@ -18,8 +18,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.test.context.junit4.SpringRunner;
 
 @Slf4j
-@SpringBootTest
-@RunWith(SpringRunner.class)
 public class ProtoUtilsTest {
 
   /** Proto String conversion convenience method */
