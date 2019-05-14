@@ -4,9 +4,13 @@ import static bio.overture.ego.grpc.ProtoUtils.createPagedResponse;
 import static bio.overture.ego.grpc.ProtoUtils.getPageable;
 
 import bio.overture.ego.grpc.*;
+import bio.overture.ego.grpc.interceptor.ApplicationAuthInterceptor;
+import bio.overture.ego.grpc.interceptor.AuthInterceptor;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.CollectionUtils;
+import io.grpc.Context;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import java.util.Collections;
 import java.util.UUID;
@@ -34,13 +38,23 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
     try {
       val id = UUID.fromString(request.getId());
 
+      val authInfo = ApplicationAuthInterceptor.AUTH_INFO.get();
+      if (true || !(authInfo.isAdmin() || authInfo.isUser() && id.equals(authInfo.getId()))) {
+        responseObserver.onError(Status.UNAUTHENTICATED.withDescription("Must be ADMIN or a user requesting themselves.").asRuntimeException());
+        return;
+      }
+
       val user = userService.get(id, true, true, true);
       output = user.toProto();
 
     } catch (NotFoundException e) {
       log.debug("gRPC Get UserService could not find user with requested ID:", e.getMessage());
+      responseObserver.onError(Status.NOT_FOUND.withDescription("No User found for provided ID.").asRuntimeException());
+      return;
     } catch (IllegalArgumentException e) {
       log.info("gRPC Get UserService received invalid ID:", e.getMessage());
+      responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("ID is not a valid UUID.").asRuntimeException());
+      return;
     }
 
     responseObserver.onNext(output);
@@ -50,6 +64,13 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
   @Override
   public void listUsers(
       ListUsersRequest request, StreamObserver<ListUsersResponse> responseObserver) {
+
+    val authInfo = ApplicationAuthInterceptor.AUTH_INFO.get();
+    if (!authInfo.isAdmin()) {
+      responseObserver.onError(Status.UNAUTHENTICATED.withDescription("Must be ADMIN to access this service.").asRuntimeException());
+      return;
+    }
+
     val output = ListUsersResponse.newBuilder();
 
     // Find Page of users (filtered by groups if provided)
