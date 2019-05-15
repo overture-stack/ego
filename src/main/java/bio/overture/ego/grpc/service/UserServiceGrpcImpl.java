@@ -5,11 +5,9 @@ import static bio.overture.ego.grpc.ProtoUtils.getPageable;
 
 import bio.overture.ego.grpc.*;
 import bio.overture.ego.grpc.interceptor.ApplicationAuthInterceptor;
-import bio.overture.ego.grpc.interceptor.AuthInterceptor;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.CollectionUtils;
-import io.grpc.Context;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import java.util.Collections;
@@ -39,11 +37,14 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
       val id = UUID.fromString(request.getId());
 
       val authInfo = ApplicationAuthInterceptor.AUTH_INFO.get();
+      if (authInfo != null) {
 
-      val selfRequest = authInfo.isUser() && id.equals(authInfo.getId());
-      if (!(authInfo.isAdmin() || authInfo.isApp() || selfRequest)) {
-        responseObserver.onError(Status.UNAUTHENTICATED.withDescription("Must be ADMIN or a user requesting themselves.").asRuntimeException());
-        return;
+        // Auth Checks - must be Admin, or an app, or a user requesting their own data.
+        val selfRequest = authInfo.isUser() && id.equals(authInfo.getId());
+        if (!(authInfo.isAdmin() || authInfo.isApp() || selfRequest)) {
+          responseObserver.onError(Status.UNAUTHENTICATED.withDescription("Must be ADMIN or a user requesting themselves.").asRuntimeException());
+          return;
+        }
       }
 
       val user = userService.get(id, true, true, true);
@@ -68,9 +69,12 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
       ListUsersRequest request, StreamObserver<ListUsersResponse> responseObserver) {
 
     val authInfo = ApplicationAuthInterceptor.AUTH_INFO.get();
-    if (!(authInfo.isAdmin() || authInfo.isApp())) {
-      responseObserver.onError(Status.UNAUTHENTICATED.withDescription("Must be an application or ADMIN user.").asRuntimeException());
-      return;
+    if (authInfo != null) {
+      // Auth Checks - must be admin or an app
+      if (!(authInfo.isAdmin() || authInfo.isApp())) {
+        responseObserver.onError(Status.UNAUTHENTICATED.withDescription("Must be an application or ADMIN user.").asRuntimeException());
+        return;
+      }
     }
 
     val output = ListUsersResponse.newBuilder();
