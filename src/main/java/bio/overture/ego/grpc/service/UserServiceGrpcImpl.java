@@ -39,7 +39,9 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
       val id = UUID.fromString(request.getId());
 
       val authInfo = ApplicationAuthInterceptor.AUTH_INFO.get();
-      if (true || !(authInfo.isAdmin() || authInfo.isUser() && id.equals(authInfo.getId()))) {
+
+      val selfRequest = authInfo.isUser() && id.equals(authInfo.getId());
+      if (!(authInfo.isAdmin() || authInfo.isApp() || selfRequest)) {
         responseObserver.onError(Status.UNAUTHENTICATED.withDescription("Must be ADMIN or a user requesting themselves.").asRuntimeException());
         return;
       }
@@ -66,8 +68,8 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
       ListUsersRequest request, StreamObserver<ListUsersResponse> responseObserver) {
 
     val authInfo = ApplicationAuthInterceptor.AUTH_INFO.get();
-    if (!authInfo.isAdmin()) {
-      responseObserver.onError(Status.UNAUTHENTICATED.withDescription("Must be ADMIN to access this service.").asRuntimeException());
+    if (!(authInfo.isAdmin() || authInfo.isApp())) {
+      responseObserver.onError(Status.UNAUTHENTICATED.withDescription("Must be an application or ADMIN user.").asRuntimeException());
       return;
     }
 
