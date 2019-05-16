@@ -5,19 +5,19 @@ import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.ApplicationType;
+import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
 import io.grpc.*;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-
-import java.util.Optional;
-import java.util.UUID;
 
 @Component
 @Profile("auth")
@@ -43,7 +43,6 @@ public class ApplicationAuthInterceptor implements AuthInterceptor {
       // You need to implement validateIdentity
       String token = metadata.get(JWT_METADATA_KEY);
 
-
       val userInfo = getUserInfo(token);
       val appInfo = getAppInfo(token);
 
@@ -52,12 +51,24 @@ public class ApplicationAuthInterceptor implements AuthInterceptor {
         return NOOP_LISTENER;
       }
 
-      val isAdmin = (userInfo.isPresent() && userInfo.get().getType() == UserType.ADMIN) || (appInfo.isPresent() && appInfo.get().getType() == ApplicationType.ADMIN);
+      val isApproved =
+          (userInfo.isPresent() && userInfo.get().getStatus() == StatusType.APPROVED)
+              || (appInfo.isPresent() && appInfo.get().getStatus() == StatusType.APPROVED);
+
+      if (!isApproved) {
+        call.close(Status.UNAUTHENTICATED.withDescription("Status not approved."), metadata);
+        return NOOP_LISTENER;
+      }
+
+      val isAdmin =
+          (userInfo.isPresent() && userInfo.get().getType() == UserType.ADMIN)
+              || (appInfo.isPresent() && appInfo.get().getType() == ApplicationType.ADMIN);
       val id = userInfo.isPresent() ? userInfo.get().getId() : appInfo.get().getId();
 
       val authInfo = new AuthInfo(userInfo.isPresent(), appInfo.isPresent(), isAdmin, id);
 
-      Context context = Context.current().withValue(AUTHORIZED_JWT, token).withValue(AUTH_INFO, authInfo);
+      Context context =
+          Context.current().withValue(AUTHORIZED_JWT, token).withValue(AUTH_INFO, authInfo);
       return Contexts.interceptCall(context, call, metadata, next);
 
     } catch (IllegalArgumentException e) {
@@ -75,8 +86,8 @@ public class ApplicationAuthInterceptor implements AuthInterceptor {
     try {
       val claims = tokenService.getTokenUserInfo(token);
       val user = userService.getById(claims.getId());
-      return Optional.of(user);
-    } catch (Exception e){
+      return Optional.of(tokenService.getTokenUserInfo(token));
+    } catch (Exception e) {
       return Optional.empty();
     }
   }
@@ -89,32 +100,30 @@ public class ApplicationAuthInterceptor implements AuthInterceptor {
       val app = applicationService.getByClientId(claims.getClientId());
 
       return Optional.of(app);
-    } catch (Exception e){
+    } catch (Exception e) {
       return Optional.empty();
     }
   }
 
   public class AuthInfo {
 
+    @Getter boolean user;
 
-    @Getter
-    boolean user;
+    @Getter boolean app;
 
-    @Getter
-    boolean app;
+    @Getter boolean admin;
 
-    @Getter
-    boolean admin;
+    @Getter UUID id;
 
-    @Getter
-    UUID id;
-
-    public AuthInfo(@NonNull final boolean isUser, @NonNull final boolean isApp, @NonNull final boolean isAdmin, @NonNull final UUID id) {
+    public AuthInfo(
+        @NonNull final boolean isUser,
+        @NonNull final boolean isApp,
+        @NonNull final boolean isAdmin,
+        @NonNull final UUID id) {
       this.user = isUser;
       this.app = isApp;
       this.admin = isAdmin;
       this.id = id;
     }
-
   }
 }

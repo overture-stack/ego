@@ -42,7 +42,10 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
         // Auth Checks - must be Admin, or an app, or a user requesting their own data.
         val selfRequest = authInfo.isUser() && id.equals(authInfo.getId());
         if (!(authInfo.isAdmin() || authInfo.isApp() || selfRequest)) {
-          responseObserver.onError(Status.UNAUTHENTICATED.withDescription("Must be ADMIN or a user requesting themselves.").asRuntimeException());
+          responseObserver.onError(
+              Status.UNAUTHENTICATED
+                  .withDescription("Must be ADMIN or a user requesting themselves.")
+                  .asRuntimeException());
           return;
         }
       }
@@ -52,11 +55,13 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
 
     } catch (NotFoundException e) {
       log.debug("gRPC Get UserService could not find user with requested ID:", e.getMessage());
-      responseObserver.onError(Status.NOT_FOUND.withDescription("No User found for provided ID.").asRuntimeException());
+      responseObserver.onError(
+          Status.NOT_FOUND.withDescription("No User found for provided ID.").asRuntimeException());
       return;
     } catch (IllegalArgumentException e) {
       log.info("gRPC Get UserService received invalid ID:", e.getMessage());
-      responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("ID is not a valid UUID.").asRuntimeException());
+      responseObserver.onError(
+          Status.INVALID_ARGUMENT.withDescription("ID is not a valid UUID.").asRuntimeException());
       return;
     }
 
@@ -72,7 +77,10 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
     if (authInfo != null) {
       // Auth Checks - must be admin or an app
       if (!(authInfo.isAdmin() || authInfo.isApp())) {
-        responseObserver.onError(Status.UNAUTHENTICATED.withDescription("Must be an application or ADMIN user.").asRuntimeException());
+        responseObserver.onError(
+            Status.UNAUTHENTICATED
+                .withDescription("Must be an application or ADMIN user.")
+                .asRuntimeException());
         return;
       }
     }
