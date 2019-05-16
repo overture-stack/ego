@@ -57,8 +57,9 @@ public class UserServiceGrpcTest {
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
   @Before
-  public void setUpInProcessGrpc() throws IOException {
+  public void before() throws IOException {
 
+    // setUpInProcessGrpc
     // Generate a unique in-process server name.
     serverName = InProcessServerBuilder.generateName();
     // Create a client channel and register for automatic graceful shutdown.
@@ -79,6 +80,8 @@ public class UserServiceGrpcTest {
   @Before
   public void setUpTestData() {
     if (!hasRunEntitySetup) {
+      hasRunEntitySetup = true;
+
       // Lets add several users to test list functionality
       val users = repeatedCallsOf(() -> entityGenerator.generateRandomUser(), 7);
 
@@ -104,8 +107,6 @@ public class UserServiceGrpcTest {
       testUsers =
           userService.getMany(
               users.stream().map(user -> user.getId()).collect(toList()), true, true, true);
-
-      hasRunEntitySetup = true;
     }
   }
 

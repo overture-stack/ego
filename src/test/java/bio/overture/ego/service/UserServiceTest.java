@@ -1,5 +1,10 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import bio.overture.ego.utils.EntityGenerator;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -10,11 +15,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-
-import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @SpringBootTest
