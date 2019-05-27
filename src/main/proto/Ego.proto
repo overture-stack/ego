@@ -53,7 +53,7 @@ message User {
     google.protobuf.StringValue status = 9;
     google.protobuf.StringValue type = 10;
 
-    repeated google.protobuf.StringValue applications = 11;
-    repeated google.protobuf.StringValue groups = 12;
-    repeated google.protobuf.StringValue scopes = 13;
+    repeated string applications = 11;
+    repeated string groups = 12;
+    repeated string scopes = 13;
 }
