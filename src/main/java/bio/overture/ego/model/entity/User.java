@@ -38,7 +38,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.protobuf.StringValue;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -57,6 +56,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
+
+import io.swagger.annotations.ApiParam;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.LazyInitializationException;
@@ -222,10 +223,10 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
             .setType(toProtoString(this.getType()));
 
     try {
-      final Set<StringValue> applications =
+      final Set<String> applications =
           mapToImmutableSet(
               this.getUserApplications(),
-              userApplication -> toProtoString(userApplication.getApplication().getId()));
+              userApplication -> userApplication.getApplication().getId().toString());
       builder.addAllApplications(applications);
 
     } catch (LazyInitializationException e) {
@@ -235,8 +236,8 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
     }
 
     try {
-      final Set<StringValue> groups =
-          mapToImmutableSet(this.getUserGroups(), group -> toProtoString(group.getGroup().getId()));
+      final Set<String> groups =
+          mapToImmutableSet(this.getUserGroups(), group -> group.getGroup().getId().toString());
       builder.addAllGroups(groups);
 
     } catch (LazyInitializationException e) {
@@ -245,9 +246,9 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
     }
 
     try {
-      final Set<StringValue> permissions =
+      final Set<String> permissions =
           mapToImmutableSet(
-              resolveUsersPermissions(this), permission -> toProtoString(new Scope(permission)));
+              resolveUsersPermissions(this), permission -> new Scope(permission).toString());
       builder.addAllScopes(permissions);
 
     } catch (LazyInitializationException e) {
