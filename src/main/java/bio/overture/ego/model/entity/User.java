@@ -56,6 +56,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
+
+import io.swagger.annotations.ApiParam;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.LazyInitializationException;
@@ -70,7 +72,7 @@ import org.hibernate.annotations.TypeDef;
 @ToString(
     exclude = {
       LombokFields.userGroups,
-      LombokFields.applications,
+      LombokFields.userApplications,
       LombokFields.userPermissions,
       LombokFields.tokens
     })
@@ -80,8 +82,8 @@ import org.hibernate.annotations.TypeDef;
   JavaFields.EMAIL,
   JavaFields.USERTYPE,
   JavaFields.STATUS,
-  JavaFields.GROUPS,
-  JavaFields.APPLICATIONS,
+  JavaFields.USERGROUPS,
+  JavaFields.USERAPPLICATIONS,
   JavaFields.USERPERMISSIONS,
   JavaFields.FIRSTNAME,
   JavaFields.LASTNAME,

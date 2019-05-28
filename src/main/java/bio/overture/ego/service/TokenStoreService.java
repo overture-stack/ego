@@ -17,11 +17,11 @@
 package bio.overture.ego.service;
 
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.service.TokenService.fetchSpecification;
 
 import bio.overture.ego.model.dto.CreateTokenRequest;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.repository.TokenStoreRepository;
+import bio.overture.ego.repository.queryspecification.builder.TokenSpecificationBuilder;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.NonNull;
@@ -48,8 +48,19 @@ public class TokenStoreService extends AbstractNamedService<Token, UUID> {
 
   @Override
   public Token getWithRelationships(@NonNull UUID id) {
+    return get(id, true, true);
+  }
+
+  @SuppressWarnings("unchecked")
+  public Token get(@NonNull UUID id, boolean fetchOwner, boolean fetchTokenScopes) {
     val result =
-        (Optional<Token>) getRepository().findOne(fetchSpecification(id, true, true, true));
+        (Optional<Token>)
+            getRepository()
+                .findOne(
+                    new TokenSpecificationBuilder()
+                        .fetchOwner(fetchOwner)
+                        .fetchTokenScopes(fetchTokenScopes)
+                        .buildById(id));
     checkNotFound(result.isPresent(), "The tokenId '%s' does not exist", id);
     return result.get();
   }
