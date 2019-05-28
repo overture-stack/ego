@@ -19,13 +19,12 @@ package bio.overture.ego.utils;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
+import java.io.IOException;
 import lombok.val;
 
 public class TypeUtils {
-  @SneakyThrows
   public static <T> T convertToAnotherType(
-      Object fromObject, Class<T> tClass, Class<?> serializationView) {
+      Object fromObject, Class<T> tClass, Class<?> serializationView) throws IOException {
     val mapper = new ObjectMapper();
     mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
     mapper.configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false);

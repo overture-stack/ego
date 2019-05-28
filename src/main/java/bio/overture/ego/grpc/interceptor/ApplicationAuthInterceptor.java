@@ -83,26 +83,17 @@ public class ApplicationAuthInterceptor implements AuthInterceptor {
 
   @SneakyThrows
   private Optional<User> getUserInfo(String token) {
-    try {
-      val claims = tokenService.getTokenUserInfo(token);
-      val user = userService.getById(claims.getId());
-      return Optional.of(tokenService.getTokenUserInfo(token));
-    } catch (Exception e) {
-      return Optional.empty();
-    }
+    val claims = tokenService.getTokenUserInfo(token);
+
+    return claims == null ? Optional.empty() : userService.findById(claims.getId());
   }
 
   @SneakyThrows
   private Optional<Application> getAppInfo(String token) {
-    try {
-      val claims = tokenService.getTokenAppInfo(token);
-
-      val app = applicationService.getByClientId(claims.getClientId());
-
-      return Optional.of(app);
-    } catch (Exception e) {
-      return Optional.empty();
-    }
+    val claims = tokenService.getTokenAppInfo(token);
+    return claims == null
+        ? Optional.empty()
+        : applicationService.findByClientId(claims.getClientId());
   }
 
   public class AuthInfo {

@@ -1,5 +1,10 @@
 package bio.overture.ego.grpc.service;
 
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
+import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import bio.overture.ego.grpc.GetUserRequest;
 import bio.overture.ego.grpc.ListUsersRequest;
 import bio.overture.ego.grpc.UserServiceGrpc;
@@ -22,6 +27,8 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.testing.GrpcCleanupRule;
+import java.io.IOException;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
@@ -32,13 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.io.IOException;
-import java.util.UUID;
-
-import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
 
 @Slf4j
 @ActiveProfiles({"test", "auth"})
@@ -69,6 +69,11 @@ public class UserServiceGrpcAuthTest {
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
   @Before
+  public void init() throws IOException {
+    grpcSetup();
+    testDataSetup();
+  }
+
   public void grpcSetup() throws IOException {
 
     serverName = InProcessServerBuilder.generateName();
@@ -76,7 +81,8 @@ public class UserServiceGrpcAuthTest {
     channel =
         grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
 
-    // Create a server, add service with auth interceptor, start, and register for automatic graceful shutdown.
+    // Create a server, add service with auth interceptor, start, and register for automatic
+    // graceful shutdown.
     grpcCleanup.register(
         InProcessServerBuilder.forName(serverName)
             .directExecutor()
@@ -87,7 +93,6 @@ public class UserServiceGrpcAuthTest {
     stub = UserServiceGrpc.newBlockingStub(channel);
   }
 
-  @Before
   public void testDataSetup() {
     if (!hasRunSetup) {
       hasRunSetup = true;
@@ -164,10 +169,8 @@ public class UserServiceGrpcAuthTest {
     try {
       // Generate a random ID, ensure that it doesn't match our user (almost impossible but check
       // anyways so we know fo sho)
-      UUID randomId;
-      do {
-        randomId = UUID.randomUUID();
-      } while (randomId.equals(testUser.getId()));
+      UUID randomId = generateNonExistentId(userService);
+      ;
 
       authStub.getUser(GetUserRequest.newBuilder().setId(randomId.toString()).build());
 
@@ -243,8 +246,7 @@ public class UserServiceGrpcAuthTest {
 
     // Test that the interceptor rejects this request
     try {
-      val reply =
-          authStub.listUsers(ListUsersRequest.newBuilder().build());
+      val reply = authStub.listUsers(ListUsersRequest.newBuilder().build());
       assertThat(reply.getUsersCount()).isGreaterThanOrEqualTo(2);
 
     } catch (StatusRuntimeException e) {
@@ -258,8 +260,7 @@ public class UserServiceGrpcAuthTest {
 
     // Test that the interceptor rejects this request
     try {
-      val reply =
-          authStub.listUsers(ListUsersRequest.newBuilder().build());
+      val reply = authStub.listUsers(ListUsersRequest.newBuilder().build());
       assertThat(reply.getUsersCount()).isGreaterThanOrEqualTo(2);
 
     } catch (StatusRuntimeException e) {

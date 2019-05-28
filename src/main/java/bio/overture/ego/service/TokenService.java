@@ -56,6 +56,7 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -272,7 +273,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       val tokenClaims =
           convertToAnotherType(body, UserTokenClaims.class, Views.JWTAccessToken.class);
       return userService.getById(fromString(tokenClaims.getSub()));
-    } catch (JwtException | ClassCastException e) {
+    } catch (JwtException | ClassCastException | IOException e) {
       log.error("Issue handling user token (MD5sum) {}", new String(md5Digest(token.getBytes())));
       return null;
     }
@@ -284,7 +285,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       val tokenClaims =
           convertToAnotherType(body, AppTokenClaims.class, Views.JWTAccessToken.class);
       return applicationService.getById(fromString(tokenClaims.getSub()));
-    } catch (JwtException | ClassCastException e) {
+    } catch (JwtException | ClassCastException | IOException e) {
       log.error(
           "Issue handling application token (MD5sum) {}", new String(md5Digest(token.getBytes())));
       return null;
