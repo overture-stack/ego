@@ -96,15 +96,16 @@ public class ApplicationAuthInterceptor implements AuthInterceptor {
         : applicationService.findByClientId(claims.getClientId());
   }
 
+  @Getter
   public class AuthInfo {
 
-    @Getter boolean user;
+    boolean user;
 
-    @Getter boolean app;
+    boolean app;
 
-    @Getter boolean admin;
+    boolean admin;
 
-    @Getter UUID id;
+    UUID id;
 
     public AuthInfo(
         @NonNull final boolean isUser,
