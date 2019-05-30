@@ -4,7 +4,6 @@ import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.junit.Assert.fail;
 
 import bio.overture.ego.grpc.GetUserRequest;
 import bio.overture.ego.grpc.ListUsersRequest;
@@ -138,7 +137,10 @@ public class UserServiceGrpcAuthTest {
     // Test that the interceptor rejects this request
     assertThatExceptionOfType(StatusRuntimeException.class)
         .as("Request should be rejected due to missing JWT")
-        .isThrownBy(() -> noAuthStub.getUser(GetUserRequest.newBuilder().setId(UUID.randomUUID().toString()).build()));
+        .isThrownBy(
+            () ->
+                noAuthStub.getUser(
+                    GetUserRequest.newBuilder().setId(UUID.randomUUID().toString()).build()));
   }
 
   @Test
@@ -147,14 +149,9 @@ public class UserServiceGrpcAuthTest {
     val authStub = MetadataUtils.attachHeaders(stub, userAuthMeta);
 
     // Test that the interceptor rejects this request
-    try {
-      val reply =
-          authStub.getUser(GetUserRequest.newBuilder().setId(testUser.getId().toString()).build());
-      assertThat(reply.getId().getValue()).isEqualTo(testUser.getId().toString());
-
-    } catch (StatusRuntimeException e) {
-      fail("User disallowed to access their ego data via grpc.");
-    }
+    val reply =
+        authStub.getUser(GetUserRequest.newBuilder().setId(testUser.getId().toString()).build());
+    assertThat(reply.getId().getValue()).isEqualTo(testUser.getId().toString());
   }
 
   @Test
@@ -166,7 +163,8 @@ public class UserServiceGrpcAuthTest {
     // Test that the interceptor rejects this request
     assertThatExceptionOfType(StatusRuntimeException.class)
         .as("User should not be allowed to access data of a different user.")
-        .isThrownBy(() -> authStub.getUser(GetUserRequest.newBuilder().setId(randomId.toString()).build()));
+        .isThrownBy(
+            () -> authStub.getUser(GetUserRequest.newBuilder().setId(randomId.toString()).build()));
   }
 
   @Test
@@ -174,14 +172,9 @@ public class UserServiceGrpcAuthTest {
     val authStub = MetadataUtils.attachHeaders(stub, userAdminAuthMeta);
 
     // Test that the interceptor rejects this request
-    try {
-      val reply =
-          authStub.getUser(GetUserRequest.newBuilder().setId(testUser.getId().toString()).build());
-      assertThat(reply.getId().getValue()).isEqualTo(testUser.getId().toString());
-
-    } catch (StatusRuntimeException e) {
-      fail("Admin disallowed to access ego user data.");
-    }
+    val reply =
+        authStub.getUser(GetUserRequest.newBuilder().setId(testUser.getId().toString()).build());
+    assertThat(reply.getId().getValue()).isEqualTo(testUser.getId().toString());
   }
 
   @Test
@@ -189,14 +182,9 @@ public class UserServiceGrpcAuthTest {
     val authStub = MetadataUtils.attachHeaders(stub, appAuthMeta);
 
     // Test that the interceptor rejects this request
-    try {
-      val reply =
-          authStub.getUser(GetUserRequest.newBuilder().setId(testUser.getId().toString()).build());
-      assertThat(reply.getId().getValue()).isEqualTo(testUser.getId().toString());
-
-    } catch (StatusRuntimeException e) {
-      fail("App disallowed to access ego user data.");
-    }
+    val reply =
+        authStub.getUser(GetUserRequest.newBuilder().setId(testUser.getId().toString()).build());
+    assertThat(reply.getId().getValue()).isEqualTo(testUser.getId().toString());
   }
 
   @Test
@@ -225,13 +213,8 @@ public class UserServiceGrpcAuthTest {
     val authStub = MetadataUtils.attachHeaders(stub, userAdminAuthMeta);
 
     // Test that the interceptor rejects this request
-    try {
-      val reply = authStub.listUsers(ListUsersRequest.newBuilder().build());
-      assertThat(reply.getUsersCount()).isGreaterThanOrEqualTo(2);
-
-    } catch (StatusRuntimeException e) {
-      fail("Admin disallowed to access list user service.");
-    }
+    val reply = authStub.listUsers(ListUsersRequest.newBuilder().build());
+    assertThat(reply.getUsersCount()).isGreaterThanOrEqualTo(2);
   }
 
   @Test
@@ -239,12 +222,7 @@ public class UserServiceGrpcAuthTest {
     val authStub = MetadataUtils.attachHeaders(stub, appAuthMeta);
 
     // Test that the interceptor rejects this request
-    try {
-      val reply = authStub.listUsers(ListUsersRequest.newBuilder().build());
-      assertThat(reply.getUsersCount()).isGreaterThanOrEqualTo(2);
-
-    } catch (StatusRuntimeException e) {
-      fail("App disallowed to access list user service.");
-    }
+    val reply = authStub.listUsers(ListUsersRequest.newBuilder().build());
+    assertThat(reply.getUsersCount()).isGreaterThanOrEqualTo(2);
   }
 }
