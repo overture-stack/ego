@@ -37,9 +37,9 @@ public class CreateUserRequest {
 
   @NotNull private StatusType status;
 
-  private String firstName;
+  @NotNull private String firstName;
 
-  private String lastName;
+  @NotNull private String lastName;
 
   private LanguageType preferredLanguage;
 }

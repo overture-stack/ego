@@ -543,6 +543,8 @@ public class UserControllerTest extends AbstractControllerTest {
         CreateUserRequest.builder()
             .email(generateNonExistentName(userService) + "@xyz.com")
             .type(USER)
+            .lastName("")
+            .lastName("")
             .preferredLanguage(ENGLISH)
             .build();
     val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(STATUS, invalidStatus);
@@ -574,6 +576,8 @@ public class UserControllerTest extends AbstractControllerTest {
             .email(generateNonExistentName(userService) + "@xyz.com")
             .status(APPROVED)
             .preferredLanguage(ENGLISH)
+            .firstName("")
+            .lastName("")
             .build();
     val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(TYPE, invalidType);
     initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
@@ -604,6 +608,8 @@ public class UserControllerTest extends AbstractControllerTest {
             .email(generateNonExistentName(userService) + "@xyz.com")
             .status(APPROVED)
             .type(USER)
+            .firstName("")
+            .lastName("")
             .build();
     val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(PREFERREDLANGUAGE, invalidLanguage);
     initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
