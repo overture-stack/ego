@@ -102,6 +102,8 @@ public class UserServiceGrpcAuthTest {
               CreateUserRequest.builder()
                   .status(StatusType.APPROVED)
                   .email("approvedUserGrpc@example.com")
+                  .lastName("")
+                  .firstName("")
                   .type(UserType.USER)
                   .build());
       userAuthMeta.put(JWT_KEY, tokenService.generateUserToken(testUser));
@@ -110,6 +112,8 @@ public class UserServiceGrpcAuthTest {
           userService.create(
               CreateUserRequest.builder()
                   .status(StatusType.APPROVED)
+                  .firstName("")
+                  .lastName("")
                   .email("approvedAdminGrpc@example.com")
                   .type(UserType.ADMIN)
                   .build());

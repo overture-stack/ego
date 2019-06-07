@@ -41,7 +41,10 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -56,8 +59,14 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
@@ -129,10 +138,12 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   @Column(name = SqlFields.STATUS, nullable = false)
   private StatusType status;
 
+  @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.FIRSTNAME)
   private String firstName;
 
+  @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.LASTNAME)
   private String lastName;
