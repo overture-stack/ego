@@ -1,0 +1,22 @@
+{
+  "name": "ego",
+  "version": "1.0.0",
+  "description": "<h1 align=\"center\"> EGO </h1><br>",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/overture-stack/ego.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/overture-stack/ego/issues"
+  },
+  "homepage": "https://github.com/overture-stack/ego#readme"
+}
