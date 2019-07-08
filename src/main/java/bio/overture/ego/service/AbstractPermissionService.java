@@ -297,7 +297,10 @@ public abstract class AbstractPermissionService<
    */
   public static Set<AbstractPermission> resolveFinalPermissions(
       Collection<? extends AbstractPermission>... collections) {
-    val combinedPermissionAgg =
+    // Java11/Java12 couldn't understand the subtyping rules anymore when using val
+    Map<Policy, ? extends List<? extends AbstractPermission>> combinedPermissionAgg;
+
+    combinedPermissionAgg =
         stream(collections)
             .flatMap(Collection::stream)
             .filter(x -> !isNull(x.getPolicy()))

@@ -15,10 +15,10 @@
  *
  */
 
-package bio.overture.ego.selenium.rule;
+package selenium.rule;
 
-import bio.overture.ego.selenium.driver.WebDriverFactory.DriverType;
 import lombok.Getter;
+import selenium.driver.WebDriverFactory.DriverType;
 
 public class SeleniumEnvironmentChecker {
 

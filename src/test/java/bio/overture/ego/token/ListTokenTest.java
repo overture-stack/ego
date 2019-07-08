@@ -86,7 +86,7 @@ public class ListTokenTest {
             .description("Test token 2.")
             .build());
 
-    assertTrue((responseList.stream().allMatch(expected::contains)));
+    assertTrue(responseList.stream().allMatch(expected::contains));
   }
 
   @Test

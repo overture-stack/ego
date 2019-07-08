@@ -4,7 +4,6 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.JavaFields;
-import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
 import javax.persistence.CascadeType;
@@ -26,10 +25,10 @@ import lombok.ToString;
 @Entity
 @Table(name = Tables.USER_GROUP)
 @Builder
-@EqualsAndHashCode(of = {LombokFields.id})
+@EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {JavaFields.USER, JavaFields.GROUP})
+@ToString(exclude = {"user", "group"})
 public class UserGroup implements Identifiable<UserGroupId> {
 
   @EmbeddedId private UserGroupId id;

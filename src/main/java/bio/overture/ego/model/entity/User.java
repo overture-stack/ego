@@ -26,7 +26,6 @@ import static com.google.common.collect.Sets.newHashSet;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.LanguageType;
-import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.Tables;
@@ -76,13 +75,7 @@ import org.hibernate.annotations.TypeDef;
 @Entity
 @Table(name = Tables.EGOUSER)
 @Data
-@ToString(
-    exclude = {
-      LombokFields.userGroups,
-      LombokFields.userApplications,
-      LombokFields.userPermissions,
-      LombokFields.tokens
-    })
+@ToString(exclude = {"userGroups", "userApplications", "userPermissions", "tokens"})
 @JsonPropertyOrder({
   JavaFields.ID,
   JavaFields.NAME,
@@ -99,7 +92,7 @@ import org.hibernate.annotations.TypeDef;
   JavaFields.PREFERREDLANGUAGE
 })
 @JsonInclude()
-@EqualsAndHashCode(of = {LombokFields.id})
+@EqualsAndHashCode(of = {"id"})
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor

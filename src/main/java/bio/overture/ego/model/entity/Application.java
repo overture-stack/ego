@@ -21,7 +21,6 @@ import static com.google.common.collect.Sets.newHashSet;
 
 import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.model.enums.JavaFields;
-import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.Tables;
@@ -65,8 +64,8 @@ import org.hibernate.annotations.TypeDef;
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonView(Views.REST.class)
-@ToString(exclude = {LombokFields.groupApplications, LombokFields.users})
-@EqualsAndHashCode(of = {LombokFields.id})
+@ToString(exclude = {"groupApplications", "userApplications"})
+@EqualsAndHashCode(of = {"id"})
 @JsonPropertyOrder({
   JavaFields.ID,
   JavaFields.NAME,

@@ -20,7 +20,6 @@ import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
 import static com.google.common.collect.Sets.newHashSet;
 
 import bio.overture.ego.model.enums.JavaFields;
-import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.Tables;
@@ -61,10 +60,9 @@ import org.hibernate.annotations.TypeDef;
 @AllArgsConstructor
 @Table(name = Tables.GROUP)
 @JsonView(Views.REST.class)
-@EqualsAndHashCode(of = {LombokFields.id})
+@EqualsAndHashCode(of = "id")
 @TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
-@ToString(
-    exclude = {LombokFields.userGroups, LombokFields.groupApplications, LombokFields.permissions})
+@ToString(exclude = {"userGroups", "groupApplications", "permissions"})
 @JsonPropertyOrder({
   JavaFields.ID,
   JavaFields.NAME,
