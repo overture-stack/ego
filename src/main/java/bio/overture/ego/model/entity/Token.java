@@ -5,7 +5,6 @@ import static com.google.common.collect.Sets.newHashSet;
 
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.JavaFields;
-import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -36,8 +35,8 @@ import org.hibernate.annotations.GenericGenerator;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {LombokFields.owner, LombokFields.scopes})
-@EqualsAndHashCode(of = {LombokFields.id})
+@ToString(exclude = {"owner", "scopes"})
+@EqualsAndHashCode(of = {"id"})
 public class Token implements Identifiable<UUID> {
 
   @Id
