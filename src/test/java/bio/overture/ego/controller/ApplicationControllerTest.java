@@ -21,8 +21,6 @@ import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
 import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
 import static bio.overture.ego.model.enums.JavaFields.GROUPAPPLICATIONS;
 import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.NAME;
-import static bio.overture.ego.model.enums.JavaFields.STATUS;
 import static bio.overture.ego.model.enums.JavaFields.USERAPPLICATIONS;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
@@ -37,7 +35,7 @@ import static bio.overture.ego.utils.EntityGenerator.randomStringNoSpaces;
 import static bio.overture.ego.utils.EntityGenerator.randomStringWithSpaces;
 import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.CreateApplicationRequest;
@@ -117,9 +115,9 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("/applications").body(app).post();
 
     val responseStatus = response.getStatusCode();
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+    assertEquals(responseStatus, HttpStatus.OK);
     val responseJson = MAPPER.readTree(response.getBody());
-    assertThat(responseJson.get("name").asText()).isEqualTo("addApplication_Success");
+    assertEquals(responseJson.get("name").asText(), "addApplication_Success");
   }
 
   @Test
@@ -148,11 +146,11 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     val response1 = initStringRequest().endpoint("/applications").body(app1).post();
 
     val responseStatus1 = response1.getStatusCode();
-    assertThat(responseStatus1).isEqualTo(HttpStatus.OK);
+    assertEquals(responseStatus1, HttpStatus.OK);
 
     val response2 = initStringRequest().endpoint("/applications").body(app2).post();
     val responseStatus2 = response2.getStatusCode();
-    assertThat(responseStatus2).isEqualTo(HttpStatus.CONFLICT);
+    assertEquals(responseStatus2, HttpStatus.CONFLICT);
   }
 
   @Test
@@ -181,8 +179,8 @@ public class ApplicationControllerTest extends AbstractControllerTest {
             .extractPageResults(Application.class);
 
     // Assert the generated applications are included in the list
-    assertThat(actualApps).hasSize(totalApplications);
-    assertThat(actualApps).containsAll(data.getApplications());
+    assertEquals(actualApps.size(), totalApplications);
+    assertTrue(actualApps.containsAll(data.getApplications()));
   }
 
   @Test
@@ -229,8 +227,11 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
     // Create the application using the request
     val app = createApplicationPostRequestAnd(createRequest).extractOneEntity(Application.class);
-    assertThat(app)
-        .isEqualToIgnoringGivenFields(createRequest, ID, GROUPAPPLICATIONS, USERAPPLICATIONS);
+    assertEquals(app.getClientId(), createRequest.getClientId());
+    assertEquals(app.getClientSecret(), createRequest.getClientSecret());
+    assertEquals(app.getName(), createRequest.getName());
+    assertEquals(app.getType(), createRequest.getType());
+    assertEquals(app.getDescription(), createRequest.getDescription());
 
     // Get the application
     getApplicationEntityGetRequestAnd(app)
@@ -424,21 +425,28 @@ public class ApplicationControllerTest extends AbstractControllerTest {
         UpdateApplicationRequest.builder()
             .name(generateNonExistentName(applicationService))
             .build();
-    assertThat(app0.getName()).isNotEqualTo(updateRequest1.getName());
+    assertNotEquals(app0.getName(), updateRequest1.getName());
 
     // Update app0 with updateRequest1, and assert the name changed
     val app0_before0 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
     partialUpdateApplicationPutRequestAnd(app0.getId(), updateRequest1).assertOk();
     val app0_after0 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
-    assertThat(app0_before0)
-        .isEqualToIgnoringGivenFields(app0_after0, ID, GROUPAPPLICATIONS, USERAPPLICATIONS, NAME);
+    assertEquals(app0_before0.getClientId(), app0_after0.getClientId());
+    assertEquals(app0_before0.getClientSecret(), app0_after0.getClientSecret());
+    assertNotEquals(app0_before0.getName(), app0_after0.getName());
+    assertEquals(app0_before0.getType(), app0_after0.getType());
+    assertEquals(app0_before0.getDescription(), app0_after0.getDescription());
 
     // Update app0 with empty update request, and assert nothing changed
     val app0_before1 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
     partialUpdateApplicationPutRequestAnd(app0.getId(), UpdateApplicationRequest.builder().build())
         .assertOk();
     val app0_after1 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
-    assertThat(app0_before1).isEqualTo(app0_after1);
+    assertEquals(app0_before1.getClientId(), app0_after1.getClientId());
+    assertEquals(app0_before1.getClientSecret(), app0_after1.getClientSecret());
+    assertEquals(app0_before1.getName(), app0_after1.getName());
+    assertEquals(app0_before1.getType(), app0_after1.getType());
+    assertEquals(app0_before1.getDescription(), app0_after1.getDescription());
 
     // Update the status field, and assert only that was updated
     val app0_before2 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
@@ -448,10 +456,12 @@ public class ApplicationControllerTest extends AbstractControllerTest {
             .build();
     partialUpdateApplicationPutRequestAnd(app0.getId(), updateRequest2).assertOk();
     val app0_after2 = getApplicationEntityGetRequestAnd(app0).extractOneEntity(Application.class);
-    assertThat(app0_before2)
-        .isEqualToIgnoringGivenFields(app0_after2, ID, GROUPAPPLICATIONS, USERAPPLICATIONS, STATUS);
-    assertThat(app0_before2.getStatus()).isNotEqualTo(app0_after2.getStatus());
-    assertThat(app0_after2.getStatus()).isEqualTo(updateRequest2.getStatus());
+    assertEquals(app0_before2.getClientId(), app0_after2.getClientId());
+    assertEquals(app0_before2.getClientSecret(), app0_after2.getClientSecret());
+    assertEquals(app0_before2.getName(), app0_after2.getName());
+    assertEquals(app0_before2.getType(), app0_after2.getType());
+    assertEquals(app0_before2.getDescription(), app0_after2.getDescription());
+    assertNotEquals(app0_before2.getStatus(), app0_after2.getStatus());
   }
 
   @Test
@@ -497,7 +507,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     // Assert the invalid status is actually invalid
     val invalidStatus = "something123";
     val match = stream(StatusType.values()).anyMatch(x -> x.toString().equals(invalidStatus));
-    assertThat(match).isFalse();
+    assertFalse(match);
 
     // Generate data
     val data = generateUniqueTestApplicationData();
@@ -536,7 +546,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     val invalidApplicationType = "something123";
     val match =
         stream(ApplicationType.values()).anyMatch(x -> x.toString().equals(invalidApplicationType));
-    assertThat(match).isFalse();
+    assertFalse(match);
 
     // Generate data
     val data = generateUniqueTestApplicationData();

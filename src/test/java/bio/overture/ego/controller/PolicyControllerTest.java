@@ -20,7 +20,7 @@ package bio.overture.ego.controller;
 import static bio.overture.ego.controller.AbstractPermissionControllerTest.createMaskJson;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.PolicyRequest;
@@ -81,12 +81,12 @@ public class PolicyControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("/policies").body(policy).post();
 
     val responseStatus = response.getStatusCode();
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+    assertEquals(responseStatus, HttpStatus.OK);
     val responseJson = MAPPER.readTree(response.getBody());
 
     log.info(response.getBody());
 
-    assertThat(responseJson.get("name").asText()).isEqualTo("AddPolicy");
+    assertEquals(responseJson.get("name").asText(), "AddPolicy");
   }
 
   @Test
@@ -98,12 +98,12 @@ public class PolicyControllerTest extends AbstractControllerTest {
     val response1 = initStringRequest().endpoint("/policies").body(policy1).post();
 
     val responseStatus1 = response1.getStatusCode();
-    assertThat(responseStatus1).isEqualTo(HttpStatus.OK);
+    assertEquals(responseStatus1, HttpStatus.OK);
 
     val response2 = initStringRequest().endpoint("/policies").body(policy2).post();
 
     val responseStatus2 = response2.getStatusCode();
-    assertThat(responseStatus2).isEqualTo(HttpStatus.CONFLICT);
+    assertEquals(responseStatus2, HttpStatus.CONFLICT);
   }
 
   @Test
@@ -115,8 +115,8 @@ public class PolicyControllerTest extends AbstractControllerTest {
     val responseStatus = response.getStatusCode();
     val responseJson = MAPPER.readTree(response.getBody());
 
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
-    assertThat(responseJson.get("name").asText()).isEqualTo("Study001");
+    assertEquals(responseStatus, HttpStatus.OK);
+    assertEquals(responseJson.get("name").asText(), "Study001");
   }
 
   @Test
@@ -132,7 +132,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
             .post();
 
     val responseStatus = response.getStatusCode();
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+    assertEquals(responseStatus, HttpStatus.OK);
 
     val getResponse = initStringRequest().endpoint("/policies/%s/groups", policyId).get();
 
@@ -140,9 +140,9 @@ public class PolicyControllerTest extends AbstractControllerTest {
     val getResponseJson = MAPPER.readTree(getResponse.getBody());
     val groupPermissionJson = getResponseJson.get(0);
 
-    assertThat(getResponseStatus).isEqualTo(HttpStatus.OK);
-    assertThat(groupPermissionJson.get("id").asText()).isEqualTo(groupId);
-    assertThat(groupPermissionJson.get("mask").asText()).isEqualTo("WRITE");
+    assertEquals(getResponseStatus, HttpStatus.OK);
+    assertEquals(groupPermissionJson.get("id").asText(), groupId);
+    assertEquals(groupPermissionJson.get("mask").asText(), "WRITE");
   }
 
   @Test
@@ -158,7 +158,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
             .post();
 
     val responseStatus = response.getStatusCode();
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+    assertEquals(responseStatus, HttpStatus.OK);
 
     val deleteResponse =
         initStringRequest()
@@ -166,15 +166,15 @@ public class PolicyControllerTest extends AbstractControllerTest {
             .delete();
 
     val deleteResponseStatus = deleteResponse.getStatusCode();
-    assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
+    assertEquals(deleteResponseStatus, HttpStatus.OK);
 
     val getResponse = initStringRequest().endpoint("/policies/%s/groups", policyId).get();
 
     val getResponseStatus = getResponse.getStatusCode();
     val getResponseJson = (ArrayNode) MAPPER.readTree(getResponse.getBody());
 
-    assertThat(getResponseStatus).isEqualTo(HttpStatus.OK);
-    assertThat(getResponseJson.size()).isEqualTo(0);
+    assertEquals(getResponseStatus, HttpStatus.OK);
+    assertEquals(getResponseJson.size(), 0);
   }
 
   @Test
@@ -190,7 +190,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
             .post();
 
     val responseStatus = response.getStatusCode();
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+    assertEquals(responseStatus, HttpStatus.OK);
     // TODO: Fix it so that POST returns JSON, not just random string message
 
     val getResponse = initStringRequest().endpoint("/policies/%s/users", policyId).get();
@@ -199,9 +199,9 @@ public class PolicyControllerTest extends AbstractControllerTest {
     val getResponseJson = MAPPER.readTree(getResponse.getBody());
     val groupPermissionJson = getResponseJson.get(0);
 
-    assertThat(getResponseStatus).isEqualTo(HttpStatus.OK);
-    assertThat(groupPermissionJson.get("id").asText()).isEqualTo(userId);
-    assertThat(groupPermissionJson.get("mask").asText()).isEqualTo("READ");
+    assertEquals(getResponseStatus, HttpStatus.OK);
+    assertEquals(groupPermissionJson.get("id").asText(), userId);
+    assertEquals(groupPermissionJson.get("mask").asText(), "READ");
   }
 
   @Test
@@ -217,21 +217,21 @@ public class PolicyControllerTest extends AbstractControllerTest {
             .post();
 
     val responseStatus = response.getStatusCode();
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+    assertEquals(responseStatus, HttpStatus.OK);
     // TODO: Fix it so that POST returns JSON, not just random string message
 
     val deleteResponse =
         initStringRequest().endpoint("/policies/%s/permission/user/%s", policyId, userId).delete();
 
     val deleteResponseStatus = deleteResponse.getStatusCode();
-    assertThat(deleteResponseStatus).isEqualTo(HttpStatus.OK);
+    assertEquals(deleteResponseStatus, HttpStatus.OK);
 
     val getResponse = initStringRequest().endpoint("/policies/%s/users", policyId).get();
 
     val getResponseStatus = getResponse.getStatusCode();
     val getResponseJson = (ArrayNode) MAPPER.readTree(getResponse.getBody());
 
-    assertThat(getResponseStatus).isEqualTo(HttpStatus.OK);
-    assertThat(getResponseJson.size()).isEqualTo(0);
+    assertEquals(getResponseStatus, HttpStatus.OK);
+    assertEquals(getResponseJson.size(), 0);
   }
 }

@@ -19,11 +19,6 @@ package bio.overture.ego.controller;
 
 import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
 import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
-import static bio.overture.ego.model.enums.JavaFields.CREATEDAT;
-import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.LASTLOGIN;
-import static bio.overture.ego.model.enums.JavaFields.LASTNAME;
-import static bio.overture.ego.model.enums.JavaFields.NAME;
 import static bio.overture.ego.model.enums.JavaFields.PREFERREDLANGUAGE;
 import static bio.overture.ego.model.enums.JavaFields.STATUS;
 import static bio.overture.ego.model.enums.JavaFields.TOKENS;
@@ -50,8 +45,7 @@ import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.junit.Assert.*;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.CreateUserRequest;
@@ -72,6 +66,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import lombok.Builder;
 import lombok.NonNull;
@@ -80,6 +75,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang.NotImplementedException;
 import org.hibernate.LazyInitializationException;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -139,16 +135,17 @@ public class UserControllerTest extends AbstractControllerTest {
     val responseStatus = response.getStatusCode();
     val responseJson = MAPPER.readTree(response.getBody());
 
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
-    assertThat(responseJson.get("count").asInt()).isGreaterThanOrEqualTo(3);
-    assertThat(responseJson.get("resultSet").isArray()).isTrue();
+    assertEquals(responseStatus, HttpStatus.OK);
+    assertTrue(responseJson.get("count").asInt() >= 3);
+    assertTrue(responseJson.get("resultSet").isArray());
 
     // Verify that the returned Users are the ones from the setup.
     Iterable<JsonNode> resultSetIterable = () -> responseJson.get("resultSet").iterator();
     val actualUserNames =
         stream(resultSetIterable).map(j -> j.get("name").asText()).collect(toImmutableList());
-    assertThat(actualUserNames)
-        .contains("FirstUser@domain.com", "SecondUser@domain.com", "ThirdUser@domain.com");
+    assertTrue(
+        actualUserNames.containsAll(
+            Set.of("FirstUser@domain.com", "SecondUser@domain.com", "ThirdUser@domain.com")));
   }
 
   @Test
@@ -159,11 +156,12 @@ public class UserControllerTest extends AbstractControllerTest {
     val responseStatus = response.getStatusCode();
     val responseJson = MAPPER.readTree(response.getBody());
 
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
-    assertThat(responseJson.get("count").asInt()).isEqualTo(1);
-    assertThat(responseJson.get("resultSet").isArray()).isTrue();
-    assertThat(responseJson.get("resultSet").elements().next().get("name").asText())
-        .isEqualTo("FirstUser@domain.com");
+    assertEquals(responseStatus, HttpStatus.OK);
+    assertEquals(responseJson.get("count").asInt(), 1);
+    assertTrue(responseJson.get("resultSet").isArray());
+    assertEquals(
+        responseJson.get("resultSet").elements().next().get("name").asText(),
+        "FirstUser@domain.com");
   }
 
   @Test
@@ -207,32 +205,28 @@ public class UserControllerTest extends AbstractControllerTest {
 
     // Create the user
     val user = createUserPostRequestAnd(r).extractOneEntity(User.class);
-    assertThat(user)
-        .isEqualToIgnoringGivenFields(
-            r,
-            ID,
-            USERAPPLICATIONS,
-            USERPERMISSIONS,
-            USERGROUPS,
-            TOKENS,
-            NAME,
-            CREATEDAT,
-            LASTLOGIN);
+    assertEquals(user.getEmail(), r.getEmail());
+    assertEquals(user.getFirstName(), r.getFirstName());
+    assertEquals(user.getLastName(), r.getLastName());
+    assertEquals(user.getPreferredLanguage(), r.getPreferredLanguage());
+    assertEquals(user.getType(), r.getType());
+    assertEquals(user.getStatus(), r.getStatus());
 
     // Assert the user can be read and matches the request data
     val r1 = getUserEntityGetRequestAnd(user).extractOneEntity(User.class);
-    assertThat(r1)
-        .isEqualToIgnoringGivenFields(
-            r,
-            ID,
-            USERAPPLICATIONS,
-            USERPERMISSIONS,
-            USERGROUPS,
-            TOKENS,
-            NAME,
-            CREATEDAT,
-            LASTLOGIN);
-    assertThat(r1).isEqualToIgnoringGivenFields(user);
+    assertEquals(r1.getEmail(), r.getEmail());
+    assertEquals(r1.getFirstName(), r.getFirstName());
+    assertEquals(r1.getLastName(), r.getLastName());
+    assertEquals(r1.getPreferredLanguage(), r.getPreferredLanguage());
+    assertEquals(r1.getType(), r.getType());
+    assertEquals(r1.getStatus(), r.getStatus());
+
+    assertEquals(r1.getEmail(), user.getEmail());
+    assertEquals(r1.getFirstName(), user.getFirstName());
+    assertEquals(r1.getLastName(), user.getLastName());
+    assertEquals(r1.getPreferredLanguage(), user.getPreferredLanguage());
+    assertEquals(r1.getType(), user.getType());
+    assertEquals(r1.getStatus(), user.getStatus());
   }
 
   @Test
@@ -378,33 +372,33 @@ public class UserControllerTest extends AbstractControllerTest {
 
     // Creating new users cause we need their Ids as inputs in this test
     val users = repeatedCallsOf(() -> entityGenerator.generateRandomUser(), testUserCount);
-    val userIds = mapToImmutableSet(users, user -> user.getId());
+    val userIds = mapToImmutableSet(users, User::getId);
 
     val results = userService.getMany(userIds, false, false, false);
 
-    assertThat(results.size()).isEqualTo(testUserCount);
+    assertEquals(results.size(), testUserCount);
 
     val testUser = results.iterator().next();
 
     try {
       testUser.getUserGroups().iterator().next().getId();
-      fail("No exception thrown accessing groups that were not fetched for user.");
+      Assert.fail("No exception thrown accessing groups that were not fetched for user.");
     } catch (Exception e) {
-      assertThat(e).isInstanceOf(LazyInitializationException.class);
+      assertTrue(e instanceof LazyInitializationException);
     }
 
     try {
       testUser.getUserApplications().iterator().next().getId();
-      fail("No exception thrown accessing applications that were not fetched for user.");
+      Assert.fail("No exception thrown accessing applications that were not fetched for user.");
     } catch (Exception e) {
-      assertThat(e).isInstanceOf(LazyInitializationException.class);
+      assertTrue(e instanceof LazyInitializationException);
     }
 
     try {
       testUser.getUserPermissions().iterator().next().getId();
-      fail("No exception thrown accessing permissions that were not fetched for user.");
+      Assert.fail("No exception thrown accessing permissions that were not fetched for user.");
     } catch (Exception e) {
-      assertThat(e).isInstanceOf(LazyInitializationException.class);
+      assertTrue(e instanceof LazyInitializationException);
     }
   }
 
@@ -416,23 +410,23 @@ public class UserControllerTest extends AbstractControllerTest {
 
     // Creating new users cause we need their Ids as inputs in this test
     val users = repeatedCallsOf(() -> entityGenerator.generateRandomUser(), testUserCount);
-    val userIds = mapToImmutableSet(users, user -> user.getId());
+    val userIds = mapToImmutableSet(users, User::getId);
 
     val results = userService.getMany(userIds, true, true, true);
 
-    assertThat(results.size()).isEqualTo(testUserCount);
+    assertEquals(results.size(), testUserCount);
 
     results
         .iterator()
         .forEachRemaining(
             user -> {
               try {
-                assertThat(user.getUserGroups()).isNotNull();
-                assertThat(user.getUserGroups().isEmpty()).isTrue();
-                assertThat(user.getUserPermissions()).isNotNull();
-                assertThat(user.getUserPermissions().isEmpty()).isTrue();
-                assertThat(user.getUserApplications()).isNotNull();
-                assertThat(user.getUserApplications().isEmpty()).isTrue();
+                assertNotNull(user.getUserGroups());
+                assertTrue(user.getUserGroups().isEmpty());
+                assertNotNull(user.getUserPermissions());
+                assertTrue(user.getUserPermissions().isEmpty());
+                assertNotNull(user.getUserApplications());
+                assertTrue(user.getUserApplications().isEmpty());
               } catch (Exception e) {
                 e.printStackTrace();
               }
@@ -456,24 +450,9 @@ public class UserControllerTest extends AbstractControllerTest {
 
     // Assert update was correct
     val actualUser1 = getUserEntityGetRequestAnd(user0).extractOneEntity(User.class);
-    assertThat(actualUser1)
-        .isEqualToIgnoringGivenFields(
-            r1,
-            TYPE,
-            STATUS,
-            NAME,
-            LASTNAME,
-            PREFERREDLANGUAGE,
-            ID,
-            CREATEDAT,
-            LASTLOGIN,
-            USERPERMISSIONS,
-            USERAPPLICATIONS,
-            USERGROUPS,
-            TOKENS);
-    assertThat(actualUser1.getFirstName()).isEqualTo(r1.getFirstName());
-    assertThat(actualUser1.getEmail()).isEqualTo(r1.getEmail());
-    assertThat(actualUser1.getName()).isEqualTo(r1.getEmail());
+    assertEquals(actualUser1.getFirstName(), r1.getFirstName());
+    assertEquals(actualUser1.getEmail(), r1.getEmail());
+    assertEquals(actualUser1.getName(), r1.getEmail());
 
     // create update request 2
     val r2 =
@@ -489,9 +468,9 @@ public class UserControllerTest extends AbstractControllerTest {
 
     // Assert update was correct
     val actualUser2 = getUserEntityGetRequestAnd(user0).extractOneEntity(User.class);
-    assertThat(actualUser2.getStatus()).isEqualTo(r2.getStatus());
-    assertThat(actualUser2.getType()).isEqualTo(r2.getType());
-    assertThat(actualUser2.getPreferredLanguage()).isEqualTo(r2.getPreferredLanguage());
+    assertEquals(actualUser2.getStatus(), r2.getStatus());
+    assertEquals(actualUser2.getType(), r2.getType());
+    assertEquals(actualUser2.getPreferredLanguage(), r2.getPreferredLanguage());
   }
 
   @Test
@@ -513,8 +492,8 @@ public class UserControllerTest extends AbstractControllerTest {
     val user1 = data.getUsers().get(1);
 
     // Assumptions
-    assertThat(user0.getName()).isEqualTo(user0.getEmail());
-    assertThat(user1.getName()).isEqualTo(user1.getEmail());
+    assertEquals(user0.getName(), user0.getEmail());
+    assertEquals(user1.getName(), user1.getEmail());
 
     // Create update request with same email
     val r1 =
@@ -533,7 +512,7 @@ public class UserControllerTest extends AbstractControllerTest {
   public void statusValidation_MalformedStatus_BadRequest() {
     val invalidStatus = "something123";
     val match = stream(StatusType.values()).anyMatch(x -> x.toString().equals(invalidStatus));
-    assertThat(match).isFalse();
+    assertFalse(match);
 
     val data = generateUniqueTestUserData();
     val user = data.getUsers().get(0);
@@ -565,7 +544,7 @@ public class UserControllerTest extends AbstractControllerTest {
   public void typeValidation_MalformedType_BadRequest() {
     val invalidType = "something123";
     val match = stream(UserType.values()).anyMatch(x -> x.toString().equals(invalidType));
-    assertThat(match).isFalse();
+    assertFalse(match);
 
     val data = generateUniqueTestUserData();
     val user = data.getUsers().get(0);
@@ -597,7 +576,7 @@ public class UserControllerTest extends AbstractControllerTest {
   public void preferredLanguageValidation_MalformedPreferredLanguage_BadRequest() {
     val invalidLanguage = "something123";
     val match = stream(LanguageType.values()).anyMatch(x -> x.toString().equals(invalidLanguage));
-    assertThat(match).isFalse();
+    assertFalse(match);
 
     val data = generateUniqueTestUserData();
     val user = data.getUsers().get(0);

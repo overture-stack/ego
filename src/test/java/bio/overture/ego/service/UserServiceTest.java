@@ -3,11 +3,11 @@ package bio.overture.ego.service;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
 import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import bio.overture.ego.utils.EntityGenerator;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,21 +49,22 @@ public class UserServiceTest {
         userService.getMany(
             users.stream().map(user -> user.getId()).collect(toList()), true, true, true);
 
-    assertThat(reply.size()).isEqualTo(numUsers);
+    Assert.assertEquals(reply.size(), numUsers);
 
     reply.forEach(
         user -> {
-          assertThat(user.getUserGroups().size()).isEqualTo(1);
-          assertThat(user.getUserGroups().iterator().next().getGroup().getName())
-              .isEqualTo(group.getName());
+          Assert.assertEquals(user.getUserGroups().size(), 1);
+          Assert.assertEquals(
+              user.getUserGroups().iterator().next().getGroup().getName(), group.getName());
 
-          assertThat(user.getUserApplications().size()).isEqualTo(1);
-          assertThat(user.getUserApplications().iterator().next().getApplication().getName())
-              .isEqualTo(application.getName());
+          Assert.assertEquals(user.getUserApplications().size(), 1);
+          Assert.assertEquals(
+              user.getUserApplications().iterator().next().getApplication().getName(),
+              application.getName());
 
-          assertThat(user.getPermissions().size()).isEqualTo(1);
-          assertThat(user.getPermissions().iterator().next())
-              .isEqualTo("UserServiceTestPolicy.WRITE");
+          Assert.assertEquals(user.getPermissions().size(), 1);
+          Assert.assertEquals(
+              user.getPermissions().iterator().next(), "UserServiceTestPolicy.WRITE");
         });
   }
 }
