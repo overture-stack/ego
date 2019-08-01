@@ -17,6 +17,8 @@
 
 package bio.overture.ego.controller;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
@@ -33,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,13 +96,13 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
             .endpoint("/users/%s/permissions/%s", user.getId(), permissionId)
             .delete();
     val deleteStatusCode = deletePermissionResponse.getStatusCode();
-    Assert.assertEquals(deleteStatusCode, HttpStatus.OK);
+    assertEquals(deleteStatusCode, HttpStatus.OK);
 
     val checkTokenAfterDeleteResponse =
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be revoked
-    Assert.assertEquals(checkTokenAfterDeleteResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterDeleteResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -125,14 +126,14 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
             .post();
 
     val upgradeStatusCode = upgradeResponse.getStatusCode();
-    Assert.assertEquals(upgradeStatusCode, HttpStatus.OK);
+    assertEquals(upgradeStatusCode, HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
     val statusCode = checkTokenAfterUpgradeResponse.getStatusCode();
 
     // Should be valid
-    Assert.assertEquals(statusCode, HttpStatus.MULTI_STATUS);
+    assertEquals(statusCode, HttpStatus.MULTI_STATUS);
   }
 
   /**
@@ -156,14 +157,14 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
             .post();
 
     val downgradeStatusCode = upgradeResponse.getStatusCode();
-    Assert.assertEquals(downgradeStatusCode, HttpStatus.OK);
+    assertEquals(downgradeStatusCode, HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
     val statusCode = checkTokenAfterUpgradeResponse.getStatusCode();
 
     // Should be revoked
-    Assert.assertEquals(statusCode, HttpStatus.UNAUTHORIZED);
+    assertEquals(statusCode, HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -187,14 +188,14 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
             .post();
 
     val denyStatusCode = upgradeResponse.getStatusCode();
-    Assert.assertEquals(denyStatusCode, HttpStatus.OK);
+    assertEquals(denyStatusCode, HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
     val statusCode = checkTokenAfterUpgradeResponse.getStatusCode();
 
     // Should be revoked
-    Assert.assertEquals(statusCode, HttpStatus.UNAUTHORIZED);
+    assertEquals(statusCode, HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -220,13 +221,13 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest()
             .endpoint("/groups/%s/permissions/%s", group.getId(), permissionId)
             .delete();
-    Assert.assertEquals(deletePermissionResponse.getStatusCode(), HttpStatus.OK);
+    assertEquals(deletePermissionResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterDeleteResponse =
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be revoked
-    Assert.assertEquals(checkTokenAfterDeleteResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterDeleteResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -251,13 +252,13 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
             .endpoint("/groups/%s/permissions", group.getId().toString())
             .body(permissionUpgradeRequest)
             .post();
-    Assert.assertEquals(upgradeResponse.getStatusCode(), HttpStatus.OK);
+    assertEquals(upgradeResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be valid
-    Assert.assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.MULTI_STATUS);
+    assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.MULTI_STATUS);
   }
 
   /**
@@ -281,13 +282,13 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
             .endpoint("/groups/%s/permissions", group.getId().toString())
             .body(permissionDowngradeRequest)
             .post();
-    Assert.assertEquals(downgradeResponse.getStatusCode(), HttpStatus.OK);
+    assertEquals(downgradeResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be revoked
-    Assert.assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -311,13 +312,13 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
             .endpoint("/groups/%s/permissions", group.getId().toString())
             .body(permissionDenyRequest)
             .post();
-    Assert.assertEquals(denyResponse.getStatusCode(), HttpStatus.OK);
+    assertEquals(denyResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be revoked
-    Assert.assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -337,13 +338,13 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest()
             .endpoint("/users/%s/groups/%s", user.getId().toString(), group.getId().toString())
             .delete();
-    Assert.assertEquals(removeUserFromGroupResponse.getStatusCode(), HttpStatus.OK);
+    assertEquals(removeUserFromGroupResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be revoked
-    Assert.assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -376,13 +377,13 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
             .endpoint("/users/%s/groups", user.getId().toString())
             .body(groupRequest)
             .post();
-    Assert.assertEquals(groupResponse.getStatusCode(), HttpStatus.OK);
+    assertEquals(groupResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be revoked
-    Assert.assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -415,13 +416,13 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
             .endpoint("/users/%s/groups", user.getId().toString())
             .body(groupRequest)
             .post();
-    Assert.assertEquals(groupResponse.getStatusCode(), HttpStatus.OK);
+    assertEquals(groupResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be valid
-    Assert.assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.MULTI_STATUS);
+    assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.MULTI_STATUS);
   }
 
   /**
@@ -441,14 +442,13 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest()
             .endpoint("/users/%s/groups/%s", user.getId().toString(), group.getId().toString())
             .delete();
-    Assert.assertEquals(deleteGroupResponse.getStatusCode(), HttpStatus.OK);
+    assertEquals(deleteGroupResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterGroupDeleteResponse =
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     // Should be revoked
-    Assert.assertEquals(
-        checkTokenAfterGroupDeleteResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterGroupDeleteResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
   }
 
   /**
@@ -486,9 +486,8 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     val checkStatusCode = checkTokenResponse.getStatusCode();
-    Assert.assertEquals(checkStatusCode, HttpStatus.MULTI_STATUS);
-    Assert.assertTrue(
-        checkTokenResponse.getBody().contains(policy.getName() + "." + tokenScopeSuffix));
+    assertEquals(checkStatusCode, HttpStatus.MULTI_STATUS);
+    assertTrue(checkTokenResponse.getBody().contains(policy.getName() + "." + tokenScopeSuffix));
 
     return accessToken;
   }
@@ -515,7 +514,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
             .endpoint("/users/%s/groups", user.getId().toString())
             .body(groupRequest)
             .post();
-    Assert.assertEquals(groupResponse.getStatusCode(), HttpStatus.OK);
+    assertEquals(groupResponse.getStatusCode(), HttpStatus.OK);
 
     // Create Group Permission
     val permissionRequest =
@@ -540,9 +539,8 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest(tokenHeaders).endpoint("/o/check_token?token=%s", accessToken).post();
 
     val checkStatusCode = checkTokenResponse.getStatusCode();
-    Assert.assertEquals(checkStatusCode, HttpStatus.MULTI_STATUS);
-    Assert.assertTrue(
-        checkTokenResponse.getBody().contains(policy.getName() + "." + tokenScopeSuffix));
+    assertEquals(checkStatusCode, HttpStatus.MULTI_STATUS);
+    assertTrue(checkTokenResponse.getBody().contains(policy.getName() + "." + tokenScopeSuffix));
 
     return accessToken;
   }

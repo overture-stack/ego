@@ -2,13 +2,13 @@ package bio.overture.ego.grpc;
 
 import static bio.overture.ego.grpc.ProtoUtils.*;
 import static java.util.stream.Collectors.toList;
+import static org.junit.Assert.*;
 
 import bio.overture.ego.model.enums.JavaFields;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang.StringUtils;
-import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -21,8 +21,8 @@ public class ProtoUtilsTest {
   @Test
   public void toProtoStringNullValue() {
     val result = toProtoString(null);
-    Assert.assertNotNull(result);
-    Assert.assertEquals(result.getValue(), StringUtils.EMPTY);
+    assertNotNull(result);
+    assertEquals(result.getValue(), StringUtils.EMPTY);
   }
 
   @Test
@@ -31,16 +31,16 @@ public class ProtoUtilsTest {
     // tests
     val testObject = Sort.by(new Sort.Order(Sort.Direction.ASC, "createdAt"));
     val result = toProtoString(testObject);
-    Assert.assertNotNull(result);
-    Assert.assertEquals(result.getValue(), testObject.toString());
+    assertNotNull(result);
+    assertEquals(result.getValue(), testObject.toString());
   }
 
   /** Create Paged Response from Page */
   @Test
   public void createPagedResponseForEmptyPage() {
     val result = createPagedResponse(Page.empty(), 0);
-    Assert.assertFalse(result.hasNextPage());
-    Assert.assertEquals(result.getMaxResults(), 0);
+    assertFalse(result.hasNextPage());
+    assertEquals(result.getMaxResults(), 0);
   }
 
   @Test
@@ -48,8 +48,8 @@ public class ProtoUtilsTest {
     val dataList = Arrays.asList("1", "2", "3");
     val page = new PageImpl<String>(dataList);
     val result = createPagedResponse(page, 0);
-    Assert.assertFalse(result.hasNextPage());
-    Assert.assertEquals(result.getMaxResults(), dataList.size());
+    assertFalse(result.hasNextPage());
+    assertEquals(result.getMaxResults(), dataList.size());
   }
 
   @Test
@@ -69,9 +69,9 @@ public class ProtoUtilsTest {
 
     val result = createPagedResponse(page, 0);
 
-    Assert.assertTrue(result.hasNextPage());
-    Assert.assertEquals(result.getNextPage().getValue(), 1);
-    Assert.assertEquals(result.getMaxResults(), dataList.size());
+    assertTrue(result.hasNextPage());
+    assertEquals(result.getNextPage().getValue(), 1);
+    assertEquals(result.getMaxResults(), dataList.size());
   }
 
   @Test
@@ -91,8 +91,8 @@ public class ProtoUtilsTest {
 
     val result = createPagedResponse(page, 1);
 
-    Assert.assertTrue(result.hasNextPage());
-    Assert.assertEquals(result.getNextPage().getValue(), 2);
+    assertTrue(result.hasNextPage());
+    assertEquals(result.getNextPage().getValue(), 2);
   }
 
   /** Pageable Resolution */
@@ -106,10 +106,10 @@ public class ProtoUtilsTest {
             .build();
     val result = getPageable(input);
 
-    Assert.assertEquals(
+    assertEquals(
         result.getSort(), Sort.by(new Sort.Order(Sort.Direction.ASC, JavaFields.CREATEDAT)));
-    Assert.assertEquals(result.getOffset(), 0);
-    Assert.assertEquals(
+    assertEquals(result.getOffset(), 0);
+    assertEquals(
         result.getPageSize(), 100); // default page size value (set in ProtoUtils.getPageable)
   }
 
@@ -132,9 +132,9 @@ public class ProtoUtilsTest {
             new Sort.Order(Sort.Direction.ASC, "lastLogin"),
             new Sort.Order(Sort.Direction.ASC, "name"));
 
-    Assert.assertEquals(result.getSort(), expectedSort);
-    Assert.assertEquals(result.getOffset(), page * size);
-    Assert.assertEquals(result.getPageSize(), 30);
+    assertEquals(result.getSort(), expectedSort);
+    assertEquals(result.getOffset(), page * size);
+    assertEquals(result.getPageSize(), 30);
   }
 
   @Test
@@ -149,7 +149,7 @@ public class ProtoUtilsTest {
             .build();
     val result = getPageable(input);
 
-    Assert.assertEquals(
+    assertEquals(
         result.getPageSize(), 1000); // default max page size value (set in ProtoUtils.getPageable)
   }
 
@@ -160,7 +160,7 @@ public class ProtoUtilsTest {
     val result = parseSort(sort);
 
     val expected = Sort.by(new Sort.Order(Sort.Direction.ASC, "createdAt"));
-    Assert.assertEquals(result, expected);
+    assertEquals(result, expected);
   }
 
   @Test
@@ -170,14 +170,14 @@ public class ProtoUtilsTest {
     val sortUpResult = parseSort(sortUp);
 
     val sortUpExpected = Sort.by(new Sort.Order(Sort.Direction.ASC, "createdAt"));
-    Assert.assertEquals(sortUpResult, sortUpExpected);
+    assertEquals(sortUpResult, sortUpExpected);
 
     // Test desc
     val sortDown = "desc";
     val sortDownResult = parseSort(sortDown);
 
     val sortDownExpected = Sort.by(new Sort.Order(Sort.Direction.DESC, "createdAt"));
-    Assert.assertEquals(sortDownResult, sortDownExpected);
+    assertEquals(sortDownResult, sortDownExpected);
   }
 
   @Test
@@ -191,11 +191,11 @@ public class ProtoUtilsTest {
     // comma separated list with all direction indicators (asc, desc, no direction indicated)
     val sort = "id desc, lastLogin, name asc";
     val result = parseSort(sort);
-    Assert.assertEquals(result, expected);
+    assertEquals(result, expected);
 
     // double check spacing variation, trailing commas, empty clauses
     val sortCompact = "id desc,lastLogin,,name asc,";
     val resultCompact = parseSort(sortCompact);
-    Assert.assertEquals(resultCompact, expected);
+    assertEquals(resultCompact, expected);
   }
 }

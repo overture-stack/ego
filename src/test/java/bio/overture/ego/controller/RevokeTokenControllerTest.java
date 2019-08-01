@@ -3,6 +3,8 @@ package bio.overture.ego.controller;
 import static bio.overture.ego.model.enums.ApplicationType.CLIENT;
 import static bio.overture.ego.model.enums.UserType.USER;
 import static java.util.UUID.randomUUID;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -17,7 +19,6 @@ import bio.overture.ego.utils.WithMockCustomUser;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,7 +82,7 @@ public class RevokeTokenControllerTest {
             test.regularUser, randomTokenName, false, 1000, "random token", randomScopes);
     entityGenerator.setupToken(test.adminUser, adminTokenName, false, 1000, "test token", scopes);
 
-    Assert.assertFalse(randomToken.isRevoked());
+    assertFalse(randomToken.isRevoked());
 
     mockMvc
         .perform(
@@ -94,7 +95,7 @@ public class RevokeTokenControllerTest {
         tokenService
             .findByTokenString(randomTokenName)
             .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
-    Assert.assertTrue(revokedToken.isRevoked());
+    assertTrue(revokedToken.isRevoked());
   }
 
   @WithMockCustomUser
@@ -108,7 +109,7 @@ public class RevokeTokenControllerTest {
     val token =
         entityGenerator.setupToken(test.adminUser, tokenName, false, 1000, "test token", scopes);
 
-    Assert.assertFalse(token.isRevoked());
+    assertFalse(token.isRevoked());
 
     mockMvc
         .perform(
@@ -121,7 +122,7 @@ public class RevokeTokenControllerTest {
         tokenService
             .findByTokenString(tokenName)
             .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
-    Assert.assertTrue(revokedToken.isRevoked());
+    assertTrue(revokedToken.isRevoked());
   }
 
   @WithMockCustomUser(firstName = "Regular", lastName = "User", type = USER)
@@ -135,7 +136,7 @@ public class RevokeTokenControllerTest {
     val token =
         entityGenerator.setupToken(test.user1, tokenName, false, 1000, "test token", scopes);
 
-    Assert.assertFalse(token.isRevoked());
+    assertFalse(token.isRevoked());
 
     mockMvc
         .perform(
@@ -147,7 +148,7 @@ public class RevokeTokenControllerTest {
         tokenService
             .findByTokenString(tokenName)
             .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
-    Assert.assertFalse(revokedToken.isRevoked());
+    assertFalse(revokedToken.isRevoked());
   }
 
   @WithMockCustomUser(firstName = "Regular", lastName = "User", type = USER)
@@ -161,7 +162,7 @@ public class RevokeTokenControllerTest {
     val token =
         entityGenerator.setupToken(test.regularUser, tokenName, false, 1000, "test token", scopes);
 
-    Assert.assertFalse(token.isRevoked());
+    assertFalse(token.isRevoked());
 
     mockMvc
         .perform(
@@ -174,7 +175,7 @@ public class RevokeTokenControllerTest {
         tokenService
             .findByTokenString(tokenName)
             .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
-    Assert.assertTrue(revokedToken.isRevoked());
+    assertTrue(revokedToken.isRevoked());
   }
 
   @WithMockCustomApplication
@@ -186,7 +187,7 @@ public class RevokeTokenControllerTest {
     val token =
         entityGenerator.setupToken(test.regularUser, tokenName, false, 1000, "test token", scopes);
 
-    Assert.assertFalse(token.isRevoked());
+    assertFalse(token.isRevoked());
 
     mockMvc
         .perform(
@@ -199,7 +200,7 @@ public class RevokeTokenControllerTest {
         tokenService
             .findByTokenString(tokenName)
             .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
-    Assert.assertTrue(revokedToken.isRevoked());
+    assertTrue(revokedToken.isRevoked());
   }
 
   @WithMockCustomApplication(
@@ -215,7 +216,7 @@ public class RevokeTokenControllerTest {
     val token =
         entityGenerator.setupToken(test.regularUser, tokenName, false, 1000, "test token", scopes);
 
-    Assert.assertFalse(token.isRevoked());
+    assertFalse(token.isRevoked());
 
     mockMvc
         .perform(
@@ -228,6 +229,6 @@ public class RevokeTokenControllerTest {
         tokenService
             .findByTokenString(tokenName)
             .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
-    Assert.assertFalse(revokedToken.isRevoked());
+    assertFalse(revokedToken.isRevoked());
   }
 }
