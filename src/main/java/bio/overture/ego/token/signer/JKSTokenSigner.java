@@ -101,7 +101,7 @@ public class JKSTokenSigner implements TokenSigner {
     if (publicKey.isPresent()) {
       val b64 = Base64.getEncoder();
       String encodedKey = b64.encodeToString(publicKey.get().getEncoded());
-      encodedKey = "-----BEGIN PUBLIC KEY-----\r\n" + encodedKey + "-----END PUBLIC KEY-----";
+      encodedKey = "-----BEGIN PUBLIC KEY-----\r\n" + encodedKey + "\r\n-----END PUBLIC KEY-----";
       return Optional.of(encodedKey);
     } else {
       return Optional.empty();
