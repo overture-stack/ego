@@ -231,13 +231,8 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   }
 
   public Application findByBasicToken(@NonNull String token) {
-    log.info(format("Looking for token '%s'", token));
     val base64encoding = removeAppTokenPrefix(token);
-    log.info(format("Decoding '%s'", base64encoding));
-
     val contents = new String(Base64.getDecoder().decode(base64encoding));
-    log.info(format("Decoded to '%s'", contents));
-
     val parts = COLON_SPLITTER.splitToList(contents);
     val clientId = parts.get(0);
     log.info(format("Extracted client id '%s'", clientId));
