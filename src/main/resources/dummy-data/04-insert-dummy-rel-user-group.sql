@@ -1,7 +1,7 @@
 TRUNCATE public.usergroup CASCADE;
 
 -- 4 Users to XYZ Research
-INSERT INTO public.usergroup (userId, grpId)
+INSERT INTO public.usergroup (user_id, group_id)
   SELECT u.id, g.id
   FROM public.egouser AS u
     LEFT JOIN public.egogroup AS g
@@ -9,7 +9,7 @@ INSERT INTO public.usergroup (userId, grpId)
   WHERE u.name IN ('Carmel.Corkery@example.com','Viviane.Langworth@example.com','Justice.Heller@example.com','Louvenia.Emard@example.com');
 
 -- 19 Users into Extreme Research
-INSERT INTO public.usergroup (userId, grpId)
+INSERT INTO public.usergroup (user_id, group_id)
   SELECT u.id, g.id
   FROM public.egouser AS u
     LEFT JOIN public.egogroup AS g
@@ -17,7 +17,7 @@ INSERT INTO public.usergroup (userId, grpId)
   WHERE u.name IN ('Elisha.Weimann@example.com','Kavon.Flatley@example.com','Carmel.Corkery@example.com','Keeley.Conn@example.com','Noe.Breitenberg@example.com','Lois.Ward@example.com','Brent.Brekke@example.com','Ruthe.Labadie@example.com','Lurline.Little@example.com','Justice.Heller@example.com','Ollie.Stroman@example.com','Devan.Harvey@example.com','Lupe.Hilll@example.com','Eudora.MacGyver@example.com','Elwyn.Reinger@example.com','Mara.Fisher@example.com','Romaine.Herman@example.com','Ali.Medhurst@example.com','Cali.Grimes@example.com');
 
 -- 48 Users into Pediatric Patient Support Network
-INSERT INTO public.usergroup (userId, grpId)
+INSERT INTO public.usergroup (user_id, group_id)
   SELECT u.id, g.id
   FROM public.egouser AS u
     LEFT JOIN public.egogroup AS g

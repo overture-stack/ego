@@ -19,23 +19,16 @@ package bio.overture.ego.service;
 import static bio.overture.ego.model.dto.Scope.effectiveScopes;
 import static bio.overture.ego.model.dto.Scope.explicitScopes;
 import static bio.overture.ego.model.enums.ApplicationType.ADMIN;
-import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
-import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.SCOPES;
-import static bio.overture.ego.model.enums.JavaFields.USERS;
-import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.service.UserService.extractScopes;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
 import static java.lang.String.format;
 import static java.util.UUID.fromString;
-import static javax.persistence.criteria.JoinType.LEFT;
 import static org.springframework.util.DigestUtils.md5Digest;
 
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
-import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.dto.UserScopesResponse;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
@@ -57,11 +50,11 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +67,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
@@ -124,31 +116,17 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
 
   @Override
   public Token getWithRelationships(@NonNull UUID id) {
-    val result =
-        (Optional<Token>) getRepository().findOne(fetchSpecification(id, true, true, true));
-    checkNotFound(result.isPresent(), "The tokenId '%s' does not exist", id);
-    return result.get();
+    return tokenStoreService.getWithRelationships(id);
   }
 
   public String generateUserToken(IDToken idToken) {
-    val userName = idToken.getEmail();
-    val user =
-        userService
-            .findByName(userName)
-            .orElseGet(
-                () -> {
-                  log.info("User not found, creating.");
-                  return userService.createFromIDToken(idToken);
-                });
-
-    val u = UpdateUserRequest.builder().lastLogin(new Date()).build();
-    userService.partialUpdate(user.getId(), u);
+    val user = userService.getUserByToken(idToken);
     return generateUserToken(user);
   }
 
   @SneakyThrows
   public String generateUserToken(User u) {
-    Set<String> permissionNames = mapToSet(extractScopes(u), p -> p.toString());
+    Set<String> permissionNames = mapToSet(extractScopes(u), Scope::toString);
     return generateUserToken(u, permissionNames);
   }
 
@@ -285,7 +263,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       val tokenClaims =
           convertToAnotherType(body, UserTokenClaims.class, Views.JWTAccessToken.class);
       return userService.getById(fromString(tokenClaims.getSub()));
-    } catch (JwtException | ClassCastException e) {
+    } catch (JwtException | ClassCastException | IOException e) {
       log.error("Issue handling user token (MD5sum) {}", new String(md5Digest(token.getBytes())));
       return null;
     }
@@ -297,7 +275,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       val tokenClaims =
           convertToAnotherType(body, AppTokenClaims.class, Views.JWTAccessToken.class);
       return applicationService.getById(fromString(tokenClaims.getSub()));
-    } catch (JwtException | ClassCastException e) {
+    } catch (JwtException | ClassCastException | IOException e) {
       log.error(
           "Issue handling application token (MD5sum) {}", new String(md5Digest(token.getBytes())));
       return null;
@@ -468,21 +446,5 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
             .exp(token.getSecondsUntilExpiry())
             .description(token.getDescription())
             .build());
-  }
-
-  public static Specification<Token> fetchSpecification(
-      UUID id, boolean fetchUser, boolean fetchApplications, boolean fetchTokenScopes) {
-    return (fromToken, query, builder) -> {
-      if (fetchUser) {
-        fromToken.fetch(USERS, LEFT);
-      }
-      if (fetchApplications) {
-        fromToken.fetch(APPLICATIONS, LEFT);
-      }
-      if (fetchTokenScopes) {
-        fromToken.fetch(SCOPES, LEFT);
-      }
-      return builder.equal(fromToken.get(ID), id);
-    };
   }
 }

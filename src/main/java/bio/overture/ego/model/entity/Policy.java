@@ -3,7 +3,6 @@ package bio.overture.ego.model.entity;
 import static com.google.common.collect.Sets.newHashSet;
 
 import bio.overture.ego.model.enums.JavaFields;
-import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
@@ -40,7 +39,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of = {LombokFields.id})
+@EqualsAndHashCode(of = {"id"})
 @NamedEntityGraph(
     name = "policy-entity-with-relationships",
     attributeNodes = {

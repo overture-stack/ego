@@ -1,6 +1,5 @@
 package bio.overture.ego.utils.web;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -10,6 +9,7 @@ import java.util.function.Function;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.junit.Assert;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -19,7 +19,7 @@ public class ResponseOption<T, O extends ResponseOption<T, O>> {
   @Getter @NonNull private final ResponseEntity<T> response;
 
   public O assertStatusCode(HttpStatus code) {
-    assertThat(response.getStatusCode()).isEqualTo(code);
+    Assert.assertEquals(response.getStatusCode(), code);
     return thisInstance();
   }
 
@@ -40,8 +40,8 @@ public class ResponseOption<T, O extends ResponseOption<T, O>> {
   }
 
   public O assertHasBody() {
-    assertThat(response.hasBody()).isTrue();
-    assertThat(response.getBody()).isNotNull();
+    Assert.assertTrue(response.hasBody());
+    Assert.assertNotNull(response.getBody());
     return thisInstance();
   }
 

@@ -4,9 +4,7 @@ import static bio.overture.ego.model.enums.AccessLevel.EGO_ACCESS_LEVEL_ENUM;
 
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.JavaFields;
-import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
@@ -30,11 +28,10 @@ import org.hibernate.annotations.TypeDef;
 
 @Data
 @MappedSuperclass
-@EqualsAndHashCode(of = {LombokFields.id})
-@ToString(exclude = {LombokFields.policy})
+@EqualsAndHashCode(of = {"id"})
+@ToString(exclude = {"policy"})
 @TypeDef(name = EGO_ACCESS_LEVEL_ENUM, typeClass = PostgreSQLEnumType.class)
 @JsonPropertyOrder({JavaFields.ID, JavaFields.POLICY, JavaFields.OWNER, JavaFields.ACCESS_LEVEL})
-@JsonInclude(JsonInclude.Include.ALWAYS)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = UserPermission.class, name = JavaFields.USERPERMISSIONS),
   @JsonSubTypes.Type(value = GroupPermission.class, name = JavaFields.GROUPPERMISSION)

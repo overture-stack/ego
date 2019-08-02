@@ -1,7 +1,6 @@
 package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.enums.JavaFields;
-import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
@@ -29,10 +28,10 @@ import lombok.ToString;
 @JsonView(Views.REST.class)
 @ToString(
     callSuper = true,
-    exclude = {LombokFields.owner})
+    exclude = {"owner"})
 @EqualsAndHashCode(
     callSuper = true,
-    of = {LombokFields.id})
+    of = {"id"})
 @NamedEntityGraph(
     name = "group-permission-entity-with-relationships",
     attributeNodes = {

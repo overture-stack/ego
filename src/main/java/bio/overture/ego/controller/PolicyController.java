@@ -90,6 +90,12 @@ public class PolicyController {
         paramType = "query",
         value = "Search for ids containing this text"),
     @ApiImplicitParam(
+        name = Fields.NAME,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Search for polices whose names containing this text"),
+    @ApiImplicitParam(
         name = LIMIT,
         required = false,
         dataType = "string",

@@ -15,12 +15,9 @@
  *
  */
 
-package bio.overture.ego.selenium;
+package selenium;
 
 import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.selenium.driver.WebDriverFactory;
-import bio.overture.ego.selenium.rule.AssumingSeleniumEnvironment;
-import bio.overture.ego.selenium.rule.SeleniumEnvironmentChecker;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.SneakyThrows;
@@ -33,6 +30,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.GenericContainer;
+import selenium.driver.WebDriverFactory;
+import selenium.rule.AssumingSeleniumEnvironment;
+import selenium.rule.SeleniumEnvironmentChecker;
 
 @Slf4j
 @ActiveProfiles({"test", "secure", "auth"})

@@ -15,7 +15,7 @@
  *
  */
 
-package bio.overture.ego.selenium.driver;
+package selenium.driver;
 
 import com.browserstack.local.Local;
 import java.io.FileReader;

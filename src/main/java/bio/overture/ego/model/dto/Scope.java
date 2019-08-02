@@ -2,6 +2,7 @@ package bio.overture.ego.model.dto;
 
 import static java.util.Objects.isNull;
 
+import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.params.ScopeName;
@@ -19,6 +20,11 @@ public class Scope {
 
   private Policy policy;
   private AccessLevel accessLevel;
+
+  public Scope(AbstractPermission permission) {
+    this.policy = permission.getPolicy();
+    this.accessLevel = permission.getAccessLevel();
+  }
 
   @Override
   public String toString() {

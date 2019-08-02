@@ -3,7 +3,9 @@ package bio.overture.ego.service;
 import static java.lang.String.format;
 
 import bio.overture.ego.model.exceptions.NotFoundException;
+import bio.overture.ego.repository.queryspecification.builder.AbstractSpecificationBuilder;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.NonNull;
@@ -33,6 +35,10 @@ public interface BaseService<T, ID> {
   void delete(ID id);
 
   Page<T> findAll(Specification specification, Pageable pageable);
+
+  Page<T> findAll(AbstractSpecificationBuilder<T, ID> specificationBuilder, Pageable pageable);
+
+  List<T> getMany(Collection<ID> ids, AbstractSpecificationBuilder<T, ID> specificationBuilder);
 
   Set<T> getMany(Collection<ID> ids);
 

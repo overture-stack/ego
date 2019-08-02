@@ -6,9 +6,11 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import bio.overture.ego.model.dto.CreateApplicationRequest;
+import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.dto.MaskDTO;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
+import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
@@ -120,6 +122,10 @@ public abstract class AbstractControllerTest {
     return deleteUsersFromGroupDeleteRequestAnd(g.getId(), userIds);
   }
 
+  protected StringResponseOption createUserPostRequestAnd(CreateUserRequest r) {
+    return initStringRequest().endpoint("/users").body(r).postAnd();
+  }
+
   protected StringResponseOption createApplicationPostRequestAnd(CreateApplicationRequest r) {
     return initStringRequest().endpoint("/applications").body(r).postAnd();
   }
@@ -138,8 +144,12 @@ public abstract class AbstractControllerTest {
     return addUsersToGroupPostRequestAnd(g.getId(), userIds);
   }
 
+  protected StringResponseOption getApplicationsForUserGetRequestAnd(UUID userId) {
+    return initStringRequest().endpoint("/users/%s/applications", userId).getAnd();
+  }
+
   protected StringResponseOption getApplicationsForUserGetRequestAnd(User u) {
-    return initStringRequest().endpoint("/users/%s/applications", u.getId()).getAnd();
+    return getApplicationsForUserGetRequestAnd(u.getId());
   }
 
   protected StringWebResource getUsersForApplicationEndpoint(UUID appId) {
@@ -156,6 +166,15 @@ public abstract class AbstractControllerTest {
 
   protected StringResponseOption getApplicationsForGroupGetRequestAnd(Group g) {
     return initStringRequest().endpoint("/groups/%s/applications", g.getId()).getAnd();
+  }
+
+  protected StringResponseOption addGroupsToUserPostRequestAnd(
+      UUID userId, Collection<UUID> groupIds) {
+    return initStringRequest().endpoint("/users/%s/groups", userId).body(groupIds).postAnd();
+  }
+
+  protected StringResponseOption addGroupsToUserPostRequestAnd(User u, Collection<Group> groups) {
+    return addGroupsToUserPostRequestAnd(u.getId(), convertToIds(groups));
   }
 
   protected StringResponseOption addApplicationsToUserPostRequestAnd(
@@ -180,8 +199,21 @@ public abstract class AbstractControllerTest {
     return initStringRequest().endpoint("/groups/%s", groupId).deleteAnd();
   }
 
+  protected StringResponseOption deleteUserDeleteRequestAnd(UUID userId) {
+    return initStringRequest().endpoint("/users/%s", userId).deleteAnd();
+  }
+
   protected StringResponseOption deleteGroupDeleteRequestAnd(Group g) {
     return deleteGroupDeleteRequestAnd(g.getId());
+  }
+
+  protected StringResponseOption deleteUserDeleteRequestAnd(User g) {
+    return deleteUserDeleteRequestAnd(g.getId());
+  }
+
+  protected StringResponseOption partialUpdateUserPutRequestAnd(
+      UUID userId, UpdateUserRequest updateRequest) {
+    return initStringRequest().endpoint("/users/%s", userId).body(updateRequest).putAnd();
   }
 
   protected StringResponseOption partialUpdateGroupPutRequestAnd(
@@ -205,8 +237,12 @@ public abstract class AbstractControllerTest {
     return initStringRequest().endpoint("/groups").body(g).postAnd();
   }
 
+  protected StringResponseOption getUserEntityGetRequestAnd(UUID userId) {
+    return initStringRequest().endpoint("/users/%s", userId).getAnd();
+  }
+
   protected StringResponseOption getUserEntityGetRequestAnd(User u) {
-    return initStringRequest().endpoint("/users/%s", u.getId()).getAnd();
+    return getUserEntityGetRequestAnd(u.getId());
   }
 
   protected StringResponseOption getApplicationEntityGetRequestAnd(UUID appId) {
@@ -221,8 +257,12 @@ public abstract class AbstractControllerTest {
     return initStringRequest().endpoint("/policies/%s", p.getId()).getAnd();
   }
 
+  protected StringResponseOption getGroupsForUserGetRequestAnd(UUID userId) {
+    return initStringRequest().endpoint("/users/%s/groups", userId).getAnd();
+  }
+
   protected StringResponseOption getGroupsForUserGetRequestAnd(User u) {
-    return initStringRequest().endpoint("/users/%s/groups", u.getId()).getAnd();
+    return getGroupsForUserGetRequestAnd(u.getId());
   }
 
   protected StringWebResource getGroupsForApplicationEndpoint(UUID appId) {
@@ -258,11 +298,41 @@ public abstract class AbstractControllerTest {
     return deleteApplicationsFromGroupDeleteRequestAnd(g.getId(), appIdsToDelete);
   }
 
+  protected StringResponseOption deleteApplicationsFromUserDeleteRequestAnd(
+      User user, Collection<Application> apps) {
+    val appIdsToDelete = convertToIds(apps);
+    return deleteApplicationsFromUserDeleteRequestAnd(user.getId(), appIdsToDelete);
+  }
+
+  protected StringResponseOption deleteApplicationsFromUserDeleteRequestAnd(
+      UUID userId, Collection<UUID> appIds) {
+    return initStringRequest()
+        .endpoint("/users/%s/applications/%s", userId, COMMA.join(appIds))
+        .deleteAnd();
+  }
+
+  protected StringResponseOption deleteGroupsFromUserDeleteRequestAnd(
+      User u, Collection<Group> groups) {
+    val groupIds = convertToIds(groups);
+    return deleteGroupsFromUserDeleteRequestAnd(u.getId(), groupIds);
+  }
+
+  protected StringResponseOption deleteGroupsFromUserDeleteRequestAnd(
+      UUID userId, Collection<UUID> groupIds) {
+    return initStringRequest()
+        .endpoint("/users/%s/groups/%s", userId, COMMA.join(groupIds))
+        .deleteAnd();
+  }
+
   protected StringResponseOption deleteApplicationsFromGroupDeleteRequestAnd(
       UUID groupId, Collection<UUID> appIds) {
     return initStringRequest()
         .endpoint("/groups/%s/applications/%s", groupId, COMMA.join(appIds))
         .deleteAnd();
+  }
+
+  protected StringWebResource listUsersEndpointAnd() {
+    return initStringRequest().endpoint("/users");
   }
 
   protected StringWebResource listGroupsEndpointAnd() {

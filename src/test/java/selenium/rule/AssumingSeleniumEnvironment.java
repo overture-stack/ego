@@ -15,13 +15,13 @@
  *
  */
 
-package bio.overture.ego.selenium.rule;
+package selenium.rule;
 
-import bio.overture.ego.selenium.driver.WebDriverFactory.DriverType;
 import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import selenium.driver.WebDriverFactory.DriverType;
 
 public class AssumingSeleniumEnvironment implements TestRule {
 

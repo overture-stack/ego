@@ -13,6 +13,8 @@ import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.join.GroupApplication;
 import bio.overture.ego.model.join.GroupApplicationId;
+import bio.overture.ego.model.join.UserApplication;
+import bio.overture.ego.model.join.UserApplicationId;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.join.UserGroupId;
 import java.util.Collection;
@@ -71,6 +73,11 @@ public class Converters {
     if (!isNull(nullableValue)) {
       consumer.accept(nullableValue);
     }
+  }
+
+  public static UserApplication convertToUserApplication(@NonNull User u, @NonNull Application a) {
+    val id = UserApplicationId.builder().applicationId(a.getId()).userId(u.getId()).build();
+    return UserApplication.builder().id(id).user(u).application(a).build();
   }
 
   public static UserGroup convertToUserGroup(@NonNull User u, @NonNull Group g) {

@@ -14,7 +14,7 @@
 [![Slack](http://slack.overture.bio/badge.svg)](http://slack.overture.bio)
 
 ## Table of Contents
-
+- [Documentation](#documentation)
 - [Introduction](#introduction)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
@@ -26,6 +26,10 @@
 - [Usage](#usage)
 - [Shoutouts](#shoutouts)
   - [Browserstack](#browserstack)
+
+## Documentation
+
+Explore documentation with the Ego [Read the Docs](https://ego.readthedocs.io/en/latest/).
 
 ## Introduction
 

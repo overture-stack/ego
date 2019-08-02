@@ -16,7 +16,7 @@
 
 package bio.overture.ego.repository.queryspecification;
 
-import static bio.overture.ego.model.enums.JavaFields.APPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.APPLICATION;
 import static bio.overture.ego.model.enums.JavaFields.EMAIL;
 import static bio.overture.ego.model.enums.JavaFields.FIRSTNAME;
 import static bio.overture.ego.model.enums.JavaFields.GROUP;
@@ -24,14 +24,17 @@ import static bio.overture.ego.model.enums.JavaFields.ID;
 import static bio.overture.ego.model.enums.JavaFields.LASTNAME;
 import static bio.overture.ego.model.enums.JavaFields.NAME;
 import static bio.overture.ego.model.enums.JavaFields.STATUS;
+import static bio.overture.ego.model.enums.JavaFields.USERAPPLICATIONS;
 import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
 
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.JavaFields;
+import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.utils.QueryUtils;
+import java.util.Collection;
 import java.util.UUID;
 import javax.persistence.criteria.Join;
 import lombok.NonNull;
@@ -58,10 +61,21 @@ public class UserSpecification extends SpecificationBase<User> {
     };
   }
 
+  public static Specification<User> inGroups(@NonNull Collection<UUID> groupIds) {
+    return (root, query, builder) -> {
+      query.distinct(true);
+      Join<User, UserGroup> userJoin = root.join(USERGROUPS);
+      Join<UserGroup, Group> groupJoin = userJoin.join(GROUP);
+
+      return builder.isTrue(groupJoin.<Integer>get(JavaFields.ID).in(groupIds));
+    };
+  }
+
   public static Specification<User> ofApplication(@NonNull UUID appId) {
     return (root, query, builder) -> {
       query.distinct(true);
-      Join<User, Application> applicationJoin = root.join(APPLICATIONS);
+      Join<User, UserApplication> userJoin = root.join(USERAPPLICATIONS);
+      Join<UserApplication, Application> applicationJoin = userJoin.join(APPLICATION);
       return builder.equal(applicationJoin.<Integer>get(ID), appId);
     };
   }

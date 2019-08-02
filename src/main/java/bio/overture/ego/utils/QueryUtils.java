@@ -25,7 +25,7 @@ public class QueryUtils {
   public static String prepareForQuery(String text) {
     String output = text;
     if (StringUtils.isEmpty(output)) {
-      return "";
+      return "%";
     }
     if (!output.contains("%")) {
       output = "%" + output + "%";

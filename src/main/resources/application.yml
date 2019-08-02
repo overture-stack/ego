@@ -1,5 +1,5 @@
 server:
-  port: 8088
+  port: 8081
 
 jwt:
   secret: testsecretisalsoasecret
@@ -18,7 +18,7 @@ spring.main.allow-bean-definition-overriding: true
 # Datasource
 spring.datasource:
   driver-class-name: org.postgresql.Driver
-  url: jdbc:postgresql://localhost:8432/ego?stringtype=unspecified
+  url: jdbc:postgresql://localhost:5432/ego?stringtype=unspecified
 
   username: postgres
   password: password
@@ -31,7 +31,7 @@ spring:
     enabled: false
   jackson:
     deserialization:
-      FAIL_ON_UNKNOWN_PROPERTIES: true
+      FAIL_ON_UNKNOWN_PROPERTIES: false
       FAIL_ON_NULL_FOR_PRIMITIVES: true
       FAIL_ON_NUMBERS_FOR_ENUMS: true
       FAIL_ON_READING_DUP_TREE_KEY: true
@@ -76,6 +76,7 @@ google:
     clientAuthenticationScheme: form
     scope:
       - email
+      - profile
   resource:
     userInfoUri: https://www.googleapis.com/oauth2/v3/userinfo
 
@@ -164,6 +165,16 @@ logging:
     threshold: ALL
   loggers:
     "org.skife.jdbi.v2": TRACE
+
+---
+###############################################################################
+# Profile - "demo"
+###############################################################################
+spring:
+  profiles: grpc
+
+grpc:
+  port: 50051
 
 ---
 ###############################################################################

@@ -21,11 +21,11 @@ import static com.google.common.collect.Sets.newHashSet;
 
 import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.model.enums.JavaFields;
-import bio.overture.ego.model.enums.LombokFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.model.join.GroupApplication;
+import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -42,7 +42,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -65,8 +64,8 @@ import org.hibernate.annotations.TypeDef;
 @AllArgsConstructor
 @Accessors(chain = true)
 @JsonView(Views.REST.class)
-@ToString(exclude = {LombokFields.groupApplications, LombokFields.users})
-@EqualsAndHashCode(of = {LombokFields.id})
+@ToString(exclude = {"groupApplications", "userApplications"})
+@EqualsAndHashCode(of = {"id"})
 @JsonPropertyOrder({
   JavaFields.ID,
   JavaFields.NAME,
@@ -135,9 +134,10 @@ public class Application implements Identifiable<UUID> {
 
   @JsonIgnore
   @Builder.Default
-  @ManyToMany(
-      mappedBy = JavaFields.APPLICATIONS,
+  @OneToMany(
+      mappedBy = JavaFields.APPLICATION,
+      cascade = CascadeType.ALL,
       fetch = FetchType.LAZY,
-      cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-  private Set<User> users = newHashSet();
+      orphanRemoval = true)
+  private Set<UserApplication> userApplications = newHashSet();
 }
