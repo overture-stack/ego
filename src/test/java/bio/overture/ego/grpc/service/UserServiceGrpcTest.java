@@ -2,7 +2,7 @@ package bio.overture.ego.grpc.service;
 
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
 import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
 
 import bio.overture.ego.grpc.GetUserRequest;
 import bio.overture.ego.grpc.ListUsersRequest;
@@ -125,21 +125,21 @@ public class UserServiceGrpcTest {
         stub.getUser(GetUserRequest.newBuilder().setId(testUser.getId().toString()).build());
 
     // Ensure all fields populated and value matches expected
-    assertThat(reply.getId().getValue()).isEqualTo(testUser.getId().toString());
-    assertThat(reply.getFirstName().getValue()).isEqualTo(testUser.getFirstName());
-    assertThat(reply.getLastName().getValue()).isEqualTo(testUser.getLastName());
-    assertThat(reply.getEmail().getValue()).isEqualTo(testUser.getEmail());
-    assertThat(reply.getStatus().getValue()).isEqualTo(testUser.getStatus().toString());
-    assertThat(reply.getPreferredLanguage().getValue())
-        .isEqualTo(testUser.getPreferredLanguage().toString());
-    assertThat(reply.getType().getValue()).isEqualTo(testUser.getType().toString());
+    assertEquals(reply.getId().getValue(), testUser.getId().toString());
+    assertEquals(reply.getFirstName().getValue(), testUser.getFirstName());
+    assertEquals(reply.getLastName().getValue(), testUser.getLastName());
+    assertEquals(reply.getEmail().getValue(), testUser.getEmail());
+    assertEquals(reply.getStatus().getValue(), testUser.getStatus().toString());
+    assertEquals(
+        reply.getPreferredLanguage().getValue(), testUser.getPreferredLanguage().toString());
+    assertEquals(reply.getType().getValue(), testUser.getType().toString());
 
-    assertThat(reply.hasCreatedAt()).isTrue();
-    assertThat(reply.hasLastLogin()).isTrue();
+    assertTrue(reply.hasCreatedAt());
+    assertTrue(reply.hasLastLogin());
 
-    assertThat(reply.getApplicationsList().size()).isEqualTo(1);
-    assertThat(reply.getGroupsList().size()).isEqualTo(1);
-    assertThat(reply.getScopesList().size()).isEqualTo(2);
+    assertEquals(reply.getApplicationsList().size(), 1);
+    assertEquals(reply.getGroupsList().size(), 1);
+    assertEquals(reply.getScopesList().size(), 2);
   }
 
   @Test
@@ -149,13 +149,13 @@ public class UserServiceGrpcTest {
     val reply = stub.listUsers(request);
 
     // Ensure response includes pagination data
-    assertThat(reply.hasPage()).isTrue();
-    assertThat(reply.getPage().getMaxResults()).isGreaterThanOrEqualTo(7);
+    assertTrue(reply.hasPage());
+    assertTrue(reply.getPage().getMaxResults() >= 7);
 
     // Make sure we got users in the response (quick sanity check, not in depth)
-    assertThat(reply.getUsersCount()).isGreaterThanOrEqualTo(7);
+    assertTrue(reply.getUsersCount() >= 7);
     val user = reply.getUsers(0);
-    assertThat(user.hasId()).isTrue();
+    assertTrue(user.hasId());
   }
 
   @Test
@@ -166,13 +166,13 @@ public class UserServiceGrpcTest {
     val reply1 = stub.listUsers(request1);
 
     // Correct number of users
-    assertThat(reply1.getUsersCount()).isEqualTo(2);
+    assertEquals(reply1.getUsersCount(), 2);
 
     // Correct pagination info
-    assertThat(reply1.hasPage()).isTrue();
-    assertThat(reply1.getPage().getMaxResults()).isGreaterThanOrEqualTo(7);
-    assertThat(reply1.getPage().hasNextPage()).isTrue();
-    assertThat(reply1.getPage().getNextPage().getValue()).isEqualTo(1);
+    assertTrue(reply1.hasPage());
+    assertTrue(reply1.getPage().getMaxResults() >= 7);
+    assertTrue(reply1.getPage().hasNextPage());
+    assertEquals(reply1.getPage().getNextPage().getValue(), 1);
 
     val user1 = reply1.getUsers(0);
 
@@ -185,13 +185,13 @@ public class UserServiceGrpcTest {
     val reply2 = stub.listUsers(request2);
 
     // Correct pagination info
-    assertThat(reply2.hasPage()).isTrue();
-    assertThat(reply2.getPage().getMaxResults()).isGreaterThanOrEqualTo(7);
-    assertThat(reply2.getPage().getNextPage().getValue()).isEqualTo(2);
+    assertTrue(reply2.hasPage());
+    assertTrue(reply2.getPage().getMaxResults() >= 7);
+    assertEquals(reply2.getPage().getNextPage().getValue(), 2);
 
     // different user (ensure we're not repeating user blocks)
     val user2 = reply2.getUsers(0);
-    assertThat(user1.getId()).isNotEqualTo(user2.getId());
+    assertTrue(user1.getId() != user2.getId());
   }
 
   @Test
@@ -202,8 +202,8 @@ public class UserServiceGrpcTest {
     val reply = stub.listUsers(request);
 
     // Correct number of users
-    assertThat(reply.getUsersCount()).isGreaterThanOrEqualTo(7);
-    assertThat(reply.getUsersCount()).isLessThanOrEqualTo(1000);
+    assertTrue(reply.getUsersCount() >= 7);
+    assertTrue(reply.getUsersCount() <= 1000);
   }
 
   @Test
@@ -214,7 +214,7 @@ public class UserServiceGrpcTest {
     val reply = stub.listUsers(request);
 
     // Correct number of users
-    assertThat(reply.getUsersCount()).isEqualTo(0);
-    assertThat(reply.getPage().hasNextPage()).isFalse();
+    assertEquals(reply.getUsersCount(), 0);
+    assertFalse(reply.getPage().hasNextPage());
   }
 }

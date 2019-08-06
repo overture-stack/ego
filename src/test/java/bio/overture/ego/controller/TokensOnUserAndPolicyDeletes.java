@@ -17,7 +17,8 @@
 
 package bio.overture.ego.controller;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
@@ -88,16 +89,15 @@ public class TokensOnUserAndPolicyDeletes extends AbstractControllerTest {
     val deleteUserResponse = initStringRequest().endpoint("/users/%s", userDelete.getId()).delete();
 
     val deleteStatusCode = deleteUserResponse.getStatusCode();
-    assertThat(deleteStatusCode).isEqualTo(HttpStatus.OK);
+    assertEquals(deleteStatusCode, HttpStatus.OK);
 
     val checkTokenAfterDeleteResponse = checkToken(tokenToDelete);
     // Should be revoked
-    assertThat(checkTokenAfterDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterDeleteResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
 
     val checkTokenRemainedAfterDeleteResponse = checkToken(tokenToKeep);
     // Should be valid
-    assertThat(checkTokenRemainedAfterDeleteResponse.getStatusCode())
-        .isEqualTo(HttpStatus.MULTI_STATUS);
+    assertEquals(checkTokenRemainedAfterDeleteResponse.getStatusCode(), HttpStatus.MULTI_STATUS);
   }
 
   /**
@@ -117,16 +117,15 @@ public class TokensOnUserAndPolicyDeletes extends AbstractControllerTest {
     val deletePolicyResponse =
         initStringRequest().endpoint("/policies/%s", policy1.getId()).delete();
     val deleteStatusCode = deletePolicyResponse.getStatusCode();
-    assertThat(deleteStatusCode).isEqualTo(HttpStatus.OK);
+    assertEquals(deleteStatusCode, HttpStatus.OK);
 
     val checkTokenAfterDeleteResponse = checkToken(tokenToDelete);
     // Should be revoked
-    assertThat(checkTokenAfterDeleteResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterDeleteResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
 
     val checkTokenRemainedAfterDeleteResponse = checkToken(tokenToKeep);
     // Should be valid
-    assertThat(checkTokenRemainedAfterDeleteResponse.getStatusCode())
-        .isEqualTo(HttpStatus.MULTI_STATUS);
+    assertEquals(checkTokenRemainedAfterDeleteResponse.getStatusCode(), HttpStatus.MULTI_STATUS);
   }
 
   /**
@@ -160,8 +159,8 @@ public class TokensOnUserAndPolicyDeletes extends AbstractControllerTest {
     val checkTokenResponse = checkToken(accessToken);
 
     val checkStatusCode = checkTokenResponse.getStatusCode();
-    assertThat(checkStatusCode).isEqualTo(HttpStatus.MULTI_STATUS);
-    assertThat(checkTokenResponse.getBody()).contains(policy.getName() + "." + "WRITE");
+    assertEquals(checkStatusCode, HttpStatus.MULTI_STATUS);
+    assertTrue(checkTokenResponse.getBody().contains(policy.getName() + "." + "WRITE"));
 
     return accessToken;
   }
