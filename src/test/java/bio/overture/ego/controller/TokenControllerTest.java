@@ -6,7 +6,7 @@ import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static java.util.Arrays.asList;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.PermissionRequest;
@@ -98,9 +98,9 @@ public class TokenControllerTest extends AbstractControllerTest {
             "",
             entityGenerator.getScopes("collab.READ"));
 
-    assertThat(tokenService.getById(tokenRevoke.getId()).isRevoked()).isFalse();
-    assertThat(tokenService.getById(otherToken.getId()).isRevoked()).isFalse();
-    assertThat(tokenService.getById(otherToken2.getId()).isRevoked()).isFalse();
+    assertFalse(tokenService.getById(tokenRevoke.getId()).isRevoked());
+    assertFalse(tokenService.getById(otherToken.getId()).isRevoked());
+    assertFalse(tokenService.getById(otherToken2.getId()).isRevoked());
 
     val scopes = "collab.READ,aws.READ";
     val params = new LinkedMultiValueMap<String, Object>();
@@ -112,10 +112,10 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/token").body(params).post();
     val responseStatus = response.getStatusCode();
 
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
-    assertThat(tokenService.getById(tokenRevoke.getId()).isRevoked()).isTrue();
-    assertThat(tokenService.getById(otherToken.getId()).isRevoked()).isFalse();
-    assertThat(tokenService.getById(otherToken2.getId()).isRevoked()).isFalse();
+    assertEquals(responseStatus, HttpStatus.OK);
+    assertTrue(tokenService.getById(tokenRevoke.getId()).isRevoked());
+    assertFalse(tokenService.getById(otherToken.getId()).isRevoked());
+    assertFalse(tokenService.getById(otherToken2.getId()).isRevoked());
   }
 
   @SneakyThrows
@@ -151,7 +151,7 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/token").body(params).post();
     val statusCode = response.getStatusCode();
 
-    assertThat(statusCode).isEqualTo(HttpStatus.OK);
+    assertEquals(statusCode, HttpStatus.OK);
     assertThatJson(response.getBody())
         .when(IGNORING_ARRAY_ORDER)
         .node("scope")
@@ -187,11 +187,11 @@ public class TokenControllerTest extends AbstractControllerTest {
 
     val response = initStringRequest().endpoint("o/token").body(params).post();
     val statusCode = response.getStatusCode();
-    assertThat(statusCode).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertEquals(statusCode, HttpStatus.INTERNAL_SERVER_ERROR);
 
     val jsonResponse = MAPPER.readTree(response.getBody());
-    assertThat(jsonResponse.get("error").asText())
-        .isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+    assertEquals(
+        jsonResponse.get("error").asText(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
   }
 
   @SneakyThrows
@@ -230,7 +230,7 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/token").body(params).post();
     val statusCode = response.getStatusCode();
 
-    assertThat(statusCode).isEqualTo(HttpStatus.OK);
+    assertEquals(statusCode, HttpStatus.OK);
     assertThatJson(response.getBody())
         .when(IGNORING_ARRAY_ORDER)
         .node("scope")
@@ -275,10 +275,9 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/token").body(params).post();
 
     val statusCode = response.getStatusCode();
-    assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND);
+    assertEquals(statusCode, HttpStatus.NOT_FOUND);
     val jsonResponse = MAPPER.readTree(response.getBody());
-    assertThat(jsonResponse.get("error").asText())
-        .isEqualTo(HttpStatus.NOT_FOUND.getReasonPhrase());
+    assertEquals(jsonResponse.get("error").asText(), HttpStatus.NOT_FOUND.getReasonPhrase());
   }
 
   @SneakyThrows
@@ -296,11 +295,11 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/token").body(params).post();
 
     val statusCode = response.getStatusCode();
-    assertThat(statusCode).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertEquals(statusCode, HttpStatus.INTERNAL_SERVER_ERROR);
 
     val jsonResponse = MAPPER.readTree(response.getBody());
-    assertThat(jsonResponse.get("error").asText())
-        .isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+    assertEquals(
+        jsonResponse.get("error").asText(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
   }
 
   @SneakyThrows
@@ -319,7 +318,7 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/check_token").body(params).post();
 
     val statusCode = response.getStatusCode();
-    assertThat(statusCode).isEqualTo(HttpStatus.UNAUTHORIZED);
+    assertEquals(statusCode, HttpStatus.UNAUTHORIZED);
   }
 
   @SneakyThrows
@@ -338,7 +337,7 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/check_token").body(params).post();
 
     val statusCode = response.getStatusCode();
-    assertThat(statusCode).isEqualTo(HttpStatus.MULTI_STATUS);
+    assertEquals(statusCode, HttpStatus.MULTI_STATUS);
   }
 
   @SneakyThrows
@@ -354,7 +353,7 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/check_token").body(params).post();
 
     val statusCode = response.getStatusCode();
-    assertThat(statusCode).isEqualTo(HttpStatus.UNAUTHORIZED);
+    assertEquals(statusCode, HttpStatus.UNAUTHORIZED);
   }
 
   @SneakyThrows
@@ -383,7 +382,7 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/scopes?userName=%s", userName).get();
 
     val statusCode = response.getStatusCode();
-    assertThat(statusCode).isEqualTo(HttpStatus.OK);
+    assertEquals(statusCode, HttpStatus.OK);
     assertThatJson(response.getBody())
         .when(IGNORING_ARRAY_ORDER)
         .node("scopes")
@@ -397,7 +396,7 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/scopes?userName=%s", userName).get();
 
     val statusCode = response.getStatusCode();
-    assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND);
+    assertEquals(statusCode, HttpStatus.NOT_FOUND);
   }
 
   @SneakyThrows
@@ -421,7 +420,7 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/token?user_id=%s", userId).get();
 
     val statusCode = response.getStatusCode();
-    assertThat(statusCode).isEqualTo(HttpStatus.OK);
+    assertEquals(statusCode, HttpStatus.OK);
 
     // Result should only have unrevoked tokens, ignoring the "exp" field.
     val expected =
@@ -443,8 +442,8 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/token?user_id=%s", userId).get();
 
     val statusCode = response.getStatusCode();
-    assertThat(statusCode).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isEqualTo("[]");
+    assertEquals(statusCode, HttpStatus.OK);
+    assertEquals(response.getBody(), "[]");
   }
 
   @SneakyThrows
@@ -464,17 +463,17 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/token").body(params).post();
     val responseStatus = response.getStatusCode();
 
-    assertThat(responseStatus).isEqualTo(HttpStatus.OK);
+    assertEquals(responseStatus, HttpStatus.OK);
 
     val listResponse =
         initStringRequest().endpoint("o/token?user_id=%s", user.getId().toString()).get();
     val listStatusCode = listResponse.getStatusCode();
-    assertThat(listStatusCode).isEqualTo(HttpStatus.OK);
+    assertEquals(listStatusCode, HttpStatus.OK);
 
     log.info(listResponse.getBody());
     val responseJson = MAPPER.readTree(listResponse.getBody());
     val exp = responseJson.get(0).get("exp").asInt();
-    assertThat(exp).isNotZero();
-    assertThat(exp).isPositive();
+    assertTrue(exp != 0);
+    assertTrue(exp > 0);
   }
 }

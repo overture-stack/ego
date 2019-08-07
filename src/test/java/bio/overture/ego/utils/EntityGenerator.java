@@ -13,7 +13,8 @@ import static java.lang.Math.abs;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import bio.overture.ego.model.dto.*;
 import bio.overture.ego.model.entity.Application;
@@ -308,7 +309,7 @@ public class EntityGenerator {
 
   public Policy setupPolicy(@NonNull String csv) {
     val args = newArrayList(COMMA_SPLITTER.split(csv));
-    assertThat(args).hasSize(2);
+    assertEquals(args.size(), 2);
     val name = args.get(0);
 
     return setupSinglePolicy(name);
@@ -427,7 +428,7 @@ public class EntityGenerator {
   }
 
   public static int randomBoundedInt(int minInclusive, int maxExclusive) {
-    assertThat(MAX_VALUE - maxExclusive).isGreaterThan(minInclusive);
+    assertTrue((MAX_VALUE - maxExclusive) > minInclusive);
     return minInclusive + randomBoundedInt(maxExclusive);
   }
 

@@ -2,8 +2,7 @@ package bio.overture.ego.grpc.service;
 
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.Assert.*;
 
 import bio.overture.ego.grpc.GetUserRequest;
 import bio.overture.ego.grpc.ListUsersRequest;
@@ -133,18 +132,20 @@ public class UserServiceGrpcAuthTest {
     }
   }
 
-  @Test
+  @Test()
   public void getUser_noAuth_rejected() {
 
     val noAuthStub = MetadataUtils.attachHeaders(stub, emptyAuthMeta);
 
     // Test that the interceptor rejects this request
-    assertThatExceptionOfType(StatusRuntimeException.class)
-        .as("Request should be rejected due to missing JWT")
-        .isThrownBy(
-            () ->
-                noAuthStub.getUser(
-                    GetUserRequest.newBuilder().setId(UUID.randomUUID().toString()).build()));
+    try {
+      noAuthStub.getUser(GetUserRequest.newBuilder().setId(UUID.randomUUID().toString()).build());
+    } catch (Exception e) {
+      assertEquals(
+          "Request should be rejected due to missing JWT",
+          StatusRuntimeException.class,
+          e.getClass());
+    }
   }
 
   @Test
@@ -155,7 +156,7 @@ public class UserServiceGrpcAuthTest {
     // Test that the interceptor rejects this request
     val reply =
         authStub.getUser(GetUserRequest.newBuilder().setId(testUser.getId().toString()).build());
-    assertThat(reply.getId().getValue()).isEqualTo(testUser.getId().toString());
+    assertEquals(reply.getId().getValue(), testUser.getId().toString());
   }
 
   @Test
@@ -164,11 +165,14 @@ public class UserServiceGrpcAuthTest {
     val authStub = MetadataUtils.attachHeaders(stub, userAuthMeta);
     UUID randomId = generateNonExistentId(userService);
 
-    // Test that the interceptor rejects this request
-    assertThatExceptionOfType(StatusRuntimeException.class)
-        .as("User should not be allowed to access data of a different user.")
-        .isThrownBy(
-            () -> authStub.getUser(GetUserRequest.newBuilder().setId(randomId.toString()).build()));
+    try {
+      authStub.getUser(GetUserRequest.newBuilder().setId(randomId.toString()).build());
+    } catch (Exception e) {
+      assertEquals(
+          "User should not be allowed to access data of a different user.",
+          StatusRuntimeException.class,
+          e.getClass());
+    }
   }
 
   @Test
@@ -178,7 +182,7 @@ public class UserServiceGrpcAuthTest {
     // Test that the interceptor rejects this request
     val reply =
         authStub.getUser(GetUserRequest.newBuilder().setId(testUser.getId().toString()).build());
-    assertThat(reply.getId().getValue()).isEqualTo(testUser.getId().toString());
+    assertEquals(reply.getId().getValue(), testUser.getId().toString());
   }
 
   @Test
@@ -188,7 +192,7 @@ public class UserServiceGrpcAuthTest {
     // Test that the interceptor rejects this request
     val reply =
         authStub.getUser(GetUserRequest.newBuilder().setId(testUser.getId().toString()).build());
-    assertThat(reply.getId().getValue()).isEqualTo(testUser.getId().toString());
+    assertEquals(reply.getId().getValue(), (testUser.getId().toString()));
   }
 
   @Test
@@ -196,9 +200,14 @@ public class UserServiceGrpcAuthTest {
     val authStub = MetadataUtils.attachHeaders(stub, emptyAuthMeta);
 
     // Test that the interceptor rejects this request
-    assertThatExceptionOfType(StatusRuntimeException.class)
-        .as("Request should be rejected due to missing JWT")
-        .isThrownBy(() -> authStub.listUsers(ListUsersRequest.newBuilder().build()));
+    try {
+      authStub.listUsers(ListUsersRequest.newBuilder().build());
+    } catch (Exception e) {
+      assertEquals(
+          "Request should be rejected due to missing JWT",
+          StatusRuntimeException.class,
+          e.getClass());
+    }
   }
 
   @Test
@@ -207,9 +216,14 @@ public class UserServiceGrpcAuthTest {
     val authStub = MetadataUtils.attachHeaders(stub, userAuthMeta);
 
     // Test that the interceptor rejects this request
-    assertThatExceptionOfType(StatusRuntimeException.class)
-        .as("Request should be rejected due to missing JWT")
-        .isThrownBy(() -> authStub.listUsers(ListUsersRequest.newBuilder().build()));
+    try {
+      authStub.listUsers(ListUsersRequest.newBuilder().build());
+    } catch (Exception e) {
+      assertEquals(
+          "Request should be rejected due to missing JWT",
+          StatusRuntimeException.class,
+          e.getClass());
+    }
   }
 
   @Test
@@ -218,7 +232,7 @@ public class UserServiceGrpcAuthTest {
 
     // Test that the interceptor rejects this request
     val reply = authStub.listUsers(ListUsersRequest.newBuilder().build());
-    assertThat(reply.getUsersCount()).isGreaterThanOrEqualTo(2);
+    assertTrue(reply.getUsersCount() >= 2);
   }
 
   @Test
@@ -227,6 +241,6 @@ public class UserServiceGrpcAuthTest {
 
     // Test that the interceptor rejects this request
     val reply = authStub.listUsers(ListUsersRequest.newBuilder().build());
-    assertThat(reply.getUsersCount()).isGreaterThanOrEqualTo(2);
+    assertTrue(reply.getUsersCount() >= 2);
   }
 }
