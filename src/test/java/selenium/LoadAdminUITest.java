@@ -19,12 +19,12 @@ package selenium;
 
 import static bio.overture.ego.model.enums.ApplicationType.ADMIN;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static org.junit.Assert.*;
 
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.service.ApplicationService;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +56,7 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
     driver.get("http://localhost:" + uiPort);
     val titleText =
         driver.findElement(By.className("Login")).findElement(By.tagName("h1")).getText();
-    Assertions.assertThat(titleText).isEqualTo("Admin Portal");
+    assertEquals(titleText, "Admin Portal");
 
     driver.findElement(By.className("fa-facebook")).click();
 
@@ -76,8 +76,7 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
             .findElement(By.tagName("div"))
             .findElement(By.tagName("div"))
             .getText();
-    Assertions.assertThat(messageDiv)
-        .contains("Your account does not have an administrator userType.");
+    assertTrue(messageDiv.contains("Your account does not have an administrator userType."));
 
     Thread.sleep(1000);
   }

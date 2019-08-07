@@ -3,7 +3,7 @@ package bio.overture.ego.model.enums;
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -23,9 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class AccessLevelTest {
   @Test
   public void testFromValue() {
-    assertThat(AccessLevel.fromValue("read")).isEqualByComparingTo(AccessLevel.READ);
-    assertThat(AccessLevel.fromValue("write")).isEqualByComparingTo(AccessLevel.WRITE);
-    assertThat(AccessLevel.fromValue("deny")).isEqualByComparingTo(AccessLevel.DENY);
+    assertEquals(AccessLevel.fromValue("read"), AccessLevel.READ);
+    assertEquals(AccessLevel.fromValue("write"), AccessLevel.WRITE);
+    assertEquals(AccessLevel.fromValue("deny"), AccessLevel.DENY);
   }
 
   @Test
