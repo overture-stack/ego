@@ -191,7 +191,7 @@ public class UserServiceGrpcTest {
 
     // different user (ensure we're not repeating user blocks)
     val user2 = reply2.getUsers(0);
-    assertTrue(user1.getId() != user2.getId());
+    assertFalse(user1.getId().equals(user2.getId()));
   }
 
   @Test
