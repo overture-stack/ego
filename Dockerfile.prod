@@ -3,7 +3,7 @@ WORKDIR /usr/src/app
 ADD . .
 RUN ./mvnw package -Dmaven.test.skip=true
 
-FROM java:8-alpine
+FROM openjdk:11.0.3-jdk
 COPY --from=0 /usr/src/app/target/ego-*-exec.jar /usr/bin/ego.jar
 ENTRYPOINT ["java", "-jar", "/usr/bin/ego.jar"]
 EXPOSE 8081/tcp
