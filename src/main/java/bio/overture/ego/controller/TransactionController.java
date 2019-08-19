@@ -39,6 +39,7 @@ import javax.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,15 +47,27 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
+@Transactional
 @RequestMapping("/transaction")
 public class TransactionController {
   PolicyService policyService;
   GroupService groupService;
   GroupPermissionService groupPermissionService;
+
+  @Autowired
+  TransactionController(
+      PolicyService policyService,
+      GroupService groupService,
+      GroupPermissionService groupPermissionService) {
+    this.policyService = policyService;
+    this.groupService = groupService;
+    this.groupPermissionService = groupPermissionService;
+  }
 
   @ApplicationScoped()
   @RequestMapping(method = POST, value = "/group_permissions")
@@ -62,24 +75,10 @@ public class TransactionController {
   @SneakyThrows
   public @ResponseBody String createGroupPermissions(
       @RequestHeader(value = "Authorization") final String authToken,
-      @RequestParam(value = "requests") final List<GroupPermissionRequest> requests) {
-    Exception exception = null;
-    List<UUID> permissionIds = List.of();
+      @RequestBody() final List<GroupPermissionRequest> requests) {
 
-    // TODO: begin transaction
-    try {
-      permissionIds = createPermissions(requests);
-    } catch (Exception e) {
-      exception = e;
-    }
-
-    if (exception == null) {
-      // TODO: commit transaction
-      return permissionIds.toString();
-    }
-
-    // TODO: rollback transaction
-    return exception.getMessage();
+    createPermissions(requests);
+    return "OK";
   }
 
   List<UUID> createPermissions(List<GroupPermissionRequest> requests) {
@@ -103,8 +102,8 @@ public class TransactionController {
     val newPermission = getPermission(newGroup, policy, request.getMask());
 
     if (newPermission.isEmpty()) {
-      throw new RuntimeException(
-          "We just created this permission, and now it's *GONE*? WHY? WHY? WHY?");
+      throw new RuntimeException(format("Can't create permission for group '%s', policy'%s', mask'%s'",
+        request.getGroupName(), request.getPolicyName(), request.getMask()));
     }
     return newPermission.get().getId();
   }
@@ -121,19 +120,30 @@ public class TransactionController {
   }
 
   @ApplicationScoped()
-  @RequestMapping(method = DELETE, value = "/group_permissions")
+  @RequestMapping(method = DELETE, value = "/groups")
   @ResponseStatus(value = OK)
   public @ResponseBody String deleteGroupPermissions(
       @RequestHeader(value = "Authorization") final String authorization,
-      @RequestParam(value = "token") final String token) {
-    return "{\"ERROR\": \"NOT IMPLEMENTED\"}";
+      @RequestBody() final DeleteRequest request) {
+    mapToList(request.getGroupNames(), name -> deleteGroupByName(name));
+    mapToList(request.getPolicyNames(), name -> deletePolicyByName(name));
+    return "OK";
   }
 
-  @ExceptionHandler({InvalidScopeException.class})
-  public ResponseEntity<Object> handleInvalidScopeException(
-      HttpServletRequest req, InvalidTokenException ex) {
-    log.error(format("Invalid PolicyIdStringWithMaskName: %s", ex.getMessage()));
-    return new ResponseEntity<>("{\"error\": \"Invalid Scope\"}", new HttpHeaders(), UNAUTHORIZED);
+  private String deleteGroupByName(String name) {
+    val group = groupService.findByName(name);
+    if (group.isPresent()) {
+      groupService.delete(group.get().getId());
+    }
+    return "OK";
+  }
+
+  private String deletePolicyByName(String name) {
+    val policy = policyService.findByName(name);
+    if (policy.isPresent()) {
+      policyService.delete(policy.get().getId());
+    }
+    return "OK";
   }
 
   @ExceptionHandler({InvalidRequestException.class})
@@ -141,13 +151,6 @@ public class TransactionController {
       HttpServletRequest req, InvalidRequestException ex) {
     log.error(format("Invalid request: %s", ex.getMessage()));
     return new ResponseEntity<>("{\"error\": \"%s\"}".format(ex.getMessage()), BAD_REQUEST);
-  }
-
-  @ExceptionHandler({UsernameNotFoundException.class})
-  public ResponseEntity<Object> handleUserNotFoundException(
-      HttpServletRequest req, InvalidTokenException ex) {
-    log.error(format("User not found: %s", ex.getMessage()));
-    return new ResponseEntity<>("{\"error\": \"User not found\"}", UNAUTHORIZED);
   }
 
   private String jsonEscape(String text) {
