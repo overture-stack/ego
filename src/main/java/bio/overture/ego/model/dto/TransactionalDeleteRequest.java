@@ -1,17 +1,19 @@
 package bio.overture.ego.model.dto;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DeleteRequest {
+/***
+ * A request to delete all of the given groups and policies in a single transaction.
+ */
+public class TransactionalDeleteRequest {
   List<String> groupNames;
   List<String> policyNames;
 }

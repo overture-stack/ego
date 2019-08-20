@@ -10,7 +10,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GroupPermissionRequest {
+/***
+ * A request create the group, policy and/or permission necessary to ensure that the specified group exists, and
+ * has a group permission consisting of the specified policy at the specified accessLevel.
+ */
+public class TransactionalGroupPermissionRequest {
   private String groupName;
   private String policyName;
   private AccessLevel mask;

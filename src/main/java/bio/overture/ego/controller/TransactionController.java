@@ -43,10 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
-import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
-import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -73,19 +70,23 @@ public class TransactionController {
   @RequestMapping(method = POST, value = "/group_permissions")
   @ResponseStatus(value = OK)
   @SneakyThrows
+  /***
+   * Ensure that all of the specified permissions have been granted to the specified groups as a single transaction,
+   * creating any creating groups, policies, and/or permissions necessary to do so.
+   */
   public @ResponseBody String createGroupPermissions(
       @RequestHeader(value = "Authorization") final String authToken,
-      @RequestBody() final List<GroupPermissionRequest> requests) {
+      @RequestBody() final List<TransactionalGroupPermissionRequest> requests) {
 
     createPermissions(requests);
     return "OK";
   }
 
-  List<UUID> createPermissions(List<GroupPermissionRequest> requests) {
+  List<UUID> createPermissions(List<TransactionalGroupPermissionRequest> requests) {
     return mapToList(requests, this::createPermission);
   }
 
-  UUID createPermission(GroupPermissionRequest request) {
+  UUID createPermission(TransactionalGroupPermissionRequest request) {
     val policy = policyService.getPolicyByNameCreateIfNecessary(request.getPolicyName());
     val group = groupService.getGroupByNameCreateIfNecessary(request.getGroupName());
     val mask = request.getMask();
@@ -102,8 +103,10 @@ public class TransactionController {
     val newPermission = getPermission(newGroup, policy, request.getMask());
 
     if (newPermission.isEmpty()) {
-      throw new RuntimeException(format("Can't create permission for group '%s', policy'%s', mask'%s'",
-        request.getGroupName(), request.getPolicyName(), request.getMask()));
+      throw new RuntimeException(
+          format(
+              "Can't create permission for group '%s', policy'%s', mask'%s'",
+              request.getGroupName(), request.getPolicyName(), request.getMask()));
     }
     return newPermission.get().getId();
   }
@@ -124,7 +127,7 @@ public class TransactionController {
   @ResponseStatus(value = OK)
   public @ResponseBody String deleteGroupPermissions(
       @RequestHeader(value = "Authorization") final String authorization,
-      @RequestBody() final DeleteRequest request) {
+      @RequestBody() final TransactionalDeleteRequest request) {
     mapToList(request.getGroupNames(), name -> deleteGroupByName(name));
     mapToList(request.getPolicyNames(), name -> deletePolicyByName(name));
     return "OK";
