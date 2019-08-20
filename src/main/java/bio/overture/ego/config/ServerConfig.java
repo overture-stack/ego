@@ -28,7 +28,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 
 @Configuration
 @EnableWebSecurity
-@Profile("default")
+@Profile("!auth")
 public class ServerConfig extends WebSecurityConfigurerAdapter {
 
   @Bean
