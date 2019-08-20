@@ -4,6 +4,7 @@ import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.PENDING;
 import static bio.overture.ego.model.enums.UserType.ADMIN;
+import static bio.overture.ego.model.enums.UserType.USER;
 import static bio.overture.ego.utils.CollectionUtils.listOf;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.Splitters.COMMA_SPLITTER;
@@ -122,19 +123,27 @@ public class EntityGenerator {
   }
 
   public User setupUser(String name) {
+    return setupUser(name, ADMIN);
+  }
+
+  public User setupUser(String name, UserType type) {
     val names = name.split(" ", 2);
     val userName = String.format("%s%s@domain.com", names[0], names[1]);
     return userService
         .findByName(userName)
         .orElseGet(
             () -> {
-              val createUserRequest = createUser(name);
+              val createUserRequest = createUser(name, type);
               return userService.create(createUserRequest);
             });
   }
 
   public List<User> setupUsers(String... users) {
-    return mapToList(listOf(users), this::setupUser);
+    return mapToList(listOf(users), user -> setupUser(user, ADMIN));
+  }
+
+  public List<User> setupPublicUsers(String... users) {
+    return mapToList(listOf(users), user -> setupUser(user, USER));
   }
 
   public void setupTestUsers() {
@@ -156,20 +165,20 @@ public class EntityGenerator {
     return groupService.associateUsersWithGroup(group.getId(), userIds);
   }
 
-  private CreateUserRequest createUser(String firstName, String lastName) {
+  private CreateUserRequest createUser(String firstName, String lastName, UserType type) {
     return CreateUserRequest.builder()
         .email(String.format("%s%s@domain.com", firstName, lastName))
         .firstName(firstName)
         .lastName(lastName)
         .status(APPROVED)
         .preferredLanguage(ENGLISH)
-        .type(ADMIN)
+        .type(type)
         .build();
   }
 
-  private CreateUserRequest createUser(String name) {
+  private CreateUserRequest createUser(String name, UserType type) {
     val names = name.split(" ", 2);
-    return createUser(names[0], names[1]);
+    return createUser(names[0], names[1], type);
   }
 
   private GroupRequest createGroupRequest(String name) {
