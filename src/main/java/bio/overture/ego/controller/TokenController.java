@@ -32,9 +32,13 @@ import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.dto.UserScopesResponse;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.security.ApplicationScoped;
+import bio.overture.ego.security.AuthorizationManager;
 import bio.overture.ego.service.TokenService;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +53,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
@@ -69,9 +74,14 @@ public class TokenController {
   /** Dependencies */
   private final TokenService tokenService;
 
+  private final AuthorizationManager
+      authorizationManager; // Need this here due to context sensitive checks
+
   @Autowired
-  public TokenController(@NonNull TokenService tokenService) {
+  public TokenController(
+      @NonNull TokenService tokenService, @NonNull AuthorizationManager authorizationManager) {
     this.tokenService = tokenService;
+    this.authorizationManager = authorizationManager;
   }
 
   @ApplicationScoped()
@@ -98,11 +108,35 @@ public class TokenController {
   @ResponseStatus(value = OK)
   public @ResponseBody TokenResponse issueToken(
       @RequestHeader(value = "Authorization") final String authorization,
-      @RequestParam(value = "user_id") UUID user_id,
+      @RequestParam(value = "user_id") UUID userId,
       @RequestParam(value = "scopes") ArrayList<String> scopes,
       @RequestParam(value = "description", required = false) String description) {
+
+    // Check if admin, if not, then check if owner
+    val authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (!authorizationManager.authorizeWithAdminRole(authentication)) {
+      val principal = authentication.getPrincipal();
+      if (principal instanceof User) {
+        val user = (User) principal;
+        if (!user.getId().equals(userId)) {
+          log.error(
+              "User: {} is illegally trying to generate access tokens for user: {}",
+              user.getId().toString(),
+              userId.toString());
+          throw new ForbiddenException("Action is forbidden for this user.");
+        }
+      } else {
+        val app = (Application) principal;
+        log.warn(
+            "Application {} tried to create an access token for user {} but is not an ADMIN application.",
+            app.getId().toString(),
+            userId.toString());
+        throw new ForbiddenException("Action is forbidden for this application.");
+      }
+    }
+
     val scopeNames = mapToList(scopes, ScopeName::new);
-    val t = tokenService.issueToken(user_id, scopeNames, description);
+    val t = tokenService.issueToken(userId, scopeNames, description);
     Set<String> issuedScopes = mapToSet(t.scopes(), Scope::toString);
     return TokenResponse.builder()
         .accessToken(t.getName())

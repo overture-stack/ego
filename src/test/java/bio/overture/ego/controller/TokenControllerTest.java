@@ -295,11 +295,10 @@ public class TokenControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/token").body(params).post();
 
     val statusCode = response.getStatusCode();
-    assertEquals(statusCode, HttpStatus.INTERNAL_SERVER_ERROR);
+    assertEquals(statusCode, HttpStatus.FORBIDDEN);
 
     val jsonResponse = MAPPER.readTree(response.getBody());
-    assertEquals(
-        jsonResponse.get("error").asText(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+    assertEquals(jsonResponse.get("error").asText(), HttpStatus.FORBIDDEN.getReasonPhrase());
   }
 
   @SneakyThrows
