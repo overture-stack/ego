@@ -70,12 +70,12 @@ public class TransactionController {
   @RequestMapping(method = POST, value = "/group_permissions")
   @ResponseStatus(value = OK)
   @SneakyThrows
-  /***
-   * Ensure that all of the specified permissions have been granted to the specified groups as a single transaction,
-   * creating any creating groups, policies, and/or permissions necessary to do so.
+  /**
+   * * Ensure that all of the specified permissions have been granted to the specified groups as a
+   * single transaction, creating any creating groups, policies, and/or permissions necessary to do
+   * so.
    */
   public @ResponseBody String createGroupPermissions(
-      @RequestHeader(value = "Authorization") final String authToken,
       @RequestBody() final List<TransactionalGroupPermissionRequest> requests) {
 
     createPermissions(requests);
@@ -123,10 +123,9 @@ public class TransactionController {
   }
 
   @ApplicationScoped()
-  @RequestMapping(method = DELETE, value = "/groups")
+  @RequestMapping(method = POST, value = "/mass_delete")
   @ResponseStatus(value = OK)
   public @ResponseBody String deleteGroupPermissions(
-      @RequestHeader(value = "Authorization") final String authorization,
       @RequestBody() final TransactionalDeleteRequest request) {
     mapToList(request.getGroupNames(), name -> deleteGroupByName(name));
     mapToList(request.getPolicyNames(), name -> deletePolicyByName(name));
