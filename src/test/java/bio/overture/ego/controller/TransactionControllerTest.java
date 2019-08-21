@@ -17,33 +17,22 @@
 
 package bio.overture.ego.controller;
 
+import static org.junit.Assert.assertEquals;
+
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.TransactionalDeleteRequest;
 import bio.overture.ego.model.dto.TransactionalGroupPermissionRequest;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.model.enums.ApplicationType;
-import bio.overture.ego.service.TokenService;
-import bio.overture.ego.utils.EntityGenerator;
-import lombok.SneakyThrows;
+import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.util.LinkedMultiValueMap;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.*;
-
-import static org.junit.Assert.assertEquals;
 
 @Slf4j
 @ActiveProfiles({"test"})
@@ -60,39 +49,33 @@ public class TransactionControllerTest extends AbstractControllerTest {
     return enableLogging;
   }
 
-@Override
- protected void beforeTest() { }
+  @Override
+  protected void beforeTest() {}
 
-  /** Before: Group does not exist. Policy does not exist. Permission does not exist.
-   * After: Group exists, with permission "".
-   * */
+  /**
+   * Before: Group does not exist. Policy does not exist. Permission does not exist. After: Group
+   * exists, with permission "".
+   */
   @Test
   public void createGroupPermissionsSuccess() {
-    val request = List.of(new TransactionalGroupPermissionRequest("group1","policy1",
-      AccessLevel.WRITE));
+    val request =
+        List.of(new TransactionalGroupPermissionRequest("group1", "policy1", AccessLevel.WRITE));
     val response = createPermissions(request);
     assertEquals(200, response.getStatusCodeValue());
   }
 
   @Test
-    public void deleteSuccessful() {
-    val request = new TransactionalDeleteRequest(List.of("group1"),List.of("policy1"));
+  public void deleteSuccessful() {
+    val request = new TransactionalDeleteRequest(List.of("group1"), List.of("policy1"));
     val response = delete(request);
     assertEquals(200, response.getStatusCodeValue());
   }
 
   ResponseEntity<String> createPermissions(List<TransactionalGroupPermissionRequest> request) {
-    return initStringRequest()
-      .endpoint("transaction/group_permissions")
-      .body(request)
-      .post();
+    return initStringRequest().endpoint("transaction/group_permissions").body(request).post();
   }
 
   ResponseEntity<String> delete(TransactionalDeleteRequest request) {
-    return initStringRequest()
-      .endpoint("transaction/mass_delete")
-      .body(request)
-      .post();
+    return initStringRequest().endpoint("transaction/mass_delete").body(request).post();
   }
-
 }

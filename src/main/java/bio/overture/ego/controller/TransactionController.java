@@ -75,11 +75,10 @@ public class TransactionController {
    * single transaction, creating any creating groups, policies, and/or permissions necessary to do
    * so.
    */
-  public @ResponseBody String createGroupPermissions(
+  public void createGroupPermissions(
       @RequestBody() final List<TransactionalGroupPermissionRequest> requests) {
 
     createPermissions(requests);
-    return "OK";
   }
 
   List<UUID> createPermissions(List<TransactionalGroupPermissionRequest> requests) {
@@ -125,27 +124,27 @@ public class TransactionController {
   @ApplicationScoped()
   @RequestMapping(method = POST, value = "/mass_delete")
   @ResponseStatus(value = OK)
-  public @ResponseBody String deleteGroupPermissions(
-      @RequestBody() final TransactionalDeleteRequest request) {
-    mapToList(request.getGroupNames(), name -> deleteGroupByName(name));
-    mapToList(request.getPolicyNames(), name -> deletePolicyByName(name));
-    return "OK";
+  public void deleteGroupPermissions(@RequestBody() final TransactionalDeleteRequest request) {
+    for (val name : request.getGroupNames()) {
+      deleteGroupByName(name);
+    }
+    for (val name : request.getPolicyNames()) {
+      deletePolicyByName(name);
+    }
   }
 
-  private String deleteGroupByName(String name) {
+  private void deleteGroupByName(String name) {
     val group = groupService.findByName(name);
     if (group.isPresent()) {
       groupService.delete(group.get().getId());
     }
-    return "OK";
   }
 
-  private String deletePolicyByName(String name) {
+  private void deletePolicyByName(String name) {
     val policy = policyService.findByName(name);
     if (policy.isPresent()) {
       policyService.delete(policy.get().getId());
     }
-    return "OK";
   }
 
   @ExceptionHandler({InvalidRequestException.class})

@@ -1,7 +1,6 @@
 package bio.overture.ego.model.dto;
 
 import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.view.Views;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
