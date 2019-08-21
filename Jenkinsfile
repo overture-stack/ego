@@ -71,14 +71,10 @@ spec:
                 }
             }
         }
-        stage('Build') {
-            steps {
-                container('jdk') {
-                    sh "./mvnw clean package -DskipTests"
-                }
+        stage('Build & Publish Develop') {
+            when {
+                branch "develop"
             }
-        }
-        stage('Publish Develop') {
             steps {
                 container('docker') {
                     withCredentials([usernamePassword(credentialsId:'OvertureDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
