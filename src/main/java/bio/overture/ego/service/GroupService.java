@@ -41,6 +41,7 @@ import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.join.GroupApplication;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
@@ -105,6 +106,16 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
                     .fetchUserGroups(true)
                     .fetchGroupPermissions(true)
                     .buildByNameIgnoreCase(name));
+  }
+
+  public Group getGroupByNameCreateIfNecessary(String name) {
+    val group = findByName(name);
+
+    if (group.isPresent()) {
+      return group.get();
+    }
+
+    return create(new GroupRequest(name, "", StatusType.APPROVED));
   }
 
   public Group create(@NonNull GroupRequest request) {
