@@ -1,4 +1,5 @@
 def commit = "UNKNOWN"
+def version = readMavenPom().getVersion()
 
 pipeline {
     agent {
@@ -90,7 +91,6 @@ spec:
           when {
             branch "master"
           }
-          def version = readMavenPom().getVersion()
           steps {
                 container('docker') {
                     withCredentials([usernamePassword(credentialsId: 'OvertureBioGithub', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
