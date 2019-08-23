@@ -64,6 +64,14 @@ public class PolicyService extends AbstractNamedService<Policy, UUID> {
     return getRepository().save(policy);
   }
 
+  public Policy getPolicyByNameCreateIfNecessary(String name) {
+    val policy = policyRepository.getPolicyByNameIgnoreCase(name);
+    if (policy.isPresent()) {
+      return policy.get();
+    }
+    return create(new PolicyRequest(name));
+  }
+
   @Override
   public Policy getWithRelationships(@NonNull UUID id) {
     val result = (Optional<Policy>) getRepository().findOne(fetchSpecification(id, true, true));
