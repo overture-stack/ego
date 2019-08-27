@@ -33,6 +33,7 @@ import bio.overture.ego.model.dto.UserScopesResponse;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.repository.TokenStoreRepository;
 import bio.overture.ego.token.IDToken;
@@ -52,6 +53,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.io.IOException;
 import java.security.InvalidKeyException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -122,6 +124,22 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   public String generateUserToken(IDToken idToken) {
     val user = userService.getUserByToken(idToken);
     return generateUserToken(user);
+  }
+
+  public String updateUserToken(String accessToken) {
+    Jws<Claims> decodedToken = validateAndReturn(accessToken);
+
+    val expiration = decodedToken.getBody().getExpiration().getTime();
+    val currentTime = Instant.now().toEpochMilli();
+
+    val userId = decodedToken.getBody().getSubject();
+    val user = userService.getById(UUID.fromString(userId));
+
+    Set<String> scope = mapToSet(extractScopes(user), Scope::toString);
+    val tokenClaims = generateUserTokenClaims(user, scope);
+    tokenClaims.setValidDuration((int) (expiration - currentTime));
+
+    return getSignedToken(tokenClaims);
   }
 
   @SneakyThrows
@@ -226,7 +244,12 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     return UUID.randomUUID().toString();
   }
 
-  public String generateUserToken(User u, Set<String> scope) {
+  public String generateUserToken(@NonNull User u, @NonNull Set<String> scope) {
+    val tokenClaims = generateUserTokenClaims(u, scope);
+    return getSignedToken(tokenClaims);
+  }
+
+  public UserTokenClaims generateUserTokenClaims(@NonNull User u, @NonNull Set<String> scope) {
     val tokenContext = new UserTokenContext(u);
     tokenContext.setScope(scope);
     val tokenClaims = new UserTokenClaims();
@@ -234,7 +257,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     tokenClaims.setValidDuration(DURATION);
     tokenClaims.setContext(tokenContext);
 
-    return getSignedToken(tokenClaims);
+    return tokenClaims;
   }
 
   @SneakyThrows
@@ -255,6 +278,22 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       log.error("JWT token is invalid", e);
     }
     return (decodedToken != null);
+  }
+
+  public Jws<Claims> validateAndReturn(String token) {
+    Jws<Claims> decodedToken = null;
+    try {
+      decodedToken = Jwts.parser().setSigningKey(tokenSigner.getKey().get()).parseClaimsJws(token);
+    } catch (JwtException e) {
+      log.error("JWT token is invalid", e);
+      throw new ForbiddenException("Authorization is required for this action.");
+    }
+    if (decodedToken == null) {
+      log.error("JWT token was null when trying to validate and return.");
+      throw new ForbiddenException("Authorization is required for this action.");
+    }
+
+    return decodedToken;
   }
 
   public User getTokenUserInfo(String token) {
