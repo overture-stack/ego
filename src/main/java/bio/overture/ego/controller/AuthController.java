@@ -27,11 +27,13 @@ import bio.overture.ego.provider.google.GoogleTokenService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.signer.TokenSigner;
+import bio.overture.ego.utils.Tokens;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -50,6 +52,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/oauth")
 public class AuthController {
+
+  @Value("${auth.token.prefix}")
+  private String TOKEN_PREFIX;
 
   private final TokenService tokenService;
   private final GoogleTokenService googleTokenService;
@@ -124,6 +129,15 @@ public class AuthController {
     String token = tokenService.generateUserToken((IDToken) authentication.getPrincipal());
     SecurityContextHolder.getContext().setAuthentication(null);
     return new ResponseEntity<>(token, OK);
+  }
+
+  @RequestMapping(
+      method = {GET, POST},
+      value = "/update-ego-token")
+  public ResponseEntity<String> updateEgoToken(
+      @RequestHeader(value = "Authorization") final String authorization) {
+    val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
+    return new ResponseEntity<>(tokenService.updateUserToken(currentToken), OK);
   }
 
   @ExceptionHandler({InvalidTokenException.class})
