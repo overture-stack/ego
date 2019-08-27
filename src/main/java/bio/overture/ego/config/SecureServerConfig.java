@@ -52,7 +52,8 @@ public class SecureServerConfig {
         "/oauth/facebook/token",
         "/oauth/token/public_key",
         "/oauth/token/verify",
-        "/oauth/ego-token"
+        "/oauth/ego-token",
+        "/oauth/update-ego-token"
       };
 
   /** Dependencies */
@@ -113,7 +114,7 @@ public class SecureServerConfig {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
       http.requestMatchers()
-          .antMatchers("/oauth/login/*", "/oauth/ego-token")
+          .antMatchers("/oauth/login/*", "/oauth/ego-token", "/oauth/update-ego-token")
           .and()
           .csrf()
           .disable()
