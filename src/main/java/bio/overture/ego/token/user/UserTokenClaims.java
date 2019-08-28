@@ -22,7 +22,6 @@ import bio.overture.ego.token.TokenClaims;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -42,10 +41,6 @@ public class UserTokenClaims extends TokenClaims {
     } else {
       return sub;
     }
-  }
-
-  public Set<String> getScope() {
-    return this.context.getScope();
   }
 
   public List<String> getAud() {
