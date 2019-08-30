@@ -22,6 +22,7 @@ import static bio.overture.ego.service.UserService.resolveUsersPermissions;
 import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
 import static com.google.common.collect.Sets.newHashSet;
+import static java.util.stream.Collectors.toList;
 
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.enums.JavaFields;
@@ -198,9 +199,22 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   // JsonViews creates
   // a dependency for this method. For now, using a UserService static method.
   // Creates permissions in JWTAccessToken::context::user
-  @JsonView(Views.JWTAccessToken.class)
+  @JsonIgnore
   public List<String> getPermissions() {
     return extractPermissionStrings(resolveUsersPermissions(this));
+  }
+
+  /**
+   * Gets the groups that the user belongs to as a List of groups ids. Meant for use in the
+   * JWTAccessToken JsonView for serialization
+   *
+   * @return List of group IDs
+   */
+  @JsonView(Views.JWTAccessToken.class)
+  public List<String> getGroups() {
+    return this.getUserGroups().stream()
+        .map(userGroup -> userGroup.getGroup().getId().toString())
+        .collect(toList()); // Cannot be unmodifiable due to Jackson serialization
   }
 
   /*
