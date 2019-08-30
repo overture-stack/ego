@@ -120,7 +120,7 @@ spec:
                         sh "helm repo add overture https://overture-stack.github.io/charts-server/"
                         sh """
                             helm upgrade --kubeconfig $KUBECONFIG --install --namespace=overture-qa ego-overture-qa \\
-                            overture/ego --reuse-values --recreate-pods --set-string image.tag=${commit}
+                            overture/ego --reuse-values --set-string image.tag=${commit}
                            """
                     }
                 }
@@ -140,7 +140,7 @@ spec:
                         sh "helm repo add overture https://overture-stack.github.io/charts-server/"
                         sh """
                             helm upgrade --kubeconfig $KUBECONFIG --install --namespace=overture-staging ego-overture-staging \\
-                            overture/ego --reuse-values --recreate-pods  --set-string image.tag=${version}
+                            overture/ego --reuse-values --set-string image.tag=${version}
                            """
                     }
                 }
