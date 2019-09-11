@@ -5,7 +5,7 @@
 
     <groupId>bio.overture</groupId>
     <artifactId>ego</artifactId>
-    <version>2.7.0</version>
+    <version>2.7.1</version>
 
     <name>ego</name>
     <description>OAuth 2.0 Authorization service that supports multiple OpenID Connect Providers</description>
@@ -13,7 +13,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.1.4.RELEASE</version>
+        <version>2.1.8.RELEASE</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -205,8 +205,8 @@
         <!-- Vault -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-vault-starter-config</artifactId>
-            <version>LATEST</version>
+            <artifactId>spring-cloud-starter-vault-config</artifactId>
+            <version>2.1.2.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
@@ -379,7 +379,7 @@
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
-                <version>Finchley.M8</version>
+                <version>Greenwich.SR2</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -397,6 +397,10 @@
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
+        </repository>
+        <repository>
+            <id>spring-releases</id>
+            <url>https://repo.spring.io/libs-release</url>
         </repository>
         <repository>
             <id>spring-milestones</id>
