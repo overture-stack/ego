@@ -180,7 +180,13 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
             .collect(toImmutableSet());
 
     disassociateUserGroupsFromGroup(groupWithUserGroups, userGroupsToDisassociate);
-    tokenEventsPublisher.requestTokenCleanupByUsers(users);
+
+    // Only request cleanup check for disassociated users
+    val usersToCheck =
+        users.stream()
+            .filter(u -> userIdsToDisassociate.contains(u.getId()))
+            .collect(toImmutableSet());
+    tokenEventsPublisher.requestTokenCleanupByUsers(usersToCheck);
   }
 
   public Group associateUsersWithGroup(@NonNull UUID id, @NonNull Collection<UUID> userIds) {
