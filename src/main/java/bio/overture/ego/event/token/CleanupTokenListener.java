@@ -47,6 +47,7 @@ public class CleanupTokenListener implements ApplicationListener<CleanupUserToke
 
   @Override
   public void onApplicationEvent(@NonNull CleanupUserTokensEvent event) {
+    log.debug("Number of users to be checked for token cleanup: {}", event.getUsers().size());
     cleanupTokens(event.getUsers());
   }
 
@@ -57,7 +58,6 @@ public class CleanupTokenListener implements ApplicationListener<CleanupUserToke
   private void cleanupTokensForUser(@NonNull User user) {
     val scopes = tokenService.userScopes(user.getName()).getScopes();
     val tokens = tokenService.listToken(user.getId());
-
     tokens.forEach(t -> verifyToken(t, scopes));
   }
 

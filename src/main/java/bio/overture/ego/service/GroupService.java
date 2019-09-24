@@ -210,7 +210,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     nonAssociatedUsers.stream()
         .map(u -> convertToUserGroup(u, groupWithUserGroups))
         .forEach(UserGroupService::associateSelf);
-    tokenEventsPublisher.requestTokenCleanupByUsers(users);
+    tokenEventsPublisher.requestTokenCleanupByUsers(nonAssociatedUsers);
     return groupWithUserGroups;
   }
 
