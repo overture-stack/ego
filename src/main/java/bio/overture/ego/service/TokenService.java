@@ -36,6 +36,7 @@ import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.repository.TokenStoreRepository;
+import bio.overture.ego.security.BasicAuthToken;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.TokenClaims;
 import bio.overture.ego.token.app.AppJWTAccessToken;
@@ -361,7 +362,10 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     }
 
     log.debug(format("token ='%s'", token));
-    val application = applicationService.findByBasicToken(authToken);
+    val contents = BasicAuthToken.decode(authToken);
+
+    val clientId = contents.get().getClientId();
+    val application = applicationService.findByClientId(clientId);
 
     val t =
         findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found"));
@@ -373,7 +377,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     // We want to limit the scopes listed in the token to those scopes that the user
     // is allowed to access at the time the token is checked -- we don't assume that
     // they have not changed since the token was issued.
-    val clientId = application.getClientId();
+
     val owner = t.getOwner();
     val scopes = explicitScopes(effectiveScopes(extractScopes(owner), t.scopes()));
     val names = mapToSet(scopes, Scope::toString);
