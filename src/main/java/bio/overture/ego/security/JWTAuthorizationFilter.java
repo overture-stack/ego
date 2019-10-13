@@ -48,7 +48,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
   private String[] publicEndpoints = null;
 
   @Value("${auth.token.prefix}")
-  private String TOKEN_PREFIX;
+  private String TOKEN_PREFIX="Bearer";
 
   @Autowired private TokenService tokenService;
   @Autowired private ApplicationService applicationService;
@@ -83,7 +83,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
    * @param tokenPayload The string representation of the Authorization Header with the token prefix
    *     included
    */
-  private void authenticateUserOrApplication(String tokenPayload) {
+  protected void authenticateUserOrApplication(String tokenPayload) {
     if (!isValidToken(tokenPayload)) {
       log.warn(
           "Invalid token (MD5sum): {}",
@@ -127,7 +127,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     throw new ForbiddenException("Bad Token");
   }
 
-  private void authenticateApplication(String tokenString) {
+  protected void authenticateApplication(String tokenString) {
     // An application just sends us Basic authToken (an id+a secret) to authenticate itself.
     val token = BasicAuthToken.decode(tokenString);
 
@@ -158,7 +158,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     }
 
     // Deny access if the clientSecret in the token is wrong
-    if (application.get().getClientSecret() != clientSecret) {
+    if (! application.get().getClientSecret().equals(clientSecret)) {
       SecurityContextHolder.clearContext();
       log.warn(
           "AuthenticateApplication: Wrong client secret for clientId '"
@@ -166,6 +166,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
               + "' from token '"
               + tokenString
               + "'");
+      return;
     }
 
     val authentication =

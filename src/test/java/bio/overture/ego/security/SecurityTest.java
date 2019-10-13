@@ -1,0 +1,102 @@
+package bio.overture.ego.security;
+
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.TokenService;
+import io.jsonwebtoken.Claims;
+import lombok.val;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.junit.Test;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.*;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+public class SecurityTest {
+  @Test
+  public void testDecodeBasicToken() {
+    val token = "Basic aWQ6c2VjcmV0";
+    val contents = BasicAuthToken.decode(token);
+    assertTrue(contents.isPresent());
+    assertEquals("id", contents.get().getClientId());
+    assertEquals("secret", contents.get().getClientSecret());
+  }
+
+  private JWTAuthorizationFilter getAuthorizationFilter(ApplicationService applicationService,
+    TokenService tokenService) {
+    val authManager=mock(AuthenticationManager.class);
+
+    val app = new Application();
+    app.setClientId("id");
+    app.setClientSecret("secret");
+    when(applicationService.findByClientId("id")).thenReturn(Optional.of(app));
+
+    val authorizationFilter = new JWTAuthorizationFilter(authManager, new String[0]);
+    ReflectionTestUtils.setField(authorizationFilter, "applicationService", applicationService);
+    ReflectionTestUtils.setField(authorizationFilter, "tokenService", tokenService);
+    return authorizationFilter;
+  }
+
+  @Test
+  public void testAuthenticateApplication() {
+    val tokenService = mock(TokenService.class);
+    val applicationService = mock(ApplicationService.class);
+
+    val app = new Application();
+    app.setClientId("id");
+    app.setClientSecret("secret");
+    when(applicationService.findByClientId("id")).thenReturn(Optional.of(app));
+
+    val authorizationFilter = getAuthorizationFilter(applicationService, tokenService);
+    ReflectionTestUtils.setField(authorizationFilter, "applicationService", applicationService);
+    ReflectionTestUtils.setField(authorizationFilter, "tokenService", tokenService);
+
+    val token = "Basic aWQ6c2VjcmV0"; // client id="id", client secret="secret"
+    authorizationFilter.authenticateApplication(token);
+    val result = SecurityContextHolder.getContext().getAuthentication();
+    assertTrue("right id & password", result.isAuthenticated());
+
+    app.setClientSecret("wrong");
+    authorizationFilter.authenticateApplication(token);
+    val result2 = SecurityContextHolder.getContext().getAuthentication();
+    assertNull("wrong password", result2);
+
+
+    when(applicationService.findByClientId("id")).thenReturn(Optional.empty());
+
+    app.setClientSecret("secret");
+    authorizationFilter.authenticateApplication(token);
+    val result3 = SecurityContextHolder.getContext().getAuthentication();
+    assertNull("Bad application id", result3);
+
+  }
+
+  @Test
+  public void testAuthenticateUserOrApplication() {
+    val applicationService = mock(ApplicationService.class);
+    val tokenService = mock(TokenService.class);
+    val claims = mock(Claims.class);
+
+    String token = "Bearer xxxx";
+
+    when(tokenService.isValidToken("xxxx")).thenReturn(true);
+    when(tokenService.getTokenClaims("xxxx")).thenReturn(claims);
+
+    val filter = getAuthorizationFilter(applicationService, tokenService);
+
+    filter.authenticateUserOrApplication(token);
+    val result = SecurityContextHolder.getContext().getAuthentication();
+    assertTrue("Passed authentication", result.isAuthenticated());
+
+    when(tokenService.isValidToken("xxxx")).thenReturn(false);
+    filter.authenticateUserOrApplication(token);
+    val result2 = SecurityContextHolder.getContext().getAuthentication();
+    assertNull("Invalid token means no access", result2);
+
+  }
+}
