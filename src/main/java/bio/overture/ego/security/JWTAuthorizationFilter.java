@@ -133,9 +133,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
     if (token.isEmpty()) {
       log.warn(
-          "AuthenticateApplication: Invalid token '"
-              + tokenString
-              + "' for application authentication request");
+          "AuthenticateApplication: Invalid token for application authentication request");
       SecurityContextHolder.clearContext();
       return;
     }
@@ -148,12 +146,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
     if (application == null || application.isEmpty()) {
       SecurityContextHolder.clearContext();
-      log.warn(
-          "AuthenticateApplication: No application found for clientId '"
-              + clientId
-              + "' from token '"
-              + tokenString
-              + "'");
+      log.warn("AuthenticateApplication: No application found for clientId " + clientId);
       return;
     }
 
