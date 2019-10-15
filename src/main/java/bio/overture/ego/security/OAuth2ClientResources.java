@@ -24,10 +24,17 @@ public class OAuth2ClientResources {
             val uri = new URI(request.getCurrentUri());
             val attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
             val session = attr.getRequest().getSession(true);
-            val pattern = Pattern.compile("client_id=([^&]+)?");
-            val matcher = pattern.matcher(uri.getQuery());
-            if (matcher.find()) {
-              session.setAttribute("ego_client_id", matcher.group(1));
+
+            val clientIdPattern = Pattern.compile("client_id=([^&]+)?");
+            val clientIdMatcher = clientIdPattern.matcher(uri.getQuery());
+            if (clientIdMatcher.find()) {
+              session.setAttribute("ego_client_id", clientIdMatcher.group(1));
+            }
+
+            val statePattern = Pattern.compile("front_state=([^&]+)?");
+            val stateMatcher = statePattern.matcher(uri.getQuery());
+            if (stateMatcher.find()) {
+              session.setAttribute("front_state", stateMatcher.group(1));
             }
 
             if (getPreEstablishedRedirectUri() != null) {

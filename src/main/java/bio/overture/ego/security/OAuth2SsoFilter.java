@@ -22,6 +22,7 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.filter.CompositeFilter;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 @Profile("auth")
@@ -34,10 +35,16 @@ public class OAuth2SsoFilter extends CompositeFilter {
         public void onAuthenticationSuccess(
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException, ServletException {
-          val application =
-              applicationService.getByClientId(
+          val application = applicationService.getByClientId(
                   (String) request.getSession().getAttribute("ego_client_id"));
-          this.setDefaultTargetUrl(application.getRedirectUri());
+          val frontState = (String) request.getSession().getAttribute("front_state");
+
+          val redirectUri = UriComponentsBuilder.fromUriString(application.getRedirectUri());
+          if (frontState != null && !frontState.isEmpty()){
+            redirectUri.queryParam("state", frontState).build().toUri();
+          }
+
+          this.setDefaultTargetUrl(redirectUri.toUriString());
           super.onAuthenticationSuccess(request, response, authentication);
         }
       };
