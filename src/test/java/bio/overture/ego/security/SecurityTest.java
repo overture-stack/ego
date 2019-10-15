@@ -1,21 +1,18 @@
 package bio.overture.ego.security;
 
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.TokenService;
 import io.jsonwebtoken.Claims;
+import java.util.*;
 import lombok.val;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import java.util.*;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 public class SecurityTest {
   @Test
@@ -27,9 +24,9 @@ public class SecurityTest {
     assertEquals("secret", contents.get().getClientSecret());
   }
 
-  private JWTAuthorizationFilter getAuthorizationFilter(ApplicationService applicationService,
-    TokenService tokenService) {
-    val authManager=mock(AuthenticationManager.class);
+  private JWTAuthorizationFilter getAuthorizationFilter(
+      ApplicationService applicationService, TokenService tokenService) {
+    val authManager = mock(AuthenticationManager.class);
 
     val app = new Application();
     app.setClientId("id");
@@ -61,11 +58,13 @@ public class SecurityTest {
     val result = SecurityContextHolder.getContext().getAuthentication();
     assertTrue("right id & password", result.isAuthenticated());
 
-    app.setClientSecret("wrong");
+    val app2 = new Application();
+    app2.setClientId("id");
+    app2.setClientSecret("wrong");
+    when(applicationService.findByClientId("id")).thenReturn(Optional.of(app2));
     authorizationFilter.authenticateApplication(token);
     val result2 = SecurityContextHolder.getContext().getAuthentication();
     assertNull("wrong password", result2);
-
 
     when(applicationService.findByClientId("id")).thenReturn(Optional.empty());
 
@@ -73,7 +72,6 @@ public class SecurityTest {
     authorizationFilter.authenticateApplication(token);
     val result3 = SecurityContextHolder.getContext().getAuthentication();
     assertNull("Bad application id", result3);
-
   }
 
   @Test
@@ -97,6 +95,5 @@ public class SecurityTest {
     filter.authenticateUserOrApplication(token);
     val result2 = SecurityContextHolder.getContext().getAuthentication();
     assertNull("Invalid token means no access", result2);
-
   }
 }

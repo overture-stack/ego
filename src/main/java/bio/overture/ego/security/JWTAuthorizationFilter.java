@@ -48,7 +48,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
   private String[] publicEndpoints = null;
 
   @Value("${auth.token.prefix}")
-  private String TOKEN_PREFIX="Bearer";
+  private String TOKEN_PREFIX = "Bearer";
 
   @Autowired private TokenService tokenService;
   @Autowired private ApplicationService applicationService;
@@ -158,7 +158,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     }
 
     // Deny access if the clientSecret in the token is wrong
-    if (! application.get().getClientSecret().equals(clientSecret)) {
+    if (!application.get().getClientSecret().equals(clientSecret)) {
       SecurityContextHolder.clearContext();
       log.warn(
           "AuthenticateApplication: Wrong client secret for clientId '"
