@@ -26,8 +26,6 @@ import static bio.overture.ego.token.app.AppTokenClaims.SCOPES;
 import static bio.overture.ego.utils.CollectionUtils.setOf;
 import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
-import static bio.overture.ego.utils.Splitters.COLON_SPLITTER;
-import static java.lang.String.format;
 import static org.mapstruct.factory.Mappers.getMapper;
 import static org.springframework.data.jpa.domain.Specification.where;
 
@@ -45,7 +43,6 @@ import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
 import bio.overture.ego.repository.queryspecification.builder.ApplicationSpecificationBuilder;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -79,8 +76,6 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   /** Constants */
   public static final ApplicationConverter APPLICATION_CONVERTER =
       getMapper(ApplicationConverter.class);
-
-  public static final String APP_TOKEN_PREFIX = "Basic ";
 
   /*
    Dependencies
@@ -230,15 +225,6 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     return result.get();
   }
 
-  public Application findByBasicToken(@NonNull String token) {
-    val base64encoding = removeAppTokenPrefix(token);
-    val contents = new String(Base64.getDecoder().decode(base64encoding));
-    val parts = COLON_SPLITTER.splitToList(contents);
-    val clientId = parts.get(0);
-    log.info(format("Extracted client id '%s'", clientId));
-    return getByClientId(clientId);
-  }
-
   @Override
   public ClientDetails loadClientByClientId(@NonNull String clientId)
       throws ClientRegistrationException {
@@ -336,10 +322,6 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
           ga.setApplication(null);
         });
     application.getGroupApplications().removeAll(groupApplications);
-  }
-
-  private static String removeAppTokenPrefix(String token) {
-    return token.replace(APP_TOKEN_PREFIX, "").trim();
   }
 
   @Mapper(
