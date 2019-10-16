@@ -4,6 +4,7 @@ import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
 import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
 import static bio.overture.ego.controller.resolver.PageableResolver.SORT;
 import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
+import static java.lang.String.format;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -189,7 +190,7 @@ public class PolicyController {
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "group_id", required = true) UUID groupId) {
     groupPermissionService.deleteByPolicyAndOwner(id, groupId);
-    return new GenericResponse("Deleted permission for group '%s' on policy '%s'");
+    return new GenericResponse(format("Deleted permission for group '%s' on policy '%s'.", groupId, id));
   }
 
   @AdminScoped
@@ -222,7 +223,7 @@ public class PolicyController {
       @PathVariable(value = "user_id", required = true) UUID userId) {
 
     userPermissionService.deleteByPolicyAndOwner(id, userId);
-    return new GenericResponse("Deleted permission for user %s on policy %s");
+    return new GenericResponse(format("Deleted permission for user '%s' on policy '%s'.", userId, id));
   }
 
   @AdminScoped
