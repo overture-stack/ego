@@ -142,16 +142,16 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     val clientSecret = token.get().getClientSecret();
 
     // Deny access if they don't have a valid clientId from one of our applications
-    val application = applicationService.findByClientId(clientId);
+    val applicationOpt = applicationService.findByClientId(clientId);
 
-    if (application == null || application.isEmpty()) {
+    if (applicationOpt == null || applicationOpt.isEmpty()) {
       SecurityContextHolder.clearContext();
       log.warn("AuthenticateApplication: No application found for clientId " + clientId);
       return;
     }
-
+    val application = applicationOpt.get();
     // Deny access if the clientSecret in the token is wrong
-    if (!application.get().getClientSecret().equals(clientSecret)) {
+    if (!application.getClientSecret().equals(clientSecret)) {
       SecurityContextHolder.clearContext();
       log.warn(
           "AuthenticateApplication: Wrong client secret for clientId '"
