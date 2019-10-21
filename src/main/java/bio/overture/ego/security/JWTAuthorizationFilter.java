@@ -48,7 +48,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
   private String[] publicEndpoints = null;
 
   @Value("${auth.token.prefix}")
-  private String TOKEN_PREFIX;
+  private String TOKEN_PREFIX = "Bearer";
 
   @Autowired private TokenService tokenService;
   @Autowired private ApplicationService applicationService;
@@ -69,7 +69,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     }
     val tokenPayload = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-    if (tokenPayload != null && tokenPayload.startsWith(applicationService.APP_TOKEN_PREFIX)) {
+    if (tokenPayload != null && tokenPayload.startsWith(BasicAuthToken.TOKEN_PREFIX)) {
       authenticateApplication(tokenPayload);
     } else {
       authenticateUserOrApplication(tokenPayload);
@@ -83,7 +83,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
    * @param tokenPayload The string representation of the Authorization Header with the token prefix
    *     included
    */
-  private void authenticateUserOrApplication(String tokenPayload) {
+  protected void authenticateUserOrApplication(String tokenPayload) {
     if (!isValidToken(tokenPayload)) {
       log.warn(
           "Invalid token (MD5sum): {}",
@@ -127,13 +127,37 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     throw new ForbiddenException("Bad Token");
   }
 
-  private void authenticateApplication(String token) {
-    val application = applicationService.findByBasicToken(token);
+  protected void authenticateApplication(String tokenString) {
+    // An application just sends us Basic authToken (an id+a secret) to authenticate itself.
+    val token = BasicAuthToken.decode(tokenString);
 
-    // Deny access if they don't have a valid app token for
-    // one of our applications
-    if (application == null) {
+    if (token.isEmpty()) {
+      log.warn("AuthenticateApplication: Invalid token for application authentication request");
       SecurityContextHolder.clearContext();
+      return;
+    }
+
+    val clientId = token.get().getClientId();
+    val clientSecret = token.get().getClientSecret();
+
+    // Deny access if they don't have a valid clientId from one of our applications
+    val application = applicationService.findByClientId(clientId);
+
+    if (application == null || application.isEmpty()) {
+      SecurityContextHolder.clearContext();
+      log.warn("AuthenticateApplication: No application found for clientId " + clientId);
+      return;
+    }
+
+    // Deny access if the clientSecret in the token is wrong
+    if (!application.get().getClientSecret().equals(clientSecret)) {
+      SecurityContextHolder.clearContext();
+      log.warn(
+          "AuthenticateApplication: Wrong client secret for clientId '"
+              + clientId
+              + "' from token '"
+              + tokenString
+              + "'");
       return;
     }
 
