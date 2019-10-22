@@ -90,9 +90,9 @@ public class ApiKeyController {
   @SneakyThrows
   public @ResponseBody TokenScopeResponse checkToken(
       @RequestHeader(value = "Authorization") final String authToken,
-      @RequestParam(value = "token") final String token) {
+      @RequestParam(value = "apiKey") final String apiKey) {
 
-    return tokenService.checkToken(authToken, token);
+    return tokenService.checkToken(authToken, apiKey);
   }
 
   @RequestMapping(method = GET, value = "/scopes")
@@ -150,9 +150,9 @@ public class ApiKeyController {
   @ResponseStatus(value = OK)
   public @ResponseBody String revokeToken(
       @RequestHeader(value = "Authorization") final String authorization,
-      @RequestParam(value = "token") final String token) {
-    tokenService.revokeToken(token);
-    return format("Token '%s' is successfully revoked!", token);
+      @RequestParam(value = "apiKey") final String apiKey) {
+    tokenService.revokeToken(apiKey);
+    return format("ApiKey '%s' is successfully revoked!", apiKey);
   }
 
   @AdminScoped

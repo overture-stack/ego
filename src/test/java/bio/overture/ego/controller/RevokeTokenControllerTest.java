@@ -87,7 +87,7 @@ public class RevokeTokenControllerTest {
     mockMvc
         .perform(
             MockMvcRequestBuilders.delete("/o/api_key")
-                .param("token", randomTokenName)
+                .param("apiKey", randomTokenName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isOk());
 
@@ -114,7 +114,7 @@ public class RevokeTokenControllerTest {
     mockMvc
         .perform(
             MockMvcRequestBuilders.delete("/o/api_key")
-                .param("token", tokenName)
+                .param("apiKey", tokenName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isOk());
 
@@ -141,7 +141,7 @@ public class RevokeTokenControllerTest {
     mockMvc
         .perform(
             MockMvcRequestBuilders.delete("/o/api_key")
-                .param("token", tokenName)
+                .param("apiKey", tokenName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isUnauthorized());
     val revokedToken =
@@ -167,7 +167,7 @@ public class RevokeTokenControllerTest {
     mockMvc
         .perform(
             MockMvcRequestBuilders.delete("/o/api_key")
-                .param("token", tokenName)
+                .param("apiKey", tokenName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isOk());
 
@@ -192,7 +192,7 @@ public class RevokeTokenControllerTest {
     mockMvc
         .perform(
             MockMvcRequestBuilders.delete("/o/api_key")
-                .param("token", tokenName)
+                .param("apiKey", tokenName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isOk());
 
@@ -221,7 +221,7 @@ public class RevokeTokenControllerTest {
     mockMvc
         .perform(
             MockMvcRequestBuilders.delete("/o/api_key")
-                .param("token", tokenName)
+                .param("apiKey", tokenName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isBadRequest());
 

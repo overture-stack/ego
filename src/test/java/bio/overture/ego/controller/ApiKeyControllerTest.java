@@ -310,7 +310,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     entityGenerator.setupToken(user, tokenName, true, 1000, "test token", scopes);
 
     val params = new LinkedMultiValueMap<String, Object>();
-    params.add("token", tokenName);
+    params.add("apiKey", tokenName);
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     super.getHeaders().set("Authorization", test.songAuth);
 
@@ -329,7 +329,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     entityGenerator.setupToken(user, tokenName, false, 1000, "test token", scopes);
 
     val params = new LinkedMultiValueMap<String, Object>();
-    params.add("token", tokenName);
+    params.add("apiKey", tokenName);
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     super.getHeaders().set("Authorization", test.songAuth);
 
@@ -344,7 +344,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
   public void checkInvalidToken() {
     val randomToken = UUID.randomUUID().toString();
     val params = new LinkedMultiValueMap<String, Object>();
-    params.add("token", randomToken);
+    params.add("apiKey", randomToken);
 
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     super.getHeaders().set("Authorization", test.songAuth);

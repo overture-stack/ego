@@ -190,7 +190,8 @@ public class PolicyController {
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "group_id", required = true) UUID groupId) {
     groupPermissionService.deleteByPolicyAndOwner(id, groupId);
-    return new GenericResponse(format("Deleted permission for group '%s' on policy '%s'.", groupId, id));
+    return new GenericResponse(
+        format("Deleted permission for group '%s' on policy '%s'.", groupId, id));
   }
 
   @AdminScoped
@@ -223,7 +224,8 @@ public class PolicyController {
       @PathVariable(value = "user_id", required = true) UUID userId) {
 
     userPermissionService.deleteByPolicyAndOwner(id, userId);
-    return new GenericResponse(format("Deleted permission for user '%s' on policy '%s'.", userId, id));
+    return new GenericResponse(
+        format("Deleted permission for user '%s' on policy '%s'.", userId, id));
   }
 
   @AdminScoped
