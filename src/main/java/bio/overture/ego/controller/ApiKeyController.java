@@ -69,7 +69,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("/o")
-public class TokenController {
+public class ApiKeyController {
 
   /** Dependencies */
   private final TokenService tokenService;
@@ -78,14 +78,14 @@ public class TokenController {
       authorizationManager; // Need this here due to context sensitive checks
 
   @Autowired
-  public TokenController(
+  public ApiKeyController(
       @NonNull TokenService tokenService, @NonNull AuthorizationManager authorizationManager) {
     this.tokenService = tokenService;
     this.authorizationManager = authorizationManager;
   }
 
   @ApplicationScoped()
-  @RequestMapping(method = POST, value = "/check_token")
+  @RequestMapping(method = POST, value = "/check_api_key")
   @ResponseStatus(value = MULTI_STATUS)
   @SneakyThrows
   public @ResponseBody TokenScopeResponse checkToken(
@@ -104,7 +104,7 @@ public class TokenController {
     return tokenService.userScopes(userName);
   }
 
-  @RequestMapping(method = POST, value = "/token")
+  @RequestMapping(method = POST, value = "/api_key")
   @ResponseStatus(value = OK)
   public @ResponseBody TokenResponse issueToken(
       @RequestHeader(value = "Authorization") final String authorization,
@@ -146,7 +146,7 @@ public class TokenController {
         .build();
   }
 
-  @RequestMapping(method = DELETE, value = "/token")
+  @RequestMapping(method = DELETE, value = "/api_key")
   @ResponseStatus(value = OK)
   public @ResponseBody String revokeToken(
       @RequestHeader(value = "Authorization") final String authorization,
@@ -156,7 +156,7 @@ public class TokenController {
   }
 
   @AdminScoped
-  @RequestMapping(method = GET, value = "/token")
+  @RequestMapping(method = GET, value = "/api_key")
   @ResponseStatus(value = OK)
   public @ResponseBody List<TokenResponse> listToken(
       @RequestHeader(value = "Authorization") final String authorization,
