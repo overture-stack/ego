@@ -457,16 +457,16 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
    *
    * @param user User that will have heir permissions mutated.
    * @param policy Policy that the permissions will be against.
-   * @param initalAccess The initial access level (MASK) that a user will have to the policy.
+   * @param initialAccess The initial access level (MASK) that a user will have to the policy.
    * @param tokenScopeSuffix The scope suffix that the token will be created with.
    * @return The access token
    */
   @SneakyThrows
   private String userPermissionTestSetup(
-      User user, Policy policy, AccessLevel initalAccess, String tokenScopeSuffix) {
+      User user, Policy policy, AccessLevel initialAccess, String tokenScopeSuffix) {
     val permissionRequest =
         ImmutableList.of(
-            PermissionRequest.builder().policyId(policy.getId()).mask(initalAccess).build());
+            PermissionRequest.builder().policyId(policy.getId()).mask(initialAccess).build());
     initStringRequest()
         .endpoint("/users/%s/permissions", user.getId().toString())
         .body(permissionRequest)
@@ -499,13 +499,13 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
    * @param user The user that will belong to the group which is having the permissions mutated.
    * @param group The group to which the group permissions are assigned.
    * @param policy The policy that the permission is relevant to.
-   * @param initalAccess The initial access level (MASK) for the group on the policy.
+   * @param initialAccess The initial access level (MASK) for the group on the policy.
    * @param tokenScopeSuffix The scope suffix that the token will be created with for the user.
    * @return The access token
    */
   @SneakyThrows
   private String groupPermissionTestSetup(
-      User user, Group group, Policy policy, AccessLevel initalAccess, String tokenScopeSuffix) {
+      User user, Group group, Policy policy, AccessLevel initialAccess, String tokenScopeSuffix) {
 
     // Associate User with Group
     val groupRequest = ImmutableList.of(group.getId());
@@ -519,7 +519,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     // Create Group Permission
     val permissionRequest =
         ImmutableList.of(
-            PermissionRequest.builder().policyId(policy.getId()).mask(initalAccess).build());
+            PermissionRequest.builder().policyId(policy.getId()).mask(initialAccess).build());
     initStringRequest()
         .endpoint("/groups/%s/permissions", group.getId().toString())
         .body(permissionRequest)
