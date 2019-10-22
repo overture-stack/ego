@@ -114,7 +114,7 @@ public class UserSelfAssignTokenTest extends AbstractControllerTest {
 
     val response =
         initStringRequest()
-            .endpoint("o/token")
+            .endpoint("o/api_key")
             .body(params)
             .headers(new HttpHeaders(headers))
             .post();
@@ -138,7 +138,7 @@ public class UserSelfAssignTokenTest extends AbstractControllerTest {
 
     val response =
         initStringRequest()
-            .endpoint("o/token")
+            .endpoint("o/api_key")
             .body(params)
             .headers(new HttpHeaders(headers))
             .post();
@@ -162,7 +162,7 @@ public class UserSelfAssignTokenTest extends AbstractControllerTest {
 
     val response =
         initStringRequest()
-            .endpoint("o/token")
+            .endpoint("o/api_key")
             .body(params)
             .headers(new HttpHeaders(headers))
             .post();
@@ -186,7 +186,7 @@ public class UserSelfAssignTokenTest extends AbstractControllerTest {
 
     val response =
         initStringRequest()
-            .endpoint("o/token")
+            .endpoint("o/api_key")
             .body(params)
             .headers(new HttpHeaders(headers))
             .post();
@@ -210,7 +210,7 @@ public class UserSelfAssignTokenTest extends AbstractControllerTest {
 
     val response =
         initStringRequest()
-            .endpoint("o/token")
+            .endpoint("o/api_key")
             .body(params)
             .headers(new HttpHeaders(headers))
             .post();

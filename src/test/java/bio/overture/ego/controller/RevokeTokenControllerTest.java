@@ -86,7 +86,7 @@ public class RevokeTokenControllerTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.delete("/o/token")
+            MockMvcRequestBuilders.delete("/o/api_key")
                 .param("token", randomTokenName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isOk());
@@ -113,7 +113,7 @@ public class RevokeTokenControllerTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.delete("/o/token")
+            MockMvcRequestBuilders.delete("/o/api_key")
                 .param("token", tokenName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isOk());
@@ -140,7 +140,7 @@ public class RevokeTokenControllerTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.delete("/o/token")
+            MockMvcRequestBuilders.delete("/o/api_key")
                 .param("token", tokenName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isUnauthorized());
@@ -166,7 +166,7 @@ public class RevokeTokenControllerTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.delete("/o/token")
+            MockMvcRequestBuilders.delete("/o/api_key")
                 .param("token", tokenName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isOk());
@@ -191,7 +191,7 @@ public class RevokeTokenControllerTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.delete("/o/token")
+            MockMvcRequestBuilders.delete("/o/api_key")
                 .param("token", tokenName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isOk());
@@ -220,7 +220,7 @@ public class RevokeTokenControllerTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.delete("/o/token")
+            MockMvcRequestBuilders.delete("/o/api_key")
                 .param("token", tokenName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isBadRequest());

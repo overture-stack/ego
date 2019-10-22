@@ -109,7 +109,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     params.add("description", DESCRIPTION);
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-    val response = initStringRequest().endpoint("o/token").body(params).post();
+    val response = initStringRequest().endpoint("o/api_key").body(params).post();
     val responseStatus = response.getStatusCode();
 
     assertEquals(responseStatus, HttpStatus.OK);
@@ -148,7 +148,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-    val response = initStringRequest().endpoint("o/token").body(params).post();
+    val response = initStringRequest().endpoint("o/api_key").body(params).post();
     val statusCode = response.getStatusCode();
 
     assertEquals(statusCode, HttpStatus.OK);
@@ -185,7 +185,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-    val response = initStringRequest().endpoint("o/token").body(params).post();
+    val response = initStringRequest().endpoint("o/api_key").body(params).post();
     val statusCode = response.getStatusCode();
     assertEquals(statusCode, HttpStatus.INTERNAL_SERVER_ERROR);
 
@@ -227,7 +227,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-    val response = initStringRequest().endpoint("o/token").body(params).post();
+    val response = initStringRequest().endpoint("o/api_key").body(params).post();
     val statusCode = response.getStatusCode();
 
     assertEquals(statusCode, HttpStatus.OK);
@@ -272,7 +272,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-    val response = initStringRequest().endpoint("o/token").body(params).post();
+    val response = initStringRequest().endpoint("o/api_key").body(params).post();
 
     val statusCode = response.getStatusCode();
     assertEquals(statusCode, HttpStatus.NOT_FOUND);
@@ -292,7 +292,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-    val response = initStringRequest().endpoint("o/token").body(params).post();
+    val response = initStringRequest().endpoint("o/api_key").body(params).post();
 
     val statusCode = response.getStatusCode();
     assertEquals(statusCode, HttpStatus.FORBIDDEN);
@@ -314,7 +314,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     super.getHeaders().set("Authorization", test.songAuth);
 
-    val response = initStringRequest().endpoint("o/check_token").body(params).post();
+    val response = initStringRequest().endpoint("o/check_api_key").body(params).post();
 
     val statusCode = response.getStatusCode();
     assertEquals(statusCode, HttpStatus.UNAUTHORIZED);
@@ -333,7 +333,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     super.getHeaders().set("Authorization", test.songAuth);
 
-    val response = initStringRequest().endpoint("o/check_token").body(params).post();
+    val response = initStringRequest().endpoint("o/check_api_key").body(params).post();
 
     val statusCode = response.getStatusCode();
     assertEquals(statusCode, HttpStatus.MULTI_STATUS);
@@ -349,7 +349,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     super.getHeaders().set("Authorization", test.songAuth);
 
-    val response = initStringRequest().endpoint("o/check_token").body(params).post();
+    val response = initStringRequest().endpoint("o/check_api_key").body(params).post();
 
     val statusCode = response.getStatusCode();
     assertEquals(statusCode, HttpStatus.UNAUTHORIZED);
@@ -416,7 +416,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     entityGenerator.setupToken(user, tokenString2, false, 1000, "test token 2", scopes2);
     entityGenerator.setupToken(user, tokenString3, true, 1000, "revoked token 3", scopes3);
 
-    val response = initStringRequest().endpoint("o/token?user_id=%s", userId).get();
+    val response = initStringRequest().endpoint("o/api_key?user_id=%s", userId).get();
 
     val statusCode = response.getStatusCode();
     assertEquals(statusCode, HttpStatus.OK);
@@ -438,7 +438,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
   @Test
   public void listTokenEmptyToken() {
     val userId = test.adminUser.getId().toString();
-    val response = initStringRequest().endpoint("o/token?user_id=%s", userId).get();
+    val response = initStringRequest().endpoint("o/api_key?user_id=%s", userId).get();
 
     val statusCode = response.getStatusCode();
     assertEquals(statusCode, HttpStatus.OK);
@@ -459,13 +459,13 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     params.add("description", DESCRIPTION);
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-    val response = initStringRequest().endpoint("o/token").body(params).post();
+    val response = initStringRequest().endpoint("o/api_key").body(params).post();
     val responseStatus = response.getStatusCode();
 
     assertEquals(responseStatus, HttpStatus.OK);
 
     val listResponse =
-        initStringRequest().endpoint("o/token?user_id=%s", user.getId().toString()).get();
+        initStringRequest().endpoint("o/api_key?user_id=%s", user.getId().toString()).get();
     val listStatusCode = listResponse.getStatusCode();
     assertEquals(listStatusCode, HttpStatus.OK);
 
