@@ -26,8 +26,8 @@ import static java.lang.String.format;
 import static java.util.UUID.fromString;
 import static org.springframework.util.DigestUtils.md5Digest;
 
+import bio.overture.ego.model.dto.ApiKeyResponse;
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.dto.UserScopesResponse;
 import bio.overture.ego.model.entity.Application;
@@ -457,7 +457,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     getRepository().save(currentToken);
   }
 
-  public List<TokenResponse> listToken(@NonNull UUID userId) {
+  public List<ApiKeyResponse> listToken(@NonNull UUID userId) {
     val user =
         userService
             .findById(userId)
@@ -471,7 +471,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
 
     val unrevokedTokens =
         tokens.stream().filter((token -> !token.isRevoked())).collect(Collectors.toSet());
-    List<TokenResponse> response = new ArrayList<>();
+    List<ApiKeyResponse> response = new ArrayList<>();
     unrevokedTokens.forEach(
         token -> {
           createTokenResponse(token, response);
@@ -480,11 +480,11 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     return response;
   }
 
-  private void createTokenResponse(@NonNull Token token, @NonNull List<TokenResponse> responses) {
+  private void createTokenResponse(@NonNull Token token, @NonNull List<ApiKeyResponse> responses) {
     val scopes = mapToSet(token.scopes(), Scope::toString);
     responses.add(
-        TokenResponse.builder()
-            .accessToken(token.getName())
+        ApiKeyResponse.builder()
+            .apiKey(token.getName())
             .scope(scopes)
             .exp(token.getSecondsUntilExpiry())
             .description(token.getDescription())

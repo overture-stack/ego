@@ -19,8 +19,8 @@ package bio.overture.ego.event.token;
 
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 
+import bio.overture.ego.model.dto.ApiKeyResponse;
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.params.ScopeName;
@@ -61,7 +61,7 @@ public class CleanupTokenListener implements ApplicationListener<CleanupUserToke
     tokens.forEach(t -> verifyToken(t, scopes));
   }
 
-  private void verifyToken(@NonNull TokenResponse token, @NonNull Set<String> scopes) {
+  private void verifyToken(@NonNull ApiKeyResponse token, @NonNull Set<String> scopes) {
     // Expand effective scopes to include READ if WRITE is present and convert to Scope type.
     val expandedUserScopes =
         Scope.explicitScopes(
@@ -77,7 +77,7 @@ public class CleanupTokenListener implements ApplicationListener<CleanupUserToke
           "Token scopes not contained in user scopes, revoking. {} not in {}",
           tokenScopes.toString(),
           expandedUserScopes.toString());
-      tokenService.revoke(token.getAccessToken());
+      tokenService.revoke(token.getApiKey());
     }
   }
 

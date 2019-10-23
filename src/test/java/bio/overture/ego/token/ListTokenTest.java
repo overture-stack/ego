@@ -3,8 +3,8 @@ package bio.overture.ego.token;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static org.junit.Assert.assertTrue;
 
+import bio.overture.ego.model.dto.ApiKeyResponse;
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.utils.EntityGenerator;
@@ -70,17 +70,17 @@ public class ListTokenTest {
 
     val responseList = tokenService.listToken(test.regularUser.getId());
 
-    List<TokenResponse> expected = new ArrayList<>();
+    List<ApiKeyResponse> expected = new ArrayList<>();
     expected.add(
-        TokenResponse.builder()
-            .accessToken(tokenString1)
+        ApiKeyResponse.builder()
+            .apiKey(tokenString1)
             .scope(scopeString1)
             .exp(userToken1.getSecondsUntilExpiry())
             .description("Test token 1.")
             .build());
     expected.add(
-        TokenResponse.builder()
-            .accessToken(tokenString2)
+        ApiKeyResponse.builder()
+            .apiKey(tokenString2)
             .scope(scopeString2)
             .exp(userToken2.getSecondsUntilExpiry())
             .description("Test token 2.")

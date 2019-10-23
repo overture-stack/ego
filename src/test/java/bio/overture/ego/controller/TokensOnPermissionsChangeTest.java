@@ -83,7 +83,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
   public void deletePermissionFromUser_ExistingToken_RevokeSuccess() {
     val user = entityGenerator.setupUser("UserFoo DeletePermission");
     val policy = entityGenerator.setupSinglePolicy("PolicyForSingleUserDeletePermission");
-    val accessToken = userPermissionTestSetup(user, policy, AccessLevel.WRITE, "WRITE");
+    val apiKey = userPermissionTestSetup(user, policy, AccessLevel.WRITE, "WRITE");
 
     val getPermissionsResponse =
         initStringRequest().endpoint("/users/%s/permissions", user.getId()).get();
@@ -99,7 +99,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     assertEquals(deleteStatusCode, HttpStatus.OK);
 
     val checkTokenAfterDeleteResponse =
-        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be revoked
     assertEquals(checkTokenAfterDeleteResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
@@ -114,7 +114,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
   public void upgradePermissionFromUser_ExistingToken_KeepTokenSuccess() {
     val user = entityGenerator.setupUser("UserFoo UpgradePermission");
     val policy = entityGenerator.setupSinglePolicy("PolicyForSingleUserUpgradePermission");
-    val accessToken = userPermissionTestSetup(user, policy, AccessLevel.READ, "READ");
+    val apiKey = userPermissionTestSetup(user, policy, AccessLevel.READ, "READ");
 
     val permissionUpgradeRequest =
         ImmutableList.of(
@@ -129,7 +129,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     assertEquals(upgradeStatusCode, HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
-        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
     val statusCode = checkTokenAfterUpgradeResponse.getStatusCode();
 
     // Should be valid
@@ -145,7 +145,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
   public void downgradePermissionFromUser_ExistingToken_RevokeTokenSuccess() {
     val user = entityGenerator.setupUser("UserFoo DowngradePermission");
     val policy = entityGenerator.setupSinglePolicy("PolicyForSingleUserDowngradePermission");
-    val accessToken = userPermissionTestSetup(user, policy, AccessLevel.WRITE, "WRITE");
+    val apiKey = userPermissionTestSetup(user, policy, AccessLevel.WRITE, "WRITE");
 
     val permissionDowngradeRequest =
         ImmutableList.of(
@@ -160,7 +160,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     assertEquals(downgradeStatusCode, HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
-        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
     val statusCode = checkTokenAfterUpgradeResponse.getStatusCode();
 
     // Should be revoked
@@ -176,7 +176,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
   public void denyPermissionFromUser_ExistingToken_RevokeTokenSuccess() {
     val user = entityGenerator.setupUser("UserFoo DenyPermission");
     val policy = entityGenerator.setupSinglePolicy("song.abc");
-    val accessToken = userPermissionTestSetup(user, policy, AccessLevel.WRITE, "WRITE");
+    val apiKey = userPermissionTestSetup(user, policy, AccessLevel.WRITE, "WRITE");
 
     val permissionDenyRequest =
         ImmutableList.of(
@@ -191,7 +191,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     assertEquals(denyStatusCode, HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
-        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
     val statusCode = checkTokenAfterUpgradeResponse.getStatusCode();
 
     // Should be revoked
@@ -209,7 +209,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     val group = entityGenerator.setupGroup("DeleteGroupPermission");
     val policy = entityGenerator.setupSinglePolicy("PolicyForGroupDeletePermission");
 
-    val accessToken = groupPermissionTestSetup(user, group, policy, AccessLevel.WRITE, "READ");
+    val apiKey = groupPermissionTestSetup(user, group, policy, AccessLevel.WRITE, "READ");
 
     val getPermissionsResponse =
         initStringRequest().endpoint("/groups/%s/permissions", group.getId()).get();
@@ -224,7 +224,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     assertEquals(deletePermissionResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterDeleteResponse =
-        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be revoked
     assertEquals(checkTokenAfterDeleteResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
@@ -242,7 +242,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     val group = entityGenerator.setupGroup("UpgradeGroupPermission");
     val policy = entityGenerator.setupSinglePolicy("PolicyForGroupUpgradePermission");
 
-    val accessToken = groupPermissionTestSetup(user, group, policy, AccessLevel.READ, "READ");
+    val apiKey = groupPermissionTestSetup(user, group, policy, AccessLevel.READ, "READ");
 
     val permissionUpgradeRequest =
         ImmutableList.of(
@@ -255,7 +255,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     assertEquals(upgradeResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
-        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be valid
     assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.MULTI_STATUS);
@@ -272,7 +272,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     val group = entityGenerator.setupGroup("DowngradeGroupPermission");
     val policy = entityGenerator.setupSinglePolicy("PolicyForGroupDowngradePermission");
 
-    val accessToken = groupPermissionTestSetup(user, group, policy, AccessLevel.WRITE, "WRITE");
+    val apiKey = groupPermissionTestSetup(user, group, policy, AccessLevel.WRITE, "WRITE");
 
     val permissionDowngradeRequest =
         ImmutableList.of(
@@ -285,7 +285,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     assertEquals(downgradeResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
-        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be revoked
     assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
@@ -302,7 +302,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     val group = entityGenerator.setupGroup("DenyGroupPermission");
     val policy = entityGenerator.setupSinglePolicy("PolicyForGroupDenyPermission");
 
-    val accessToken = groupPermissionTestSetup(user, group, policy, AccessLevel.WRITE, "WRITE");
+    val apiKey = groupPermissionTestSetup(user, group, policy, AccessLevel.WRITE, "WRITE");
 
     val permissionDenyRequest =
         ImmutableList.of(
@@ -315,7 +315,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     assertEquals(denyResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
-        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be revoked
     assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
@@ -332,7 +332,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     val group = entityGenerator.setupGroup("RemoveGroupPermission");
     val policy = entityGenerator.setupSinglePolicy("PolicyForGroupRemovePermission");
 
-    val accessToken = groupPermissionTestSetup(user, group, policy, AccessLevel.WRITE, "WRITE");
+    val apiKey = groupPermissionTestSetup(user, group, policy, AccessLevel.WRITE, "WRITE");
 
     val removeUserFromGroupResponse =
         initStringRequest()
@@ -341,7 +341,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     assertEquals(removeUserFromGroupResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
-        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be revoked
     assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
@@ -359,7 +359,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     val group = entityGenerator.setupGroup("GoodExistingGroupPermission");
     val policy = entityGenerator.setupSinglePolicy("PolicyForDenyGroupAddPermission");
 
-    val accessToken = groupPermissionTestSetup(user, group, policy, AccessLevel.WRITE, "WRITE");
+    val apiKey = groupPermissionTestSetup(user, group, policy, AccessLevel.WRITE, "WRITE");
 
     val groupDeny = entityGenerator.setupGroup("AddDenyGroupPermission");
 
@@ -380,7 +380,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     assertEquals(groupResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
-        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be revoked
     assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
@@ -398,7 +398,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     val group = entityGenerator.setupGroup("GoodExistingReadGroupPermission");
     val policy = entityGenerator.setupSinglePolicy("PolicyForWriteGroupUpgradeAddPermission");
 
-    val accessToken = groupPermissionTestSetup(user, group, policy, AccessLevel.READ, "READ");
+    val apiKey = groupPermissionTestSetup(user, group, policy, AccessLevel.READ, "READ");
 
     val groupWrite = entityGenerator.setupGroup("AddWriteUpgradeGroupPermission");
 
@@ -419,7 +419,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     assertEquals(groupResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterUpgradeResponse =
-        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be valid
     assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.MULTI_STATUS);
@@ -436,7 +436,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     val group = entityGenerator.setupGroup("DeleteGroupWithUserPermission");
     val policy = entityGenerator.setupSinglePolicy("PolicyForDeleteGroupWithUserPermission");
 
-    val accessToken = groupPermissionTestSetup(user, group, policy, AccessLevel.READ, "READ");
+    val apiKey = groupPermissionTestSetup(user, group, policy, AccessLevel.READ, "READ");
 
     val deleteGroupResponse =
         initStringRequest()
@@ -445,7 +445,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     assertEquals(deleteGroupResponse.getStatusCode(), HttpStatus.OK);
 
     val checkTokenAfterGroupDeleteResponse =
-        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be revoked
     assertEquals(checkTokenAfterGroupDeleteResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
@@ -480,16 +480,16 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
             .post();
 
     val tokenResponseJson = MAPPER.readTree(createTokenResponse.getBody());
-    val accessToken = tokenResponseJson.get("accessToken").asText();
+    val apiKey = tokenResponseJson.get("apiKey").asText();
 
     val checkTokenResponse =
-        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     val checkStatusCode = checkTokenResponse.getStatusCode();
     assertEquals(checkStatusCode, HttpStatus.MULTI_STATUS);
     assertTrue(checkTokenResponse.getBody().contains(policy.getName() + "." + tokenScopeSuffix));
 
-    return accessToken;
+    return apiKey;
   }
 
   /**
@@ -533,15 +533,15 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
             .post();
 
     val tokenResponseJson = MAPPER.readTree(createTokenResponse.getBody());
-    val accessToken = tokenResponseJson.get("accessToken").asText();
+    val apiKey = tokenResponseJson.get("apiKey").asText();
 
     val checkTokenResponse =
-        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", accessToken).post();
+        initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     val checkStatusCode = checkTokenResponse.getStatusCode();
     assertEquals(checkStatusCode, HttpStatus.MULTI_STATUS);
     assertTrue(checkTokenResponse.getBody().contains(policy.getName() + "." + tokenScopeSuffix));
 
-    return accessToken;
+    return apiKey;
   }
 }

@@ -10,8 +10,8 @@ import lombok.Value;
 @Value
 @Builder
 @JsonView(Views.REST.class)
-public class TokenResponse {
-  @NonNull private final String accessToken;
+public class ApiKeyResponse {
+  @NonNull private final String apiKey;
   @NonNull private final Set<String> scope;
   @NonNull private final Long exp;
   private String description;

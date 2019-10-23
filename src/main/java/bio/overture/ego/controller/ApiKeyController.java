@@ -28,8 +28,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
+import bio.overture.ego.model.dto.ApiKeyResponse;
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.dto.UserScopesResponse;
 import bio.overture.ego.model.entity.Application;
@@ -106,7 +106,7 @@ public class ApiKeyController {
 
   @RequestMapping(method = POST, value = "/api_key")
   @ResponseStatus(value = OK)
-  public @ResponseBody TokenResponse issueToken(
+  public @ResponseBody ApiKeyResponse issueToken(
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "user_id") UUID userId,
       @RequestParam(value = "scopes") ArrayList<String> scopes,
@@ -138,8 +138,8 @@ public class ApiKeyController {
     val scopeNames = mapToList(scopes, ScopeName::new);
     val t = tokenService.issueToken(userId, scopeNames, description);
     Set<String> issuedScopes = mapToSet(t.scopes(), Scope::toString);
-    return TokenResponse.builder()
-        .accessToken(t.getName())
+    return ApiKeyResponse.builder()
+        .apiKey(t.getName())
         .scope(issuedScopes)
         .exp(t.getSecondsUntilExpiry())
         .description(t.getDescription())
@@ -158,7 +158,7 @@ public class ApiKeyController {
   @AdminScoped
   @RequestMapping(method = GET, value = "/api_key")
   @ResponseStatus(value = OK)
-  public @ResponseBody List<TokenResponse> listToken(
+  public @ResponseBody List<ApiKeyResponse> listToken(
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "user_id") UUID user_id) {
     return tokenService.listToken(user_id);

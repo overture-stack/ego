@@ -423,11 +423,11 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
     // Result should only have unrevoked tokens, ignoring the "exp" field.
     val expected =
-        "[{\"accessToken\":\"891044a1-3ffd-4164-a6a0-0e1e666b28dc\","
+        "[{\"apiKey\":\"891044a1-3ffd-4164-a6a0-0e1e666b28dc\","
             + "\"scope\":[\"collab.READ\"],"
             + "\"exp\":\"${json-unit.ignore}\","
             + "\"description\":\"test token 2\"},"
-            + "{\"accessToken\":\"791044a1-3ffd-4164-a6a0-0e1e666b28dc\","
+            + "{\"apiKey\":\"791044a1-3ffd-4164-a6a0-0e1e666b28dc\","
             + "\"scope\":[\"song.READ\"],"
             + "\"exp\":\"${json-unit.ignore}\","
             + "\"description\":\"test token 1\"}]";
