@@ -183,7 +183,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   }
 
   @SneakyThrows
-  public Token issueToken(UUID user_id, List<ScopeName> scopeNames, String description) {
+  public Token issueApiKey(UUID user_id, List<ScopeName> scopeNames, String description) {
     log.info(format("Looking for user '%s'", str(user_id)));
     log.info(format("Scopes are '%s'", strList(scopeNames)));
     log.info(format("Token description is '%s'", description));

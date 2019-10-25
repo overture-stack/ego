@@ -136,13 +136,13 @@ public class ApiKeyController {
     }
 
     val scopeNames = mapToList(scopes, ScopeName::new);
-    val t = tokenService.issueToken(userId, scopeNames, description);
-    Set<String> issuedScopes = mapToSet(t.scopes(), Scope::toString);
+    val aK = tokenService.issueApiKey(userId, scopeNames, description);
+    Set<String> issuedScopes = mapToSet(aK.scopes(), Scope::toString);
     return ApiKeyResponse.builder()
-        .apiKey(t.getName())
+        .apiKey(aK.getName())
         .scope(issuedScopes)
-        .exp(t.getSecondsUntilExpiry())
-        .description(t.getDescription())
+        .exp(aK.getSecondsUntilExpiry())
+        .description(aK.getDescription())
         .build();
   }
 

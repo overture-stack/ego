@@ -35,49 +35,49 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class CleanupTokenListener implements ApplicationListener<CleanupUserTokensEvent> {
+public class CleanupApiKeyListener implements ApplicationListener<CleanupUserTokensEvent> {
 
   /** Dependencies */
   private final TokenService tokenService;
 
   @Autowired
-  public CleanupTokenListener(@NonNull TokenService tokenService) {
+  public CleanupApiKeyListener(@NonNull TokenService tokenService) {
     this.tokenService = tokenService;
   }
 
   @Override
   public void onApplicationEvent(@NonNull CleanupUserTokensEvent event) {
     log.debug("Number of users to be checked for token cleanup: {}", event.getUsers().size());
-    cleanupTokens(event.getUsers());
+    cleanupApiKeys(event.getUsers());
   }
 
-  private void cleanupTokens(@NonNull Set<User> users) {
-    users.forEach(this::cleanupTokensForUser);
+  private void cleanupApiKeys(@NonNull Set<User> users) {
+    users.forEach(this::cleanupApiKeysForUser);
   }
 
-  private void cleanupTokensForUser(@NonNull User user) {
+  private void cleanupApiKeysForUser(@NonNull User user) {
     val scopes = tokenService.userScopes(user.getName()).getScopes();
     val tokens = tokenService.listToken(user.getId());
     tokens.forEach(t -> verifyToken(t, scopes));
   }
 
-  private void verifyToken(@NonNull ApiKeyResponse token, @NonNull Set<String> scopes) {
+  private void verifyToken(@NonNull ApiKeyResponse apiKey, @NonNull Set<String> scopes) {
     // Expand effective scopes to include READ if WRITE is present and convert to Scope type.
     val expandedUserScopes =
         Scope.explicitScopes(
             scopes.stream().map(this::convertStringToScope).collect(toImmutableSet()));
 
     // Convert token scopes from String to Scope
-    val tokenScopes =
-        token.getScope().stream().map(this::convertStringToScope).collect(toImmutableSet());
+    val apiKeyScopes =
+        apiKey.getScope().stream().map(this::convertStringToScope).collect(toImmutableSet());
 
     // Compare
-    if (!expandedUserScopes.containsAll(tokenScopes)) {
+    if (!expandedUserScopes.containsAll(apiKeyScopes)) {
       log.info(
-          "Token scopes not contained in user scopes, revoking. {} not in {}",
-          tokenScopes.toString(),
+          "ApiKey scopes not contained in user scopes, revoking. {} not in {}",
+          apiKeyScopes.toString(),
           expandedUserScopes.toString());
-      tokenService.revoke(token.getApiKey());
+      tokenService.revoke(apiKey.getApiKey());
     }
   }
 

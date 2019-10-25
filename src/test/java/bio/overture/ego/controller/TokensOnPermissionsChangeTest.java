@@ -459,7 +459,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
    * @param policy Policy that the permissions will be against.
    * @param initialAccess The initial access level (MASK) that a user will have to the policy.
    * @param tokenScopeSuffix The scope suffix that the token will be created with.
-   * @return The access token
+   * @return The API key
    */
   @SneakyThrows
   private String userPermissionTestSetup(
@@ -501,7 +501,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
    * @param policy The policy that the permission is relevant to.
    * @param initialAccess The initial access level (MASK) for the group on the policy.
    * @param tokenScopeSuffix The scope suffix that the token will be created with for the user.
-   * @return The access token
+   * @return The API key
    */
   @SneakyThrows
   private String groupPermissionTestSetup(
