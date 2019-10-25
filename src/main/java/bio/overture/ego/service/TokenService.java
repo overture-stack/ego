@@ -92,7 +92,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   private TokenSigner tokenSigner;
   private UserService userService;
   private ApplicationService applicationService;
-  private TokenStoreService tokenStoreService;
+  private ApiKeyStoreService apiKeyStoreService;
   private PolicyService policyService;
 
   /** Configuration */
@@ -106,20 +106,20 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       @NonNull TokenSigner tokenSigner,
       @NonNull UserService userService,
       @NonNull ApplicationService applicationService,
-      @NonNull TokenStoreService tokenStoreService,
+      @NonNull ApiKeyStoreService apiKeyStoreService,
       @NonNull PolicyService policyService,
       @NonNull TokenStoreRepository tokenStoreRepository) {
     super(Token.class, tokenStoreRepository);
     this.tokenSigner = tokenSigner;
     this.userService = userService;
     this.applicationService = applicationService;
-    this.tokenStoreService = tokenStoreService;
+    this.apiKeyStoreService = apiKeyStoreService;
     this.policyService = policyService;
   }
 
   @Override
   public Token getWithRelationships(@NonNull UUID id) {
-    return tokenStoreService.getWithRelationships(id);
+    return apiKeyStoreService.getWithRelationships(id);
   }
 
   public String generateUserToken(IDToken idToken) {
@@ -230,7 +230,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     }
 
     log.info("Creating token in token store");
-    tokenStoreService.create(token);
+    apiKeyStoreService.create(token);
 
     log.info(format("Returning '%s'", str(token)));
 
@@ -238,7 +238,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   }
 
   public Optional<Token> findByTokenString(String token) {
-    return tokenStoreService.findByTokenName(token);
+    return apiKeyStoreService.findByTokenName(token);
   }
 
   public String generateTokenString() {

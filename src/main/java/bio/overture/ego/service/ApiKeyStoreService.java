@@ -35,13 +35,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @Transactional
-public class TokenStoreService extends AbstractNamedService<Token, UUID> {
+public class ApiKeyStoreService extends AbstractNamedService<Token, UUID> {
 
   /** Dependencies */
   private final TokenStoreRepository tokenRepository;
 
   @Autowired
-  public TokenStoreService(@NonNull TokenStoreRepository repository) {
+  public ApiKeyStoreService(@NonNull TokenStoreRepository repository) {
     super(Token.class, repository);
     this.tokenRepository = repository;
   }

@@ -64,7 +64,7 @@ public class EntityGenerator {
 
   @Autowired private PolicyService policyService;
 
-  @Autowired private TokenStoreService tokenStoreService;
+  @Autowired private ApiKeyStoreService apiKeyStoreService;
 
   @Autowired private UserPermissionService userPermissionService;
 
@@ -351,7 +351,7 @@ public class EntityGenerator {
 
     tokenObject.setScopes(scopes);
 
-    return tokenStoreService.create(tokenObject);
+    return apiKeyStoreService.create(tokenObject);
   }
 
   public void addPermissions(User user, Set<Scope> scopes) {
