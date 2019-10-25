@@ -77,7 +77,7 @@ public class Token implements Identifiable<UUID> {
       cascade = CascadeType.ALL,
       fetch = FetchType.LAZY)
   @Builder.Default
-  private Set<TokenScope> scopes = newHashSet();
+  private Set<ApiKeyScope> scopes = newHashSet();
 
   public Long getSecondsUntilExpiry() {
     val seconds = expiryDate.getTime() / 1000L - Calendar.getInstance().getTime().getTime() / 1000L;
@@ -88,7 +88,7 @@ public class Token implements Identifiable<UUID> {
     if (scopes == null) {
       scopes = new HashSet<>();
     }
-    scopes.add(new TokenScope(this, scope.getPolicy(), scope.getAccessLevel()));
+    scopes.add(new ApiKeyScope(this, scope.getPolicy(), scope.getAccessLevel()));
   }
 
   @JsonIgnore
@@ -97,6 +97,6 @@ public class Token implements Identifiable<UUID> {
   }
 
   public void setScopes(Set<Scope> scopes) {
-    this.scopes = mapToSet(scopes, s -> new TokenScope(this, s.getPolicy(), s.getAccessLevel()));
+    this.scopes = mapToSet(scopes, s -> new ApiKeyScope(this, s.getPolicy(), s.getAccessLevel()));
   }
 }

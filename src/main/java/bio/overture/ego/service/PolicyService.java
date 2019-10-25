@@ -12,8 +12,8 @@ import static org.mapstruct.factory.Mappers.getMapper;
 
 import bio.overture.ego.event.token.TokenEventsPublisher;
 import bio.overture.ego.model.dto.PolicyRequest;
+import bio.overture.ego.model.entity.ApiKeyScope;
 import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.entity.TokenScope;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.PolicyRepository;
 import bio.overture.ego.repository.queryspecification.PolicySpecification;
@@ -85,8 +85,8 @@ public class PolicyService extends AbstractNamedService<Policy, UUID> {
 
     // For semantic/readability reasons, revoke tokens AFTER policy is deleted.
     val tokensToRevoke =
-        policy.getTokenScopes().stream()
-            .map(TokenScope::getToken)
+        policy.getApiKeyScopes().stream()
+            .map(ApiKeyScope::getToken)
             .collect(Collectors.toImmutableSet());
     super.delete(id);
     tokenEventsPublisher.requestTokenCleanup(tokensToRevoke);
