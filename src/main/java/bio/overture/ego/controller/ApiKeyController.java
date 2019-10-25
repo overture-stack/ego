@@ -29,8 +29,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import bio.overture.ego.model.dto.ApiKeyResponse;
+import bio.overture.ego.model.dto.ApiKeyScopeResponse;
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.dto.UserScopesResponse;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
@@ -88,7 +88,7 @@ public class ApiKeyController {
   @RequestMapping(method = POST, value = "/check_api_key")
   @ResponseStatus(value = MULTI_STATUS)
   @SneakyThrows
-  public @ResponseBody TokenScopeResponse checkToken(
+  public @ResponseBody ApiKeyScopeResponse checkToken(
       @RequestHeader(value = "Authorization") final String authToken,
       @RequestParam(value = "apiKey") final String apiKey) {
 

@@ -27,8 +27,8 @@ import static java.util.UUID.fromString;
 import static org.springframework.util.DigestUtils.md5Digest;
 
 import bio.overture.ego.model.dto.ApiKeyResponse;
+import bio.overture.ego.model.dto.ApiKeyScopeResponse;
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.dto.UserScopesResponse;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Token;
@@ -355,7 +355,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   }
 
   @SneakyThrows
-  public TokenScopeResponse checkToken(String authToken, String token) {
+  public ApiKeyScopeResponse checkToken(String authToken, String token) {
     if (token == null) {
       log.debug("Null token");
       throw new InvalidTokenException("No token field found in POST request");
@@ -382,7 +382,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     val scopes = explicitScopes(effectiveScopes(extractScopes(owner), t.scopes()));
     val names = mapToSet(scopes, Scope::toString);
 
-    return new TokenScopeResponse(owner.getName(), clientId, t.getSecondsUntilExpiry(), names);
+    return new ApiKeyScopeResponse(owner.getName(), clientId, t.getSecondsUntilExpiry(), names);
   }
 
   public UserScopesResponse userScopes(@NonNull String userName) {
