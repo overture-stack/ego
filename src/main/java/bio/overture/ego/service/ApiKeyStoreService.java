@@ -76,7 +76,7 @@ public class ApiKeyStoreService extends AbstractNamedService<ApiKey, UUID> {
     return res;
   }
 
-  public Optional<ApiKey> findByTokenName(String tokenName) {
-    return tokenRepository.findByName(tokenName);
+  public Optional<ApiKey> findByApiKeyName(String apiKeyName) {
+    return tokenRepository.findByName(apiKeyName);
   }
 }

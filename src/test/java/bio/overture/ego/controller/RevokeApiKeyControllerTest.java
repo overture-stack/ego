@@ -93,7 +93,7 @@ public class RevokeApiKeyControllerTest {
 
     val revokedApiKey =
         tokenService
-            .findByTokenString(randomApiKeyName)
+            .findByApiKeyString(randomApiKeyName)
             .orElseThrow(() -> new InvalidTokenException("ApiKey Not Found!"));
     assertTrue(revokedApiKey.isRevoked());
   }
@@ -120,7 +120,7 @@ public class RevokeApiKeyControllerTest {
 
     val revokedApiKey =
         tokenService
-            .findByTokenString(apiKeyName)
+            .findByApiKeyString(apiKeyName)
             .orElseThrow(() -> new InvalidTokenException("ApiKey Not Found!"));
     assertTrue(revokedApiKey.isRevoked());
   }
@@ -146,7 +146,7 @@ public class RevokeApiKeyControllerTest {
         .andExpect(status().isUnauthorized());
     val revokedApiKey =
         tokenService
-            .findByTokenString(apiKeyName)
+            .findByApiKeyString(apiKeyName)
             .orElseThrow(() -> new InvalidTokenException("ApiKey Not Found!"));
     assertFalse(revokedApiKey.isRevoked());
   }
@@ -174,7 +174,7 @@ public class RevokeApiKeyControllerTest {
 
     val revokedApiKey =
         tokenService
-            .findByTokenString(apiKeyName)
+            .findByApiKeyString(apiKeyName)
             .orElseThrow(() -> new InvalidTokenException("ApiKey Not Found!"));
     assertTrue(revokedApiKey.isRevoked());
   }
@@ -200,7 +200,7 @@ public class RevokeApiKeyControllerTest {
 
     val revokedApiKey =
         tokenService
-            .findByTokenString(apiKeyName)
+            .findByApiKeyString(apiKeyName)
             .orElseThrow(() -> new InvalidTokenException("ApiKey Not Found!"));
     assertTrue(revokedApiKey.isRevoked());
   }
@@ -230,7 +230,7 @@ public class RevokeApiKeyControllerTest {
 
     val revokedApiKey =
         tokenService
-            .findByTokenString(apiKeyName)
+            .findByApiKeyString(apiKeyName)
             .orElseThrow(() -> new InvalidTokenException("ApiKey Not Found!"));
     assertFalse(revokedApiKey.isRevoked());
   }

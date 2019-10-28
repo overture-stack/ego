@@ -92,7 +92,7 @@ public class ApiKeyController {
       @RequestHeader(value = "Authorization") final String authToken,
       @RequestParam(value = "apiKey") final String apiKey) {
 
-    return tokenService.checkToken(authToken, apiKey);
+    return tokenService.checkApiKey(authToken, apiKey);
   }
 
   @RequestMapping(method = GET, value = "/scopes")
@@ -151,7 +151,7 @@ public class ApiKeyController {
   public @ResponseBody String revokeToken(
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "apiKey") final String apiKey) {
-    tokenService.revokeToken(apiKey);
+    tokenService.revokeApiKey(apiKey);
     return format("ApiKey '%s' is successfully revoked!", apiKey);
   }
 
@@ -161,7 +161,7 @@ public class ApiKeyController {
   public @ResponseBody List<ApiKeyResponse> listToken(
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "user_id") UUID user_id) {
-    return tokenService.listToken(user_id);
+    return tokenService.listApiKey(user_id);
   }
 
   @ExceptionHandler({InvalidTokenException.class})

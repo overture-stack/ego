@@ -68,7 +68,7 @@ public class ListApiKeyTest {
     apiKeys.add(userToken2);
     test.regularUser.setTokens(apiKeys);
 
-    val responseList = tokenService.listToken(test.regularUser.getId());
+    val responseList = tokenService.listApiKey(test.regularUser.getId());
 
     List<ApiKeyResponse> expected = new ArrayList<>();
     expected.add(
@@ -91,7 +91,7 @@ public class ListApiKeyTest {
 
   @Test
   public void testEmptyTokenList() {
-    val tokens = tokenService.listToken(test.regularUser.getId());
-    assertTrue(tokens.isEmpty());
+    val apiKeys = tokenService.listApiKey(test.regularUser.getId());
+    assertTrue(apiKeys.isEmpty());
   }
 }
