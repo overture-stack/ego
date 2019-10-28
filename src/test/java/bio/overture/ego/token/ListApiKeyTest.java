@@ -3,9 +3,9 @@ package bio.overture.ego.token;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static org.junit.Assert.assertTrue;
 
+import bio.overture.ego.model.dto.ApiKeyResponse;
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.dto.TokenResponse;
-import bio.overture.ego.model.entity.Token;
+import bio.overture.ego.model.entity.ApiKey;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.TestData;
@@ -33,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 @ActiveProfiles("test")
 @Ignore
-public class ListTokenTest {
+public class ListApiKeyTest {
 
   public static TestData test = null;
   @Autowired private EntityGenerator entityGenerator;
@@ -46,9 +46,9 @@ public class ListTokenTest {
   }
 
   @Test
-  public void testListToken() {
-    val tokenString1 = "791044a1-3ffd-4164-a6a0-0e1e666b28dc";
-    val tokenString2 = "891044a1-3ffd-4164-a6a0-0e1e666b28dc";
+  public void testListApiKey() {
+    val apiKeyString1 = "791044a1-3ffd-4164-a6a0-0e1e666b28dc";
+    val apiKeyString2 = "891044a1-3ffd-4164-a6a0-0e1e666b28dc";
 
     val scopes1 = test.getScopes("song.WRITE", "id.WRITE");
     val scopes2 = test.getScopes("song.READ", "id.READ");
@@ -57,30 +57,30 @@ public class ListTokenTest {
     Set<String> scopeString2 = mapToSet(scopes2, Scope::toString);
 
     val userToken1 =
-        entityGenerator.setupToken(
-            test.regularUser, tokenString1, false, 1000, "Test token 1.", scopes1);
+        entityGenerator.setupApiKey(
+            test.regularUser, apiKeyString1, false, 1000, "Test token 1.", scopes1);
     val userToken2 =
-        entityGenerator.setupToken(
-            test.regularUser, tokenString2, false, 1000, "Test token 2.", scopes2);
+        entityGenerator.setupApiKey(
+            test.regularUser, apiKeyString2, false, 1000, "Test token 2.", scopes2);
 
-    Set<Token> tokens = new HashSet<>();
-    tokens.add(userToken1);
-    tokens.add(userToken2);
-    test.regularUser.setTokens(tokens);
+    Set<ApiKey> apiKeys = new HashSet<>();
+    apiKeys.add(userToken1);
+    apiKeys.add(userToken2);
+    test.regularUser.setTokens(apiKeys);
 
-    val responseList = tokenService.listToken(test.regularUser.getId());
+    val responseList = tokenService.listApiKey(test.regularUser.getId());
 
-    List<TokenResponse> expected = new ArrayList<>();
+    List<ApiKeyResponse> expected = new ArrayList<>();
     expected.add(
-        TokenResponse.builder()
-            .accessToken(tokenString1)
+        ApiKeyResponse.builder()
+            .apiKey(apiKeyString1)
             .scope(scopeString1)
             .exp(userToken1.getSecondsUntilExpiry())
             .description("Test token 1.")
             .build());
     expected.add(
-        TokenResponse.builder()
-            .accessToken(tokenString2)
+        ApiKeyResponse.builder()
+            .apiKey(apiKeyString2)
             .scope(scopeString2)
             .exp(userToken2.getSecondsUntilExpiry())
             .description("Test token 2.")
@@ -91,7 +91,7 @@ public class ListTokenTest {
 
   @Test
   public void testEmptyTokenList() {
-    val tokens = tokenService.listToken(test.regularUser.getId());
-    assertTrue(tokens.isEmpty());
+    val apiKeys = tokenService.listApiKey(test.regularUser.getId());
+    assertTrue(apiKeys.isEmpty());
   }
 }

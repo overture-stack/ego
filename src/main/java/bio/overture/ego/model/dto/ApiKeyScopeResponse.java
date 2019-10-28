@@ -9,7 +9,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 @JsonView(Views.REST.class)
-public class TokenScopeResponse {
+public class ApiKeyScopeResponse {
   private String user_name;
   private String client_id;
   private Long exp;

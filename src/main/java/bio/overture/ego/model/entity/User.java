@@ -175,7 +175,7 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
       orphanRemoval = true,
       cascade = CascadeType.ALL,
       fetch = FetchType.LAZY)
-  private Set<Token> tokens = newHashSet();
+  private Set<ApiKey> tokens = newHashSet();
 
   @JsonIgnore
   @Builder.Default

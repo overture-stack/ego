@@ -1,6 +1,6 @@
 package bio.overture.ego.repository;
 
-import bio.overture.ego.model.entity.Token;
+import bio.overture.ego.model.entity.ApiKey;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -9,13 +9,13 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface TokenStoreRepository extends NamedRepository<Token, UUID> {
+public interface TokenStoreRepository extends NamedRepository<ApiKey, UUID> {
 
-  Optional<Token> getTokenByNameIgnoreCase(String name);
+  Optional<ApiKey> getTokenByNameIgnoreCase(String name);
 
-  Token findOneByNameIgnoreCase(String token);
+  ApiKey findOneByNameIgnoreCase(String token);
 
-  Set<Token> findAllByIdIn(List<UUID> ids);
+  Set<ApiKey> findAllByIdIn(List<UUID> ids);
 
   @Modifying
   @Query(
@@ -27,7 +27,7 @@ public interface TokenStoreRepository extends NamedRepository<Token, UUID> {
   //  Set<Token> findAllByOwnerAndScopes(List<UUID> ids);
 
   @Override
-  default Optional<Token> findByName(String name) {
+  default Optional<ApiKey> findByName(String name) {
     return getTokenByNameIgnoreCase(name);
   }
 }

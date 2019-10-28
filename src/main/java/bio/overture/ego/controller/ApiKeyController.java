@@ -28,9 +28,9 @@ import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
+import bio.overture.ego.model.dto.ApiKeyResponse;
+import bio.overture.ego.model.dto.ApiKeyScopeResponse;
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.dto.TokenResponse;
-import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.dto.UserScopesResponse;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
@@ -69,7 +69,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("/o")
-public class TokenController {
+public class ApiKeyController {
 
   /** Dependencies */
   private final TokenService tokenService;
@@ -78,21 +78,21 @@ public class TokenController {
       authorizationManager; // Need this here due to context sensitive checks
 
   @Autowired
-  public TokenController(
+  public ApiKeyController(
       @NonNull TokenService tokenService, @NonNull AuthorizationManager authorizationManager) {
     this.tokenService = tokenService;
     this.authorizationManager = authorizationManager;
   }
 
   @ApplicationScoped()
-  @RequestMapping(method = POST, value = "/check_token")
+  @RequestMapping(method = POST, value = "/check_api_key")
   @ResponseStatus(value = MULTI_STATUS)
   @SneakyThrows
-  public @ResponseBody TokenScopeResponse checkToken(
+  public @ResponseBody ApiKeyScopeResponse checkToken(
       @RequestHeader(value = "Authorization") final String authToken,
-      @RequestParam(value = "token") final String token) {
+      @RequestParam(value = "apiKey") final String apiKey) {
 
-    return tokenService.checkToken(authToken, token);
+    return tokenService.checkApiKey(authToken, apiKey);
   }
 
   @RequestMapping(method = GET, value = "/scopes")
@@ -104,9 +104,9 @@ public class TokenController {
     return tokenService.userScopes(userName);
   }
 
-  @RequestMapping(method = POST, value = "/token")
+  @RequestMapping(method = POST, value = "/api_key")
   @ResponseStatus(value = OK)
-  public @ResponseBody TokenResponse issueToken(
+  public @ResponseBody ApiKeyResponse issueToken(
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "user_id") UUID userId,
       @RequestParam(value = "scopes") ArrayList<String> scopes,
@@ -136,32 +136,32 @@ public class TokenController {
     }
 
     val scopeNames = mapToList(scopes, ScopeName::new);
-    val t = tokenService.issueToken(userId, scopeNames, description);
-    Set<String> issuedScopes = mapToSet(t.scopes(), Scope::toString);
-    return TokenResponse.builder()
-        .accessToken(t.getName())
+    val aK = tokenService.issueApiKey(userId, scopeNames, description);
+    Set<String> issuedScopes = mapToSet(aK.scopes(), Scope::toString);
+    return ApiKeyResponse.builder()
+        .apiKey(aK.getName())
         .scope(issuedScopes)
-        .exp(t.getSecondsUntilExpiry())
-        .description(t.getDescription())
+        .exp(aK.getSecondsUntilExpiry())
+        .description(aK.getDescription())
         .build();
   }
 
-  @RequestMapping(method = DELETE, value = "/token")
+  @RequestMapping(method = DELETE, value = "/api_key")
   @ResponseStatus(value = OK)
   public @ResponseBody String revokeToken(
       @RequestHeader(value = "Authorization") final String authorization,
-      @RequestParam(value = "token") final String token) {
-    tokenService.revokeToken(token);
-    return format("Token '%s' is successfully revoked!", token);
+      @RequestParam(value = "apiKey") final String apiKey) {
+    tokenService.revokeApiKey(apiKey);
+    return format("ApiKey '%s' is successfully revoked!", apiKey);
   }
 
   @AdminScoped
-  @RequestMapping(method = GET, value = "/token")
+  @RequestMapping(method = GET, value = "/api_key")
   @ResponseStatus(value = OK)
-  public @ResponseBody List<TokenResponse> listToken(
+  public @ResponseBody List<ApiKeyResponse> listToken(
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "user_id") UUID user_id) {
-    return tokenService.listToken(user_id);
+    return tokenService.listApiKey(user_id);
   }
 
   @ExceptionHandler({InvalidTokenException.class})

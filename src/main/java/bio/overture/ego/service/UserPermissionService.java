@@ -1,6 +1,6 @@
 package bio.overture.ego.service;
 
-import bio.overture.ego.event.token.TokenEventsPublisher;
+import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
@@ -25,17 +25,17 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
   /** Dependencies */
   private final UserService userService;
 
-  private final TokenEventsPublisher tokenEventsPublisher;
+  private final ApiKeyEventsPublisher apiKeyEventsPublisher;
 
   @Autowired
   public UserPermissionService(
       @NonNull UserPermissionRepository repository,
       @NonNull UserService userService,
-      @NonNull TokenEventsPublisher tokenEventsPublisher,
+      @NonNull ApiKeyEventsPublisher apiKeyEventsPublisher,
       @NonNull PolicyService policyService) {
     super(User.class, UserPermission.class, userService, policyService, repository);
     this.userService = userService;
-    this.tokenEventsPublisher = tokenEventsPublisher;
+    this.apiKeyEventsPublisher = apiKeyEventsPublisher;
   }
 
   /**
@@ -49,7 +49,7 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
   public User addPermissions(
       @NonNull UUID userId, @NonNull List<PermissionRequest> permissionRequests) {
     val user = super.addPermissions(userId, permissionRequests);
-    tokenEventsPublisher.requestTokenCleanupByUsers(ImmutableSet.of(userService.getById(userId)));
+    apiKeyEventsPublisher.requestApiKeyCleanupByUsers(ImmutableSet.of(userService.getById(userId)));
     return user;
   }
 
@@ -62,7 +62,7 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
   @Override
   public void deletePermissions(@NonNull UUID userId, @NonNull Collection<UUID> idsToDelete) {
     super.deletePermissions(userId, idsToDelete);
-    tokenEventsPublisher.requestTokenCleanupByUsers(ImmutableSet.of(userService.getById(userId)));
+    apiKeyEventsPublisher.requestApiKeyCleanupByUsers(ImmutableSet.of(userService.getById(userId)));
   }
 
   @Override
