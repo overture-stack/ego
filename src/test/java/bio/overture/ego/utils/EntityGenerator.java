@@ -328,7 +328,7 @@ public class EntityGenerator {
     setupPolicies("Study001", "Study002", "Study003");
   }
 
-  public ApiKey setupToken(
+  public ApiKey setupApiKey(
       User user,
       String token,
       boolean isRevoked,

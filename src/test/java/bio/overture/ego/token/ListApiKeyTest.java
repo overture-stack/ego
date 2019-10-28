@@ -57,10 +57,10 @@ public class ListApiKeyTest {
     Set<String> scopeString2 = mapToSet(scopes2, Scope::toString);
 
     val userToken1 =
-        entityGenerator.setupToken(
+        entityGenerator.setupApiKey(
             test.regularUser, apiKeyString1, false, 1000, "Test token 1.", scopes1);
     val userToken2 =
-        entityGenerator.setupToken(
+        entityGenerator.setupApiKey(
             test.regularUser, apiKeyString2, false, 1000, "Test token 2.", scopes2);
 
     Set<ApiKey> apiKeys = new HashSet<>();

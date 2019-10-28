@@ -78,9 +78,9 @@ public class RevokeApiKeyControllerTest {
     val randomScopes = test.getScopes("song.READ");
 
     val randomApiKey =
-        entityGenerator.setupToken(
+        entityGenerator.setupApiKey(
             test.regularUser, randomApiKeyName, false, 1000, "random token", randomScopes);
-    entityGenerator.setupToken(test.adminUser, adminTokenName, false, 1000, "test token", scopes);
+    entityGenerator.setupApiKey(test.adminUser, adminTokenName, false, 1000, "test token", scopes);
 
     assertFalse(randomApiKey.isRevoked());
 
@@ -107,7 +107,7 @@ public class RevokeApiKeyControllerTest {
     val apiKeyName = randomUUID().toString();
     val scopes = test.getScopes("song.READ", "collab.READ", "id.WRITE");
     val apiKey =
-        entityGenerator.setupToken(test.adminUser, apiKeyName, false, 1000, "test token", scopes);
+        entityGenerator.setupApiKey(test.adminUser, apiKeyName, false, 1000, "test token", scopes);
 
     assertFalse(apiKey.isRevoked());
 
@@ -134,7 +134,7 @@ public class RevokeApiKeyControllerTest {
     val apiKeyName = randomUUID().toString();
     val scopes = test.getScopes("id.WRITE");
     val apiKey =
-        entityGenerator.setupToken(test.user1, apiKeyName, false, 1000, "test token", scopes);
+        entityGenerator.setupApiKey(test.user1, apiKeyName, false, 1000, "test token", scopes);
 
     assertFalse(apiKey.isRevoked());
 
@@ -160,7 +160,8 @@ public class RevokeApiKeyControllerTest {
     val apiKeyName = randomUUID().toString();
     val scopes = test.getScopes("song.READ");
     val apiKey =
-        entityGenerator.setupToken(test.regularUser, apiKeyName, false, 1000, "test token", scopes);
+        entityGenerator.setupApiKey(
+            test.regularUser, apiKeyName, false, 1000, "test token", scopes);
 
     assertFalse(apiKey.isRevoked());
 
@@ -185,7 +186,8 @@ public class RevokeApiKeyControllerTest {
     val apiKeyName = randomUUID().toString();
     val scopes = test.getScopes("song.READ");
     val apiKey =
-        entityGenerator.setupToken(test.regularUser, apiKeyName, false, 1000, "test token", scopes);
+        entityGenerator.setupApiKey(
+            test.regularUser, apiKeyName, false, 1000, "test token", scopes);
 
     assertFalse(apiKey.isRevoked());
 
@@ -214,7 +216,8 @@ public class RevokeApiKeyControllerTest {
     val apiKeyName = randomUUID().toString();
     val scopes = test.getScopes("song.READ");
     val apiKey =
-        entityGenerator.setupToken(test.regularUser, apiKeyName, false, 1000, "test token", scopes);
+        entityGenerator.setupApiKey(
+            test.regularUser, apiKeyName, false, 1000, "test token", scopes);
 
     assertFalse(apiKey.isRevoked());
 

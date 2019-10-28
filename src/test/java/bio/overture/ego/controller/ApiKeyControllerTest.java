@@ -69,38 +69,38 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  public void issueTokenShouldRevokeRedundantTokens() {
+  public void issueApiKeyShouldRevokeRedundantApiKeys() {
     val user = entityGenerator.setupUser("Test User");
     val userId = user.getId();
     val standByUser = entityGenerator.setupUser("Test User2");
     entityGenerator.setupPolicies("aws,no-be-used", "collab,no-be-used");
     entityGenerator.addPermissions(user, entityGenerator.getScopes("aws.READ", "collab.READ"));
 
-    val tokenRevoke =
-        entityGenerator.setupToken(
+    val apiKeyRevoke =
+        entityGenerator.setupApiKey(
             user, "token 1", false, 1000, "", entityGenerator.getScopes("collab.READ", "aws.READ"));
 
-    val otherToken =
-        entityGenerator.setupToken(
+    val otherApiKey =
+        entityGenerator.setupApiKey(
             standByUser,
-            "token not be affected",
+            "apiKey not be affected",
             false,
             1000,
             "",
             entityGenerator.getScopes("collab.READ", "aws.READ"));
 
-    val otherToken2 =
-        entityGenerator.setupToken(
+    val otherApiKey2 =
+        entityGenerator.setupApiKey(
             user,
-            "token 2 not be affected",
+            "apiKey 2 not be affected",
             false,
             1000,
             "",
             entityGenerator.getScopes("collab.READ"));
 
-    assertFalse(tokenService.getById(tokenRevoke.getId()).isRevoked());
-    assertFalse(tokenService.getById(otherToken.getId()).isRevoked());
-    assertFalse(tokenService.getById(otherToken2.getId()).isRevoked());
+    assertFalse(tokenService.getById(apiKeyRevoke.getId()).isRevoked());
+    assertFalse(tokenService.getById(otherApiKey.getId()).isRevoked());
+    assertFalse(tokenService.getById(otherApiKey2.getId()).isRevoked());
 
     val scopes = "collab.READ,aws.READ";
     val params = new LinkedMultiValueMap<String, Object>();
@@ -113,15 +113,15 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     val responseStatus = response.getStatusCode();
 
     assertEquals(responseStatus, HttpStatus.OK);
-    assertTrue(tokenService.getById(tokenRevoke.getId()).isRevoked());
-    assertFalse(tokenService.getById(otherToken.getId()).isRevoked());
-    assertFalse(tokenService.getById(otherToken2.getId()).isRevoked());
+    assertTrue(tokenService.getById(apiKeyRevoke.getId()).isRevoked());
+    assertFalse(tokenService.getById(otherApiKey.getId()).isRevoked());
+    assertFalse(tokenService.getById(otherApiKey2.getId()).isRevoked());
   }
 
   @SneakyThrows
   @Test
-  public void issueTokenExactScope() {
-    // if scopes are exactly the same as user scopes, issue token should be successful,
+  public void issueApiKeyExactScope() {
+    // if scopes are exactly the same as user scopes, issue api key should be successful,
 
     val user = userService.getByName("FirstUser@domain.com");
     val userId = user.getId();
@@ -162,8 +162,8 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
   @SneakyThrows
   @Test
-  public void issueTokenWithExcessiveScope() {
-    // If token has scopes that user doesn't, token won't be issued.
+  public void issueApiKeyWithExcessiveScope() {
+    // If api key has scopes that user doesn't, api key won't be issued.
 
     val user = userService.getByName("SecondUser@domain.com");
     val userId = user.getId();
@@ -196,8 +196,8 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
   @SneakyThrows
   @Test
-  public void issueTokenForLimitedScopes() {
-    // if scopes are subset of user scopes, issue token should be successful
+  public void issueApiKeyForLimitedScopes() {
+    // if scopes are subset of user scopes, issue api key should be successful
 
     val user = userService.getByName("UserTwo@domain.com");
     val userId = user.getId();
@@ -282,7 +282,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
   @SneakyThrows
   @Test
-  public void issueTokenForInvalidUser() {
+  public void issueApiKeyForInvalidUser() {
     val userId = UUID.randomUUID();
     val scopes = "Study001.READ,Invalid.WRITE";
     val params = new LinkedMultiValueMap<String, Object>();
@@ -303,14 +303,14 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
   @SneakyThrows
   @Test
-  public void checkRevokedToken() {
+  public void checkRevokedApiKey() {
     val user = userService.getByName("UserThree@domain.com");
-    val tokenName = "601044a1-3ffd-4164-a6a0-0e1e666b28dc";
+    val apiKeyName = "601044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.WRITE", "id.WRITE", "portal.WRITE");
-    entityGenerator.setupToken(user, tokenName, true, 1000, "test token", scopes);
+    entityGenerator.setupApiKey(user, apiKeyName, true, 1000, "test token", scopes);
 
     val params = new LinkedMultiValueMap<String, Object>();
-    params.add("apiKey", tokenName);
+    params.add("apiKey", apiKeyName);
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     super.getHeaders().set("Authorization", test.songAuth);
 
@@ -322,14 +322,14 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
   @SneakyThrows
   @Test
-  public void checkValidToken() {
+  public void checkValidApiKey() {
     val user = userService.getByName("UserThree@domain.com");
-    val tokenName = "501044a1-3ffd-4164-a6a0-0e1e666b28dc";
+    val apiKeyName = "501044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.WRITE", "id.WRITE", "portal.WRITE");
-    entityGenerator.setupToken(user, tokenName, false, 1000, "test token", scopes);
+    entityGenerator.setupApiKey(user, apiKeyName, false, 1000, "test token", scopes);
 
     val params = new LinkedMultiValueMap<String, Object>();
-    params.add("apiKey", tokenName);
+    params.add("apiKey", apiKeyName);
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     super.getHeaders().set("Authorization", test.songAuth);
 
@@ -341,10 +341,10 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
   @SneakyThrows
   @Test
-  public void checkInvalidToken() {
-    val randomToken = UUID.randomUUID().toString();
+  public void checkInvalidApiKey() {
+    val randomApiKey = UUID.randomUUID().toString();
     val params = new LinkedMultiValueMap<String, Object>();
-    params.add("apiKey", randomToken);
+    params.add("apiKey", randomApiKey);
 
     super.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
     super.getHeaders().set("Authorization", test.songAuth);
@@ -400,28 +400,28 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
   @SneakyThrows
   @Test
-  public void listToken() {
+  public void listApiKey() {
     val user = entityGenerator.setupUser("List Token");
     val userId = user.getId().toString();
 
-    val tokenString1 = "791044a1-3ffd-4164-a6a0-0e1e666b28dc";
-    val tokenString2 = "891044a1-3ffd-4164-a6a0-0e1e666b28dc";
-    val tokenString3 = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
+    val apiKeyString1 = "791044a1-3ffd-4164-a6a0-0e1e666b28dc";
+    val apiKeyString2 = "891044a1-3ffd-4164-a6a0-0e1e666b28dc";
+    val apiKeyString3 = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
 
     val scopes1 = test.getScopes("song.READ");
     val scopes2 = test.getScopes("collab.READ");
     val scopes3 = test.getScopes("id.WRITE");
 
-    entityGenerator.setupToken(user, tokenString1, false, 1000, "test token 1", scopes1);
-    entityGenerator.setupToken(user, tokenString2, false, 1000, "test token 2", scopes2);
-    entityGenerator.setupToken(user, tokenString3, true, 1000, "revoked token 3", scopes3);
+    entityGenerator.setupApiKey(user, apiKeyString1, false, 1000, "test token 1", scopes1);
+    entityGenerator.setupApiKey(user, apiKeyString2, false, 1000, "test token 2", scopes2);
+    entityGenerator.setupApiKey(user, apiKeyString3, true, 1000, "revoked token 3", scopes3);
 
     val response = initStringRequest().endpoint("o/api_key?user_id=%s", userId).get();
 
     val statusCode = response.getStatusCode();
     assertEquals(statusCode, HttpStatus.OK);
 
-    // Result should only have unrevoked tokens, ignoring the "exp" field.
+    // Result should only have unrevoked api keys, ignoring the "exp" field.
     val expected =
         "[{\"apiKey\":\"891044a1-3ffd-4164-a6a0-0e1e666b28dc\","
             + "\"scope\":[\"collab.READ\"],"
@@ -436,7 +436,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
   @SneakyThrows
   @Test
-  public void listTokenEmptyToken() {
+  public void listApiKeyEmptyApiKey() {
     val userId = test.adminUser.getId().toString();
     val response = initStringRequest().endpoint("o/api_key?user_id=%s", userId).get();
 
@@ -447,7 +447,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
   @SneakyThrows
   @Test
-  public void tokenShouldHaveNonZeroExpiry() {
+  public void apiKeyShouldHaveNonZeroExpiry() {
     val user = entityGenerator.setupUser("NonZero User");
     entityGenerator.setupSinglePolicy("NonZeroExpiryPolicy");
     entityGenerator.addPermissions(user, entityGenerator.getScopes("NonZeroExpiryPolicy.READ"));
