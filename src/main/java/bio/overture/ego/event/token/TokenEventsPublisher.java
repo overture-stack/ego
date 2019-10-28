@@ -17,7 +17,7 @@
 
 package bio.overture.ego.event.token;
 
-import bio.overture.ego.model.entity.Token;
+import bio.overture.ego.model.entity.ApiKey;
 import bio.overture.ego.model.entity.User;
 import java.util.Set;
 import lombok.NonNull;
@@ -39,7 +39,7 @@ public class TokenEventsPublisher {
     applicationEventPublisher.publishEvent(new CleanupUserTokensEvent(this, users));
   }
 
-  public void requestTokenCleanup(@NonNull final Set<Token> tokens) {
-    applicationEventPublisher.publishEvent(new RevokeTokensEvent(this, tokens));
+  public void requestTokenCleanup(@NonNull final Set<ApiKey> apiKeys) {
+    applicationEventPublisher.publishEvent(new RevokeApiKeysEvent(this, apiKeys));
   }
 }

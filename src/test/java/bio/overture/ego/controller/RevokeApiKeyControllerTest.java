@@ -42,7 +42,7 @@ import org.springframework.web.context.WebApplicationContext;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration
 @Transactional
-public class RevokeTokenControllerTest {
+public class RevokeApiKeyControllerTest {
 
   @Autowired private TokenService tokenService;
 
@@ -211,23 +211,23 @@ public class RevokeTokenControllerTest {
   @SneakyThrows
   @Test
   public void revokeTokenAsClientApp() {
-    val tokenName = randomUUID().toString();
+    val apiKey = randomUUID().toString();
     val scopes = test.getScopes("song.READ");
     val token =
-        entityGenerator.setupToken(test.regularUser, tokenName, false, 1000, "test token", scopes);
+        entityGenerator.setupToken(test.regularUser, apiKey, false, 1000, "test token", scopes);
 
     assertFalse(token.isRevoked());
 
     mockMvc
         .perform(
             MockMvcRequestBuilders.delete("/o/api_key")
-                .param("apiKey", tokenName)
+                .param("apiKey", apiKey)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isBadRequest());
 
     val revokedToken =
         tokenService
-            .findByTokenString(tokenName)
+            .findByTokenString(apiKey)
             .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
     assertFalse(revokedToken.isRevoked());
   }

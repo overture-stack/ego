@@ -40,7 +40,7 @@ public class ApiKeyScope implements Serializable {
   @NotNull
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = SqlFields.TOKENID_JOIN, nullable = false)
-  private Token token;
+  private ApiKey token;
 
   @Id
   @NotNull

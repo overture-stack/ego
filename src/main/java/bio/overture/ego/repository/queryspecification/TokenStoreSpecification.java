@@ -16,6 +16,6 @@
 
 package bio.overture.ego.repository.queryspecification;
 
-import bio.overture.ego.model.entity.Token;
+import bio.overture.ego.model.entity.ApiKey;
 
-public class TokenStoreSpecification extends SpecificationBase<Token> {}
+public class TokenStoreSpecification extends SpecificationBase<ApiKey> {}

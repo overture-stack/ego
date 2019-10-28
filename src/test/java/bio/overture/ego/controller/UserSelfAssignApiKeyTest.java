@@ -45,7 +45,7 @@ import org.springframework.util.LinkedMultiValueMap;
 @SpringBootTest(
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class UserSelfAssignTokenTest extends AbstractControllerTest {
+public class UserSelfAssignApiKeyTest extends AbstractControllerTest {
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;

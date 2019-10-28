@@ -17,7 +17,7 @@
 
 package bio.overture.ego.event.token;
 
-import bio.overture.ego.model.entity.Token;
+import bio.overture.ego.model.entity.ApiKey;
 import bio.overture.ego.service.TokenService;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,18 +25,18 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 @Component
-public class RevokeTokenListener implements ApplicationListener<RevokeTokensEvent> {
+public class RevokeApiKeyListener implements ApplicationListener<RevokeApiKeysEvent> {
 
   /** Dependencies */
   private final TokenService tokenService;
 
   @Autowired
-  public RevokeTokenListener(@NonNull TokenService tokenService) {
+  public RevokeApiKeyListener(@NonNull TokenService tokenService) {
     this.tokenService = tokenService;
   }
 
   @Override
-  public void onApplicationEvent(@NonNull RevokeTokensEvent event) {
-    event.getTokens().stream().map(Token::getName).forEach(tokenService::revoke);
+  public void onApplicationEvent(@NonNull RevokeApiKeysEvent event) {
+    event.getApiKeys().stream().map(ApiKey::getName).forEach(tokenService::revoke);
   }
 }

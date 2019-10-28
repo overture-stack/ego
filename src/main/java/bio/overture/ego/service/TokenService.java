@@ -30,8 +30,8 @@ import bio.overture.ego.model.dto.ApiKeyResponse;
 import bio.overture.ego.model.dto.ApiKeyScopeResponse;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UserScopesResponse;
+import bio.overture.ego.model.entity.ApiKey;
 import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.params.ScopeName;
@@ -79,7 +79,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class TokenService extends AbstractNamedService<Token, UUID> {
+public class TokenService extends AbstractNamedService<ApiKey, UUID> {
 
   /*
    * Constant
@@ -109,7 +109,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       @NonNull ApiKeyStoreService apiKeyStoreService,
       @NonNull PolicyService policyService,
       @NonNull TokenStoreRepository tokenStoreRepository) {
-    super(Token.class, tokenStoreRepository);
+    super(ApiKey.class, tokenStoreRepository);
     this.tokenSigner = tokenSigner;
     this.userService = userService;
     this.applicationService = applicationService;
@@ -118,7 +118,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   }
 
   @Override
-  public Token getWithRelationships(@NonNull UUID id) {
+  public ApiKey getWithRelationships(@NonNull UUID id) {
     return apiKeyStoreService.getWithRelationships(id);
   }
 
@@ -183,7 +183,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   }
 
   @SneakyThrows
-  public Token issueApiKey(UUID user_id, List<ScopeName> scopeNames, String description) {
+  public ApiKey issueApiKey(UUID user_id, List<ScopeName> scopeNames, String description) {
     log.info(format("Looking for user '%s'", str(user_id)));
     log.info(format("Scopes are '%s'", strList(scopeNames)));
     log.info(format("Token description is '%s'", description));
@@ -217,27 +217,27 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
 
     val today = Calendar.getInstance();
 
-    val token = new Token();
-    token.setExpiryDate(expiryDate);
-    token.setIssueDate(today.getTime());
-    token.setRevoked(false);
-    token.setName(tokenString);
-    token.setOwner(u);
-    token.setDescription(description);
+    val apiKey = new ApiKey();
+    apiKey.setExpiryDate(expiryDate);
+    apiKey.setIssueDate(today.getTime());
+    apiKey.setRevoked(false);
+    apiKey.setName(tokenString);
+    apiKey.setOwner(u);
+    apiKey.setDescription(description);
 
     for (Scope requestedScope : requestedScopes) {
-      token.addScope(requestedScope);
+      apiKey.addScope(requestedScope);
     }
 
     log.info("Creating token in token store");
-    apiKeyStoreService.create(token);
+    apiKeyStoreService.create(apiKey);
 
-    log.info(format("Returning '%s'", str(token)));
+    log.info(format("Returning '%s'", str(apiKey)));
 
-    return token;
+    return apiKey;
   }
 
-  public Optional<Token> findByTokenString(String token) {
+  public Optional<ApiKey> findByTokenString(String token) {
     return apiKeyStoreService.findByTokenName(token);
   }
 
@@ -480,14 +480,15 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     return response;
   }
 
-  private void createTokenResponse(@NonNull Token token, @NonNull List<ApiKeyResponse> responses) {
-    val scopes = mapToSet(token.scopes(), Scope::toString);
+  private void createTokenResponse(
+      @NonNull ApiKey apiKey, @NonNull List<ApiKeyResponse> responses) {
+    val scopes = mapToSet(apiKey.scopes(), Scope::toString);
     responses.add(
         ApiKeyResponse.builder()
-            .apiKey(token.getName())
+            .apiKey(apiKey.getName())
             .scope(scopes)
-            .exp(token.getSecondsUntilExpiry())
-            .description(token.getDescription())
+            .exp(apiKey.getSecondsUntilExpiry())
+            .description(apiKey.getDescription())
             .build());
   }
 }

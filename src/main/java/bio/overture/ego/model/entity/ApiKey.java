@@ -37,7 +37,7 @@ import org.hibernate.annotations.GenericGenerator;
 @AllArgsConstructor
 @ToString(exclude = {"owner", "scopes"})
 @EqualsAndHashCode(of = {"id"})
-public class Token implements Identifiable<UUID> {
+public class ApiKey implements Identifiable<UUID> {
 
   @Id
   @Column(name = SqlFields.ID, updatable = false, nullable = false)
