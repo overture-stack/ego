@@ -2,7 +2,7 @@ package bio.overture.ego.service;
 
 import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 
-import bio.overture.ego.event.token.TokenEventsPublisher;
+import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
@@ -25,17 +25,17 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
   /** Dependencies */
   private final GroupService groupService;
 
-  private final TokenEventsPublisher tokenEventsPublisher;
+  private final ApiKeyEventsPublisher apiKeyEventsPublisher;
 
   @Autowired
   public GroupPermissionService(
       @NonNull GroupPermissionRepository repository,
       @NonNull GroupService groupService,
-      @NonNull TokenEventsPublisher tokenEventsPublisher,
+      @NonNull ApiKeyEventsPublisher apiKeyEventsPublisher,
       @NonNull PolicyService policyService) {
     super(Group.class, GroupPermission.class, groupService, policyService, repository);
     this.groupService = groupService;
-    this.tokenEventsPublisher = tokenEventsPublisher;
+    this.apiKeyEventsPublisher = apiKeyEventsPublisher;
   }
 
   /**
@@ -50,7 +50,7 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
       @NonNull UUID groupId, @NonNull List<PermissionRequest> permissionRequests) {
     val group = super.addPermissions(groupId, permissionRequests);
     val users = mapToImmutableSet(group.getUserGroups(), UserGroup::getUser);
-    tokenEventsPublisher.requestTokenCleanupByUsers(users);
+    apiKeyEventsPublisher.requestApiKeyCleanupByUsers(users);
     return group;
   }
 
@@ -65,7 +65,7 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
     super.deletePermissions(groupId, idsToDelete);
     val group = groupService.getWithRelationships(groupId);
     val users = mapToImmutableSet(group.getUserGroups(), UserGroup::getUser);
-    tokenEventsPublisher.requestTokenCleanupByUsers(users);
+    apiKeyEventsPublisher.requestApiKeyCleanupByUsers(users);
   }
 
   @Override

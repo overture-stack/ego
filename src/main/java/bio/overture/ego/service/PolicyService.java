@@ -10,7 +10,7 @@ import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static javax.persistence.criteria.JoinType.LEFT;
 import static org.mapstruct.factory.Mappers.getMapper;
 
-import bio.overture.ego.event.token.TokenEventsPublisher;
+import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.entity.ApiKeyScope;
 import bio.overture.ego.model.entity.Policy;
@@ -47,15 +47,15 @@ public class PolicyService extends AbstractNamedService<Policy, UUID> {
   /** Dependencies */
   private final PolicyRepository policyRepository;
 
-  private final TokenEventsPublisher tokenEventsPublisher;
+  private final ApiKeyEventsPublisher apiKeyEventsPublisher;
 
   @Autowired
   public PolicyService(
       @NonNull PolicyRepository policyRepository,
-      @NonNull TokenEventsPublisher tokenEventsPublisher) {
+      @NonNull ApiKeyEventsPublisher apiKeyEventsPublisher) {
     super(Policy.class, policyRepository);
     this.policyRepository = policyRepository;
-    this.tokenEventsPublisher = tokenEventsPublisher;
+    this.apiKeyEventsPublisher = apiKeyEventsPublisher;
   }
 
   public Policy create(@NonNull PolicyRequest createRequest) {
@@ -83,13 +83,13 @@ public class PolicyService extends AbstractNamedService<Policy, UUID> {
     checkExistence(id);
     val policy = this.getById(id);
 
-    // For semantic/readability reasons, revoke tokens AFTER policy is deleted.
-    val tokensToRevoke =
+    // For semantic/readability reasons, revoke api keys AFTER policy is deleted.
+    val apiKeysToRevoke =
         policy.getApiKeyScopes().stream()
             .map(ApiKeyScope::getToken)
             .collect(Collectors.toImmutableSet());
     super.delete(id);
-    tokenEventsPublisher.requestTokenCleanup(tokensToRevoke);
+    apiKeyEventsPublisher.requestApiKeyCleanup(apiKeysToRevoke);
   }
 
   public Page<Policy> listPolicies(

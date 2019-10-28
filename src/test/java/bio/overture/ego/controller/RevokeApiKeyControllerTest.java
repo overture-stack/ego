@@ -69,138 +69,138 @@ public class RevokeApiKeyControllerTest {
   @WithMockCustomUser
   @SneakyThrows
   @Test
-  public void revokeAnyTokenAsAdminUser() {
-    // Admin users can revoke other users' tokens.
+  public void revokeAnyApiKeyAsAdminUser() {
+    // Admin users can revoke other users' api keys.
 
-    val randomTokenName = randomUUID().toString();
+    val randomApiKeyName = randomUUID().toString();
     val adminTokenName = randomUUID().toString();
     val scopes = test.getScopes("song.READ");
     val randomScopes = test.getScopes("song.READ");
 
-    val randomToken =
+    val randomApiKey =
         entityGenerator.setupToken(
-            test.regularUser, randomTokenName, false, 1000, "random token", randomScopes);
+            test.regularUser, randomApiKeyName, false, 1000, "random token", randomScopes);
     entityGenerator.setupToken(test.adminUser, adminTokenName, false, 1000, "test token", scopes);
 
-    assertFalse(randomToken.isRevoked());
+    assertFalse(randomApiKey.isRevoked());
 
     mockMvc
         .perform(
             MockMvcRequestBuilders.delete("/o/api_key")
-                .param("apiKey", randomTokenName)
+                .param("apiKey", randomApiKeyName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isOk());
 
-    val revokedToken =
+    val revokedApiKey =
         tokenService
-            .findByTokenString(randomTokenName)
-            .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
-    assertTrue(revokedToken.isRevoked());
+            .findByTokenString(randomApiKeyName)
+            .orElseThrow(() -> new InvalidTokenException("ApiKey Not Found!"));
+    assertTrue(revokedApiKey.isRevoked());
   }
 
   @WithMockCustomUser
   @SneakyThrows
   @Test
-  public void revokeOwnTokenAsAdminUser() {
-    // Admin users can revoke their own tokens.
+  public void revokeOwnApiKeyAsAdminUser() {
+    // Admin users can revoke their own api keys.
 
-    val tokenName = randomUUID().toString();
+    val apiKeyName = randomUUID().toString();
     val scopes = test.getScopes("song.READ", "collab.READ", "id.WRITE");
-    val token =
-        entityGenerator.setupToken(test.adminUser, tokenName, false, 1000, "test token", scopes);
+    val apiKey =
+        entityGenerator.setupToken(test.adminUser, apiKeyName, false, 1000, "test token", scopes);
 
-    assertFalse(token.isRevoked());
+    assertFalse(apiKey.isRevoked());
 
     mockMvc
         .perform(
             MockMvcRequestBuilders.delete("/o/api_key")
-                .param("apiKey", tokenName)
+                .param("apiKey", apiKeyName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isOk());
 
-    val revokedToken =
+    val revokedApiKey =
         tokenService
-            .findByTokenString(tokenName)
-            .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
-    assertTrue(revokedToken.isRevoked());
+            .findByTokenString(apiKeyName)
+            .orElseThrow(() -> new InvalidTokenException("ApiKey Not Found!"));
+    assertTrue(revokedApiKey.isRevoked());
   }
 
   @WithMockCustomUser(firstName = "Regular", lastName = "User", type = USER)
   @SneakyThrows
   @Test
-  public void revokeAnyTokenAsRegularUser() {
-    // Regular user cannot revoke other people's token
+  public void revokeAnyApiKeyAsRegularUser() {
+    // Regular user cannot revoke other people's api keys
 
-    val tokenName = randomUUID().toString();
+    val apiKeyName = randomUUID().toString();
     val scopes = test.getScopes("id.WRITE");
-    val token =
-        entityGenerator.setupToken(test.user1, tokenName, false, 1000, "test token", scopes);
+    val apiKey =
+        entityGenerator.setupToken(test.user1, apiKeyName, false, 1000, "test token", scopes);
 
-    assertFalse(token.isRevoked());
+    assertFalse(apiKey.isRevoked());
 
     mockMvc
         .perform(
             MockMvcRequestBuilders.delete("/o/api_key")
-                .param("apiKey", tokenName)
+                .param("apiKey", apiKeyName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isUnauthorized());
-    val revokedToken =
+    val revokedApiKey =
         tokenService
-            .findByTokenString(tokenName)
-            .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
-    assertFalse(revokedToken.isRevoked());
+            .findByTokenString(apiKeyName)
+            .orElseThrow(() -> new InvalidTokenException("ApiKey Not Found!"));
+    assertFalse(revokedApiKey.isRevoked());
   }
 
   @WithMockCustomUser(firstName = "Regular", lastName = "User", type = USER)
   @SneakyThrows
   @Test
-  public void revokeOwnTokenAsRegularUser() {
-    // Regular users can only revoke tokens that belong to them.
+  public void revokeOwnApiKeyAsRegularUser() {
+    // Regular users can only revoke api keys that belong to them.
 
-    val tokenName = randomUUID().toString();
+    val apiKeyName = randomUUID().toString();
     val scopes = test.getScopes("song.READ");
-    val token =
-        entityGenerator.setupToken(test.regularUser, tokenName, false, 1000, "test token", scopes);
+    val apiKey =
+        entityGenerator.setupToken(test.regularUser, apiKeyName, false, 1000, "test token", scopes);
 
-    assertFalse(token.isRevoked());
+    assertFalse(apiKey.isRevoked());
 
     mockMvc
         .perform(
             MockMvcRequestBuilders.delete("/o/api_key")
-                .param("apiKey", tokenName)
+                .param("apiKey", apiKeyName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isOk());
 
-    val revokedToken =
+    val revokedApiKey =
         tokenService
-            .findByTokenString(tokenName)
-            .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
-    assertTrue(revokedToken.isRevoked());
+            .findByTokenString(apiKeyName)
+            .orElseThrow(() -> new InvalidTokenException("ApiKey Not Found!"));
+    assertTrue(revokedApiKey.isRevoked());
   }
 
   @WithMockCustomApplication
   @SneakyThrows
   @Test
   public void revokeAnyTokenAsAdminApp() {
-    val tokenName = randomUUID().toString();
+    val apiKeyName = randomUUID().toString();
     val scopes = test.getScopes("song.READ");
-    val token =
-        entityGenerator.setupToken(test.regularUser, tokenName, false, 1000, "test token", scopes);
+    val apiKey =
+        entityGenerator.setupToken(test.regularUser, apiKeyName, false, 1000, "test token", scopes);
 
-    assertFalse(token.isRevoked());
+    assertFalse(apiKey.isRevoked());
 
     mockMvc
         .perform(
             MockMvcRequestBuilders.delete("/o/api_key")
-                .param("apiKey", tokenName)
+                .param("apiKey", apiKeyName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isOk());
 
-    val revokedToken =
+    val revokedApiKey =
         tokenService
-            .findByTokenString(tokenName)
-            .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
-    assertTrue(revokedToken.isRevoked());
+            .findByTokenString(apiKeyName)
+            .orElseThrow(() -> new InvalidTokenException("ApiKey Not Found!"));
+    assertTrue(revokedApiKey.isRevoked());
   }
 
   @WithMockCustomApplication(
@@ -210,25 +210,25 @@ public class RevokeApiKeyControllerTest {
       type = CLIENT)
   @SneakyThrows
   @Test
-  public void revokeTokenAsClientApp() {
-    val apiKey = randomUUID().toString();
+  public void revokeApiKeyAsClientApp() {
+    val apiKeyName = randomUUID().toString();
     val scopes = test.getScopes("song.READ");
-    val token =
-        entityGenerator.setupToken(test.regularUser, apiKey, false, 1000, "test token", scopes);
+    val apiKey =
+        entityGenerator.setupToken(test.regularUser, apiKeyName, false, 1000, "test token", scopes);
 
-    assertFalse(token.isRevoked());
+    assertFalse(apiKey.isRevoked());
 
     mockMvc
         .perform(
             MockMvcRequestBuilders.delete("/o/api_key")
-                .param("apiKey", apiKey)
+                .param("apiKey", apiKeyName)
                 .header(AUTHORIZATION, ACCESS_TOKEN))
         .andExpect(status().isBadRequest());
 
-    val revokedToken =
+    val revokedApiKey =
         tokenService
-            .findByTokenString(apiKey)
-            .orElseThrow(() -> new InvalidTokenException("Token Not Found!"));
-    assertFalse(revokedToken.isRevoked());
+            .findByTokenString(apiKeyName)
+            .orElseThrow(() -> new InvalidTokenException("ApiKey Not Found!"));
+    assertFalse(revokedApiKey.isRevoked());
   }
 }

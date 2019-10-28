@@ -26,20 +26,20 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TokenEventsPublisher {
+public class ApiKeyEventsPublisher {
 
   private ApplicationEventPublisher applicationEventPublisher;
 
   @Autowired
-  public TokenEventsPublisher(ApplicationEventPublisher applicationEventPublisher) {
+  public ApiKeyEventsPublisher(ApplicationEventPublisher applicationEventPublisher) {
     this.applicationEventPublisher = applicationEventPublisher;
   }
 
-  public void requestTokenCleanupByUsers(@NonNull final Set<User> users) {
+  public void requestApiKeyCleanupByUsers(@NonNull final Set<User> users) {
     applicationEventPublisher.publishEvent(new CleanupUserTokensEvent(this, users));
   }
 
-  public void requestTokenCleanup(@NonNull final Set<ApiKey> apiKeys) {
+  public void requestApiKeyCleanup(@NonNull final Set<ApiKey> apiKeys) {
     applicationEventPublisher.publishEvent(new RevokeApiKeysEvent(this, apiKeys));
   }
 }
