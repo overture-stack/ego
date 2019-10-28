@@ -23,11 +23,11 @@ import lombok.Getter;
 import lombok.NonNull;
 import org.springframework.context.ApplicationEvent;
 
-public class CleanupUserTokensEvent extends ApplicationEvent {
+public class CleanupUserApiKeysEvent extends ApplicationEvent {
 
   @Getter private Set<User> users;
 
-  public CleanupUserTokensEvent(@NonNull Object source, Set<User> users) {
+  public CleanupUserApiKeysEvent(@NonNull Object source, Set<User> users) {
     super(source);
     this.users = users;
   }

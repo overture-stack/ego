@@ -36,7 +36,7 @@ public class ApiKeyEventsPublisher {
   }
 
   public void requestApiKeyCleanupByUsers(@NonNull final Set<User> users) {
-    applicationEventPublisher.publishEvent(new CleanupUserTokensEvent(this, users));
+    applicationEventPublisher.publishEvent(new CleanupUserApiKeysEvent(this, users));
   }
 
   public void requestApiKeyCleanup(@NonNull final Set<ApiKey> apiKeys) {

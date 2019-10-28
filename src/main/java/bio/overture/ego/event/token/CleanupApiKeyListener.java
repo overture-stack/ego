@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class CleanupApiKeyListener implements ApplicationListener<CleanupUserTokensEvent> {
+public class CleanupApiKeyListener implements ApplicationListener<CleanupUserApiKeysEvent> {
 
   /** Dependencies */
   private final TokenService tokenService;
@@ -46,8 +46,8 @@ public class CleanupApiKeyListener implements ApplicationListener<CleanupUserTok
   }
 
   @Override
-  public void onApplicationEvent(@NonNull CleanupUserTokensEvent event) {
-    log.debug("Number of users to be checked for token cleanup: {}", event.getUsers().size());
+  public void onApplicationEvent(@NonNull CleanupUserApiKeysEvent event) {
+    log.debug("Number of users to be checked for api key cleanup: {}", event.getUsers().size());
     cleanupApiKeys(event.getUsers());
   }
 
@@ -58,16 +58,16 @@ public class CleanupApiKeyListener implements ApplicationListener<CleanupUserTok
   private void cleanupApiKeysForUser(@NonNull User user) {
     val scopes = tokenService.userScopes(user.getName()).getScopes();
     val tokens = tokenService.listToken(user.getId());
-    tokens.forEach(t -> verifyToken(t, scopes));
+    tokens.forEach(t -> verifyApiKey(t, scopes));
   }
 
-  private void verifyToken(@NonNull ApiKeyResponse apiKey, @NonNull Set<String> scopes) {
+  private void verifyApiKey(@NonNull ApiKeyResponse apiKey, @NonNull Set<String> scopes) {
     // Expand effective scopes to include READ if WRITE is present and convert to Scope type.
     val expandedUserScopes =
         Scope.explicitScopes(
             scopes.stream().map(this::convertStringToScope).collect(toImmutableSet()));
 
-    // Convert token scopes from String to Scope
+    // Convert apiKey scopes from String to Scope
     val apiKeyScopes =
         apiKey.getScope().stream().map(this::convertStringToScope).collect(toImmutableSet());
 
