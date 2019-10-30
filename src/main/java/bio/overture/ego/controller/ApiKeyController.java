@@ -165,10 +165,10 @@ public class ApiKeyController {
   }
 
   @ExceptionHandler({InvalidTokenException.class})
-  public ResponseEntity<Object> handleInvalidTokenException(
+  public ResponseEntity<Object> handleInvalidApiKeyException(
       HttpServletRequest req, InvalidTokenException ex) {
-    log.error(format("ID ScopedAccessToken not found.:%s", ex.toString()));
-    return errorResponse(UNAUTHORIZED, "Invalid token: %s", ex);
+    log.error(format("ID ScopedAccessApiKey not found.:%s", ex.toString()));
+    return errorResponse(UNAUTHORIZED, "Invalid apiKey: %s", ex);
   }
 
   @ExceptionHandler({InvalidScopeException.class})
