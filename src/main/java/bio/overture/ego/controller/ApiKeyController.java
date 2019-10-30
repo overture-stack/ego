@@ -88,7 +88,7 @@ public class ApiKeyController {
   @RequestMapping(method = POST, value = "/check_api_key")
   @ResponseStatus(value = MULTI_STATUS)
   @SneakyThrows
-  public @ResponseBody ApiKeyScopeResponse checkToken(
+  public @ResponseBody ApiKeyScopeResponse checkApiKey(
       @RequestHeader(value = "Authorization") final String authToken,
       @RequestParam(value = "apiKey") final String apiKey) {
 
@@ -106,7 +106,7 @@ public class ApiKeyController {
 
   @RequestMapping(method = POST, value = "/api_key")
   @ResponseStatus(value = OK)
-  public @ResponseBody ApiKeyResponse issueToken(
+  public @ResponseBody ApiKeyResponse issueApiKey(
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "user_id") UUID userId,
       @RequestParam(value = "scopes") ArrayList<String> scopes,
@@ -148,7 +148,7 @@ public class ApiKeyController {
 
   @RequestMapping(method = DELETE, value = "/api_key")
   @ResponseStatus(value = OK)
-  public @ResponseBody String revokeToken(
+  public @ResponseBody String revokeApiKey(
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "apiKey") final String apiKey) {
     tokenService.revokeApiKey(apiKey);
@@ -158,7 +158,7 @@ public class ApiKeyController {
   @AdminScoped
   @RequestMapping(method = GET, value = "/api_key")
   @ResponseStatus(value = OK)
-  public @ResponseBody List<ApiKeyResponse> listToken(
+  public @ResponseBody List<ApiKeyResponse> listApiKey(
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "user_id") UUID user_id) {
     return tokenService.listApiKey(user_id);
