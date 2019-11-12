@@ -27,7 +27,7 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.security.AdminScoped;
+import bio.overture.ego.security.ApplicationScoped;
 import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.PolicyService;
@@ -66,7 +66,7 @@ public class TransactionController {
     this.groupPermissionService = groupPermissionService;
   }
 
-  @AdminScoped()
+  @ApplicationScoped()
   @RequestMapping(method = POST, value = "/group_permissions")
   @ResponseStatus(value = OK)
   @SneakyThrows
@@ -121,7 +121,7 @@ public class TransactionController {
         && groupPermission.getAccessLevel().equals(mask);
   }
 
-  @AdminScoped()
+  @ApplicationScoped()
   @RequestMapping(method = POST, value = "/mass_delete")
   @ResponseStatus(value = OK)
   public void deleteGroupPermissions(@RequestBody() final TransactionalDeleteRequest request) {
