@@ -34,7 +34,7 @@ import static java.util.Objects.isNull;
 import static org.springframework.data.jpa.domain.Specification.where;
 
 import bio.overture.ego.config.UserDefaultsConfig;
-import bio.overture.ego.event.token.TokenEventsPublisher;
+import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UpdateUserRequest;
@@ -72,7 +72,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
   /** Dependencies */
   private final GroupRepository groupRepository;
 
-  private final TokenEventsPublisher tokenEventsPublisher;
+  private final ApiKeyEventsPublisher apiKeyEventsPublisher;
   private final ApplicationService applicationService;
   private final UserRepository userRepository;
 
@@ -85,13 +85,13 @@ public class UserService extends AbstractNamedService<User, UUID> {
       @NonNull GroupRepository groupRepository,
       @NonNull ApplicationService applicationService,
       @NonNull UserDefaultsConfig userDefaultsConfig,
-      @NonNull TokenEventsPublisher tokenEventsPublisher) {
+      @NonNull ApiKeyEventsPublisher apiKeyEventsPublisher) {
     super(User.class, userRepository);
     this.userRepository = userRepository;
     this.groupRepository = groupRepository;
     this.applicationService = applicationService;
     this.userDefaultsConfig = userDefaultsConfig;
-    this.tokenEventsPublisher = tokenEventsPublisher;
+    this.apiKeyEventsPublisher = apiKeyEventsPublisher;
   }
 
   public User create(@NonNull CreateUserRequest request) {
@@ -272,7 +272,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     nonAssociatedGroups.stream()
         .map(g -> convertToUserGroup(userWithUserGroups, g))
         .forEach(UserGroupService::associateSelf);
-    tokenEventsPublisher.requestTokenCleanupByUsers(ImmutableSet.of(userWithUserGroups));
+    apiKeyEventsPublisher.requestApiKeyCleanupByUsers(ImmutableSet.of(userWithUserGroups));
     return userWithUserGroups;
   }
 
@@ -341,7 +341,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .collect(toImmutableSet());
 
     disassociateUserGroupsFromUser(userWithGroups, userGroupsToDisassociate);
-    tokenEventsPublisher.requestTokenCleanupByUsers(ImmutableSet.of(userWithGroups));
+    apiKeyEventsPublisher.requestApiKeyCleanupByUsers(ImmutableSet.of(userWithGroups));
   }
 
   @Override
@@ -349,7 +349,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     val user = getWithRelationships(id);
     disassociateAllGroupsFromUser(user);
     disassociateAllApplicationsFromUser(user);
-    tokenEventsPublisher.requestTokenCleanupByUsers(ImmutableSet.of(user));
+    apiKeyEventsPublisher.requestApiKeyCleanupByUsers(ImmutableSet.of(user));
     super.delete(id);
   }
 

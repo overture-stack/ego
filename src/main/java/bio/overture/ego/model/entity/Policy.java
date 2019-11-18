@@ -83,5 +83,5 @@ public class Policy implements Identifiable<UUID> {
       cascade = CascadeType.ALL,
       orphanRemoval = true,
       fetch = FetchType.LAZY)
-  private Set<TokenScope> tokenScopes = newHashSet();
+  private Set<ApiKeyScope> apiKeyScopes = newHashSet();
 }

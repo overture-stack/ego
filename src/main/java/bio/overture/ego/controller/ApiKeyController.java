@@ -28,10 +28,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
-import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.dto.TokenResponse;
-import bio.overture.ego.model.dto.TokenScopeResponse;
-import bio.overture.ego.model.dto.UserScopesResponse;
+import bio.overture.ego.model.dto.*;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.ForbiddenException;
@@ -69,7 +66,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("/o")
-public class TokenController {
+public class ApiKeyController {
 
   /** Dependencies */
   private final TokenService tokenService;
@@ -78,21 +75,34 @@ public class TokenController {
       authorizationManager; // Need this here due to context sensitive checks
 
   @Autowired
-  public TokenController(
+  public ApiKeyController(
       @NonNull TokenService tokenService, @NonNull AuthorizationManager authorizationManager) {
     this.tokenService = tokenService;
     this.authorizationManager = authorizationManager;
   }
 
   @ApplicationScoped()
+  @RequestMapping(method = POST, value = "/check_api_key")
+  @ResponseStatus(value = MULTI_STATUS)
+  @SneakyThrows
+  public @ResponseBody ApiKeyScopeResponse checkApiKey(
+      @RequestHeader(value = "Authorization") final String authToken,
+      @RequestParam(value = "apiKey") final String apiKey) {
+
+    return tokenService.checkApiKey(authToken, apiKey);
+  }
+
+  /** DEPRECATED: GET /check_token to be removed in next major release */
+  @Deprecated
+  @ApplicationScoped()
   @RequestMapping(method = POST, value = "/check_token")
   @ResponseStatus(value = MULTI_STATUS)
   @SneakyThrows
-  public @ResponseBody TokenScopeResponse checkToken(
+  public @ResponseBody ApiKeyScopeResponse checkToken(
       @RequestHeader(value = "Authorization") final String authToken,
       @RequestParam(value = "token") final String token) {
 
-    return tokenService.checkToken(authToken, token);
+    return tokenService.checkApiKey(authToken, token);
   }
 
   @RequestMapping(method = GET, value = "/scopes")
@@ -104,6 +114,29 @@ public class TokenController {
     return tokenService.userScopes(userName);
   }
 
+  @RequestMapping(method = POST, value = "/api_key")
+  @ResponseStatus(value = OK)
+  public @ResponseBody ApiKeyResponse issueApiKey(
+      @RequestHeader(value = "Authorization") final String authorization,
+      @RequestParam(value = "user_id") UUID userId,
+      @RequestParam(value = "scopes") ArrayList<String> scopes,
+      @RequestParam(value = "description", required = false) String description) {
+
+    checkAdminOrOwner(userId); // side effect check and exception throw
+
+    val scopeNames = mapToList(scopes, ScopeName::new);
+    val aK = tokenService.issueApiKey(userId, scopeNames, description);
+    Set<String> issuedScopes = mapToSet(aK.scopes(), Scope::toString);
+    return ApiKeyResponse.builder()
+        .apiKey(aK.getName())
+        .scope(issuedScopes)
+        .exp(aK.getSecondsUntilExpiry())
+        .description(aK.getDescription())
+        .build();
+  }
+
+  /** DEPRECATED: POST /token to be removed in next major release */
+  @Deprecated
   @RequestMapping(method = POST, value = "/token")
   @ResponseStatus(value = OK)
   public @ResponseBody TokenResponse issueToken(
@@ -112,31 +145,10 @@ public class TokenController {
       @RequestParam(value = "scopes") ArrayList<String> scopes,
       @RequestParam(value = "description", required = false) String description) {
 
-    // Check if admin, if not, then check if owner
-    val authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (!authorizationManager.authorizeWithAdminRole(authentication)) {
-      val principal = authentication.getPrincipal();
-      if (principal instanceof User) {
-        val user = (User) principal;
-        if (!user.getId().equals(userId)) {
-          log.error(
-              "User: {} is illegally trying to generate access tokens for user: {}",
-              user.getId().toString(),
-              userId.toString());
-          throw new ForbiddenException("Action is forbidden for this user.");
-        }
-      } else {
-        val app = (Application) principal;
-        log.warn(
-            "Application {} tried to create an access token for user {} but is not an ADMIN application.",
-            app.getId().toString(),
-            userId.toString());
-        throw new ForbiddenException("Action is forbidden for this application.");
-      }
-    }
+    checkAdminOrOwner(userId); // side effect check and exception throw
 
     val scopeNames = mapToList(scopes, ScopeName::new);
-    val t = tokenService.issueToken(userId, scopeNames, description);
+    val t = tokenService.issueApiKey(userId, scopeNames, description);
     Set<String> issuedScopes = mapToSet(t.scopes(), Scope::toString);
     return TokenResponse.builder()
         .accessToken(t.getName())
@@ -146,29 +158,51 @@ public class TokenController {
         .build();
   }
 
+  @RequestMapping(method = DELETE, value = "/api_key")
+  @ResponseStatus(value = OK)
+  public @ResponseBody String revokeApiKey(
+      @RequestHeader(value = "Authorization") final String authorization,
+      @RequestParam(value = "apiKey") final String apiKey) {
+    tokenService.revokeApiKey(apiKey);
+    return format("ApiKey '%s' is successfully revoked!", apiKey);
+  }
+
+  /** DEPRECATED: DELETE /token to be removed in next major release */
+  @Deprecated
   @RequestMapping(method = DELETE, value = "/token")
   @ResponseStatus(value = OK)
   public @ResponseBody String revokeToken(
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "token") final String token) {
-    tokenService.revokeToken(token);
+    tokenService.revokeApiKey(token);
     return format("Token '%s' is successfully revoked!", token);
   }
 
+  @AdminScoped
+  @RequestMapping(method = GET, value = "/api_key")
+  @ResponseStatus(value = OK)
+  public @ResponseBody List<ApiKeyResponse> listApiKey(
+      @RequestHeader(value = "Authorization") final String authorization,
+      @RequestParam(value = "user_id") UUID user_id) {
+    return tokenService.listApiKey(user_id);
+  }
+
+  /** DEPRECATED: GET /token to be removed in next major release */
+  @Deprecated
   @AdminScoped
   @RequestMapping(method = GET, value = "/token")
   @ResponseStatus(value = OK)
   public @ResponseBody List<TokenResponse> listToken(
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "user_id") UUID user_id) {
-    return tokenService.listToken(user_id);
+    return tokenService.listTokens(user_id);
   }
 
   @ExceptionHandler({InvalidTokenException.class})
-  public ResponseEntity<Object> handleInvalidTokenException(
+  public ResponseEntity<Object> handleInvalidApiKeyException(
       HttpServletRequest req, InvalidTokenException ex) {
-    log.error(format("ID ScopedAccessToken not found.:%s", ex.toString()));
-    return errorResponse(UNAUTHORIZED, "Invalid token: %s", ex);
+    log.error(format("ID ScopedAccessApiKey not found.:%s", ex.toString()));
+    return errorResponse(UNAUTHORIZED, "Invalid apiKey: %s", ex);
   }
 
   @ExceptionHandler({InvalidScopeException.class})
@@ -202,5 +236,30 @@ public class TokenController {
     headers.setContentType(APPLICATION_JSON);
     val msg = format("{\"error\": \"%s\"}", jsonEscape(ex.getMessage()));
     return new ResponseEntity<>(msg, status);
+  }
+
+  private void checkAdminOrOwner(@NonNull UUID userId) {
+    // Check if admin, if not, then check if owner
+    val authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (!authorizationManager.authorizeWithAdminRole(authentication)) {
+      val principal = authentication.getPrincipal();
+      if (principal instanceof User) {
+        val user = (User) principal;
+        if (!user.getId().equals(userId)) {
+          log.error(
+              "User: {} is illegally trying to generate access tokens for user: {}",
+              user.getId().toString(),
+              userId.toString());
+          throw new ForbiddenException("Action is forbidden for this user.");
+        }
+      } else {
+        val app = (Application) principal;
+        log.warn(
+            "Application {} tried to create an access token for user {} but is not an ADMIN application.",
+            app.getId().toString(),
+            userId.toString());
+        throw new ForbiddenException("Action is forbidden for this application.");
+      }
+    }
   }
 }

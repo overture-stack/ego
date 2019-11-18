@@ -26,12 +26,13 @@ import static java.lang.String.format;
 import static java.util.UUID.fromString;
 import static org.springframework.util.DigestUtils.md5Digest;
 
+import bio.overture.ego.model.dto.ApiKeyResponse;
+import bio.overture.ego.model.dto.ApiKeyScopeResponse;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.TokenResponse;
-import bio.overture.ego.model.dto.TokenScopeResponse;
 import bio.overture.ego.model.dto.UserScopesResponse;
+import bio.overture.ego.model.entity.ApiKey;
 import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Token;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.params.ScopeName;
@@ -79,7 +80,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class TokenService extends AbstractNamedService<Token, UUID> {
+public class TokenService extends AbstractNamedService<ApiKey, UUID> {
 
   /*
    * Constant
@@ -92,7 +93,7 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   private TokenSigner tokenSigner;
   private UserService userService;
   private ApplicationService applicationService;
-  private TokenStoreService tokenStoreService;
+  private ApiKeyStoreService apiKeyStoreService;
   private PolicyService policyService;
 
   /** Configuration */
@@ -106,20 +107,20 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       @NonNull TokenSigner tokenSigner,
       @NonNull UserService userService,
       @NonNull ApplicationService applicationService,
-      @NonNull TokenStoreService tokenStoreService,
+      @NonNull ApiKeyStoreService apiKeyStoreService,
       @NonNull PolicyService policyService,
       @NonNull TokenStoreRepository tokenStoreRepository) {
-    super(Token.class, tokenStoreRepository);
+    super(ApiKey.class, tokenStoreRepository);
     this.tokenSigner = tokenSigner;
     this.userService = userService;
     this.applicationService = applicationService;
-    this.tokenStoreService = tokenStoreService;
+    this.apiKeyStoreService = apiKeyStoreService;
     this.policyService = policyService;
   }
 
   @Override
-  public Token getWithRelationships(@NonNull UUID id) {
-    return tokenStoreService.getWithRelationships(id);
+  public ApiKey getWithRelationships(@NonNull UUID id) {
+    return apiKeyStoreService.getWithRelationships(id);
   }
 
   public String generateUserToken(IDToken idToken) {
@@ -183,10 +184,10 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   }
 
   @SneakyThrows
-  public Token issueToken(UUID user_id, List<ScopeName> scopeNames, String description) {
+  public ApiKey issueApiKey(UUID user_id, List<ScopeName> scopeNames, String description) {
     log.info(format("Looking for user '%s'", str(user_id)));
     log.info(format("Scopes are '%s'", strList(scopeNames)));
-    log.info(format("Token description is '%s'", description));
+    log.info(format("ApiKey description is '%s'", description));
 
     val u =
         userService
@@ -208,8 +209,8 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
       throw new InvalidScopeException(msg);
     }
 
-    val tokenString = generateTokenString();
-    log.info(format("Generated token string '%s'", str(tokenString)));
+    val apiKeyString = generateApiKeyString();
+    log.info(format("Generated apiKey string '%s'", str(apiKeyString)));
 
     val cal = Calendar.getInstance();
     cal.add(Calendar.DAY_OF_YEAR, API_TOKEN_DURATION);
@@ -217,31 +218,31 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
 
     val today = Calendar.getInstance();
 
-    val token = new Token();
-    token.setExpiryDate(expiryDate);
-    token.setIssueDate(today.getTime());
-    token.setRevoked(false);
-    token.setName(tokenString);
-    token.setOwner(u);
-    token.setDescription(description);
+    val apiKey = new ApiKey();
+    apiKey.setExpiryDate(expiryDate);
+    apiKey.setIssueDate(today.getTime());
+    apiKey.setRevoked(false);
+    apiKey.setName(apiKeyString);
+    apiKey.setOwner(u);
+    apiKey.setDescription(description);
 
     for (Scope requestedScope : requestedScopes) {
-      token.addScope(requestedScope);
+      apiKey.addScope(requestedScope);
     }
 
-    log.info("Creating token in token store");
-    tokenStoreService.create(token);
+    log.info("Creating apiKey in apiKey store");
+    apiKeyStoreService.create(apiKey);
 
-    log.info(format("Returning '%s'", str(token)));
+    log.info(format("Returning '%s'", str(apiKey)));
 
-    return token;
+    return apiKey;
   }
 
-  public Optional<Token> findByTokenString(String token) {
-    return tokenStoreService.findByTokenName(token);
+  public Optional<ApiKey> findByApiKeyString(String apiKey) {
+    return apiKeyStoreService.findByApiKeyName(apiKey);
   }
 
-  public String generateTokenString() {
+  public String generateApiKeyString() {
     return UUID.randomUUID().toString();
   }
 
@@ -355,34 +356,34 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
   }
 
   @SneakyThrows
-  public TokenScopeResponse checkToken(String authToken, String token) {
-    if (token == null) {
-      log.debug("Null token");
-      throw new InvalidTokenException("No token field found in POST request");
+  public ApiKeyScopeResponse checkApiKey(String authToken, String apiKey) {
+    if (apiKey == null) {
+      log.debug("Null apiKey");
+      throw new InvalidTokenException("No apiKey field found in POST request");
     }
 
-    log.debug(format("token ='%s'", token));
+    log.debug(format("apiKey ='%s'", apiKey));
     val contents = BasicAuthToken.decode(authToken);
 
     val clientId = contents.get().getClientId();
     val application = applicationService.findByClientId(clientId);
 
-    val t =
-        findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found"));
+    val aK =
+        findByApiKeyString(apiKey).orElseThrow(() -> new InvalidTokenException("ApiKey not found"));
 
-    if (t.isRevoked())
+    if (aK.isRevoked())
       throw new InvalidTokenException(
-          format("Token \"%s\" has expired or is no longer valid. ", token));
+          format("ApiKey \"%s\" has expired or is no longer valid. ", apiKey));
 
-    // We want to limit the scopes listed in the token to those scopes that the user
-    // is allowed to access at the time the token is checked -- we don't assume that
-    // they have not changed since the token was issued.
+    // We want to limit the scopes listed in the apiKey to those scopes that the user
+    // is allowed to access at the time the apiKey is checked -- we don't assume that
+    // they have not changed since the apiKey was issued.
 
-    val owner = t.getOwner();
-    val scopes = explicitScopes(effectiveScopes(extractScopes(owner), t.scopes()));
+    val owner = aK.getOwner();
+    val scopes = explicitScopes(effectiveScopes(extractScopes(owner), aK.scopes()));
     val names = mapToSet(scopes, Scope::toString);
 
-    return new TokenScopeResponse(owner.getName(), clientId, t.getSecondsUntilExpiry(), names);
+    return new ApiKeyScopeResponse(owner.getName(), clientId, aK.getSecondsUntilExpiry(), names);
   }
 
   public UserScopesResponse userScopes(@NonNull String userName) {
@@ -393,101 +394,117 @@ public class TokenService extends AbstractNamedService<Token, UUID> {
     return new UserScopesResponse(names);
   }
 
-  public void revokeToken(@NonNull String tokenName) {
-    validateTokenName(tokenName);
+  public void revokeApiKey(@NonNull String apiKeyName) {
+    validateApiKeyName(apiKeyName);
     val principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
     if (principal instanceof User) {
-      revokeTokenAsUser(tokenName, (User) principal);
+      revokeApiKeyAsUser(apiKeyName, (User) principal);
     } else if (principal instanceof Application) {
-      revokeTokenAsApplication(tokenName, (Application) principal);
+      revokeApiKeyAsApplication(apiKeyName, (Application) principal);
     } else {
-      log.info("Unknown type of authentication, token is not allowed to be revoked.");
+      log.info("Unknown type of authentication, apiKey is not allowed to be revoked.");
       throw new InvalidRequestException("Unknown type of authentication.");
     }
   }
 
-  private void revokeTokenAsUser(String tokenName, User user) {
+  private void revokeApiKeyAsUser(String apiKeyName, User user) {
     if (userService.isAdmin(user) && userService.isActiveUser(user)) {
-      revoke(tokenName);
+      revoke(apiKeyName);
     } else {
-      // if it's a regular user, check if the token belongs to the user
-      verifyToken(tokenName, user.getId());
-      revoke(tokenName);
+      // if it's a regular user, check if the api key belongs to the user
+      verifyApiKey(apiKeyName, user.getId());
+      revoke(apiKeyName);
     }
   }
 
-  private void revokeTokenAsApplication(String tokenName, Application application) {
+  private void revokeApiKeyAsApplication(String apiKeyName, Application application) {
     if (application.getType() == ADMIN) {
-      revoke(tokenName);
+      revoke(apiKeyName);
     } else {
       throw new InvalidRequestException(
-          format("The application does not have permission to revoke token '%s'", tokenName));
+          format("The application does not have permission to revoke apiKey '%s'", apiKeyName));
     }
   }
 
-  private void verifyToken(String token, UUID userId) {
-    val currentToken =
-        findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found."));
+  private void verifyApiKey(String apiKey, UUID userId) {
+    val currentApiKey =
+        findByApiKeyString(apiKey)
+            .orElseThrow(() -> new InvalidTokenException("ApiKey not found."));
 
-    if (!currentToken.getOwner().getId().equals(userId)) {
-      throw new InvalidTokenException("Users can only revoke tokens that belong to them.");
+    if (!currentApiKey.getOwner().getId().equals(userId)) {
+      throw new InvalidTokenException("Users can only revoke apiKeys that belong to them.");
     }
   }
 
-  private void validateTokenName(@NonNull String tokenName) {
-    log.info(format("Validating token: '%s'.", tokenName));
+  private void validateApiKeyName(@NonNull String apiKeyName) {
+    log.info(format("Validating apiKey: '%s'.", apiKeyName));
 
-    if (tokenName.isEmpty()) {
-      throw new InvalidTokenException("Token cannot be empty.");
+    if (apiKeyName.isEmpty()) {
+      throw new InvalidTokenException("ApiKey cannot be empty.");
     }
 
-    if (tokenName.length() > 2048) {
-      throw new InvalidRequestException("Invalid token, the maximum length for a token is 2048.");
+    if (apiKeyName.length() > 2048) {
+      throw new InvalidRequestException(
+          "Invalid apiKey, the maximum length for an apiKey is 2048.");
     }
   }
 
-  public void revoke(String token) {
-    val currentToken =
-        findByTokenString(token).orElseThrow(() -> new InvalidTokenException("Token not found."));
-    if (currentToken.isRevoked()) {
-      throw new InvalidTokenException(format("Token '%s' is already revoked.", token));
+  public void revoke(String apiKey) {
+    val currentApiKey =
+        findByApiKeyString(apiKey)
+            .orElseThrow(() -> new InvalidTokenException("ApiKey not found."));
+    if (currentApiKey.isRevoked()) {
+      throw new InvalidTokenException(format("ApiKey '%s' is already revoked.", apiKey));
     }
-    currentToken.setRevoked(true);
-    getRepository().save(currentToken);
+    currentApiKey.setRevoked(true);
+    getRepository().save(currentApiKey);
   }
 
-  public List<TokenResponse> listToken(@NonNull UUID userId) {
+  public List<ApiKeyResponse> listApiKey(@NonNull UUID userId) {
+    return getApiKeysForUser(userId).stream()
+        .filter((token -> !token.isRevoked()))
+        .map(this::createApiKeyResponse)
+        .collect(Collectors.toList());
+  }
+
+  /** DEPRECATED: To be removed in next major release */
+  @Deprecated
+  public List<TokenResponse> listTokens(@NonNull UUID userId) {
+    return getApiKeysForUser(userId).stream()
+        .filter((token -> !token.isRevoked()))
+        .map(this::createTokenResponse)
+        .collect(Collectors.toList());
+  }
+
+  private Set<ApiKey> getApiKeysForUser(@NonNull UUID userId) {
     val user =
         userService
             .findById(userId)
             .orElseThrow(
                 () -> new UsernameNotFoundException(format("Can't find user '%s'", str(userId))));
-
-    val tokens = user.getTokens();
-    if (tokens.isEmpty()) {
-      return new ArrayList<>();
-    }
-
-    val unrevokedTokens =
-        tokens.stream().filter((token -> !token.isRevoked())).collect(Collectors.toSet());
-    List<TokenResponse> response = new ArrayList<>();
-    unrevokedTokens.forEach(
-        token -> {
-          createTokenResponse(token, response);
-        });
-
-    return response;
+    return user.getTokens();
   }
 
-  private void createTokenResponse(@NonNull Token token, @NonNull List<TokenResponse> responses) {
+  private ApiKeyResponse createApiKeyResponse(@NonNull ApiKey apiKey) {
+    val scopes = mapToSet(apiKey.scopes(), Scope::toString);
+    return ApiKeyResponse.builder()
+        .apiKey(apiKey.getName())
+        .scope(scopes)
+        .exp(apiKey.getSecondsUntilExpiry())
+        .description(apiKey.getDescription())
+        .build();
+  }
+
+  /** DEPRECATED: To be removed in next major release */
+  @Deprecated
+  private TokenResponse createTokenResponse(@NonNull ApiKey token) {
     val scopes = mapToSet(token.scopes(), Scope::toString);
-    responses.add(
-        TokenResponse.builder()
-            .accessToken(token.getName())
-            .scope(scopes)
-            .exp(token.getSecondsUntilExpiry())
-            .description(token.getDescription())
-            .build());
+    return TokenResponse.builder()
+        .accessToken(token.getName())
+        .scope(scopes)
+        .exp(token.getSecondsUntilExpiry())
+        .description(token.getDescription())
+        .build();
   }
 }

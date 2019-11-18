@@ -132,8 +132,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     val token = BasicAuthToken.decode(tokenString);
 
     if (token.isEmpty()) {
-      log.warn(
-          "AuthenticateApplication: Invalid token for application authentication request");
+      log.warn("AuthenticateApplication: Invalid token for application authentication request");
       SecurityContextHolder.clearContext();
       return;
     }

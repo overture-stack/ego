@@ -18,12 +18,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import bio.overture.ego.model.dto.*;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.entity.Token;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.entity.UserPermission;
+import bio.overture.ego.model.entity.*;
+import bio.overture.ego.model.entity.ApiKey;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.model.enums.LanguageType;
@@ -64,7 +60,7 @@ public class EntityGenerator {
 
   @Autowired private PolicyService policyService;
 
-  @Autowired private TokenStoreService tokenStoreService;
+  @Autowired private ApiKeyStoreService apiKeyStoreService;
 
   @Autowired private UserPermissionService userPermissionService;
 
@@ -332,7 +328,7 @@ public class EntityGenerator {
     setupPolicies("Study001", "Study002", "Study003");
   }
 
-  public Token setupToken(
+  public ApiKey setupApiKey(
       User user,
       String token,
       boolean isRevoked,
@@ -340,7 +336,7 @@ public class EntityGenerator {
       String description,
       Set<Scope> scopes) {
     val tokenObject =
-        Token.builder()
+        ApiKey.builder()
             .name(token)
             .isRevoked(isRevoked)
             .owner(user)
@@ -351,7 +347,7 @@ public class EntityGenerator {
 
     tokenObject.setScopes(scopes);
 
-    return tokenStoreService.create(tokenObject);
+    return apiKeyStoreService.create(tokenObject);
   }
 
   public void addPermissions(User user, Set<Scope> scopes) {

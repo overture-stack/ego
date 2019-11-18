@@ -17,18 +17,18 @@
 
 package bio.overture.ego.event.token;
 
-import bio.overture.ego.model.entity.Token;
+import bio.overture.ego.model.entity.ApiKey;
 import java.util.Set;
 import lombok.Getter;
 import lombok.NonNull;
 import org.springframework.context.ApplicationEvent;
 
-public class RevokeTokensEvent extends ApplicationEvent {
+public class RevokeApiKeysEvent extends ApplicationEvent {
 
-  @Getter private Set<Token> tokens;
+  @Getter private Set<ApiKey> apiKeys;
 
-  public RevokeTokensEvent(@NonNull Object source, @NonNull Set<Token> tokens) {
+  public RevokeApiKeysEvent(@NonNull Object source, @NonNull Set<ApiKey> apiKeys) {
     super(source);
-    this.tokens = tokens;
+    this.apiKeys = apiKeys;
   }
 }

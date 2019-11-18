@@ -19,7 +19,7 @@ package bio.overture.ego.service;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 
 import bio.overture.ego.model.dto.CreateTokenRequest;
-import bio.overture.ego.model.entity.Token;
+import bio.overture.ego.model.entity.ApiKey;
 import bio.overture.ego.repository.TokenStoreRepository;
 import bio.overture.ego.repository.queryspecification.builder.TokenSpecificationBuilder;
 import java.util.Optional;
@@ -35,26 +35,26 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @Transactional
-public class TokenStoreService extends AbstractNamedService<Token, UUID> {
+public class ApiKeyStoreService extends AbstractNamedService<ApiKey, UUID> {
 
   /** Dependencies */
   private final TokenStoreRepository tokenRepository;
 
   @Autowired
-  public TokenStoreService(@NonNull TokenStoreRepository repository) {
-    super(Token.class, repository);
+  public ApiKeyStoreService(@NonNull TokenStoreRepository repository) {
+    super(ApiKey.class, repository);
     this.tokenRepository = repository;
   }
 
   @Override
-  public Token getWithRelationships(@NonNull UUID id) {
+  public ApiKey getWithRelationships(@NonNull UUID id) {
     return get(id, true, true);
   }
 
   @SuppressWarnings("unchecked")
-  public Token get(@NonNull UUID id, boolean fetchOwner, boolean fetchTokenScopes) {
+  public ApiKey get(@NonNull UUID id, boolean fetchOwner, boolean fetchTokenScopes) {
     val result =
-        (Optional<Token>)
+        (Optional<ApiKey>)
             getRepository()
                 .findOne(
                     new TokenSpecificationBuilder()
@@ -65,18 +65,18 @@ public class TokenStoreService extends AbstractNamedService<Token, UUID> {
     return result.get();
   }
 
-  public Token create(@NonNull CreateTokenRequest createTokenRequest) {
+  public ApiKey create(@NonNull CreateTokenRequest createTokenRequest) {
     throw new NotImplementedException();
   }
 
   @Deprecated
-  public Token create(@NonNull Token scopedAccessToken) {
-    Token res = tokenRepository.save(scopedAccessToken);
-    tokenRepository.revokeRedundantTokens(scopedAccessToken.getOwner().getId());
+  public ApiKey create(@NonNull ApiKey scopedAccessApiKey) {
+    ApiKey res = tokenRepository.save(scopedAccessApiKey);
+    tokenRepository.revokeRedundantTokens(scopedAccessApiKey.getOwner().getId());
     return res;
   }
 
-  public Optional<Token> findByTokenName(String tokenName) {
-    return tokenRepository.findByName(tokenName);
+  public Optional<ApiKey> findByApiKeyName(String apiKeyName) {
+    return tokenRepository.findByName(apiKeyName);
   }
 }

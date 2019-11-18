@@ -36,7 +36,7 @@ import static bio.overture.ego.utils.Joiners.PRETTY_COMMA;
 import static org.mapstruct.factory.Mappers.getMapper;
 import static org.springframework.data.jpa.domain.Specification.where;
 
-import bio.overture.ego.event.token.TokenEventsPublisher;
+import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.GroupRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
@@ -80,18 +80,18 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
 
   private final UserRepository userRepository;
   private final ApplicationService applicationService;
-  private final TokenEventsPublisher tokenEventsPublisher;
+  private final ApiKeyEventsPublisher apiKeyEventsPublisher;
 
   @Autowired
   public GroupService(
       @NonNull GroupRepository groupRepository,
       @NonNull UserRepository userRepository,
       @NonNull ApplicationService applicationService,
-      @NonNull TokenEventsPublisher tokenEventsPublisher) {
+      @NonNull ApiKeyEventsPublisher apiKeyEventsPublisher) {
     super(Group.class, groupRepository);
     this.groupRepository = groupRepository;
     this.applicationService = applicationService;
-    this.tokenEventsPublisher = tokenEventsPublisher;
+    this.apiKeyEventsPublisher = apiKeyEventsPublisher;
     this.userRepository = userRepository;
   }
 
@@ -135,7 +135,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     val users = mapToSet(group.getUserGroups(), UserGroup::getUser);
     disassociateAllUsersFromGroup(group);
     disassociateAllApplicationsFromGroup(group);
-    tokenEventsPublisher.requestTokenCleanupByUsers(users);
+    apiKeyEventsPublisher.requestApiKeyCleanupByUsers(users);
     getRepository().delete(group);
   }
 
@@ -186,7 +186,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
         users.stream()
             .filter(u -> userIdsToDisassociate.contains(u.getId()))
             .collect(toImmutableSet());
-    tokenEventsPublisher.requestTokenCleanupByUsers(usersToCheck);
+    apiKeyEventsPublisher.requestApiKeyCleanupByUsers(usersToCheck);
   }
 
   public Group associateUsersWithGroup(@NonNull UUID id, @NonNull Collection<UUID> userIds) {
@@ -216,7 +216,7 @@ public class GroupService extends AbstractNamedService<Group, UUID> {
     nonAssociatedUsers.stream()
         .map(u -> convertToUserGroup(u, groupWithUserGroups))
         .forEach(UserGroupService::associateSelf);
-    tokenEventsPublisher.requestTokenCleanupByUsers(nonAssociatedUsers);
+    apiKeyEventsPublisher.requestApiKeyCleanupByUsers(nonAssociatedUsers);
     return groupWithUserGroups;
   }
 
