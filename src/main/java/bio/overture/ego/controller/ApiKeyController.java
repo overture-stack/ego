@@ -188,6 +188,7 @@ public class ApiKeyController {
   }
 
   /** DEPRECATED: GET /token to be removed in next major release */
+  @Deprecated
   @AdminScoped
   @RequestMapping(method = GET, value = "/token")
   @ResponseStatus(value = OK)
