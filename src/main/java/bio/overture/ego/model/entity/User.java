@@ -54,6 +54,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -194,6 +195,12 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
       fetch = FetchType.LAZY,
       orphanRemoval = true)
   private Set<UserApplication> userApplications = newHashSet();
+
+  @OneToOne(
+    cascade = CascadeType.ALL,
+    fetch = FetchType.LAZY,
+    orphanRemoval = true)
+  private RefreshToken refreshToken;
 
   // TODO: [rtisma] move getPermissions to UserService once DTO task is complete.
   // JsonViews creates
