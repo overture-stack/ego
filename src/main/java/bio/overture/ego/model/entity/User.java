@@ -66,6 +66,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.hibernate.LazyInitializationException;
@@ -77,7 +78,7 @@ import org.hibernate.annotations.TypeDef;
 @Entity
 @Table(name = Tables.EGOUSER)
 @Data
-@ToString(exclude = {"userGroups", "userApplications", "userPermissions", "tokens"})
+@ToString(exclude = {"userGroups", "userApplications", "userPermissions", "tokens", "refreshToken"})
 @JsonPropertyOrder({
   JavaFields.ID,
   JavaFields.NAME,
@@ -100,6 +101,7 @@ import org.hibernate.annotations.TypeDef;
 @NoArgsConstructor
 @JsonView(Views.REST.class)
 @TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
+@FieldNameConstants
 public class User implements PolicyOwner, NameableEntity<UUID> {
 
   // TODO: find JPA equivalent for GenericGenerator
@@ -197,6 +199,7 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   private Set<UserApplication> userApplications = newHashSet();
 
   @OneToOne(
+    mappedBy = RefreshToken.Fields.user,
     cascade = CascadeType.ALL,
     fetch = FetchType.LAZY,
     orphanRemoval = true)
