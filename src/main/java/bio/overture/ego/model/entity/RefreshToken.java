@@ -36,16 +36,13 @@ public class RefreshToken implements Identifiable<UUID> {
 //  private UUID refreshId;
 
   @Id
-  @Column(name = SqlFields.ID, nullable = false, updatable = false)
+  @Column(name = SqlFields.REFRESHID, nullable = false, updatable = false)
   @GenericGenerator(name = "refresh_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "refresh_uuid")
   private UUID id;
 
-  @OneToOne(
-    fetch = FetchType.LAZY,
-     mappedBy = User.Fields.refreshToken
-    )
-  @JoinColumn(name = SqlFields.USERID_JOIN, referencedColumnName = SqlFields.ID)
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = SqlFields.USER_ID, referencedColumnName = SqlFields.ID)
   private User user;
 
   @NotNull

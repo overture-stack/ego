@@ -190,7 +190,6 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
     cascade = CascadeType.ALL,
     fetch = FetchType.LAZY,
     orphanRemoval = true)
-  @JoinColumn(name = SqlFields.ID, referencedColumnName = "id")
   private RefreshToken refreshToken;
 
   // TODO: [rtisma] move getPermissions to UserService once DTO task is complete.
