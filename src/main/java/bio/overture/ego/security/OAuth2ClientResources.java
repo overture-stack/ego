@@ -2,7 +2,7 @@ package bio.overture.ego.security;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.ResourceServerProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
@@ -10,7 +10,9 @@ import org.springframework.security.oauth2.client.token.AccessTokenRequest;
 import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.util.UriComponentsBuilder;
 
+@Slf4j
 public class OAuth2ClientResources {
 
   @NestedConfigurationProperty
@@ -24,10 +26,20 @@ public class OAuth2ClientResources {
             val uri = new URI(request.getCurrentUri());
             val attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
             val session = attr.getRequest().getSession(true);
-            val pattern = Pattern.compile("client_id=([^&]+)?");
-            val matcher = pattern.matcher(uri.getQuery());
-            if (matcher.find()) {
-              session.setAttribute("ego_client_id", matcher.group(1));
+
+            val uriComponents = UriComponentsBuilder.fromUri(uri).build();
+            val queryParams = uriComponents.getQueryParams();
+
+            val clientId = queryParams.getFirst("client_id");
+            if (clientId != null && !clientId.isEmpty()) {
+              session.setAttribute("ego_client_id", clientId);
+            }
+
+            val redirectUri = queryParams.getFirst("redirect_uri");
+            if (redirectUri != null && !redirectUri.isEmpty()) {
+              session.setAttribute("ego_redirect_uri", redirectUri);
+            } else {
+              session.setAttribute("ego_redirect_uri", "");
             }
 
             if (getPreEstablishedRedirectUri() != null) {
