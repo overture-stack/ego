@@ -186,11 +186,10 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   private Set<UserApplication> userApplications = newHashSet();
 
   @OneToOne(
-    mappedBy = RefreshToken.Fields.user,
-    cascade = CascadeType.ALL,
-    fetch = FetchType.LAZY,
-    orphanRemoval = true)
-  @JoinColumn(name = SqlFields.ID, referencedColumnName = "id")
+      mappedBy = RefreshToken.Fields.user,
+      cascade = CascadeType.ALL,
+      fetch = FetchType.LAZY,
+      orphanRemoval = true)
   private RefreshToken refreshToken;
 
   // TODO: [rtisma] move getPermissions to UserService once DTO task is complete.
