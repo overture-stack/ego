@@ -1,11 +1,5 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
-import static java.util.stream.Collectors.toList;
-
-import bio.overture.ego.model.entity.RefreshToken;
-import bio.overture.ego.model.entity.User;
 import bio.overture.ego.repository.RefreshTokenRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.utils.EntityGenerator;
@@ -20,8 +14,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.UUID;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
+import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @SpringBootTest
@@ -74,11 +69,10 @@ public class UserServiceTest {
               user.getPermissions().iterator().next(), "UserServiceTestPolicy.WRITE");
         });
   }
-  @Autowired
-  private UserRepository userRepository;
 
-  @Autowired
-  private RefreshTokenRepository refreshTokenRepository;
+  @Autowired private UserRepository userRepository;
+
+  @Autowired private RefreshTokenRepository refreshTokenRepository;
 
   @Test
   public void testAssociateUserWithRefreshToken() {

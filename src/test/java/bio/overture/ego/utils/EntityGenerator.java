@@ -11,7 +11,6 @@ import static bio.overture.ego.utils.Splitters.COMMA_SPLITTER;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Math.abs;
-import static java.lang.Math.log;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -29,7 +28,6 @@ import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.*;
 import com.google.common.collect.ImmutableSet;
-
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -506,12 +504,11 @@ public class EntityGenerator {
     calendar.add(Calendar.HOUR, 3);
     val expiryDate = new Timestamp(calendar.getTime().getTime());
     return RefreshToken.builder()
-      .jti(randomJti)
-      .id(randomRefreshId)
-      .issueDate(issueDate)
-      .expiryDate(expiryDate)
-      .user(user)
-      .build();
+        .jti(randomJti)
+        .id(randomRefreshId)
+        .issueDate(issueDate)
+        .expiryDate(expiryDate)
+        .user(user)
+        .build();
   }
-
 }
