@@ -23,7 +23,8 @@ import bio.overture.ego.model.entity.Application;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Predicate;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -33,7 +34,8 @@ import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientE
 public class Redirects {
 
   /**
-   * Returns redirect uri based Declares a runtime exception to be explicit
+   * Returns redirect uri based on combination between provided URI and those registed in the passed
+   * application. Checks validity and throws 403 if unauthorized URI is provided.
    *
    * @return Returns URI as a String that Ego will redirect to
    */
@@ -58,26 +60,10 @@ public class Redirects {
 
     val isValid =
         redirects
-            .map(
-                r -> {
-                  try {
-                    return new URI(r);
-                  } catch (URISyntaxException e) {
-                    log.error(
-                        format(
-                            "Could not parse URI in getRedirectUriOrThrow for clientId: %s %s",
-                            app.getClientId(), r),
-                        e);
-                    return null;
-                  }
-                })
-            .filter(Objects::nonNull)
-            .map(
-                u ->
-                    u.getHost().equals(redirectUri.getHost())
-                        && u.getPort() == redirectUri.getPort()) // Map to valid/invalid
-            .reduce(Boolean::logicalOr) // Needs at least one valid
-            .orElse(false);
+            .map(Redirects::toUri)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .anyMatch(getMatcher(redirectUri)); // Needs at least one valid
 
     if (isValid) {
       return redirect;
@@ -85,5 +71,18 @@ public class Redirects {
       log.error(msg);
       throw new UnauthorizedClientException(msg);
     }
+  }
+
+  private static Optional<URI> toUri(String uri) {
+    try {
+      return Optional.of(new URI(uri));
+    } catch (URISyntaxException e) {
+      log.error(format("Could not parse URI %s", uri), e);
+      return Optional.empty();
+    }
+  }
+
+  private static Predicate<URI> getMatcher(URI target) {
+    return (URI u) -> u.getHost().equals(target.getHost()) && u.getPort() == target.getPort();
   }
 }
