@@ -16,14 +16,15 @@
 
 package bio.overture.ego.security;
 
-import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.utils.Redirects;
 import java.net.URI;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -44,12 +45,13 @@ public class CorsFilter implements Filter {
     final HttpServletRequest request = (HttpServletRequest) req;
 
     String clientId = request.getParameter("client_id");
+    String redirectUri = request.getParameter("redirect_uri");
 
     // allow ego app access token at /oauth/ego-token
     if (clientId != null) {
       try {
-        Application app = applicationService.getByClientId(clientId);
-        URI uri = new URI(app.getRedirectUri());
+        val app = applicationService.getByClientId(clientId);
+        val uri = new URI(Redirects.getRedirectUri(app, redirectUri));
         response.setHeader(
             "Access-Control-Allow-Origin",
             uri.getScheme()

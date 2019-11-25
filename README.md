@@ -9,8 +9,6 @@
 </p>
 
 [![BrowserStack Status](https://www.browserstack.com/automate/badge.svg?badge_key=U3dLZnRFNWI2MWNFY2NGcXVtVTB3WDcyU2dPVjlVeEFYUEdxUnpYZlhrUT0tLTFzY0taYTA0MVFEa3ErNkRZdTBRWVE9PQ==--690f89a41a0eedf7b4975bd7df2eac162e04e775% )](https://www.browserstack.com/automate/public-build/U3dLZnRFNWI2MWNFY2NGcXVtVTB3WDcyU2dPVjlVeEFYUEdxUnpYZlhrUT0tLTFzY0taYTA0MVFEa3ErNkRZdTBRWVE9PQ==--690f89a41a0eedf7b4975bd7df2eac162e04e775%)
-[![Build Status](https://travis-ci.org/overture-stack/ego.svg?branch=master)](https://travis-ci.org/overture-stack/ego)
-[![CircleCI](https://circleci.com/gh/overture-stack/ego/tree/develop.svg?style=svg)](https://circleci.com/gh/overture-stack/ego/tree/develop)
 [![Slack](http://slack.overture.bio/badge.svg)](http://slack.overture.bio)
 
 ## Table of Contents
