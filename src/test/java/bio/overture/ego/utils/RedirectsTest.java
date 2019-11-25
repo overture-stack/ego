@@ -48,6 +48,14 @@ public class RedirectsTest {
   }
 
   @Test
+  public void testBlankRedirect() {
+    val app = appWithUrls("https://example.com");
+
+    val redirect = getRedirectUri(app, "          ");
+    assertEquals("https://example.com", redirect);
+  }
+
+  @Test
   public void testSameDomainNoPath() {
     val app = appWithUrls("https://example.com");
 
@@ -56,11 +64,27 @@ public class RedirectsTest {
   }
 
   @Test
+  public void testSameDomainNoPathWithParams() {
+    val app = appWithUrls("https://example.com");
+
+    val redirect = getRedirectUri(app, "https://example.com?foo=1&bar=2");
+    assertEquals("https://example.com?foo=1&bar=2", redirect);
+  }
+
+  @Test
   public void testSameDomainWithPath() {
     val app = appWithUrls("https://example.com");
 
     val redirect = getRedirectUri(app, "https://example.com/foobar");
     assertEquals("https://example.com/foobar", redirect);
+  }
+
+  @Test
+  public void testSameDomainWithPathAndParams() {
+    val app = appWithUrls("https://example.com");
+
+    val redirect = getRedirectUri(app, "https://example.com/foobar?over=9000");
+    assertEquals("https://example.com/foobar?over=9000", redirect);
   }
 
   @Test
@@ -85,6 +109,22 @@ public class RedirectsTest {
 
     val redirect = getRedirectUri(app, "https://other.example.com/super/secret/path");
     assertEquals("https://other.example.com/super/secret/path", redirect);
+  }
+
+  @Test
+  public void testPathFromListWithParam() {
+    val app = appWithUrls("https://example.com:5555,https://other.example.com,https://google.ca");
+
+    val redirect = getRedirectUri(app, "https://other.example.com/super/secret/path?maximum=power");
+    assertEquals("https://other.example.com/super/secret/path?maximum=power", redirect);
+  }
+
+  @Test
+  public void testPathFromListWithParams() {
+    val app = appWithUrls("https://example.com:5555,https://other.example.com,https://google.ca");
+
+    val redirect = getRedirectUri(app, "https://other.example.com/super/secret/path?foo=1&bar=2");
+    assertEquals("https://other.example.com/super/secret/path?foo=1&bar=2", redirect);
   }
 
   @Test
