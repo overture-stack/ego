@@ -36,7 +36,7 @@ public class RefreshToken implements Identifiable<UUID> {
 //  private UUID refreshId;
 
   @Id
-  @Column(name = SqlFields.REFRESHID, nullable = false, updatable = false)
+  @Column(name = SqlFields.ID, nullable = false, updatable = false)
   @GenericGenerator(name = "refresh_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "refresh_uuid")
   private UUID id;
