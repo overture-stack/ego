@@ -25,23 +25,36 @@ import org.hibernate.annotations.GenericGenerator;
 @ToString(exclude = {"user"})
 public class RefreshToken implements Identifiable<UUID> {
 
-  @Id
-  @Column(name = SqlFields.USER_ID, nullable = false, updatable = false)
-  private UUID userId;
+//  @Id
+//  @Column(name = SqlFields.USER_ID, nullable = false, updatable = false)
+//  private UUID id;
+//
+//  @NotNull
+//  @Column(name = SqlFields.REFRESHID, updatable = false, nullable = false)
+//  @GenericGenerator(name = "refresh_uuid", strategy = "org.hibernate.id.UUIDGenerator")
+//  @GeneratedValue(generator = "refresh_uuid")
+//  private UUID refreshId;
 
-  @NotNull
-  @Column(name = SqlFields.REFRESHID, updatable = false, nullable = false)
+  @Id
+  @Column(name = SqlFields.ID, nullable = false, updatable = false)
   @GenericGenerator(name = "refresh_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "refresh_uuid")
-  private UUID refreshId;
+  private UUID id;
+
+  @OneToOne(
+    fetch = FetchType.LAZY,
+     mappedBy = User.Fields.refreshToken
+    )
+  @JoinColumn(name = SqlFields.USERID_JOIN, referencedColumnName = SqlFields.ID)
+  private User user;
 
   @NotNull
   @Column(name = SqlFields.JTI, updatable = false, nullable = false)
   private UUID jti;
 
-  @MapsId
-  @OneToOne(fetch = FetchType.LAZY)
-  private User user;
+//  @MapsId
+//  @OneToOne(fetch = FetchType.LAZY)
+//  private User user;
 
   @NotNull
   @Column(name = SqlFields.ISSUEDATE, updatable = false, nullable = false)
@@ -51,8 +64,4 @@ public class RefreshToken implements Identifiable<UUID> {
   @Column(name = SqlFields.EXPIRYDATE, updatable = false, nullable = false)
   private Date expiryDate;
 
-  @Override
-  public UUID getId() {
-    return refreshId;
-  }
 }

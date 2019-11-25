@@ -4,6 +4,10 @@ import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
 import static java.util.stream.Collectors.toList;
 
+import bio.overture.ego.model.entity.RefreshToken;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.repository.RefreshTokenRepository;
+import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.utils.EntityGenerator;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -15,6 +19,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @SpringBootTest
@@ -66,5 +73,33 @@ public class UserServiceTest {
           Assert.assertEquals(
               user.getPermissions().iterator().next(), "UserServiceTestPolicy.WRITE");
         });
+  }
+  @Autowired
+  private UserRepository userRepository;
+
+  @Autowired
+  private RefreshTokenRepository refreshTokenRepository;
+
+  @Test
+  public void testAssociateUserWithRefreshToken() {
+    // create a user
+    val user1 = entityGenerator.setupUser("Jimmy Hoffa");
+    // create a refresh token
+    val refreshToken1 = entityGenerator.setupRefreshToken(user1);
+    // set user on refresh token
+    refreshToken1.setUser(user1);
+    log.info("set user1 on refresh token");
+    // set refresh token on user - are these sets just the one to one assoc?
+    user1.setRefreshToken(refreshToken1);
+    log.info("set refresh token on user1");
+    userRepository.save(user1);
+    log.info("finished saving user1");
+    userService.get(user1.getId(), false, false, false, true);
+    log.info("finished");
+
+    val userWithRefreshToken = userService.get(user1.getId(), false, false, false, true);
+    Assert.assertTrue(userWithRefreshToken.getRefreshToken() != null);
+    Assert.assertEquals(userWithRefreshToken.getRefreshToken(), refreshToken1);
+    Assert.assertEquals(userWithRefreshToken.getId(), user1.getId());
   }
 }
