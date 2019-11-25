@@ -43,7 +43,7 @@ public class Redirects {
     val redirects = Arrays.stream(app.getRedirectUri().split(","));
 
     // Short return if no redirect URI is provided
-    if (redirect == null || redirect.isEmpty()) {
+    if (redirect == null || redirect.isBlank()) {
       return redirects
           .findFirst()
           .orElseThrow(() -> new UnauthorizedClientException("Cannot find valid redirect URI"));
