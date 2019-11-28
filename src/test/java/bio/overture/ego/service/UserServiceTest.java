@@ -1,11 +1,5 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
-import static java.util.stream.Collectors.toList;
-
-import bio.overture.ego.model.entity.RefreshToken;
-import bio.overture.ego.model.entity.User;
 import bio.overture.ego.repository.RefreshTokenRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.utils.EntityGenerator;
@@ -20,8 +14,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.UUID;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
+import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @SpringBootTest
@@ -80,26 +75,17 @@ public class UserServiceTest {
   @Autowired
   private RefreshTokenRepository refreshTokenRepository;
 
-  @Test
-  public void testAssociateUserWithRefreshToken() {
-    // create a user
-    val user1 = entityGenerator.setupUser("Jimmy Hoffa");
-    // create a refresh token
-    val refreshToken1 = entityGenerator.setupRefreshToken(user1);
-    // set user on refresh token
-    refreshToken1.setUser(user1);
-    log.info("set user1 on refresh token");
-    // set refresh token on user - are these sets just the one to one assoc?
-    user1.setRefreshToken(refreshToken1);
-    log.info("set refresh token on user1");
-    userRepository.save(user1);
-    log.info("finished saving user1");
-    userService.get(user1.getId(), false, false, false, true);
-    log.info("finished");
+  @Autowired
+  private RefreshTokenService refreshTokenService;
 
-    val userWithRefreshToken = userService.get(user1.getId(), false, false, false, true);
-    Assert.assertTrue(userWithRefreshToken.getRefreshToken() != null);
-    Assert.assertEquals(userWithRefreshToken.getRefreshToken(), refreshToken1);
-    Assert.assertEquals(userWithRefreshToken.getId(), user1.getId());
+  @Test
+    public void testAssociateUserWithRefreshToken() {
+    // create a user
+    val user = entityGenerator.setupUser("Jimmy Hoffa");
+    val rt = refreshTokenService.create(user);
+    val u = userService.get(user.getId(), false, false, false, true);
+    Assert.assertTrue(u.getRefreshToken() != null);
+    Assert.assertEquals(u.getRefreshToken(), rt);
+    Assert.assertEquals(u.getId(), user.getId());
   }
 }

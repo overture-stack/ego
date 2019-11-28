@@ -1,7 +1,9 @@
 package bio.overture.ego.service;
 
 //import bio.overture.ego.model.dto.CreateRefreshTokenRequest;
+
 import bio.overture.ego.model.entity.RefreshToken;
+import bio.overture.ego.model.entity.User;
 import bio.overture.ego.repository.RefreshTokenRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.builder.RefreshTokenSpecificationBuilder;
@@ -12,11 +14,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 @Slf4j
 @Service
@@ -27,16 +31,35 @@ public class RefreshTokenService extends AbstractBaseService<RefreshToken, UUID>
   private RefreshTokenRepository refreshTokenRepository;
 
   /** Configuration */
-  @Value("${refreshToken.duration:10800000}")
-  private int DURATION;
+  private int durationSeconds;
 
   @Autowired
   public RefreshTokenService(
-    @NonNull RefreshTokenRepository refreshTokenRepository,
-    @NonNull UserRepository userRepository,
-    @NonNull UserService userService) {
+      @NonNull RefreshTokenRepository refreshTokenRepository,
+      @NonNull UserRepository userRepository,
+      @NonNull UserService userService,
+      @Value("${refreshToken.durationSeconds:10800000}") int durationSeconds
+  ) {
     super(RefreshToken.class, refreshTokenRepository);
+    this.durationSeconds = durationSeconds;
     this.refreshTokenRepository = refreshTokenRepository;
+  }
+
+  //TODO: Ann to implement this
+  private RefreshToken  createTransient(User user){
+    val nowInstant = Instant.now();
+   val expiryInstant = nowInstant.plus(durationSeconds, SECONDS);
+    return RefreshToken.builder()
+        .jti(UUID.randomUUID()) //TODO [ANN] to implement propertly with jwt
+        .issueDate(Date.from(nowInstant))
+        .expiryDate(Date.from(expiryInstant))
+        .build();
+  }
+
+  public RefreshToken create(@NonNull User user){
+    val rt = createTransient(user);
+    associateUserRefreshToken(user, rt);
+    return refreshTokenRepository.save(rt);
   }
 
   @SuppressWarnings("unchecked")
@@ -58,6 +81,11 @@ public class RefreshTokenService extends AbstractBaseService<RefreshToken, UUID>
   @Override
   public RefreshToken getWithRelationships(@NonNull UUID userId) {
     return get(userId,true);
+  }
+
+  private static void associateUserRefreshToken(User user, RefreshToken refreshToken){
+    user.setRefreshToken(refreshToken);
+    refreshToken.setUser(user);
   }
 //  public RefreshToken create(@NonNull CreateRefreshTokenRequest request) {
 //    this.checkUserIdUnique(request.getUserId()); // where should validation be?

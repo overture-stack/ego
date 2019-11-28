@@ -1,5 +1,54 @@
 package bio.overture.ego.utils;
 
+import bio.overture.ego.model.dto.CreateApplicationRequest;
+import bio.overture.ego.model.dto.CreateUserRequest;
+import bio.overture.ego.model.dto.GroupRequest;
+import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.dto.PolicyRequest;
+import bio.overture.ego.model.dto.Scope;
+import bio.overture.ego.model.entity.ApiKey;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.entity.RefreshToken;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.entity.UserPermission;
+import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.enums.ApplicationType;
+import bio.overture.ego.model.enums.LanguageType;
+import bio.overture.ego.model.enums.StatusType;
+import bio.overture.ego.model.enums.UserType;
+import bio.overture.ego.model.params.ScopeName;
+import bio.overture.ego.service.ApiKeyStoreService;
+import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.BaseService;
+import bio.overture.ego.service.GroupPermissionService;
+import bio.overture.ego.service.GroupService;
+import bio.overture.ego.service.NamedService;
+import bio.overture.ego.service.PolicyService;
+import bio.overture.ego.service.TokenService;
+import bio.overture.ego.service.UserPermissionService;
+import bio.overture.ego.service.UserService;
+import com.google.common.collect.ImmutableSet;
+import lombok.NonNull;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Supplier;
+
 import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.PENDING;
@@ -11,34 +60,11 @@ import static bio.overture.ego.utils.Splitters.COMMA_SPLITTER;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Math.abs;
-import static java.lang.Math.log;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-import bio.overture.ego.model.dto.*;
-import bio.overture.ego.model.entity.*;
-import bio.overture.ego.model.entity.ApiKey;
-import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.model.enums.ApplicationType;
-import bio.overture.ego.model.enums.LanguageType;
-import bio.overture.ego.model.enums.StatusType;
-import bio.overture.ego.model.enums.UserType;
-import bio.overture.ego.model.params.ScopeName;
-import bio.overture.ego.service.*;
-import com.google.common.collect.ImmutableSet;
-
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.function.Supplier;
-import lombok.NonNull;
-import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 @Component
 /**
@@ -493,11 +519,9 @@ public class EntityGenerator {
     return fn + " " + ln;
   }
 
-  public RefreshToken setupRefreshToken(User user) {
+  public RefreshToken generateRefreshToken(@NonNull User user) {
     // switch these to use generateRandom methods when you create a service
     UUID randomJti = UUID.randomUUID();
-    UUID randomRefreshId = UUID.randomUUID();
-
     Calendar calendar = Calendar.getInstance();
     Timestamp timestamp = new Timestamp(new Date().getTime());
 
@@ -507,7 +531,6 @@ public class EntityGenerator {
     val expiryDate = new Timestamp(calendar.getTime().getTime());
     return RefreshToken.builder()
       .jti(randomJti)
-      .id(randomRefreshId)
       .issueDate(issueDate)
       .expiryDate(expiryDate)
       .user(user)

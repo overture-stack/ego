@@ -2,11 +2,6 @@ package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import java.util.*;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +9,21 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.GenericGenerator;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.validation.constraints.NotNull;
+import java.util.Date;
+import java.util.UUID;
 
 @Entity
 @Table(name = Tables.REFRESHTOKEN)
@@ -54,11 +64,13 @@ public class RefreshToken implements Identifiable<UUID> {
 //  private User user;
 
   @NotNull
-  @Column(name = SqlFields.ISSUEDATE, updatable = false, nullable = false)
+  @Column(name = SqlFields.ISSUEDATE)
+  @Temporal(value = TemporalType.TIMESTAMP)
   private Date issueDate;
 
   @NotNull
-  @Column(name = SqlFields.EXPIRYDATE, updatable = false, nullable = false)
+  @Column(name = SqlFields.EXPIRYDATE)
+  @Temporal(value = TemporalType.TIMESTAMP)
   private Date expiryDate;
 
 }
