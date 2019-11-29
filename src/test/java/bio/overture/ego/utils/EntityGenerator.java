@@ -493,25 +493,4 @@ public class EntityGenerator {
     return fn + " " + ln;
   }
 
-  public RefreshToken setupRefreshToken(User user) {
-    // switch these to use generateRandom methods when you create a service
-    UUID randomJti = UUID.randomUUID();
-    UUID randomRefreshId = UUID.randomUUID();
-
-    Calendar calendar = Calendar.getInstance();
-    Timestamp timestamp = new Timestamp(new Date().getTime());
-
-    calendar.setTimeInMillis(timestamp.getTime());
-    val issueDate = new Timestamp(calendar.getTime().getTime());
-    calendar.add(Calendar.HOUR, 3);
-    val expiryDate = new Timestamp(calendar.getTime().getTime());
-    return RefreshToken.builder()
-      .jti(randomJti)
-      .id(randomRefreshId)
-      .issueDate(issueDate)
-      .expiryDate(expiryDate)
-      .user(user)
-      .build();
-  }
-
 }

@@ -2,7 +2,6 @@ package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.*;
 import javax.persistence.*;
@@ -25,16 +24,6 @@ import org.hibernate.annotations.GenericGenerator;
 @ToString(exclude = {"user"})
 public class RefreshToken implements Identifiable<UUID> {
 
-//  @Id
-//  @Column(name = SqlFields.USER_ID, nullable = false, updatable = false)
-//  private UUID id;
-//
-//  @NotNull
-//  @Column(name = SqlFields.REFRESHID, updatable = false, nullable = false)
-//  @GenericGenerator(name = "refresh_uuid", strategy = "org.hibernate.id.UUIDGenerator")
-//  @GeneratedValue(generator = "refresh_uuid")
-//  private UUID refreshId;
-
   @Id
   @Column(name = SqlFields.ID, nullable = false, updatable = false)
   @GenericGenerator(name = "refresh_uuid", strategy = "org.hibernate.id.UUIDGenerator")
@@ -42,23 +31,21 @@ public class RefreshToken implements Identifiable<UUID> {
   private UUID id;
 
   @OneToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = SqlFields.USER_ID, referencedColumnName = SqlFields.ID)
+  @JoinColumn(name = SqlFields.USERID_JOIN, referencedColumnName = SqlFields.ID, nullable = false)
   private User user;
 
   @NotNull
   @Column(name = SqlFields.JTI, updatable = false, nullable = false)
   private UUID jti;
 
-//  @MapsId
-//  @OneToOne(fetch = FetchType.LAZY)
-//  private User user;
-
   @NotNull
-  @Column(name = SqlFields.ISSUEDATE, updatable = false, nullable = false)
+  @Column(name = SqlFields.ISSUEDATE)
+  @Temporal(value = TemporalType.TIMESTAMP)
   private Date issueDate;
 
   @NotNull
-  @Column(name = SqlFields.EXPIRYDATE, updatable = false, nullable = false)
+  @Column(name = SqlFields.EXPIRYDATE)
+  @Temporal(value = TemporalType.TIMESTAMP)
   private Date expiryDate;
 
 }

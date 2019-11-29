@@ -120,6 +120,8 @@ logging:
 #logging.level.org.hibernate.SQL: DEBUG
 #logging.level.org.hibernate.type.descriptor.sql: TRACE
 
+refreshToken:
+  durationInSeconds: 10800000
 
 # When you are desperate, use this...
 #logging.level.org.hibernate: TRACE
