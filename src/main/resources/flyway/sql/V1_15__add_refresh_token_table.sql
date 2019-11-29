@@ -1,8 +1,8 @@
 CREATE TABLE REFRESHTOKEN (
-    user_id  UUID PRIMARY KEY,
-    refresh_id UUID UNIQUE DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY,
+    user_id UUID UNIQUE NOT NULL,
     jti UUID UNIQUE NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES EGOUSER(id),
-    issuedate TIMESTAMP NOT NULL DEFAULT NOW(),
-    expirydate TIMESTAMP NOT NULL DEFAULT NOW()
+    issuedate TIMESTAMP NOT NULL,
+    expirydate TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES EGOUSER(id)
 );

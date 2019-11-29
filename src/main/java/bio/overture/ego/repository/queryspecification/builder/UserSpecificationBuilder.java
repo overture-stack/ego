@@ -31,7 +31,7 @@ public class UserSpecificationBuilder extends AbstractSpecificationBuilder<User,
       root.fetch(USERGROUPS, LEFT).fetch(GROUP, LEFT).fetch(PERMISSIONS, LEFT).fetch(POLICY, LEFT);
     }
     if (fetchRefreshToken) {
-      root.fetch("refreshToken", LEFT);
+      root.fetch(User.Fields.refreshToken, LEFT);
     }
     return root;
   }

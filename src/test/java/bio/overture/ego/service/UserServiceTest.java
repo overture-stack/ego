@@ -4,6 +4,8 @@ import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
 import static java.util.stream.Collectors.toList;
 
+import bio.overture.ego.repository.RefreshTokenRepository;
+import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.utils.EntityGenerator;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -16,6 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -25,6 +28,7 @@ public class UserServiceTest {
 
   @Autowired private UserService userService;
   @Autowired private EntityGenerator entityGenerator;
+  @Autowired private RefreshTokenService refreshTokenService;
 
   @Test
   public void testGetManyUsersWithRelations() {
@@ -66,5 +70,23 @@ public class UserServiceTest {
           Assert.assertEquals(
               user.getPermissions().iterator().next(), "UserServiceTestPolicy.WRITE");
         });
+  }
+  @Autowired
+  private UserRepository userRepository;
+
+  @Autowired
+  private RefreshTokenRepository refreshTokenRepository;
+
+  @Test
+  public void testAssociateUserWithRefreshToken() {
+
+    val user1 = entityGenerator.setupUser("Homer Simpson");
+    val refreshToken1 = refreshTokenService.createRefreshToken(user1);
+
+    val userWithRefreshToken = userService.get(user1.getId(), false, false, false, true);
+
+    Assert.assertTrue(userWithRefreshToken.getRefreshToken() != null);
+    Assert.assertEquals(userWithRefreshToken.getRefreshToken(), refreshToken1);
+    Assert.assertEquals(userWithRefreshToken.getId(), user1.getId());
   }
 }
