@@ -33,7 +33,6 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.params.ScopeName;
-import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.security.ApplicationScoped;
 import bio.overture.ego.security.AuthorizationManager;
 import bio.overture.ego.service.TokenService;
@@ -178,24 +177,24 @@ public class ApiKeyController {
     return format("Token '%s' is successfully revoked!", token);
   }
 
-  @AdminScoped
   @RequestMapping(method = GET, value = "/api_key")
   @ResponseStatus(value = OK)
   public @ResponseBody List<ApiKeyResponse> listApiKey(
       @RequestHeader(value = "Authorization") final String authorization,
-      @RequestParam(value = "user_id") UUID user_id) {
-    return tokenService.listApiKey(user_id);
+      @RequestParam(value = "user_id") UUID userId) {
+    checkAdminOrOwner(userId);
+    return tokenService.listApiKey(userId);
   }
 
   /** DEPRECATED: GET /token to be removed in next major release */
   @Deprecated
-  @AdminScoped
   @RequestMapping(method = GET, value = "/token")
   @ResponseStatus(value = OK)
   public @ResponseBody List<TokenResponse> listToken(
       @RequestHeader(value = "Authorization") final String authorization,
-      @RequestParam(value = "user_id") UUID user_id) {
-    return tokenService.listTokens(user_id);
+      @RequestParam(value = "user_id") UUID userId) {
+    checkAdminOrOwner(userId);
+    return tokenService.listTokens(userId);
   }
 
   @ExceptionHandler({InvalidTokenException.class})
