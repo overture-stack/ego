@@ -2,15 +2,10 @@ package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
-
 import java.util.*;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -48,4 +43,8 @@ public class RefreshToken implements Identifiable<UUID> {
   @Temporal(value = TemporalType.TIMESTAMP)
   private Date expiryDate;
 
+  public Long getSecondsUntilExpiry() {
+    val seconds = expiryDate.getTime() / 1000L - Calendar.getInstance().getTime().getTime() / 1000L;
+    return seconds > 0 ? seconds : 0;
+  }
 }

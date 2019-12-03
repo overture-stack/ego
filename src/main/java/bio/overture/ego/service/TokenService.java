@@ -96,10 +96,8 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   private PolicyService policyService;
 
   /** Configuration */
-  @Value("${jwt.duration:86400000}")
-  private int DURATION;
+  private int JWT_DURATION;
 
-  @Value("${apitoken.duration:365}")
   private int API_TOKEN_DURATION;
 
   public TokenService(
@@ -108,13 +106,17 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
       @NonNull ApplicationService applicationService,
       @NonNull ApiKeyStoreService apiKeyStoreService,
       @NonNull PolicyService policyService,
-      @NonNull TokenStoreRepository tokenStoreRepository) {
+      @NonNull TokenStoreRepository tokenStoreRepository,
+      @Value("${jwt.duration:10800000}") int JWT_DURATION,
+      @Value("${apitoken.duration:365}") int API_TOKEN_DURATION) {
     super(ApiKey.class, tokenStoreRepository);
     this.tokenSigner = tokenSigner;
     this.userService = userService;
     this.applicationService = applicationService;
     this.apiKeyStoreService = apiKeyStoreService;
     this.policyService = policyService;
+    this.JWT_DURATION = JWT_DURATION;
+    this.API_TOKEN_DURATION = API_TOKEN_DURATION;
   }
 
   @Override
@@ -255,7 +257,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     tokenContext.setScope(scope);
     val tokenClaims = new UserTokenClaims();
     tokenClaims.setIss(ISSUER_NAME);
-    tokenClaims.setValidDuration(DURATION);
+    tokenClaims.setValidDuration(JWT_DURATION);
     tokenClaims.setContext(tokenContext);
 
     return tokenClaims;
@@ -266,7 +268,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     val tokenContext = new AppTokenContext(application);
     val tokenClaims = new AppTokenClaims();
     tokenClaims.setIss(ISSUER_NAME);
-    tokenClaims.setValidDuration(DURATION);
+    tokenClaims.setValidDuration(JWT_DURATION);
     tokenClaims.setContext(tokenContext);
     return getSignedToken(tokenClaims);
   }

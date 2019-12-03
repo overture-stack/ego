@@ -120,8 +120,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
       boolean fetchUserPermissions,
       boolean fetchUserGroups,
       boolean fetchApplications,
-      boolean fetchRefreshToken
-  ) {
+      boolean fetchRefreshToken) {
     val result =
         (Optional<User>)
             getRepository()
