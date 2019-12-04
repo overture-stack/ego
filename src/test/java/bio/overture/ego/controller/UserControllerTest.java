@@ -181,7 +181,7 @@ public class UserControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @Ignore("low prority, but should be implemented")
+  @Ignore("low priority, but should be implemented")
   public void findUsers_FindSomeQuery_Success() {
     throw new NotImplementedException(
         "need to implement the test 'findUsers_FindSomeQuery_Success'");

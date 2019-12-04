@@ -53,7 +53,8 @@ public class SecureServerConfig {
         "/oauth/token/public_key",
         "/oauth/token/verify",
         "/oauth/ego-token",
-        "/oauth/update-ego-token"
+        "/oauth/update-ego-token",
+        "/oauth/refresh"
       };
 
   /** Dependencies */
