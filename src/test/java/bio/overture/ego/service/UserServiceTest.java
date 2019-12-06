@@ -25,7 +25,7 @@ public class UserServiceTest {
 
   @Autowired private UserService userService;
   @Autowired private EntityGenerator entityGenerator;
-  @Autowired private RefreshTokenService refreshTokenService;
+  @Autowired private RefreshContextService refreshContextService;
   @Autowired private TokenService tokenService;
 
   @Test
@@ -76,7 +76,7 @@ public class UserServiceTest {
     val user1 = entityGenerator.setupUser("Homer Simpson");
     val user1Token = tokenService.generateUserToken(user1);
 
-    val refreshToken1 = refreshTokenService.createRefreshToken(user1Token);
+    val refreshToken1 = refreshContextService.createRefreshToken(user1Token);
 
     val userWithRefreshToken = userService.get(user1.getId(), false, false, false, true);
 

@@ -26,7 +26,7 @@ import static java.lang.String.format;
 
 @Slf4j
 @Service
-public class RefreshTokenService extends AbstractBaseService<RefreshToken, UUID> {
+public class RefreshContextService extends AbstractBaseService<RefreshToken, UUID> {
 
   private RefreshTokenRepository refreshTokenRepository;
   private UserService userService;
@@ -35,7 +35,7 @@ public class RefreshTokenService extends AbstractBaseService<RefreshToken, UUID>
   private int durationInSeconds;
 
   @Autowired
-  public RefreshTokenService(
+  public RefreshContextService(
       @NonNull RefreshTokenRepository refreshTokenRepository,
       @NonNull UserService userService,
       @NonNull TokenService tokenService,
@@ -82,19 +82,21 @@ public class RefreshTokenService extends AbstractBaseService<RefreshToken, UUID>
     val jti = tokenService.getTokenClaims(bearerToken).getId();
     val refreshToken = createTransientToken(UUID.fromString(jti));
     refreshToken.associateWithUser(user);
-    associateUserAndRefreshToken(user, refreshToken);
     return refreshTokenRepository.save(refreshToken);
   }
 
-  // create association between user and token
-  private static void associateUserAndRefreshToken(User user, RefreshToken refreshToken) {
-    refreshToken.setUser(user);
-    user.setRefreshToken(refreshToken);
-  }
 
   private void checkUniqueByUserId(UUID userId) {
     checkUnique(
       !refreshTokenRepository.existsById(userId), "A refresh token already exists for this user id");
+  }
+
+  public RefreshContext createIncomingRefreshContext() {
+    return null;
+  }
+
+  public RefreshContext createOutgoingRefreshContext() {
+    return null;
   }
 
   public RefreshContext createRefreshContext(String refreshTokenId, String bearerToken) {
