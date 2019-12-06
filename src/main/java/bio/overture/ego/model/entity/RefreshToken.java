@@ -47,4 +47,9 @@ public class RefreshToken implements Identifiable<UUID> {
     val seconds = expiryDate.getTime() / 1000L - Calendar.getInstance().getTime().getTime() / 1000L;
     return seconds > 0 ? seconds : 0;
   }
+
+  public void associateWithUser(@NonNull User user){
+    this.setUser(user);
+    user.setRefreshToken(this);
+  }
 }
