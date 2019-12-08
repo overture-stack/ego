@@ -30,6 +30,7 @@ import java.util.function.Supplier;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -58,6 +59,8 @@ public class EntityGenerator {
   @Autowired private ApiKeyStoreService apiKeyStoreService;
 
   @Autowired private UserPermissionService userPermissionService;
+
+  private int durationInSeconds;
 
   public Application setupApplication(String clientId) {
     return applicationService
@@ -483,5 +486,19 @@ public class EntityGenerator {
     val fn = generateRandomName(r, length);
     val ln = generateRandomName(r, length);
     return fn + " " + ln;
+  }
+
+  public RefreshToken generateRandomRefreshToken(
+    @Value("${refreshToken.durationInSeconds:43200000}") int durationInSeconds
+    ) {
+    this.durationInSeconds = durationInSeconds;
+    val now = Instant.now();
+    val expiry = now.plus(durationInSeconds, ChronoUnit.SECONDS);
+
+    return RefreshToken.builder()
+      .jti(UUID.randomUUID())
+      .issueDate(Date.from(now))
+      .expiryDate(Date.from(expiry))
+      .build();
   }
 }
