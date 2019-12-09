@@ -60,7 +60,9 @@ public class EntityGenerator {
 
   @Autowired private UserPermissionService userPermissionService;
 
-  private int durationInSeconds;
+  @Autowired private RefreshContextService refreshContextService;
+
+  private int duration;
 
   public Application setupApplication(String clientId) {
     return applicationService
@@ -489,16 +491,22 @@ public class EntityGenerator {
   }
 
   public RefreshToken generateRandomRefreshToken(
-    @Value("${refreshToken.durationInSeconds:43200000}") int durationInSeconds
-    ) {
-    this.durationInSeconds = durationInSeconds;
+      @Value("${refreshToken.duration:43200000}") int duration) {
+    this.duration = duration;
     val now = Instant.now();
-    val expiry = now.plus(durationInSeconds, ChronoUnit.SECONDS);
+    val expiry = now.plus(duration, ChronoUnit.MILLIS);
 
     return RefreshToken.builder()
-      .jti(UUID.randomUUID())
-      .issueDate(Date.from(now))
-      .expiryDate(Date.from(expiry))
-      .build();
+        .jti(UUID.randomUUID())
+        .issueDate(Date.from(now))
+        .expiryDate(Date.from(expiry))
+        .build();
+  }
+
+  public User setupUserWithRefreshToken(String username) {
+    val user = this.setupUser(username);
+    val userToken = tokenService.generateUserToken(user);
+    val refreshToken = refreshContextService.createRefreshToken(userToken);
+    return refreshToken.getUser();
   }
 }

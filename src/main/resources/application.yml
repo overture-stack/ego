@@ -9,7 +9,7 @@ apitoken:
   duration: 365 # in days
 
 refreshToken:
-  durationInSeconds: 43200000 # in milliseconds = 12hrs
+  duration: 43200000 # in milliseconds = 12hrs
 
 # security
 auth:

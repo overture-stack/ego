@@ -115,7 +115,8 @@ public class SecureServerConfig {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
       http.requestMatchers()
-          .antMatchers("/oauth/login/*", "/oauth/ego-token", "/oauth/update-ego-token", "/oauth/refresh")
+          .antMatchers(
+              "/oauth/login/*", "/oauth/ego-token", "/oauth/update-ego-token", "/oauth/refresh")
           .and()
           .csrf()
           .disable()

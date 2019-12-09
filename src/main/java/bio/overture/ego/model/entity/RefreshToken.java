@@ -48,7 +48,7 @@ public class RefreshToken implements Identifiable<UUID> {
     return seconds > 0 ? seconds : 0;
   }
 
-  public void associateWithUser(@NonNull User user){
+  public void associateWithUser(@NonNull User user) {
     this.setUser(user);
     user.setRefreshToken(this);
   }

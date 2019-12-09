@@ -7,6 +7,9 @@ import bio.overture.ego.service.RefreshContextService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Assert;
@@ -21,10 +24,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -38,29 +37,31 @@ public class RefreshContextTest {
   @Autowired RefreshTokenRepository refreshTokenRepository;
   @Autowired UserService userService;
 
-  @Rule
-  public ExpectedException exceptionRule = ExpectedException.none();
+  @Rule public ExpectedException exceptionRule = ExpectedException.none();
 
-//  refresh token is expired ->401 Unauthorized
+  //  refresh token is expired ->401 Unauthorized
   @Test
   public void validate_tokenIsExpired_Unauthorized() {
     val user1 = entityGenerator.setupUser("User One");
     val user1Token = tokenService.generateUserToken(user1);
     val refreshToken1 = refreshContextService.createRefreshToken(user1Token);
 
-    val mockExpiry = Instant.now().minus(100, ChronoUnit.SECONDS);
+    val mockExpiry = Instant.now().minus(100, ChronoUnit.MILLIS);
     refreshToken1.setExpiryDate(Date.from(mockExpiry));
-    // generating refresh token randomly may not be correct way to test. this will create a random stored jti
-//    val refreshToken1 = entityGenerator.generateRandomRefreshToken(-10);
-//    refreshToken1.associateWithUser(user1);
-//    refreshTokenRepository.save(refreshToken1);
+    // generating refresh token randomly may not be correct way to test. this will create a random
+    // stored jti
+    //    val refreshToken1 = entityGenerator.generateRandomRefreshToken(-10);
+    //    refreshToken1.associateWithUser(user1);
+    //    refreshTokenRepository.save(refreshToken1);
 
     val storedRefreshToken = refreshContextService.getById(refreshToken1.getId());
-    val incomingRefreshContext = refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user1Token);
+    val incomingRefreshContext =
+        refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user1Token);
     Assert.assertTrue(storedRefreshToken.getSecondsUntilExpiry() == 0);
 
     exceptionRule.expect(UnauthorizedClientException.class);
-    exceptionRule.expectMessage(String.format("RefreshToken %s is expired", storedRefreshToken.getId()));
+    exceptionRule.expectMessage(
+        String.format("RefreshToken %s is expired", storedRefreshToken.getId()));
     incomingRefreshContext.validate();
   }
 
@@ -71,9 +72,11 @@ public class RefreshContextTest {
     val user1Token = tokenService.generateUserToken(user1);
     val refreshToken1 = refreshContextService.createRefreshToken(user1Token);
 
-    // mock incoming refreshId to match what we have stored. This would normally come from request cookie
+    // mock incoming refreshId to match what we have stored. This would normally come from request
+    // cookie
     val incomingRefreshId = refreshToken1.getId();
-    val incomingRefreshContext = refreshContextService.createRefreshContext(incomingRefreshId.toString(), user1Token);
+    val incomingRefreshContext =
+        refreshContextService.createRefreshContext(incomingRefreshId.toString(), user1Token);
 
     Assert.assertTrue(refreshToken1.getSecondsUntilExpiry() > 0);
     Assert.assertTrue(incomingRefreshContext.validate());
@@ -88,13 +91,14 @@ public class RefreshContextTest {
 
     val refreshToken1 = refreshContextService.createRefreshToken(user1Token);
 
-    val refreshContext1 = refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user1Token);
+    val refreshContext1 =
+        refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user1Token);
 
     Assert.assertTrue(refreshContext1.hasApprovedUser());
     Assert.assertTrue(refreshContext1.validate());
   }
 
-//  user status is NOT approved -> 403 Forbidden
+  //  user status is NOT approved -> 403 Forbidden
   @Test
   public void validate_UserNonApprovedStatus_ForbiddenException() {
     val disabledUser = entityGenerator.setupUser("Disabled User");
@@ -112,9 +116,15 @@ public class RefreshContextTest {
     val rejectedUserRefreshToken = refreshContextService.createRefreshToken(rejectedUserToken);
     val pendingUserRefreshToken = refreshContextService.createRefreshToken(pendingUserToken);
 
-    val disabledUserRefreshContext = refreshContextService.createRefreshContext(disabledUserRefreshToken.getId().toString(), disabledUserToken);
-    val rejectedUserRefreshContext = refreshContextService.createRefreshContext(rejectedUserRefreshToken.getId().toString(), rejectedUserToken);
-    val pendingUserRefreshContext = refreshContextService.createRefreshContext(pendingUserRefreshToken.getId().toString(), pendingUserToken);
+    val disabledUserRefreshContext =
+        refreshContextService.createRefreshContext(
+            disabledUserRefreshToken.getId().toString(), disabledUserToken);
+    val rejectedUserRefreshContext =
+        refreshContextService.createRefreshContext(
+            rejectedUserRefreshToken.getId().toString(), rejectedUserToken);
+    val pendingUserRefreshContext =
+        refreshContextService.createRefreshContext(
+            pendingUserRefreshToken.getId().toString(), pendingUserToken);
 
     Assert.assertFalse(disabledUserRefreshContext.hasApprovedUser());
     Assert.assertFalse(rejectedUserRefreshContext.hasApprovedUser());
@@ -135,17 +145,21 @@ public class RefreshContextTest {
     val refreshToken1 = refreshContextService.createRefreshToken(user1Token);
 
     val storedRefreshToken = refreshContextService.getById(refreshToken1.getId());
-    val incomingRefreshContext = refreshContextService.createRefreshContext(storedRefreshToken.getId().toString(), user1Token);
+    val incomingRefreshContext =
+        refreshContextService.createRefreshContext(
+            storedRefreshToken.getId().toString(), user1Token);
     val incomingTokenClaims = tokenService.getTokenClaims(user1Token);
 
-//    Assert.assertEquals(refreshToken1.getUser().getId().toString(), incomingTokenClaims.getSubject());
-//    Assert.assertEquals(refreshToken1.getJti().toString(), incomingTokenClaims.getId());
-    Assert.assertEquals(storedRefreshToken.getUser().getId().toString(), incomingTokenClaims.getSubject());
+    //    Assert.assertEquals(refreshToken1.getUser().getId().toString(),
+    // incomingTokenClaims.getSubject());
+    //    Assert.assertEquals(refreshToken1.getJti().toString(), incomingTokenClaims.getId());
+    Assert.assertEquals(
+        storedRefreshToken.getUser().getId().toString(), incomingTokenClaims.getSubject());
     Assert.assertEquals(storedRefreshToken.getJti().toString(), incomingTokenClaims.getId());
     Assert.assertTrue(incomingRefreshContext.validate());
   }
 
-//  token claims jti does NOT match stored refreshToken jti* -> 403 Forbidden
+  //  token claims jti does NOT match stored refreshToken jti* -> 403 Forbidden
   @Test
   public void validate_jtiDoesNotMatchRefreshTokenJti_ForbiddenException() {
     val user1 = entityGenerator.setupUser("User One");
@@ -158,16 +172,18 @@ public class RefreshContextTest {
 
     // insert into db
     refreshContextService.getById(refreshToken1.getId());
-    val incomingRefreshContext = refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user1Token);
+    val incomingRefreshContext =
+        refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user1Token);
     val incomingJti = tokenService.getTokenClaims(user1Token).getId();
     Assert.assertFalse(refreshToken1.getJti().toString() == incomingJti);
 
     exceptionRule.expect(ForbiddenException.class);
-    exceptionRule.expectMessage(String.format("Invalid token claims for refreshId %s.", refreshToken1.getId()));
+    exceptionRule.expectMessage(
+        String.format("Invalid token claims for refreshId %s.", refreshToken1.getId()));
     incomingRefreshContext.validate();
   }
 
-//  token claims sub (userId) does NOT match stored refreshToken userId* -> 403 Forbidden
+  //  token claims sub (userId) does NOT match stored refreshToken userId* -> 403 Forbidden
   @Test
   public void validate_jwtSubDoesNotMatchRefreshTokenUser_ForbiddenException() {
     val user1 = entityGenerator.setupUser("User One");
@@ -179,14 +195,15 @@ public class RefreshContextTest {
     val refreshToken1 = refreshContextService.createRefreshToken(user1Token);
     val refreshToken2 = refreshContextService.createRefreshToken(user2Token);
 
-    val incomingRefreshContext = refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user2Token);
+    val incomingRefreshContext =
+        refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user2Token);
     val incomingUserClaims = tokenService.getTokenClaims(user2Token);
-    Assert.assertFalse(refreshToken1.getUser().getId().toString() == incomingUserClaims.getSubject());
+    Assert.assertFalse(
+        refreshToken1.getUser().getId().toString() == incomingUserClaims.getSubject());
 
     exceptionRule.expect(ForbiddenException.class);
-    exceptionRule.expectMessage(String.format("Invalid token claims for refreshId %s.", refreshToken1.getId()));
+    exceptionRule.expectMessage(
+        String.format("Invalid token claims for refreshId %s.", refreshToken1.getId()));
     incomingRefreshContext.validate();
-
   }
-
 }
