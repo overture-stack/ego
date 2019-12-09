@@ -20,7 +20,11 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
+import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.testcontainers.shaded.org.apache.http.protocol.HTTP;
+
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static java.lang.String.format;
 
@@ -39,7 +43,7 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
       @NonNull RefreshTokenRepository refreshTokenRepository,
       @NonNull UserService userService,
       @NonNull TokenService tokenService,
-      @Value("${refreshToken.durationInSeconds}") int durationInSeconds) {
+      @Value("${refreshToken.durationInSeconds:43200000}") int durationInSeconds) {
     super(RefreshToken.class, refreshTokenRepository);
     this.refreshTokenRepository = refreshTokenRepository;
     this.userService = userService;
@@ -48,13 +52,13 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
   }
 
   @SuppressWarnings("unchecked")
-  public RefreshToken get(@NonNull UUID userId, boolean fetchUser) {
+  public RefreshToken get(@NonNull UUID id, boolean fetchUser) {
     val result =
         (Optional<RefreshToken>)
             getRepository()
                 .findOne(
-                    new RefreshTokenSpecificationBuilder().fetchUser(fetchUser).buildById(userId));
-    checkNotFound(result.isPresent(), "The refreshToken for userId '%s' does not exist", userId);
+                    new RefreshTokenSpecificationBuilder().fetchUser(fetchUser).buildById(id));
+    checkNotFound(result.isPresent(), "RefreshToken '%s' does not exist", id);
     return result.get();
   }
 
@@ -73,6 +77,10 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
         .build();
   }
 
+  public Optional<RefreshToken> getRefreshTokenByUser(User user) {
+    return refreshTokenRepository.getByUser(user);
+  }
+
   // you are creating a fresh token with the bearer token (jwt) that is coming from ego-token
   // on post-login requests, you will still be using the bearer token from the request headers to create the assoc
   // check userId unique before create. do i need to check refresh id is unique too?
@@ -84,7 +92,6 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
     refreshToken.associateWithUser(user);
     return refreshTokenRepository.save(refreshToken);
   }
-
 
   private void checkUniqueByUserId(UUID userId) {
     checkUnique(
@@ -104,16 +111,15 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
     val tokenClaims = tokenService.getTokenClaims(bearerToken);
     val user = tokenService.getTokenUserInfo(bearerToken);
     if (refreshTokenOpt == null || refreshTokenOpt.isEmpty()) {
-      throw new InvalidTokenException(format("RefreshToken \"%s\" is not found. ", refreshTokenId));
+      throw new UnauthorizedClientException(String.format("RefreshToken %s is not found.", refreshTokenId));
+//      throw new HttpClientErrorException.Unauthorized()
+//      throw new HttpClientErrorException.Unauthorized.(format("RefreshToken \"%s\" is not found. ", refreshTokenId));
     }
     val refreshToken = refreshTokenOpt.get();
     // do you want to just return a context instance here, or return validate method which will throw an exception if created context is invalid for any reason?
     return RefreshContext.builder().refreshToken(refreshToken).tokenClaims(tokenClaims).user(user).build();
   }
 
-//  public RefreshContext validateContext(String refreshTokenId, String bearerToken) {
-//
-//  }
 }
 
 // first call needed when you get here from refresh endpoint is:

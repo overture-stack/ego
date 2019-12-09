@@ -5,10 +5,9 @@ import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import bio.overture.ego.model.entity.RefreshToken;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.ForbiddenException;
-import bio.overture.ego.repository.RefreshTokenRepository;
 import io.jsonwebtoken.Claims;
 import lombok.*;
-import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
+import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
 
 import java.util.UUID;
 
@@ -40,52 +39,25 @@ public class RefreshContext {
     return refreshToken.getJti().equals(UUID.fromString(tokenClaims.getId()));
   }
 
-  private boolean isNotExpired() {
-    return refreshToken.getSecondsUntilExpiry() > 0;
+  private boolean isExpired() {
+    return refreshToken.getSecondsUntilExpiry() <= 0;
   }
 
   public boolean validate() {
     if (!hasApprovedUser()) {
       throw new ForbiddenException("User does not have approved status, rejecting.");
-    } else if (
+    }
+    if (this.isExpired()) {
+      throw new UnauthorizedClientException(String.format("RefreshToken %s is expired", refreshToken.getId()));
+    }
+    if (
       this.userMatches() &
-        this.jtiMatches() &
-        this.isNotExpired()
+        this.jtiMatches()
     ) {
       return true;
     } else {
-      throw new InvalidRequestException("Unknown type of authentication."); // customize?
+      throw new ForbiddenException(String.format("Invalid token claims for refreshId %s.", refreshToken.getId()));
     }
   }
 
 }
-
-//    RefreshTokenService method takes in bearer and refreshId, gets validations from context
-// and returns
-//    if (nonValidUser) { 403 response }
-//    if (nonValidContext) { 401 response } -> login
-//    if (validContext) { 200 response }
-// default response?
-// validations:
-// jwt user + jti + refresh token id (tokenClaims + cookie) matches db row
-// refresh token is not expired
-// client id passed as query parameter to help verify cookie
-// check for scope changes
-// when to renew the access token? on 400 errors - i.e. when the access token expires but the
-// refresh token is still valid
-// when the refresh token is used for a new accessToken, regenerate a new token uuid, delete old row and replace
-// in the db
-
-// login request comes in
-// goes to oauth, gets accessToken jwt from provider
-// comes back to ego. take the accessToken and attach a refresh token to that user.
-// add all those ids into the REFRESHTOKEN table
-// pass this refresh token id back in the response (in session cookie), with the jwt
-
-// find by refresh id
-// user id matches
-// claims -> jti matches
-// refresh expiry is valid
-// client id matches. client id passed in request
-// user status is approved
-// user scope has not changed
