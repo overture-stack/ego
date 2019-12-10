@@ -15,8 +15,8 @@ import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientE
 @AllArgsConstructor
 public class RefreshContext {
 
-  @NonNull private RefreshToken refreshToken; // found in db by id in cookie
-  @NonNull private User user; // comes from refreshToken -> User assoc
+  @NonNull private RefreshToken refreshToken; // from db
+  @NonNull private User user; // from refreshToken -> User assoc
   @NonNull private Claims tokenClaims; // from jwt
 
   public boolean hasApprovedUser() {
@@ -40,6 +40,7 @@ public class RefreshContext {
       throw new ForbiddenException("User does not have approved status, rejecting.");
     }
     if (this.isExpired()) {
+      // TODO: [anncatton] fix, this is throwing a 500 in postman, not a 401
       throw new UnauthorizedClientException(
           String.format("RefreshToken %s is expired", refreshToken.getId()));
     }
