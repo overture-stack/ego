@@ -35,6 +35,8 @@ public class RefreshContext {
     return refreshToken.getSecondsUntilExpiry() <= 0;
   }
 
+  // TODO: [anncatton] refreshToken needs to be deleted on failed refresh request
+  // delete currently called in AuthController
   public boolean validate() {
     if (!hasApprovedUser()) {
       throw new ForbiddenException("User does not have approved status, rejecting.");

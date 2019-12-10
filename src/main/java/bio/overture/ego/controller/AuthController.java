@@ -141,9 +141,7 @@ public class AuthController {
         refreshContextService.createRefreshContext(refreshToken.getId().toString(), token);
 
     if (newRefreshContext.hasApprovedUser()) {
-      val cookie =
-          createCookie(
-              "refreshId", refreshToken.getId().toString(), refreshTokenDuration);
+      val cookie = createCookie("refreshId", refreshToken.getId().toString(), refreshTokenDuration);
       response.addCookie(cookie);
     }
 
@@ -176,6 +174,7 @@ public class AuthController {
     return new ResponseEntity<>("User is logged out", OK);
   }
 
+  // TODO: [anncatton] add controller tests
   @RequestMapping(method = POST, value = "/refresh")
   public ResponseEntity<String> refreshEgoToken(
       @RequestHeader(value = "Authorization") final String authorization,
@@ -211,7 +210,7 @@ public class AuthController {
 
     cookie.setDomain("localhost");
     // disable setSecure while testing locally in browser, or will not set in cookies
-    cookie.setSecure(true);
+    //    cookie.setSecure(true);
     cookie.setHttpOnly(true);
     cookie.setMaxAge(maxAge);
     cookie.setPath("/");
