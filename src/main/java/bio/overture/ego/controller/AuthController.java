@@ -16,14 +16,15 @@
 
 package bio.overture.ego.controller;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import static java.lang.String.format;
+import static org.springframework.http.HttpStatus.*;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
+import bio.overture.ego.model.entity.RefreshToken;
 import bio.overture.ego.provider.facebook.FacebookTokenService;
 import bio.overture.ego.provider.google.GoogleTokenService;
+import bio.overture.ego.service.RefreshContextService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.signer.TokenSigner;
@@ -41,12 +42,11 @@ import org.springframework.security.oauth2.common.exceptions.InvalidScopeExcepti
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 @Slf4j
 @RestController
@@ -60,17 +60,24 @@ public class AuthController {
   private final GoogleTokenService googleTokenService;
   private final FacebookTokenService facebookTokenService;
   private final TokenSigner tokenSigner;
+  private final RefreshContextService refreshContextService;
+
+  private int refreshTokenDuration;
 
   @Autowired
   public AuthController(
       @NonNull TokenService tokenService,
       @NonNull GoogleTokenService googleTokenService,
       @NonNull FacebookTokenService facebookTokenService,
-      @NonNull TokenSigner tokenSigner) {
+      @NonNull TokenSigner tokenSigner,
+      RefreshContextService refreshContextService,
+      @Value("${refreshToken.durationInSeconds:43200}") int refreshTokenDuration) {
     this.tokenService = tokenService;
     this.googleTokenService = googleTokenService;
     this.facebookTokenService = facebookTokenService;
     this.tokenSigner = tokenSigner;
+    this.refreshContextService = refreshContextService;
+    this.refreshTokenDuration = refreshTokenDuration;
   }
 
   @RequestMapping(method = GET, value = "/google/token")
@@ -120,13 +127,26 @@ public class AuthController {
     return pubKey.orElse("");
   }
 
+  // used only for login. will issue the first refresh token/access token from here
   @RequestMapping(
       method = {GET, POST},
       value = "/ego-token")
   @SneakyThrows
-  public ResponseEntity<String> user(OAuth2Authentication authentication) {
+  public ResponseEntity<String> user(OAuth2Authentication authentication, HttpServletResponse response) {
     if (authentication == null) return new ResponseEntity<>("Please login", UNAUTHORIZED);
     String token = tokenService.generateUserToken((IDToken) authentication.getPrincipal());
+
+    refreshContextService.disassociateUserAndDelete(token);
+    RefreshToken refreshToken = refreshContextService.createRefreshToken(token);
+
+    val newRefreshContext = refreshContextService.createRefreshContext(refreshToken.getId().toString(), token);
+
+    // do we want to skip adding the refresh token id user is not approved?
+    if (newRefreshContext.hasApprovedUser()) {
+      val cookie = createCookie("refreshId", refreshToken.getId().toString(), refreshTokenDuration); //use lib
+      response.addCookie(cookie);
+    }
+
     SecurityContextHolder.getContext().setAuthentication(null);
     return new ResponseEntity<>(token, OK);
   }
@@ -138,6 +158,73 @@ public class AuthController {
       @RequestHeader(value = "Authorization") final String authorization) {
     val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
     return new ResponseEntity<>(tokenService.updateUserToken(currentToken), OK);
+  }
+
+  @RequestMapping(
+    method = POST,
+    value = "/ego-logout")
+  public ResponseEntity<String> egoLogout(
+    @RequestHeader(value = "Authorization") final String authorization,
+    @CookieValue(value = "refreshId", defaultValue = "missing") String refreshId,
+    HttpServletResponse response,
+    HttpServletRequest request) {
+    val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
+    val cookieToRemove = createCookie("refreshId", "", 0);
+    response.addCookie(cookieToRemove);
+
+    refreshContextService.disassociateUserAndDelete(currentToken);
+    val session =  request.getSession(false);
+    session.invalidate();
+    return new ResponseEntity<>("User is logged out", OK);
+  }
+
+  // use for subsequent auth requests that provide a refresh token in the cookie
+  @RequestMapping(method = POST, value = "/refresh")
+  public ResponseEntity<String> refreshEgoToken(
+      @RequestHeader(value = "Authorization") final String authorization,
+      @CookieValue(value = "refreshId", defaultValue = "missing") String refreshId,
+      HttpServletResponse response) {
+    if (authorization == null)
+      return new ResponseEntity<>("Please login", UNAUTHORIZED);
+
+    // check client id here? is it already checked somewhere else? possibly this is part of a claims
+    // check?
+    val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
+    // validate jwt before proceeding to service call.
+    tokenService.validateAndReturn(currentToken);
+
+    val currentRefreshContext = refreshContextService.createRefreshContext(refreshId, currentToken);
+    val isValid = currentRefreshContext.validate(); // if not valid throw unauthorized
+
+    refreshContextService.disassociateUserAndDelete(currentToken);
+    if (isValid) {
+      // generate new token + refresh token
+      val currentUser = tokenService.getTokenUserInfo(currentToken);
+      val newUserToken = tokenService.generateUserToken(currentUser);
+      val newRefreshToken = refreshContextService.createRefreshToken(newUserToken);
+      val newRefreshId = newRefreshToken.getId().toString();
+
+      val newCookie = createCookie("refreshId", newRefreshId, refreshTokenDuration);
+      response.addCookie(newCookie);
+
+      return new ResponseEntity<>(newUserToken, OK);
+    } else {
+      return new ResponseEntity<>(format("Unable to refresh auth, please login"), UNAUTHORIZED);
+    }
+
+  }
+
+  private static Cookie createCookie(String cookieName, String cookieValue, Integer maxAge) {
+    Cookie cookie = new Cookie(cookieName, cookieValue);
+
+    cookie.setDomain("localhost");
+    // disable setSecure while testing locally
+//    cookie.setSecure(true);
+    cookie.setHttpOnly(true);
+    cookie.setMaxAge(maxAge);
+    cookie.setPath("/");
+
+    return cookie;
   }
 
   @ExceptionHandler({InvalidTokenException.class})

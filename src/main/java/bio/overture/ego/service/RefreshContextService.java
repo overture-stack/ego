@@ -1,12 +1,11 @@
 package bio.overture.ego.service;
 
-// import bio.overture.ego.model.dto.CreateRefreshTokenRequest;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
+import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 
 import bio.overture.ego.model.domain.RefreshContext;
 import bio.overture.ego.model.entity.RefreshToken;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.repository.RefreshTokenRepository;
 import bio.overture.ego.repository.queryspecification.builder.RefreshTokenSpecificationBuilder;
 import java.sql.Date;
@@ -19,14 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.testcontainers.shaded.org.apache.http.protocol.HTTP;
-
-import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static java.lang.String.format;
 
 @Slf4j
 @Service
@@ -36,19 +29,19 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
   private UserService userService;
   private TokenService tokenService;
   /** Configuration */
-  private int durationInSeconds;
+  private int duration;
 
   @Autowired
   public RefreshContextService(
       @NonNull RefreshTokenRepository refreshTokenRepository,
       @NonNull UserService userService,
       @NonNull TokenService tokenService,
-      @Value("${refreshToken.durationInSeconds:43200000}") int durationInSeconds) {
+      @Value("${refreshToken.duration:43200000}") int duration) {
     super(RefreshToken.class, refreshTokenRepository);
     this.refreshTokenRepository = refreshTokenRepository;
     this.userService = userService;
     this.tokenService = tokenService;
-    this.durationInSeconds = durationInSeconds;
+    this.duration = duration;
   }
 
   @SuppressWarnings("unchecked")
@@ -57,7 +50,7 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
         (Optional<RefreshToken>)
             getRepository()
                 .findOne(
-                    new RefreshTokenSpecificationBuilder().fetchUser(fetchUser).buildById(id));
+                  new RefreshTokenSpecificationBuilder().fetchUser(fetchUser).buildById(id));
     checkNotFound(result.isPresent(), "RefreshToken '%s' does not exist", id);
     return result.get();
   }
@@ -69,7 +62,7 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
 
   private RefreshToken createTransientToken(UUID jti) {
     val now = Instant.now();
-    val expiry = now.plus(durationInSeconds, ChronoUnit.SECONDS);
+    val expiry = now.plus(duration, ChronoUnit.MILLIS);
     return RefreshToken.builder()
         .jti(jti)
         .issueDate(Date.from(now))
@@ -81,29 +74,32 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
     return refreshTokenRepository.getByUser(user);
   }
 
-  // you are creating a fresh token with the bearer token (jwt) that is coming from ego-token
-  // on post-login requests, you will still be using the bearer token from the request headers to create the assoc
-  // check userId unique before create. do i need to check refresh id is unique too?
-  // check unique outside create
+  private void checkUniqueByUser(User user) {
+    checkUnique(!getRefreshTokenByUser(user).isPresent(),
+      String.format("A refresh token already exists for %s", user.getId()));
+  }
+
+  public void disassociateUserAndDelete(String userToken) {
+    val user = tokenService.getTokenUserInfo(userToken);
+
+    val refreshTokenOpt = this.getRefreshTokenByUser(user);
+    if (refreshTokenOpt.isPresent()) {
+      log.info("token exists, deleting...");
+      user.setRefreshToken(null);
+      val existingRefreshToken = refreshTokenOpt.get();
+      refreshTokenRepository.delete(existingRefreshToken);
+      userService.get(user.getId(), false, false, false, false);
+    }
+  }
+
   public RefreshToken createRefreshToken(@NonNull String bearerToken) {
     val user = tokenService.getTokenUserInfo(bearerToken);
+    this.checkUniqueByUser(user);
+
     val jti = tokenService.getTokenClaims(bearerToken).getId();
     val refreshToken = createTransientToken(UUID.fromString(jti));
     refreshToken.associateWithUser(user);
     return refreshTokenRepository.save(refreshToken);
-  }
-
-  private void checkUniqueByUserId(UUID userId) {
-    checkUnique(
-      !refreshTokenRepository.existsById(userId), "A refresh token already exists for this user id");
-  }
-
-  public RefreshContext createIncomingRefreshContext() {
-    return null;
-  }
-
-  public RefreshContext createOutgoingRefreshContext() {
-    return null;
   }
 
   public RefreshContext createRefreshContext(String refreshTokenId, String bearerToken) {
@@ -111,13 +107,15 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
     val tokenClaims = tokenService.getTokenClaims(bearerToken);
     val user = tokenService.getTokenUserInfo(bearerToken);
     if (refreshTokenOpt == null || refreshTokenOpt.isEmpty()) {
-      throw new UnauthorizedClientException(String.format("RefreshToken %s is not found.", refreshTokenId));
-//      throw new HttpClientErrorException.Unauthorized()
-//      throw new HttpClientErrorException.Unauthorized.(format("RefreshToken \"%s\" is not found. ", refreshTokenId));
+      throw new UnauthorizedClientException(
+          String.format("RefreshToken %s is not found.", refreshTokenId));
     }
     val refreshToken = refreshTokenOpt.get();
-    // do you want to just return a context instance here, or return validate method which will throw an exception if created context is invalid for any reason?
-    return RefreshContext.builder().refreshToken(refreshToken).tokenClaims(tokenClaims).user(user).build();
+    return RefreshContext.builder()
+        .refreshToken(refreshToken)
+        .tokenClaims(tokenClaims)
+        .user(user)
+        .build();
   }
 
 }
