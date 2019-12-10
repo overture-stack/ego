@@ -29,6 +29,7 @@ import static org.springframework.util.DigestUtils.md5Digest;
 import bio.overture.ego.model.dto.ApiKeyResponse;
 import bio.overture.ego.model.dto.ApiKeyScopeResponse;
 import bio.overture.ego.model.dto.Scope;
+import bio.overture.ego.model.dto.TokenResponse;
 import bio.overture.ego.model.dto.UserScopesResponse;
 import bio.overture.ego.model.entity.ApiKey;
 import bio.overture.ego.model.entity.Application;
@@ -463,37 +464,49 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   }
 
   public List<ApiKeyResponse> listApiKey(@NonNull UUID userId) {
+    return getApiKeysForUser(userId).stream()
+        .filter((token -> !token.isRevoked()))
+        .map(this::createApiKeyResponse)
+        .collect(Collectors.toList());
+  }
+
+  /** DEPRECATED: To be removed in next major release */
+  @Deprecated
+  public List<TokenResponse> listTokens(@NonNull UUID userId) {
+    return getApiKeysForUser(userId).stream()
+        .filter((token -> !token.isRevoked()))
+        .map(this::createTokenResponse)
+        .collect(Collectors.toList());
+  }
+
+  private Set<ApiKey> getApiKeysForUser(@NonNull UUID userId) {
     val user =
         userService
             .findById(userId)
             .orElseThrow(
                 () -> new UsernameNotFoundException(format("Can't find user '%s'", str(userId))));
-
-    val tokens = user.getTokens();
-    if (tokens.isEmpty()) {
-      return new ArrayList<>();
-    }
-
-    val unrevokedTokens =
-        tokens.stream().filter((token -> !token.isRevoked())).collect(Collectors.toSet());
-    List<ApiKeyResponse> response = new ArrayList<>();
-    unrevokedTokens.forEach(
-        token -> {
-          createApiKeyResponse(token, response);
-        });
-
-    return response;
+    return user.getTokens();
   }
 
-  private void createApiKeyResponse(
-      @NonNull ApiKey apiKey, @NonNull List<ApiKeyResponse> responses) {
+  private ApiKeyResponse createApiKeyResponse(@NonNull ApiKey apiKey) {
     val scopes = mapToSet(apiKey.scopes(), Scope::toString);
-    responses.add(
-        ApiKeyResponse.builder()
-            .apiKey(apiKey.getName())
-            .scope(scopes)
-            .exp(apiKey.getSecondsUntilExpiry())
-            .description(apiKey.getDescription())
-            .build());
+    return ApiKeyResponse.builder()
+        .apiKey(apiKey.getName())
+        .scope(scopes)
+        .exp(apiKey.getSecondsUntilExpiry())
+        .description(apiKey.getDescription())
+        .build();
+  }
+
+  /** DEPRECATED: To be removed in next major release */
+  @Deprecated
+  private TokenResponse createTokenResponse(@NonNull ApiKey token) {
+    val scopes = mapToSet(token.scopes(), Scope::toString);
+    return TokenResponse.builder()
+        .accessToken(token.getName())
+        .scope(scopes)
+        .exp(token.getSecondsUntilExpiry())
+        .description(token.getDescription())
+        .build();
   }
 }
