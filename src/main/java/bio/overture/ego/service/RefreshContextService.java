@@ -49,8 +49,7 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
     val result =
         (Optional<RefreshToken>)
             getRepository()
-                .findOne(
-                  new RefreshTokenSpecificationBuilder().fetchUser(fetchUser).buildById(id));
+                .findOne(new RefreshTokenSpecificationBuilder().fetchUser(fetchUser).buildById(id));
     checkNotFound(result.isPresent(), "RefreshToken '%s' does not exist", id);
     return result.get();
   }
@@ -75,8 +74,9 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
   }
 
   private void checkUniqueByUser(User user) {
-    checkUnique(!getRefreshTokenByUser(user).isPresent(),
-      String.format("A refresh token already exists for %s", user.getId()));
+    checkUnique(
+        !getRefreshTokenByUser(user).isPresent(),
+        String.format("A refresh token already exists for %s", user.getId()));
   }
 
   public void disassociateUserAndDelete(String userToken) {
@@ -117,7 +117,6 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
         .user(user)
         .build();
   }
-
 }
 
 // first call needed when you get here from refresh endpoint is:

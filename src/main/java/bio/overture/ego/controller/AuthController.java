@@ -29,6 +29,9 @@ import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.signer.TokenSigner;
 import bio.overture.ego.utils.Tokens;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -43,10 +46,6 @@ import org.springframework.security.oauth2.common.exceptions.InvalidTokenExcepti
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 @Slf4j
 @RestController
@@ -132,18 +131,22 @@ public class AuthController {
       method = {GET, POST},
       value = "/ego-token")
   @SneakyThrows
-  public ResponseEntity<String> user(OAuth2Authentication authentication, HttpServletResponse response) {
+  public ResponseEntity<String> user(
+      OAuth2Authentication authentication, HttpServletResponse response) {
     if (authentication == null) return new ResponseEntity<>("Please login", UNAUTHORIZED);
     String token = tokenService.generateUserToken((IDToken) authentication.getPrincipal());
 
     refreshContextService.disassociateUserAndDelete(token);
     RefreshToken refreshToken = refreshContextService.createRefreshToken(token);
 
-    val newRefreshContext = refreshContextService.createRefreshContext(refreshToken.getId().toString(), token);
+    val newRefreshContext =
+        refreshContextService.createRefreshContext(refreshToken.getId().toString(), token);
 
     // do we want to skip adding the refresh token id user is not approved?
     if (newRefreshContext.hasApprovedUser()) {
-      val cookie = createCookie("refreshId", refreshToken.getId().toString(), refreshTokenDuration); //use lib
+      val cookie =
+          createCookie(
+              "refreshId", refreshToken.getId().toString(), refreshTokenDuration); // use lib
       response.addCookie(cookie);
     }
 
@@ -160,20 +163,18 @@ public class AuthController {
     return new ResponseEntity<>(tokenService.updateUserToken(currentToken), OK);
   }
 
-  @RequestMapping(
-    method = POST,
-    value = "/ego-logout")
+  @RequestMapping(method = POST, value = "/ego-logout")
   public ResponseEntity<String> egoLogout(
-    @RequestHeader(value = "Authorization") final String authorization,
-    @CookieValue(value = "refreshId", defaultValue = "missing") String refreshId,
-    HttpServletResponse response,
-    HttpServletRequest request) {
+      @RequestHeader(value = "Authorization") final String authorization,
+      @CookieValue(value = "refreshId", defaultValue = "missing") String refreshId,
+      HttpServletResponse response,
+      HttpServletRequest request) {
     val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
     val cookieToRemove = createCookie("refreshId", "", 0);
     response.addCookie(cookieToRemove);
 
     refreshContextService.disassociateUserAndDelete(currentToken);
-    val session =  request.getSession(false);
+    val session = request.getSession(false);
     session.invalidate();
     return new ResponseEntity<>("User is logged out", OK);
   }
@@ -184,8 +185,7 @@ public class AuthController {
       @RequestHeader(value = "Authorization") final String authorization,
       @CookieValue(value = "refreshId", defaultValue = "missing") String refreshId,
       HttpServletResponse response) {
-    if (authorization == null)
-      return new ResponseEntity<>("Please login", UNAUTHORIZED);
+    if (authorization == null) return new ResponseEntity<>("Please login", UNAUTHORIZED);
 
     // check client id here? is it already checked somewhere else? possibly this is part of a claims
     // check?
@@ -211,7 +211,6 @@ public class AuthController {
     } else {
       return new ResponseEntity<>(format("Unable to refresh auth, please login"), UNAUTHORIZED);
     }
-
   }
 
   private static Cookie createCookie(String cookieName, String cookieValue, Integer maxAge) {
@@ -219,7 +218,7 @@ public class AuthController {
 
     cookie.setDomain("localhost");
     // disable setSecure while testing locally
-//    cookie.setSecure(true);
+    //    cookie.setSecure(true);
     cookie.setHttpOnly(true);
     cookie.setMaxAge(maxAge);
     cookie.setPath("/");

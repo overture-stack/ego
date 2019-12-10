@@ -46,7 +46,8 @@ public class RefreshContextServiceTest {
     refreshContextService.disassociateUserAndDelete(user1Token);
 
     exceptionRule.expect(NotFoundException.class);
-    exceptionRule.expectMessage(String.format("RefreshToken '%s' does not exist", refreshToken1.getId()));
+    exceptionRule.expectMessage(
+        String.format("RefreshToken '%s' does not exist", refreshToken1.getId()));
     Assert.assertTrue(refreshContextService.get(refreshToken1.getId(), false) == refreshToken1);
     refreshContextService.get(refreshToken1.getId(), false);
   }
@@ -62,7 +63,8 @@ public class RefreshContextServiceTest {
     Assert.assertNotNull(refreshContextService.get(refreshToken1.getId(), true));
     Assert.assertEquals(refreshToken1, refreshContextService.get(refreshToken1.getId(), true));
     exceptionRule.expect(UniqueViolationException.class);
-    exceptionRule.expectMessage(String.format("A refresh token already exists for %s", user1.getId()));
+    exceptionRule.expectMessage(
+        String.format("A refresh token already exists for %s", user1.getId()));
     refreshContextService.createRefreshToken(user1Token);
   }
 
