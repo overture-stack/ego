@@ -1,12 +1,14 @@
 package bio.overture.ego.security;
 
 import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.utils.Redirects;
 import java.io.IOException;
 import java.util.*;
 import javax.servlet.Filter;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -18,11 +20,13 @@ import org.springframework.security.oauth2.client.OAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestOperations;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.filter.OAuth2ClientAuthenticationProcessingFilter;
+import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.filter.CompositeFilter;
 
+@Slf4j
 @Component
 @Profile("auth")
 public class OAuth2SsoFilter extends CompositeFilter {
@@ -37,8 +41,16 @@ public class OAuth2SsoFilter extends CompositeFilter {
           val application =
               applicationService.getByClientId(
                   (String) request.getSession().getAttribute("ego_client_id"));
-          this.setDefaultTargetUrl(application.getRedirectUri());
-          super.onAuthenticationSuccess(request, response, authentication);
+
+          String redirectUri = (String) request.getSession().getAttribute("ego_redirect_uri");
+
+          val redirect = Redirects.getRedirectUri(application, redirectUri);
+          if (!redirect.isEmpty()) {
+            this.setDefaultTargetUrl(redirect);
+            super.onAuthenticationSuccess(request, response, authentication);
+          } else {
+            throw new UnauthorizedClientException("Incorrect redirect uri for ego client.");
+          }
         }
       };
 
