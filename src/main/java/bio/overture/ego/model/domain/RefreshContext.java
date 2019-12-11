@@ -5,10 +5,10 @@ import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import bio.overture.ego.model.entity.RefreshToken;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.ForbiddenException;
+import bio.overture.ego.model.exceptions.UnauthorizedException;
 import io.jsonwebtoken.Claims;
 import java.util.UUID;
 import lombok.*;
-import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
 
 @Data
 @Builder
@@ -43,7 +43,7 @@ public class RefreshContext {
     }
     if (this.isExpired()) {
       // TODO: [anncatton] fix, this is throwing a 500 in postman, not a 401
-      throw new UnauthorizedClientException(
+      throw new UnauthorizedException(
           String.format("RefreshToken %s is expired", refreshToken.getId()));
     }
     if (this.userMatches() & this.jtiMatches()) {

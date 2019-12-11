@@ -60,22 +60,18 @@ public class AuthController {
   private final TokenSigner tokenSigner;
   private final RefreshContextService refreshContextService;
 
-  private int refreshTokenDuration;
-
   @Autowired
   public AuthController(
       @NonNull TokenService tokenService,
       @NonNull GoogleTokenService googleTokenService,
       @NonNull FacebookTokenService facebookTokenService,
       @NonNull TokenSigner tokenSigner,
-      RefreshContextService refreshContextService,
-      @Value("${refreshToken.durationInSeconds:43200}") int refreshTokenDuration) {
+      RefreshContextService refreshContextService) {
     this.tokenService = tokenService;
     this.googleTokenService = googleTokenService;
     this.facebookTokenService = facebookTokenService;
     this.tokenSigner = tokenSigner;
     this.refreshContextService = refreshContextService;
-    this.refreshTokenDuration = refreshTokenDuration;
   }
 
   @RequestMapping(method = GET, value = "/google/token")
@@ -141,7 +137,11 @@ public class AuthController {
         refreshContextService.createRefreshContext(refreshToken.getId().toString(), token);
 
     if (newRefreshContext.hasApprovedUser()) {
-      val cookie = createCookie("refreshId", refreshToken.getId().toString(), refreshTokenDuration);
+      val cookie =
+          createCookie(
+              "refreshId",
+              refreshToken.getId().toString(),
+              refreshToken.getSecondsUntilExpiry().intValue());
       response.addCookie(cookie);
     }
 
@@ -164,6 +164,8 @@ public class AuthController {
       @CookieValue(value = "refreshId", defaultValue = "missing") String refreshId,
       HttpServletResponse response,
       HttpServletRequest request) {
+    if (authorization == null || refreshId.equals("missing"))
+      return new ResponseEntity<>("Please login", UNAUTHORIZED);
     val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
     val cookieToRemove = createCookie("refreshId", "", 0);
     response.addCookie(cookieToRemove);
@@ -180,13 +182,14 @@ public class AuthController {
       @RequestHeader(value = "Authorization") final String authorization,
       @CookieValue(value = "refreshId", defaultValue = "missing") String refreshId,
       HttpServletResponse response) {
-    if (authorization == null) return new ResponseEntity<>("Please login", UNAUTHORIZED);
-
+    if (authorization == null || refreshId.equals("missing"))
+      return new ResponseEntity<>("Please login", UNAUTHORIZED);
     val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
     // TODO: [anncatton] validate jwt before proceeding to service call.
 
-    val currentRefreshContext = refreshContextService.createRefreshContext(refreshId, currentToken);
-    val isValid = currentRefreshContext.validate();
+    val incomingRefreshContext =
+        refreshContextService.createRefreshContext(refreshId, currentToken);
+    val isValid = incomingRefreshContext.validate();
 
     refreshContextService.disassociateUserAndDelete(currentToken);
     if (isValid) {
@@ -196,12 +199,15 @@ public class AuthController {
       val newRefreshToken = refreshContextService.createRefreshToken(newUserToken);
       val newRefreshId = newRefreshToken.getId().toString();
 
-      val newCookie = createCookie("refreshId", newRefreshId, refreshTokenDuration);
+      val newCookie =
+          createCookie(
+              "refreshId", newRefreshId, newRefreshToken.getSecondsUntilExpiry().intValue());
       response.addCookie(newCookie);
 
       return new ResponseEntity<>(newUserToken, OK);
     } else {
-      return new ResponseEntity<>(format("Unable to refresh auth, please login"), UNAUTHORIZED);
+      return new ResponseEntity<>(
+          format("Unable to refresh authorization, please login"), UNAUTHORIZED);
     }
   }
 

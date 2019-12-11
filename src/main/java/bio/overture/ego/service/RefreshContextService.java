@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 public class RefreshContextService extends AbstractBaseService<RefreshToken, UUID> {
 
   private RefreshTokenRepository refreshTokenRepository;
-  private UserService userService;
   private TokenService tokenService;
   /** Configuration */
   private int duration;
@@ -34,12 +33,10 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
   @Autowired
   public RefreshContextService(
       @NonNull RefreshTokenRepository refreshTokenRepository,
-      @NonNull UserService userService,
       @NonNull TokenService tokenService,
       @Value("${refreshToken.duration:43200000}") int duration) {
     super(RefreshToken.class, refreshTokenRepository);
     this.refreshTokenRepository = refreshTokenRepository;
-    this.userService = userService;
     this.tokenService = tokenService;
     this.duration = duration;
   }

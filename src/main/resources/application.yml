@@ -10,7 +10,6 @@ apitoken:
 
 refreshToken:
   duration: 43200000 # in milliseconds = 12hrs
-  durationInSeconds: 43200 # in seconds = 12hrs
 
 # security
 auth:
