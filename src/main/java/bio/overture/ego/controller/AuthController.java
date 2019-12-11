@@ -189,9 +189,12 @@ public class AuthController {
 
     val incomingRefreshContext =
         refreshContextService.createRefreshContext(refreshId, currentToken);
-    val isValid = incomingRefreshContext.validate();
-
+    log.debug("created refresh context");
     refreshContextService.disassociateUserAndDelete(currentToken);
+    log.debug("disassociating and deleting refresh token");
+    val isValid = incomingRefreshContext.validate();
+    log.debug("checked validation");
+
     if (isValid) {
       // generate new token + refresh token
       val currentUser = tokenService.getTokenUserInfo(currentToken);

@@ -6,6 +6,7 @@ import bio.overture.ego.model.entity.RefreshToken;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.exceptions.UnauthorizedException;
+import bio.overture.ego.service.RefreshContextService;
 import io.jsonwebtoken.Claims;
 import java.util.UUID;
 import lombok.*;
@@ -35,14 +36,11 @@ public class RefreshContext {
     return refreshToken.getSecondsUntilExpiry() <= 0;
   }
 
-  // TODO: [anncatton] refreshToken needs to be deleted on failed refresh request
-  // delete currently called in AuthController
   public boolean validate() {
     if (!hasApprovedUser()) {
       throw new ForbiddenException("User does not have approved status, rejecting.");
     }
     if (this.isExpired()) {
-      // TODO: [anncatton] fix, this is throwing a 500 in postman, not a 401
       throw new UnauthorizedException(
           String.format("RefreshToken %s is expired", refreshToken.getId()));
     }
