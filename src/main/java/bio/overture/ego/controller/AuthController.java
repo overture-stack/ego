@@ -164,15 +164,15 @@ public class AuthController {
       @CookieValue(value = "refreshId", defaultValue = "missing") String refreshId,
       HttpServletResponse response,
       HttpServletRequest request) {
+    log.debug("in delete endpoint");
     if (authorization == null || refreshId.equals("missing"))
       return new ResponseEntity<>("Please login", UNAUTHORIZED);
+    log.debug("checked for auth and refreshId: " + refreshId);
     val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
     val cookieToRemove = createCookie("refreshId", "", 0);
     response.addCookie(cookieToRemove);
-
+    log.debug("added cookie to remove");
     refreshContextService.disassociateUserAndDelete(currentToken);
-    val session = request.getSession(false);
-    session.invalidate();
     return new ResponseEntity<>("User is logged out", OK);
   }
 
