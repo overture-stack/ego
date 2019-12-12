@@ -81,7 +81,7 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
 
     val refreshTokenOpt = this.getRefreshTokenByUser(user);
     if (refreshTokenOpt.isPresent()) {
-      log.info("token exists, deleting...");
+      log.debug("Refresh token exists, deleting...");
       user.setRefreshToken(null);
       val existingRefreshToken = refreshTokenOpt.get();
       refreshTokenRepository.delete(existingRefreshToken);

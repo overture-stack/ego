@@ -2,6 +2,7 @@ package bio.overture.ego.model.domain;
 
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.exceptions.ForbiddenException;
+import bio.overture.ego.model.exceptions.UnauthorizedException;
 import bio.overture.ego.repository.RefreshTokenRepository;
 import bio.overture.ego.service.RefreshContextService;
 import bio.overture.ego.service.TokenService;
@@ -19,7 +20,6 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,18 +48,13 @@ public class RefreshContextTest {
 
     val mockExpiry = Instant.now().minus(100, ChronoUnit.MILLIS);
     refreshToken1.setExpiryDate(Date.from(mockExpiry));
-    // generating refresh token randomly may not be correct way to test. this will create a random
-    // stored jti
-    //    val refreshToken1 = entityGenerator.generateRandomRefreshToken(-10);
-    //    refreshToken1.associateWithUser(user1);
-    //    refreshTokenRepository.save(refreshToken1);
 
     val storedRefreshToken = refreshContextService.getById(refreshToken1.getId());
     val incomingRefreshContext =
         refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user1Token);
     Assert.assertTrue(storedRefreshToken.getSecondsUntilExpiry() == 0);
 
-    exceptionRule.expect(UnauthorizedClientException.class);
+    exceptionRule.expect(UnauthorizedException.class);
     exceptionRule.expectMessage(
         String.format("RefreshToken %s is expired", storedRefreshToken.getId()));
     incomingRefreshContext.validate();

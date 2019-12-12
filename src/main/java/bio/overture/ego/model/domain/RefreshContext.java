@@ -6,7 +6,6 @@ import bio.overture.ego.model.entity.RefreshToken;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.exceptions.UnauthorizedException;
-import bio.overture.ego.service.RefreshContextService;
 import io.jsonwebtoken.Claims;
 import java.util.UUID;
 import lombok.*;

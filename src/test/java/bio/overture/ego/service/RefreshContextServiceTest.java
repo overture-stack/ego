@@ -1,6 +1,8 @@
 package bio.overture.ego.service;
 
 import bio.overture.ego.model.domain.RefreshContext;
+import bio.overture.ego.model.enums.StatusType;
+import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
 import bio.overture.ego.repository.RefreshTokenRepository;
@@ -15,7 +17,6 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,11 +37,34 @@ public class RefreshContextServiceTest {
   @Rule public ExpectedException exceptionRule = ExpectedException.none();
 
   @Test
-  public void refresh_usedTokenIsDeleted() {
+  public void refresh_invalidContext_usedTokenIsDeleted() {
+    val user1 = entityGenerator.setupUserWithRefreshToken("User One");
+    // force invalid refreshContext with invalid user status
+    user1.setStatus(StatusType.PENDING);
+    val user1Token = tokenService.generateUserToken(user1);
+    val refreshToken1 = user1.getRefreshToken();
+
+    Assert.assertTrue(refreshContextService.getById(refreshToken1.getId()) != null);
+    val incomingRefreshContext =
+        refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user1Token);
+    refreshContextService.disassociateUserAndDelete(user1Token);
+
+    exceptionRule.expect(NotFoundException.class);
+    exceptionRule.expectMessage(
+        String.format("RefreshToken '%s' does not exist", refreshToken1.getId()));
+    Assert.assertTrue(refreshContextService.get(refreshToken1.getId(), false) == refreshToken1);
+    refreshContextService.get(refreshToken1.getId(), false);
+
+    exceptionRule.expect(ForbiddenException.class);
+    exceptionRule.expectMessage("User does not have approved status, rejecting.");
+    incomingRefreshContext.validate();
+  }
+
+  @Test
+  public void refresh_validContext_usedTokenIsDeleted() {
     val user1 = entityGenerator.setupUserWithRefreshToken("User One");
     val user1Token = tokenService.generateUserToken(user1);
     val refreshToken1 = user1.getRefreshToken();
-    userService.get(user1.getId(), false, false, false, true);
 
     Assert.assertTrue(refreshContextService.getById(refreshToken1.getId()) != null);
     refreshContextService.disassociateUserAndDelete(user1Token);
@@ -68,10 +92,8 @@ public class RefreshContextServiceTest {
     refreshContextService.createRefreshToken(user1Token);
   }
 
-  //  cookie refreshId is NOT found in db -> 401 Unauthorized
   @Test
   public void createContext_incomingRefreshIdDoesNotMatch_Unauthorized() {
-    // if you get a not found with the incoming refreshId, return 401
     val user1 = entityGenerator.setupUser("User One");
     val storedRefreshToken = entityGenerator.generateRandomRefreshToken(43200000);
     val user1Token = tokenService.generateUserToken(user1);
@@ -85,12 +107,11 @@ public class RefreshContextServiceTest {
     Assert.assertNotEquals(storedRefreshToken.getId(), incomingRefreshId);
     Assert.assertTrue(refreshTokenRepository.findById(incomingRefreshId).isEmpty());
 
-    exceptionRule.expect(UnauthorizedClientException.class);
+    exceptionRule.expect(NotFoundException.class);
     exceptionRule.expectMessage(String.format("RefreshToken %s is not found.", incomingRefreshId));
     refreshContextService.createRefreshContext(incomingRefreshIdAsString, user1Token);
   }
 
-  //  cookie refreshId is found in db -> new refreshContext
   @Test
   public void createContext_incomingRefreshIdDoesMatch_newContext() {
     val user1 = entityGenerator.setupUser("User One");
@@ -108,9 +129,3 @@ public class RefreshContextServiceTest {
             == RefreshContext.class);
   }
 }
-
-//  cookie refreshId is NOT found in db -> 401 Unauthorized
-//  cookie refreshId is found in db -> new refreshContext
-// refresh token is deleted after use
-// valid refreshContext creates new refreshToken
-// valid refreshContext creates new accessToken???
