@@ -5,6 +5,8 @@ import bio.overture.ego.model.enums.Tables;
 import java.util.*;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.GenericGenerator;
@@ -25,6 +27,7 @@ public class RefreshToken implements Identifiable<UUID> {
   @GeneratedValue(generator = "refresh_uuid")
   private UUID id;
 
+  @JsonIgnore
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = SqlFields.USERID_JOIN, referencedColumnName = SqlFields.ID, nullable = false)
   private User user;
