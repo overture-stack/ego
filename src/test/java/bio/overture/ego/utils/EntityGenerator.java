@@ -491,7 +491,7 @@ public class EntityGenerator {
   }
 
   public RefreshToken generateRandomRefreshToken(
-      @Value("${refreshToken.duration:43200000}") int duration) {
+      @Value("${refreshToken.durationMs:43200000}") int duration) {
     this.duration = duration;
     val now = Instant.now();
     val expiry = now.plus(duration, ChronoUnit.MILLIS);

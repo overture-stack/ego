@@ -15,9 +15,9 @@ import lombok.*;
 @AllArgsConstructor
 public class RefreshContext {
 
-  @NonNull private RefreshToken refreshToken; // from db
-  @NonNull private User user; // from refreshToken -> User assoc
-  @NonNull private Claims tokenClaims; // from jwt
+  @NonNull private RefreshToken refreshToken;
+  @NonNull private User user;
+  @NonNull private Claims tokenClaims;
 
   public boolean hasApprovedUser() {
     return user.getStatus() == APPROVED;

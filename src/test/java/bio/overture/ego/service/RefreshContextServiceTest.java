@@ -1,7 +1,6 @@
 package bio.overture.ego.service;
 
 import bio.overture.ego.model.domain.RefreshContext;
-import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.model.exceptions.UniqueViolationException;
@@ -20,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
+import static bio.overture.ego.model.enums.StatusType.PENDING;
 
 @Slf4j
 @SpringBootTest
@@ -40,7 +40,7 @@ public class RefreshContextServiceTest {
   public void refresh_invalidContext_usedTokenIsDeleted() {
     val user1 = entityGenerator.setupUserWithRefreshToken("User One");
     // force invalid refreshContext with invalid user status
-    user1.setStatus(StatusType.PENDING);
+    user1.setStatus(PENDING);
     val user1Token = tokenService.generateUserToken(user1);
     val refreshToken1 = user1.getRefreshToken();
 
