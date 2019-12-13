@@ -1,5 +1,9 @@
 package bio.overture.ego.model.domain;
 
+import static bio.overture.ego.model.enums.StatusType.DISABLED;
+import static bio.overture.ego.model.enums.StatusType.PENDING;
+import static bio.overture.ego.model.enums.StatusType.REJECTED;
+
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.exceptions.UnauthorizedException;
 import bio.overture.ego.repository.RefreshTokenRepository;
@@ -22,9 +26,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-import static bio.overture.ego.model.enums.StatusType.DISABLED;
-import static bio.overture.ego.model.enums.StatusType.PENDING;
-import static bio.overture.ego.model.enums.StatusType.REJECTED;
 
 @Slf4j
 @SpringBootTest
@@ -41,7 +42,6 @@ public class RefreshContextTest {
 
   @Rule public ExpectedException exceptionRule = ExpectedException.none();
 
-  //  refresh token is expired ->401 Unauthorized
   @Test
   public void validate_tokenIsExpired_Unauthorized() {
     val user1 = entityGenerator.setupUser("User One");
@@ -62,7 +62,6 @@ public class RefreshContextTest {
     incomingRefreshContext.validate();
   }
 
-  //  refresh token is NOT expired -> validate == true
   @Test
   public void validate_tokenIsNotExpired_ValidRefreshContext() {
     val user1 = entityGenerator.setupUser("User One");
@@ -79,7 +78,6 @@ public class RefreshContextTest {
     Assert.assertTrue(incomingRefreshContext.validate());
   }
 
-  //  user status is approved -> validate == true
   @Test
   public void validate_UserApprovedStatus_ValidRefreshContext() {
     val user1 = entityGenerator.setupUser("User One");
@@ -95,7 +93,6 @@ public class RefreshContextTest {
     Assert.assertTrue(refreshContext1.validate());
   }
 
-  //  user status is NOT approved -> 403 Forbidden
   @Test
   public void validate_UserNonApprovedStatus_ForbiddenException() {
     val disabledUser = entityGenerator.setupUser("Disabled User");
@@ -134,7 +131,6 @@ public class RefreshContextTest {
     pendingUserRefreshContext.validate();
   }
 
-  //  token claims jti + userId (sub) matches stored refreshToken jti* -> validate == true
   @Test
   public void validate_jwtClaimsMatchRefreshToken_validRefreshContext() {
     val user1 = entityGenerator.setupUser("User One");
@@ -156,7 +152,6 @@ public class RefreshContextTest {
     Assert.assertTrue(incomingRefreshContext.validate());
   }
 
-  //  token claims jti does NOT match stored refreshToken jti* -> 403 Forbidden
   @Test
   public void validate_jtiDoesNotMatchRefreshTokenJti_ForbiddenException() {
     val user1 = entityGenerator.setupUser("User One");
@@ -172,7 +167,7 @@ public class RefreshContextTest {
     val incomingRefreshContext =
         refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user1Token);
     val incomingJti = tokenService.getTokenClaims(user1Token).getId();
-    Assert.assertFalse(refreshToken1.getJti().toString() == incomingJti);
+    Assert.assertNotEquals(refreshToken1.getJti().toString(), incomingJti);
 
     exceptionRule.expect(ForbiddenException.class);
     exceptionRule.expectMessage(
@@ -180,7 +175,6 @@ public class RefreshContextTest {
     incomingRefreshContext.validate();
   }
 
-  //  token claims sub (userId) does NOT match stored refreshToken userId* -> 403 Forbidden
   @Test
   public void validate_jwtSubDoesNotMatchRefreshTokenUser_ForbiddenException() {
     val user1 = entityGenerator.setupUser("User One");
@@ -190,13 +184,12 @@ public class RefreshContextTest {
     val user2Token = tokenService.generateUserToken(user2);
 
     val refreshToken1 = refreshContextService.createRefreshToken(user1Token);
-    val refreshToken2 = refreshContextService.createRefreshToken(user2Token);
 
     val incomingRefreshContext =
         refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user2Token);
     val incomingUserClaims = tokenService.getTokenClaims(user2Token);
-    Assert.assertFalse(
-        refreshToken1.getUser().getId().toString() == incomingUserClaims.getSubject());
+    Assert.assertNotEquals(
+        refreshToken1.getUser().getId().toString(), incomingUserClaims.getSubject());
 
     exceptionRule.expect(ForbiddenException.class);
     exceptionRule.expectMessage(

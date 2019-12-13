@@ -2,14 +2,15 @@ package bio.overture.ego.service;
 
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static java.util.Objects.isNull;
 
 import bio.overture.ego.model.domain.RefreshContext;
 import bio.overture.ego.model.entity.RefreshToken;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.repository.RefreshTokenRepository;
 import bio.overture.ego.repository.queryspecification.builder.RefreshTokenSpecificationBuilder;
 import java.sql.Date;
+import java.sql.Ref;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -21,6 +22,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.Cookie;
+
+import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
+
 @Slf4j
 @Service
 public class RefreshContextService extends AbstractBaseService<RefreshToken, UUID> {
@@ -28,17 +33,17 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
   private RefreshTokenRepository refreshTokenRepository;
   private TokenService tokenService;
   /** Configuration */
-  private int duration;
+  private int durationMs;
 
   @Autowired
   public RefreshContextService(
       @NonNull RefreshTokenRepository refreshTokenRepository,
       @NonNull TokenService tokenService,
-      @Value("${refreshToken.duration:43200000}") int duration) {
+      @Value("${refreshToken.durationMs:43200000}") int durationMs) {
     super(RefreshToken.class, refreshTokenRepository);
     this.refreshTokenRepository = refreshTokenRepository;
     this.tokenService = tokenService;
-    this.duration = duration;
+    this.durationMs = durationMs;
   }
 
   @SuppressWarnings("unchecked")
@@ -58,7 +63,7 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
 
   private RefreshToken createTransientToken(UUID jti) {
     val now = Instant.now();
-    val expiry = now.plus(duration, ChronoUnit.MILLIS);
+    val expiry = now.plus(durationMs, ChronoUnit.MILLIS);
     return RefreshToken.builder()
         .jti(jti)
         .issueDate(Date.from(now))
@@ -102,9 +107,12 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
     val refreshTokenOpt = refreshTokenRepository.findById(UUID.fromString(refreshTokenId));
     val tokenClaims = tokenService.getTokenClaims(bearerToken);
     val user = tokenService.getTokenUserInfo(bearerToken);
-    if (refreshTokenOpt == null || refreshTokenOpt.isEmpty()) {
-      throw new NotFoundException(String.format("RefreshToken %s is not found.", refreshTokenId));
-    }
+
+    checkNotFound(
+        !isNull(refreshTokenOpt) && refreshTokenOpt.isPresent(),
+        "RefreshToken %s is not found.",
+        refreshTokenId);
+
     val refreshToken = refreshTokenOpt.get();
     return RefreshContext.builder()
         .refreshToken(refreshToken)
@@ -112,4 +120,46 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
         .user(user)
         .build();
   }
+
+  public RefreshContext createNewRefreshContext(@NonNull String bearerToken, boolean disassociateUser) {
+    if (disassociateUser) {
+      disassociateUserAndDelete(bearerToken);
+    }
+    val newRefreshToken = createRefreshToken(bearerToken);
+    return createRefreshContext(newRefreshToken.getId().toString(), bearerToken);
+  }
+
+  public String validateAndReturnNewUserToken(String refreshId, String bearerToken) {
+    val incomingRefreshContext = createRefreshContext(refreshId, bearerToken);
+    disassociateUserAndDelete(bearerToken); // fine to just pass bearer token cuz doesn't do any validation
+
+    incomingRefreshContext.validate(); // if not valid, will throw here
+
+    val newUserToken = tokenService.generateUserToken(incomingRefreshContext.getUser());
+    createRefreshToken(newUserToken);
+    return newUserToken;
+  }
+
+  private Cookie createCookie(String cookieName, String cookieValue, Integer maxAge) {
+    Cookie cookie = new Cookie(cookieName, cookieValue);
+    // where to access the accepted domain?
+    cookie.setDomain("localhost");
+    // disable setSecure while testing locally in browser, or will not show in cookies
+//    cookie.setSecure(true);
+    cookie.setHttpOnly(true);
+    cookie.setMaxAge(maxAge);
+    cookie.setPath("/");
+
+    return cookie;
+  }
+
+  public Cookie createRefreshCookie(RefreshToken refreshToken){
+    return createCookie(REFRESH_ID, refreshToken.getId().toString(), refreshToken.getSecondsUntilExpiry().intValue());
+  }
+
+  public Cookie deleteRefreshTokenAndCookie(String bearerToken) {
+    disassociateUserAndDelete(bearerToken);
+    return createCookie(REFRESH_ID, "", 0);
+  }
+
 }

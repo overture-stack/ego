@@ -20,6 +20,7 @@ import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
+import bio.overture.ego.model.domain.RefreshContext;
 import bio.overture.ego.model.entity.RefreshToken;
 import bio.overture.ego.provider.facebook.FacebookTokenService;
 import bio.overture.ego.provider.google.GoogleTokenService;
@@ -28,8 +29,6 @@ import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.signer.TokenSigner;
 import bio.overture.ego.utils.Tokens;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -45,6 +44,7 @@ import org.springframework.security.oauth2.common.exceptions.InvalidTokenExcepti
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
 
 @Slf4j
 @RestController
@@ -66,7 +66,7 @@ public class AuthController {
       @NonNull GoogleTokenService googleTokenService,
       @NonNull FacebookTokenService facebookTokenService,
       @NonNull TokenSigner tokenSigner,
-      RefreshContextService refreshContextService) {
+      @NonNull RefreshContextService refreshContextService) {
     this.tokenService = tokenService;
     this.googleTokenService = googleTokenService;
     this.facebookTokenService = facebookTokenService;
@@ -127,21 +127,14 @@ public class AuthController {
   @SneakyThrows
   public ResponseEntity<String> user(
       OAuth2Authentication authentication, HttpServletResponse response) {
-    if (authentication == null) return new ResponseEntity<>("Please login", UNAUTHORIZED);
+    if (authentication == null) {
+      return new ResponseEntity<>("Please login", UNAUTHORIZED);
+    }
     String token = tokenService.generateUserToken((IDToken) authentication.getPrincipal());
 
-    refreshContextService.disassociateUserAndDelete(token);
-    RefreshToken refreshToken = refreshContextService.createRefreshToken(token);
-
-    val newRefreshContext =
-        refreshContextService.createRefreshContext(refreshToken.getId().toString(), token);
-
-    if (newRefreshContext.hasApprovedUser()) {
-      val cookie =
-          createCookie(
-              "refreshId",
-              refreshToken.getId().toString(),
-              refreshToken.getSecondsUntilExpiry().intValue());
+    val outgoingRefreshContext = refreshContextService.createNewRefreshContext(token, true);
+    if (outgoingRefreshContext.hasApprovedUser()) {
+      val cookie = refreshContextService.createRefreshCookie(outgoingRefreshContext.getRefreshToken());
       response.addCookie(cookie);
     }
 
@@ -161,18 +154,16 @@ public class AuthController {
   @RequestMapping(method = DELETE, value = "/refresh")
   public ResponseEntity<String> deleteRefreshToken(
       @RequestHeader(value = "Authorization") final String authorization,
-      @CookieValue(value = "refreshId", defaultValue = "missing") String refreshId,
-      HttpServletResponse response,
-      HttpServletRequest request) {
-    log.debug("in delete endpoint");
-    if (authorization == null || refreshId.equals("missing"))
+      @CookieValue(value = REFRESH_ID, defaultValue = "missing") String refreshId,
+      HttpServletResponse response) {
+
+    if (authorization == null || refreshId.equals("missing")) {
       return new ResponseEntity<>("Please login", UNAUTHORIZED);
-    log.debug("checked for auth and refreshId: " + refreshId);
+    }
     val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
-    val cookieToRemove = createCookie("refreshId", "", 0);
+    val cookieToRemove = refreshContextService.deleteRefreshTokenAndCookie(currentToken);
     response.addCookie(cookieToRemove);
-    log.debug("added cookie to remove");
-    refreshContextService.disassociateUserAndDelete(currentToken);
+
     return new ResponseEntity<>("User is logged out", OK);
   }
 
@@ -180,51 +171,20 @@ public class AuthController {
   @RequestMapping(method = POST, value = "/refresh")
   public ResponseEntity<String> refreshEgoToken(
       @RequestHeader(value = "Authorization") final String authorization,
-      @CookieValue(value = "refreshId", defaultValue = "missing") String refreshId,
+      @CookieValue(value = REFRESH_ID, defaultValue = "missing") String refreshId,
       HttpServletResponse response) {
-    if (authorization == null || refreshId.equals("missing"))
+    if (authorization == null || refreshId.equals("missing")) {
       return new ResponseEntity<>("Please login", UNAUTHORIZED);
+    }
     val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
     // TODO: [anncatton] validate jwt before proceeding to service call.
 
-    val incomingRefreshContext =
-        refreshContextService.createRefreshContext(refreshId, currentToken);
-    log.debug("created refresh context");
-    refreshContextService.disassociateUserAndDelete(currentToken);
-    log.debug("disassociating and deleting refresh token");
-    val isValid = incomingRefreshContext.validate();
-    log.debug("checked validation");
+    val outboundUserToken = refreshContextService.validateAndReturnNewUserToken(refreshId, currentToken);
+    val newRefreshToken = tokenService.getTokenUserInfo(outboundUserToken).getRefreshToken();
+    val newCookie = refreshContextService.createRefreshCookie(newRefreshToken);
+    response.addCookie(newCookie);
 
-    if (isValid) {
-      // generate new token + refresh token
-      val currentUser = tokenService.getTokenUserInfo(currentToken);
-      val newUserToken = tokenService.generateUserToken(currentUser);
-      val newRefreshToken = refreshContextService.createRefreshToken(newUserToken);
-      val newRefreshId = newRefreshToken.getId().toString();
-
-      val newCookie =
-          createCookie(
-              "refreshId", newRefreshId, newRefreshToken.getSecondsUntilExpiry().intValue());
-      response.addCookie(newCookie);
-
-      return new ResponseEntity<>(newUserToken, OK);
-    } else {
-      return new ResponseEntity<>(
-          format("Unable to refresh authorization, please login"), UNAUTHORIZED);
-    }
-  }
-
-  private static Cookie createCookie(String cookieName, String cookieValue, Integer maxAge) {
-    Cookie cookie = new Cookie(cookieName, cookieValue);
-
-    cookie.setDomain("localhost");
-    // disable setSecure while testing locally in browser, or will not set in cookies
-    //    cookie.setSecure(true);
-    cookie.setHttpOnly(true);
-    cookie.setMaxAge(maxAge);
-    cookie.setPath("/");
-
-    return cookie;
+    return new ResponseEntity<>(outboundUserToken, OK);
   }
 
   @ExceptionHandler({InvalidTokenException.class})

@@ -2,11 +2,10 @@ package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.*;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.GenericGenerator;
