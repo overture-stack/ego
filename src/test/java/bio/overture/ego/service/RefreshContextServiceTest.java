@@ -1,5 +1,6 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.PENDING;
 
 import bio.overture.ego.model.domain.RefreshContext;
@@ -97,7 +98,7 @@ public class RefreshContextServiceTest {
   }
 
   @Test
-  public void createContext_incomingRefreshIdDoesNotMatch_Unauthorized() {
+  public void createContext_incomingRefreshIdDoesNotMatch_NotFound() {
     val user1 = entityGenerator.setupUser("User One");
     val storedRefreshToken = entityGenerator.generateRandomRefreshToken(43200000);
     val user1Token = tokenService.generateUserToken(user1);
@@ -131,5 +132,113 @@ public class RefreshContextServiceTest {
     Assert.assertEquals(
         refreshContextService.createRefreshContext(incomingRefreshId, user1Token).getClass(),
         RefreshContext.class);
+  }
+
+  @Test
+  public void validateAndReturnToken_mismatchedRefreshToken_NotFound() {
+    val incomingUser = entityGenerator.setupUserWithRefreshToken("User One");
+    val incomingUserToken = tokenService.generateUserToken(incomingUser);
+
+    val mockIncomingUserRefreshId = UUID.randomUUID();
+
+    exceptionRule.expect(NotFoundException.class);
+    exceptionRule.expectMessage(
+        String.format("RefreshToken %s is not found.", mockIncomingUserRefreshId));
+    refreshContextService.validateAndReturnNewUserToken(
+        mockIncomingUserRefreshId.toString(), incomingUserToken);
+    Assert.assertFalse(
+        refreshContextService.findById(incomingUser.getRefreshToken().getId()).isPresent());
+  }
+
+  @Test
+  public void validateAndReturn_invalidClaims_Forbidden() {
+    val incomingUser = entityGenerator.setupUserWithRefreshToken("Incoming User");
+    val incomingUserToken = tokenService.generateUserToken(incomingUser);
+
+    tokenService.getTokenClaims(incomingUserToken).setId(UUID.randomUUID().toString());
+    exceptionRule.expect(ForbiddenException.class);
+    exceptionRule.expectMessage(
+        String.format(
+            "Invalid token claims for refreshId %s.", incomingUser.getRefreshToken().getId()));
+    refreshContextService.validateAndReturnNewUserToken(
+        incomingUser.getRefreshToken().getId().toString(), incomingUserToken);
+    Assert.assertNull(incomingUser.getRefreshToken());
+    Assert.assertFalse(
+        refreshContextService.findById(incomingUser.getRefreshToken().getId()).isPresent());
+  }
+
+  @Test
+  public void validateAndReturnToken_validClaims_newAccessToken() {
+    val incomingUser = entityGenerator.setupUser("User One");
+    val incomingUserToken = tokenService.generateUserToken(incomingUser);
+    val incomingRefreshToken = refreshContextService.createRefreshToken(incomingUserToken);
+    val incomingRefreshId = incomingRefreshToken.getId();
+
+    val incomingClaims = tokenService.getTokenClaims(incomingUserToken);
+
+    val outgoingUserToken =
+        refreshContextService.validateAndReturnNewUserToken(
+            incomingRefreshId.toString(), incomingUserToken);
+    Assert.assertFalse(refreshContextService.findById(incomingRefreshId).isPresent());
+    val outgoingUser = tokenService.getTokenUserInfo(outgoingUserToken);
+    val outgoingUserClaims = tokenService.getTokenClaims(outgoingUserToken);
+
+    Assert.assertEquals(incomingUser, outgoingUser);
+    Assert.assertEquals(incomingClaims.get("context"), outgoingUserClaims.get("context"));
+    Assert.assertNotEquals(incomingClaims, outgoingUserClaims);
+    Assert.assertNotEquals(incomingClaims.getId(), outgoingUserClaims.getId());
+  }
+
+  @Test
+  public void createNewRefreshContext_existingRefreshToken_validContext() {
+    val user1 = entityGenerator.setupUserWithRefreshToken("User One");
+    val user1Token = tokenService.generateUserToken(user1);
+    val existingRefreshId = user1.getRefreshToken().getId();
+
+    Assert.assertTrue(refreshContextService.findById(user1.getRefreshToken().getId()).isPresent());
+    val user1Context = refreshContextService.createInitialRefreshContext(user1Token);
+
+    Assert.assertTrue(user1Context.getClass().equals(RefreshContext.class));
+    Assert.assertTrue(user1Context.validate());
+    Assert.assertNotEquals(existingRefreshId, user1Context.getRefreshToken().getId());
+  }
+
+  @Test
+  public void createInitialRefreshContext_noExistingRefreshToken_validContext() {
+    val user1 = entityGenerator.setupUser("User One");
+    val user1Token = tokenService.generateUserToken(user1);
+
+    Assert.assertNull(user1.getRefreshToken());
+    val user1Context = refreshContextService.createInitialRefreshContext(user1Token);
+
+    Assert.assertNotNull(user1.getRefreshToken());
+    Assert.assertTrue(refreshContextService.findById(user1.getRefreshToken().getId()).isPresent());
+    Assert.assertTrue(user1Context.getClass().equals(RefreshContext.class));
+    Assert.assertTrue(user1Context.validate());
+  }
+
+  @Test
+  public void createInitialRefreshContext_nonApprovedUser_Forbidden() {
+    val pendingUser = entityGenerator.setupUser("User One");
+    pendingUser.setStatus(PENDING);
+    val pendingUserToken = tokenService.generateUserToken(pendingUser);
+
+    Assert.assertFalse(pendingUser.getStatus() == APPROVED);
+
+    exceptionRule.expect(ForbiddenException.class);
+    exceptionRule.expectMessage("User does not have approved status, rejecting.");
+    refreshContextService.createInitialRefreshContext(pendingUserToken);
+  }
+
+  @Test
+  public void createInitialRefreshContext_approvedUser_validContext() {
+    val approvedUser = entityGenerator.setupUser("User One");
+    val approvedUserToken = tokenService.generateUserToken(approvedUser);
+
+    Assert.assertTrue(approvedUser.getStatus() == APPROVED);
+
+    val approvedUserContext = refreshContextService.createInitialRefreshContext(approvedUserToken);
+    Assert.assertEquals(approvedUserContext.getClass(), RefreshContext.class);
+    Assert.assertTrue(approvedUserContext.validate());
   }
 }

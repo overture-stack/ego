@@ -1,5 +1,7 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static java.util.Objects.isNull;
@@ -7,24 +9,21 @@ import static java.util.Objects.isNull;
 import bio.overture.ego.model.domain.RefreshContext;
 import bio.overture.ego.model.entity.RefreshToken;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.repository.RefreshTokenRepository;
 import bio.overture.ego.repository.queryspecification.builder.RefreshTokenSpecificationBuilder;
 import java.sql.Date;
-import java.sql.Ref;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
+import javax.servlet.http.Cookie;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import javax.servlet.http.Cookie;
-
-import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
 
 @Slf4j
 @Service
@@ -121,19 +120,22 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
         .build();
   }
 
-  public RefreshContext createNewRefreshContext(@NonNull String bearerToken, boolean disassociateUser) {
-    if (disassociateUser) {
-      disassociateUserAndDelete(bearerToken);
+  public RefreshContext createInitialRefreshContext(@NonNull String bearerToken) {
+    disassociateUserAndDelete(bearerToken);
+
+    if (tokenService.getTokenUserInfo(bearerToken).getStatus() != APPROVED) {
+      throw new ForbiddenException("User does not have approved status, rejecting.");
     }
+
     val newRefreshToken = createRefreshToken(bearerToken);
     return createRefreshContext(newRefreshToken.getId().toString(), bearerToken);
   }
 
   public String validateAndReturnNewUserToken(String refreshId, String bearerToken) {
     val incomingRefreshContext = createRefreshContext(refreshId, bearerToken);
-    disassociateUserAndDelete(bearerToken); // fine to just pass bearer token cuz doesn't do any validation
+    disassociateUserAndDelete(bearerToken);
 
-    incomingRefreshContext.validate(); // if not valid, will throw here
+    incomingRefreshContext.validate();
 
     val newUserToken = tokenService.generateUserToken(incomingRefreshContext.getUser());
     createRefreshToken(newUserToken);
@@ -145,7 +147,7 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
     // where to access the accepted domain?
     cookie.setDomain("localhost");
     // disable setSecure while testing locally in browser, or will not show in cookies
-//    cookie.setSecure(true);
+    //    cookie.setSecure(true);
     cookie.setHttpOnly(true);
     cookie.setMaxAge(maxAge);
     cookie.setPath("/");
@@ -153,13 +155,15 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
     return cookie;
   }
 
-  public Cookie createRefreshCookie(RefreshToken refreshToken){
-    return createCookie(REFRESH_ID, refreshToken.getId().toString(), refreshToken.getSecondsUntilExpiry().intValue());
+  public Cookie createRefreshCookie(RefreshToken refreshToken) {
+    return createCookie(
+        REFRESH_ID,
+        refreshToken.getId().toString(),
+        refreshToken.getSecondsUntilExpiry().intValue());
   }
 
   public Cookie deleteRefreshTokenAndCookie(String bearerToken) {
     disassociateUserAndDelete(bearerToken);
     return createCookie(REFRESH_ID, "", 0);
   }
-
 }

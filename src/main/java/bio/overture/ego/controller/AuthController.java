@@ -16,12 +16,10 @@
 
 package bio.overture.ego.controller;
 
-import static java.lang.String.format;
+import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
-import bio.overture.ego.model.domain.RefreshContext;
-import bio.overture.ego.model.entity.RefreshToken;
 import bio.overture.ego.provider.facebook.FacebookTokenService;
 import bio.overture.ego.provider.google.GoogleTokenService;
 import bio.overture.ego.service.RefreshContextService;
@@ -44,7 +42,6 @@ import org.springframework.security.oauth2.common.exceptions.InvalidTokenExcepti
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
 
 @Slf4j
 @RestController
@@ -132,11 +129,10 @@ public class AuthController {
     }
     String token = tokenService.generateUserToken((IDToken) authentication.getPrincipal());
 
-    val outgoingRefreshContext = refreshContextService.createNewRefreshContext(token, true);
-    if (outgoingRefreshContext.hasApprovedUser()) {
-      val cookie = refreshContextService.createRefreshCookie(outgoingRefreshContext.getRefreshToken());
-      response.addCookie(cookie);
-    }
+    val outgoingRefreshContext = refreshContextService.createInitialRefreshContext(token);
+    val cookie =
+        refreshContextService.createRefreshCookie(outgoingRefreshContext.getRefreshToken());
+    response.addCookie(cookie);
 
     SecurityContextHolder.getContext().setAuthentication(null);
     return new ResponseEntity<>(token, OK);
@@ -179,7 +175,8 @@ public class AuthController {
     val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
     // TODO: [anncatton] validate jwt before proceeding to service call.
 
-    val outboundUserToken = refreshContextService.validateAndReturnNewUserToken(refreshId, currentToken);
+    val outboundUserToken =
+        refreshContextService.validateAndReturnNewUserToken(refreshId, currentToken);
     val newRefreshToken = tokenService.getTokenUserInfo(outboundUserToken).getRefreshToken();
     val newCookie = refreshContextService.createRefreshCookie(newRefreshToken);
     response.addCookie(newCookie);
