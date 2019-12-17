@@ -2,6 +2,12 @@ package bio.overture.ego.service;
 
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.PENDING;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import bio.overture.ego.model.domain.RefreshContext;
 import bio.overture.ego.model.exceptions.ForbiddenException;
@@ -12,7 +18,6 @@ import bio.overture.ego.utils.EntityGenerator;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -46,8 +51,8 @@ public class RefreshContextServiceTest {
     val user1Token = tokenService.generateUserToken(user1);
     val refreshToken1 = user1.getRefreshToken();
 
-    Assert.assertTrue(refreshContextService.findById(refreshToken1.getId()).isPresent());
-    Assert.assertTrue(refreshContextService.getById(refreshToken1.getId()) != null);
+    assertTrue(refreshContextService.findById(refreshToken1.getId()).isPresent());
+    assertTrue(refreshContextService.getById(refreshToken1.getId()) != null);
 
     val incomingRefreshContext =
         refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user1Token);
@@ -56,7 +61,7 @@ public class RefreshContextServiceTest {
     exceptionRule.expect(NotFoundException.class);
     exceptionRule.expectMessage(
         String.format("RefreshToken '%s' does not exist", refreshToken1.getId()));
-    Assert.assertEquals(refreshContextService.get(refreshToken1.getId(), true), refreshToken1);
+    assertEquals(refreshContextService.get(refreshToken1.getId(), true), refreshToken1);
     refreshContextService.get(refreshToken1.getId(), false);
 
     exceptionRule.expect(ForbiddenException.class);
@@ -70,14 +75,14 @@ public class RefreshContextServiceTest {
     val user1Token = tokenService.generateUserToken(user1);
     val refreshToken1 = user1.getRefreshToken();
 
-    Assert.assertTrue(refreshContextService.findById(refreshToken1.getId()).isPresent());
-    Assert.assertTrue(refreshContextService.getById(refreshToken1.getId()) != null);
+    assertTrue(refreshContextService.findById(refreshToken1.getId()).isPresent());
+    assertTrue(refreshContextService.getById(refreshToken1.getId()) != null);
     refreshContextService.disassociateUserAndDelete(user1Token);
 
     exceptionRule.expect(NotFoundException.class);
     exceptionRule.expectMessage(
         String.format("RefreshToken '%s' does not exist", refreshToken1.getId()));
-    Assert.assertEquals(refreshContextService.get(refreshToken1.getId(), true), refreshToken1);
+    assertEquals(refreshContextService.get(refreshToken1.getId(), true), refreshToken1);
     refreshContextService.get(refreshToken1.getId(), false);
   }
 
@@ -89,8 +94,8 @@ public class RefreshContextServiceTest {
     val user2Token = tokenService.generateUserToken(user2);
 
     val refreshToken1 = refreshContextService.createRefreshToken(user1Token);
-    Assert.assertNotNull(refreshContextService.get(refreshToken1.getId(), true));
-    Assert.assertEquals(refreshToken1, refreshContextService.get(refreshToken1.getId(), true));
+    assertNotNull(refreshContextService.get(refreshToken1.getId(), true));
+    assertEquals(refreshToken1, refreshContextService.get(refreshToken1.getId(), true));
     exceptionRule.expect(UniqueViolationException.class);
     exceptionRule.expectMessage(
         String.format("A refresh token already exists for %s", user1.getId()));
@@ -109,8 +114,8 @@ public class RefreshContextServiceTest {
     val incomingRefreshId = UUID.randomUUID();
     val incomingRefreshIdAsString = incomingRefreshId.toString();
 
-    Assert.assertNotEquals(storedRefreshToken.getId(), incomingRefreshId);
-    Assert.assertTrue(refreshTokenRepository.findById(incomingRefreshId).isEmpty());
+    assertNotEquals(storedRefreshToken.getId(), incomingRefreshId);
+    assertTrue(refreshTokenRepository.findById(incomingRefreshId).isEmpty());
 
     exceptionRule.expect(NotFoundException.class);
     exceptionRule.expectMessage(String.format("RefreshToken %s is not found.", incomingRefreshId));
@@ -128,8 +133,8 @@ public class RefreshContextServiceTest {
 
     val incomingRefreshId = storedRefreshToken.getId().toString();
 
-    Assert.assertEquals(storedRefreshToken.getId(), UUID.fromString(incomingRefreshId));
-    Assert.assertEquals(
+    assertEquals(storedRefreshToken.getId(), UUID.fromString(incomingRefreshId));
+    assertEquals(
         refreshContextService.createRefreshContext(incomingRefreshId, user1Token).getClass(),
         RefreshContext.class);
   }
@@ -146,8 +151,7 @@ public class RefreshContextServiceTest {
         String.format("RefreshToken %s is not found.", mockIncomingUserRefreshId));
     refreshContextService.validateAndReturnNewUserToken(
         mockIncomingUserRefreshId.toString(), incomingUserToken);
-    Assert.assertFalse(
-        refreshContextService.findById(incomingUser.getRefreshToken().getId()).isPresent());
+    assertFalse(refreshContextService.findById(incomingUser.getRefreshToken().getId()).isPresent());
   }
 
   @Test
@@ -162,9 +166,8 @@ public class RefreshContextServiceTest {
             "Invalid token claims for refreshId %s.", incomingUser.getRefreshToken().getId()));
     refreshContextService.validateAndReturnNewUserToken(
         incomingUser.getRefreshToken().getId().toString(), incomingUserToken);
-    Assert.assertNull(incomingUser.getRefreshToken());
-    Assert.assertFalse(
-        refreshContextService.findById(incomingUser.getRefreshToken().getId()).isPresent());
+    assertNull(incomingUser.getRefreshToken());
+    assertFalse(refreshContextService.findById(incomingUser.getRefreshToken().getId()).isPresent());
   }
 
   @Test
@@ -179,14 +182,14 @@ public class RefreshContextServiceTest {
     val outgoingUserToken =
         refreshContextService.validateAndReturnNewUserToken(
             incomingRefreshId.toString(), incomingUserToken);
-    Assert.assertFalse(refreshContextService.findById(incomingRefreshId).isPresent());
+    assertFalse(refreshContextService.findById(incomingRefreshId).isPresent());
     val outgoingUser = tokenService.getTokenUserInfo(outgoingUserToken);
     val outgoingUserClaims = tokenService.getTokenClaims(outgoingUserToken);
 
-    Assert.assertEquals(incomingUser, outgoingUser);
-    Assert.assertEquals(incomingClaims.get("context"), outgoingUserClaims.get("context"));
-    Assert.assertNotEquals(incomingClaims, outgoingUserClaims);
-    Assert.assertNotEquals(incomingClaims.getId(), outgoingUserClaims.getId());
+    assertEquals(incomingUser, outgoingUser);
+    assertEquals(incomingClaims.get("context"), outgoingUserClaims.get("context"));
+    assertNotEquals(incomingClaims, outgoingUserClaims);
+    assertNotEquals(incomingClaims.getId(), outgoingUserClaims.getId());
   }
 
   @Test
@@ -195,12 +198,12 @@ public class RefreshContextServiceTest {
     val user1Token = tokenService.generateUserToken(user1);
     val existingRefreshId = user1.getRefreshToken().getId();
 
-    Assert.assertTrue(refreshContextService.findById(user1.getRefreshToken().getId()).isPresent());
+    assertTrue(refreshContextService.findById(user1.getRefreshToken().getId()).isPresent());
     val user1Context = refreshContextService.createInitialRefreshContext(user1Token);
 
-    Assert.assertTrue(user1Context.getClass().equals(RefreshContext.class));
-    Assert.assertTrue(user1Context.validate());
-    Assert.assertNotEquals(existingRefreshId, user1Context.getRefreshToken().getId());
+    assertTrue(user1Context.getClass().equals(RefreshContext.class));
+    assertTrue(user1Context.validate());
+    assertNotEquals(existingRefreshId, user1Context.getRefreshToken().getId());
   }
 
   @Test
@@ -208,13 +211,13 @@ public class RefreshContextServiceTest {
     val user1 = entityGenerator.setupUser("User One");
     val user1Token = tokenService.generateUserToken(user1);
 
-    Assert.assertNull(user1.getRefreshToken());
+    assertNull(user1.getRefreshToken());
     val user1Context = refreshContextService.createInitialRefreshContext(user1Token);
 
-    Assert.assertNotNull(user1.getRefreshToken());
-    Assert.assertTrue(refreshContextService.findById(user1.getRefreshToken().getId()).isPresent());
-    Assert.assertTrue(user1Context.getClass().equals(RefreshContext.class));
-    Assert.assertTrue(user1Context.validate());
+    assertNotNull(user1.getRefreshToken());
+    assertTrue(refreshContextService.findById(user1.getRefreshToken().getId()).isPresent());
+    assertTrue(user1Context.getClass().equals(RefreshContext.class));
+    assertTrue(user1Context.validate());
   }
 
   @Test
@@ -223,7 +226,7 @@ public class RefreshContextServiceTest {
     pendingUser.setStatus(PENDING);
     val pendingUserToken = tokenService.generateUserToken(pendingUser);
 
-    Assert.assertFalse(pendingUser.getStatus() == APPROVED);
+    assertFalse(pendingUser.getStatus() == APPROVED);
 
     exceptionRule.expect(ForbiddenException.class);
     exceptionRule.expectMessage("User does not have approved status, rejecting.");
@@ -235,10 +238,10 @@ public class RefreshContextServiceTest {
     val approvedUser = entityGenerator.setupUser("User One");
     val approvedUserToken = tokenService.generateUserToken(approvedUser);
 
-    Assert.assertTrue(approvedUser.getStatus() == APPROVED);
+    assertTrue(approvedUser.getStatus() == APPROVED);
 
     val approvedUserContext = refreshContextService.createInitialRefreshContext(approvedUserToken);
-    Assert.assertEquals(approvedUserContext.getClass(), RefreshContext.class);
-    Assert.assertTrue(approvedUserContext.validate());
+    assertEquals(approvedUserContext.getClass(), RefreshContext.class);
+    assertTrue(approvedUserContext.validate());
   }
 }

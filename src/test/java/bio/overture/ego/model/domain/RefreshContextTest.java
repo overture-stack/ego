@@ -3,6 +3,10 @@ package bio.overture.ego.model.domain;
 import static bio.overture.ego.model.enums.StatusType.DISABLED;
 import static bio.overture.ego.model.enums.StatusType.PENDING;
 import static bio.overture.ego.model.enums.StatusType.REJECTED;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.exceptions.UnauthorizedException;
@@ -16,7 +20,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -54,7 +57,7 @@ public class RefreshContextTest {
     val storedRefreshToken = refreshContextService.getById(refreshToken1.getId());
     val incomingRefreshContext =
         refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user1Token);
-    Assert.assertTrue(storedRefreshToken.getSecondsUntilExpiry() == 0);
+    assertTrue(storedRefreshToken.getSecondsUntilExpiry() == 0);
 
     exceptionRule.expect(UnauthorizedException.class);
     exceptionRule.expectMessage(
@@ -74,8 +77,8 @@ public class RefreshContextTest {
     val incomingRefreshContext =
         refreshContextService.createRefreshContext(incomingRefreshId.toString(), user1Token);
 
-    Assert.assertTrue(refreshToken1.getSecondsUntilExpiry() > 0);
-    Assert.assertTrue(incomingRefreshContext.validate());
+    assertTrue(refreshToken1.getSecondsUntilExpiry() > 0);
+    assertTrue(incomingRefreshContext.validate());
   }
 
   @Test
@@ -89,8 +92,8 @@ public class RefreshContextTest {
     val refreshContext1 =
         refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user1Token);
 
-    Assert.assertTrue(refreshContext1.hasApprovedUser());
-    Assert.assertTrue(refreshContext1.validate());
+    assertTrue(refreshContext1.hasApprovedUser());
+    assertTrue(refreshContext1.validate());
   }
 
   @Test
@@ -120,9 +123,9 @@ public class RefreshContextTest {
         refreshContextService.createRefreshContext(
             pendingUserRefreshToken.getId().toString(), pendingUserToken);
 
-    Assert.assertFalse(disabledUserRefreshContext.hasApprovedUser());
-    Assert.assertFalse(rejectedUserRefreshContext.hasApprovedUser());
-    Assert.assertFalse(pendingUserRefreshContext.hasApprovedUser());
+    assertFalse(disabledUserRefreshContext.hasApprovedUser());
+    assertFalse(rejectedUserRefreshContext.hasApprovedUser());
+    assertFalse(pendingUserRefreshContext.hasApprovedUser());
 
     exceptionRule.expect(ForbiddenException.class);
     exceptionRule.expectMessage("User does not have approved status, rejecting.");
@@ -143,13 +146,9 @@ public class RefreshContextTest {
             storedRefreshToken.getId().toString(), user1Token);
     val incomingTokenClaims = tokenService.getTokenClaims(user1Token);
 
-    //    Assert.assertEquals(refreshToken1.getUser().getId().toString(),
-    // incomingTokenClaims.getSubject());
-    //    Assert.assertEquals(refreshToken1.getJti().toString(), incomingTokenClaims.getId());
-    Assert.assertEquals(
-        storedRefreshToken.getUser().getId().toString(), incomingTokenClaims.getSubject());
-    Assert.assertEquals(storedRefreshToken.getJti().toString(), incomingTokenClaims.getId());
-    Assert.assertTrue(incomingRefreshContext.validate());
+    assertEquals(storedRefreshToken.getUser().getId().toString(), incomingTokenClaims.getSubject());
+    assertEquals(storedRefreshToken.getJti().toString(), incomingTokenClaims.getId());
+    assertTrue(incomingRefreshContext.validate());
   }
 
   @Test
@@ -167,7 +166,7 @@ public class RefreshContextTest {
     val incomingRefreshContext =
         refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user1Token);
     val incomingJti = tokenService.getTokenClaims(user1Token).getId();
-    Assert.assertNotEquals(refreshToken1.getJti().toString(), incomingJti);
+    assertNotEquals(refreshToken1.getJti().toString(), incomingJti);
 
     exceptionRule.expect(ForbiddenException.class);
     exceptionRule.expectMessage(
@@ -188,8 +187,7 @@ public class RefreshContextTest {
     val incomingRefreshContext =
         refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user2Token);
     val incomingUserClaims = tokenService.getTokenClaims(user2Token);
-    Assert.assertNotEquals(
-        refreshToken1.getUser().getId().toString(), incomingUserClaims.getSubject());
+    assertNotEquals(refreshToken1.getUser().getId().toString(), incomingUserClaims.getSubject());
 
     exceptionRule.expect(ForbiddenException.class);
     exceptionRule.expectMessage(
