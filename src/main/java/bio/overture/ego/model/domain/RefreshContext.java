@@ -5,19 +5,19 @@ import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import bio.overture.ego.model.entity.RefreshToken;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.ForbiddenException;
+import bio.overture.ego.model.exceptions.UnauthorizedException;
 import io.jsonwebtoken.Claims;
 import java.util.UUID;
 import lombok.*;
-import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
 
 @Data
 @Builder
 @AllArgsConstructor
 public class RefreshContext {
 
-  @NonNull private RefreshToken refreshToken; // found in db by id in cookie
-  @NonNull private User user; // comes from refreshToken -> User assoc
-  @NonNull private Claims tokenClaims; // from jwt
+  @NonNull private RefreshToken refreshToken;
+  @NonNull private User user;
+  @NonNull private Claims tokenClaims;
 
   public boolean hasApprovedUser() {
     return user.getStatus() == APPROVED;
@@ -40,7 +40,7 @@ public class RefreshContext {
       throw new ForbiddenException("User does not have approved status, rejecting.");
     }
     if (this.isExpired()) {
-      throw new UnauthorizedClientException(
+      throw new UnauthorizedException(
           String.format("RefreshToken %s is expired", refreshToken.getId()));
     }
     if (this.userMatches() & this.jtiMatches()) {

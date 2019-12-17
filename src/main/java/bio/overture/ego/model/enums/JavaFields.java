@@ -62,4 +62,5 @@ public class JavaFields {
   public static final String APPLICATION_ID = "applicationId";
   public static final String GROUPAPPLICATIONS = "groupApplications";
   public static final String USERAPPLICATIONS = "userApplications";
+  public static final String REFRESH_ID = "refreshId";
 }

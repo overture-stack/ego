@@ -1,11 +1,15 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static java.util.Objects.isNull;
 
 import bio.overture.ego.model.domain.RefreshContext;
 import bio.overture.ego.model.entity.RefreshToken;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.repository.RefreshTokenRepository;
 import bio.overture.ego.repository.queryspecification.builder.RefreshTokenSpecificationBuilder;
 import java.sql.Date;
@@ -13,12 +17,12 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
+import javax.servlet.http.Cookie;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -26,22 +30,19 @@ import org.springframework.stereotype.Service;
 public class RefreshContextService extends AbstractBaseService<RefreshToken, UUID> {
 
   private RefreshTokenRepository refreshTokenRepository;
-  private UserService userService;
   private TokenService tokenService;
   /** Configuration */
-  private int duration;
+  private int durationMs;
 
   @Autowired
   public RefreshContextService(
       @NonNull RefreshTokenRepository refreshTokenRepository,
-      @NonNull UserService userService,
       @NonNull TokenService tokenService,
-      @Value("${refreshToken.duration:43200000}") int duration) {
+      @Value("${refreshToken.durationMs:43200000}") int durationMs) {
     super(RefreshToken.class, refreshTokenRepository);
     this.refreshTokenRepository = refreshTokenRepository;
-    this.userService = userService;
     this.tokenService = tokenService;
-    this.duration = duration;
+    this.durationMs = durationMs;
   }
 
   @SuppressWarnings("unchecked")
@@ -61,7 +62,7 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
 
   private RefreshToken createTransientToken(UUID jti) {
     val now = Instant.now();
-    val expiry = now.plus(duration, ChronoUnit.MILLIS);
+    val expiry = now.plus(durationMs, ChronoUnit.MILLIS);
     return RefreshToken.builder()
         .jti(jti)
         .issueDate(Date.from(now))
@@ -84,11 +85,10 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
 
     val refreshTokenOpt = this.getRefreshTokenByUser(user);
     if (refreshTokenOpt.isPresent()) {
-      log.info("token exists, deleting...");
+      log.debug("Refresh token exists, deleting...");
       user.setRefreshToken(null);
       val existingRefreshToken = refreshTokenOpt.get();
       refreshTokenRepository.delete(existingRefreshToken);
-      userService.get(user.getId(), false, false, false, false);
     }
   }
 
@@ -106,10 +106,12 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
     val refreshTokenOpt = refreshTokenRepository.findById(UUID.fromString(refreshTokenId));
     val tokenClaims = tokenService.getTokenClaims(bearerToken);
     val user = tokenService.getTokenUserInfo(bearerToken);
-    if (refreshTokenOpt == null || refreshTokenOpt.isEmpty()) {
-      throw new UnauthorizedClientException(
-          String.format("RefreshToken %s is not found.", refreshTokenId));
-    }
+
+    checkNotFound(
+        !isNull(refreshTokenOpt) && refreshTokenOpt.isPresent(),
+        "RefreshToken %s is not found.",
+        refreshTokenId);
+
     val refreshToken = refreshTokenOpt.get();
     return RefreshContext.builder()
         .refreshToken(refreshToken)
@@ -117,28 +119,51 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
         .user(user)
         .build();
   }
+
+  public RefreshContext createInitialRefreshContext(@NonNull String bearerToken) {
+    disassociateUserAndDelete(bearerToken);
+
+    if (tokenService.getTokenUserInfo(bearerToken).getStatus() != APPROVED) {
+      throw new ForbiddenException("User does not have approved status, rejecting.");
+    }
+
+    val newRefreshToken = createRefreshToken(bearerToken);
+    return createRefreshContext(newRefreshToken.getId().toString(), bearerToken);
+  }
+
+  public String validateAndReturnNewUserToken(String refreshId, String bearerToken) {
+    val incomingRefreshContext = createRefreshContext(refreshId, bearerToken);
+    disassociateUserAndDelete(bearerToken);
+
+    incomingRefreshContext.validate();
+
+    val newUserToken = tokenService.generateUserToken(incomingRefreshContext.getUser());
+    createRefreshToken(newUserToken);
+    return newUserToken;
+  }
+
+  private Cookie createCookie(String cookieName, String cookieValue, Integer maxAge) {
+    Cookie cookie = new Cookie(cookieName, cookieValue);
+    // where to access the accepted domain?
+    cookie.setDomain("localhost");
+    // disable setSecure while testing locally in browser, or will not show in cookies
+    //    cookie.setSecure(true);
+    cookie.setHttpOnly(true);
+    cookie.setMaxAge(maxAge);
+    cookie.setPath("/");
+
+    return cookie;
+  }
+
+  public Cookie createRefreshCookie(RefreshToken refreshToken) {
+    return createCookie(
+        REFRESH_ID,
+        refreshToken.getId().toString(),
+        refreshToken.getSecondsUntilExpiry().intValue());
+  }
+
+  public Cookie deleteRefreshTokenAndCookie(String bearerToken) {
+    disassociateUserAndDelete(bearerToken);
+    return createCookie(REFRESH_ID, "", 0);
+  }
 }
-
-// first call needed when you get here from refresh endpoint is:
-// validate the request, otherwise you shouldn't proceed: validate jwt, validate refreshId exists
-// should validate refresh id exists ALSO happen in context? seems like it should belong there???
-// validate user Status
-// validate with RefreshContext
-// after validation, delete refresh token
-// if validation passes, proceed to create. if it fails, return 401
-// before create, check unique byUserId
-// create and associate
-// maybe have 2 main validations from context, for valid User and valid context? to differentiate
-// response
-//  val refreshToken = refreshTokenService.getById(UUID.fromString(refreshId));
-//  val requestClaims = tokenService.getTokenClaims(bearer);
-//  val userFromClaims = tokenService.getTokenUserInfo(requestClaims.getSubject());
-//
-//  val userStatus = userFromClaims.getStatus();
-//  val refreshContext = new RefreshContext(refreshToken, userFromClaims, requestClaims);
-
-// service will need:
-// create
-// associate
-// check user is unique. check refresh id is unique?
-// validate from RefreshContext

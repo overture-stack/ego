@@ -3,14 +3,13 @@ server:
 
 jwt:
   secret: testsecretisalsoasecret
-  duration: 10800000 #in milliseconds 10800000 = 3hrs, max = 2147483647
+  durationMs: 10800000 #in milliseconds 10800000 = 3hrs, max = 2147483647
 
 apitoken:
-  duration: 365 # in days
+  durationDays: 365 # in days
 
 refreshToken:
-  duration: 43200000 # in milliseconds = 12hrs
-  durationInSeconds: 43200 # in seconds = 12hrs
+  durationMs: 43200000 # in milliseconds = 12hrs
 
 # security
 auth:

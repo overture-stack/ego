@@ -185,6 +185,7 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
       orphanRemoval = true)
   private Set<UserApplication> userApplications = newHashSet();
 
+  @JsonIgnore
   @OneToOne(
       mappedBy = RefreshToken.Fields.user,
       cascade = CascadeType.ALL,

@@ -2,6 +2,7 @@ package bio.overture.ego.model.entity;
 
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.*;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -25,6 +26,7 @@ public class RefreshToken implements Identifiable<UUID> {
   @GeneratedValue(generator = "refresh_uuid")
   private UUID id;
 
+  @JsonIgnore
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = SqlFields.USERID_JOIN, referencedColumnName = SqlFields.ID, nullable = false)
   private User user;

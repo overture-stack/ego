@@ -108,8 +108,8 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
       @NonNull ApiKeyStoreService apiKeyStoreService,
       @NonNull PolicyService policyService,
       @NonNull TokenStoreRepository tokenStoreRepository,
-      @Value("${jwt.duration:10800000}") int JWT_DURATION,
-      @Value("${apitoken.duration:365}") int API_TOKEN_DURATION) {
+      @Value("${jwt.durationMs:10800000}") int JWT_DURATION,
+      @Value("${apitoken.durationDays:365}") int API_TOKEN_DURATION) {
     super(ApiKey.class, tokenStoreRepository);
     this.tokenSigner = tokenSigner;
     this.userService = userService;
