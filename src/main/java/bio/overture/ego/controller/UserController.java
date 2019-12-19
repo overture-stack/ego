@@ -22,22 +22,13 @@ import static bio.overture.ego.controller.resolver.PageableResolver.SORT;
 import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
 import static org.springframework.util.StringUtils.isEmpty;
 
-import bio.overture.ego.model.dto.CreateUserRequest;
-import bio.overture.ego.model.dto.PageDTO;
-import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.dto.UpdateUserRequest;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.entity.UserPermission;
+import bio.overture.ego.model.dto.*;
+import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
-import bio.overture.ego.service.ApplicationService;
-import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.UserPermissionService;
-import bio.overture.ego.service.UserService;
+import bio.overture.ego.service.*;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.ApiImplicitParam;
@@ -45,6 +36,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import lombok.NonNull;
@@ -248,6 +240,16 @@ public class UserController {
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "permissionIds", required = true) List<UUID> permissionIds) {
     userPermissionService.deletePermissions(id, permissionIds);
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups/permissions")
+  @ApiResponses(value = {@ApiResponse(code = 200, message = "Get User Group permissions")})
+  @ResponseStatus(value = HttpStatus.OK)
+  public @ResponseBody Collection<ResolvedPermissionResponse> getGroupPermissions(
+      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
+      @PathVariable(value = "id", required = true) UUID id) {
+    return userPermissionService.getResolvedPermissions(id);
   }
 
   /*

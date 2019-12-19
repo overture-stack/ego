@@ -13,7 +13,7 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true, chain = true)
 public class UserSpecificationBuilder extends AbstractSpecificationBuilder<User, UUID> {
 
-  private boolean fetchUserPermissions;
+  private boolean fetchUserAndGroupPermissions;
   private boolean fetchUserGroups;
   private boolean fetchApplications;
 
@@ -25,10 +25,11 @@ public class UserSpecificationBuilder extends AbstractSpecificationBuilder<User,
     if (fetchUserGroups) {
       root.fetch(USERGROUPS, LEFT).fetch(GROUP, LEFT);
     }
-    if (fetchUserPermissions) {
+    if (fetchUserAndGroupPermissions) {
       root.fetch(USERPERMISSIONS, LEFT).fetch(POLICY, LEFT);
       root.fetch(USERGROUPS, LEFT).fetch(GROUP, LEFT).fetch(PERMISSIONS, LEFT).fetch(POLICY, LEFT);
     }
+
     return root;
   }
 }
