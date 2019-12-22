@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 
+import java.util.UUID;
+
 @Value
 @Builder
 public class ResolvedPermissionResponse {
@@ -14,4 +16,5 @@ public class ResolvedPermissionResponse {
   @NonNull private final AccessLevel accessLevel;
   @NonNull private final String ownerType;
   @NonNull private final Identifiable owner;
+  @NonNull private final UUID id;
 }
