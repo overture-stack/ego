@@ -24,7 +24,9 @@ public interface TokenStoreRepository extends NamedRepository<ApiKey, UUID> {
       nativeQuery = true)
   int revokeRedundantTokens(@Param("userId") UUID userId);
 
-  //  Set<Token> findAllByOwnerAndScopes(List<UUID> ids);
+  // Set<Token> findAllByOwnerAndScopes(List<UUID> ids);
+
+  Set<ApiKey> findAllByOwner_Id(UUID userId);
 
   @Override
   default Optional<ApiKey> findByName(String name) {

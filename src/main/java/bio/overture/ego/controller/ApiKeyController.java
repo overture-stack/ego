@@ -16,6 +16,8 @@
 
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.controller.resolver.PageableResolver.*;
+import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static java.lang.String.format;
@@ -31,11 +33,16 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import bio.overture.ego.model.dto.*;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.params.ScopeName;
+import bio.overture.ego.model.search.Filters;
+import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.ApplicationScoped;
 import bio.overture.ego.security.AuthorizationManager;
 import bio.overture.ego.service.TokenService;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -46,6 +53,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,6 +69,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import springfox.documentation.annotations.ApiIgnore;
 
 @Slf4j
 @RestController
@@ -177,13 +186,54 @@ public class ApiKeyController {
     return format("Token '%s' is successfully revoked!", token);
   }
 
+  // TODO: paginate response
   @RequestMapping(method = GET, value = "/api_key")
+  @ApiImplicitParams({
+    @ApiImplicitParam(
+        name = Fields.NAME, // TODO: what should this field be?
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Search for ids containing this text"),
+    @ApiImplicitParam(
+        name = LIMIT,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Number of results to retrieve"),
+    @ApiImplicitParam(
+        name = OFFSET,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Index of first result to retrieve"),
+    @ApiImplicitParam(
+        name = SORT,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Field to sort on"),
+    @ApiImplicitParam(
+        name = SORTORDER,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Sorting order: ASC|DESC. Default order: DESC"),
+  })
   @ResponseStatus(value = OK)
-  public @ResponseBody List<ApiKeyResponse> listApiKey(
+  public @ResponseBody PageDTO<ApiKeyResponse> listApiKey(
       @RequestHeader(value = "Authorization") final String authorization,
-      @RequestParam(value = "user_id") UUID userId) {
+      @RequestParam(value = "user_id") UUID userId,
+      @RequestParam(value = "query", required = false) String query,
+      @ApiIgnore @Filters List<SearchFilter> filters,
+      Pageable pageable) {
     checkAdminOrOwner(userId);
-    return tokenService.listApiKey(userId);
+    //    if (isEmpty(query)) {
+    return new PageDTO<>(tokenService.findApiKeysForUser(userId, filters, pageable));
+    //    } else {
+    //      return new PageDTO<>(tokenService.findApiKeysForUser(userId, query, filters, pageable));
+    //    }
+    //    return tokenService.listApiKey(userId);
   }
 
   /** DEPRECATED: GET /token to be removed in next major release */

@@ -36,6 +36,7 @@ import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.params.ScopeName;
+import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.TokenStoreRepository;
 import bio.overture.ego.security.BasicAuthToken;
 import bio.overture.ego.token.IDToken;
@@ -48,6 +49,7 @@ import bio.overture.ego.token.user.UserJWTAccessToken;
 import bio.overture.ego.token.user.UserTokenClaims;
 import bio.overture.ego.token.user.UserTokenContext;
 import bio.overture.ego.view.Views;
+import com.google.common.collect.ImmutableList;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
@@ -71,6 +73,9 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
@@ -468,6 +473,17 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
         .collect(Collectors.toList());
   }
 
+  public Page<ApiKeyResponse> findApiKeysForUser(
+      @NonNull UUID userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+    val apiKeys = ImmutableList.copyOf(apiKeyStoreService.findAllByUserId(userId));
+    val apiKeyResponses =
+        apiKeys.stream()
+            .filter((token -> !token.isRevoked()))
+            .map(this::createApiKeyResponse)
+            .collect(Collectors.toList());
+    return new PageImpl<>(apiKeyResponses, pageable, apiKeys.size());
+  }
+
   /** DEPRECATED: To be removed in next major release */
   @Deprecated
   public List<TokenResponse> listTokens(@NonNull UUID userId) {
@@ -493,6 +509,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
         .scope(scopes)
         .exp(apiKey.getSecondsUntilExpiry())
         .description(apiKey.getDescription())
+        .iss(apiKey.getIssueDate())
         .build();
   }
 
