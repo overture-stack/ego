@@ -73,16 +73,22 @@ public class ListApiKeyTest {
     List<ApiKeyResponse> expected = new ArrayList<>();
     expected.add(
         ApiKeyResponse.builder()
-            .apiKey(apiKeyString1)
+            .name(apiKeyString1)
             .scope(scopeString1)
-            .exp(userToken1.getSecondsUntilExpiry())
+            .exp(userToken1.getExpiryDate())
+            .iss(userToken1.getIssueDate())
+            .isRevoked(userToken1.isRevoked())
+            .secondsUntilExpiry(userToken1.getSecondsUntilExpiry())
             .description("Test token 1.")
             .build());
     expected.add(
         ApiKeyResponse.builder()
-            .apiKey(apiKeyString2)
+            .name(apiKeyString2)
             .scope(scopeString2)
-            .exp(userToken2.getSecondsUntilExpiry())
+            .exp(userToken2.getExpiryDate())
+            .iss(userToken2.getIssueDate())
+            .isRevoked(userToken2.isRevoked())
+            .secondsUntilExpiry(userToken2.getSecondsUntilExpiry())
             .description("Test token 2.")
             .build());
 

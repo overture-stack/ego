@@ -26,6 +26,7 @@ import static org.springframework.http.HttpStatus.MULTI_STATUS;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.util.StringUtils.isEmpty;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -62,13 +63,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
 @Slf4j
@@ -136,9 +131,12 @@ public class ApiKeyController {
     val aK = tokenService.issueApiKey(userId, scopeNames, description);
     Set<String> issuedScopes = mapToSet(aK.scopes(), Scope::toString);
     return ApiKeyResponse.builder()
-        .apiKey(aK.getName())
+        .name(aK.getName())
         .scope(issuedScopes)
-        .exp(aK.getSecondsUntilExpiry())
+        .secondsUntilExpiry(aK.getSecondsUntilExpiry())
+        .exp(aK.getExpiryDate())
+        .iss(aK.getIssueDate())
+        .isRevoked(aK.isRevoked())
         .description(aK.getDescription())
         .build();
   }
@@ -186,11 +184,10 @@ public class ApiKeyController {
     return format("Token '%s' is successfully revoked!", token);
   }
 
-  // TODO: paginate response
   @RequestMapping(method = GET, value = "/api_key")
   @ApiImplicitParams({
     @ApiImplicitParam(
-        name = Fields.NAME, // TODO: what should this field be?
+        name = Fields.ID, // TODO: what should this field be?
         required = false,
         dataType = "string",
         paramType = "query",
@@ -228,12 +225,11 @@ public class ApiKeyController {
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
     checkAdminOrOwner(userId);
-    //    if (isEmpty(query)) {
-    return new PageDTO<>(tokenService.findApiKeysForUser(userId, filters, pageable));
-    //    } else {
-    //      return new PageDTO<>(tokenService.findApiKeysForUser(userId, query, filters, pageable));
-    //    }
-    //    return tokenService.listApiKey(userId);
+    if (isEmpty(query)) {
+      return new PageDTO<>(tokenService.listApiKeysForUser(userId, filters, pageable));
+    } else {
+      return new PageDTO<>(tokenService.findApiKeysForUser(userId, query, filters, pageable));
+    }
   }
 
   /** DEPRECATED: GET /token to be removed in next major release */

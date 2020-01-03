@@ -12,9 +12,11 @@ import lombok.Value;
 @Builder
 @JsonView(Views.REST.class)
 public class ApiKeyResponse {
-  @NonNull private final String apiKey;
+  @NonNull private final String name;
   @NonNull private final Set<String> scope;
-  @NonNull private final Long exp;
+  @NonNull private final Date exp;
   @NonNull private final Date iss;
+  @NonNull private final Boolean isRevoked;
+  @NonNull private final Long secondsUntilExpiry;
   private String description;
 }
