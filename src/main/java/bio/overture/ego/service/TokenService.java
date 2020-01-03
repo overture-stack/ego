@@ -83,6 +83,7 @@ import org.springframework.security.oauth2.common.exceptions.InvalidScopeExcepti
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
 
+// TODO: rename to ApiKeyService [anncatton]
 @Slf4j
 @Service
 public class TokenService extends AbstractNamedService<ApiKey, UUID> {

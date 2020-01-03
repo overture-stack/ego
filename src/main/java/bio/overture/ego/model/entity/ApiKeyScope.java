@@ -24,6 +24,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
+// TODO: rename TOKENSCOPE to API_KEY_SCOPE [anncatton]
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
