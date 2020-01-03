@@ -10,7 +10,7 @@ apitoken:
 
 refreshToken:
   durationMs: 43200000 # in milliseconds = 12hrs
-  cookieIsSecure: true
+  cookieIsSecure: false
 
 # security
 auth:
@@ -193,11 +193,6 @@ spring:
 spring:
   profiles: test
 logging.test.controller.enable: true
-
-
-refreshToken:
-  cookieIsSecure: false
-
 
 spring.datasource:
   driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
