@@ -4,7 +4,6 @@ import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static java.util.Objects.isNull;
 
 import bio.overture.ego.model.domain.RefreshContext;
 import bio.overture.ego.model.entity.RefreshToken;
@@ -34,15 +33,19 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
   /** Configuration */
   private int durationMs;
 
+  private boolean cookieIsSecure;
+
   @Autowired
   public RefreshContextService(
       @NonNull RefreshTokenRepository refreshTokenRepository,
       @NonNull TokenService tokenService,
-      @Value("${refreshToken.durationMs:43200000}") int durationMs) {
+      @Value("${refreshToken.durationMs:43200000}") int durationMs,
+      @Value("${refreshToken.cookieIsSecure}") boolean cookieIsSecure) {
     super(RefreshToken.class, refreshTokenRepository);
     this.refreshTokenRepository = refreshTokenRepository;
     this.tokenService = tokenService;
     this.durationMs = durationMs;
+    this.cookieIsSecure = cookieIsSecure;
   }
 
   @SuppressWarnings("unchecked")
@@ -70,13 +73,13 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
         .build();
   }
 
-  public Optional<RefreshToken> getRefreshTokenByUser(User user) {
+  private Optional<RefreshToken> getRefreshTokenByUser(User user) {
     return refreshTokenRepository.getByUser(user);
   }
 
   private void checkUniqueByUser(User user) {
     checkUnique(
-        !getRefreshTokenByUser(user).isPresent(),
+        getRefreshTokenByUser(user).isEmpty(),
         String.format("A refresh token already exists for %s", user.getId()));
   }
 
@@ -107,10 +110,7 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
     val tokenClaims = tokenService.getTokenClaims(bearerToken);
     val user = tokenService.getTokenUserInfo(bearerToken);
 
-    checkNotFound(
-        !isNull(refreshTokenOpt) && refreshTokenOpt.isPresent(),
-        "RefreshToken %s is not found.",
-        refreshTokenId);
+    checkNotFound(refreshTokenOpt.isPresent(), "RefreshToken %s is not found.", refreshTokenId);
 
     val refreshToken = refreshTokenOpt.get();
     return RefreshContext.builder()
@@ -147,7 +147,7 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
     // where to access the accepted domain?
     cookie.setDomain("localhost");
     // disable setSecure while testing locally in browser, or will not show in cookies
-    //    cookie.setSecure(true);
+    cookie.setSecure(cookieIsSecure);
     cookie.setHttpOnly(true);
     cookie.setMaxAge(maxAge);
     cookie.setPath("/");

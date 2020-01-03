@@ -10,6 +10,7 @@ apitoken:
 
 refreshToken:
   durationMs: 43200000 # in milliseconds = 12hrs
+  cookieIsSecure: true
 
 # security
 auth:
@@ -193,6 +194,9 @@ spring:
   profiles: test
 logging.test.controller.enable: true
 
+
+refreshToken:
+  cookieIsSecure: false
 
 
 spring.datasource:
