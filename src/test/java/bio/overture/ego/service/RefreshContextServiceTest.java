@@ -52,11 +52,11 @@ public class RefreshContextServiceTest {
     val refreshToken1 = user1.getRefreshToken();
 
     assertTrue(refreshContextService.findById(refreshToken1.getId()).isPresent());
-    assertTrue(refreshContextService.getById(refreshToken1.getId()) != null);
+    assertNotNull(refreshContextService.getById(refreshToken1.getId()));
 
     val incomingRefreshContext =
         refreshContextService.createRefreshContext(refreshToken1.getId().toString(), user1Token);
-    refreshContextService.disassociateUserAndDelete(user1Token);
+    refreshContextService.disassociateUserAndDelete(user1);
 
     exceptionRule.expect(NotFoundException.class);
     exceptionRule.expectMessage(
@@ -72,12 +72,11 @@ public class RefreshContextServiceTest {
   @Test
   public void refresh_validContext_usedTokenIsDeleted() {
     val user1 = entityGenerator.setupUserWithRefreshToken("User One");
-    val user1Token = tokenService.generateUserToken(user1);
     val refreshToken1 = user1.getRefreshToken();
 
     assertTrue(refreshContextService.findById(refreshToken1.getId()).isPresent());
-    assertTrue(refreshContextService.getById(refreshToken1.getId()) != null);
-    refreshContextService.disassociateUserAndDelete(user1Token);
+    assertNotNull(refreshContextService.getById(refreshToken1.getId()));
+    refreshContextService.disassociateUserAndDelete(user1);
 
     exceptionRule.expect(NotFoundException.class);
     exceptionRule.expectMessage(

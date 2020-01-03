@@ -156,8 +156,7 @@ public class AuthController {
     if (authorization == null || refreshId.equals("missing")) {
       return new ResponseEntity<>("Please login", UNAUTHORIZED);
     }
-    val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
-    val cookieToRemove = refreshContextService.deleteRefreshTokenAndCookie(currentToken);
+    val cookieToRemove = refreshContextService.deleteRefreshTokenAndCookie(refreshId);
     response.addCookie(cookieToRemove);
 
     return new ResponseEntity<>("User is logged out", OK);

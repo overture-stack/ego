@@ -83,9 +83,7 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
         String.format("A refresh token already exists for %s", user.getId()));
   }
 
-  public void disassociateUserAndDelete(String userToken) {
-    val user = tokenService.getTokenUserInfo(userToken);
-
+  public void disassociateUserAndDelete(User user) {
     val refreshTokenOpt = this.getRefreshTokenByUser(user);
     if (refreshTokenOpt.isPresent()) {
       log.debug("Refresh token exists, deleting...");
@@ -107,12 +105,13 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
 
   public RefreshContext createRefreshContext(String refreshTokenId, String bearerToken) {
     val refreshTokenOpt = refreshTokenRepository.findById(UUID.fromString(refreshTokenId));
-    val tokenClaims = tokenService.getTokenClaims(bearerToken);
-    val user = tokenService.getTokenUserInfo(bearerToken);
+    val tokenClaims = tokenService.getTokenClaimsIgnoreExpiry(bearerToken);
 
     checkNotFound(refreshTokenOpt.isPresent(), "RefreshToken %s is not found.", refreshTokenId);
 
     val refreshToken = refreshTokenOpt.get();
+    val user = refreshToken.getUser();
+
     return RefreshContext.builder()
         .refreshToken(refreshToken)
         .tokenClaims(tokenClaims)
@@ -121,7 +120,8 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
   }
 
   public RefreshContext createInitialRefreshContext(@NonNull String bearerToken) {
-    disassociateUserAndDelete(bearerToken);
+    val user = tokenService.getTokenUserInfo(bearerToken);
+    disassociateUserAndDelete(user);
 
     if (tokenService.getTokenUserInfo(bearerToken).getStatus() != APPROVED) {
       throw new ForbiddenException("User does not have approved status, rejecting.");
@@ -133,7 +133,7 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
 
   public String validateAndReturnNewUserToken(String refreshId, String bearerToken) {
     val incomingRefreshContext = createRefreshContext(refreshId, bearerToken);
-    disassociateUserAndDelete(bearerToken);
+    disassociateUserAndDelete(incomingRefreshContext.getUser());
 
     incomingRefreshContext.validate();
 
@@ -162,8 +162,9 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
         refreshToken.getSecondsUntilExpiry().intValue());
   }
 
-  public Cookie deleteRefreshTokenAndCookie(String bearerToken) {
-    disassociateUserAndDelete(bearerToken);
+  public Cookie deleteRefreshTokenAndCookie(String refreshId) {
+    val incomingRefreshToken = getById(UUID.fromString(refreshId));
+    disassociateUserAndDelete(incomingRefreshToken.getUser());
     return createCookie(REFRESH_ID, "", 0);
   }
 }

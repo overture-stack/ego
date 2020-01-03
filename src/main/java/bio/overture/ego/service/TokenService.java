@@ -48,11 +48,7 @@ import bio.overture.ego.token.user.UserJWTAccessToken;
 import bio.overture.ego.token.user.UserTokenClaims;
 import bio.overture.ego.token.user.UserTokenContext;
 import bio.overture.ego.view.Views;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.time.Instant;
@@ -334,6 +330,15 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
           .getBody();
     } else {
       throw new InvalidKeyException("Invalid signing key for the token.");
+    }
+  }
+
+  public Claims getTokenClaimsIgnoreExpiry(String token) {
+    try {
+      return getTokenClaims(token);
+    } catch (ExpiredJwtException exception) {
+      log.info("Refreshing expired token!", exception);
+      return exception.getClaims();
     }
   }
 
