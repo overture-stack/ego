@@ -32,9 +32,9 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import bio.overture.ego.model.dto.*;
+import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.model.search.Filters;
@@ -42,8 +42,7 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.ApplicationScoped;
 import bio.overture.ego.security.AuthorizationManager;
 import bio.overture.ego.service.TokenService;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -187,12 +186,6 @@ public class ApiKeyController {
   @RequestMapping(method = GET, value = "/api_key")
   @ApiImplicitParams({
     @ApiImplicitParam(
-        name = Fields.ID, // TODO: what should this field be?
-        required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Search for ids containing this text"),
-    @ApiImplicitParam(
         name = LIMIT,
         required = false,
         dataType = "string",
@@ -217,11 +210,13 @@ public class ApiKeyController {
         paramType = "query",
         value = "Sorting order: ASC|DESC. Default order: DESC"),
   })
-  @ResponseStatus(value = OK)
+  @ApiResponses(value = {@ApiResponse(code = 200, message = "Page ApiKeys for a User")})
   public @ResponseBody PageDTO<ApiKeyResponse> listApiKey(
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "user_id") UUID userId,
-      @RequestParam(value = "query", required = false) String query,
+      @ApiParam(value = "Query string compares to ApiKey's Name fields.", required = false)
+          @RequestParam(value = "query", required = false)
+          String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
     checkAdminOrOwner(userId);
