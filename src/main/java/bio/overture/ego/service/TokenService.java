@@ -73,6 +73,7 @@ import org.springframework.security.oauth2.common.exceptions.InvalidRequestExcep
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @Service
@@ -337,8 +338,13 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     try {
       return getTokenClaims(token);
     } catch (ExpiredJwtException exception) {
-      log.info("Refreshing expired token!", exception);
-      return exception.getClaims();
+      val claims = exception.getClaims();
+      if (StringUtils.isEmpty(claims.getId())) {
+        throw new ForbiddenException("Invalid token claims, cannot refresh expired token.");
+      }
+      log.info("Refreshing expired token: {}", claims.getId());
+      log.debug("Refreshing expired token! ", exception);
+      return claims;
     }
   }
 
