@@ -48,11 +48,7 @@ import bio.overture.ego.token.user.UserJWTAccessToken;
 import bio.overture.ego.token.user.UserTokenClaims;
 import bio.overture.ego.token.user.UserTokenContext;
 import bio.overture.ego.view.Views;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.time.Instant;
@@ -77,6 +73,7 @@ import org.springframework.security.oauth2.common.exceptions.InvalidRequestExcep
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @Service
@@ -334,6 +331,20 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
           .getBody();
     } else {
       throw new InvalidKeyException("Invalid signing key for the token.");
+    }
+  }
+
+  public Claims getTokenClaimsIgnoreExpiry(String token) {
+    try {
+      return getTokenClaims(token);
+    } catch (ExpiredJwtException exception) {
+      val claims = exception.getClaims();
+      if (StringUtils.isEmpty(claims.getId())) {
+        throw new ForbiddenException("Invalid token claims, cannot refresh expired token.");
+      }
+      log.info("Refreshing expired token: {}", claims.getId());
+      log.debug("Refreshing expired token! ", exception);
+      return claims;
     }
   }
 
