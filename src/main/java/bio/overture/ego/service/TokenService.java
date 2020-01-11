@@ -540,7 +540,6 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     return ApiKeyResponse.builder()
         .name(apiKey.getName())
         .scope(scopes)
-        .secondsUntilExpiry(apiKey.getSecondsUntilExpiry())
         .description(apiKey.getDescription())
         .iss(apiKey.getIssueDate())
         .exp(apiKey.getExpiryDate())

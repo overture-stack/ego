@@ -26,8 +26,6 @@ public interface TokenStoreRepository extends NamedRepository<ApiKey, UUID> {
 
   // Set<Token> findAllByOwnerAndScopes(List<UUID> ids);
 
-  Set<ApiKey> findAllByOwner_Id(UUID userId);
-
   @Override
   default Optional<ApiKey> findByName(String name) {
     return getTokenByNameIgnoreCase(name);

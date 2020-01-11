@@ -132,7 +132,6 @@ public class ApiKeyController {
     return ApiKeyResponse.builder()
         .name(aK.getName())
         .scope(issuedScopes)
-        .secondsUntilExpiry(aK.getSecondsUntilExpiry())
         .exp(aK.getExpiryDate())
         .iss(aK.getIssueDate())
         .isRevoked(aK.isRevoked())

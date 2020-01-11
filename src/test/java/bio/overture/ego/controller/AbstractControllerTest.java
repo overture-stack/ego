@@ -5,12 +5,7 @@ import static bio.overture.ego.utils.Joiners.COMMA;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
-import bio.overture.ego.model.dto.CreateApplicationRequest;
-import bio.overture.ego.model.dto.CreateUserRequest;
-import bio.overture.ego.model.dto.GroupRequest;
-import bio.overture.ego.model.dto.MaskDTO;
-import bio.overture.ego.model.dto.UpdateApplicationRequest;
-import bio.overture.ego.model.dto.UpdateUserRequest;
+import bio.overture.ego.model.dto.*;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
@@ -237,6 +232,16 @@ public abstract class AbstractControllerTest {
     return initStringRequest().endpoint("/groups").body(g).postAnd();
   }
 
+  protected StringResponseOption createApiKeyPostRequestAnd(
+      String userId, String scopes, String description) {
+    return initStringRequest()
+        .endpoint("/o/api_key")
+        .queryParam("user_id", userId)
+        .queryParam("scopes", scopes)
+        .queryParam("description", description)
+        .postAnd();
+  }
+
   protected StringResponseOption getUserEntityGetRequestAnd(UUID userId) {
     return initStringRequest().endpoint("/users/%s", userId).getAnd();
   }
@@ -341,5 +346,9 @@ public abstract class AbstractControllerTest {
 
   protected StringWebResource listApplicationsEndpointAnd() {
     return initStringRequest().endpoint("/applications");
+  }
+
+  protected StringWebResource listApiKeysEndpointAnd() {
+    return initStringRequest().endpoint("/o/api_key");
   }
 }

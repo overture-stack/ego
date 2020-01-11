@@ -4,19 +4,19 @@ import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import java.util.Date;
 import java.util.Set;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Value;
+import lombok.*;
 
-@Value
+@Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @JsonView(Views.REST.class)
 public class ApiKeyResponse {
-  @NonNull private final String name;
-  @NonNull private final Set<String> scope;
-  @NonNull private final Date exp;
-  @NonNull private final Date iss;
-  @NonNull private final Boolean isRevoked;
-  @NonNull private final Long secondsUntilExpiry;
+
+  @NonNull private String name;
+  @NonNull private Set<String> scope;
+  @NonNull private Date exp;
+  @NonNull private Date iss;
+  @NonNull private Boolean isRevoked;
   private String description;
 }

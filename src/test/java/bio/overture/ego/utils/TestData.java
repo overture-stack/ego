@@ -51,7 +51,7 @@ public class TestData {
     val adminAppSecret = "Admin-App-Secret";
     adminApp = entityGenerator.setupApplication(adminAppId, adminAppSecret, ApplicationType.ADMIN);
 
-    val allPolicies = listOf("song", "id", "collab", "aws", "portal", "song2");
+    val allPolicies = listOf("song", "id", "collab", "aws", "portal", "song2", "song3", "aws2");
 
     policyMap = new HashMap<>();
     for (val p : allPolicies) {

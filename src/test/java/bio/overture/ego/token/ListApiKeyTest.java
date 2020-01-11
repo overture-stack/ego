@@ -78,7 +78,6 @@ public class ListApiKeyTest {
             .exp(userToken1.getExpiryDate())
             .iss(userToken1.getIssueDate())
             .isRevoked(userToken1.isRevoked())
-            .secondsUntilExpiry(userToken1.getSecondsUntilExpiry())
             .description("Test token 1.")
             .build());
     expected.add(
@@ -88,7 +87,6 @@ public class ListApiKeyTest {
             .exp(userToken2.getExpiryDate())
             .iss(userToken2.getIssueDate())
             .isRevoked(userToken2.isRevoked())
-            .secondsUntilExpiry(userToken2.getSecondsUntilExpiry())
             .description("Test token 2.")
             .build());
 

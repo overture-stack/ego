@@ -23,7 +23,6 @@ import bio.overture.ego.model.entity.ApiKey;
 import bio.overture.ego.repository.TokenStoreRepository;
 import bio.overture.ego.repository.queryspecification.builder.TokenSpecificationBuilder;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -79,9 +78,5 @@ public class ApiKeyStoreService extends AbstractNamedService<ApiKey, UUID> {
 
   public Optional<ApiKey> findByApiKeyName(String apiKeyName) {
     return tokenRepository.findByName(apiKeyName);
-  }
-
-  public Set<ApiKey> findAllByUserId(UUID userId) {
-    return tokenRepository.findAllByOwner_Id(userId);
   }
 }
