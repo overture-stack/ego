@@ -162,7 +162,6 @@ public class AuthController {
     return new ResponseEntity<>("User is logged out", OK);
   }
 
-  // TODO: [anncatton] add controller tests
   @RequestMapping(method = POST, value = "/refresh")
   public ResponseEntity<String> refreshEgoToken(
       @RequestHeader(value = "Authorization") final String authorization,
