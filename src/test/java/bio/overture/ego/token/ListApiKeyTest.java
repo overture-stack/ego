@@ -75,8 +75,8 @@ public class ListApiKeyTest {
         ApiKeyResponse.builder()
             .name(apiKeyString1)
             .scope(scopeString1)
-            .exp(userToken1.getExpiryDate())
-            .iss(userToken1.getIssueDate())
+            .expiryDate(userToken1.getExpiryDate())
+            .issueDate(userToken1.getIssueDate())
             .isRevoked(userToken1.isRevoked())
             .description("Test token 1.")
             .build());
@@ -84,8 +84,8 @@ public class ListApiKeyTest {
         ApiKeyResponse.builder()
             .name(apiKeyString2)
             .scope(scopeString2)
-            .exp(userToken2.getExpiryDate())
-            .iss(userToken2.getIssueDate())
+            .expiryDate(userToken2.getExpiryDate())
+            .issueDate(userToken2.getIssueDate())
             .isRevoked(userToken2.isRevoked())
             .description("Test token 2.")
             .build());

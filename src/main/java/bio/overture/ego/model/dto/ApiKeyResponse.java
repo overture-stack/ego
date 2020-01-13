@@ -15,8 +15,8 @@ public class ApiKeyResponse {
 
   @NonNull private String name;
   @NonNull private Set<String> scope;
-  @NonNull private Date exp;
-  @NonNull private Date iss;
+  @NonNull private Date expiryDate;
+  @NonNull private Date issueDate;
   @NonNull private Boolean isRevoked;
   private String description;
 }

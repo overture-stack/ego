@@ -541,8 +541,8 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
         .name(apiKey.getName())
         .scope(scopes)
         .description(apiKey.getDescription())
-        .iss(apiKey.getIssueDate())
-        .exp(apiKey.getExpiryDate())
+        .issueDate(apiKey.getIssueDate())
+        .expiryDate(apiKey.getExpiryDate())
         .isRevoked(apiKey.isRevoked())
         .build();
   }

@@ -545,7 +545,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
     val responseJson = MAPPER.readTree(listResponse.getBody());
 
-    val expiryDate = responseJson.get("resultSet").get(0).get("exp");
+    val expiryDate = responseJson.get("resultSet").get(0).get("expiryDate");
     val date1 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(expiryDate.asText());
 
     val seconds = date1.getTime() / 1000L - Calendar.getInstance().getTime().getTime() / 1000L;
