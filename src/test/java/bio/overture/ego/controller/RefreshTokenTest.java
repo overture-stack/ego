@@ -15,7 +15,6 @@ import bio.overture.ego.utils.EntityGenerator;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -126,19 +125,6 @@ public class RefreshTokenTest extends AbstractControllerTest {
     assertEquals(statusCode, FORBIDDEN);
     val headers = response.getResponse().getHeaders();
     assertNull(headers.get("Set-Cookie"));
-  }
-
-  // POST /ego-token endpoint
-  // cookie is added if login valid
-  // how to mock oauth authentication? tokenHeaders will not be passed here like in /refresh
-  @Ignore
-  @Test
-  public void egoToken_validLogin_refreshCookieAdded() {
-    val mockClientId = "";
-    val response = createRefreshTokenOnLoginEndpointAnd(mockClientId);
-    val statusCode = response.getResponse().getStatusCode();
-
-    assertEquals(statusCode, OK);
   }
 
   @Test
