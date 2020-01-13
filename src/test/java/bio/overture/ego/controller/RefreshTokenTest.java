@@ -110,6 +110,24 @@ public class RefreshTokenTest extends AbstractControllerTest {
     assertNull(headers.get("Set-Cookie"));
   }
 
+  @Test
+  public void refresh_invalidBearerTokenClaims_Forbidden() {
+    val invalidClaimsUser = entityGenerator.setupUser("Invalid Bearer");
+    val invalidBearerToken = tokenService.generateUserToken(invalidClaimsUser);
+
+    tokenHeaders.clear();
+    tokenHeaders.add(AUTHORIZATION, "Bearer " + invalidBearerToken);
+    tokenHeaders.setContentType(APPLICATION_JSON);
+    val refreshToken = refreshContext.getRefreshToken();
+    val response = createRefreshTokenEndpointAnd(refreshToken.getId().toString(), tokenHeaders);
+
+    val statusCode = response.getResponse().getStatusCode();
+
+    assertEquals(statusCode, FORBIDDEN);
+    val headers = response.getResponse().getHeaders();
+    assertNull(headers.get("Set-Cookie"));
+  }
+
   // POST /ego-token endpoint
   // cookie is added if login valid
   // how to mock oauth authentication? tokenHeaders will not be passed here like in /refresh
@@ -136,7 +154,9 @@ public class RefreshTokenTest extends AbstractControllerTest {
     assertEquals(responseBody, "User is logged out");
 
     val newCookie = response.getResponse().getHeaders().get("Set-Cookie");
-    assertTrue(newCookie.get(0).contains("refreshId=; Max-Age=0;"));
+    val refreshCookie = newCookie.get(0);
+    assertNotNull(refreshCookie);
+    assertTrue(refreshCookie.contains("refreshId=; Max-Age=0;"));
 
     exceptionRule.expect(NotFoundException.class);
     exceptionRule.expectMessage(
