@@ -10,6 +10,7 @@ import javax.persistence.criteria.Root;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+// TODO: change name to ApiKeySpecificationBuilder... [anncatton]
 @Setter
 @Accessors(fluent = true, chain = true)
 public class TokenSpecificationBuilder extends AbstractSpecificationBuilder<ApiKey, UUID> {

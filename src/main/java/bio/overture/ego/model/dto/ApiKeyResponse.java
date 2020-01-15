@@ -2,17 +2,21 @@ package bio.overture.ego.model.dto;
 
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
+import java.util.Date;
 import java.util.Set;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Value;
+import lombok.*;
 
-@Value
+@Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @JsonView(Views.REST.class)
 public class ApiKeyResponse {
-  @NonNull private final String apiKey;
-  @NonNull private final Set<String> scope;
-  @NonNull private final Long exp;
+
+  @NonNull private String name;
+  @NonNull private Set<String> scope;
+  @NonNull private Date expiryDate;
+  @NonNull private Date issueDate;
+  @NonNull private Boolean isRevoked;
   private String description;
 }

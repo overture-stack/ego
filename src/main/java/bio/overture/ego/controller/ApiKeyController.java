@@ -16,6 +16,8 @@
 
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.controller.resolver.PageableResolver.*;
+import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static java.lang.String.format;
@@ -24,18 +26,23 @@ import static org.springframework.http.HttpStatus.MULTI_STATUS;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.util.StringUtils.isEmpty;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import bio.overture.ego.model.dto.*;
+import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.params.ScopeName;
+import bio.overture.ego.model.search.Filters;
+import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.ApplicationScoped;
 import bio.overture.ego.security.AuthorizationManager;
 import bio.overture.ego.service.TokenService;
+import io.swagger.annotations.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -46,6 +53,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,13 +62,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 @Slf4j
 @RestController
@@ -127,9 +130,11 @@ public class ApiKeyController {
     val aK = tokenService.issueApiKey(userId, scopeNames, description);
     Set<String> issuedScopes = mapToSet(aK.scopes(), Scope::toString);
     return ApiKeyResponse.builder()
-        .apiKey(aK.getName())
+        .name(aK.getName())
         .scope(issuedScopes)
-        .exp(aK.getSecondsUntilExpiry())
+        .expiryDate(aK.getExpiryDate())
+        .issueDate(aK.getIssueDate())
+        .isRevoked(aK.isRevoked())
         .description(aK.getDescription())
         .build();
   }
@@ -178,12 +183,47 @@ public class ApiKeyController {
   }
 
   @RequestMapping(method = GET, value = "/api_key")
-  @ResponseStatus(value = OK)
-  public @ResponseBody List<ApiKeyResponse> listApiKey(
+  @ApiImplicitParams({
+    @ApiImplicitParam(
+        name = LIMIT,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Number of results to retrieve"),
+    @ApiImplicitParam(
+        name = OFFSET,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Index of first result to retrieve"),
+    @ApiImplicitParam(
+        name = SORT,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Field to sort on"),
+    @ApiImplicitParam(
+        name = SORTORDER,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Sorting order: ASC|DESC. Default order: DESC"),
+  })
+  @ApiResponses(value = {@ApiResponse(code = 200, message = "Page ApiKeys for a User")})
+  public @ResponseBody PageDTO<ApiKeyResponse> listApiKey(
       @RequestHeader(value = "Authorization") final String authorization,
-      @RequestParam(value = "user_id") UUID userId) {
+      @RequestParam(value = "user_id") UUID userId,
+      @ApiParam(value = "Query string compares to ApiKey's Name fields.", required = false)
+          @RequestParam(value = "query", required = false)
+          String query,
+      @ApiIgnore @Filters List<SearchFilter> filters,
+      Pageable pageable) {
     checkAdminOrOwner(userId);
-    return tokenService.listApiKey(userId);
+    if (isEmpty(query)) {
+      return new PageDTO<>(tokenService.listApiKeysForUser(userId, filters, pageable));
+    } else {
+      return new PageDTO<>(tokenService.findApiKeysForUser(userId, query, filters, pageable));
+    }
   }
 
   /** DEPRECATED: GET /token to be removed in next major release */
