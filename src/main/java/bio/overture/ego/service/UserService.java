@@ -110,6 +110,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
                     .fetchApplications(true)
                     .fetchUserGroups(true)
                     .fetchUserPermissions(true)
+                    .fetchRefreshToken(true)
                     .buildByNameIgnoreCase(name));
   }
 
@@ -118,7 +119,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
       @NonNull UUID id,
       boolean fetchUserPermissions,
       boolean fetchUserGroups,
-      boolean fetchApplications) {
+      boolean fetchApplications,
+      boolean fetchRefreshToken) {
     val result =
         (Optional<User>)
             getRepository()
@@ -127,6 +129,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
                         .fetchUserPermissions(fetchUserPermissions)
                         .fetchUserGroups(fetchUserGroups)
                         .fetchApplications(fetchApplications)
+                        .fetchRefreshToken(fetchRefreshToken)
                         .buildById(id));
     checkNotFound(result.isPresent(), "The userId '%s' does not exist", id);
     return result.get();
@@ -171,15 +174,15 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   @Override
   public User getWithRelationships(@NonNull UUID id) {
-    return get(id, true, true, true);
+    return get(id, true, true, true, true);
   }
 
   public User getWithApplications(@NonNull UUID id) {
-    return get(id, false, false, true);
+    return get(id, false, false, true, false);
   }
 
   public User getWithGroups(@NonNull UUID id) {
-    return get(id, false, true, false);
+    return get(id, false, true, false, false);
   }
 
   /**

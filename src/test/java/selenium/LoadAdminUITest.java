@@ -23,6 +23,8 @@ import static org.junit.Assert.*;
 
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.service.ApplicationService;
+import java.util.Calendar;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.junit.Test;
@@ -54,6 +56,7 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
             .build());
 
     driver.get("http://localhost:" + uiPort);
+
     val titleText =
         driver.findElement(By.className("Login")).findElement(By.tagName("h1")).getText();
     assertEquals(titleText, "Admin Portal");
@@ -77,6 +80,16 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
             .findElement(By.tagName("div"))
             .getText();
     assertTrue(messageDiv.contains("Your account does not have an administrator userType."));
+
+    val refreshCookie = driver.manage().getCookieNamed("refreshId");
+    assertNotNull(refreshCookie);
+    assertNotNull(refreshCookie.getValue());
+    assertSame(UUID.fromString(refreshCookie.getValue()).getClass(), UUID.class);
+    assertTrue(refreshCookie.isHttpOnly());
+
+    val exp = refreshCookie.getExpiry();
+    val millis = exp.getTime() - Calendar.getInstance().getTime().getTime();
+    assertTrue(millis > 0);
 
     Thread.sleep(1000);
   }

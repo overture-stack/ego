@@ -33,16 +33,11 @@ public abstract class AbstractControllerTest {
 
   /** Constants */
   public static final ObjectMapper MAPPER = new ObjectMapper();
-
   private static final String ACCESS_TOKEN = "TestToken";
-
-  /** Config */
 
   /** State */
   @LocalServerPort private int port;
-
   private TestRestTemplate restTemplate = new TestRestTemplate();
-
   @Getter private HttpHeaders headers = new HttpHeaders();
 
   @Before
@@ -346,6 +341,30 @@ public abstract class AbstractControllerTest {
 
   protected StringWebResource listApplicationsEndpointAnd() {
     return initStringRequest().endpoint("/applications");
+  }
+
+  protected StringWebResource refreshTokenEndpointAnd(String refreshId, HttpHeaders headers) {
+    val refreshCookie = String.format("refreshId=%s;", refreshId);
+    headers.add("Cookie", refreshCookie);
+    return initStringRequest().endpoint("/oauth/refresh").headers(headers);
+  }
+
+  protected StringResponseOption createRefreshTokenEndpointAnd(
+      String refreshId, HttpHeaders headers) {
+    return refreshTokenEndpointAnd(refreshId, headers).postAnd();
+  }
+
+  protected StringWebResource egoTokenEndpointAnd(String clientId) {
+    return initStringRequest().endpoint(String.format("/oauth/ego-token?client_id=%s", clientId));
+  }
+
+  protected StringResponseOption createRefreshTokenOnLoginEndpointAnd(String clientId) {
+    return egoTokenEndpointAnd(clientId).postAnd();
+  }
+
+  protected StringResponseOption deleteRefreshTokenEndpointAnd(
+      String refreshId, HttpHeaders headers) {
+    return refreshTokenEndpointAnd(refreshId, headers).deleteAnd();
   }
 
   protected StringWebResource listApiKeysEndpointAnd() {

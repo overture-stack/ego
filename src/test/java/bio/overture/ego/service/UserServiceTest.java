@@ -25,6 +25,8 @@ public class UserServiceTest {
 
   @Autowired private UserService userService;
   @Autowired private EntityGenerator entityGenerator;
+  @Autowired private RefreshContextService refreshContextService;
+  @Autowired private TokenService tokenService;
 
   @Test
   public void testGetManyUsersWithRelations() {
@@ -66,5 +68,20 @@ public class UserServiceTest {
           Assert.assertEquals(
               user.getPermissions().iterator().next(), "UserServiceTestPolicy.WRITE");
         });
+  }
+
+  @Test
+  public void testAssociateUserWithRefreshToken() {
+
+    val user1 = entityGenerator.setupUser("Homer Simpson");
+    val user1Token = tokenService.generateUserToken(user1);
+
+    val refreshToken1 = refreshContextService.createRefreshToken(user1Token);
+
+    val userWithRefreshToken = userService.get(user1.getId(), false, false, false, true);
+
+    Assert.assertTrue(userWithRefreshToken.getRefreshToken() != null);
+    Assert.assertEquals(userWithRefreshToken.getRefreshToken(), refreshToken1);
+    Assert.assertEquals(userWithRefreshToken.getId(), user1.getId());
   }
 }

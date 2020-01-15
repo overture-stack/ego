@@ -53,7 +53,8 @@ public class SecureServerConfig {
         "/oauth/token/public_key",
         "/oauth/token/verify",
         "/oauth/ego-token",
-        "/oauth/update-ego-token"
+        "/oauth/update-ego-token",
+        "/oauth/refresh"
       };
 
   /** Dependencies */
@@ -114,7 +115,8 @@ public class SecureServerConfig {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
       http.requestMatchers()
-          .antMatchers("/oauth/login/*", "/oauth/ego-token", "/oauth/update-ego-token")
+          .antMatchers(
+              "/oauth/login/*", "/oauth/ego-token", "/oauth/update-ego-token", "/oauth/refresh")
           .and()
           .csrf()
           .disable()
