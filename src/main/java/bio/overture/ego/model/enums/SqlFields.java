@@ -31,4 +31,7 @@ public class SqlFields {
   public static final String ISSUEDATE = "issuedate";
   public static final String EXPIRYDATE = "expirydate";
   public static final String ISREVOKED = "isrevoked";
+  public static final String JTI = "jti";
+  public static final String REFRESHID = "refresh_id";
+  public static final String USER_ID = "user_id";
 }

@@ -77,7 +77,7 @@ public class CleanupApiKeyListener implements ApplicationListener<CleanupUserApi
           "ApiKey scopes not contained in user scopes, revoking. {} not in {}",
           apiKeyScopes.toString(),
           expandedUserScopes.toString());
-      tokenService.revoke(apiKey.getApiKey());
+      tokenService.revoke(apiKey.getName());
     }
   }
 
