@@ -146,6 +146,7 @@ public class TokensOnUserAndPolicyDeletes extends AbstractControllerTest {
         .body(permissionRequest)
         .post();
 
+    // TODO: [anncatton] update endpoint to "/o/api_key"
     val createTokenResponse =
         initStringRequest()
             .endpoint(

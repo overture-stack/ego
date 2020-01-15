@@ -21,22 +21,23 @@ import static bio.overture.ego.model.dto.Scope.explicitScopes;
 import static bio.overture.ego.model.enums.ApplicationType.ADMIN;
 import static bio.overture.ego.service.UserService.extractScopes;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
 import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
 import static java.lang.String.format;
 import static java.util.UUID.fromString;
+import static org.springframework.data.jpa.domain.Specification.where;
 import static org.springframework.util.DigestUtils.md5Digest;
 
-import bio.overture.ego.model.dto.ApiKeyResponse;
-import bio.overture.ego.model.dto.ApiKeyScopeResponse;
-import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.dto.TokenResponse;
-import bio.overture.ego.model.dto.UserScopesResponse;
+import bio.overture.ego.model.dto.*;
 import bio.overture.ego.model.entity.ApiKey;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.params.ScopeName;
+import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.TokenStoreRepository;
+import bio.overture.ego.repository.UserRepository;
+import bio.overture.ego.repository.queryspecification.TokenStoreSpecification;
 import bio.overture.ego.security.BasicAuthToken;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.TokenClaims;
@@ -48,6 +49,7 @@ import bio.overture.ego.token.user.UserJWTAccessToken;
 import bio.overture.ego.token.user.UserTokenClaims;
 import bio.overture.ego.token.user.UserTokenContext;
 import bio.overture.ego.view.Views;
+import com.google.common.collect.*;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
@@ -71,6 +73,9 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
@@ -78,6 +83,7 @@ import org.springframework.security.oauth2.common.exceptions.InvalidScopeExcepti
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
 
+// TODO: rename to ApiKeyService [anncatton]
 @Slf4j
 @Service
 public class TokenService extends AbstractNamedService<ApiKey, UUID> {
@@ -95,6 +101,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   private ApplicationService applicationService;
   private ApiKeyStoreService apiKeyStoreService;
   private PolicyService policyService;
+  private final UserRepository userRepository;
 
   /** Configuration */
   @Value("${jwt.duration:86400000}")
@@ -109,13 +116,15 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
       @NonNull ApplicationService applicationService,
       @NonNull ApiKeyStoreService apiKeyStoreService,
       @NonNull PolicyService policyService,
-      @NonNull TokenStoreRepository tokenStoreRepository) {
+      @NonNull TokenStoreRepository tokenStoreRepository,
+      @NonNull UserRepository userRepository) {
     super(ApiKey.class, tokenStoreRepository);
     this.tokenSigner = tokenSigner;
     this.userService = userService;
     this.applicationService = applicationService;
     this.apiKeyStoreService = apiKeyStoreService;
     this.policyService = policyService;
+    this.userRepository = userRepository;
   }
 
   @Override
@@ -468,6 +477,46 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
         .collect(Collectors.toList());
   }
 
+  public Page<ApiKeyResponse> listApiKeysForUser(
+      @NonNull UUID userId, @NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
+
+    checkEntityExistence(User.class, userRepository, userId);
+
+    val apiKeys =
+        (Page<ApiKey>)
+            getRepository()
+                .findAll(
+                    where(TokenStoreSpecification.containsUser(userId))
+                        .and(TokenStoreSpecification.filterBy(filters)),
+                    pageable);
+
+    val apiKeyResponses =
+        ImmutableList.copyOf(apiKeys).stream()
+            .map(this::createApiKeyResponse)
+            .collect(Collectors.toList());
+
+    return new PageImpl<>(apiKeyResponses, pageable, apiKeys.getTotalElements());
+  }
+
+  public Page<ApiKeyResponse> findApiKeysForUser(
+      @NonNull UUID userId, String query, List<SearchFilter> filters, @NonNull Pageable pageable) {
+    checkEntityExistence(User.class, userRepository, userId);
+    val apiKeys =
+        (Page<ApiKey>)
+            getRepository()
+                .findAll(
+                    where(TokenStoreSpecification.containsUser(userId))
+                        .and(TokenStoreSpecification.containsText(query))
+                        .and(TokenStoreSpecification.filterBy(filters)),
+                    pageable);
+
+    val apiKeyResponses =
+        ImmutableList.copyOf(apiKeys).stream()
+            .map(this::createApiKeyResponse)
+            .collect(Collectors.toList());
+
+    return new PageImpl<>(apiKeyResponses, pageable, apiKeys.getTotalElements());
+  }
   /** DEPRECATED: To be removed in next major release */
   @Deprecated
   public List<TokenResponse> listTokens(@NonNull UUID userId) {
@@ -489,10 +538,12 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   private ApiKeyResponse createApiKeyResponse(@NonNull ApiKey apiKey) {
     val scopes = mapToSet(apiKey.scopes(), Scope::toString);
     return ApiKeyResponse.builder()
-        .apiKey(apiKey.getName())
+        .name(apiKey.getName())
         .scope(scopes)
-        .exp(apiKey.getSecondsUntilExpiry())
         .description(apiKey.getDescription())
+        .issueDate(apiKey.getIssueDate())
+        .expiryDate(apiKey.getExpiryDate())
+        .isRevoked(apiKey.isRevoked())
         .build();
   }
 
