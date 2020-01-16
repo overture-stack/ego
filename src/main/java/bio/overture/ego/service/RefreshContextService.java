@@ -35,17 +35,21 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
 
   private boolean cookieIsSecure;
 
+  private String refreshTokenDomain;
+
   @Autowired
   public RefreshContextService(
       @NonNull RefreshTokenRepository refreshTokenRepository,
       @NonNull TokenService tokenService,
       @Value("${refreshToken.durationMs:43200000}") int durationMs,
-      @Value("${refreshToken.cookieIsSecure}") boolean cookieIsSecure) {
+      @Value("${refreshToken.cookieIsSecure}") boolean cookieIsSecure,
+      @Value("${refreshToken.domain}") String refreshTokenDomain) {
     super(RefreshToken.class, refreshTokenRepository);
     this.refreshTokenRepository = refreshTokenRepository;
     this.tokenService = tokenService;
     this.durationMs = durationMs;
     this.cookieIsSecure = cookieIsSecure;
+    this.refreshTokenDomain = refreshTokenDomain;
   }
 
   @SuppressWarnings("unchecked")
@@ -145,7 +149,7 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
   private Cookie createCookie(String cookieName, String cookieValue, Integer maxAge) {
     Cookie cookie = new Cookie(cookieName, cookieValue);
     // where to access the accepted domain?
-    cookie.setDomain("localhost");
+    cookie.setDomain(refreshTokenDomain);
     // disable setSecure while testing locally in browser, or will not show in cookies
     cookie.setSecure(cookieIsSecure);
     cookie.setHttpOnly(true);

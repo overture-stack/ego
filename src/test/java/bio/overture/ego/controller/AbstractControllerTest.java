@@ -33,10 +33,12 @@ public abstract class AbstractControllerTest {
 
   /** Constants */
   public static final ObjectMapper MAPPER = new ObjectMapper();
+
   private static final String ACCESS_TOKEN = "TestToken";
 
   /** State */
   @LocalServerPort private int port;
+
   private TestRestTemplate restTemplate = new TestRestTemplate();
   @Getter private HttpHeaders headers = new HttpHeaders();
 
