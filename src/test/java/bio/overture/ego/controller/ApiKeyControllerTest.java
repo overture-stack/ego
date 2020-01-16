@@ -3,20 +3,24 @@ package bio.overture.ego.controller;
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static java.util.Arrays.asList;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.junit.Assert.*;
 
 import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.dto.*;
+import bio.overture.ego.repository.TokenStoreRepository;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.TestData;
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -48,6 +52,8 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
   @Autowired private EntityGenerator entityGenerator;
 
   @Autowired private TokenService tokenService;
+
+  @Autowired private TokenStoreRepository tokenStoreRepository;
 
   @Value("${logging.test.controller.enable}")
   private boolean enableLogging;
@@ -400,38 +406,105 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
   @SneakyThrows
   @Test
-  public void listApiKey() {
-    val user = entityGenerator.setupUser("List Token");
-    val userId = user.getId().toString();
+  public void listApiKey_findAllQuery_Success() {
+    val testUser = entityGenerator.setupUser("List User");
+    testUser.setType(ADMIN);
+    testUser.setStatus(APPROVED);
+    val testUserId = testUser.getId().toString();
+    entityGenerator.addPermissions(
+        testUser,
+        test.getScopes(
+            "song.READ", "collab.READ", "id.WRITE", "aws.WRITE", "song2.READ", "portal.READ"));
 
-    val apiKeyString1 = "791044a1-3ffd-4164-a6a0-0e1e666b28dc";
-    val apiKeyString2 = "891044a1-3ffd-4164-a6a0-0e1e666b28dc";
-    val apiKeyString3 = "491044a1-3ffd-4164-a6a0-0e1e666b28dc";
+    val apiKeyResponse1 =
+        createApiKeyPostRequestAnd(testUserId, "song.READ", "with scopes 1")
+            .extractOneEntity(ApiKeyResponse.class);
+    val apiKeyResponse2 =
+        createApiKeyPostRequestAnd(testUserId, "id.WRITE", "with scopes 2")
+            .extractOneEntity(ApiKeyResponse.class);
+    val apiKeyResponse3 =
+        createApiKeyPostRequestAnd(testUserId, "aws.WRITE", "with scopes 3")
+            .extractOneEntity(ApiKeyResponse.class);
+    val apiKeyResponse4 =
+        createApiKeyPostRequestAnd(testUserId, "song2.READ", "with scopes 4")
+            .extractOneEntity(ApiKeyResponse.class);
+    val apiKeyResponse5 =
+        createApiKeyPostRequestAnd(testUserId, "portal.READ", "with scopes 5")
+            .extractOneEntity(ApiKeyResponse.class);
 
-    val scopes1 = test.getScopes("song.READ");
-    val scopes2 = test.getScopes("collab.READ");
-    val scopes3 = test.getScopes("id.WRITE");
+    val response =
+        listApiKeysEndpointAnd()
+            .queryParam("user_id", testUserId)
+            .queryParam("offset", 0)
+            .queryParam("limit", 20)
+            .getAnd()
+            .assertOk()
+            .assertPageResultsOfType(ApiKeyResponse.class)
+            .containsAll(
+                Set.of(
+                    apiKeyResponse1,
+                    apiKeyResponse2,
+                    apiKeyResponse3,
+                    apiKeyResponse4,
+                    apiKeyResponse5));
 
-    entityGenerator.setupApiKey(user, apiKeyString1, false, 1000, "test token 1", scopes1);
-    entityGenerator.setupApiKey(user, apiKeyString2, false, 1000, "test token 2", scopes2);
-    entityGenerator.setupApiKey(user, apiKeyString3, true, 1000, "revoked token 3", scopes3);
+    val responseWithLimit =
+        listApiKeysEndpointAnd()
+            .queryParam("user_id", testUserId)
+            .queryParam("offset", 0)
+            .queryParam("limit", 3)
+            .getAnd()
+            .assertOk();
 
-    val response = initStringRequest().endpoint("o/api_key?user_id=%s", userId).get();
+    responseWithLimit.assertPageResultsOfType(ApiKeyResponse.class).hasSize(3);
 
-    val statusCode = response.getStatusCode();
-    assertEquals(statusCode, HttpStatus.OK);
+    val responseWithLimitJson = MAPPER.readTree(responseWithLimit.getResponse().getBody());
+    assertEquals(5, responseWithLimitJson.get("count").asInt());
+  }
 
-    // Result should only have unrevoked api keys, ignoring the "exp" field.
-    val expected =
-        "[{\"apiKey\":\"891044a1-3ffd-4164-a6a0-0e1e666b28dc\","
-            + "\"scope\":[\"collab.READ\"],"
-            + "\"exp\":\"${json-unit.ignore}\","
-            + "\"description\":\"test token 2\"},"
-            + "{\"apiKey\":\"791044a1-3ffd-4164-a6a0-0e1e666b28dc\","
-            + "\"scope\":[\"song.READ\"],"
-            + "\"exp\":\"${json-unit.ignore}\","
-            + "\"description\":\"test token 1\"}]";
-    assertThatJson(response.getBody()).when(IGNORING_ARRAY_ORDER).isEqualTo(expected);
+  @Test
+  @SneakyThrows
+  public void findApiKey_findSomeQuery_Success() {
+    val queryUser = entityGenerator.setupUser("Query User");
+    val queryUserId = queryUser.getId().toString();
+
+    entityGenerator.addPermissions(
+        queryUser,
+        test.getScopes("song.READ", "aws.WRITE", "aws2.WRITE", "song2.READ", "song3.READ"));
+
+    val apiKeyResponse1 =
+        createApiKeyPostRequestAnd(queryUserId, "aws.WRITE", "with scopes 3")
+            .extractOneEntity(ApiKeyResponse.class);
+    val apiKeyResponse2 =
+        createApiKeyPostRequestAnd(queryUserId, "song2.READ", "with scopes 4")
+            .extractOneEntity(ApiKeyResponse.class);
+    val apiKeyResponse3 =
+        createApiKeyPostRequestAnd(queryUserId, "song3.READ", "with scopes 5")
+            .extractOneEntity(ApiKeyResponse.class);
+
+    listApiKeysEndpointAnd()
+        .queryParam("user_id", queryUserId)
+        .queryParam("offset", 0)
+        .queryParam("limit", 20)
+        .queryParam("query", "abcdefghijklmnopqrstuvwxyz")
+        .getAnd()
+        .assertOk()
+        .assertPageResultsOfType(ApiKeyResponse.class)
+        .hasSize(0);
+
+    val responseWithResults =
+        listApiKeysEndpointAnd()
+            .queryParam("user_id", queryUserId)
+            .queryParam("offset", 0)
+            .queryParam("limit", 20)
+            .queryParam("query", apiKeyResponse3.getName())
+            .getAnd()
+            .assertOk();
+
+    val responseWithResultsJson = MAPPER.readTree(responseWithResults.getResponse().getBody());
+    assertEquals(1, responseWithResultsJson.get("resultSet").size());
+
+    responseWithResults.assertPageResultsOfType(ApiKeyResponse.class).contains(apiKeyResponse3);
   }
 
   @SneakyThrows
@@ -442,7 +515,8 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
     val statusCode = response.getStatusCode();
     assertEquals(statusCode, HttpStatus.OK);
-    assertEquals(response.getBody(), "[]");
+
+    assertEquals(response.getBody(), "{\"limit\":20,\"offset\":0,\"count\":0,\"resultSet\":[]}");
   }
 
   @SneakyThrows
@@ -469,10 +543,15 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     val listStatusCode = listResponse.getStatusCode();
     assertEquals(listStatusCode, HttpStatus.OK);
 
-    log.info(listResponse.getBody());
     val responseJson = MAPPER.readTree(listResponse.getBody());
-    val exp = responseJson.get(0).get("exp").asInt();
-    assertTrue(exp != 0);
-    assertTrue(exp > 0);
+
+    val expiryDate = responseJson.get("resultSet").get(0).get("expiryDate");
+    val date1 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(expiryDate.asText());
+
+    val seconds = date1.getTime() / 1000L - Calendar.getInstance().getTime().getTime() / 1000L;
+    val secondsValue = seconds > 0 ? seconds : 0;
+
+    assertNotEquals(secondsValue, 0);
+    assertTrue(secondsValue > 0);
   }
 }

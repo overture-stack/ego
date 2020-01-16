@@ -3,10 +3,15 @@ server:
 
 jwt:
   secret: testsecretisalsoasecret
-  duration: 86400000 #in milliseconds 86400000 = 1day, max = 2147483647
+  durationMs: 10800000 #in milliseconds 10800000 = 3hrs, max = 2147483647
 
 apitoken:
-  duration: 365 # in days
+  durationDays: 365 # in days
+
+refreshToken:
+  durationMs: 43200000 # in milliseconds = 12hrs
+  cookieIsSecure: false
+  domain: localhost
 
 # security
 auth:
@@ -120,7 +125,6 @@ logging:
 #logging.level.org.hibernate.SQL: DEBUG
 #logging.level.org.hibernate.type.descriptor.sql: TRACE
 
-
 # When you are desperate, use this...
 #logging.level.org.hibernate: TRACE
 
@@ -190,7 +194,6 @@ spring:
 spring:
   profiles: test
 logging.test.controller.enable: true
-
 
 
 spring.datasource:

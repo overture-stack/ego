@@ -19,12 +19,7 @@ import static org.junit.Assert.assertTrue;
 
 import bio.overture.ego.model.dto.*;
 import bio.overture.ego.model.entity.*;
-import bio.overture.ego.model.entity.ApiKey;
-import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.model.enums.ApplicationType;
-import bio.overture.ego.model.enums.LanguageType;
-import bio.overture.ego.model.enums.StatusType;
-import bio.overture.ego.model.enums.UserType;
+import bio.overture.ego.model.enums.*;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.*;
 import com.google.common.collect.ImmutableSet;
@@ -35,6 +30,7 @@ import java.util.function.Supplier;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -63,6 +59,10 @@ public class EntityGenerator {
   @Autowired private ApiKeyStoreService apiKeyStoreService;
 
   @Autowired private UserPermissionService userPermissionService;
+
+  @Autowired private RefreshContextService refreshContextService;
+
+  private int duration;
 
   public Application setupApplication(String clientId) {
     return applicationService
@@ -488,5 +488,25 @@ public class EntityGenerator {
     val fn = generateRandomName(r, length);
     val ln = generateRandomName(r, length);
     return fn + " " + ln;
+  }
+
+  public RefreshToken generateRandomRefreshToken(
+      @Value("${refreshToken.durationMs:43200000}") int duration) {
+    this.duration = duration;
+    val now = Instant.now();
+    val expiry = now.plus(duration, ChronoUnit.MILLIS);
+
+    return RefreshToken.builder()
+        .jti(UUID.randomUUID())
+        .issueDate(Date.from(now))
+        .expiryDate(Date.from(expiry))
+        .build();
+  }
+
+  public User setupUserWithRefreshToken(String username) {
+    val user = this.setupUser(username);
+    val userToken = tokenService.generateUserToken(user);
+    val refreshToken = refreshContextService.createRefreshToken(userToken);
+    return refreshToken.getUser();
   }
 }

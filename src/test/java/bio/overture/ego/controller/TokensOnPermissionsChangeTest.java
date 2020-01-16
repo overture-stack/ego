@@ -480,7 +480,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
             .post();
 
     val tokenResponseJson = MAPPER.readTree(createTokenResponse.getBody());
-    val apiKey = tokenResponseJson.get("apiKey").asText();
+    val apiKey = tokenResponseJson.get("name").asText();
 
     val checkTokenResponse =
         initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
@@ -533,7 +533,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
             .post();
 
     val tokenResponseJson = MAPPER.readTree(createTokenResponse.getBody());
-    val apiKey = tokenResponseJson.get("apiKey").asText();
+    val apiKey = tokenResponseJson.get("name").asText();
 
     val checkTokenResponse =
         initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();

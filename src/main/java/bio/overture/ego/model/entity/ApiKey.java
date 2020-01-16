@@ -29,6 +29,7 @@ import lombok.ToString;
 import lombok.val;
 import org.hibernate.annotations.GenericGenerator;
 
+// TODO: rename TOKEN to API_TOKEN [anncatton]
 @Entity
 @Table(name = Tables.TOKEN)
 @Data

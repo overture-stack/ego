@@ -50,7 +50,7 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
         }
       }
 
-      val user = userService.get(id, true, true, true);
+      val user = userService.getWithRelationships(id);
       output = user.toProto();
 
     } catch (NotFoundException e) {
