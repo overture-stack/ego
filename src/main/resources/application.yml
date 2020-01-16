@@ -11,6 +11,7 @@ apitoken:
 refreshToken:
   durationMs: 43200000 # in milliseconds = 12hrs
   cookieIsSecure: false
+  domain: localhost
 
 # security
 auth:
