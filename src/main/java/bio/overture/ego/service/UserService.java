@@ -109,7 +109,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
                 new UserSpecificationBuilder()
                     .fetchApplications(true)
                     .fetchUserGroups(true)
-                    .fetchUserPermissions(true)
+                    .fetchUserAndGroupPermissions(true)
                     .fetchRefreshToken(true)
                     .buildByNameIgnoreCase(name));
   }
@@ -126,7 +126,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
             getRepository()
                 .findOne(
                     new UserSpecificationBuilder()
-                        .fetchUserPermissions(fetchUserPermissions)
+                        .fetchUserAndGroupPermissions(fetchUserPermissions)
                         .fetchUserGroups(fetchUserGroups)
                         .fetchApplications(fetchApplications)
                         .fetchRefreshToken(fetchRefreshToken)
@@ -142,7 +142,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
       boolean fetchApplications) {
     val spec =
         new UserSpecificationBuilder()
-            .fetchUserPermissions(fetchUserPermissions)
+            .fetchUserAndGroupPermissions(fetchUserPermissions)
             .fetchUserGroups(fetchUserGroups)
             .fetchApplications(fetchApplications);
     return getMany(ids, spec);
