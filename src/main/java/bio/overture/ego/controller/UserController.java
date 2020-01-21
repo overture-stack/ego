@@ -244,9 +244,9 @@ public class UserController {
 
   @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups/permissions")
-  @ApiResponses(value = {@ApiResponse(code = 200, message = "Get User Group permissions")})
+  @ApiResponses(value = {@ApiResponse(code = 200, message = "Get effective permissions for a user with user and group permissions")})
   @ResponseStatus(value = HttpStatus.OK)
-  public @ResponseBody Collection<ResolvedPermissionResponse> getGroupPermissions(
+  public @ResponseBody Collection<ResolvedPermissionResponse> getResolvedPermissions(
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id) {
     return userPermissionService.getResolvedPermissions(id);
