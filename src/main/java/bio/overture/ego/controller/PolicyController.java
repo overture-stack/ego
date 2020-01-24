@@ -6,6 +6,7 @@ import static bio.overture.ego.controller.resolver.PageableResolver.SORT;
 import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
 import static java.lang.String.format;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.util.StringUtils.isEmpty;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -29,10 +30,7 @@ import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableList;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.*;
 import java.util.List;
 import java.util.UUID;
 import lombok.NonNull;
@@ -40,13 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
 @Slf4j
@@ -95,7 +87,7 @@ public class PolicyController {
         required = false,
         dataType = "string",
         paramType = "query",
-        value = "Search for polices whose names containing this text"),
+        value = "Search for policies whose names contain this text"),
     @ApiImplicitParam(
         name = LIMIT,
         required = false,
@@ -230,6 +222,32 @@ public class PolicyController {
 
   @AdminScoped
   @RequestMapping(method = GET, value = "/{id}/users")
+  @ApiImplicitParams({
+    @ApiImplicitParam(
+        name = LIMIT,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Number of results to retrieve"),
+    @ApiImplicitParam(
+        name = OFFSET,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Index of first result to retrieve"),
+    @ApiImplicitParam(
+        name = SORT,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Field to sort on"),
+    @ApiImplicitParam(
+        name = SORTORDER,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Sorting order: ASC|DESC. Default order: DESC"),
+  })
   @ApiResponses(
       value = {
         @ApiResponse(
@@ -237,14 +255,52 @@ public class PolicyController {
             message = "Get list of user ids with given policy id",
             response = String.class)
       })
-  public @ResponseBody List<PolicyResponse> findUserIds(
+  public @ResponseBody PageDTO<PolicyResponse> findUserIds(
       @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) UUID id) {
-    return userPermissionService.findByPolicy(id);
+      @PathVariable(value = "id", required = true) UUID id,
+      @ApiParam(
+              value = "Query string compares to permission ID and AccessLevel fields.",
+              required = false)
+          @RequestParam(value = "query", required = false)
+          String query,
+      @ApiIgnore @Filters List<SearchFilter> filters,
+      Pageable pageable) {
+    if (isEmpty(query)) {
+      return new PageDTO(userPermissionService.listUserPermissionsByPolicy(id, filters, pageable));
+    } else {
+      return new PageDTO<>(
+          userPermissionService.findUserPermissionsByPolicy(id, filters, query, pageable));
+    }
   }
 
   @AdminScoped
   @RequestMapping(method = GET, value = "/{id}/groups")
+  @ApiImplicitParams({
+    @ApiImplicitParam(
+        name = LIMIT,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Number of results to retrieve"),
+    @ApiImplicitParam(
+        name = OFFSET,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Index of first result to retrieve"),
+    @ApiImplicitParam(
+        name = SORT,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Field to sort on"),
+    @ApiImplicitParam(
+        name = SORTORDER,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Sorting order: ASC|DESC. Default order: DESC"),
+  })
   @ApiResponses(
       value = {
         @ApiResponse(
@@ -252,9 +308,22 @@ public class PolicyController {
             message = "Get list of group ids with given policy id",
             response = String.class)
       })
-  public @ResponseBody List<PolicyResponse> findGroupIds(
+  public @ResponseBody PageDTO<PolicyResponse> findGroupIds(
       @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) UUID id) {
-    return groupPermissionService.findByPolicy(id);
+      @PathVariable(value = "id", required = true) UUID id,
+      @ApiParam(
+              value = "Query string compares to permission ID and AccessLevel fields.",
+              required = false)
+          @RequestParam(value = "query", required = false)
+          String query,
+      @ApiIgnore @Filters List<SearchFilter> filters,
+      Pageable pageable) {
+    if (isEmpty(query)) {
+      return new PageDTO(
+          groupPermissionService.listGroupPermissionsByPolicy(id, filters, pageable));
+    } else {
+      return new PageDTO<>(
+          groupPermissionService.findGroupPermissionsByPolicy(id, filters, query, pageable));
+    }
   }
 }

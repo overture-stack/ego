@@ -23,6 +23,7 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 import static javax.persistence.criteria.JoinType.LEFT;
+import static org.springframework.data.jpa.domain.Specification.where;
 
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
@@ -30,7 +31,10 @@ import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.NameableEntity;
 import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.PermissionRepository;
+import bio.overture.ego.repository.queryspecification.GroupPermissionSpecification;
+import bio.overture.ego.repository.queryspecification.UserPermissionSpecification;
 import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -91,6 +95,86 @@ public abstract class AbstractPermissionService<
   public List<PolicyResponse> findByPolicy(UUID policyId) {
     val permissions = ImmutableList.copyOf(permissionRepository.findAllByPolicy_Id(policyId));
     return mapToList(permissions, this::convertToPolicyResponse);
+  }
+
+  public Page<PolicyResponse> listUserPermissionsByPolicy(
+      @NonNull UUID policyId, List<SearchFilter> filters, @NonNull Pageable pageable) {
+    val userPermissions =
+        (Page<P>)
+            getRepository()
+                .findAll(
+                    where(UserPermissionSpecification.withPolicy(policyId))
+                        .and(UserPermissionSpecification.filterBy(filters)),
+                    pageable);
+
+    val responses =
+        ImmutableList.copyOf(userPermissions).stream()
+            .map(this::convertToPolicyResponse)
+            .collect(java.util.stream.Collectors.toList());
+
+    return new PageImpl<>(responses, pageable, userPermissions.getTotalElements());
+  }
+
+  public Page<PolicyResponse> findUserPermissionsByPolicy(
+      @NonNull UUID policyId,
+      List<SearchFilter> filters,
+      String query,
+      @NonNull Pageable pageable) {
+    val userPermissions =
+        (Page<P>)
+            getRepository()
+                .findAll(
+                    where(UserPermissionSpecification.withPolicy(policyId))
+                        .and(UserPermissionSpecification.containsText(query))
+                        .and(UserPermissionSpecification.filterBy(filters)),
+                    pageable);
+
+    val responses =
+        ImmutableList.copyOf(userPermissions).stream()
+            .map(this::convertToPolicyResponse)
+            .collect(java.util.stream.Collectors.toList());
+
+    return new PageImpl<>(responses, pageable, userPermissions.getTotalElements());
+  }
+
+  public Page<PolicyResponse> listGroupPermissionsByPolicy(
+      @NonNull UUID policyId, List<SearchFilter> filters, @NonNull Pageable pageable) {
+    val groupPermissions =
+        (Page<P>)
+            getRepository()
+                .findAll(
+                    where(GroupPermissionSpecification.withPolicy(policyId))
+                        .and(GroupPermissionSpecification.filterBy(filters)),
+                    pageable);
+
+    val responses =
+        ImmutableList.copyOf(groupPermissions).stream()
+            .map(this::convertToPolicyResponse)
+            .collect(java.util.stream.Collectors.toList());
+
+    return new PageImpl<>(responses, pageable, groupPermissions.getTotalElements());
+  }
+
+  public Page<PolicyResponse> findGroupPermissionsByPolicy(
+      @NonNull UUID policyId,
+      List<SearchFilter> filters,
+      String query,
+      @NonNull Pageable pageable) {
+    val groupPermissions =
+        (Page<P>)
+            getRepository()
+                .findAll(
+                    where(GroupPermissionSpecification.withPolicy(policyId))
+                        .and(GroupPermissionSpecification.containsText(query))
+                        .and(GroupPermissionSpecification.filterBy(filters)),
+                    pageable);
+
+    val responses =
+        ImmutableList.copyOf(groupPermissions).stream()
+            .map(this::convertToPolicyResponse)
+            .collect(java.util.stream.Collectors.toList());
+
+    return new PageImpl<>(responses, pageable, groupPermissions.getTotalElements());
   }
 
   public Page<P> getPermissions(@NonNull UUID ownerId, @NonNull Pageable pageable) {
