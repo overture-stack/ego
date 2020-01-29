@@ -5,7 +5,7 @@
 
     <groupId>bio.overture</groupId>
     <artifactId>ego</artifactId>
-    <version>2.10.2-SNAPSHOT</version>
+    <version>2.11.0</version>
 
     <name>ego</name>
     <description>OAuth 2.0 Authorization service that supports multiple OpenID Connect Providers</description>
