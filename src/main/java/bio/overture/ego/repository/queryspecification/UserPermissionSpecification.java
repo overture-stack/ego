@@ -18,9 +18,7 @@ package bio.overture.ego.repository.queryspecification;
 
 import static bio.overture.ego.model.enums.JavaFields.*;
 
-import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.entity.UserPermission;
+import bio.overture.ego.model.entity.*;
 import bio.overture.ego.utils.QueryUtils;
 import java.util.UUID;
 import javax.persistence.criteria.Join;
@@ -52,14 +50,11 @@ public class UserPermissionSpecification extends SpecificationBase<UserPermissio
 
     // TODO: these joins are not working
     return (root, query, builder) -> {
-
-      // Join<UserPermission, Policy> userPermissionPolicyJoin =
-      // userPermissionJoin.join(POLICY);
-      Join<User, UserPermission> userPermissionJoin = root.join(USERPERMISSIONS);
+      Join<UserPermission, User> userPermissionJoin = root.join(OWNER);
 
       query.distinct(true);
       return builder.or(
-          getQueryPredicatesForJoin(builder, userPermissionJoin, finalText, ID, ACCESS_LEVEL));
+          getQueryPredicatesForJoin(builder, userPermissionJoin, finalText, ID, NAME, ACCESS_LEVEL));
       //      return builder.or(getQueryPredicates(builder, root, finalText, ID, ACCESS_LEVEL));
     };
   }
