@@ -34,7 +34,6 @@ import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.PermissionRepository;
 import bio.overture.ego.repository.queryspecification.GroupPermissionSpecification;
-import bio.overture.ego.repository.queryspecification.UserPermissionSpecification;
 import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -95,46 +94,6 @@ public abstract class AbstractPermissionService<
   public List<PolicyResponse> findByPolicy(UUID policyId) {
     val permissions = ImmutableList.copyOf(permissionRepository.findAllByPolicy_Id(policyId));
     return mapToList(permissions, this::convertToPolicyResponse);
-  }
-
-  public Page<PolicyResponse> listUserPermissionsByPolicy(
-      @NonNull UUID policyId, List<SearchFilter> filters, @NonNull Pageable pageable) {
-    val userPermissions =
-        (Page<P>)
-            getRepository()
-                .findAll(
-                    where(UserPermissionSpecification.withPolicy(policyId))
-                        .and(UserPermissionSpecification.filterBy(filters)),
-                    pageable);
-
-    val responses =
-        ImmutableList.copyOf(userPermissions).stream()
-            .map(this::convertToPolicyResponse)
-            .collect(java.util.stream.Collectors.toList());
-
-    return new PageImpl<>(responses, pageable, userPermissions.getTotalElements());
-  }
-
-  public Page<PolicyResponse> findUserPermissionsByPolicy(
-      @NonNull UUID policyId,
-      List<SearchFilter> filters,
-      String query,
-      @NonNull Pageable pageable) {
-    val userPermissions =
-        (Page<P>)
-            getRepository()
-                .findAll(
-                    where(UserPermissionSpecification.withPolicy(policyId))
-                        .and(UserPermissionSpecification.containsText(query))
-                        .and(UserPermissionSpecification.filterBy(filters)),
-                    pageable);
-
-    val responses =
-        ImmutableList.copyOf(userPermissions).stream()
-            .map(this::convertToPolicyResponse)
-            .collect(java.util.stream.Collectors.toList());
-
-    return new PageImpl<>(responses, pageable, userPermissions.getTotalElements());
   }
 
   public Page<PolicyResponse> listGroupPermissionsByPolicy(
@@ -402,7 +361,7 @@ public abstract class AbstractPermissionService<
     return permissions.get(0);
   }
 
-  private PolicyResponse convertToPolicyResponse(@NonNull P p) {
+  protected PolicyResponse convertToPolicyResponse(@NonNull P p) {
     val name = p.getOwner().getName();
     val id = p.getOwner().getId().toString();
     val mask = p.getAccessLevel();

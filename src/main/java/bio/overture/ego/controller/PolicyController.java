@@ -266,7 +266,8 @@ public class PolicyController {
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
     if (isEmpty(query)) {
-      return new PageDTO(userPermissionService.listUserPermissionsByPolicy(id, filters, pageable));
+      return new PageDTO<>(
+          userPermissionService.listUserPermissionsByPolicy(id, filters, pageable));
     } else {
       return new PageDTO<>(
           userPermissionService.findUserPermissionsByPolicy(id, filters, query, pageable));
