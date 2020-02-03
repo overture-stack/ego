@@ -135,6 +135,7 @@ public class UserPermissionControllerTest
     return format("policies/%s/users", policyId);
   }
 
+  //TODO: delete this test
   @Test
   @SneakyThrows
   public void addPermissionsToOwner_Unique_Success__ROB() {
@@ -170,7 +171,7 @@ public class UserPermissionControllerTest
     val p = this.policies.get(0);
     val resp =
         initStringRequest()
-            .endpoint("policies/%s/users?name=%s", p.getId(), owner1.getName())
+            .endpoint("policies/%s/users?query=%s", p.getId(), owner1.getName())
             .getAnd()
             .getResponse();
     log.info("response: {}", resp);
