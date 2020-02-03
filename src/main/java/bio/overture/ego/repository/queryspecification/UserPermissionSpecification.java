@@ -32,11 +32,11 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import static bio.overture.ego.model.enums.JavaFields.ACCESS_LEVEL;
-import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.NAME;
-import static bio.overture.ego.model.enums.JavaFields.OWNER;
-import static bio.overture.ego.model.enums.JavaFields.POLICY;
+import static bio.overture.ego.model.entity.AbstractPermission.Fields.accessLevel;
+import static bio.overture.ego.model.entity.AbstractPermission.Fields.policy;
+import static bio.overture.ego.model.entity.User.Fields.id;
+import static bio.overture.ego.model.entity.User.Fields.name;
+import static bio.overture.ego.model.entity.UserPermission.Fields.owner;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 @Slf4j
@@ -53,8 +53,8 @@ public class UserPermissionSpecification extends SpecificationBase<UserPermissio
       val sp = SimpleCriteriaBuilder.of(root, builder, query);
       sp.setDistinct(true);
       // Create joins
-      val policySp = sp.leftJoinFetch(Policy.class, POLICY);
-      val userSp = sp.leftJoinFetch(User.class, OWNER);
+      val policySp = sp.leftJoinFetch(Policy.class, policy);
+      val userSp = sp.leftJoinFetch(User.class, owner);
 
       // Create predicates for filtering by policyId AND searchFilters
       val filterPredicates = userSp.searchFilter(filters);
@@ -68,9 +68,11 @@ public class UserPermissionSpecification extends SpecificationBase<UserPermissio
         // Create query predicate
         val queryPredicates = Lists.<Predicate>newArrayList();
         val finalText = QueryUtils.prepareForQuery(text);
-        queryPredicates.add(
-            builder.like(builder.lower(root.get(ACCESS_LEVEL).as(String.class)), finalText));
-        Stream.of(ID, NAME)
+        // UserPermission.accessLevel
+        queryPredicates.add(sp.matchStringField(accessLevel, finalText));
+
+        // User.id and User.name
+        Stream.of(id, name)
             .map( fieldName -> userSp.matchStringField(fieldName, finalText))
             .forEach(queryPredicates::add);
         // Query predicates should be ORed together

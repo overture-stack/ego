@@ -18,6 +18,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.FieldNameConstants;
 
 @Entity
 @Table(name = Tables.USER_PERMISSION)
@@ -27,6 +28,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @JsonView(Views.REST.class)
 @ToString(callSuper = true)
+@FieldNameConstants
 @EqualsAndHashCode(
     callSuper = true,
     of = {"id"})
