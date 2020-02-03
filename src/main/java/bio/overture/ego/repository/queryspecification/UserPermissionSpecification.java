@@ -16,46 +16,72 @@
 
 package bio.overture.ego.repository.queryspecification;
 
-import static bio.overture.ego.model.enums.JavaFields.*;
-
-import bio.overture.ego.model.entity.*;
+import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.entity.UserPermission;
+import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.QueryUtils;
-import java.util.UUID;
-import javax.persistence.criteria.Join;
+import com.google.common.collect.Lists;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
 
+import javax.persistence.criteria.Predicate;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Stream;
+
+import static bio.overture.ego.model.entity.AbstractPermission.Fields.accessLevel;
+import static bio.overture.ego.model.entity.AbstractPermission.Fields.policy;
+import static bio.overture.ego.model.entity.User.Fields.id;
+import static bio.overture.ego.model.entity.User.Fields.name;
+import static bio.overture.ego.model.entity.UserPermission.Fields.owner;
+import static com.google.common.base.Strings.isNullOrEmpty;
+
+@Slf4j
 public class UserPermissionSpecification extends SpecificationBase<UserPermission> {
 
-  public static Specification<UserPermission> withPolicy(@NonNull UUID policyId) {
-    return (root, query, builder) -> {
-      query.distinct(true);
-
-      Join<UserPermission, Policy> userPermissionPolicyJoin = root.join(POLICY);
-      return builder.equal(userPermissionPolicyJoin.<Integer>get(ID), policyId);
-    };
+  public static Specification<UserPermission> buildFilterSpecification(
+      @NonNull UUID policyId, @NonNull List<SearchFilter> filters) {
+    return buildFilterAndQuerySpecification(policyId, filters, null);
   }
 
-  public static Specification<UserPermission> withUser(@NonNull UUID userId) {
+  public static Specification<UserPermission> buildFilterAndQuerySpecification(
+      @NonNull UUID policyId, @NonNull List<SearchFilter> filters, String text) {
     return (root, query, builder) -> {
-      query.distinct(true);
-      Join<UserPermission, Policy> applicationJoin = root.join(OWNER);
-      return builder.equal(applicationJoin.<Integer>get(ID), userId);
-    };
-  }
+      val scb = SimpleCriteriaBuilder.of(root, builder, query);
+      scb.setDistinct(true);
+      // Create joins
+      val policySp = scb.leftJoinFetch(Policy.class, policy);
+      val userSp = scb.leftJoinFetch(User.class, owner);
 
-  public static Specification<UserPermission> containsText(@NonNull String text) {
-    val finalText = QueryUtils.prepareForQuery(text);
+      // Create predicates for filtering by policyId AND searchFilters
+      val filterPredicates = userSp.searchFilter(filters);
+      val policyIdPredicate = policySp.equalId(policyId);
+      val andPredicates= Lists.<Predicate>newArrayList();
+      andPredicates.addAll(filterPredicates);
+      andPredicates.add(policyIdPredicate);
+      val andPredicate = builder.and(andPredicates.toArray(Predicate[]::new));
 
-    // TODO: these joins are not working
-    return (root, query, builder) -> {
-      Join<UserPermission, User> userPermissionJoin = root.join(OWNER);
+      if (!isNullOrEmpty(text)) {
+        // Create query predicate
+        val queryPredicates = Lists.<Predicate>newArrayList();
+        val finalText = QueryUtils.prepareForQuery(text);
+        // UserPermission.accessLevel
+        queryPredicates.add(scb.matchStringField(accessLevel, finalText));
 
-      query.distinct(true);
-      return builder.or(
-          getQueryPredicatesForJoin(builder, userPermissionJoin, finalText, ID, NAME, ACCESS_LEVEL));
-      //      return builder.or(getQueryPredicates(builder, root, finalText, ID, ACCESS_LEVEL));
+        // User.id and User.name
+        Stream.of(id, name)
+            .map( fieldName -> userSp.matchStringField(fieldName, finalText))
+            .forEach(queryPredicates::add);
+        // Query predicates should be ORed together
+        val orPredicate = builder.or(queryPredicates.toArray(Predicate[]::new));
+
+        // Query and Filter predicate should be ANDed
+        return builder.and(andPredicate, orPredicate);
+      }
+      return andPredicate;
     };
   }
 }

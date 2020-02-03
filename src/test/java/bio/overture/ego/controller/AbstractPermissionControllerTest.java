@@ -53,11 +53,11 @@ public abstract class AbstractPermissionControllerTest<
   private static final String INVALID_UUID = "invalidUUID000";
 
   /** State */
-  private O owner1;
+  protected O owner1;
 
-  private O owner2;
-  private List<Policy> policies;
-  private List<PermissionRequest> permissionRequests;
+  protected O owner2;
+  protected List<Policy> policies;
+  protected List<PermissionRequest> permissionRequests;
 
   @Override
   protected void beforeTest() {

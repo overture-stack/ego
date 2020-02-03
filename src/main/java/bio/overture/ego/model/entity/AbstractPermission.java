@@ -22,12 +22,14 @@ import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
 @Data
 @MappedSuperclass
+@FieldNameConstants
 @EqualsAndHashCode(of = {"id"})
 @ToString(exclude = {"policy"})
 @TypeDef(name = EGO_ACCESS_LEVEL_ENUM, typeClass = PostgreSQLEnumType.class)
