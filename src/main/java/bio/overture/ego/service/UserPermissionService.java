@@ -1,7 +1,6 @@
 package bio.overture.ego.service;
 
 import static bio.overture.ego.repository.queryspecification.UserPermissionSpecification.buildFilterSpecification;
-import static bio.overture.ego.repository.queryspecification.UserPermissionSpecification.buildQueryAndFilterSpecification;
 import static bio.overture.ego.repository.queryspecification.UserPermissionSpecification.buildQueryAndFilterSpecification_BETTER;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static java.util.stream.Collectors.toUnmodifiableList;
@@ -15,7 +14,6 @@ import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.UserPermissionRepository;
-import bio.overture.ego.repository.queryspecification.UserPermissionSpecification;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
@@ -27,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,8 +53,7 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
       @NonNull UUID policyId, List<SearchFilter> filters, @NonNull Pageable pageable) {
     val userPermissions =
         (Page<UserPermission>)
-            getRepository()
-                .findAll( buildFilterSpecification(policyId, filters), pageable);
+            getRepository().findAll(buildQueryAndFilterSpecification_BETTER(policyId, filters), pageable);
 
     val responses =
         ImmutableList.copyOf(userPermissions).stream()
@@ -72,12 +68,14 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
       List<SearchFilter> filters,
       String query,
       @NonNull Pageable pageable) {
-    // Since userPermissions needs users and policies fetched, cannot just do a join, need to do a fetch AND join,
+    // Since userPermissions needs users and policies fetched, cannot just do a join, need to do a
+    // fetch AND join,
     // otherwise will experience N+1 query problem
     val userPermissions =
         (Page<UserPermission>)
             getRepository()
-                .findAll( buildQueryAndFilterSpecification_BETTER(policyId, filters, query), pageable);
+                .findAll(
+                    buildQueryAndFilterSpecification_BETTER(policyId, filters, query), pageable);
 
     val responses =
         ImmutableList.copyOf(userPermissions).stream()
