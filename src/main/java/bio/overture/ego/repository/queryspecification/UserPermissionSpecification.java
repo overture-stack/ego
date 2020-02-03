@@ -50,11 +50,11 @@ public class UserPermissionSpecification extends SpecificationBase<UserPermissio
   public static Specification<UserPermission> buildFilterAndQuerySpecification(
       @NonNull UUID policyId, @NonNull List<SearchFilter> filters, String text) {
     return (root, query, builder) -> {
-      val sp = SimpleCriteriaBuilder.of(root, builder, query);
-      sp.setDistinct(true);
+      val scb = SimpleCriteriaBuilder.of(root, builder, query);
+      scb.setDistinct(true);
       // Create joins
-      val policySp = sp.leftJoinFetch(Policy.class, policy);
-      val userSp = sp.leftJoinFetch(User.class, owner);
+      val policySp = scb.leftJoinFetch(Policy.class, policy);
+      val userSp = scb.leftJoinFetch(User.class, owner);
 
       // Create predicates for filtering by policyId AND searchFilters
       val filterPredicates = userSp.searchFilter(filters);
@@ -69,7 +69,7 @@ public class UserPermissionSpecification extends SpecificationBase<UserPermissio
         val queryPredicates = Lists.<Predicate>newArrayList();
         val finalText = QueryUtils.prepareForQuery(text);
         // UserPermission.accessLevel
-        queryPredicates.add(sp.matchStringField(accessLevel, finalText));
+        queryPredicates.add(scb.matchStringField(accessLevel, finalText));
 
         // User.id and User.name
         Stream.of(id, name)
