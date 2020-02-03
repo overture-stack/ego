@@ -680,10 +680,10 @@ public abstract class AbstractPermissionControllerTest<
     // Assert that response contains both ownerIds, ownerNames and policyId
     val body = MAPPER.readTree(r3.getBody());
     assertNotNull(body);
-
+    assertTrue(body.get("resultSet").isArray());
     val expectedMap = uniqueIndex(asList(owner1, owner2), Identifiable::getId);
 
-    Streams.stream(body.iterator())
+    Streams.stream(body.get("resultSet").iterator())
         .forEach(
             n -> {
               val actualOwnerId = UUID.fromString(n.path("id").asText());

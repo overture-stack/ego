@@ -1,5 +1,11 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.repository.queryspecification.AbstractPermissionSpecification.buildFilterAndQuerySpecification;
+import static bio.overture.ego.repository.queryspecification.AbstractPermissionSpecification.buildFilterSpecification;
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
+import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.stream.Collectors.toUnmodifiableSet;
+
 import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
@@ -11,8 +17,10 @@ import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.UserPermissionRepository;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -22,16 +30,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-
-import static bio.overture.ego.repository.queryspecification.UserPermissionSpecification.buildFilterAndQuerySpecification;
-import static bio.overture.ego.repository.queryspecification.UserPermissionSpecification.buildFilterSpecification;
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
-import static java.util.stream.Collectors.toUnmodifiableList;
-import static java.util.stream.Collectors.toUnmodifiableSet;
 
 @Slf4j
 @Service
@@ -59,15 +57,13 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
     // Note: Since userPermissions needs users and policies fetched,
     // cannot just do a join, need to do a fetch AND join,
     // otherwise will experience N+1 query problem
+
     val userPermissions =
         (Page<UserPermission>)
-            getRepository().findAll(
-                buildFilterSpecification(policyId, filters), pageable);
+            getRepository().findAll(buildFilterSpecification(policyId, filters), pageable);
 
     val responses =
-        ImmutableList.copyOf(userPermissions).stream()
-            .map(this::convertToPolicyResponse)
-            .collect(toUnmodifiableList());
+        userPermissions.stream().map(this::convertToPolicyResponse).collect(toUnmodifiableList());
 
     return new PageImpl<>(responses, pageable, userPermissions.getTotalElements());
   }
@@ -84,13 +80,10 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
     val userPermissions =
         (Page<UserPermission>)
             getRepository()
-                .findAll(
-                    buildFilterAndQuerySpecification(policyId, filters, query), pageable);
+                .findAll(buildFilterAndQuerySpecification(policyId, filters, query), pageable);
 
     val responses =
-        ImmutableList.copyOf(userPermissions).stream()
-            .map(this::convertToPolicyResponse)
-            .collect(toUnmodifiableList());
+        userPermissions.stream().map(this::convertToPolicyResponse).collect(toUnmodifiableList());
 
     return new PageImpl<>(responses, pageable, userPermissions.getTotalElements());
   }

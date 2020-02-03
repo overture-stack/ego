@@ -16,36 +16,4 @@
 
 package bio.overture.ego.repository.queryspecification;
 
-import static bio.overture.ego.model.enums.JavaFields.ACCESS_LEVEL;
-import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.POLICY;
-
-import bio.overture.ego.model.entity.GroupPermission;
-import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.entity.UserPermission;
-import bio.overture.ego.utils.QueryUtils;
-import java.util.UUID;
-import javax.persistence.criteria.Join;
-import lombok.NonNull;
-import lombok.val;
-import org.springframework.data.jpa.domain.Specification;
-
-public class GroupPermissionSpecification extends SpecificationBase<GroupPermission> {
-
-  public static Specification<UserPermission> withPolicy(@NonNull UUID policyId) {
-    return (root, query, builder) -> {
-      query.distinct(true);
-      Join<GroupPermission, Policy> applicationJoin = root.join(POLICY);
-      return builder.equal(applicationJoin.<Integer>get(ID), policyId);
-    };
-  }
-
-  public static Specification<UserPermission> containsText(@NonNull String text) {
-    val finalText = QueryUtils.prepareForQuery(text);
-
-    return (root, query, builder) -> {
-      query.distinct(true);
-      return builder.or(getQueryPredicates(builder, root, finalText, ID, ACCESS_LEVEL));
-    };
-  }
-}
+public class GroupPermissionSpecification extends AbstractPermissionSpecification {}
