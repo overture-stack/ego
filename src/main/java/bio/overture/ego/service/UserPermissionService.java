@@ -1,7 +1,7 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.repository.queryspecification.AbstractPermissionSpecification.buildFilterAndQuerySpecification;
-import static bio.overture.ego.repository.queryspecification.AbstractPermissionSpecification.buildFilterSpecification;
+import static bio.overture.ego.repository.queryspecification.UserPermissionSpecification.buildFilterAndQuerySpecification;
+import static bio.overture.ego.repository.queryspecification.UserPermissionSpecification.buildFilterSpecification;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Collectors.toUnmodifiableSet;
