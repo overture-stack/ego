@@ -412,7 +412,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
     val requestWithNestedSort =
         initStringRequest()
             .endpoint("/policies/%s/users", policyId)
-            .queryParam("sort", "owner.name")
+            .queryParam("sort", "name")
             .queryParam("sortOrder", "ASC");
 
     val responseWithNestedSort = requestWithNestedSort.get();
@@ -618,7 +618,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
     val requestWithNestedSort =
         initStringRequest()
             .endpoint("/policies/%s/groups", policyId)
-            .queryParam("sort", "owner.name")
+            .queryParam("sort", "name")
             .queryParam("sortOrder", "ASC");
 
     val responseWithNestedSort = requestWithNestedSort.get();

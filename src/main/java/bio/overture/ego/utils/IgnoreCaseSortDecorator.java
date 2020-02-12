@@ -1,13 +1,14 @@
 package bio.overture.ego.utils;
 
 import static java.util.stream.Collectors.toUnmodifiableList;
+import static org.springframework.util.StringUtils.isEmpty;
 
+import java.util.Map;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Order;
 
 @RequiredArgsConstructor
 public class IgnoreCaseSortDecorator implements Pageable {
@@ -17,8 +18,19 @@ public class IgnoreCaseSortDecorator implements Pageable {
   /** Decorated methods */
   @Override
   public Sort getSort() {
-    val orders = delegate.getSort().stream().map(Order::ignoreCase).collect(toUnmodifiableList());
+    val orders =
+        delegate.getSort().stream()
+            .map(o -> new Sort.Order(o.getDirection(), getSortField(o.getProperty())).ignoreCase())
+            .collect(toUnmodifiableList());
+
     return Sort.by(orders);
+  }
+
+  private String getSortField(String sort) {
+    Map<String, String> sortMap =
+        Map.of("name", "owner.name", "id", "owner.id", "mask", "accessLevel");
+    val mapValue = sortMap.get(sort);
+    return isEmpty(mapValue) ? sort : mapValue;
   }
 
   /** Delegated methods */
