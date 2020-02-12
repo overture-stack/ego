@@ -261,7 +261,7 @@ public class PolicyController {
       @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @ApiParam(
-              value = "Query string compares to permission ID and AccessLevel fields.",
+              value = "Query string compares to AccessLevel and user Id and Name fields.",
               required = false)
           @RequestParam(value = "query", required = false)
           String query,
@@ -316,7 +316,7 @@ public class PolicyController {
       @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @ApiParam(
-              value = "Query string compares to permission ID and AccessLevel fields.",
+              value = "Query string compares to AccessLevel and group Id and Name fields.",
               required = false)
           @RequestParam(value = "query", required = false)
           String query,

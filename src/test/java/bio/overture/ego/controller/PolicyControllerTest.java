@@ -20,15 +20,22 @@ package bio.overture.ego.controller;
 import static bio.overture.ego.controller.AbstractPermissionControllerTest.createMaskJson;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.OK;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.User;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.Streams;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -326,6 +333,113 @@ public class PolicyControllerTest extends AbstractControllerTest {
     assertEquals(6, validQueryResponseJson.get("count").asInt());
 
     requestWithInvalidQuery.getAnd().assertPageResultsOfType(PolicyResponse.class);
+
+    val requestWithValidQueryAndLimit =
+        initStringRequest()
+            .endpoint("/policies/%s/users", policyId)
+            .queryParam("limit", 5)
+            .queryParam("offset", 0)
+            .queryParam("query", "read");
+
+    val responseWithValidQueryAndLimit = requestWithValidQueryAndLimit.get();
+    assertEquals(responseWithValidQueryAndLimit.getStatusCode(), OK);
+    val validQueryAndLimitResponseJson = MAPPER.readTree(responseWithValidQueryAndLimit.getBody());
+    assertEquals(6, validQueryAndLimitResponseJson.get("count").asInt());
+    assertEquals(5, validQueryAndLimitResponseJson.get("resultSet").size());
+
+    requestWithInvalidQuery.getAnd().assertPageResultsOfType(PolicyResponse.class);
+  }
+
+  @SneakyThrows
+  @Test
+  public void listUserPermission_sorted_Success() {
+    val policyId =
+        entityGenerator.setupSinglePolicy("ListSortedUserPermissions").getId().toString();
+    val usersWithRead =
+        entityGenerator.setupUsers(
+            "user 1", "Atticus Finch", "bomba John", "Barry White", "User Five", "user six");
+    val usersWithWrite = entityGenerator.setupUsers("Julia Child", "Judith Jones");
+
+    val userWithReadIds =
+        usersWithRead.stream().map(user -> user.getId().toString()).collect(Collectors.toList());
+
+    userWithReadIds.stream()
+        .map(
+            id ->
+                initStringRequest()
+                    .endpoint("/policies/%s/permission/user/%s", policyId, id)
+                    .body(createMaskJson(READ.toString()))
+                    .post())
+        .collect(Collectors.toList());
+
+    val usersWithWriteIds =
+        usersWithWrite.stream().map(user -> user.getId().toString()).collect(Collectors.toList());
+
+    usersWithWriteIds.stream()
+        .map(
+            id ->
+                initStringRequest()
+                    .endpoint("/policies/%s/permission/user/%s", policyId, id)
+                    .body(createMaskJson(WRITE.toString()))
+                    .post())
+        .collect(Collectors.toList());
+
+    val response = initStringRequest().endpoint("/policies/%s/users", policyId).get();
+
+    val responseStatus = response.getStatusCode();
+    assertEquals(responseStatus, OK);
+
+    // test with non nested sort value
+    val requestWithNonNestedSort =
+        initStringRequest()
+            .endpoint("/policies/%s/users", policyId)
+            .queryParam("sort", "accessLevel")
+            .queryParam("sortOrder", "ASC");
+
+    val responseWithNonNestedSort = requestWithNonNestedSort.get();
+    assertEquals(responseWithNonNestedSort.getStatusCode(), OK);
+    val responseJson = MAPPER.readTree(responseWithNonNestedSort.getBody());
+
+    assertEquals(8, responseJson.get("count").asInt());
+
+    val resultSet = responseJson.get("resultSet");
+    assertTrue(resultSet.isArray());
+    requestWithNonNestedSort.getAnd().assertOk().assertPageResultsOfType(PolicyResponse.class);
+    assertEquals(resultSet.get(0).get("mask").asText(), READ.toString());
+    assertEquals(resultSet.get(7).get("mask").asText(), WRITE.toString());
+
+    // test with nested sort value
+    val requestWithNestedSort =
+        initStringRequest()
+            .endpoint("/policies/%s/users", policyId)
+            .queryParam("sort", "owner.name")
+            .queryParam("sortOrder", "ASC");
+
+    val responseWithNestedSort = requestWithNestedSort.get();
+    assertEquals(responseWithNestedSort.getStatusCode(), OK);
+    val nestedSortResponseJson = MAPPER.readTree(responseWithNestedSort.getBody());
+
+    assertEquals(8, nestedSortResponseJson.get("count").asInt());
+
+    val nestedSortResultSet = nestedSortResponseJson.get("resultSet");
+    assertTrue(nestedSortResultSet.isArray());
+    requestWithNestedSort.getAnd().assertOk().assertPageResultsOfType(PolicyResponse.class);
+
+    val responseNames =
+        Streams.stream(nestedSortResultSet.iterator())
+            .map(r -> r.get("name").asText())
+            .collect(toImmutableList());
+
+    List<User> combinedUserList = new ArrayList(usersWithRead);
+    combinedUserList.addAll(usersWithWrite);
+
+    List<String> sortedList =
+        combinedUserList.stream()
+            .map(User::getEmail)
+            .sorted(String.CASE_INSENSITIVE_ORDER)
+            .collect(toImmutableList());
+
+    assertEquals(responseNames, sortedList);
   }
 
   @SneakyThrows
@@ -420,5 +534,117 @@ public class PolicyControllerTest extends AbstractControllerTest {
     assertEquals(6, validQueryResponseJson.get("count").asInt());
 
     requestWithInvalidQuery.getAnd().assertPageResultsOfType(PolicyResponse.class);
+
+    // test with query and limit less than total count
+    val requestWithValidQueryAndLimit =
+        initStringRequest()
+            .endpoint("/policies/%s/groups", policyId)
+            .queryParam("limit", 4)
+            .queryParam("offset", 0)
+            .queryParam("query", "read");
+
+    val responseWithValidQueryAndLimit = requestWithValidQueryAndLimit.get();
+    assertEquals(responseWithValidQueryAndLimit.getStatusCode(), OK);
+    val validQueryAndLimitResponseJson = MAPPER.readTree(responseWithValidQueryAndLimit.getBody());
+    assertEquals(6, validQueryAndLimitResponseJson.get("count").asInt());
+    assertEquals(4, validQueryAndLimitResponseJson.get("resultSet").size());
+
+    requestWithValidQueryAndLimit.getAnd().assertPageResultsOfType(PolicyResponse.class);
+  }
+
+  @SneakyThrows
+  @Test
+  public void listGroupPermission_sorted_Success() {
+    val policyId =
+        entityGenerator.setupSinglePolicy("ListSortedGroupPermissions").getId().toString();
+    val groupsWithRead =
+        entityGenerator.setupGroups(
+            "group 1", "Test Group", "B Group", "A Group", "ZZ Group", "xylophones");
+    val groupsWithWrite =
+        entityGenerator.setupGroups("Write Group One", "write permission group", "Writers");
+
+    val groupsWithReadIds =
+        groupsWithRead.stream().map(group -> group.getId().toString()).collect(Collectors.toList());
+
+    groupsWithReadIds.stream()
+        .map(
+            id ->
+                initStringRequest()
+                    .endpoint("/policies/%s/permission/group/%s", policyId, id)
+                    .body(createMaskJson(READ.toString()))
+                    .post())
+        .collect(Collectors.toList());
+
+    val groupsWithWriteIds =
+        groupsWithWrite.stream()
+            .map(group -> group.getId().toString())
+            .collect(Collectors.toList());
+
+    groupsWithWriteIds.stream()
+        .map(
+            id ->
+                initStringRequest()
+                    .endpoint("/policies/%s/permission/group/%s", policyId, id)
+                    .body(createMaskJson(WRITE.toString()))
+                    .post())
+        .collect(Collectors.toList());
+
+    val response = initStringRequest().endpoint("/policies/%s/groups", policyId).get();
+
+    val responseStatus = response.getStatusCode();
+    assertEquals(responseStatus, OK);
+
+    // test with non nested sort value
+    val requestWithNonNestedSort =
+        initStringRequest()
+            .endpoint("/policies/%s/groups", policyId)
+            .queryParam("sort", "accessLevel")
+            .queryParam("sortOrder", "ASC");
+
+    val responseWithNonNestedSort = requestWithNonNestedSort.get();
+    assertEquals(responseWithNonNestedSort.getStatusCode(), OK);
+    val responseJson = MAPPER.readTree(responseWithNonNestedSort.getBody());
+
+    assertEquals(9, responseJson.get("count").asInt());
+
+    val resultSet = responseJson.get("resultSet");
+    assertTrue(resultSet.isArray());
+    requestWithNonNestedSort.getAnd().assertOk().assertPageResultsOfType(PolicyResponse.class);
+
+    assertEquals(resultSet.get(0).get("mask").asText(), READ.toString());
+    assertEquals(resultSet.get(8).get("mask").asText(), WRITE.toString());
+
+    // test with nested sort value
+    val requestWithNestedSort =
+        initStringRequest()
+            .endpoint("/policies/%s/groups", policyId)
+            .queryParam("sort", "owner.name")
+            .queryParam("sortOrder", "ASC");
+
+    val responseWithNestedSort = requestWithNestedSort.get();
+    assertEquals(responseWithNestedSort.getStatusCode(), OK);
+    val nestedSortResponseJson = MAPPER.readTree(responseWithNestedSort.getBody());
+
+    assertEquals(9, nestedSortResponseJson.get("count").asInt());
+
+    val nestedSortResultSet = nestedSortResponseJson.get("resultSet");
+    assertTrue(nestedSortResultSet.isArray());
+    requestWithNestedSort.getAnd().assertOk().assertPageResultsOfType(PolicyResponse.class);
+
+    val responseNames =
+        Streams.stream(nestedSortResultSet.iterator())
+            .map(r -> r.get("name").asText())
+            .collect(toImmutableList());
+
+    List<Group> combinedGroupList = new ArrayList(groupsWithRead);
+    combinedGroupList.addAll(groupsWithWrite);
+
+    List<String> sortedList =
+        combinedGroupList.stream()
+            .map(Group::getName)
+            .sorted(String.CASE_INSENSITIVE_ORDER)
+            .collect(toImmutableList());
+
+    assertEquals(responseNames, sortedList);
   }
 }
