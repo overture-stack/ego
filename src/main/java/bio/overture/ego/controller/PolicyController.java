@@ -27,6 +27,7 @@ import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.service.UserPermissionService;
+import bio.overture.ego.utils.IgnoreCaseSortDecorator;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableList;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -265,12 +267,13 @@ public class PolicyController {
           String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
+    val decoratedPageable = new IgnoreCaseSortDecorator(pageable);
     if (isEmpty(query)) {
       return new PageDTO<>(
-          userPermissionService.listUserPermissionsByPolicy(id, filters, pageable));
+          userPermissionService.listUserPermissionsByPolicy(id, filters, decoratedPageable));
     } else {
       return new PageDTO<>(
-          userPermissionService.findUserPermissionsByPolicy(id, filters, query, pageable));
+          userPermissionService.findUserPermissionsByPolicy(id, filters, query, decoratedPageable));
     }
   }
 
@@ -319,12 +322,14 @@ public class PolicyController {
           String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       Pageable pageable) {
+    val decoratedPageable = new IgnoreCaseSortDecorator(pageable);
     if (isEmpty(query)) {
       return new PageDTO(
-          groupPermissionService.listGroupPermissionsByPolicy(id, filters, pageable));
+          groupPermissionService.listGroupPermissionsByPolicy(id, filters, decoratedPageable));
     } else {
       return new PageDTO<>(
-          groupPermissionService.findGroupPermissionsByPolicy(id, filters, query, pageable));
+          groupPermissionService.findGroupPermissionsByPolicy(
+              id, filters, query, decoratedPageable));
     }
   }
 }

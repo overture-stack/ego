@@ -55,10 +55,14 @@ public class UserPermissionSpecification {
       // instead only joined.
       //  When using the joinFetch methodology, hibernate was throwing cryptic errors, so this is a
       // sub performant fix until someone figures out the issue.
-      if (isNullOrEmpty(text) && filters.isEmpty()) {
+      // if no query text is present, Spring creates an extra query for count(userperm) which will
+      // throw an exception on Fetch
+      // https://coderanch.com/t/656073/frameworks/Spring-Data-fetch-join-Specification
+      if (query.getResultType() == Long.class || query.getResultType() == long.class) {
         val join = scb.leftJoin(Policy.class, policy);
         return join.equalId(policyId);
       }
+
       val policySp = scb.leftJoinFetch(Policy.class, policy);
       val permissionSp = scb.leftJoinFetch(User.class, OWNER);
 
