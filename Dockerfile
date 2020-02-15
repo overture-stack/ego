@@ -12,9 +12,9 @@ ENV EGO_USER_ID 9999
 ENV EGO_GROUP_ID 9999
 ENV EGO_DIR /target
 RUN addgroup -S -g $EGO_GROUP_ID $EGO_USER \
-    && adduser -S -u $EGO_USER_ID -g $EGO_GROUP_ID $EGO_USER  \
+    && adduser -S -u $EGO_USER_ID -G $EGO_USER $EGO_USER  \
     && mkdir -p $EGO_DIR \
     && chown -R $EGO_USER $EGO_DIR 
-USER $EGO_USER
+USER $EGO_USER_ID
 ENTRYPOINT ["java", "-jar", "/usr/bin/ego.jar"]
 EXPOSE 8081/tcp
