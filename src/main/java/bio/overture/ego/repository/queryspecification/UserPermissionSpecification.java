@@ -23,6 +23,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.QueryUtils;
 import com.google.common.collect.Lists;
@@ -38,12 +39,12 @@ import org.springframework.security.core.parameters.P;
 
 @Slf4j
 public class UserPermissionSpecification {
-  public static Specification<P> buildFilterSpecification(
+  public static Specification<UserPermission> buildFilterSpecification(
       @NonNull UUID policyId, @NonNull List<SearchFilter> filters) {
     return buildFilterAndQuerySpecification(policyId, filters, null);
   }
 
-  public static Specification<P> buildFilterAndQuerySpecification(
+  public static Specification<UserPermission> buildFilterAndQuerySpecification(
       @NonNull UUID policyId, @NonNull List<SearchFilter> filters, String text) {
     return (root, query, builder) -> {
       val scb = SimpleCriteriaBuilder.of(root, builder, query);
@@ -62,7 +63,6 @@ public class UserPermissionSpecification {
         val join = scb.leftJoin(Policy.class, policy);
         return join.equalId(policyId);
       }
-
       val policySp = scb.leftJoinFetch(Policy.class, policy);
       val permissionSp = scb.leftJoinFetch(User.class, OWNER);
 

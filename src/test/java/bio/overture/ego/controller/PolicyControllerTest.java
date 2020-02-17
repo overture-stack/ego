@@ -18,10 +18,14 @@
 package bio.overture.ego.controller;
 
 import static bio.overture.ego.controller.AbstractPermissionControllerTest.createMaskJson;
+import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static bio.overture.ego.utils.Collectors.toImmutableList;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toMap;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.OK;
@@ -647,4 +651,5 @@ public class PolicyControllerTest extends AbstractControllerTest {
 
     assertEquals(responseNames, sortedList);
   }
+
 }
