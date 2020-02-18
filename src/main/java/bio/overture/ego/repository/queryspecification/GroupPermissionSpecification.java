@@ -22,6 +22,7 @@ import static bio.overture.ego.model.enums.JavaFields.*;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.QueryUtils;
@@ -38,12 +39,12 @@ import org.springframework.security.core.parameters.P;
 
 @Slf4j
 public class GroupPermissionSpecification {
-  public static Specification<P> buildFilterSpecification(
+  public static Specification<GroupPermission> buildFilterSpecification(
       @NonNull UUID policyId, @NonNull List<SearchFilter> filters) {
     return buildFilterAndQuerySpecification(policyId, filters, null);
   }
 
-  public static Specification<P> buildFilterAndQuerySpecification(
+  public static Specification<GroupPermission> buildFilterAndQuerySpecification(
       @NonNull UUID policyId, @NonNull List<SearchFilter> filters, String text) {
     return (root, query, builder) -> {
       val scb = SimpleCriteriaBuilder.of(root, builder, query);

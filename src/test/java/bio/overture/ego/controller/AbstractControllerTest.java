@@ -1,7 +1,10 @@
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.utils.CollectionUtils.difference;
+import static bio.overture.ego.utils.CollectionUtils.intersection;
 import static bio.overture.ego.utils.Converters.convertToIds;
 import static bio.overture.ego.utils.Joiners.COMMA;
+import static org.junit.Assert.assertEquals;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
@@ -11,12 +14,14 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.utils.CollectionUtils;
 import bio.overture.ego.utils.web.BasicWebResource;
 import bio.overture.ego.utils.web.ResponseOption;
 import bio.overture.ego.utils.web.StringResponseOption;
 import bio.overture.ego.utils.web.StringWebResource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collection;
+import java.util.Set;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NonNull;
@@ -47,6 +52,20 @@ public abstract class AbstractControllerTest {
     headers.add(AUTHORIZATION, "Bearer " + ACCESS_TOKEN);
     headers.setContentType(APPLICATION_JSON);
     beforeTest();
+  }
+
+  public static <T> Set<T> assertDifferenceHasSize(@NonNull Collection<T> left,
+      @NonNull Collection<T> right, int expectedDifferenceSize){
+    val diff = difference(left, right);
+    assertEquals(expectedDifferenceSize, diff.size());
+    return diff;
+  }
+
+  public static <T> Set<T> assertIntersectionHasSize(@NonNull Collection<T> left,
+      @NonNull Collection<T> right, int expectedIntersectionSize){
+    val intersection = intersection(left, right);
+    assertEquals(expectedIntersectionSize, intersection.size());
+    return intersection;
   }
 
   /** Additional setup before each test */

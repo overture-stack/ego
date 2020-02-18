@@ -4,6 +4,7 @@ import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
 import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
 import static bio.overture.ego.controller.resolver.PageableResolver.SORT;
 import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
+import static bio.overture.ego.model.dto.GenericResponse.createGenericResponse;
 import static java.lang.String.format;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.util.StringUtils.isEmpty;
@@ -184,8 +185,7 @@ public class PolicyController {
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "group_id", required = true) UUID groupId) {
     groupPermissionService.deleteByPolicyAndOwner(id, groupId);
-    return new GenericResponse(
-        format("Deleted permission for group '%s' on policy '%s'.", groupId, id));
+    return createGenericResponse( "Deleted permission for group '%s' on policy '%s'.", groupId, id);
   }
 
   @AdminScoped
@@ -199,8 +199,8 @@ public class PolicyController {
       @RequestBody(required = true) MaskDTO maskDTO) {
     userPermissionService.addPermissions(
         userId, ImmutableList.of(new PermissionRequest(id, maskDTO.getMask())));
-    // TODO [rtisma]: change this to actually return proper response
-    return "1 user permission successfully added to ACL '" + id + "'";
+    // TODO [rtisma,anncattton]: BREAKING CHANGE change this to return GenericResponse object. Maybe this should return User just like how createGroupPermissions does
+    return format("1 user permission successfully added to ACL '%s'",  id);
   }
 
   @AdminScoped
@@ -218,8 +218,7 @@ public class PolicyController {
       @PathVariable(value = "user_id", required = true) UUID userId) {
 
     userPermissionService.deleteByPolicyAndOwner(id, userId);
-    return new GenericResponse(
-        format("Deleted permission for user '%s' on policy '%s'.", userId, id));
+    return createGenericResponse( "Deleted permission for user '%s' on policy '%s'.", userId, id);
   }
 
   @AdminScoped
@@ -248,7 +247,7 @@ public class PolicyController {
         required = false,
         dataType = "string",
         paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC"),
+        value = "Sorting order: ASC|DESC. Default order: DESC. Note: ascending sort order for the mask field is: READ,WRITE,DENY"),
   })
   @ApiResponses(
       value = {
@@ -303,8 +302,8 @@ public class PolicyController {
         required = false,
         dataType = "string",
         paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC"),
-  })
+        value = "Sorting order: ASC|DESC. Default order: DESC. Note: ascending sort order for the mask field is: READ,WRITE,DENY"),
+})
   @ApiResponses(
       value = {
         @ApiResponse(

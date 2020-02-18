@@ -35,6 +35,14 @@ public class SimpleCriteriaBuilder<X, Y> {
     return new SimpleCriteriaBuilder<Y, T>(join, builder, query);
   }
 
+
+  @SuppressWarnings("unchecked")
+  public <T> SimpleCriteriaBuilder<Y, T> leftOuterJoinFetch(Class<T> joinClass, String joinField) {
+    Fetch<Y, T> fetch = from.fetch(joinField, JoinType.LEFT);
+    val join = (Join<Y, T>) fetch;
+    return new SimpleCriteriaBuilder<Y, T>(join, builder, query);
+  }
+
   public <T> SimpleCriteriaBuilder<Y, T> leftJoin(Class<T> joinClass, String joinField) {
     Join<Y, T> join = from.join(joinField, JoinType.INNER);
     return new SimpleCriteriaBuilder<>(join, builder, query);
