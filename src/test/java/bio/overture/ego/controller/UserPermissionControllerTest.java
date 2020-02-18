@@ -3,11 +3,13 @@ package bio.overture.ego.controller;
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static java.lang.String.format;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toMap;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.lessThan;
+import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -28,19 +30,24 @@ import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import bio.overture.ego.utils.Streams;
+import bio.overture.ego.utils.web.StringWebResource;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.parameters.P;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -65,6 +72,10 @@ public class UserPermissionControllerTest
 
   @Value("${logging.test.controller.enable}")
   private boolean enableLogging;
+
+  private String getUsersForPolicyEndpoint(UUID policyId) {
+    return format("policies/%s/users", policyId);
+  }
 
   @Override
   protected boolean enableLogging() {
@@ -170,10 +181,10 @@ public class UserPermissionControllerTest
     users.forEach(u ->
       initStringRequest()
           .endpoint(getAddPermissionsEndpoint(u.getId().toString()))
-          .body(PermissionRequest.builder()
+          .body(List.of(PermissionRequest.builder()
               .mask(mask)
               .policyId(policyId)
-              .build() )
+              .build()))
           .postAnd()
           .assertOk());
   }
@@ -182,9 +193,9 @@ public class UserPermissionControllerTest
   protected void beforeTest() {
     super.beforeTest();
     policyUT = this.policies.get(0);
-    usersWithWrite = entityGenerator.setupUsers("AUser Write", "BUser Write", "CUser Write");
-    usersWithRead = entityGenerator.setupUsers("AUser Read", "BUser Read", "CUser Read");
-    usersWithDeny = entityGenerator.setupUsers("AUser Deny", "BUser Deny", "CUser Deny");
+    usersWithWrite = entityGenerator.setupUsers("AUser Apple", "BUser Grape", "CUser Orange");
+    usersWithRead = entityGenerator.setupUsers("AUser Grape", "BUser Apple", "CUser Grape");
+    usersWithDeny = entityGenerator.setupUsers("AUser Orange", "BUser Orange", "CUser Apple");
     createDenyPermissionsForUsers(policyUT, usersWithDeny);
     createReadPermissionsForUsers(policyUT, usersWithRead);
     createWritePermissionsForUsers(policyUT, usersWithWrite);
@@ -337,6 +348,126 @@ public class UserPermissionControllerTest
 //    log.info("response: {}", resp);
   }
 
-  public void test
+  private StringWebResource createUserPolicyResponseRequest(){
+    return initStringRequest()
+        .endpoint(getUsersForPolicyEndpoint(this.policyUT.getId()));
+  }
+
+  private Stream<User> streamAllUsers(){
+    return Stream.of(usersWithDeny, usersWithRead, usersWithWrite)
+        .flatMap(Collection::stream);
+  }
+
+  /**
+   * Test listing users for a policy without any request params returns all expected users
+   */
+  @Test
+  public void listUserForPolicy_noParam_Success(){
+    val items = createUserPolicyResponseRequest()
+        .getAnd()
+        .assertOk()
+        .extractPageResults(PolicyResponse.class)
+        .stream()
+        .map(PolicyResponse::getId)
+        .collect(toUnmodifiableSet());
+
+    val expectedUserIds = streamAllUsers()
+        .map(User::getId)
+        .map(UUID::toString)
+        .collect(toUnmodifiableSet());
+    assertTrue(items.containsAll(expectedUserIds));
+  }
+
+  /**
+   * Test usage of the query request param for the /policies/{}/users endpoint
+   */
+  @Test
+  public void listPolicyUsers_nameQuery_Success(){
+    // Assert querying of a group of names
+    val query1 = "BUser";
+    val items1 = createUserPolicyResponseRequest()
+        .queryParam("query", query1)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToSet(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedUserIds1 = streamAllUsers()
+        .filter(x -> x.getName().toLowerCase().contains(query1.toLowerCase()))
+        .map(User::getId)
+        .map(UUID::toString)
+        .collect(toUnmodifiableSet());
+    assertTrue(items1.containsAll(expectedUserIds1));
+
+
+    // Assert querying of different group of names
+    val query2 = "Grape";
+    val items2 = createUserPolicyResponseRequest()
+        .queryParam("query", query2)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToSet(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedUserIds2 = streamAllUsers()
+        .filter(x -> x.getName().toLowerCase().contains(query2.toLowerCase()))
+        .map(User::getId)
+        .map(UUID::toString)
+        .collect(toUnmodifiableSet());
+    assertTrue(items2.containsAll(expectedUserIds2));
+
+    // Assert case insensitive querying of the masks
+    val query3 = "DeNy";
+    val items3 = createUserPolicyResponseRequest()
+        .queryParam("query", query3)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToSet(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedUserIds3 = mapToImmutableSet(usersWithDeny, x -> x.getId().toString());
+    assertTrue(items3.containsAll(expectedUserIds3));
+  }
+
+  private static <T> Comparator<T> buildStringComparator(Function<T, String> function, boolean asc, boolean ignoreCase){
+    return comparing(function, (x, y) -> {
+      val left = ignoreCase ? x.toLowerCase() : x;
+      val right = ignoreCase ? y.toLowerCase() : y;
+      return asc ? left.compareTo(right) : right.compareTo(left);
+    });
+  }
+
+  @Test
+  public void listPolicyUsers_sortByNameAndDesc_Success(){
+    val actualUserIds = createUserPolicyResponseRequest()
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "dEsc")
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedUserIds = streamAllUsers()
+        .sorted(buildStringComparator(User::getName, false, true))
+        .map(User::getId)
+        .map(UUID::toString)
+        .collect(toUnmodifiableList());
+
+    assertEquals(expectedUserIds, actualUserIds);
+  }
+
+  @Test
+  public void listPolicyUsers_sortByNameAndAsc_Success(){
+    val actualUserIds = createUserPolicyResponseRequest()
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "aSc")
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedUserIds = streamAllUsers()
+        .sorted(buildStringComparator(User::getName, true, true))
+        .map(User::getId)
+        .map(UUID::toString)
+        .collect(toUnmodifiableList());
+
+    assertEquals(expectedUserIds, actualUserIds);
+  }
 
 }

@@ -13,6 +13,9 @@ import org.springframework.data.domain.Sort;
 @RequiredArgsConstructor
 public class IgnoreCaseSortDecorator implements Pageable {
 
+  private static final Map<String, String> SORT_MAP =
+      Map.of("name", "owner.name", "id", "owner.id", "mask", "accessLevel");
+
   @NonNull private final Pageable delegate;
 
   /** Decorated methods */
@@ -27,9 +30,7 @@ public class IgnoreCaseSortDecorator implements Pageable {
   }
 
   private String getSortField(String sort) {
-    Map<String, String> sortMap =
-        Map.of("name", "owner.name", "id", "owner.id", "mask", "accessLevel");
-    val mapValue = sortMap.get(sort);
+    val mapValue = SORT_MAP.get(sort);
     return isEmpty(mapValue) ? sort : mapValue;
   }
 

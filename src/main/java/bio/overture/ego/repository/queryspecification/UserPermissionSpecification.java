@@ -18,10 +18,12 @@ package bio.overture.ego.repository.queryspecification;
 
 import static bio.overture.ego.model.entity.AbstractPermission.Fields.accessLevel;
 import static bio.overture.ego.model.entity.AbstractPermission.Fields.policy;
+import static bio.overture.ego.model.entity.User.Fields.refreshToken;
 import static bio.overture.ego.model.enums.JavaFields.*;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.entity.RefreshToken;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.search.SearchFilter;
@@ -35,7 +37,6 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.parameters.P;
 
 @Slf4j
 public class UserPermissionSpecification {
@@ -64,10 +65,19 @@ public class UserPermissionSpecification {
         return join.equalId(policyId);
       }
       val policySp = scb.leftJoinFetch(Policy.class, policy);
-      val permissionSp = scb.leftJoinFetch(User.class, OWNER);
+      val ownerSp = scb.leftJoinFetch(User.class, OWNER);
+
+      //PERFORMANCE BUG TODO: [rtisma] without the line below, N+1 refreshtoken selects occur,
+      // where N is the number of users returned as a result of this entire method.
+      // It seems that Spring traverses over the resulting User entities
+      // and since it is in the persistent context,
+      // makes N+1 subsequent select queries (probably calling getRefreshToken() somewhere).
+      // Since there is no trivial way to fix this (other than implementing paging on our own),
+      // joining the refresh token is a more performant solution but still not optimal.
+      ownerSp.leftOuterJoinFetch(RefreshToken.class, refreshToken);
 
       // Create predicates for filtering by policyId AND searchFilters
-      val filterPredicates = permissionSp.searchFilter(filters);
+      val filterPredicates = ownerSp.searchFilter(filters);
       val policyIdPredicate = policySp.equalId(policyId);
       val andPredicates = Lists.<Predicate>newArrayList();
       andPredicates.addAll(filterPredicates);
@@ -83,7 +93,7 @@ public class UserPermissionSpecification {
 
         // Owner ID and NAME
         Stream.of(ID, NAME)
-            .map(fieldName -> permissionSp.filterByField(fieldName, finalText))
+            .map(fieldName -> ownerSp.filterByField(fieldName, finalText))
             .forEach(queryPredicates::add);
         // Query predicates should be ORed together
         val orPredicate = builder.or(queryPredicates.toArray(Predicate[]::new));

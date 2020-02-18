@@ -1,5 +1,6 @@
 package bio.overture.ego.utils.web;
 
+import static org.junit.Assert.assertEquals;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -19,7 +20,8 @@ public class ResponseOption<T, O extends ResponseOption<T, O>> {
   @Getter @NonNull private final ResponseEntity<T> response;
 
   public O assertStatusCode(HttpStatus code) {
-    Assert.assertEquals(response.getStatusCode(), code);
+
+    assertEquals(response.getBody().toString(), response.getStatusCode(), code);
     return thisInstance();
   }
 
