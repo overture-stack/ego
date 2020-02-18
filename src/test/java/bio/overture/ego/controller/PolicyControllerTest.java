@@ -18,29 +18,16 @@
 package bio.overture.ego.controller;
 
 import static bio.overture.ego.controller.AbstractPermissionControllerTest.createMaskJson;
-import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static bio.overture.ego.utils.Collectors.toImmutableList;
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toMap;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.OK;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.PolicyRequest;
-import bio.overture.ego.model.dto.PolicyResponse;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.User;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.Streams;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -247,5 +234,4 @@ public class PolicyControllerTest extends AbstractControllerTest {
     assertEquals(getResponseStatus, OK);
     assertEquals(0, getResponseJson.get("count").asInt());
   }
-
 }

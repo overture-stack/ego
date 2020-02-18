@@ -35,7 +35,6 @@ public class SimpleCriteriaBuilder<X, Y> {
     return new SimpleCriteriaBuilder<Y, T>(join, builder, query);
   }
 
-
   @SuppressWarnings("unchecked")
   public <T> SimpleCriteriaBuilder<Y, T> leftOuterJoinFetch(Class<T> joinClass, String joinField) {
     Fetch<Y, T> fetch = from.fetch(joinField, JoinType.LEFT);

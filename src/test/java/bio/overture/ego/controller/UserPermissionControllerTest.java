@@ -1,17 +1,19 @@
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static java.lang.String.format;
+
 import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
-import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.service.AbstractPermissionService;
 import bio.overture.ego.service.NamedService;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.service.UserPermissionService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
+import java.util.Collection;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,16 +23,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-
-import static bio.overture.ego.model.enums.AccessLevel.DENY;
-import static bio.overture.ego.model.enums.AccessLevel.READ;
-import static bio.overture.ego.model.enums.AccessLevel.WRITE;
-import static bio.overture.ego.utils.Joiners.COMMA;
-import static java.lang.String.format;
 
 @Slf4j
 @ActiveProfiles("test")
@@ -44,6 +36,7 @@ public class UserPermissionControllerTest
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
+
   @Autowired private PolicyService policyService;
   @Autowired private UserService userService;
   @Autowired private UserPermissionService userPermissionService;
@@ -130,5 +123,4 @@ public class UserPermissionControllerTest
   protected String getReadOwnersForPolicyEndpoint(String policyId) {
     return format("policies/%s/users", policyId);
   }
-
 }

@@ -13,9 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -37,8 +35,9 @@ public class StringResponseOption extends ResponseOption<String, StringResponseO
         .map(x -> internalExtractOneEntityFromResponse(x, entityClass));
   }
 
-  public <R> StringResponseOption assertPageResultHasSize(@NonNull Class<R> entityClass, final int expectedSize ){
-    assertEquals(extractPageResults(entityClass).size(),expectedSize);
+  public <R> StringResponseOption assertPageResultHasSize(
+      @NonNull Class<R> entityClass, final int expectedSize) {
+    assertEquals(extractPageResults(entityClass).size(), expectedSize);
     return this;
   }
 
@@ -50,20 +49,23 @@ public class StringResponseOption extends ResponseOption<String, StringResponseO
     return assertThat(extractOneEntity(entityClass));
   }
 
-  public <R,O> Stream<O> transformPageResultsToStream(@NonNull Class<R> entityClass, @NonNull Function<R, O> transformingFunction) {
-    return extractPageResults(entityClass)
-        .stream()
-        .map(transformingFunction);
+  public <R, O> Stream<O> transformPageResultsToStream(
+      @NonNull Class<R> entityClass, @NonNull Function<R, O> transformingFunction) {
+    return extractPageResults(entityClass).stream().map(transformingFunction);
   }
-  public <R,O> List<O> transformPageResultsToList(@NonNull Class<R> entityClass, @NonNull Function<R, O> transformingFunction) {
+
+  public <R, O> List<O> transformPageResultsToList(
+      @NonNull Class<R> entityClass, @NonNull Function<R, O> transformingFunction) {
     return transformPageResultsToStream(entityClass, transformingFunction)
         .collect(toUnmodifiableList());
   }
 
-  public <R,O> Set<O> transformPageResultsToSet(@NonNull Class<R> entityClass, @NonNull Function<R, O> transformingFunction) {
+  public <R, O> Set<O> transformPageResultsToSet(
+      @NonNull Class<R> entityClass, @NonNull Function<R, O> transformingFunction) {
     return transformPageResultsToStream(entityClass, transformingFunction)
         .collect(toUnmodifiableSet());
   }
+
   public <R> List<R> extractPageResults(@NonNull Class<R> entityClass) {
     return assertOk()
         .assertHasBody()

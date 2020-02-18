@@ -14,7 +14,6 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.utils.CollectionUtils;
 import bio.overture.ego.utils.web.BasicWebResource;
 import bio.overture.ego.utils.web.ResponseOption;
 import bio.overture.ego.utils.web.StringResponseOption;
@@ -54,15 +53,15 @@ public abstract class AbstractControllerTest {
     beforeTest();
   }
 
-  public static <T> Set<T> assertDifferenceHasSize(@NonNull Collection<T> left,
-      @NonNull Collection<T> right, int expectedDifferenceSize){
+  public static <T> Set<T> assertDifferenceHasSize(
+      @NonNull Collection<T> left, @NonNull Collection<T> right, int expectedDifferenceSize) {
     val diff = difference(left, right);
     assertEquals(expectedDifferenceSize, diff.size());
     return diff;
   }
 
-  public static <T> Set<T> assertIntersectionHasSize(@NonNull Collection<T> left,
-      @NonNull Collection<T> right, int expectedIntersectionSize){
+  public static <T> Set<T> assertIntersectionHasSize(
+      @NonNull Collection<T> left, @NonNull Collection<T> right, int expectedIntersectionSize) {
     val intersection = intersection(left, right);
     assertEquals(expectedIntersectionSize, intersection.size());
     return intersection;

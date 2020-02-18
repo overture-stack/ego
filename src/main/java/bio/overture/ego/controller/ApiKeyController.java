@@ -18,6 +18,7 @@ package bio.overture.ego.controller;
 
 import static bio.overture.ego.controller.resolver.PageableResolver.*;
 import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
+import static bio.overture.ego.model.dto.GenericResponse.createGenericResponse;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static java.lang.String.format;
@@ -164,11 +165,11 @@ public class ApiKeyController {
 
   @RequestMapping(method = DELETE, value = "/api_key")
   @ResponseStatus(value = OK)
-  public @ResponseBody String revokeApiKey(
+  public @ResponseBody GenericResponse revokeApiKey(
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "apiKey") final String apiKey) {
     tokenService.revokeApiKey(apiKey);
-    return format("ApiKey '%s' is successfully revoked!", apiKey);
+    return createGenericResponse("ApiKey '%s' is successfully revoked!", apiKey);
   }
 
   /** DEPRECATED: DELETE /token to be removed in next major release */

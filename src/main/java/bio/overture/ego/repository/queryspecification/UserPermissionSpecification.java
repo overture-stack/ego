@@ -67,7 +67,7 @@ public class UserPermissionSpecification {
       val policySp = scb.leftJoinFetch(Policy.class, policy);
       val ownerSp = scb.leftJoinFetch(User.class, OWNER);
 
-      //PERFORMANCE BUG TODO: [rtisma] without the line below, N+1 refreshtoken selects occur,
+      // PERFORMANCE BUG TODO: [rtisma] without the line below, N+1 refreshtoken selects occur,
       // where N is the number of users returned as a result of this entire method.
       // It seems that Spring traverses over the resulting User entities
       // and since it is in the persistent context,
