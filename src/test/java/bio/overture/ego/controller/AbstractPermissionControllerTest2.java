@@ -1,31 +1,15 @@
 package bio.overture.ego.controller;
 
-import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.NameableEntity;
 import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.service.AbstractPermissionService;
-import bio.overture.ego.service.NamedService;
-import bio.overture.ego.service.PolicyService;
-import bio.overture.ego.utils.CollectionUtils;
-import bio.overture.ego.utils.EntityGenerator;
-import bio.overture.ego.utils.Streams;
-import bio.overture.ego.utils.web.StringResponseOption;
 import bio.overture.ego.utils.web.StringWebResource;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Test;
-import org.springframework.http.HttpStatus;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -34,39 +18,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
-import static bio.overture.ego.utils.Collectors.toImmutableList;
-import static bio.overture.ego.utils.Collectors.toImmutableSet;
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentName;
-import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newEnumMap;
-import static com.google.common.collect.Maps.uniqueIndex;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static java.util.Arrays.stream;
 import static java.util.Comparator.comparing;
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Collectors.toUnmodifiableSet;
-import static java.util.stream.Stream.concat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.OK;
 
 @Slf4j
 public abstract class AbstractPermissionControllerTest2<
@@ -103,6 +66,7 @@ public abstract class AbstractPermissionControllerTest2<
     }
   }
   /**
+   * /policies/{policyId}/owners
    * Test listing owners for a policy without any request params returns all expected owners
    */
   @Test
@@ -119,6 +83,10 @@ public abstract class AbstractPermissionControllerTest2<
     assertTrue(actualOwnerIds.containsAll(expectedOwnerIds));
   }
 
+  /**
+   *  /policies/{policyId}/owners?limit=<>
+   *   Test listing owners for a policy with only a limit
+   */
   @Test
   public void listUserForPolicy_noParamWithLimit_Success(){
     getOwnersForPolicyRequest()
@@ -128,6 +96,7 @@ public abstract class AbstractPermissionControllerTest2<
   }
 
   /**
+   * /policies/{policyId}/owners?query=<>
    * Test usage of the query request param for the /policies/{}/<ownerType> endpoint
    */
   @Test
@@ -175,6 +144,9 @@ public abstract class AbstractPermissionControllerTest2<
     assertTrue(actualOwnerIds3.containsAll(expectedOwnerIds3));
   }
 
+  /**
+   *
+   */
   @Test
   public void listPolicyOwners_sortByNameAndDesc_Success(){
     val actualOwnerIds = getOwnersForPolicyRequest()
@@ -417,12 +389,12 @@ public abstract class AbstractPermissionControllerTest2<
         .map(Identifiable::getId)
         .map(UUID::toString)
         .collect(toUnmodifiableSet());
-
     assertEquals(expectedFirstSetOwnerIds, actualFirstSetOwnerIds);
   }
 
   @Test
   public void listPolicyOwners_queryOwnerAndSortByNameAndDesc_Success(){
+    // Assert query for a name returns with correct PolicyResponses
     val actualOwnerIds1 = getOwnersForPolicyRequest()
         .queryParam("query", "aowner")
         .queryParam("sort", "name")
@@ -437,10 +409,9 @@ public abstract class AbstractPermissionControllerTest2<
         .map(O::getId)
         .map(UUID::toString)
         .collect(toUnmodifiableList());
-
     assertEquals(expectedOwnerIds1, actualOwnerIds1);
 
-
+    // Assert query for a different name returns with correct PolicyResponses
     val actualOwnerIds2 = getOwnersForPolicyRequest()
         .queryParam("query", "apple")
         .queryParam("sort", "name")
@@ -455,12 +426,85 @@ public abstract class AbstractPermissionControllerTest2<
         .map(O::getId)
         .map(UUID::toString)
         .collect(toUnmodifiableList());
-
     assertEquals(expectedOwnerIds2, actualOwnerIds2);
+
+    // Assert query for a mask value returns with correct PolicyResponses
+    val actualOwnerIds3 = getOwnersForPolicyRequest()
+        .queryParam("query", "write")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "asc")
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToSet(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedOwnerIds3 = ownerMap.get(WRITE).stream()
+        .map(Identifiable::getId)
+        .map(UUID::toString)
+        .collect(toUnmodifiableSet());
+    assertEquals(expectedOwnerIds3, actualOwnerIds3);
+  }
+
+  @Test
+  public void listPolicyOwners_queryOwnerAndSortByNameAndDescAndLimit_Success(){
+    // Assert query for a name returns with correct PolicyResponses and limit
+    val actualOwnerIds1 = getOwnersForPolicyRequest()
+        .queryParam("query", "aowner")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "desc")
+        .queryParam("limit", 2)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedOwnerIds1 = streamAllOwners()
+        .filter(o -> o.getName().toLowerCase().contains("aowner"))
+        .sorted(buildStringComparator(NameableEntity::getName, false, true))
+        .map(O::getId)
+        .map(UUID::toString)
+        .limit(2)
+        .collect(toUnmodifiableList());
+    assertEquals(expectedOwnerIds1, actualOwnerIds1);
+
+    // Assert query for a different name returns with correct PolicyResponses with limit
+    val actualOwnerIds2 = getOwnersForPolicyRequest()
+        .queryParam("query", "apple")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "desc")
+        .queryParam("limit", 2)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedOwnerIds2 = streamAllOwners()
+        .filter(o -> o.getName().toLowerCase().contains("apple"))
+        .sorted(buildStringComparator(NameableEntity::getName, false, true))
+        .map(O::getId)
+        .map(UUID::toString)
+        .limit(2)
+        .collect(toUnmodifiableList());
+    assertEquals(expectedOwnerIds2, actualOwnerIds2);
+
+    // Assert query for a mask value returns with correct PolicyResponses with limit
+    val actualOwnerIds3 = getOwnersForPolicyRequest()
+        .queryParam("query", "write")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "asc")
+        .queryParam("limit", 2)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToSet(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedOwnerIds3 = ownerMap.get(WRITE).stream()
+        .map(Identifiable::getId)
+        .map(UUID::toString)
+        .limit(2)
+        .collect(toUnmodifiableSet());
+    assertEquals(expectedOwnerIds3, actualOwnerIds3);
   }
 
   @Test
   public void listPolicyOwners_queryOwnerAndSortByNameAndAsc_Success(){
+    // Assert query for a name returns with correct PolicyResponses
     val actualOwnerIds1 = getOwnersForPolicyRequest()
         .queryParam("query", "cowner")
         .queryParam("sort", "name")
@@ -475,9 +519,9 @@ public abstract class AbstractPermissionControllerTest2<
         .map(O::getId)
         .map(UUID::toString)
         .collect(toUnmodifiableList());
-
     assertEquals(expectedOwnerIds1, actualOwnerIds1);
 
+    // Assert query for a different name returns with correct PolicyResponses
     val actualOwnerIds2 = getOwnersForPolicyRequest()
         .queryParam("query", "orange")
         .queryParam("sort", "name")
@@ -492,9 +536,170 @@ public abstract class AbstractPermissionControllerTest2<
         .map(O::getId)
         .map(UUID::toString)
         .collect(toUnmodifiableList());
-
     assertEquals(expectedOwnerIds2, actualOwnerIds2);
+
+    // Assert query for a mask value returns with correct PolicyResponses
+    val actualOwnerIds3 = getOwnersForPolicyRequest()
+        .queryParam("query", "read")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "asc")
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToSet(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedOwnerIds3 = ownerMap.get(READ).stream()
+        .map(Identifiable::getId)
+        .map(UUID::toString)
+        .collect(toUnmodifiableSet());
+    assertEquals(expectedOwnerIds3, actualOwnerIds3);
   }
+
+  @Test
+  public void listPolicyOwners_queryOwnerAndSortByNameAndAscAndLimit_Success(){
+    // Assert query for a name returns with correct PolicyResponses with limit
+    val actualOwnerIds1 = getOwnersForPolicyRequest()
+        .queryParam("query", "cowner")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "asc")
+        .queryParam("limit", 2)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedOwnerIds1 = streamAllOwners()
+        .filter(o -> o.getName().toLowerCase().contains("cowner"))
+        .sorted(buildStringComparator(NameableEntity::getName, true, true))
+        .map(O::getId)
+        .map(UUID::toString)
+        .limit(2)
+        .collect(toUnmodifiableList());
+    assertEquals(expectedOwnerIds1, actualOwnerIds1);
+
+    // Assert query for a different name returns with correct PolicyResponses with limit
+    val actualOwnerIds2 = getOwnersForPolicyRequest()
+        .queryParam("query", "orange")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "asc")
+        .queryParam("limit", 1)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedOwnerIds2 = streamAllOwners()
+        .filter(o -> o.getName().toLowerCase().contains("orange"))
+        .sorted(buildStringComparator(NameableEntity::getName, true, true))
+        .map(O::getId)
+        .map(UUID::toString)
+        .limit(1)
+        .collect(toUnmodifiableList());
+    assertEquals(expectedOwnerIds2, actualOwnerIds2);
+
+    // Assert query for a mask value returns with correct PolicyResponses with limit
+    val actualOwnerIds3 = getOwnersForPolicyRequest()
+        .queryParam("query", "deny")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "asc")
+        .queryParam("limit", 1)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToSet(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedOwnerIds3 = ownerMap.get(DENY).stream()
+        .map(Identifiable::getId)
+        .map(UUID::toString)
+        .limit(1)
+        .collect(toUnmodifiableSet());
+    assertEquals(expectedOwnerIds3, actualOwnerIds3);
+  }
+
+  @Test
+  public void listPolicyOwners_queryOwnerAndSortByMaskAndAsc_Success() {
+    // Assert query for a name returns with correct PolicyResponses
+    val actualOwnerIds1 = getOwnersForPolicyRequest()
+        .queryParam("query", "cowner")
+        .queryParam("sort", "mask")
+        .queryParam("sortOrder", "asc")
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedOwnerIds1 = Stream.of(READ, WRITE, DENY)
+        .map(ownerMap::get)
+        .flatMap(Collection::stream)
+        .filter(x -> x.getName().toLowerCase().contains("cowner"))
+        .map(Identifiable::getId)
+        .map(UUID::toString)
+        .collect(toUnmodifiableList());
+    assertEquals(expectedOwnerIds1, actualOwnerIds1);
+  }
+
+  @Test
+  public void listPolicyOwners_queryOwnerAndSortByMaskAndAscAndLimit_Success() {
+    // Assert query for a name returns with correct PolicyResponses
+    val actualOwnerIds1 = getOwnersForPolicyRequest()
+        .queryParam("query", "cowner")
+        .queryParam("sort", "mask")
+        .queryParam("sortOrder", "asc")
+        .queryParam("limit", 2)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedOwnerIds1 = Stream.of(READ, WRITE, DENY)
+        .map(ownerMap::get)
+        .flatMap(Collection::stream)
+        .filter(x -> x.getName().toLowerCase().contains("cowner"))
+        .map(Identifiable::getId)
+        .map(UUID::toString)
+        .limit(2)
+        .collect(toUnmodifiableList());
+    assertEquals(expectedOwnerIds1, actualOwnerIds1);
+  }
+
+  @Test
+  public void listPolicyOwners_queryOwnerAndSortByMaskAndDesc_Success() {
+    // Assert query for a name returns with correct PolicyResponses
+    val actualOwnerIds1 = getOwnersForPolicyRequest()
+        .queryParam("query", "aowner")
+        .queryParam("sort", "mask")
+        .queryParam("sortOrder", "desc")
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedOwnerIds1 = Stream.of(DENY, WRITE, READ)
+        .map(ownerMap::get)
+        .flatMap(Collection::stream)
+        .filter(x -> x.getName().toLowerCase().contains("aowner"))
+        .map(Identifiable::getId)
+        .map(UUID::toString)
+        .collect(toUnmodifiableList());
+    assertEquals(expectedOwnerIds1, actualOwnerIds1);
+  }
+
+  @Test
+  public void listPolicyOwners_queryOwnerAndSortByMaskAndDescAndLimit_Success() {
+    // Assert query for a name returns with correct PolicyResponses
+    val actualOwnerIds1 = getOwnersForPolicyRequest()
+        .queryParam("query", "aowner")
+        .queryParam("sort", "mask")
+        .queryParam("sortOrder", "desc")
+        .queryParam("limit", 2)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+
+    val expectedOwnerIds1 = Stream.of(DENY, WRITE, READ)
+        .map(ownerMap::get)
+        .flatMap(Collection::stream)
+        .filter(x -> x.getName().toLowerCase().contains("aowner"))
+        .map(Identifiable::getId)
+        .map(UUID::toString)
+        .limit(2)
+        .collect(toUnmodifiableList());
+    assertEquals(expectedOwnerIds1, actualOwnerIds1);
+  }
+
 
   /** Necessary abstract methods for a generic abstract test */
   protected abstract List<O> setupOwners(String ... names);
