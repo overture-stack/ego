@@ -21,7 +21,7 @@ public class ResponseOption<T, O extends ResponseOption<T, O>> {
 
   public O assertStatusCode(HttpStatus code) {
 
-    assertEquals(response.getBody().toString(), response.getStatusCode(), code);
+    assertEquals(response.getStatusCode(), code);
     return thisInstance();
   }
 

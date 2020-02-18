@@ -1,7 +1,9 @@
 package bio.overture.ego.controller;
 
+import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.entity.AbstractPermission;
+import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.NameableEntity;
 import bio.overture.ego.model.entity.Policy;
@@ -32,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @Slf4j
-public abstract class AbstractPermissionControllerTest2<
+public abstract class AbstractListOwnerPermissionsForPolicyControllerTest<
         O extends NameableEntity<UUID>, P extends AbstractPermission<O>>
     extends AbstractControllerTest {
 
@@ -46,9 +48,8 @@ public abstract class AbstractPermissionControllerTest2<
   private boolean initialized = false;
 
   @Override
-  protected void beforeTest() {
+  protected synchronized void beforeTest() {
     // Initial setup of entities (run once)
-    synchronized (this){
       if (!initialized)  {
         this.ownerMap = newEnumMap(AccessLevel.class);
         this.policyUT = createPolicy("test-policy-"+System.currentTimeMillis());
@@ -63,7 +64,6 @@ public abstract class AbstractPermissionControllerTest2<
         createWritePermissionsForOwners(policyUT, ownersWithWrite);
         initialized = true;
       }
-    }
   }
   /**
    * /policies/{policyId}/owners
@@ -338,14 +338,13 @@ public abstract class AbstractPermissionControllerTest2<
     val actualFirstSetOwnerIds = Set.copyOf(actualOwnerIds.subList(0, 3));
     val actualSecondSetOwnerIds = Set.copyOf(actualOwnerIds.subList(3, 5));
 
-    val expectedFirstSetOwnerIds = mapToImmutableSet(ownersWithDeny, x -> x.getId().toString());
-    val expectedSecondSetOwnerIds = ownersWithWrite.stream().limit(2)
-        .map(Identifiable::getId)
-        .map(UUID::toString)
-        .collect(toUnmodifiableSet());
+    assertEquals(3, actualFirstSetOwnerIds.size());
+    assertEquals(2, actualSecondSetOwnerIds.size());
 
-    assertEquals(expectedFirstSetOwnerIds, actualFirstSetOwnerIds);
-    assertEquals(expectedSecondSetOwnerIds, actualSecondSetOwnerIds);
+    val expectedOwnerWithDenyUserIds = mapToImmutableSet(ownersWithDeny, x -> x.getId().toString());
+    val expectedOwnerWithWriteUserIds = mapToImmutableSet(ownersWithWrite, x -> x.getId().toString());
+    assertEquals(expectedOwnerWithDenyUserIds, actualFirstSetOwnerIds);
+    assertTrue(expectedOwnerWithWriteUserIds.containsAll(actualSecondSetOwnerIds));
   }
 
   @Test
@@ -385,11 +384,8 @@ public abstract class AbstractPermissionControllerTest2<
     assertEquals(2, totalSize);
     val actualFirstSetOwnerIds = Set.copyOf(actualOwnerIds.subList(0, totalSize));
 
-    val expectedFirstSetOwnerIds = ownersWithRead.stream().limit(2)
-        .map(Identifiable::getId)
-        .map(UUID::toString)
-        .collect(toUnmodifiableSet());
-    assertEquals(expectedFirstSetOwnerIds, actualFirstSetOwnerIds);
+    val expectedOwnerWithReadUserIds = mapToImmutableSet(ownersWithRead, o -> o.getId().toString());
+    assertTrue(expectedOwnerWithReadUserIds.containsAll(actualFirstSetOwnerIds));
   }
 
   @Test
@@ -704,13 +700,17 @@ public abstract class AbstractPermissionControllerTest2<
   /** Necessary abstract methods for a generic abstract test */
   protected abstract List<O> setupOwners(String ... names);
 
-  protected abstract void createPermissionsForOwners(UUID policyId, AccessLevel mask, Collection<O> owners);
-
-  // Owner specific
-  protected abstract Class<O> getOwnerType();
-
-  // Permission specific
-  protected abstract Class<P> getPermissionType();
+  private void createPermissionsForOwners(UUID policyId, AccessLevel mask, Collection<? extends Identifiable<UUID>> owners) {
+    owners.forEach(u ->
+        initStringRequest()
+            .endpoint(getAddPermissionsEndpoint(u.getId()))
+            .body(List.of(PermissionRequest.builder()
+                .mask(mask)
+                .policyId(policyId)
+                .build()))
+            .postAnd()
+            .assertOk());
+  }
 
   // Endpoints
   protected abstract String getAddPermissionsEndpoint(UUID ownerId);
@@ -722,11 +722,6 @@ public abstract class AbstractPermissionControllerTest2<
   private Stream<O> streamAllOwners(){
     return Stream.of(ownersWithDeny, ownersWithRead, ownersWithWrite)
         .flatMap(Collection::stream);
-  }
-
-  private StringWebResource getAddPermissionRequest(UUID ownerId){
-    return initStringRequest()
-        .endpoint(getAddPermissionsEndpoint(ownerId));
   }
 
   private StringWebResource getOwnersForPolicyRequest(){

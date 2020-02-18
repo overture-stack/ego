@@ -248,45 +248,6 @@ public class PolicyControllerTest extends AbstractControllerTest {
     assertEquals(0, getResponseJson.get("count").asInt());
   }
 
-  @SneakyThrows
-  @Test
-  public void listUserPermission_findAllQuery_Success() {
-    val policyId = entityGenerator.setupSinglePolicy("ListUserPermissions").getId().toString();
-    val users =
-        entityGenerator.setupUsers(
-            "User 1", "User 2", "User 3", "User 4", "User 5", "User 6", "User 7", "User 8");
-
-    val userIds = users.stream().map(user -> user.getId().toString()).collect(Collectors.toList());
-
-    userIds.stream()
-        .map(
-            id ->
-                initStringRequest()
-                    .endpoint("/policies/%s/permission/user/%s", policyId, id)
-                    .body(createMaskJson(READ.toString()))
-                    .post())
-        .collect(Collectors.toList());
-
-    val response = initStringRequest().endpoint("/policies/%s/users", policyId).get();
-
-    val responseStatus = response.getStatusCode();
-    assertEquals(responseStatus, OK);
-
-    val requestWithLimit =
-        initStringRequest()
-            .endpoint("/policies/%s/users", policyId)
-            .queryParam("limit", 5)
-            .queryParam("offset", 0);
-
-    val responseWithLimit = requestWithLimit.get();
-    assertEquals(responseWithLimit.getStatusCode(), OK);
-    val responseJson = MAPPER.readTree(responseWithLimit.getBody());
-
-    assertEquals(userIds.size(), responseJson.get("count").asInt());
-    assertEquals(5, responseJson.get("resultSet").size());
-
-    requestWithLimit.getAnd().assertOk().assertPageResultsOfType(PolicyResponse.class);
-  }
 
   @Test
   @SneakyThrows
