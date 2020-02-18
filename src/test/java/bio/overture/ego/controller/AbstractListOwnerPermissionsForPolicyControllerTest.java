@@ -8,7 +8,9 @@ import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.NameableEntity;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.utils.CollectionUtils;
 import bio.overture.ego.utils.web.StringWebResource;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Test;
@@ -25,6 +27,8 @@ import java.util.stream.Stream;
 import static bio.overture.ego.model.enums.AccessLevel.DENY;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.utils.CollectionUtils.difference;
+import static bio.overture.ego.utils.CollectionUtils.intersection;
 import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 import static com.google.common.collect.Maps.newEnumMap;
 import static java.util.Comparator.comparing;
@@ -84,15 +88,29 @@ public abstract class AbstractListOwnerPermissionsForPolicyControllerTest<
   }
 
   /**
-   *  /policies/{policyId}/owners?limit=<>
+   *  /policies/{policyId}/owners?limit=<>&offset=<></>
    *   Test listing owners for a policy with only a limit
    */
   @Test
-  public void listUserForPolicy_noParamWithLimit_Success(){
-    getOwnersForPolicyRequest()
-        .queryParam("limit", "4")
+  public void listUserForPolicy_noParamWithLimitOffset_Success(){
+    // Assert limit with zero offset
+    val actualOwnerIds1 = getOwnersForPolicyRequest()
+        .queryParam("offset", 0)
+        .queryParam("limit", 4)
         .getAnd()
-        .assertPageResultHasSize(PolicyResponse.class, 4);
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+    assertEquals(4, actualOwnerIds1.size());
+
+    // Assert non-zero offset
+    val actualOwnerIds2 = getOwnersForPolicyRequest()
+        .queryParam("offset", 2)
+        .queryParam("limit", 4)
+        .getAnd()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+    assertEquals(4, actualOwnerIds2.size());
+    assertDifferenceHasSize(actualOwnerIds1, actualOwnerIds2, 2);
+    assertDifferenceHasSize(actualOwnerIds2, actualOwnerIds1, 2);
+    assertIntersectionHasSize(actualOwnerIds1, actualOwnerIds2, 2);
   }
 
   /**
@@ -166,23 +184,37 @@ public abstract class AbstractListOwnerPermissionsForPolicyControllerTest<
   }
 
   @Test
-  public void listPolicyOwners_sortByNameAndDescAndLimit_Success(){
-    val actualOwnerIds = getOwnersForPolicyRequest()
+  public void listPolicyOwners_sortByNameAndDescAndLimitOffset_Success(){
+    // Assert limit with zero offset
+    val actualOwnerIds1 = getOwnersForPolicyRequest()
         .queryParam("sort", "name")
         .queryParam("sortOrder", "dEsc")
+        .queryParam("offset", 0)
         .queryParam("limit", 5)
         .getAnd()
         .assertOk()
         .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
 
-    val expectedOwnerIds = streamAllOwners()
+    val expectedOwnerIds1 = streamAllOwners()
         .sorted(buildStringComparator(O::getName, false, true))
         .map(O::getId)
         .map(UUID::toString)
         .limit(5)
         .collect(toUnmodifiableList());
+    assertEquals(expectedOwnerIds1, actualOwnerIds1);
 
-    assertEquals(expectedOwnerIds, actualOwnerIds);
+    // Assert non-zero offset
+    val actualOwnerIds2 = getOwnersForPolicyRequest()
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "dEsc")
+        .queryParam("offset", 2)
+        .queryParam("limit", 5)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+    assertDifferenceHasSize(actualOwnerIds1, actualOwnerIds2, 2);
+    assertDifferenceHasSize(actualOwnerIds2, actualOwnerIds1, 2);
+    assertIntersectionHasSize(actualOwnerIds2, actualOwnerIds1, 3);
   }
 
 
@@ -205,23 +237,38 @@ public abstract class AbstractListOwnerPermissionsForPolicyControllerTest<
   }
 
   @Test
-  public void listPolicyOwners_sortByNameAndAscAndLimit_Success(){
-    val actualOwnerIds = getOwnersForPolicyRequest()
+  public void listPolicyOwners_sortByNameAndAscAndLimitOffset_Success(){
+    // Assert limit with zero offset
+    val actualOwnerIds1 = getOwnersForPolicyRequest()
         .queryParam("sort", "name")
         .queryParam("sortOrder", "aSc")
+        .queryParam("offset", 0)
         .queryParam("limit", 7)
         .getAnd()
         .assertOk()
         .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
 
-    val expectedOwnerIds = streamAllOwners()
+    val expectedOwnerIds1 = streamAllOwners()
         .sorted(buildStringComparator(O::getName, true, true))
         .map(O::getId)
         .map(UUID::toString)
         .limit(7)
         .collect(toUnmodifiableList());
+    assertEquals(expectedOwnerIds1, actualOwnerIds1);
 
-    assertEquals(expectedOwnerIds, actualOwnerIds);
+
+    // Assert non-zero offset
+    val actualOwnerIds2 = getOwnersForPolicyRequest()
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "aSc")
+        .queryParam("offset", 2)
+        .queryParam("limit", 7)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+    assertDifferenceHasSize(actualOwnerIds1, actualOwnerIds2, 2);
+    assertDifferenceHasSize(actualOwnerIds2, actualOwnerIds1, 2);
+    assertIntersectionHasSize(actualOwnerIds2, actualOwnerIds1, 5);
   }
 
   @Test
@@ -243,23 +290,38 @@ public abstract class AbstractListOwnerPermissionsForPolicyControllerTest<
   }
 
   @Test
-  public void listPolicyOwners_sortByIdAndDescAndLimit_Success(){
-    val actualOwnerIds = getOwnersForPolicyRequest()
+  public void listPolicyOwners_sortByIdAndDescAndLimitOffset_Success(){
+    // Assert limit with zero offset
+    val actualOwnerIds1 = getOwnersForPolicyRequest()
         .queryParam("sort", "id")
         .queryParam("sortOrder", "deSc")
+        .queryParam("offset", 0)
         .queryParam("limit", 6 )
         .getAnd()
         .assertOk()
         .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
 
-    val expectedOwnerIds = streamAllOwners()
+    val expectedOwnerIds1 = streamAllOwners()
         .sorted(buildStringComparator(o -> o.getId().toString(), false, true))
         .map(O::getId)
         .map(UUID::toString)
         .limit(6)
         .collect(toUnmodifiableList());
+    assertEquals(expectedOwnerIds1, actualOwnerIds1);
 
-    assertEquals(expectedOwnerIds, actualOwnerIds);
+
+    // Assert non-zero offset
+    val actualOwnerIds2 = getOwnersForPolicyRequest()
+        .queryParam("sort", "id")
+        .queryParam("sortOrder", "deSc")
+        .queryParam("offset", 2)
+        .queryParam("limit", 6 )
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+    assertDifferenceHasSize(actualOwnerIds1, actualOwnerIds2, 2);
+    assertDifferenceHasSize(actualOwnerIds2, actualOwnerIds1, 2);
+    assertIntersectionHasSize(actualOwnerIds2, actualOwnerIds1, 4);
   }
 
   @Test
@@ -281,23 +343,39 @@ public abstract class AbstractListOwnerPermissionsForPolicyControllerTest<
   }
 
   @Test
-  public void listPolicyOwners_sortByIdAndAscAndLimit_Success(){
-    val actualOwnerIds = getOwnersForPolicyRequest()
+  public void listPolicyOwners_sortByIdAndAscAndLimitOffset_Success(){
+    // Assert limit with zero offset
+    val actualOwnerIds1 = getOwnersForPolicyRequest()
         .queryParam("sort", "id")
         .queryParam("sortOrder", "asC")
+        .queryParam("offset", 0)
         .queryParam("limit", 8)
         .getAnd()
         .assertOk()
         .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
 
-    val expectedOwnerIds = streamAllOwners()
+    val expectedOwnerIds1 = streamAllOwners()
         .sorted(buildStringComparator(o -> o.getId().toString(), true, true))
         .map(O::getId)
         .map(UUID::toString)
         .limit(8)
         .collect(toUnmodifiableList());
+    assertEquals(expectedOwnerIds1, actualOwnerIds1);
 
-    assertEquals(expectedOwnerIds, actualOwnerIds);
+
+    // Assert non-zero offset
+    val actualOwnerIds2 = getOwnersForPolicyRequest()
+        .queryParam("sort", "id")
+        .queryParam("sortOrder", "asC")
+        .queryParam("offset", 4)
+        .queryParam("limit", 8)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+    assertEquals(5, actualOwnerIds2.size());
+    assertDifferenceHasSize(actualOwnerIds1, actualOwnerIds2, 4);
+    assertDifferenceHasSize(actualOwnerIds2, actualOwnerIds1, 1);
+    assertIntersectionHasSize(actualOwnerIds1, actualOwnerIds2, 4);
   }
 
   @Test
@@ -324,19 +402,21 @@ public abstract class AbstractListOwnerPermissionsForPolicyControllerTest<
   }
 
   @Test
-  public void listPolicyOwners_sortByMaskAndDescAndLimit_Success(){
-    val actualOwnerIds = getOwnersForPolicyRequest()
+  public void listPolicyOwners_sortByMaskAndDescAndLimitOffset_Success(){
+    // Assert limit with zero offset
+    val actualOwnerIds1 = getOwnersForPolicyRequest()
         .queryParam("sort", "mask")
         .queryParam("sortOrder", "deSC")
+        .queryParam("offset", 0)
         .queryParam("limit", 5)
         .getAnd()
         .assertOk()
         .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
 
-    val totalSize = actualOwnerIds.size();
+    val totalSize = actualOwnerIds1.size();
     assertEquals(5, totalSize);
-    val actualFirstSetOwnerIds = Set.copyOf(actualOwnerIds.subList(0, 3));
-    val actualSecondSetOwnerIds = Set.copyOf(actualOwnerIds.subList(3, 5));
+    val actualFirstSetOwnerIds = Set.copyOf(actualOwnerIds1.subList(0, 3));
+    val actualSecondSetOwnerIds = Set.copyOf(actualOwnerIds1.subList(3, 5));
 
     assertEquals(3, actualFirstSetOwnerIds.size());
     assertEquals(2, actualSecondSetOwnerIds.size());
@@ -345,6 +425,21 @@ public abstract class AbstractListOwnerPermissionsForPolicyControllerTest<
     val expectedOwnerWithWriteUserIds = mapToImmutableSet(ownersWithWrite, x -> x.getId().toString());
     assertEquals(expectedOwnerWithDenyUserIds, actualFirstSetOwnerIds);
     assertTrue(expectedOwnerWithWriteUserIds.containsAll(actualSecondSetOwnerIds));
+
+
+    // Assert non-zero offset
+    val actualOwnerIds2 = getOwnersForPolicyRequest()
+        .queryParam("sort", "mask")
+        .queryParam("sortOrder", "deSC")
+        .queryParam("offset", 2)
+        .queryParam("limit", 5)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+    assertEquals(5, actualOwnerIds2.size());
+    assertDifferenceHasSize(actualOwnerIds1, actualOwnerIds2, 2);
+    assertDifferenceHasSize(actualOwnerIds2, actualOwnerIds1, 2);
+    assertIntersectionHasSize(actualOwnerIds1, actualOwnerIds2, 3);
   }
 
   @Test
@@ -371,21 +466,36 @@ public abstract class AbstractListOwnerPermissionsForPolicyControllerTest<
   }
 
   @Test
-  public void listPolicyOwners_sortByMaskAndAscAndLimit_Success(){
-    val actualOwnerIds = getOwnersForPolicyRequest()
+  public void listPolicyOwners_sortByMaskAndAscAndLimitOffset_Success(){
+    // Assert limit with zero offset
+    val actualOwnerIds1 = getOwnersForPolicyRequest()
         .queryParam("sort", "mask")
         .queryParam("sortOrder", "ASC")
+        .queryParam("offset", 0)
         .queryParam("limit", 2)
         .getAnd()
         .assertOk()
         .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
 
-    val totalSize = actualOwnerIds.size();
+    val totalSize = actualOwnerIds1.size();
     assertEquals(2, totalSize);
-    val actualFirstSetOwnerIds = Set.copyOf(actualOwnerIds.subList(0, totalSize));
+    val actualFirstSetOwnerIds = Set.copyOf(actualOwnerIds1.subList(0, totalSize));
 
     val expectedOwnerWithReadUserIds = mapToImmutableSet(ownersWithRead, o -> o.getId().toString());
     assertTrue(expectedOwnerWithReadUserIds.containsAll(actualFirstSetOwnerIds));
+
+    // Assert non-zero offset
+    val actualOwnerIds2 = getOwnersForPolicyRequest()
+        .queryParam("sort", "mask")
+        .queryParam("sortOrder", "ASC")
+        .queryParam("offset", 1)
+        .queryParam("limit", 2)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+    assertDifferenceHasSize(actualOwnerIds1, actualOwnerIds2, 1);
+    assertDifferenceHasSize(actualOwnerIds2, actualOwnerIds1, 1);
+    assertIntersectionHasSize(actualOwnerIds2, actualOwnerIds1, 1);
   }
 
   @Test
@@ -499,6 +609,85 @@ public abstract class AbstractListOwnerPermissionsForPolicyControllerTest<
   }
 
   @Test
+  public void listPolicyOwners_queryOwnerAndSortByNameAndDescAndLimitOffset_Success(){
+    // Assert query for a name returns with correct PolicyResponses and limit
+    val actualOwnerIds1 = getOwnersForPolicyRequest()
+        .queryParam("query", "aowner")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "desc")
+        .queryParam("offset", 0)
+        .queryParam("limit", 2)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+
+    // Assert non-zero offset
+    val actualOwnerIds1_offset = getOwnersForPolicyRequest()
+        .queryParam("query", "aowner")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "desc")
+        .queryParam("offset", 1)
+        .queryParam("limit", 2)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+    assertDifferenceHasSize(actualOwnerIds1, actualOwnerIds1_offset, 1);
+    assertDifferenceHasSize(actualOwnerIds1_offset, actualOwnerIds1, 1);
+    assertIntersectionHasSize(actualOwnerIds1_offset, actualOwnerIds1, 1);
+
+    // Assert query for a different name returns with correct PolicyResponses with limit
+    val actualOwnerIds2 = getOwnersForPolicyRequest()
+        .queryParam("query", "apple")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "desc")
+        .queryParam("offset", 0)
+        .queryParam("limit", 2)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+
+    // Assert non-zero offset
+    val actualOwnerIds2_offset = getOwnersForPolicyRequest()
+        .queryParam("query", "apple")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "desc")
+        .queryParam("offset", 1)
+        .queryParam("limit", 3)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+    assertDifferenceHasSize(actualOwnerIds2, actualOwnerIds2_offset, 1);
+    assertDifferenceHasSize(actualOwnerIds2_offset, actualOwnerIds2, 1);
+    assertIntersectionHasSize(actualOwnerIds2_offset, actualOwnerIds2, 1);
+
+
+    // Assert query for a mask value returns with correct PolicyResponses with limit
+    val actualOwnerIds3 = getOwnersForPolicyRequest()
+        .queryParam("query", "write")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "asc")
+        .queryParam("offset", 0)
+        .queryParam("limit", 2)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToSet(PolicyResponse.class, PolicyResponse::getId);
+
+    // Assert non-zero offset
+    val actualOwnerIds3_offset = getOwnersForPolicyRequest()
+        .queryParam("query", "write")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "asc")
+        .queryParam("offset", 1)
+        .queryParam("limit", 1)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToSet(PolicyResponse.class, PolicyResponse::getId);
+    assertDifferenceHasSize(actualOwnerIds3, actualOwnerIds3_offset, 1);
+    assertDifferenceHasSize(actualOwnerIds3_offset, actualOwnerIds3, 0);
+    assertIntersectionHasSize(actualOwnerIds3_offset, actualOwnerIds3, 1);
+  }
+
+  @Test
   public void listPolicyOwners_queryOwnerAndSortByNameAndAsc_Success(){
     // Assert query for a name returns with correct PolicyResponses
     val actualOwnerIds1 = getOwnersForPolicyRequest()
@@ -609,6 +798,84 @@ public abstract class AbstractListOwnerPermissionsForPolicyControllerTest<
   }
 
   @Test
+  public void listPolicyOwners_queryOwnerAndSortByNameAndAscAndLimitOffset_Success(){
+    // Assert query for a name returns with correct PolicyResponses with limit
+    val actualOwnerIds1 = getOwnersForPolicyRequest()
+        .queryParam("query", "cowner")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "asc")
+        .queryParam("offset", 0)
+        .queryParam("limit", 2)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+
+    // Assert non-zero offset
+    val actualOwnerIds1_offset = getOwnersForPolicyRequest()
+        .queryParam("query", "cowner")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "asc")
+        .queryParam("offset", 1)
+        .queryParam("limit", 2)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+    assertDifferenceHasSize(actualOwnerIds1, actualOwnerIds1_offset,1);
+    assertDifferenceHasSize(actualOwnerIds1_offset, actualOwnerIds1,1);
+    assertIntersectionHasSize(actualOwnerIds1_offset, actualOwnerIds1,1);
+
+    // Assert query for a different name returns with correct PolicyResponses with limit
+    val actualOwnerIds2 = getOwnersForPolicyRequest()
+        .queryParam("query", "orange")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "asc")
+        .queryParam("offset", 0)
+        .queryParam("limit", 1)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+
+    // Assert non-zero offset
+    val actualOwnerIds2_offset = getOwnersForPolicyRequest()
+        .queryParam("query", "orange")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "asc")
+        .queryParam("offset", 1)
+        .queryParam("limit", 1)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+    assertDifferenceHasSize(actualOwnerIds2, actualOwnerIds2_offset,1);
+    assertDifferenceHasSize(actualOwnerIds2_offset, actualOwnerIds2,1);
+    assertIntersectionHasSize(actualOwnerIds2_offset, actualOwnerIds2,0);
+
+    // Assert query for a mask value returns with correct PolicyResponses with limit
+    val actualOwnerIds3 = getOwnersForPolicyRequest()
+        .queryParam("query", "deny")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "asc")
+        .queryParam("offset", 0)
+        .queryParam("limit", 3)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToSet(PolicyResponse.class, PolicyResponse::getId);
+
+    // Assert non-zero offset
+    val actualOwnerIds3_offset = getOwnersForPolicyRequest()
+        .queryParam("query", "deny")
+        .queryParam("sort", "name")
+        .queryParam("sortOrder", "asc")
+        .queryParam("offset", 2)
+        .queryParam("limit", 3)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToSet(PolicyResponse.class, PolicyResponse::getId);
+    assertDifferenceHasSize(actualOwnerIds3, actualOwnerIds3_offset,2);
+    assertDifferenceHasSize(actualOwnerIds3_offset, actualOwnerIds3,0);
+    assertIntersectionHasSize(actualOwnerIds3_offset, actualOwnerIds3,1);
+  }
+
+  @Test
   public void listPolicyOwners_queryOwnerAndSortByMaskAndAsc_Success() {
     // Assert query for a name returns with correct PolicyResponses
     val actualOwnerIds1 = getOwnersForPolicyRequest()
@@ -630,12 +897,13 @@ public abstract class AbstractListOwnerPermissionsForPolicyControllerTest<
   }
 
   @Test
-  public void listPolicyOwners_queryOwnerAndSortByMaskAndAscAndLimit_Success() {
+  public void listPolicyOwners_queryOwnerAndSortByMaskAndAscAndLimitOffset_Success() {
     // Assert query for a name returns with correct PolicyResponses
     val actualOwnerIds1 = getOwnersForPolicyRequest()
         .queryParam("query", "cowner")
         .queryParam("sort", "mask")
         .queryParam("sortOrder", "asc")
+        .queryParam("offset", 0)
         .queryParam("limit", 2)
         .getAnd()
         .assertOk()
@@ -650,6 +918,20 @@ public abstract class AbstractListOwnerPermissionsForPolicyControllerTest<
         .limit(2)
         .collect(toUnmodifiableList());
     assertEquals(expectedOwnerIds1, actualOwnerIds1);
+
+    // Assert non-zero offset
+    val actualOwnerIds2 = getOwnersForPolicyRequest()
+        .queryParam("query", "cowner")
+        .queryParam("sort", "mask")
+        .queryParam("sortOrder", "asc")
+        .queryParam("offset", 1)
+        .queryParam("limit", 3)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+    assertDifferenceHasSize(actualOwnerIds1, actualOwnerIds2, 1);
+    assertDifferenceHasSize(actualOwnerIds2, actualOwnerIds1, 1);
+    assertIntersectionHasSize(actualOwnerIds1, actualOwnerIds1, 2);
   }
 
   @Test
@@ -674,12 +956,13 @@ public abstract class AbstractListOwnerPermissionsForPolicyControllerTest<
   }
 
   @Test
-  public void listPolicyOwners_queryOwnerAndSortByMaskAndDescAndLimit_Success() {
+  public void listPolicyOwners_queryOwnerAndSortByMaskAndDescAndLimitOffset_Success() {
     // Assert query for a name returns with correct PolicyResponses
     val actualOwnerIds1 = getOwnersForPolicyRequest()
         .queryParam("query", "aowner")
         .queryParam("sort", "mask")
         .queryParam("sortOrder", "desc")
+        .queryParam("offset", 0)
         .queryParam("limit", 2)
         .getAnd()
         .assertOk()
@@ -694,6 +977,20 @@ public abstract class AbstractListOwnerPermissionsForPolicyControllerTest<
         .limit(2)
         .collect(toUnmodifiableList());
     assertEquals(expectedOwnerIds1, actualOwnerIds1);
+
+    // Assert non-zero offset
+    val actualOwnerIds2 = getOwnersForPolicyRequest()
+        .queryParam("query", "aowner")
+        .queryParam("sort", "mask")
+        .queryParam("sortOrder", "desc")
+        .queryParam("offset", 1)
+        .queryParam("limit", 2)
+        .getAnd()
+        .assertOk()
+        .transformPageResultsToList(PolicyResponse.class, PolicyResponse::getId);
+    assertDifferenceHasSize(actualOwnerIds1, actualOwnerIds2, 1);
+    assertDifferenceHasSize(actualOwnerIds2, actualOwnerIds1, 1);
+    assertIntersectionHasSize(actualOwnerIds2, actualOwnerIds1, 1);
   }
 
 

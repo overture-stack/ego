@@ -116,7 +116,6 @@ logging:
   level:
     root: ERROR
     #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
-    #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     #org.springframework.boot: INFO
     bio.overture.ego: INFO
 
