@@ -80,7 +80,7 @@ spec:
                     withCredentials([usernamePassword(credentialsId:'OvertureDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         sh 'docker login -u $USERNAME -p $PASSWORD'
                     }
-                    sh "docker build --network=host -f Dockerfile.prod . -t overture/ego:edge -t overture/ego:${commit}"
+                    sh "docker build --network=host -f Dockerfile . -t overture/ego:edge -t overture/ego:${commit}"
                     sh "docker push overture/ego:${commit}"
                     sh "docker push overture/ego:edge"
                 }
@@ -100,7 +100,7 @@ spec:
                     withCredentials([usernamePassword(credentialsId:'OvertureDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                         sh 'docker login -u $USERNAME -p $PASSWORD'
                     }
-                    sh "docker build --network=host -f Dockerfile.prod . -t overture/ego:latest -t overture/ego:${version}"
+                    sh "docker build --network=host -f Dockerfile . -t overture/ego:latest -t overture/ego:${version}"
                     sh "docker push overture/ego:${version}"
                     sh "docker push overture/ego:latest"
                 }
