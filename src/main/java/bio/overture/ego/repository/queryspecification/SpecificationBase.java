@@ -21,7 +21,6 @@ import bio.overture.ego.utils.QueryUtils;
 import java.util.Arrays;
 import java.util.List;
 import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import lombok.NonNull;
@@ -37,27 +36,6 @@ public class SpecificationBase<T> {
     return Arrays.stream(params)
         .map(p -> filterByField(builder, root, p, queryText))
         .toArray(Predicate[]::new);
-  }
-
-  protected static <T> Predicate[] getQueryPredicatesForJoin(
-      @NonNull CriteriaBuilder builder,
-      @NonNull Join join,
-      String queryText,
-      @NonNull String... params) {
-    return Arrays.stream(params)
-        .map(p -> filterByFieldForJoin(builder, join, p, queryText))
-        .toArray(Predicate[]::new);
-  }
-
-  public static <T> Predicate filterByFieldForJoin(
-      @NonNull CriteriaBuilder builder,
-      @NonNull Join join,
-      @NonNull String fieldName,
-      String fieldValue) {
-    val finalText = QueryUtils.prepareForQuery(fieldValue);
-
-    // Cast "as" String so that we can search ENUM types
-    return builder.like(builder.lower(join.get(fieldName).as(String.class)), finalText);
   }
 
   public static <T> Predicate filterByField(

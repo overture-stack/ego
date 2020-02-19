@@ -169,7 +169,7 @@ public class ApiKeyController {
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "apiKey") final String apiKey) {
     tokenService.revokeApiKey(apiKey);
-    return createGenericResponse("ApiKey '%s' is successfully revoked!", apiKey);
+    return createGenericResponse("ApiKey '%s' was successfully revoked!", apiKey);
   }
 
   /** DEPRECATED: DELETE /token to be removed in next major release */
