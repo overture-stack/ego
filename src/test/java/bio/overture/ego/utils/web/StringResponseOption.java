@@ -3,12 +3,17 @@ package bio.overture.ego.utils.web;
 import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Streams.stream;
+import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import bio.overture.ego.utils.Streams;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -30,12 +35,35 @@ public class StringResponseOption extends ResponseOption<String, StringResponseO
         .map(x -> internalExtractOneEntityFromResponse(x, entityClass));
   }
 
+  public <R> StringResponseOption assertPageResultHasSize(
+      @NonNull Class<R> entityClass, final int expectedSize) {
+    assertEquals(extractPageResults(entityClass).size(), expectedSize);
+    return this;
+  }
+
   public <R> ListAssert<R> assertPageResultsOfType(Class<R> entityClass) {
     return assertThat(extractPageResults(entityClass));
   }
 
   public <R> ObjectAssert<R> assertEntityOfType(Class<R> entityClass) {
     return assertThat(extractOneEntity(entityClass));
+  }
+
+  public <R, O> Stream<O> transformPageResultsToStream(
+      @NonNull Class<R> entityClass, @NonNull Function<R, O> transformingFunction) {
+    return extractPageResults(entityClass).stream().map(transformingFunction);
+  }
+
+  public <R, O> List<O> transformPageResultsToList(
+      @NonNull Class<R> entityClass, @NonNull Function<R, O> transformingFunction) {
+    return transformPageResultsToStream(entityClass, transformingFunction)
+        .collect(toUnmodifiableList());
+  }
+
+  public <R, O> Set<O> transformPageResultsToSet(
+      @NonNull Class<R> entityClass, @NonNull Function<R, O> transformingFunction) {
+    return transformPageResultsToStream(entityClass, transformingFunction)
+        .collect(toUnmodifiableSet());
   }
 
   public <R> List<R> extractPageResults(@NonNull Class<R> entityClass) {

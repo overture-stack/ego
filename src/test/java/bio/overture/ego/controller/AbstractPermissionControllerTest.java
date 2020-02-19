@@ -53,11 +53,11 @@ public abstract class AbstractPermissionControllerTest<
   private static final String INVALID_UUID = "invalidUUID000";
 
   /** State */
-  private O owner1;
+  protected O owner1;
 
-  private O owner2;
-  private List<Policy> policies;
-  private List<PermissionRequest> permissionRequests;
+  protected O owner2;
+  protected List<Policy> policies;
+  protected List<PermissionRequest> permissionRequests;
 
   @Override
   protected void beforeTest() {
@@ -680,10 +680,10 @@ public abstract class AbstractPermissionControllerTest<
     // Assert that response contains both ownerIds, ownerNames and policyId
     val body = MAPPER.readTree(r3.getBody());
     assertNotNull(body);
-
+    assertTrue(body.get("resultSet").isArray());
     val expectedMap = uniqueIndex(asList(owner1, owner2), Identifiable::getId);
 
-    Streams.stream(body.iterator())
+    Streams.stream(body.get("resultSet").iterator())
         .forEach(
             n -> {
               val actualOwnerId = UUID.fromString(n.path("id").asText());

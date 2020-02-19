@@ -116,7 +116,6 @@ logging:
   level:
     root: ERROR
     #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
-    #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     #org.springframework.boot: INFO
     bio.overture.ego: INFO
 
@@ -193,7 +192,9 @@ spring:
 ###############################################################################
 spring:
   profiles: test
-logging.test.controller.enable: true
+
+# To log the httpRequests and httpResponses for the controllers, set to true
+logging.test.controller.enable: false
 
 
 spring.datasource:

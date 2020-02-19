@@ -1,23 +1,33 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
+import static bio.overture.ego.repository.queryspecification.UserPermissionSpecification.buildFilterAndQuerySpecification;
+import static bio.overture.ego.repository.queryspecification.UserPermissionSpecification.buildFilterSpecification;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
 import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.dto.ResolvedPermissionResponse;
-import bio.overture.ego.model.entity.*;
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.join.UserGroup;
+import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.UserPermissionRepository;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import lombok.*;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +50,42 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
     super(User.class, UserPermission.class, userService, policyService, repository);
     this.userService = userService;
     this.apiKeyEventsPublisher = apiKeyEventsPublisher;
+  }
+
+  public Page<PolicyResponse> listUserPermissionsByPolicy(
+      @NonNull UUID policyId, List<SearchFilter> filters, @NonNull Pageable pageable) {
+    // Note: Since userPermissions needs users and policies fetched,
+    // cannot just do a join, need to do a fetch AND join,
+    // otherwise will experience N+1 query problem
+
+    val userPermissions =
+        (Page<UserPermission>)
+            getRepository().findAll(buildFilterSpecification(policyId, filters), pageable);
+
+    val responses =
+        userPermissions.stream().map(this::convertToPolicyResponse).collect(toUnmodifiableList());
+
+    return new PageImpl<>(responses, pageable, userPermissions.getTotalElements());
+  }
+
+  public Page<PolicyResponse> findUserPermissionsByPolicy(
+      @NonNull UUID policyId,
+      List<SearchFilter> filters,
+      String query,
+      @NonNull Pageable pageable) {
+
+    // Note: Since userPermissions needs users and policies fetched,
+    // cannot just do a join, need to do a fetch AND join,
+    // otherwise will experience N+1 query problem
+    val userPermissions =
+        (Page<UserPermission>)
+            getRepository()
+                .findAll(buildFilterAndQuerySpecification(policyId, filters, query), pageable);
+
+    val responses =
+        userPermissions.stream().map(this::convertToPolicyResponse).collect(toUnmodifiableList());
+
+    return new PageImpl<>(responses, pageable, userPermissions.getTotalElements());
   }
 
   /**
