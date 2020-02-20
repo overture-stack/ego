@@ -8,7 +8,6 @@ import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundE
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.utils.CollectionUtils.difference;
-import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Joiners.COMMA;
@@ -86,11 +85,6 @@ public abstract class AbstractPermissionService<
     val result = (Optional<P>) permissionRepository.findOne(fetchSpecification(id, true));
     checkNotFound(result.isPresent(), "The groupPermissionId '%s' does not exist", id);
     return result.get();
-  }
-
-  public List<PolicyResponse> findByPolicy(UUID policyId) {
-    val permissions = ImmutableList.copyOf(permissionRepository.findAllByPolicy_Id(policyId));
-    return mapToList(permissions, this::convertToPolicyResponse);
   }
 
   public Page<P> getPermissions(@NonNull UUID ownerId, @NonNull Pageable pageable) {
@@ -318,7 +312,7 @@ public abstract class AbstractPermissionService<
     return permissions.get(0);
   }
 
-  private PolicyResponse convertToPolicyResponse(@NonNull P p) {
+  protected PolicyResponse convertToPolicyResponse(@NonNull P p) {
     val name = p.getOwner().getName();
     val id = p.getOwner().getId().toString();
     val mask = p.getAccessLevel();

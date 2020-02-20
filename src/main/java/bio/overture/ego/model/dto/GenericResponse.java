@@ -17,14 +17,22 @@
 
 package bio.overture.ego.model.dto;
 
+import static java.lang.String.format;
+
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NonNull;
 
 @AllArgsConstructor
 @Getter
 @JsonView(Views.REST.class)
 public class GenericResponse {
   private String message;
+
+  public static GenericResponse createGenericResponse(
+      @NonNull String formattedString, Object... args) {
+    return new GenericResponse(format(formattedString, args));
+  }
 }

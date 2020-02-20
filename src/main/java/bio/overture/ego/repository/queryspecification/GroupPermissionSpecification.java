@@ -18,14 +18,12 @@ package bio.overture.ego.repository.queryspecification;
 
 import static bio.overture.ego.model.entity.AbstractPermission.Fields.accessLevel;
 import static bio.overture.ego.model.entity.AbstractPermission.Fields.policy;
-import static bio.overture.ego.model.entity.User.Fields.refreshToken;
 import static bio.overture.ego.model.enums.JavaFields.*;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
+import bio.overture.ego.model.entity.Group;
+import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
-import bio.overture.ego.model.entity.RefreshToken;
-import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.QueryUtils;
 import com.google.common.collect.Lists;
@@ -39,13 +37,13 @@ import lombok.val;
 import org.springframework.data.jpa.domain.Specification;
 
 @Slf4j
-public class UserPermissionSpecification {
-  public static Specification<UserPermission> buildFilterSpecification(
+public class GroupPermissionSpecification {
+  public static Specification<GroupPermission> buildFilterSpecification(
       @NonNull UUID policyId, @NonNull List<SearchFilter> filters) {
     return buildFilterAndQuerySpecification(policyId, filters, null);
   }
 
-  public static Specification<UserPermission> buildFilterAndQuerySpecification(
+  public static Specification<GroupPermission> buildFilterAndQuerySpecification(
       @NonNull UUID policyId, @NonNull List<SearchFilter> filters, String text) {
     return (root, query, builder) -> {
       val scb = SimpleCriteriaBuilder.of(root, builder, query);
@@ -57,7 +55,7 @@ public class UserPermissionSpecification {
       // instead only joined.
       //  When using the joinFetch methodology, hibernate was throwing cryptic errors, so this is a
       // sub performant fix until someone figures out the issue.
-      // if no query text is present, Spring creates an extra query for count(userperm) which will
+      // if no query text is present, Spring creates an extra query for count(groupperm) which will
       // throw an exception on Fetch
       // https://coderanch.com/t/656073/frameworks/Spring-Data-fetch-join-Specification
       if (query.getResultType() == Long.class || query.getResultType() == long.class) {
@@ -65,16 +63,7 @@ public class UserPermissionSpecification {
         return join.equalId(policyId);
       }
       val policySp = scb.leftJoinFetch(Policy.class, policy);
-      val ownerSp = scb.leftJoinFetch(User.class, OWNER);
-
-      // PERFORMANCE BUG TODO: [rtisma] without the line below, N+1 refreshtoken selects occur,
-      // where N is the number of users returned as a result of this entire method.
-      // It seems that Spring traverses over the resulting User entities
-      // and since it is in the persistent context,
-      // makes N+1 subsequent select queries (probably calling getRefreshToken() somewhere).
-      // Since there is no trivial way to fix this (other than implementing paging on our own),
-      // joining the refresh token is a more performant solution but still not optimal.
-      ownerSp.leftOuterJoinFetch(RefreshToken.class, refreshToken);
+      val ownerSp = scb.leftJoinFetch(Group.class, OWNER);
 
       // Create predicates for filtering by policyId AND searchFilters
       val filterPredicates = ownerSp.searchFilter(filters);
