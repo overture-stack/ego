@@ -71,7 +71,7 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
 
     driver.findElement(By.id("loginbutton")).click();
 
-    Thread.sleep(10000);
+    Thread.sleep(5000);
 
     val messageDiv =
         driver
@@ -79,7 +79,6 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
             .findElement(By.tagName("div"))
             .findElement(By.tagName("div"))
             .getText();
-    System.err.println("messageDiv=" + messageDiv);
     assertTrue(messageDiv.contains("Your account does not have an administrator userType."));
 
     val refreshCookie = driver.manage().getCookieNamed("refreshId");
@@ -92,6 +91,6 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
     val millis = exp.getTime() - Calendar.getInstance().getTime().getTime();
     assertTrue(millis > 0);
 
-    Thread.sleep(10000);
+    Thread.sleep(5000);
   }
 }
