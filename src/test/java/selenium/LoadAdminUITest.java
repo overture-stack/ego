@@ -71,7 +71,7 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
 
     driver.findElement(By.id("loginbutton")).click();
 
-    Thread.sleep(1000);
+    Thread.sleep(5000);
 
     val messageDiv =
         driver
@@ -91,6 +91,6 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
     val millis = exp.getTime() - Calendar.getInstance().getTime().getTime();
     assertTrue(millis > 0);
 
-    Thread.sleep(1000);
+    Thread.sleep(5000);
   }
 }
