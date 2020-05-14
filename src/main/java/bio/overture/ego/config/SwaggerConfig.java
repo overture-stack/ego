@@ -16,6 +16,7 @@
 
 package bio.overture.ego.config;
 
+import java.util.ArrayList;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Component;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.Contact;
+import springfox.documentation.service.VendorExtension;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.paths.RelativePathProvider;
 import springfox.documentation.spring.web.plugins.Docket;
@@ -77,6 +79,7 @@ public class SwaggerConfig {
         "",
         new Contact("", "", ""),
         "Apache License Version 2.0",
-        "");
+        "",
+        new ArrayList<VendorExtension>());
   }
 }
