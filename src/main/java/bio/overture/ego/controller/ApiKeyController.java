@@ -26,7 +26,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.MULTI_STATUS;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.*;
 import static org.springframework.util.StringUtils.isEmpty;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -85,7 +85,10 @@ public class ApiKeyController {
   }
 
   @ApplicationScoped()
-  @RequestMapping(method = POST, value = "/check_api_key")
+  @RequestMapping(
+      method = POST,
+      value = "/check_api_key",
+      produces = {APPLICATION_JSON_VALUE, APPLICATION_JSON_UTF8_VALUE})
   @ResponseStatus(value = MULTI_STATUS)
   @SneakyThrows
   public @ResponseBody ApiKeyScopeResponse checkApiKey(
@@ -98,7 +101,10 @@ public class ApiKeyController {
   /** DEPRECATED: GET /check_token to be removed in next major release */
   @Deprecated
   @ApplicationScoped()
-  @RequestMapping(method = POST, value = "/check_token")
+  @RequestMapping(
+      method = POST,
+      value = "/check_token",
+      produces = {"application/json"})
   @ResponseStatus(value = MULTI_STATUS)
   @SneakyThrows
   public @ResponseBody ApiKeyScopeResponse checkToken(

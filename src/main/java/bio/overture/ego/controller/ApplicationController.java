@@ -190,7 +190,7 @@ public class ApplicationController {
         name = Fields.ID,
         required = false,
         dataType = "string",
-        paramType = "query",
+        paramType = "path",
         value = "Search for ids containing this text"),
     @ApiImplicitParam(
         name = SORT,
@@ -239,7 +239,7 @@ public class ApplicationController {
         name = Fields.ID,
         required = false,
         dataType = "string",
-        paramType = "query",
+        paramType = "path",
         value = "Search for ids containing this text"),
     @ApiImplicitParam(
         name = SORT,

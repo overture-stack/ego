@@ -17,6 +17,7 @@
 package bio.overture.ego.config;
 
 import java.util.ArrayList;
+import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
@@ -65,8 +66,9 @@ public class SwaggerConfig {
                     return properties.getBaseUrl();
                   }
                 })
-            .apiInfo(metaInfo());
-
+            .apiInfo(metaInfo())
+            .produces(Set.of("application/json"))
+            .consumes(Set.of("application/json"));
     return docket;
   }
 
