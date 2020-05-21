@@ -265,9 +265,9 @@ public class UserController {
   @ApiImplicitParams({
     @ApiImplicitParam(
         name = Fields.ID,
-        required = false,
+        required = true,
         dataType = "string",
-        paramType = "query",
+        paramType = "path",
         value = "Search for ids containing this text"),
     @ApiImplicitParam(
         name = LIMIT,
@@ -339,7 +339,7 @@ public class UserController {
   @ApiImplicitParams({
     @ApiImplicitParam(
         name = Fields.ID,
-        required = false,
+        required = true,
         dataType = "string",
         paramType = "query",
         value = "Search for ids containing this text"),

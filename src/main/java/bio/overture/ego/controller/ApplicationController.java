@@ -188,7 +188,7 @@ public class ApplicationController {
         value = "Index of first result to retrieve"),
     @ApiImplicitParam(
         name = Fields.ID,
-        required = false,
+        required = true,
         dataType = "string",
         paramType = "path",
         value = "Search for ids containing this text"),
@@ -237,7 +237,7 @@ public class ApplicationController {
         value = "Index of first result to retrieve"),
     @ApiImplicitParam(
         name = Fields.ID,
-        required = false,
+        required = true,
         dataType = "string",
         paramType = "path",
         value = "Search for ids containing this text"),

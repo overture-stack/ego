@@ -185,7 +185,7 @@ public class GroupController {
   @ApiImplicitParams({
     @ApiImplicitParam(
         name = Fields.ID,
-        required = false,
+        required = true,
         dataType = "string",
         paramType = "path",
         value = "Search for ids containing this text"),
@@ -256,7 +256,7 @@ public class GroupController {
   @ApiImplicitParams({
     @ApiImplicitParam(
         name = Fields.ID,
-        required = false,
+        required = true,
         dataType = "string",
         paramType = "path",
         value = "Search for ids containing this text"),
@@ -331,7 +331,7 @@ public class GroupController {
   @ApiImplicitParams({
     @ApiImplicitParam(
         name = Fields.ID,
-        required = false,
+        required = true,
         dataType = "string",
         paramType = "path",
         value = "Search for ids containing this text"),
