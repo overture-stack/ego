@@ -104,9 +104,9 @@ public class SwaggerConfig {
   private static SecurityContext securityContext() {
     return SecurityContext.builder()
         .securityReferences(List.of(securityReference()))
-        // We want the default Bearer auth applied only for AdminScoped endpoints.
-        // For ApplicationScoped endpoints, an explicit RequestHeader fields will be present in the
-        // ui
+        // We want the default Bearer auth applied only for non-ApplicationScoped endpoints.
+        // For ApplicationScoped endpoints, an explicit RequestHeader
+        // fields will be present in the ui
         .forPaths(x -> !isApplicationScopedPath(x))
         .build();
   }
