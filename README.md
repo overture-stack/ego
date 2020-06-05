@@ -1,5 +1,6 @@
 <h1 align="center"> EGO </h1><br>
 
+
 <p align="center">
   A scalable stateless Authorization Service for Federated Identities including Google and Facebook
 </p>
