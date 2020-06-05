@@ -325,7 +325,7 @@ public class UserController {
         name = Fields.ID,
         required = true,
         dataType = "string",
-        paramType = "query",
+        paramType = "path",
         value = "Search for ids containing this text"),
     @ApiImplicitParam(
         name = LIMIT,

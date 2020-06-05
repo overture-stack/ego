@@ -115,7 +115,6 @@ public class ApiKeyController {
     return tokenService.checkApiKey(authorization, token);
   }
 
-  @AdminScoped
   @RequestMapping(method = GET, value = "/scopes")
   @ResponseStatus(value = OK)
   @SneakyThrows
@@ -168,7 +167,6 @@ public class ApiKeyController {
         .build();
   }
 
-  @AdminScoped
   @RequestMapping(method = DELETE, value = "/api_key")
   @ResponseStatus(value = OK)
   public @ResponseBody GenericResponse revokeApiKey(
@@ -179,7 +177,6 @@ public class ApiKeyController {
 
   /** DEPRECATED: DELETE /token to be removed in next major release */
   @Deprecated
-  @AdminScoped
   @RequestMapping(method = DELETE, value = "/token")
   @ResponseStatus(value = OK)
   public @ResponseBody String revokeToken(@RequestParam(value = "token") final String token) {
