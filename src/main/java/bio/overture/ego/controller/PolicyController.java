@@ -117,7 +117,8 @@ public class PolicyController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Policies")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Policy> listPolicies(
-      @ApiIgnore @Filters List<SearchFilter> filters, Pageable pageable) {
+      @ApiIgnore @Filters List<SearchFilter> filters,
+      @ApiIgnore Pageable pageable) {
     return new PageDTO<>(policyService.listPolicies(filters, pageable));
   }
 
@@ -251,7 +252,7 @@ public class PolicyController {
           @RequestParam(value = "query", required = false)
           String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     val decoratedPageable = new IgnoreCaseSortDecorator(pageable);
     if (isEmpty(query)) {
       return new PageDTO<>(
@@ -306,7 +307,7 @@ public class PolicyController {
           @RequestParam(value = "query", required = false)
           String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     val decoratedPageable = new IgnoreCaseSortDecorator(pageable);
     if (isEmpty(query)) {
       return new PageDTO(

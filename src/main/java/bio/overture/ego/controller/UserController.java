@@ -116,7 +116,7 @@ public class UserController {
   })
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Users")})
   @JsonView(Views.REST.class)
-  public @ResponseBody PageDTO<User> findUsers(
+  public @ResponseBody PageDTO<User> listUsers(
       @ApiParam(
               value =
                   "Query string compares to Users Name, Email, First Name, and Last Name fields.",
@@ -124,7 +124,7 @@ public class UserController {
           @RequestParam(value = "query", required = false)
           String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     if (isEmpty(query)) {
       return new PageDTO<>(userService.listUsers(filters, pageable));
     } else {
@@ -206,7 +206,8 @@ public class UserController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page User Permissions for a User")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<UserPermission> getPermissions(
-      @PathVariable(value = "id", required = true) UUID id, Pageable pageable) {
+      @PathVariable(value = "id", required = true) UUID id,
+      @ApiIgnore Pageable pageable) {
     return new PageDTO<>(userPermissionService.getPermissions(id, pageable));
   }
 
@@ -287,7 +288,7 @@ public class UserController {
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     if (isEmpty(query)) {
       return new PageDTO<>(groupService.findGroupsForUser(id, filters, pageable));
     } else {
@@ -358,7 +359,7 @@ public class UserController {
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     if (isEmpty(query)) {
       return new PageDTO<>(applicationService.findApplicationsForUser(id, filters, pageable));
     } else {

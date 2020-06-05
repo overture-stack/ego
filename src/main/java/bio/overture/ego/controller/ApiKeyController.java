@@ -93,11 +93,9 @@ public class ApiKeyController {
       produces = {APPLICATION_JSON_VALUE, APPLICATION_JSON_UTF8_VALUE})
   @ResponseStatus(value = MULTI_STATUS)
   @SneakyThrows
-  @Authorization("apiKey")
   public @ResponseBody ApiKeyScopeResponse checkApiKey(
       @RequestHeader(value = "Authorization") final String authToken,
       @RequestParam(value = "apiKey") final String apiKey) {
-
     return tokenService.checkApiKey(authToken, apiKey);
   }
 
@@ -110,7 +108,6 @@ public class ApiKeyController {
       produces = {"application/json"})
   @ResponseStatus(value = MULTI_STATUS)
   @SneakyThrows
-  @Authorization("apiKey")
   public @ResponseBody ApiKeyScopeResponse checkToken(
       @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "token") final String token) {
@@ -227,7 +224,7 @@ public class ApiKeyController {
           @RequestParam(value = "query", required = false)
           String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     checkAdminOrOwner(userId);
     if (isEmpty(query)) {
       return new PageDTO<>(tokenService.listApiKeysForUser(userId, filters, pageable));

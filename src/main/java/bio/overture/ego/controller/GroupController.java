@@ -124,10 +124,10 @@ public class GroupController {
   })
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Groups")})
   @JsonView(Views.REST.class)
-  public @ResponseBody PageDTO<Group> findGroups(
+  public @ResponseBody PageDTO<Group> listGroups(
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     if (isEmpty(query)) {
       return new PageDTO<>(groupService.listGroups(filters, pageable));
     } else {
@@ -214,7 +214,8 @@ public class GroupController {
       })
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<GroupPermission> getGroupPermissionsForGroup(
-      @PathVariable(value = "id", required = true) UUID id, Pageable pageable) {
+      @PathVariable(value = "id", required = true) UUID id,
+      @ApiIgnore Pageable pageable) {
     return new PageDTO<>(groupPermissionService.getPermissions(id, pageable));
   }
 
@@ -281,7 +282,7 @@ public class GroupController {
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     if (StringUtils.isEmpty(query)) {
       return new PageDTO<>(applicationService.findApplicationsForGroup(id, filters, pageable));
     } else {
@@ -353,7 +354,7 @@ public class GroupController {
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     if (StringUtils.isEmpty(query)) {
       return new PageDTO<>(userService.findUsersForGroup(id, filters, pageable));
     } else {

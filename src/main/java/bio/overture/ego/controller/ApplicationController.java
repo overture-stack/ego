@@ -114,10 +114,10 @@ public class ApplicationController {
   })
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Applications")})
   @JsonView(Views.REST.class)
-  public @ResponseBody PageDTO<Application> findApplications(
+  public @ResponseBody PageDTO<Application> listApplications(
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     if (isEmpty(query)) {
       return new PageDTO<>(applicationService.listApps(filters, pageable));
     } else {
@@ -205,7 +205,7 @@ public class ApplicationController {
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     if (isEmpty(query)) {
       return new PageDTO<>(userService.findUsersForApplication(id, filters, pageable));
     } else {
@@ -253,7 +253,7 @@ public class ApplicationController {
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     if (isEmpty(query)) {
       return new PageDTO<>(groupService.findGroupsForApplication(id, filters, pageable));
     } else {

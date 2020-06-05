@@ -23,6 +23,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 import bio.overture.ego.provider.facebook.FacebookTokenService;
 import bio.overture.ego.provider.google.GoogleTokenService;
+import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.service.RefreshContextService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.IDToken;

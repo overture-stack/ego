@@ -30,6 +30,7 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
+import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.ApiKey;
@@ -49,6 +50,13 @@ import static springfox.documentation.spi.DocumentationType.SWAGGER_2;
 @EnableSwagger2
 @Configuration
 public class SwaggerConfig {
+
+  private static final Set<String> APPLICATION_SCOPED_PATHS = Set.of(
+      "/o/check_api_key",
+      "/o/check_token",
+      "/transaction/group_permissions",
+      "/transaction/mass_delete"
+  );
 
   private final BuildProperties buildProperties;
 
@@ -100,7 +108,14 @@ public class SwaggerConfig {
   private static SecurityContext securityContext(){
     return SecurityContext.builder()
         .securityReferences(List.of(securityReference()))
+        // We want the default Bearer auth applied only for AdminScoped endpoints.
+        // For ApplicationScoped endpoints, an explicit RequestHeader fields will be present in the ui
+        .forPaths(x -> !isApplicationScopedPath(x))
         .build();
+  }
+
+  private static boolean isApplicationScopedPath(@NonNull String path) {
+    return APPLICATION_SCOPED_PATHS.contains(path);
   }
 
   private static SecurityReference securityReference(){
