@@ -40,7 +40,6 @@ import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
-import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.security.ApplicationScoped;
 import bio.overture.ego.security.AuthorizationManager;
 import bio.overture.ego.service.TokenService;
