@@ -147,7 +147,6 @@ public class ApiKeyController {
   }
 
   /** DEPRECATED: POST /token to be removed in next major release */
-  @AdminScoped
   @Deprecated
   @RequestMapping(method = POST, value = "/token")
   @ResponseStatus(value = OK)
@@ -188,7 +187,6 @@ public class ApiKeyController {
     return format("Token '%s' is successfully revoked!", token);
   }
 
-  @AdminScoped
   @RequestMapping(method = GET, value = "/api_key")
   @ApiImplicitParams({
     @ApiImplicitParam(
@@ -234,7 +232,6 @@ public class ApiKeyController {
 
   /** DEPRECATED: GET /token to be removed in next major release */
   @Deprecated
-  @AdminScoped
   @RequestMapping(method = GET, value = "/token")
   @ResponseStatus(value = OK)
   public @ResponseBody List<TokenResponse> listTokens(
