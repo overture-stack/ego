@@ -124,7 +124,6 @@ public class ApiKeyController {
     return tokenService.userScopes(userName);
   }
 
-  @AdminScoped
   @RequestMapping(method = POST, value = "/api_key")
   @ResponseStatus(value = OK)
   public @ResponseBody ApiKeyResponse issueApiKey(

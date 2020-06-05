@@ -117,8 +117,7 @@ public class PolicyController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Policies")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Policy> listPolicies(
-      @ApiIgnore @Filters List<SearchFilter> filters,
-      @ApiIgnore Pageable pageable) {
+      @ApiIgnore @Filters List<SearchFilter> filters, @ApiIgnore Pageable pageable) {
     return new PageDTO<>(policyService.listPolicies(filters, pageable));
   }
 

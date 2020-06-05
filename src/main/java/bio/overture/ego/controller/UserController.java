@@ -206,8 +206,7 @@ public class UserController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page User Permissions for a User")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<UserPermission> getPermissions(
-      @PathVariable(value = "id", required = true) UUID id,
-      @ApiIgnore Pageable pageable) {
+      @PathVariable(value = "id", required = true) UUID id, @ApiIgnore Pageable pageable) {
     return new PageDTO<>(userPermissionService.getPermissions(id, pageable));
   }
 

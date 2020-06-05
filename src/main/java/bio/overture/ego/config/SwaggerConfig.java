@@ -16,8 +16,10 @@
 
 package bio.overture.ego.config;
 
+import static springfox.documentation.builders.RequestHandlerSelectors.basePackage;
+import static springfox.documentation.spi.DocumentationType.SWAGGER_2;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import lombok.Getter;
@@ -30,33 +32,27 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
-import springfox.documentation.builders.PathSelectors;
-import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.ApiKey;
 import springfox.documentation.service.AuthorizationScope;
 import springfox.documentation.service.Contact;
 import springfox.documentation.service.SecurityReference;
 import springfox.documentation.service.VendorExtension;
-import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.service.contexts.SecurityContext;
 import springfox.documentation.spring.web.paths.RelativePathProvider;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
-import static springfox.documentation.builders.RequestHandlerSelectors.basePackage;
-import static springfox.documentation.spi.DocumentationType.SWAGGER_2;
-
 @EnableSwagger2
 @Configuration
 public class SwaggerConfig {
 
-  private static final Set<String> APPLICATION_SCOPED_PATHS = Set.of(
-      "/o/check_api_key",
-      "/o/check_token",
-      "/transaction/group_permissions",
-      "/transaction/mass_delete"
-  );
+  private static final Set<String> APPLICATION_SCOPED_PATHS =
+      Set.of(
+          "/o/check_api_key",
+          "/o/check_token",
+          "/transaction/group_permissions",
+          "/transaction/mass_delete");
 
   private final BuildProperties buildProperties;
 
@@ -105,11 +101,12 @@ public class SwaggerConfig {
     return new ApiKey("Bearer", "Authorization", "header");
   }
 
-  private static SecurityContext securityContext(){
+  private static SecurityContext securityContext() {
     return SecurityContext.builder()
         .securityReferences(List.of(securityReference()))
         // We want the default Bearer auth applied only for AdminScoped endpoints.
-        // For ApplicationScoped endpoints, an explicit RequestHeader fields will be present in the ui
+        // For ApplicationScoped endpoints, an explicit RequestHeader fields will be present in the
+        // ui
         .forPaths(x -> !isApplicationScopedPath(x))
         .build();
   }
@@ -118,7 +115,7 @@ public class SwaggerConfig {
     return APPLICATION_SCOPED_PATHS.contains(path);
   }
 
-  private static SecurityReference securityReference(){
+  private static SecurityReference securityReference() {
     return SecurityReference.builder()
         .reference("Bearer")
         .scopes(new AuthorizationScope[0])
@@ -139,5 +136,4 @@ public class SwaggerConfig {
      */
     private String baseUrl = "";
   }
-
 }
