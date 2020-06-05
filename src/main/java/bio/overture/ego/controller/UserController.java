@@ -31,6 +31,7 @@ import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.service.*;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiParam;
@@ -43,11 +44,9 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -59,6 +58,7 @@ import springfox.documentation.annotations.ApiIgnore;
 @Slf4j
 @RestController
 @RequestMapping("/users")
+@Api(tags = "Users")
 public class UserController {
 
   /** Dependencies */
@@ -117,7 +117,6 @@ public class UserController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Users")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<User> findUsers(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @ApiParam(
               value =
                   "Query string compares to Users Name, Email, First Name, and Last Name fields.",
@@ -139,9 +138,7 @@ public class UserController {
       value = {
         @ApiResponse(code = 200, message = "Create new user", response = User.class),
       })
-  public @ResponseBody User createUser(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @RequestBody(required = true) CreateUserRequest request) {
+  public @ResponseBody User createUser(@RequestBody(required = true) CreateUserRequest request) {
     return userService.create(request);
   }
 
@@ -149,9 +146,7 @@ public class UserController {
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
   @ApiResponses(value = {@ApiResponse(code = 200, message = "User Details", response = User.class)})
   @JsonView(Views.REST.class)
-  public @ResponseBody User getUser(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) UUID id) {
+  public @ResponseBody User getUser(@PathVariable(value = "id", required = true) UUID id) {
     return userService.getById(id);
   }
 
@@ -165,7 +160,6 @@ public class UserController {
             response = User.class)
       })
   public @ResponseBody User updateUser(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) UpdateUserRequest updateUserRequest) {
     return userService.partialUpdate(id, updateUserRequest);
@@ -174,9 +168,7 @@ public class UserController {
   @AdminScoped
   @RequestMapping(method = RequestMethod.DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
-  public void deleteUser(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) UUID id) {
+  public void deleteUser(@PathVariable(value = "id", required = true) UUID id) {
     userService.delete(id);
   }
 
@@ -214,9 +206,7 @@ public class UserController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page User Permissions for a User")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<UserPermission> getPermissions(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
-      @PathVariable(value = "id", required = true) UUID id,
-      Pageable pageable) {
+      @PathVariable(value = "id", required = true) UUID id, Pageable pageable) {
     return new PageDTO<>(userPermissionService.getPermissions(id, pageable));
   }
 
@@ -225,7 +215,6 @@ public class UserController {
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Add user permissions", response = User.class)})
   public @ResponseBody User addPermissions(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<PermissionRequest> permissions) {
     return userPermissionService.addPermissions(id, permissions);
@@ -236,7 +225,6 @@ public class UserController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete User permissions")})
   @ResponseStatus(value = HttpStatus.OK)
   public void deletePermissions(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "permissionIds", required = true) List<UUID> permissionIds) {
     userPermissionService.deletePermissions(id, permissionIds);
@@ -252,7 +240,6 @@ public class UserController {
       })
   @ResponseStatus(value = HttpStatus.OK)
   public @ResponseBody Collection<ResolvedPermissionResponse> getResolvedPermissions(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id) {
     return userPermissionService.getResolvedPermissions(id);
   }
@@ -297,7 +284,6 @@ public class UserController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Groups for a User")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Group> getGroupsFromUser(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
@@ -314,7 +300,6 @@ public class UserController {
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Add Groups to user", response = User.class)})
   public @ResponseBody User addGroupsToUser(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<UUID> groupIds) {
     return userService.associateGroupsWithUser(id, groupIds);
@@ -325,7 +310,6 @@ public class UserController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete Groups from User")})
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteGroupsFromUser(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "groupIDs", required = true) List<UUID> groupIds) {
     userService.disassociateGroupsFromUser(id, groupIds);
@@ -371,7 +355,6 @@ public class UserController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Applications for a User")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Application> getApplicationsFromUser(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
@@ -391,7 +374,6 @@ public class UserController {
         @ApiResponse(code = 200, message = "Add Applications to User", response = User.class)
       })
   public @ResponseBody User addApplicationsToUser(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<UUID> applicationIds) {
     return userService.associateApplicationsWithUser(id, applicationIds);
@@ -402,7 +384,6 @@ public class UserController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete Applications from User")})
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteApplicationsFromUser(
-      @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = true) final String accessToken,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "applicationIds", required = true) List<UUID> applicationIds) {
     userService.disassociateApplicationsFromUser(id, applicationIds);

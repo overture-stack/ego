@@ -40,6 +40,7 @@ import bio.overture.ego.model.exceptions.ForbiddenException;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
+import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.security.ApplicationScoped;
 import bio.overture.ego.security.AuthorizationManager;
 import bio.overture.ego.service.TokenService;
@@ -69,6 +70,7 @@ import springfox.documentation.annotations.ApiIgnore;
 @Slf4j
 @RestController
 @RequestMapping("/o")
+@Api(tags = "Api Keys")
 public class ApiKeyController {
 
   /** Dependencies */
@@ -91,6 +93,7 @@ public class ApiKeyController {
       produces = {APPLICATION_JSON_VALUE, APPLICATION_JSON_UTF8_VALUE})
   @ResponseStatus(value = MULTI_STATUS)
   @SneakyThrows
+  @Authorization("apiKey")
   public @ResponseBody ApiKeyScopeResponse checkApiKey(
       @RequestHeader(value = "Authorization") final String authToken,
       @RequestParam(value = "apiKey") final String apiKey) {
@@ -107,26 +110,27 @@ public class ApiKeyController {
       produces = {"application/json"})
   @ResponseStatus(value = MULTI_STATUS)
   @SneakyThrows
+  @Authorization("apiKey")
   public @ResponseBody ApiKeyScopeResponse checkToken(
-      @RequestHeader(value = "Authorization") final String authToken,
+      @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "token") final String token) {
 
-    return tokenService.checkApiKey(authToken, token);
+    return tokenService.checkApiKey(authorization, token);
   }
 
+  @AdminScoped
   @RequestMapping(method = GET, value = "/scopes")
   @ResponseStatus(value = OK)
   @SneakyThrows
-  public @ResponseBody UserScopesResponse userScope(
-      @RequestHeader(value = "Authorization") final String auth,
+  public @ResponseBody UserScopesResponse getUserScope(
       @RequestParam(value = "userName") final String userName) {
     return tokenService.userScopes(userName);
   }
 
+  @AdminScoped
   @RequestMapping(method = POST, value = "/api_key")
   @ResponseStatus(value = OK)
   public @ResponseBody ApiKeyResponse issueApiKey(
-      @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "user_id") UUID userId,
       @RequestParam(value = "scopes") ArrayList<String> scopes,
       @RequestParam(value = "description", required = false) String description) {
@@ -147,11 +151,11 @@ public class ApiKeyController {
   }
 
   /** DEPRECATED: POST /token to be removed in next major release */
+  @AdminScoped
   @Deprecated
   @RequestMapping(method = POST, value = "/token")
   @ResponseStatus(value = OK)
   public @ResponseBody TokenResponse issueToken(
-      @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "user_id") UUID userId,
       @RequestParam(value = "scopes") ArrayList<String> scopes,
       @RequestParam(value = "description", required = false) String description) {
@@ -169,10 +173,10 @@ public class ApiKeyController {
         .build();
   }
 
+  @AdminScoped
   @RequestMapping(method = DELETE, value = "/api_key")
   @ResponseStatus(value = OK)
   public @ResponseBody GenericResponse revokeApiKey(
-      @RequestHeader(value = "Authorization") final String authorization,
       @RequestParam(value = "apiKey") final String apiKey) {
     tokenService.revokeApiKey(apiKey);
     return createGenericResponse("ApiKey '%s' was successfully revoked!", apiKey);
@@ -180,15 +184,15 @@ public class ApiKeyController {
 
   /** DEPRECATED: DELETE /token to be removed in next major release */
   @Deprecated
+  @AdminScoped
   @RequestMapping(method = DELETE, value = "/token")
   @ResponseStatus(value = OK)
-  public @ResponseBody String revokeToken(
-      @RequestHeader(value = "Authorization") final String authorization,
-      @RequestParam(value = "token") final String token) {
+  public @ResponseBody String revokeToken(@RequestParam(value = "token") final String token) {
     tokenService.revokeApiKey(token);
     return format("Token '%s' is successfully revoked!", token);
   }
 
+  @AdminScoped
   @RequestMapping(method = GET, value = "/api_key")
   @ApiImplicitParams({
     @ApiImplicitParam(
@@ -217,8 +221,7 @@ public class ApiKeyController {
         value = "Sorting order: ASC|DESC. Default order: DESC"),
   })
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page ApiKeys for a User")})
-  public @ResponseBody PageDTO<ApiKeyResponse> listApiKey(
-      @RequestHeader(value = "Authorization") final String authorization,
+  public @ResponseBody PageDTO<ApiKeyResponse> listApiKeys(
       @RequestParam(value = "user_id") UUID userId,
       @ApiParam(value = "Query string compares to ApiKey's Name fields.", required = false)
           @RequestParam(value = "query", required = false)
@@ -235,10 +238,10 @@ public class ApiKeyController {
 
   /** DEPRECATED: GET /token to be removed in next major release */
   @Deprecated
+  @AdminScoped
   @RequestMapping(method = GET, value = "/token")
   @ResponseStatus(value = OK)
-  public @ResponseBody List<TokenResponse> listToken(
-      @RequestHeader(value = "Authorization") final String authorization,
+  public @ResponseBody List<TokenResponse> listTokens(
       @RequestParam(value = "user_id") UUID userId) {
     checkAdminOrOwner(userId);
     return tokenService.listTokens(userId);
