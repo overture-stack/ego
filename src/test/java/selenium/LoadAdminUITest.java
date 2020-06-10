@@ -94,8 +94,6 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
     val millis = exp.getTime() - Calendar.getInstance().getTime().getTime();
     assertTrue(millis > 0);
 
-    log.warn("Waiting 5 seconds");
     Thread.sleep(5000);
-    log.warn("The end");
   }
 }
