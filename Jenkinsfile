@@ -12,7 +12,7 @@ spec:
   containers:
   - name: jdk
     tty: true
-    image: openjdk:11
+    image: adoptopenjdk/openjdk11:jdk-11.0.7_10-alpine-slim
     env: 
       - name: DOCKER_HOST 
         value: tcp://localhost:2375 
