@@ -93,5 +93,6 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
     assertTrue(millis > 0);
 
     Thread.sleep(5000);
+    driver.quit();
   }
 }
