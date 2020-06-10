@@ -36,7 +36,8 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
   /** Dependencies */
   @Autowired private ApplicationService applicationService;
 
-  @Test
+  // 15min * 60s * 1000ns - 900,000ms
+  @Test(timeout = 900000L)
   @SneakyThrows
   public void loadAdmin_Success() {
     val facebookUser = System.getenv("FACEBOOK_USER");
