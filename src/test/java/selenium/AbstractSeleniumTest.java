@@ -63,7 +63,9 @@ public abstract class AbstractSeleniumTest {
   @AfterClass
   public static void tearDown() {
     if (driver != null) {
+      log.warn("Quitting...");
       driver.quit();
+      log.warn("quit successfully");
     }
   }
 
