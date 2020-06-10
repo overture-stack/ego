@@ -95,10 +95,6 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
     assertTrue(millis > 0);
 
     Thread.sleep(5000);
-    log.warn("Closing driver....");
-    driver.close();
-    log.warn("----done");
-    driver.quit();
-    log.warn("quitted");
+    log.error("the end");
   }
 }
