@@ -26,11 +26,13 @@ import bio.overture.ego.service.ApplicationService;
 import java.util.Calendar;
 import java.util.UUID;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.springframework.beans.factory.annotation.Autowired;
 
+@Slf4j
 public class LoadAdminUITest extends AbstractSeleniumTest {
 
   /** Dependencies */
@@ -93,6 +95,9 @@ public class LoadAdminUITest extends AbstractSeleniumTest {
     assertTrue(millis > 0);
 
     Thread.sleep(5000);
-    driver.quit();
+    log.info("Closing driver....");
+    driver.close();
+    log.info("----done");
+    //driver.quit();
   }
 }
