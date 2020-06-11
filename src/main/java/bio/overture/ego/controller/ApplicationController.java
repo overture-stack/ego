@@ -21,7 +21,6 @@ import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
 import static bio.overture.ego.controller.resolver.PageableResolver.SORT;
 import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
 import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -42,6 +41,7 @@ import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
@@ -66,6 +66,7 @@ import springfox.documentation.annotations.ApiIgnore;
 @Slf4j
 @RestController
 @RequestMapping("/applications")
+@Api(tags = "Applications")
 public class ApplicationController {
 
   /** Dependencies */
@@ -114,11 +115,12 @@ public class ApplicationController {
   })
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Applications")})
   @JsonView(Views.REST.class)
-  public @ResponseBody PageDTO<Application> findApplications(
-      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
+  public @ResponseBody PageDTO<Application> listApplications(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     if (isEmpty(query)) {
       return new PageDTO<>(applicationService.listApps(filters, pageable));
     } else {
@@ -131,7 +133,8 @@ public class ApplicationController {
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "New Application", response = Application.class)})
   public @ResponseBody Application createApplication(
-      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @RequestBody(required = true) CreateApplicationRequest request) {
     return applicationService.create(request);
   }
@@ -144,7 +147,8 @@ public class ApplicationController {
       })
   @JsonView(Views.REST.class)
   public @ResponseBody Application getApplication(
-      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id) {
     return applicationService.getById(id);
   }
@@ -156,7 +160,8 @@ public class ApplicationController {
         @ApiResponse(code = 200, message = "Updated application info", response = Application.class)
       })
   public @ResponseBody Application updateApplication(
-      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(name = "id", required = true) UUID id,
       @RequestBody(required = true) UpdateApplicationRequest updateRequest) {
     return applicationService.partialUpdate(id, updateRequest);
@@ -166,7 +171,8 @@ public class ApplicationController {
   @RequestMapping(method = DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteApplication(
-      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id) {
     applicationService.delete(id);
   }
@@ -188,9 +194,9 @@ public class ApplicationController {
         value = "Index of first result to retrieve"),
     @ApiImplicitParam(
         name = Fields.ID,
-        required = false,
+        required = true,
         dataType = "string",
-        paramType = "query",
+        paramType = "path",
         value = "Search for ids containing this text"),
     @ApiImplicitParam(
         name = SORT,
@@ -208,11 +214,12 @@ public class ApplicationController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Users for an Application")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<User> getUsersForApplication(
-      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     if (isEmpty(query)) {
       return new PageDTO<>(userService.findUsersForApplication(id, filters, pageable));
     } else {
@@ -237,9 +244,9 @@ public class ApplicationController {
         value = "Index of first result to retrieve"),
     @ApiImplicitParam(
         name = Fields.ID,
-        required = false,
+        required = true,
         dataType = "string",
-        paramType = "query",
+        paramType = "path",
         value = "Search for ids containing this text"),
     @ApiImplicitParam(
         name = SORT,
@@ -257,11 +264,12 @@ public class ApplicationController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Groups for an Application")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Group> getGroupsForApplication(
-      @RequestHeader(value = AUTHORIZATION, required = true) final String accessToken,
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     if (isEmpty(query)) {
       return new PageDTO<>(groupService.findGroupsForApplication(id, filters, pageable));
     } else {

@@ -26,17 +26,20 @@ import bio.overture.ego.service.ApplicationService;
 import java.util.Calendar;
 import java.util.UUID;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.springframework.beans.factory.annotation.Autowired;
 
+@Slf4j
 public class LoadAdminUITest extends AbstractSeleniumTest {
 
   /** Dependencies */
   @Autowired private ApplicationService applicationService;
 
-  @Test
+  // 15min * 60s * 1000ns - 900,000ms
+  @Test(timeout = 900000L)
   @SneakyThrows
   public void loadAdmin_Success() {
     val facebookUser = System.getenv("FACEBOOK_USER");
