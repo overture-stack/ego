@@ -146,14 +146,16 @@ public class AuthController {
       method = {GET, POST},
       value = "/update-ego-token")
   public ResponseEntity<String> updateEgoToken(
-      @ApiIgnore @RequestHeader(value = "Authorization") final String authorization) {
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization) {
     val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
     return new ResponseEntity<>(tokenService.updateUserToken(currentToken), OK);
   }
 
   @RequestMapping(method = DELETE, value = "/refresh")
   public ResponseEntity<String> deleteRefreshToken(
-      @ApiIgnore @RequestHeader(value = "Authorization") final String authorization,
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @CookieValue(value = REFRESH_ID, defaultValue = "missing") String refreshId,
       HttpServletResponse response) {
 
@@ -168,7 +170,8 @@ public class AuthController {
 
   @RequestMapping(method = POST, value = "/refresh")
   public ResponseEntity<String> refreshEgoToken(
-      @ApiIgnore @RequestHeader(value = "Authorization") final String authorization,
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @CookieValue(value = REFRESH_ID, defaultValue = "missing") String refreshId,
       HttpServletResponse response) {
     if (authorization == null || refreshId.equals("missing")) {

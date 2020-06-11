@@ -70,7 +70,10 @@ public class PolicyController {
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Get policy by id", response = Policy.class)})
   @JsonView(Views.REST.class)
-  public @ResponseBody Policy getPolicy(@PathVariable(value = "id", required = true) UUID id) {
+  public @ResponseBody Policy getPolicy(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "id", required = true) UUID id) {
     return policyService.getById(id);
   }
 
@@ -117,7 +120,10 @@ public class PolicyController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Policies")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Policy> listPolicies(
-      @ApiIgnore @Filters List<SearchFilter> filters, @ApiIgnore Pageable pageable) {
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @ApiIgnore @Filters List<SearchFilter> filters,
+      @ApiIgnore Pageable pageable) {
     return new PageDTO<>(policyService.listPolicies(filters, pageable));
   }
 
@@ -128,6 +134,8 @@ public class PolicyController {
         @ApiResponse(code = 200, message = "New Policy", response = Policy.class),
       })
   public @ResponseBody Policy createPolicy(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @RequestBody(required = true) PolicyRequest createRequest) {
     return policyService.create(createRequest);
   }
@@ -137,6 +145,8 @@ public class PolicyController {
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Updated Policy", response = Policy.class)})
   public @ResponseBody Policy updatePolicy(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id") UUID id,
       @RequestBody(required = true) PolicyRequest updatedRequst) {
     return policyService.partialUpdate(id, updatedRequst);
@@ -145,7 +155,10 @@ public class PolicyController {
   @AdminScoped
   @RequestMapping(method = DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
-  public void deletePolicy(@PathVariable(value = "id", required = true) UUID id) {
+  public void deletePolicy(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "id", required = true) UUID id) {
     policyService.delete(id);
   }
 
@@ -155,6 +168,8 @@ public class PolicyController {
       value = {@ApiResponse(code = 200, message = "Add group permission", response = String.class)})
   @JsonView(Views.REST.class)
   public @ResponseBody Group createGroupPermission(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "group_id", required = true) UUID groupId,
       @RequestBody(required = true) MaskDTO maskDTO) {
@@ -172,6 +187,8 @@ public class PolicyController {
             response = GenericResponse.class)
       })
   public @ResponseBody GenericResponse deleteGroupPermission(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "group_id", required = true) UUID groupId) {
     groupPermissionService.deleteByPolicyAndOwner(id, groupId);
@@ -183,6 +200,8 @@ public class PolicyController {
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Add user permission", response = String.class)})
   public @ResponseBody User createUserPermission(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "user_id", required = true) UUID userId,
       @RequestBody(required = true) MaskDTO maskDTO) {
@@ -200,6 +219,8 @@ public class PolicyController {
             response = GenericResponse.class)
       })
   public @ResponseBody GenericResponse deleteUserPermission(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "user_id", required = true) UUID userId) {
 
@@ -244,6 +265,8 @@ public class PolicyController {
             response = String.class)
       })
   public @ResponseBody PageDTO<PolicyResponse> findUserIds(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @ApiParam(
               value = "Query string compares to AccessLevel and user Id and Name fields.",
@@ -299,6 +322,8 @@ public class PolicyController {
             response = String.class)
       })
   public @ResponseBody PageDTO<PolicyResponse> findGroupIds(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @ApiParam(
               value = "Query string compares to AccessLevel and group Id and Name fields.",

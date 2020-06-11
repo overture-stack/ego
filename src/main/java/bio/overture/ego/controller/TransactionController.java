@@ -18,7 +18,6 @@ package bio.overture.ego.controller;
 
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static java.lang.String.format;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
@@ -79,7 +78,7 @@ public class TransactionController {
    * so.
    */
   public void createGroupPermissions(
-      @RequestHeader(value = AUTHORIZATION, required = true) final String authorization,
+      @RequestHeader(value = "Authorization", required = true) final String authorization,
       @RequestBody() final List<TransactionalGroupPermissionRequest> requests) {
 
     createPermissions(requests);
@@ -129,7 +128,7 @@ public class TransactionController {
   @RequestMapping(method = POST, value = "/mass_delete")
   @ResponseStatus(value = OK)
   public void deleteGroupPermissions(
-      @RequestHeader(value = AUTHORIZATION, required = true) final String authorization,
+      @RequestHeader(value = "Authorization", required = true) final String authorization,
       @RequestBody() final TransactionalDeleteRequest request) {
     for (val name : request.getGroupNames()) {
       deleteGroupByName(name);

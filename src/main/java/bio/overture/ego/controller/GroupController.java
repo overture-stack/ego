@@ -57,6 +57,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -123,6 +124,8 @@ public class GroupController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Groups")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Group> listGroups(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       @ApiIgnore Pageable pageable) {
@@ -139,7 +142,10 @@ public class GroupController {
       value = {
         @ApiResponse(code = 200, message = "New Group", response = Group.class),
       })
-  public @ResponseBody Group createGroup(@RequestBody GroupRequest createRequest) {
+  public @ResponseBody Group createGroup(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody GroupRequest createRequest) {
     return groupService.create(createRequest);
   }
 
@@ -148,7 +154,10 @@ public class GroupController {
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Group Details", response = Group.class)})
   @JsonView(Views.REST.class)
-  public @ResponseBody Group getGroup(@PathVariable(value = "id") UUID id) {
+  public @ResponseBody Group getGroup(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "id") UUID id) {
     return groupService.getById(id);
   }
 
@@ -157,6 +166,8 @@ public class GroupController {
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Updated group info", response = Group.class)})
   public @ResponseBody Group updateGroup(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id") UUID id,
       @RequestBody(required = true) GroupRequest updateRequest) {
     return groupService.partialUpdate(id, updateRequest);
@@ -165,7 +176,10 @@ public class GroupController {
   @AdminScoped
   @RequestMapping(method = DELETE, value = "/{id}")
   @ResponseStatus(value = OK)
-  public void deleteGroup(@PathVariable(value = "id", required = true) UUID id) {
+  public void deleteGroup(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "id", required = true) UUID id) {
     groupService.delete(id);
   }
 
@@ -212,7 +226,10 @@ public class GroupController {
       })
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<GroupPermission> getGroupPermissionsForGroup(
-      @PathVariable(value = "id", required = true) UUID id, @ApiIgnore Pageable pageable) {
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "id", required = true) UUID id,
+      @ApiIgnore Pageable pageable) {
     return new PageDTO<>(groupPermissionService.getPermissions(id, pageable));
   }
 
@@ -221,6 +238,8 @@ public class GroupController {
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Add group permissions", response = Group.class)})
   public @ResponseBody Group addPermissions(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<PermissionRequest> permissions) {
     return groupPermissionService.addPermissions(id, permissions);
@@ -231,6 +250,8 @@ public class GroupController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete group permissions")})
   @ResponseStatus(value = OK)
   public void deletePermissions(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "permissionIds", required = true) List<UUID> permissionIds) {
     groupPermissionService.deletePermissions(id, permissionIds);
@@ -276,6 +297,8 @@ public class GroupController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Applications for a Group")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Application> getApplicationsForGroup(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
@@ -293,6 +316,8 @@ public class GroupController {
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Add Apps to Group", response = Group.class)})
   public @ResponseBody Group addApplicationsToGroup(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<UUID> appIds) {
     return groupService.associateApplicationsWithGroup(id, appIds);
@@ -303,6 +328,8 @@ public class GroupController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete Apps from Group")})
   @ResponseStatus(value = OK)
   public void deleteApplicationsFromGroup(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "appIds", required = true) List<UUID> appIds) {
     groupService.disassociateApplicationsFromGroup(id, appIds);
@@ -348,6 +375,8 @@ public class GroupController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Users for a Group")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<User> getUsersForGroup(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
@@ -364,6 +393,8 @@ public class GroupController {
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "Add Users to Group", response = Group.class)})
   public @ResponseBody Group addUsersToGroup(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<UUID> userIds) {
     return groupService.associateUsersWithGroup(id, userIds);
@@ -374,6 +405,8 @@ public class GroupController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete Users from Group")})
   @ResponseStatus(value = OK)
   public void deleteUsersFromGroup(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "userIds", required = true) List<UUID> userIds) {
     groupService.disassociateUsersFromGroup(id, userIds);

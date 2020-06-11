@@ -55,6 +55,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -115,6 +116,8 @@ public class ApplicationController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Applications")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Application> listApplications(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
       @ApiIgnore Pageable pageable) {
@@ -130,6 +133,8 @@ public class ApplicationController {
   @ApiResponses(
       value = {@ApiResponse(code = 200, message = "New Application", response = Application.class)})
   public @ResponseBody Application createApplication(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @RequestBody(required = true) CreateApplicationRequest request) {
     return applicationService.create(request);
   }
@@ -142,6 +147,8 @@ public class ApplicationController {
       })
   @JsonView(Views.REST.class)
   public @ResponseBody Application getApplication(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id) {
     return applicationService.getById(id);
   }
@@ -153,6 +160,8 @@ public class ApplicationController {
         @ApiResponse(code = 200, message = "Updated application info", response = Application.class)
       })
   public @ResponseBody Application updateApplication(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(name = "id", required = true) UUID id,
       @RequestBody(required = true) UpdateApplicationRequest updateRequest) {
     return applicationService.partialUpdate(id, updateRequest);
@@ -161,7 +170,10 @@ public class ApplicationController {
   @AdminScoped
   @RequestMapping(method = DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
-  public void deleteApplication(@PathVariable(value = "id", required = true) UUID id) {
+  public void deleteApplication(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "id", required = true) UUID id) {
     applicationService.delete(id);
   }
 
@@ -202,6 +214,8 @@ public class ApplicationController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Users for an Application")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<User> getUsersForApplication(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
@@ -250,6 +264,8 @@ public class ApplicationController {
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Groups for an Application")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Group> getGroupsForApplication(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
