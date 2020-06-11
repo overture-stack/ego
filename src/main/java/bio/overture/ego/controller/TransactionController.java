@@ -32,6 +32,7 @@ import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.PolicyService;
 import com.google.common.collect.ImmutableList;
+import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -51,6 +52,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @Transactional
 @RequestMapping("/transaction")
+@Api(tags = "Transactions")
 public class TransactionController {
   PolicyService policyService;
   GroupService groupService;
@@ -76,6 +78,7 @@ public class TransactionController {
    * so.
    */
   public void createGroupPermissions(
+      @RequestHeader(value = "Authorization", required = true) final String authorization,
       @RequestBody() final List<TransactionalGroupPermissionRequest> requests) {
 
     createPermissions(requests);
@@ -124,7 +127,9 @@ public class TransactionController {
   @ApplicationScoped()
   @RequestMapping(method = POST, value = "/mass_delete")
   @ResponseStatus(value = OK)
-  public void deleteGroupPermissions(@RequestBody() final TransactionalDeleteRequest request) {
+  public void deleteGroupPermissions(
+      @RequestHeader(value = "Authorization", required = true) final String authorization,
+      @RequestBody() final TransactionalDeleteRequest request) {
     for (val name : request.getGroupNames()) {
       deleteGroupByName(name);
     }

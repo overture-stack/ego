@@ -26,7 +26,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.MULTI_STATUS;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.*;
 import static org.springframework.util.StringUtils.isEmpty;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -69,6 +69,7 @@ import springfox.documentation.annotations.ApiIgnore;
 @Slf4j
 @RestController
 @RequestMapping("/o")
+@Api(tags = "Api Keys")
 public class ApiKeyController {
 
   /** Dependencies */
@@ -85,34 +86,40 @@ public class ApiKeyController {
   }
 
   @ApplicationScoped()
-  @RequestMapping(method = POST, value = "/check_api_key")
+  @RequestMapping(
+      method = POST,
+      value = "/check_api_key",
+      produces = {APPLICATION_JSON_VALUE, APPLICATION_JSON_UTF8_VALUE})
   @ResponseStatus(value = MULTI_STATUS)
   @SneakyThrows
   public @ResponseBody ApiKeyScopeResponse checkApiKey(
-      @RequestHeader(value = "Authorization") final String authToken,
+      @RequestHeader(value = "Authorization", required = true) final String authorization,
       @RequestParam(value = "apiKey") final String apiKey) {
-
-    return tokenService.checkApiKey(authToken, apiKey);
+    return tokenService.checkApiKey(authorization, apiKey);
   }
 
   /** DEPRECATED: GET /check_token to be removed in next major release */
   @Deprecated
   @ApplicationScoped()
-  @RequestMapping(method = POST, value = "/check_token")
+  @RequestMapping(
+      method = POST,
+      value = "/check_token",
+      produces = {"application/json"})
   @ResponseStatus(value = MULTI_STATUS)
   @SneakyThrows
   public @ResponseBody ApiKeyScopeResponse checkToken(
-      @RequestHeader(value = "Authorization") final String authToken,
+      @RequestHeader(value = "Authorization", required = true) final String authorization,
       @RequestParam(value = "token") final String token) {
 
-    return tokenService.checkApiKey(authToken, token);
+    return tokenService.checkApiKey(authorization, token);
   }
 
   @RequestMapping(method = GET, value = "/scopes")
   @ResponseStatus(value = OK)
   @SneakyThrows
-  public @ResponseBody UserScopesResponse userScope(
-      @RequestHeader(value = "Authorization") final String auth,
+  public @ResponseBody UserScopesResponse getUserScope(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @RequestParam(value = "userName") final String userName) {
     return tokenService.userScopes(userName);
   }
@@ -120,7 +127,8 @@ public class ApiKeyController {
   @RequestMapping(method = POST, value = "/api_key")
   @ResponseStatus(value = OK)
   public @ResponseBody ApiKeyResponse issueApiKey(
-      @RequestHeader(value = "Authorization") final String authorization,
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @RequestParam(value = "user_id") UUID userId,
       @RequestParam(value = "scopes") ArrayList<String> scopes,
       @RequestParam(value = "description", required = false) String description) {
@@ -145,7 +153,8 @@ public class ApiKeyController {
   @RequestMapping(method = POST, value = "/token")
   @ResponseStatus(value = OK)
   public @ResponseBody TokenResponse issueToken(
-      @RequestHeader(value = "Authorization") final String authorization,
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @RequestParam(value = "user_id") UUID userId,
       @RequestParam(value = "scopes") ArrayList<String> scopes,
       @RequestParam(value = "description", required = false) String description) {
@@ -166,7 +175,8 @@ public class ApiKeyController {
   @RequestMapping(method = DELETE, value = "/api_key")
   @ResponseStatus(value = OK)
   public @ResponseBody GenericResponse revokeApiKey(
-      @RequestHeader(value = "Authorization") final String authorization,
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @RequestParam(value = "apiKey") final String apiKey) {
     tokenService.revokeApiKey(apiKey);
     return createGenericResponse("ApiKey '%s' was successfully revoked!", apiKey);
@@ -177,7 +187,8 @@ public class ApiKeyController {
   @RequestMapping(method = DELETE, value = "/token")
   @ResponseStatus(value = OK)
   public @ResponseBody String revokeToken(
-      @RequestHeader(value = "Authorization") final String authorization,
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @RequestParam(value = "token") final String token) {
     tokenService.revokeApiKey(token);
     return format("Token '%s' is successfully revoked!", token);
@@ -211,14 +222,15 @@ public class ApiKeyController {
         value = "Sorting order: ASC|DESC. Default order: DESC"),
   })
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Page ApiKeys for a User")})
-  public @ResponseBody PageDTO<ApiKeyResponse> listApiKey(
-      @RequestHeader(value = "Authorization") final String authorization,
+  public @ResponseBody PageDTO<ApiKeyResponse> listApiKeys(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @RequestParam(value = "user_id") UUID userId,
       @ApiParam(value = "Query string compares to ApiKey's Name fields.", required = false)
           @RequestParam(value = "query", required = false)
           String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
-      Pageable pageable) {
+      @ApiIgnore Pageable pageable) {
     checkAdminOrOwner(userId);
     if (isEmpty(query)) {
       return new PageDTO<>(tokenService.listApiKeysForUser(userId, filters, pageable));
@@ -231,8 +243,9 @@ public class ApiKeyController {
   @Deprecated
   @RequestMapping(method = GET, value = "/token")
   @ResponseStatus(value = OK)
-  public @ResponseBody List<TokenResponse> listToken(
-      @RequestHeader(value = "Authorization") final String authorization,
+  public @ResponseBody List<TokenResponse> listTokens(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @RequestParam(value = "user_id") UUID userId) {
     checkAdminOrOwner(userId);
     return tokenService.listTokens(userId);

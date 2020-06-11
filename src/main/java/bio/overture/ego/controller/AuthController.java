@@ -18,6 +18,7 @@ package bio.overture.ego.controller;
 
 import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
 import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 import bio.overture.ego.provider.facebook.FacebookTokenService;
@@ -27,6 +28,7 @@ import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.signer.TokenSigner;
 import bio.overture.ego.utils.Tokens;
+import io.swagger.annotations.Api;
 import javax.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -42,10 +44,12 @@ import org.springframework.security.oauth2.common.exceptions.InvalidTokenExcepti
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 @Slf4j
 @RestController
 @RequestMapping("/oauth")
+@Api(tags = "Auth")
 public class AuthController {
 
   @Value("${auth.token.prefix}")
@@ -111,8 +115,8 @@ public class AuthController {
     return true;
   }
 
-  @RequestMapping(method = GET, value = "/token/public_key")
   @ResponseStatus(value = OK)
+  @RequestMapping(method = GET, value = "/token/public_key", produces = TEXT_PLAIN_VALUE)
   public @ResponseBody String getPublicKey() {
     val pubKey = tokenSigner.getEncodedPublicKey();
     return pubKey.orElse("");
@@ -142,14 +146,16 @@ public class AuthController {
       method = {GET, POST},
       value = "/update-ego-token")
   public ResponseEntity<String> updateEgoToken(
-      @RequestHeader(value = "Authorization") final String authorization) {
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization) {
     val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
     return new ResponseEntity<>(tokenService.updateUserToken(currentToken), OK);
   }
 
   @RequestMapping(method = DELETE, value = "/refresh")
   public ResponseEntity<String> deleteRefreshToken(
-      @RequestHeader(value = "Authorization") final String authorization,
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @CookieValue(value = REFRESH_ID, defaultValue = "missing") String refreshId,
       HttpServletResponse response) {
 
@@ -164,7 +170,8 @@ public class AuthController {
 
   @RequestMapping(method = POST, value = "/refresh")
   public ResponseEntity<String> refreshEgoToken(
-      @RequestHeader(value = "Authorization") final String authorization,
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
       @CookieValue(value = REFRESH_ID, defaultValue = "missing") String refreshId,
       HttpServletResponse response) {
     if (authorization == null || refreshId.equals("missing")) {

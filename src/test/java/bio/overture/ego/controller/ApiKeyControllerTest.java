@@ -342,7 +342,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/check_api_key").body(params).post();
 
     val statusCode = response.getStatusCode();
-    assertEquals(statusCode, HttpStatus.MULTI_STATUS);
+    assertEquals(HttpStatus.MULTI_STATUS, statusCode);
   }
 
   @SneakyThrows
@@ -358,7 +358,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/check_api_key").body(params).post();
 
     val statusCode = response.getStatusCode();
-    assertEquals(statusCode, HttpStatus.UNAUTHORIZED);
+    assertEquals(HttpStatus.UNAUTHORIZED, statusCode);
   }
 
   @SneakyThrows
@@ -401,7 +401,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/scopes?userName=%s", userName).get();
 
     val statusCode = response.getStatusCode();
-    assertEquals(statusCode, HttpStatus.NOT_FOUND);
+    assertEquals(HttpStatus.NOT_FOUND, statusCode);
   }
 
   @SneakyThrows
@@ -514,7 +514,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/api_key?user_id=%s", userId).get();
 
     val statusCode = response.getStatusCode();
-    assertEquals(statusCode, HttpStatus.OK);
+    assertEquals(HttpStatus.OK, statusCode);
 
     assertEquals(response.getBody(), "{\"limit\":20,\"offset\":0,\"count\":0,\"resultSet\":[]}");
   }
@@ -536,12 +536,12 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/api_key").body(params).post();
     val responseStatus = response.getStatusCode();
 
-    assertEquals(responseStatus, HttpStatus.OK);
+    assertEquals(HttpStatus.OK, responseStatus);
 
     val listResponse =
         initStringRequest().endpoint("o/api_key?user_id=%s", user.getId().toString()).get();
     val listStatusCode = listResponse.getStatusCode();
-    assertEquals(listStatusCode, HttpStatus.OK);
+    assertEquals(HttpStatus.OK, responseStatus);
 
     val responseJson = MAPPER.readTree(listResponse.getBody());
 
@@ -551,7 +551,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     val seconds = date1.getTime() / 1000L - Calendar.getInstance().getTime().getTime() / 1000L;
     val secondsValue = seconds > 0 ? seconds : 0;
 
-    assertNotEquals(secondsValue, 0);
+    assertNotEquals(0, secondsValue);
     assertTrue(secondsValue > 0);
   }
 }
