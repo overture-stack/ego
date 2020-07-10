@@ -79,7 +79,7 @@ import org.hibernate.annotations.TypeDef;
 @TypeDef(name = "application_type_enum", typeClass = PostgreSQLEnumType.class)
 @TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
 @JsonInclude(JsonInclude.Include.CUSTOM)
-public class Application implements Identifiable<UUID> {
+public class Application implements PolicyOwner, NameableEntity<UUID> {
 
   @Id
   @Column(name = SqlFields.ID, updatable = false, nullable = false)
