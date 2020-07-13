@@ -140,4 +140,13 @@ public class Application implements PolicyOwner, NameableEntity<UUID> {
       fetch = FetchType.LAZY,
       orphanRemoval = true)
   private Set<UserApplication> userApplications = newHashSet();
+
+  @JsonIgnore
+  @Builder.Default
+  @OneToMany(
+      mappedBy = JavaFields.OWNER,
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
+      fetch = FetchType.LAZY)
+  private Set<ApplicationPermission> applicationPermissions = newHashSet();
 }

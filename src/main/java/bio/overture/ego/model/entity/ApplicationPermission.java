@@ -6,10 +6,9 @@ import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonView;
+import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
-
-import javax.persistence.*;
 
 @Entity
 @Data
@@ -21,14 +20,14 @@ import javax.persistence.*;
 @ToString(callSuper = true)
 @FieldNameConstants
 @EqualsAndHashCode(
-  callSuper = true,
-  of = {"id"})
+    callSuper = true,
+    of = {"id"})
 @NamedEntityGraph(
-  name = "application-permission-entity-with-relationships",
-  attributeNodes = {
-    @NamedAttributeNode(value = JavaFields.POLICY),
-    @NamedAttributeNode(value = JavaFields.OWNER)
-  })
+    name = "application-permission-entity-with-relationships",
+    attributeNodes = {
+      @NamedAttributeNode(value = JavaFields.POLICY),
+      @NamedAttributeNode(value = JavaFields.OWNER)
+    })
 public class ApplicationPermission extends AbstractPermission<Application> {
 
   @ManyToOne(fetch = FetchType.LAZY)
