@@ -21,7 +21,7 @@ public class ApplicationSpecificationBuilder
 
   private boolean fetchGroups;
   private boolean fetchUsers;
-  private boolean fetchApplicationPermissions;
+  private boolean fetchApplicationAndGroupPermissions;
 
   public Specification<Application> buildByClientIdIgnoreCase(@NonNull String clientId) {
     return (fromApplication, query, builder) -> {
@@ -44,8 +44,12 @@ public class ApplicationSpecificationBuilder
     if (fetchUsers) {
       root.fetch(USERAPPLICATIONS, LEFT).fetch(USER, LEFT);
     }
-    if (fetchApplicationPermissions) {
-      root.fetch(PERMISSIONS, LEFT);
+    if (fetchApplicationAndGroupPermissions) {
+      root.fetch(APPLICATIONPERMISSIONS, LEFT).fetch(POLICY, LEFT);
+      root.fetch(GROUPAPPLICATIONS, LEFT)
+          .fetch(GROUP, LEFT)
+          .fetch(PERMISSIONS, LEFT)
+          .fetch(POLICY, LEFT);
     }
     return root;
   }

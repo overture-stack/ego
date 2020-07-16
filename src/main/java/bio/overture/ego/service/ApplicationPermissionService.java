@@ -3,12 +3,16 @@ package bio.overture.ego.service;
 import static bio.overture.ego.repository.queryspecification.ApplicationPermissionSpecification.buildFilterAndQuerySpecification;
 import static bio.overture.ego.repository.queryspecification.ApplicationPermissionSpecification.buildFilterSpecification;
 import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
+import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 
 import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
+import bio.overture.ego.model.dto.ResolvedPermissionResponse;
 import bio.overture.ego.model.entity.*;
+import bio.overture.ego.model.join.GroupApplication;
 import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationPermissionRepository;
@@ -123,5 +127,34 @@ public class ApplicationPermissionService
             .collect(toUnmodifiableList());
 
     return new PageImpl<>(responses, pageable, applicationPermissions.getTotalElements());
+  }
+
+  public List<ResolvedPermissionResponse> getResolvedPermissions(@NonNull UUID applicationId) {
+    val app = applicationService.getWithRelationships(applicationId);
+    val appPermissions = app.getApplicationPermissions();
+    val groupPermissions =
+        mapToList(app.getGroupApplications(), GroupApplication::getGroup).stream()
+            .map(Group::getPermissions)
+            .flatMap(Collection::stream)
+            .collect(toUnmodifiableSet());
+
+    return resolveFinalPermissions(appPermissions, groupPermissions).stream()
+        .map(
+            x -> {
+              val ownerType = x.getOwner().getClass().getSimpleName().toUpperCase();
+              val accessLevel = x.getAccessLevel();
+              val policy = x.getPolicy();
+              val owner = x.getOwner();
+              val id = x.getId();
+
+              return ResolvedPermissionResponse.builder()
+                  .accessLevel(accessLevel)
+                  .ownerType(ownerType)
+                  .policy(policy)
+                  .owner(owner)
+                  .id(id)
+                  .build();
+            })
+        .collect(toUnmodifiableList());
   }
 }

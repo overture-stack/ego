@@ -52,6 +52,7 @@ public class JavaFields {
   public static final String USERPERMISSION = "userPermission";
   public static final String GROUPPERMISSION = "groupPermission";
   public static final String GROUPPERMISSIONS = "groupPermissions";
+  public static final String APPLICATIONPERMISSIONS = "applicationPermissions";
   public static final String DESCRIPTION = "description";
   public static final String CLIENTID = "clientId";
   public static final String CLIENTSECRET = "clientSecret";

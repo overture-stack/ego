@@ -27,10 +27,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
-import bio.overture.ego.model.dto.CreateApplicationRequest;
-import bio.overture.ego.model.dto.PageDTO;
-import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.dto.UpdateApplicationRequest;
+import bio.overture.ego.model.dto.*;
 import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.search.Filters;
@@ -47,6 +44,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import lombok.NonNull;
@@ -54,14 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
 @Slf4j
@@ -358,5 +349,22 @@ public class ApplicationController {
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "permissionIds", required = true) List<UUID> permissionIds) {
     applicationPermissionService.deletePermissions(id, permissionIds);
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.GET, value = "/{id}/groups/permissions")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            code = 200,
+            message =
+                "Get effective permissions for an application with application and group permissions")
+      })
+  @ResponseStatus(value = HttpStatus.OK)
+  public @ResponseBody Collection<ResolvedPermissionResponse> getResolvedPermissions(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "id", required = true) UUID id) {
+    return applicationPermissionService.getResolvedPermissions(id);
   }
 }
