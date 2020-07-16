@@ -4,16 +4,15 @@ import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonView;
 import javax.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 
 @Entity
-@Data
 @Table(name = Tables.APPLICATION_PERMISSION)
-@JsonInclude
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonView(Views.REST.class)

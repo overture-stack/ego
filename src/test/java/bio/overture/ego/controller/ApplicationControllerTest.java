@@ -19,9 +19,7 @@ package bio.overture.ego.controller;
 
 import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
 import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
-import static bio.overture.ego.model.enums.JavaFields.GROUPAPPLICATIONS;
-import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.USERAPPLICATIONS;
+import static bio.overture.ego.model.enums.JavaFields.*;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentClientId;
@@ -85,7 +83,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
   @Override
   protected void beforeTest() {
-    // Initial setup of entities (run once
+    // Initial setup of entities (run once)
     if (!hasRunEntitySetup) {
       entityGenerator.setupTestUsers();
       entityGenerator.setupTestApplications();
@@ -159,7 +157,8 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     val application = applicationService.getByClientId("111111");
     getApplicationEntityGetRequestAnd(application)
         .assertEntityOfType(Application.class)
-        .isEqualToIgnoringGivenFields(application, GROUPAPPLICATIONS, USERAPPLICATIONS);
+        .isEqualToIgnoringGivenFields(
+            application, GROUPAPPLICATIONS, USERAPPLICATIONS, APPLICATIONPERMISSIONS);
   }
 
   @Test
@@ -236,7 +235,8 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     // Get the application
     getApplicationEntityGetRequestAnd(app)
         .assertEntityOfType(Application.class)
-        .isEqualToIgnoringGivenFields(createRequest, ID, GROUPAPPLICATIONS, USERAPPLICATIONS);
+        .isEqualToIgnoringGivenFields(
+            createRequest, ID, GROUPAPPLICATIONS, USERAPPLICATIONS, APPLICATIONPERMISSIONS);
   }
 
   @Test
@@ -628,7 +628,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
   @Test
   public void getUsersFromApplication_NonExistentGroup_NotFound() {
-    // Generate non existing applicaition id
+    // Generate non existing application id
     val nonExistentId = generateNonExistentId(applicationService);
 
     // Read non existing application id and assert its NOT_FOUND

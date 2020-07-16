@@ -75,7 +75,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
 
   @Test
   @SneakyThrows
-  public void addpolicy_Success() {
+  public void addPolicy_Success() {
     val policy = PolicyRequest.builder().name("AddPolicy").build();
 
     val response = initStringRequest().endpoint("/policies").body(policy).post();
@@ -227,6 +227,66 @@ public class PolicyControllerTest extends AbstractControllerTest {
     assertEquals(deleteResponseStatus, OK);
 
     val getResponse = initStringRequest().endpoint("/policies/%s/users", policyId).get();
+
+    val getResponseStatus = getResponse.getStatusCode();
+    val getResponseJson = MAPPER.readTree(getResponse.getBody());
+
+    assertEquals(getResponseStatus, OK);
+    assertEquals(0, getResponseJson.get("count").asInt());
+  }
+
+  @Test
+  @SneakyThrows
+  public void associatePermissionsWithApplication_ExistingEntitiesButNoRelationship_Success() {
+    val policyId = entityGenerator.setupSinglePolicy("AddAppPermission").getId().toString();
+    val appId = entityGenerator.setupApplication("AppPolicy Add").getId().toString();
+
+    val response =
+        initStringRequest()
+            .endpoint("/policies/%s/permission/application/%s", policyId, appId)
+            .body(createMaskJson(READ.toString()))
+            .post();
+
+    val responseStatus = response.getStatusCode();
+    assertEquals(responseStatus, OK);
+    // TODO: Fix it so that POST returns JSON, not just random string message
+
+    val getResponse = initStringRequest().endpoint("/policies/%s/applications", policyId).get();
+
+    val getResponseStatus = getResponse.getStatusCode();
+    val getResponseJson = MAPPER.readTree(getResponse.getBody());
+    val permissionJson = getResponseJson.get("resultSet").get(0);
+
+    assertEquals(getResponseStatus, OK);
+    assertEquals(permissionJson.get("id").asText(), appId);
+    assertEquals(permissionJson.get("mask").asText(), "READ");
+  }
+
+  @Test
+  @SneakyThrows
+  public void disassociatePermissionsFromApplication_ExistingEntitiesAndRelationships_Success() {
+    val policyId = entityGenerator.setupSinglePolicy("DeleteAppPermission").getId().toString();
+    val appId = entityGenerator.setupApplication("AppPolicy Delete").getId().toString();
+
+    val response =
+        initStringRequest()
+            .endpoint("/policies/%s/permission/application/%s", policyId, appId)
+            .body(createMaskJson(WRITE.toString()))
+            .post();
+
+    val responseStatus = response.getStatusCode();
+    assertEquals(responseStatus, OK);
+    // TODO: Fix it so that POST returns JSON, not just random string message
+
+    val deleteResponse =
+        initStringRequest()
+            .endpoint("/policies/%s/permission/application/%s", policyId, appId)
+            .delete();
+
+    val deleteResponseStatus = deleteResponse.getStatusCode();
+    assertEquals(deleteResponseStatus, OK);
+
+    val getResponse = initStringRequest().endpoint("/policies/%s/applications", policyId).get();
 
     val getResponseStatus = getResponse.getStatusCode();
     val getResponseJson = MAPPER.readTree(getResponse.getBody());
