@@ -115,6 +115,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
                 new ApplicationSpecificationBuilder()
                     .fetchGroups(true)
                     .fetchUsers(true)
+                    .fetchApplicationAndGroupPermissions(true)
                     .buildByNameIgnoreCase(name));
   }
 
@@ -212,6 +213,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
                 new ApplicationSpecificationBuilder()
                     .fetchGroups(true)
                     .fetchUsers(true)
+                    .fetchApplicationAndGroupPermissions(true)
                     .buildByClientIdIgnoreCase(clientId));
   }
 
