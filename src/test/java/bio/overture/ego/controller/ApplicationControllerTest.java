@@ -19,6 +19,8 @@ package bio.overture.ego.controller;
 
 import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
 import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
+import static bio.overture.ego.model.enums.AccessLevel.READ;
+import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static bio.overture.ego.model.enums.JavaFields.*;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
@@ -38,9 +40,7 @@ import static org.junit.Assert.*;
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.service.ApplicationService;
@@ -341,6 +341,16 @@ public class ApplicationControllerTest extends AbstractControllerTest {
         .assertPageResultsOfType(User.class)
         .containsExactly(user0);
 
+    addApplicationPermissionToApplicationPostRequestAnd(app0, data.getPolicies().get(0), READ)
+        .assertOk();
+
+    addApplicationPermissionToApplicationPostRequestAnd(app0, data.getPolicies().get(1), WRITE)
+        .assertOk();
+
+    getApplicationPermissionsForApplicationGetRequestAnd(app0)
+        .assertPageResultsOfType(ApplicationPermission.class)
+        .hasSize(2);
+
     // Delete App0
     deleteApplicationDeleteRequestAnd(app0).assertOk();
 
@@ -352,6 +362,9 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
     // Assert group0 still exists
     getGroupEntityGetRequestAnd(group0).assertOk();
+
+    // Assert all policies still exist
+    data.getPolicies().forEach(p -> getPolicyGetRequestAnd(p).assertOk());
 
     // Assert user0 is associated with 0 applications
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
@@ -465,7 +478,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
   @Test
   public void updateApplication_NonExistentApplication_NotFound() {
-    // Generate a non-existing applicaiton Id
+    // Generate a non-existing application Id
     val nonExistentId = generateNonExistentId(applicationService);
 
     // Assert that updating a non-existing application results in NOT_FOUND error
@@ -599,7 +612,7 @@ public class ApplicationControllerTest extends AbstractControllerTest {
 
   @Test
   public void getGroupsFromApplication_NonExistentApplication_NotFound() {
-    // Generate non existing applicaition id
+    // Generate non existing application id
     val nonExistentId = generateNonExistentId(applicationService);
 
     // Read non existing application id and assert its NOT_FOUND
@@ -639,11 +652,13 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     val applications = repeatedCallsOf(() -> entityGenerator.generateRandomApplication(), 2);
     val groups = repeatedCallsOf(() -> entityGenerator.generateRandomGroup(), 3);
     val users = repeatedCallsOf(() -> entityGenerator.generateRandomUser(), 3);
+    val policies = repeatedCallsOf(() -> entityGenerator.generateRandomPolicy(), 2);
 
     return TestApplicationData.builder()
         .applications(applications)
         .users(users)
         .groups(groups)
+        .policies(policies)
         .build();
   }
 
@@ -653,5 +668,6 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     @NonNull private final List<Group> groups;
     @NonNull private final List<Application> applications;
     @NonNull private final List<User> users;
+    @NonNull private final List<Policy> policies;
   }
 }
