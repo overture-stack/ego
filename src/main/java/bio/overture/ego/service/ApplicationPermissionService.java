@@ -1,7 +1,5 @@
 package bio.overture.ego.service;
 
-import static bio.overture.ego.repository.queryspecification.ApplicationPermissionSpecification.buildFilterAndQuerySpecification;
-import static bio.overture.ego.repository.queryspecification.ApplicationPermissionSpecification.buildFilterSpecification;
 import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static java.util.stream.Collectors.toUnmodifiableList;
@@ -16,6 +14,7 @@ import bio.overture.ego.model.join.GroupApplication;
 import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.ApplicationPermissionRepository;
+import bio.overture.ego.repository.queryspecification.ApplicationPermissionSpecification;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -37,13 +36,15 @@ public class ApplicationPermissionService
   private final ApplicationService applicationService;
 
   private final ApiKeyEventsPublisher apiKeyEventsPublisher;
+  private final ApplicationPermissionSpecification applicationPermissionSpecification;
 
   @Autowired
   public ApplicationPermissionService(
       @NonNull ApplicationPermissionRepository applicationPermissionRepository,
       @NonNull ApplicationService applicationService,
       @NonNull ApiKeyEventsPublisher apiKeyEventsPublisher,
-      @NonNull PolicyService policyService) {
+      @NonNull PolicyService policyService,
+      @NonNull ApplicationPermissionSpecification applicationPermissionSpecification) {
     super(
         Application.class,
         ApplicationPermission.class,
@@ -52,6 +53,7 @@ public class ApplicationPermissionService
         applicationPermissionRepository);
     this.applicationService = applicationService;
     this.apiKeyEventsPublisher = apiKeyEventsPublisher;
+    this.applicationPermissionSpecification = applicationPermissionSpecification;
   }
 
   /**
@@ -96,12 +98,16 @@ public class ApplicationPermissionService
     return policy.getApplicationPermissions();
   }
 
+  @SuppressWarnings("unchecked")
   public Page<PolicyResponse> listApplicationPermissionsByPolicy(
       @NonNull UUID policyId, List<SearchFilter> filters, @NonNull Pageable pageable) {
 
     val applicationPermissions =
         (Page<ApplicationPermission>)
-            getRepository().findAll(buildFilterSpecification(policyId, filters), pageable);
+            getRepository()
+                .findAll(
+                    applicationPermissionSpecification.buildFilterSpecification(policyId, filters),
+                    pageable);
 
     val responses =
         applicationPermissions.stream()
@@ -111,6 +117,7 @@ public class ApplicationPermissionService
     return new PageImpl<>(responses, pageable, applicationPermissions.getTotalElements());
   }
 
+  @SuppressWarnings("unchecked")
   public Page<PolicyResponse> findApplicationPermissionsByPolicy(
       @NonNull UUID policyId,
       List<SearchFilter> filters,
@@ -119,7 +126,10 @@ public class ApplicationPermissionService
     val applicationPermissions =
         (Page<ApplicationPermission>)
             getRepository()
-                .findAll(buildFilterAndQuerySpecification(policyId, filters, query), pageable);
+                .findAll(
+                    applicationPermissionSpecification.buildFilterAndQuerySpecification(
+                        policyId, filters, query),
+                    pageable);
 
     val responses =
         applicationPermissions.stream()
@@ -129,6 +139,7 @@ public class ApplicationPermissionService
     return new PageImpl<>(responses, pageable, applicationPermissions.getTotalElements());
   }
 
+  @SuppressWarnings("unchecked")
   public List<ResolvedPermissionResponse> getResolvedPermissions(@NonNull UUID applicationId) {
     val app = applicationService.getWithRelationships(applicationId);
     val appPermissions = app.getApplicationPermissions();

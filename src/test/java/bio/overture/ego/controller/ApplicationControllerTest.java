@@ -235,7 +235,11 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     getApplicationEntityGetRequestAnd(app)
         .assertEntityOfType(Application.class)
         .isEqualToIgnoringGivenFields(
-            createRequest, ID, GROUPAPPLICATIONS, USERAPPLICATIONS, APPLICATIONPERMISSIONS);
+            createRequest,
+            ID,
+            GROUPAPPLICATIONS,
+            USERAPPLICATIONS,
+            Application.Fields.applicationPermissions);
   }
 
   @Test

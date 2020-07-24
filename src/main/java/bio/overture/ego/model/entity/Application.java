@@ -71,7 +71,6 @@ import org.hibernate.annotations.TypeDef;
   JavaFields.REDIRECTURI,
   JavaFields.DESCRIPTION,
   JavaFields.STATUS,
-  JavaFields.APPLICATIONPERMISSIONS
 })
 @EqualsAndHashCode(of = {"id"})
 @Builder

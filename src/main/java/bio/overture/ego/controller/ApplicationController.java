@@ -29,7 +29,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 import bio.overture.ego.model.dto.*;
 import bio.overture.ego.model.entity.*;
-import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
@@ -188,12 +187,6 @@ public class ApplicationController {
         paramType = "query",
         value = "Index of first result to retrieve"),
     @ApiImplicitParam(
-        name = Fields.ID,
-        required = true,
-        dataType = "string",
-        paramType = "path",
-        value = "Search for ids containing this text"),
-    @ApiImplicitParam(
         name = SORT,
         required = false,
         dataType = "string",
@@ -238,12 +231,6 @@ public class ApplicationController {
         paramType = "query",
         value = "Index of first result to retrieve"),
     @ApiImplicitParam(
-        name = Fields.ID,
-        required = true,
-        dataType = "string",
-        paramType = "path",
-        value = "Search for ids containing this text"),
-    @ApiImplicitParam(
         name = SORT,
         required = false,
         dataType = "string",
@@ -278,12 +265,6 @@ public class ApplicationController {
   @AdminScoped
   @RequestMapping(method = GET, value = "/{id}/permissions")
   @ApiImplicitParams({
-    @ApiImplicitParam(
-        name = Fields.ID,
-        required = true,
-        dataType = "string",
-        paramType = "path",
-        value = "Search for ids containing this text"),
     @ApiImplicitParam(
         name = LIMIT,
         required = false,

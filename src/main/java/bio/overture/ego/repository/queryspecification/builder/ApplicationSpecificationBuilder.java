@@ -44,8 +44,9 @@ public class ApplicationSpecificationBuilder
     if (fetchUsers) {
       root.fetch(USERAPPLICATIONS, LEFT).fetch(USER, LEFT);
     }
+
     if (fetchApplicationAndGroupPermissions) {
-      root.fetch(APPLICATIONPERMISSIONS, LEFT).fetch(POLICY, LEFT);
+      root.fetch(Application.Fields.applicationPermissions, LEFT).fetch(POLICY, LEFT);
       root.fetch(GROUPAPPLICATIONS, LEFT)
           .fetch(GROUP, LEFT)
           .fetch(PERMISSIONS, LEFT)
