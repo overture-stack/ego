@@ -22,12 +22,12 @@ import org.springframework.data.jpa.domain.Specification;
 @Slf4j
 public class AbstractPermissionSpecification<P extends AbstractPermission> {
 
-  public Specification<P> buildFilterSpecification(
+  public static <P extends AbstractPermission> Specification<P> buildFilterSpecification(
       @NonNull UUID policyId, @NonNull List<SearchFilter> filters) {
     return buildFilterAndQuerySpecification(policyId, filters, null);
   }
 
-  public Specification<P> buildFilterAndQuerySpecification(
+  public static <P extends AbstractPermission> Specification<P> buildFilterAndQuerySpecification(
       @NonNull UUID policyId, @NonNull List<SearchFilter> filters, String text) {
     return (root, query, builder) -> {
       val scb = SimpleCriteriaBuilder.of(root, builder, query);

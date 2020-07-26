@@ -1,5 +1,7 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.repository.queryspecification.GroupPermissionSpecification.buildFilterAndQuerySpecification;
+import static bio.overture.ego.repository.queryspecification.GroupPermissionSpecification.buildFilterSpecification;
 import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
@@ -12,7 +14,6 @@ import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.GroupPermissionRepository;
-import bio.overture.ego.repository.queryspecification.GroupPermissionSpecification;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -33,19 +34,16 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
   private final GroupService groupService;
 
   private final ApiKeyEventsPublisher apiKeyEventsPublisher;
-  private final GroupPermissionSpecification groupPermissionSpecification;
 
   @Autowired
   public GroupPermissionService(
       @NonNull GroupPermissionRepository repository,
       @NonNull GroupService groupService,
       @NonNull ApiKeyEventsPublisher apiKeyEventsPublisher,
-      @NonNull PolicyService policyService,
-      @NonNull GroupPermissionSpecification groupPermissionSpecification) {
+      @NonNull PolicyService policyService) {
     super(Group.class, GroupPermission.class, groupService, policyService, repository);
     this.groupService = groupService;
     this.apiKeyEventsPublisher = apiKeyEventsPublisher;
-    this.groupPermissionSpecification = groupPermissionSpecification;
   }
 
   /**
@@ -93,10 +91,7 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
 
     val groupPermissions =
         (Page<GroupPermission>)
-            getRepository()
-                .findAll(
-                    groupPermissionSpecification.buildFilterSpecification(policyId, filters),
-                    pageable);
+            getRepository().findAll(buildFilterSpecification(policyId, filters), pageable);
 
     val responses =
         groupPermissions.stream().map(this::convertToPolicyResponse).collect(toUnmodifiableList());
@@ -112,10 +107,7 @@ public class GroupPermissionService extends AbstractPermissionService<Group, Gro
     val groupPermissions =
         (Page<GroupPermission>)
             getRepository()
-                .findAll(
-                    groupPermissionSpecification.buildFilterAndQuerySpecification(
-                        policyId, filters, query),
-                    pageable);
+                .findAll(buildFilterAndQuerySpecification(policyId, filters, query), pageable);
 
     val responses =
         groupPermissions.stream().map(this::convertToPolicyResponse).collect(toUnmodifiableList());
