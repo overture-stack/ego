@@ -367,6 +367,9 @@ public class ApplicationControllerTest extends AbstractControllerTest {
     // Assert group0 still exists
     getGroupEntityGetRequestAnd(group0).assertOk();
 
+    // Assert app0 permissions were deleted
+    getApplicationPermissionsForApplicationGetRequestAnd(app0).assertNotFound();
+
     // Assert all policies still exist
     data.getPolicies().forEach(p -> getPolicyGetRequestAnd(p).assertOk());
 
