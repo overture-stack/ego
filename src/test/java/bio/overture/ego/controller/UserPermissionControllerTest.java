@@ -123,4 +123,14 @@ public class UserPermissionControllerTest
   protected String getReadOwnersForPolicyEndpoint(String policyId) {
     return format("policies/%s/users", policyId);
   }
+
+  @Override
+  protected String getOwnerAndGroupPermissionsForOwnerEndpoint(String ownerId) {
+    return format("users/%s/groups/permissions", ownerId);
+  }
+
+  @Override
+  protected String getAddOwnerToGroupEndpoint(String groupId) {
+    return format("groups/%s/users", groupId);
+  }
 }

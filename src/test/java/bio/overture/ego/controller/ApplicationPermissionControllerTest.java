@@ -120,4 +120,14 @@ public class ApplicationPermissionControllerTest
   protected String getReadOwnersForPolicyEndpoint(String policyId) {
     return format("policies/%s/applications", policyId);
   }
+
+  @Override
+  protected String getOwnerAndGroupPermissionsForOwnerEndpoint(String ownerId) {
+    return format("applications/%s/groups/permissions", ownerId);
+  }
+
+  @Override
+  protected String getAddOwnerToGroupEndpoint(String groupId) {
+    return format("groups/%s/applications", groupId);
+  }
 }
