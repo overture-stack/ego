@@ -115,6 +115,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
                 new ApplicationSpecificationBuilder()
                     .fetchGroups(true)
                     .fetchUsers(true)
+                    .fetchApplicationAndGroupPermissions(true)
                     .buildByNameIgnoreCase(name));
   }
 
@@ -133,7 +134,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
   @Override
   public Application getWithRelationships(@NonNull UUID id) {
-    return get(id, true, true);
+    return get(id, true, true, true);
   }
 
   @SuppressWarnings("unchecked")
@@ -212,6 +213,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
                 new ApplicationSpecificationBuilder()
                     .fetchGroups(true)
                     .fetchUsers(true)
+                    .fetchApplicationAndGroupPermissions(true)
                     .buildByClientIdIgnoreCase(clientId));
   }
 
@@ -279,12 +281,17 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   }
 
   @SuppressWarnings("unchecked")
-  private Application get(UUID id, boolean fetchUsers, boolean fetchGroups) {
+  private Application get(
+      UUID id,
+      boolean fetchUsers,
+      boolean fetchGroups,
+      boolean fetchApplicationAndGroupPermissions) {
     val result =
         (Optional<Application>)
             getRepository()
                 .findOne(
                     new ApplicationSpecificationBuilder()
+                        .fetchApplicationAndGroupPermissions(fetchApplicationAndGroupPermissions)
                         .fetchUsers(fetchUsers)
                         .fetchGroups(fetchGroups)
                         .buildById(id));

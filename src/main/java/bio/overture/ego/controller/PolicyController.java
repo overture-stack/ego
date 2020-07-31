@@ -17,6 +17,7 @@ import bio.overture.ego.model.dto.PageDTO;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
+import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
@@ -24,6 +25,7 @@ import bio.overture.ego.model.enums.Fields;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
+import bio.overture.ego.service.ApplicationPermissionService;
 import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.service.UserPermissionService;
@@ -54,15 +56,18 @@ public class PolicyController {
 
   private final UserPermissionService userPermissionService;
   private final GroupPermissionService groupPermissionService;
+  private final ApplicationPermissionService applicationPermissionService;
 
   @Autowired
   public PolicyController(
       @NonNull PolicyService policyService,
       @NonNull UserPermissionService userPermissionService,
-      @NonNull GroupPermissionService groupPermissionService) {
+      @NonNull GroupPermissionService groupPermissionService,
+      @NonNull ApplicationPermissionService applicationPermissionService) {
     this.policyService = policyService;
     this.groupPermissionService = groupPermissionService;
     this.userPermissionService = userPermissionService;
+    this.applicationPermissionService = applicationPermissionService;
   }
 
   @AdminScoped
@@ -229,6 +234,41 @@ public class PolicyController {
   }
 
   @AdminScoped
+  @RequestMapping(method = POST, value = "/{id}/permission/application/{application_id}")
+  @ApiResponses(
+      value = {
+        @ApiResponse(code = 200, message = "Add application permission", response = String.class)
+      })
+  public @ResponseBody Application createApplicationPermission(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "application_id", required = true) UUID applicationId,
+      @RequestBody(required = true) MaskDTO maskDTO) {
+    return applicationPermissionService.addPermissions(
+        applicationId, ImmutableList.of(new PermissionRequest(id, maskDTO.getMask())));
+  }
+
+  @AdminScoped
+  @RequestMapping(method = DELETE, value = "/{id}/permission/application/{application_id}")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            code = 200,
+            message = "Delete application permission",
+            response = GenericResponse.class)
+      })
+  public @ResponseBody GenericResponse deleteApplicationPermission(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "id", required = true) UUID id,
+      @PathVariable(value = "application_id", required = true) UUID applicationId) {
+    applicationPermissionService.deleteByPolicyAndOwner(id, applicationId);
+    return createGenericResponse(
+        "Deleted permission for application '%s' on policy '%s'.", applicationId, id);
+  }
+
+  @AdminScoped
   @RequestMapping(method = GET, value = "/{id}/users")
   @ApiImplicitParams({
     @ApiImplicitParam(
@@ -339,6 +379,65 @@ public class PolicyController {
     } else {
       return new PageDTO<>(
           groupPermissionService.findGroupPermissionsByPolicy(
+              id, filters, query, decoratedPageable));
+    }
+  }
+
+  @AdminScoped
+  @RequestMapping(method = GET, value = "/{id}/applications")
+  @ApiImplicitParams({
+    @ApiImplicitParam(
+        name = LIMIT,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Number of results to retrieve"),
+    @ApiImplicitParam(
+        name = OFFSET,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Index of first result to retrieve"),
+    @ApiImplicitParam(
+        name = SORT,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value = "Field to sort on"),
+    @ApiImplicitParam(
+        name = SORTORDER,
+        required = false,
+        dataType = "string",
+        paramType = "query",
+        value =
+            "Sorting order: ASC|DESC. Default order: DESC. Note: ascending sort order for the mask field is: READ,WRITE,DENY"),
+  })
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            code = 200,
+            message = "Get list of application ids with given policy id",
+            response = String.class)
+      })
+  public @ResponseBody PageDTO<PolicyResponse> findApplicationIds(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "id", required = true) UUID id,
+      @ApiParam(
+              value = "Query string compares to AccessLevel and Application Id and Name fields.",
+              required = false)
+          @RequestParam(value = "query", required = false)
+          String query,
+      @ApiIgnore @Filters List<SearchFilter> filters,
+      @ApiIgnore Pageable pageable) {
+    val decoratedPageable = new IgnoreCaseSortDecorator(pageable);
+    if (isEmpty(query)) {
+      return new PageDTO(
+          applicationPermissionService.listApplicationPermissionsByPolicy(
+              id, filters, decoratedPageable));
+    } else {
+      return new PageDTO<>(
+          applicationPermissionService.findApplicationPermissionsByPolicy(
               id, filters, query, decoratedPageable));
     }
   }

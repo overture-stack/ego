@@ -994,7 +994,7 @@ public class GroupControllerTest extends AbstractControllerTest {
     // Add applications to the group
     addApplicationsToGroupPostRequestAnd(group0, data.getApplications()).assertOk();
 
-    // Assert without usign the controller, that the group IS associated with all the apps
+    // Assert without using the controller, that the group IS associated with all the apps
     val afterGroup = groupService.getWithRelationships(group0.getId());
     val expectedApplications =
         mapToImmutableSet(afterGroup.getGroupApplications(), GroupApplication::getApplication);

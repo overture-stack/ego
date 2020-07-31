@@ -52,6 +52,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -59,13 +60,8 @@ import org.hibernate.annotations.TypeDef;
 @Entity
 @Table(name = Tables.APPLICATION)
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Accessors(chain = true)
-@JsonView(Views.REST.class)
-@ToString(exclude = {"groupApplications", "userApplications"})
-@EqualsAndHashCode(of = {"id"})
+@ToString(exclude = {"groupApplications", "userApplications", "applicationPermissions"})
 @JsonPropertyOrder({
   JavaFields.ID,
   JavaFields.NAME,
@@ -74,12 +70,18 @@ import org.hibernate.annotations.TypeDef;
   JavaFields.CLIENTSECRET,
   JavaFields.REDIRECTURI,
   JavaFields.DESCRIPTION,
-  JavaFields.STATUS
+  JavaFields.STATUS,
 })
+@EqualsAndHashCode(of = {"id"})
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonView(Views.REST.class)
+@FieldNameConstants
 @TypeDef(name = "application_type_enum", typeClass = PostgreSQLEnumType.class)
 @TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
 @JsonInclude(JsonInclude.Include.CUSTOM)
-public class Application implements Identifiable<UUID> {
+public class Application implements PolicyOwner, NameableEntity<UUID> {
 
   @Id
   @Column(name = SqlFields.ID, updatable = false, nullable = false)
@@ -140,4 +142,13 @@ public class Application implements Identifiable<UUID> {
       fetch = FetchType.LAZY,
       orphanRemoval = true)
   private Set<UserApplication> userApplications = newHashSet();
+
+  @JsonIgnore
+  @OneToMany(
+      mappedBy = JavaFields.OWNER,
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
+      fetch = FetchType.LAZY)
+  @Builder.Default
+  private Set<ApplicationPermission> applicationPermissions = newHashSet();
 }

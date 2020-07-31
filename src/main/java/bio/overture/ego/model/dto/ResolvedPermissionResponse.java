@@ -4,9 +4,7 @@ import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.enums.AccessLevel;
 import java.util.UUID;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Value;
+import lombok.*;
 
 @Value
 @Builder

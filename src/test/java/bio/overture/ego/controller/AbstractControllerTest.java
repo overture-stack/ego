@@ -390,4 +390,20 @@ public abstract class AbstractControllerTest {
   protected StringWebResource listApiKeysEndpointAnd() {
     return initStringRequest().endpoint("/o/api_key");
   }
+
+  protected StringResponseOption getApplicationPermissionsForApplicationGetRequestAnd(
+      Application application) {
+    return initStringRequest()
+        .endpoint("/applications/%s/permissions", application.getId())
+        .getAnd();
+  }
+
+  protected StringResponseOption addApplicationPermissionToApplicationPostRequestAnd(
+      Application application, Policy policy, AccessLevel mask) {
+    val body = MaskDTO.builder().mask(mask).build();
+    return initStringRequest()
+        .endpoint("/policies/%s/permission/application/%s", policy.getId(), application.getId())
+        .body(body)
+        .postAnd();
+  }
 }

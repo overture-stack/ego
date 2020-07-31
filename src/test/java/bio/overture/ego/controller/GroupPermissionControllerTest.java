@@ -16,6 +16,7 @@ import bio.overture.ego.utils.EntityGenerator;
 import java.util.Collection;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Assume;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -123,5 +124,27 @@ public class GroupPermissionControllerTest
   @Override
   protected String getReadOwnersForPolicyEndpoint(String policyId) {
     return format("policies/%s/groups", policyId);
+  }
+
+  @Override
+  protected String getOwnerAndGroupPermissionsForOwnerEndpoint(String ownerId) {
+    return format("groups/%s/permissions", ownerId);
+  }
+
+  @Override
+  protected String getAddOwnerToGroupEndpoint(String groupId) {
+    return "groups";
+  }
+
+  @Override
+  public void resolveOwnerAndGroupPermissions__noPermissionOverlap() {
+    log.info("Resolved permissions test does not apply to groups, skipping");
+    Assume.assumeTrue(true);
+  }
+
+  @Override
+  public void resolveOwnerAndGroupPermissions__hasPermissionOverlap() {
+    log.info("Resolved permissions test does not apply to groups, skipping");
+    Assume.assumeTrue(true);
   }
 }
