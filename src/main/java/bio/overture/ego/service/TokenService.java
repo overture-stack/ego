@@ -19,6 +19,7 @@ package bio.overture.ego.service;
 import static bio.overture.ego.model.dto.Scope.effectiveScopes;
 import static bio.overture.ego.model.dto.Scope.explicitScopes;
 import static bio.overture.ego.model.enums.ApplicationType.ADMIN;
+import static bio.overture.ego.service.ApplicationService.extractScopes;
 import static bio.overture.ego.service.UserService.extractScopes;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
@@ -277,8 +278,10 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
 
   @SneakyThrows
   public String generateAppToken(Application application) {
+    Set<String> permissionNames = mapToSet(extractScopes(application), Scope::toString);
     val tokenContext = new AppTokenContext(application);
     val tokenClaims = new AppTokenClaims();
+    tokenContext.setScope(permissionNames);
     tokenClaims.setIss(ISSUER_NAME);
     tokenClaims.setValidDuration(JWT_DURATION);
     tokenClaims.setContext(tokenContext);

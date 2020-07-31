@@ -19,10 +19,14 @@ package bio.overture.ego.token.app;
 import bio.overture.ego.service.TokenService;
 import io.jsonwebtoken.Claims;
 import java.util.*;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2RefreshToken;
 
+@Data
+@Slf4j
 public class AppJWTAccessToken implements OAuth2AccessToken {
 
   private Claims tokenClaims = null;
@@ -42,7 +46,9 @@ public class AppJWTAccessToken implements OAuth2AccessToken {
 
   @Override
   public Set<String> getScope() {
-    return new HashSet<String>((Arrays.asList(AppTokenClaims.SCOPES)));
+    val claims = (LinkedHashMap) tokenClaims.get("context");
+    val scopes = (List<String>) claims.get("scope");
+    return new HashSet<String>(scopes);
   }
 
   @Override
