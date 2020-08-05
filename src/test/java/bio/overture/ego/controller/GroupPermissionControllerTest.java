@@ -137,13 +137,13 @@ public class GroupPermissionControllerTest
   }
 
   @Override
-  public void resolveOwnerAndGroupPermissions__noPermissionOverlap() {
+  public void resolveOwnerAndGroupPermissions_noPermissionOverlap_Success() {
     log.info("Resolved permissions test does not apply to groups, skipping");
     Assume.assumeTrue(true);
   }
 
   @Override
-  public void resolveOwnerAndGroupPermissions__hasPermissionOverlap() {
+  public void resolveOwnerAndGroupPermissions_hasPermissionOverlap_Success() {
     log.info("Resolved permissions test does not apply to groups, skipping");
     Assume.assumeTrue(true);
   }

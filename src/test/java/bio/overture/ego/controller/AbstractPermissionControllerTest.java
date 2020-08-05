@@ -927,7 +927,7 @@ public abstract class AbstractPermissionControllerTest<
 
   @Test
   @SneakyThrows
-  public void resolveOwnerAndGroupPermissions__noPermissionOverlap() {
+  public void resolveOwnerAndGroupPermissions_noPermissionOverlap_Success() {
     // setup group with random name to prevent conflict on add permission request
     val group = getEntityGenerator().setupGroup(UUID.randomUUID().toString());
 
@@ -993,7 +993,7 @@ public abstract class AbstractPermissionControllerTest<
 
   @Test
   @SneakyThrows
-  public void resolveOwnerAndGroupPermissions__hasPermissionOverlap() {
+  public void resolveOwnerAndGroupPermissions_hasPermissionOverlap_Success() {
     // setup groups with random name to prevent conflict on add permission request
     val group1 = getEntityGenerator().setupGroup(UUID.randomUUID().toString());
     val group2 = getEntityGenerator().setupGroup(UUID.randomUUID().toString());
