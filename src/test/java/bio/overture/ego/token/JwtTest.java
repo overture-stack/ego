@@ -64,7 +64,7 @@ public class JwtTest {
   @Test
   @SuppressWarnings("unchecked")
   @SneakyThrows
-  public void jwtContainsUserGroups() {
+  public void userJwtContainsUserGroups() {
     val groupId = UUID.randomUUID().toString();
 
     User user =
@@ -95,7 +95,7 @@ public class JwtTest {
 
   @Test
   @SneakyThrows
-  public void appJwtContainsResolvedScopes_ApplicationPermsOnly_Success() {
+  public void applicationPermsOnly_appJwtHasAllResolvedScopes_Success() {
     val app = entityGenerator.setupApplication("TestApp", "testsecret", ApplicationType.CLIENT);
     val policies = entityGenerator.setupPolicies("SONG", "SCORE", "DACO");
 
@@ -104,12 +104,15 @@ public class JwtTest {
         PermissionRequest.builder().policyId(policies.get(1).getId()).mask(WRITE).build();
     val permReq3 = PermissionRequest.builder().policyId(policies.get(2).getId()).mask(DENY).build();
 
+    // add app permissions
     applicationPermissionService.addPermissions(
         app.getId(), Arrays.asList(permReq1, permReq2, permReq3));
     val appClient = applicationService.loadClientByClientId(app.getClientId());
 
+    // get permissions, assert count matches
     val appPerms = applicationService.getByClientId(app.getClientId()).getApplicationPermissions();
     assertEquals(appPerms.size(), 3);
+
     val permScopes =
         appPerms.stream()
             .map(AbstractPermissionService::buildScope)
@@ -117,15 +120,29 @@ public class JwtTest {
             .collect(Collectors.toList());
     assertEquals(appClient.getClientId(), app.getClientId());
 
+    // assert appClient scopes match created permissions
     List<String> scopes = new ArrayList<>(appClient.getScope());
     assertEquals(scopes.size(), permScopes.size());
     assertTrue(scopes.containsAll(permScopes) && permScopes.containsAll(scopes));
+
+    // getting app with relationships after permissions are set up, create accessToken jwt
+    val appWithRelations = applicationService.getWithRelationships(app.getId());
+    val appToken = tokenService.generateAppToken(appWithRelations);
+    tokenService.isValidToken(appToken);
+    val accessToken = tokenService.getAppAccessToken(appToken);
+    val accessTokenScope = accessToken.getScope();
+
+    // assert jwt scope matches appClient scope
+    assertEquals(scopes.size(), accessTokenScope.size());
+    assertTrue(scopes.containsAll(accessTokenScope));
+    assertTrue(accessTokenScope.containsAll(scopes));
   }
 
   @Test
   @SneakyThrows
-  public void appJwtContainsResolvedScopes_ApplicationAndGroupPerms_Success() {
-    val app = entityGenerator.setupApplication("TestCombinedApp", "testsecret", ApplicationType.CLIENT);
+  public void applicationAndGroupPerms_appJwtHasAllResolvedScopes_Success() {
+    val app =
+        entityGenerator.setupApplication("TestCombinedApp", "testsecret", ApplicationType.CLIENT);
     val group = entityGenerator.setupGroup("Test Group");
     val policies = entityGenerator.setupPolicies("SONG", "SCORE");
 
@@ -134,13 +151,16 @@ public class JwtTest {
         PermissionRequest.builder().policyId(policies.get(0).getId()).mask(WRITE).build();
     val permReq3 = PermissionRequest.builder().policyId(policies.get(1).getId()).mask(READ).build();
 
+    // associate app with group
     groupService.associateApplicationsWithGroup(group.getId(), Arrays.asList(app.getId()));
+
+    // add app and group permissions
     applicationPermissionService.addPermissions(app.getId(), Arrays.asList(permReq1, permReq3));
     groupPermissionService.addPermissions(group.getId(), Arrays.asList(permReq2));
 
+    // get permissions, assert count matches
     val appPerms = applicationService.getByClientId(app.getClientId()).getApplicationPermissions();
     val groupPerms = groupService.getWithRelationships(group.getId()).getPermissions();
-
     assertEquals(appPerms.size(), 2);
     assertEquals(groupPerms.size(), 1);
 
@@ -153,11 +173,24 @@ public class JwtTest {
             .collect(Collectors.toList());
     assertEquals(appClient.getClientId(), app.getClientId());
 
+    // assert appClient scopes match created permissions
     List<String> scopes = new ArrayList<>(appClient.getScope());
     assertEquals(permScopes.size(), 2);
     assertEquals(scopes.size(), permScopes.size());
     String songWrite = Scope.createScope(policies.get(0), WRITE).toString();
     String scoreRead = Scope.createScope(policies.get(1), READ).toString();
     assertTrue(scopes.containsAll(Arrays.asList(songWrite, scoreRead)));
+
+    // getting app with relationships after permissions are set up, create accessToken jwt
+    val appWithRelations = applicationService.getWithRelationships(app.getId());
+    val appToken = tokenService.generateAppToken(appWithRelations);
+    tokenService.isValidToken(appToken);
+    val accessToken = tokenService.getAppAccessToken(appToken);
+    val accessTokenScope = accessToken.getScope();
+
+    // assert accessToken jwt scope matches appClient scope
+    assertEquals(scopes.size(), accessTokenScope.size());
+    assertTrue(scopes.containsAll(accessTokenScope));
+    assertTrue(accessTokenScope.containsAll(scopes));
   }
 }
