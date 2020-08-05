@@ -19,6 +19,7 @@ package bio.overture.ego.config;
 import static springfox.documentation.builders.RequestHandlerSelectors.basePackage;
 import static springfox.documentation.spi.DocumentationType.SWAGGER_2;
 
+import com.google.common.base.Predicates;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +33,7 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
+import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.ApiKey;
 import springfox.documentation.service.AuthorizationScope;
@@ -56,6 +58,10 @@ public class SwaggerConfig {
 
   private final BuildProperties buildProperties;
 
+  // exclude all spring security oauth endpoints except /oauth/token
+  private final String pathsToExcludeRegex =
+      "^((?!\\/oauth\\/token_key|\\/oauth/authorize|\\/oauth\\/check_token|\\/oauth\\/confirm_access|\\/oauth\\/error).)*$";
+
   @Autowired
   public SwaggerConfig(@NonNull BuildProperties buildProperties) {
     this.buildProperties = buildProperties;
@@ -66,7 +72,11 @@ public class SwaggerConfig {
     val docket =
         new Docket(SWAGGER_2)
             .select()
-            .apis(basePackage("bio.overture.ego.controller"))
+            .apis(
+                Predicates.or(
+                    basePackage("bio.overture.ego.controller"),
+                    basePackage("org.springframework.security.oauth2.provider.endpoint")))
+            .paths(PathSelectors.regex(pathsToExcludeRegex))
             .build()
             .host(swaggerProperties.host)
             .pathProvider(
