@@ -46,9 +46,9 @@ public class AppJWTAccessToken implements OAuth2AccessToken {
 
   @Override
   public Set<String> getScope() {
-    val claims = (LinkedHashMap) tokenClaims.get("context");
-    val scopes = (List<String>) claims.get("scope");
-    return new HashSet<String>(scopes);
+    val claims = (LinkedHashMap<String, List<String>>) tokenClaims.get("context");
+    val scopes = claims.get("scope");
+    return new HashSet<>(scopes);
   }
 
   @Override
