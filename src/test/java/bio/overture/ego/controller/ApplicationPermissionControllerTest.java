@@ -29,7 +29,7 @@ import org.springframework.test.context.support.DependencyInjectionTestExecution
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ApplicationPermissionControllerTest
-    extends AbstractPermissionControllerTest<Application, ApplicationPermission> {
+    extends AbstractResolvablePermissionControllerTest<Application, ApplicationPermission> {
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
