@@ -258,7 +258,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
       throw new ClientRegistrationException("Client Access is not approved.");
     }
 
-    Set<String> approvedScopes = mapToSet(extractScopes(application), Scope::toString);
+    val approvedScopes = mapToSet(extractScopes(application), Scope::toString);
 
     // transform application to client details
     val clientDetails = new BaseClientDetails();

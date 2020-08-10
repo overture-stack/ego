@@ -278,7 +278,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
 
   @SneakyThrows
   public String generateAppToken(Application application) {
-    Set<String> permissionNames = mapToSet(extractScopes(application), Scope::toString);
+    val permissionNames = mapToSet(extractScopes(application), Scope::toString);
     val tokenContext = new AppTokenContext(application);
     val tokenClaims = new AppTokenClaims();
     tokenContext.setScope(permissionNames);
