@@ -7,10 +7,10 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 
 import bio.overture.ego.AuthorizationServiceMain;
+import bio.overture.ego.model.dto.ResolvedPermissionResponse;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.ApplicationPermission;
 import bio.overture.ego.model.entity.GroupPermission;
@@ -80,27 +80,31 @@ public class AppJWTTest extends AbstractControllerTest {
         initStringRequest()
             .endpoint("/policies/%s/permission/application/%s", policyId1, appId)
             .body(createMaskJson(READ.toString()))
-            .post();
-    assertEquals(r1.getStatusCode(), OK);
+            .postAnd()
+            .assertOk();
 
     val r2 =
         initStringRequest()
             .endpoint("/policies/%s/permission/application/%s", policyId2, appId)
             .body(createMaskJson(WRITE.toString()))
-            .post();
-    assertEquals(r2.getStatusCode(), OK);
+            .postAnd()
+            .assertOk();
 
     val r3 =
         initStringRequest()
             .endpoint("/policies/%s/permission/application/%s", policyId3, appId)
             .body(createMaskJson(DENY.toString()))
-            .post();
-    assertEquals(r3.getStatusCode(), OK);
+            .postAnd()
+            .assertOk();
 
     // get app permissions from endpoint
-    val appPermReq = initStringRequest().endpoint("/applications/%s/permissions", appId).getAnd();
-    appPermReq.assertOk();
-    appPermReq.assertPageResultHasSize(ApplicationPermission.class, 3);
+    val appPermReq =
+        initStringRequest()
+            .endpoint("/applications/%s/permissions", appId)
+            .getAnd()
+            .assertOk()
+            .assertPageResultHasSize(ApplicationPermission.class, 3);
+
     val responseBody = appPermReq.getResponse().getBody();
     assertNotNull(responseBody);
     val responseJson = MAPPER.readTree(responseBody);
@@ -122,10 +126,17 @@ public class AppJWTTest extends AbstractControllerTest {
     params.add("client_secret", app.getClientSecret());
 
     // get app jwt scopes
-    val tokenReq =
-        initStringRequest().endpoint("/oauth/token").headers(tokenHeaders).body(params).post();
-    assertEquals(tokenReq.getStatusCode(), OK);
-    val tokenResponse = tokenReq.getBody();
+    val tokenResponse =
+        initStringRequest()
+            .endpoint("/oauth/token")
+            .headers(tokenHeaders)
+            .body(params)
+            .postAnd()
+            .assertOk()
+            .assertHasBody()
+            .getResponse()
+            .getBody();
+
     val tokenJson = MAPPER.readTree(tokenResponse);
     val accessToken = tokenJson.get("access_token").asText();
     tokenService.isValidToken(accessToken);
@@ -149,65 +160,65 @@ public class AppJWTTest extends AbstractControllerTest {
     val policyId2 = policies.get(1).getId();
 
     // associate app with group
-    val assocGroupReq =
-        initStringRequest().endpoint("/groups/%s/applications", groupId).body(asList(appId)).post();
-    assertEquals(assocGroupReq.getStatusCode(), OK);
+    initStringRequest()
+        .endpoint("/groups/%s/applications", groupId)
+        .body(asList(appId))
+        .postAnd()
+        .assertOk();
 
-    val appPerm1 =
-        initStringRequest()
-            .endpoint("/policies/%s/permission/application/%s", policyId1, appId)
-            .body(createMaskJson(READ.toString()))
-            .post();
+    initStringRequest()
+        .endpoint("/policies/%s/permission/application/%s", policyId1, appId)
+        .body(createMaskJson(READ.toString()))
+        .postAnd()
+        .assertOk();
 
-    val appPerm2 =
-        initStringRequest()
-            .endpoint("/policies/%s/permission/application/%s", policyId2, appId)
-            .body(createMaskJson(READ.toString()))
-            .post();
+    initStringRequest()
+        .endpoint("/policies/%s/permission/application/%s", policyId2, appId)
+        .body(createMaskJson(READ.toString()))
+        .postAnd()
+        .assertOk();
 
-    val groupPerm1 =
-        initStringRequest()
-            .endpoint("/policies/%s/permission/group/%s", policyId1, groupId)
-            .body(createMaskJson(WRITE.toString()))
-            .post();
+    initStringRequest()
+        .endpoint("/policies/%s/permission/group/%s", policyId1, groupId)
+        .body(createMaskJson(WRITE.toString()))
+        .postAnd()
+        .assertOk();
 
     // get app permissions
-    val appPermsReq = initStringRequest().endpoint("/applications/%s/permissions", appId).getAnd();
-    appPermsReq.assertOk();
-    appPermsReq.assertPageResultHasSize(ApplicationPermission.class, 2);
+    initStringRequest()
+        .endpoint("/applications/%s/permissions", appId)
+        .getAnd()
+        .assertOk()
+        .assertPageResultHasSize(ApplicationPermission.class, 2);
 
     // get group permissions
-    val groupPermsReq = initStringRequest().endpoint("/groups/%s/permissions", groupId).getAnd();
-    groupPermsReq.assertOk();
-    groupPermsReq.assertPageResultHasSize(GroupPermission.class, 1);
+    initStringRequest()
+        .endpoint("/groups/%s/permissions", groupId)
+        .getAnd()
+        .assertOk()
+        .assertPageResultHasSize(GroupPermission.class, 1);
 
     // get resolved permissions for app
-    val resolvedAppPermsReq =
-        initStringRequest().endpoint("/applications/%s/groups/permissions", appId).getAnd();
-    resolvedAppPermsReq.assertOk();
-
-    val responseBody = resolvedAppPermsReq.getResponse().getBody();
-    assertNotNull(responseBody);
-    val responseJson = MAPPER.readTree(responseBody);
+    val resolvedPerms =
+        initStringRequest()
+            .endpoint("/applications/%s/groups/permissions", appId)
+            .getAnd()
+            .assertOk()
+            .assertHasBody()
+            .extractManyEntities(ResolvedPermissionResponse.class);
 
     // assert there are only 2 resolved permissions because of overlap
-    assertTrue(responseJson.isArray());
-    assertEquals(responseJson.size(), 2);
+    assertNotNull(resolvedPerms);
+    assertEquals(resolvedPerms.size(), 2);
 
     val resolvedScopes =
-        Streams.stream(responseJson)
+        resolvedPerms.stream()
             .map(
                 x -> {
-                  // this logic assumes result can be only App or Group permission type
-                  val owner = x.get("ownerType").asText();
-                  if (owner.equalsIgnoreCase("group")) {
-                    return gson.fromJson(x.toString(), GroupPermission.class);
-                  } else {
-                    return gson.fromJson(x.toString(), ApplicationPermission.class);
-                  }
+                  val acl = x.getAccessLevel();
+                  val policy = x.getPolicy();
+                  return Scope.createScope(policy, acl).toString();
                 })
-            .map(AbstractPermissionService::buildScope)
-            .map(Scope::toString)
             .collect(toSet());
 
     val params = new LinkedMultiValueMap<String, Object>();
@@ -216,10 +227,17 @@ public class AppJWTTest extends AbstractControllerTest {
     params.add("client_secret", app.getClientSecret());
 
     // get app jwt scopes
-    val tokenReq =
-        initStringRequest().endpoint("/oauth/token").headers(tokenHeaders).body(params).post();
-    assertEquals(tokenReq.getStatusCode(), OK);
-    val tokenResponse = tokenReq.getBody();
+    val tokenResponse =
+        initStringRequest()
+            .endpoint("/oauth/token")
+            .headers(tokenHeaders)
+            .body(params)
+            .postAnd()
+            .assertOk()
+            .assertHasBody()
+            .getResponse()
+            .getBody();
+
     val tokenJson = MAPPER.readTree(tokenResponse);
     val accessToken = tokenJson.get("access_token").asText();
     tokenService.isValidToken(accessToken);

@@ -35,5 +35,5 @@ public class AppTokenContext {
   @JsonProperty("application")
   private Application appInfo;
 
-  private Set<String> Scope;
+  private Set<String> scope;
 }

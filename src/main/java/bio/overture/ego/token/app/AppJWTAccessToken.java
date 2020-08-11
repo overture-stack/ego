@@ -44,6 +44,7 @@ public class AppJWTAccessToken implements OAuth2AccessToken {
     return output;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Set<String> getScope() {
     val claims = (LinkedHashMap<String, List<String>>) tokenClaims.get("context");
