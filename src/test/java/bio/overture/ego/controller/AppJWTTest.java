@@ -10,15 +10,15 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 
 import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.dto.ResolvedPermissionResponse;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.ApplicationPermission;
 import bio.overture.ego.model.entity.GroupPermission;
+import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.service.*;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.Streams;
-import com.google.gson.Gson;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -43,10 +43,10 @@ public class AppJWTTest extends AbstractControllerTest {
   /** Dependencies */
   @Autowired private TokenService tokenService;
 
+  @Autowired private PolicyService policyService;
   @Autowired private EntityGenerator entityGenerator;
 
   private HttpHeaders tokenHeaders = new HttpHeaders();
-  private Gson gson = new Gson();
 
   @Value("${logging.test.controller.enable}")
   private boolean enableLogging;
@@ -98,24 +98,16 @@ public class AppJWTTest extends AbstractControllerTest {
             .assertOk();
 
     // get app permissions from endpoint
-    val appPermReq =
+    val appPermResponse =
         initStringRequest()
             .endpoint("/applications/%s/permissions", appId)
             .getAnd()
             .assertOk()
-            .assertPageResultHasSize(ApplicationPermission.class, 3);
-
-    val responseBody = appPermReq.getResponse().getBody();
-    assertNotNull(responseBody);
-    val responseJson = MAPPER.readTree(responseBody);
-    val results = responseJson.get("resultSet");
-
-    assertEquals(responseJson.get("count").asInt(), 3);
-    assertTrue(results.isArray());
+            .assertPageResultHasSize(ApplicationPermission.class, 3)
+            .extractPageResults(ApplicationPermission.class);
 
     val scopes =
-        Streams.stream(results)
-            .map(x -> gson.fromJson(x.toString(), ApplicationPermission.class))
+        appPermResponse.stream()
             .map(AbstractPermissionService::buildScope)
             .map(Scope::toString)
             .collect(toSet());
@@ -205,19 +197,22 @@ public class AppJWTTest extends AbstractControllerTest {
             .getAnd()
             .assertOk()
             .assertHasBody()
-            .extractManyEntities(ResolvedPermissionResponse.class);
+            .getResponse()
+            .getBody();
 
-    // assert there are only 2 resolved permissions because of overlap
-    assertNotNull(resolvedPerms);
-    assertEquals(resolvedPerms.size(), 2);
+    val jsonPerms = MAPPER.readTree(resolvedPerms);
+    assertNotNull(jsonPerms);
 
     val resolvedScopes =
-        resolvedPerms.stream()
+        Streams.stream(jsonPerms)
             .map(
                 x -> {
-                  val acl = x.getAccessLevel();
-                  val policy = x.getPolicy();
-                  return Scope.createScope(policy, acl).toString();
+                  val acl = x.get("accessLevel").asText();
+
+                  val policyInfo = x.get("policy").get("id").asText();
+                  val policyId = UUID.fromString(policyInfo);
+                  val policy = policyService.getById(policyId);
+                  return Scope.createScope(policy, AccessLevel.fromValue(acl)).toString();
                 })
             .collect(toSet());
 
