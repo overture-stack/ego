@@ -17,6 +17,8 @@
 package bio.overture.ego.config;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.stream.Stream.concat;
 import static springfox.documentation.builders.RequestHandlerSelectors.basePackage;
 import static springfox.documentation.spi.DocumentationType.SWAGGER_2;
 
@@ -26,14 +28,19 @@ import com.google.common.base.Predicates;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import springfox.documentation.builders.ParameterBuilder;
 import springfox.documentation.builders.PathSelectors;
@@ -42,6 +49,8 @@ import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.ApiKey;
 import springfox.documentation.service.AuthorizationScope;
 import springfox.documentation.service.Contact;
+import springfox.documentation.service.Parameter;
+import springfox.documentation.service.ResolvedMethodParameter;
 import springfox.documentation.service.SecurityReference;
 import springfox.documentation.service.VendorExtension;
 import springfox.documentation.spi.DocumentationType;
@@ -57,6 +66,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @Configuration
 public class SwaggerConfig {
 
+  private static final Set<String> POST_ACCESS_TOKEN_PARAMS = Set.of("client_secret", "client_id", "grant_type");
   private static final Set<String> APPLICATION_SCOPED_PATHS =
       Set.of(
           "/o/check_api_key",
@@ -80,36 +90,14 @@ public class SwaggerConfig {
     return new ParameterBuilderPlugin() {
       @Override
       public void apply(ParameterContext context) {
-        if (context.getGroupName().equals("token-endpoint")) {
+        if (context.getGroupName().equals("auth-controller") && context.getOperationContext().getName().equals("postAccessToken")) {
           context
               .getOperationContext()
               .operationBuilder()
-              .parameters(
-                  asList(
-                      new ParameterBuilder()
-                          .type(new TypeResolver().resolve(String.class))
-                          .name("client_secret")
-                          .parameterType("query")
-                          .required(true)
-                          .modelRef(new ModelRef("String"))
-                          .build(),
-                      new ParameterBuilder()
-                          .type(new TypeResolver().resolve(String.class))
-                          .name("client_id")
-                          .parameterType("query")
-                          .required(true)
-                          .modelRef(new ModelRef("String"))
-                          .build(),
-                      new ParameterBuilder()
-                          .type(new TypeResolver().resolve(String.class))
-                          .name("grant_type")
-                          .parameterType("query")
-                          .required(true)
-                          .modelRef(new ModelRef("String"))
-                          .build()));
+              .parameters(generatePostAccessTokenParameters());
 
           // hide default "parameters" arg
-          Optional<String> defaultName = context.resolvedMethodParameter().defaultName();
+          val defaultName = context.resolvedMethodParameter().defaultName();
           if (defaultName.isPresent() && defaultName.get().equals("parameters")) {
             context.parameterBuilder().required(false).hidden(true).build();
           }
@@ -129,8 +117,8 @@ public class SwaggerConfig {
         .select()
         .apis(
             Predicates.or(
-                basePackage("bio.overture.ego.controller"),
-                basePackage("org.springframework.security.oauth2.provider.endpoint")))
+                basePackage("bio.overture.ego.controller")))
+//                basePackage("org.springframework.security.oauth2.provider.endpoint")))
         .paths(PathSelectors.regex(pathsToExcludeRegex))
         .build()
         .host(swaggerProperties.host)
@@ -184,6 +172,18 @@ public class SwaggerConfig {
         .reference("Bearer")
         .scopes(new AuthorizationScope[0])
         .build();
+  }
+
+  private static List<Parameter> generatePostAccessTokenParameters(){
+    return POST_ACCESS_TOKEN_PARAMS.stream()
+        .map(name -> new ParameterBuilder()
+            .type(new TypeResolver().resolve(String.class))
+            .name(name)
+            .parameterType("query")
+            .required(true)
+            .modelRef(new ModelRef("String"))
+            .build())
+        .collect(toUnmodifiableList());
   }
 
   @Component
