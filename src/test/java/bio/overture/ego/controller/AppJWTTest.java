@@ -18,6 +18,7 @@ import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.service.*;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.Streams;
+import java.util.HashSet;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -240,5 +241,39 @@ public class AppJWTTest extends AbstractControllerTest {
 
     // assert jwt scope matches scopes from resolved permissions
     assertEquals(resolvedScopes, accessTokenScope);
+  }
+
+  @Test
+  @SneakyThrows
+  public void applicationPerms_appHasNoScopes_Error() {
+    // generate app with no permissions
+    val app = entityGenerator.setupApplication("Empty App", "emptysecret", ApplicationType.CLIENT);
+
+    val params = new LinkedMultiValueMap<String, Object>();
+    params.add("grant_type", "client_credentials");
+    params.add("client_id", app.getClientId());
+    params.add("client_secret", app.getClientSecret());
+
+    // get app jwt scopes
+    val tokenResponse =
+        initStringRequest()
+            .endpoint("/oauth/token")
+            .headers(tokenHeaders)
+            .body(params)
+            .postAnd()
+            .assertOk()
+            .assertHasBody()
+            .getResponse()
+            .getBody();
+
+    val tokenJson = MAPPER.readTree(tokenResponse);
+    val accessToken = tokenJson.get("access_token").asText();
+
+    // receive a valid token
+    tokenService.isValidToken(accessToken);
+    val accessTokenScope = tokenService.getAppAccessToken(accessToken).getScope();
+
+    // assert jwt scope is empty
+    assertEquals(new HashSet<>(), accessTokenScope);
   }
 }

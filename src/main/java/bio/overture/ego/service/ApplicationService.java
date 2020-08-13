@@ -260,6 +260,11 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
     val approvedScopes = mapToSet(extractScopes(application), Scope::toString);
 
+    // spring will throw a 500 if passed an empty set
+    if (approvedScopes.isEmpty()) {
+      approvedScopes.add("");
+    }
+
     // transform application to client details
     val clientDetails = new BaseClientDetails();
     clientDetails.setClientId(clientId);

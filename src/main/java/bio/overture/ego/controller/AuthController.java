@@ -20,8 +20,6 @@ import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
 import static bio.overture.ego.utils.SwaggerConstants.AUTH_CONTROLLER;
 import static bio.overture.ego.utils.SwaggerConstants.POST_ACCESS_TOKEN;
 import static org.springframework.http.HttpStatus.*;
-import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
@@ -31,12 +29,12 @@ import bio.overture.ego.service.RefreshContextService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.signer.TokenSigner;
-import bio.overture.ego.utils.SwaggerConstants;
 import bio.overture.ego.utils.Tokens;
 import io.swagger.annotations.Api;
-import javax.servlet.http.HttpServletResponse;
-
 import io.swagger.annotations.ApiOperation;
+import java.security.Principal;
+import java.util.Map;
+import javax.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +42,6 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
@@ -57,13 +54,10 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
-import java.security.Principal;
-import java.util.Map;
-
 @Slf4j
 @RestController
 @RequestMapping("/oauth")
-@Api(tags = "Auth",value = AUTH_CONTROLLER)
+@Api(tags = "Auth", value = AUTH_CONTROLLER)
 public class AuthController {
 
   @Value("${auth.token.prefix}")
@@ -92,16 +86,17 @@ public class AuthController {
     this.tokenEndpoint = tokenEndpoint;
   }
 
-  // This spring tokenEndpoint controller is proxied so that Springfox can include this in the swagger-ui under the
-  // Auth controller
+  // This spring tokenEndpoint controller is proxied so that Springfox can include this in the
+  // swagger-ui under the Auth controller
   @ApiOperation(value = POST_ACCESS_TOKEN)
-  @RequestMapping(value = "/token", method=RequestMethod.POST)
-  public ResponseEntity<OAuth2AccessToken> postAccessToken(Principal principal, @RequestParam
-      Map<String, String> parameters) throws HttpRequestMethodNotSupportedException {
+  @RequestMapping(value = "/token", method = RequestMethod.POST)
+  public ResponseEntity<OAuth2AccessToken> postAccessToken(
+      Principal principal, @RequestParam Map<String, String> parameters)
+      throws HttpRequestMethodNotSupportedException {
     return this.tokenEndpoint.postAccessToken(principal, parameters);
   }
 
-    @RequestMapping(method = GET, value = "/google/token")
+  @RequestMapping(method = GET, value = "/google/token")
   @ResponseStatus(value = OK)
   @SneakyThrows
   public @ResponseBody String exchangeGoogleTokenForAuth(

@@ -18,22 +18,15 @@ package bio.overture.ego.config;
 
 import static bio.overture.ego.utils.SwaggerConstants.AUTH_CONTROLLER;
 import static bio.overture.ego.utils.SwaggerConstants.POST_ACCESS_TOKEN;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toUnmodifiableList;
-import static java.util.stream.Stream.concat;
 import static springfox.documentation.builders.RequestHandlerSelectors.basePackage;
 import static springfox.documentation.spi.DocumentationType.SWAGGER_2;
 
-import bio.overture.ego.utils.SwaggerConstants;
 import com.fasterxml.classmate.TypeResolver;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -43,17 +36,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import springfox.documentation.builders.ParameterBuilder;
-import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.schema.ModelRef;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.ApiKey;
 import springfox.documentation.service.AuthorizationScope;
 import springfox.documentation.service.Contact;
 import springfox.documentation.service.Parameter;
-import springfox.documentation.service.ResolvedMethodParameter;
 import springfox.documentation.service.SecurityReference;
 import springfox.documentation.service.VendorExtension;
 import springfox.documentation.spi.DocumentationType;
@@ -69,7 +59,8 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @Configuration
 public class SwaggerConfig {
 
-  private static final Set<String> POST_ACCESS_TOKEN_PARAMS = Set.of("client_secret", "client_id", "grant_type");
+  private static final Set<String> POST_ACCESS_TOKEN_PARAMS =
+      Set.of("client_secret", "client_id", "grant_type");
   private static final Set<String> APPLICATION_SCOPED_PATHS =
       Set.of(
           "/o/check_api_key",
@@ -78,10 +69,6 @@ public class SwaggerConfig {
           "/transaction/mass_delete");
 
   private final BuildProperties buildProperties;
-
-  // exclude all spring security oauth endpoints except /oauth/token
-  private final String pathsToExcludeRegex =
-      "^((?!\\/oauth\\/token_key|\\/oauth/authorize|\\/oauth\\/check_token|\\/oauth\\/confirm_access|\\/oauth\\/error).)*$";
 
   @Autowired
   public SwaggerConfig(@NonNull BuildProperties buildProperties) {
@@ -93,7 +80,8 @@ public class SwaggerConfig {
     return new ParameterBuilderPlugin() {
       @Override
       public void apply(ParameterContext context) {
-        if (context.getGroupName().equals(AUTH_CONTROLLER) && context.getOperationContext().getName().equals(POST_ACCESS_TOKEN)) {
+        if (context.getGroupName().equals(AUTH_CONTROLLER)
+            && context.getOperationContext().getName().equals(POST_ACCESS_TOKEN)) {
           context
               .getOperationContext()
               .operationBuilder()
@@ -118,11 +106,7 @@ public class SwaggerConfig {
   public Docket productApi(SwaggerProperties swaggerProperties) {
     return new Docket(SWAGGER_2)
         .select()
-        .apis(
-            Predicates.or(
-                basePackage("bio.overture.ego.controller")))
-//                basePackage("org.springframework.security.oauth2.provider.endpoint")))
-        .paths(PathSelectors.regex(pathsToExcludeRegex))
+        .apis(Predicates.or(basePackage("bio.overture.ego.controller")))
         .build()
         .host(swaggerProperties.host)
         .pathProvider(
@@ -177,15 +161,17 @@ public class SwaggerConfig {
         .build();
   }
 
-  private static List<Parameter> generatePostAccessTokenParameters(){
+  private static List<Parameter> generatePostAccessTokenParameters() {
     return POST_ACCESS_TOKEN_PARAMS.stream()
-        .map(name -> new ParameterBuilder()
-            .type(new TypeResolver().resolve(String.class))
-            .name(name)
-            .parameterType("query")
-            .required(true)
-            .modelRef(new ModelRef("String"))
-            .build())
+        .map(
+            name ->
+                new ParameterBuilder()
+                    .type(new TypeResolver().resolve(String.class))
+                    .name(name)
+                    .parameterType("query")
+                    .required(true)
+                    .modelRef(new ModelRef("String"))
+                    .build())
         .collect(toUnmodifiableList());
   }
 
