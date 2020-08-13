@@ -17,6 +17,8 @@
 package bio.overture.ego.controller;
 
 import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
+import static bio.overture.ego.utils.SwaggerConstants.AUTH_CONTROLLER;
+import static bio.overture.ego.utils.SwaggerConstants.POST_ACCESS_TOKEN;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
@@ -29,6 +31,7 @@ import bio.overture.ego.service.RefreshContextService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.signer.TokenSigner;
+import bio.overture.ego.utils.SwaggerConstants;
 import bio.overture.ego.utils.Tokens;
 import io.swagger.annotations.Api;
 import javax.servlet.http.HttpServletResponse;
@@ -60,7 +63,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/oauth")
-@Api(tags = "Auth")
+@Api(tags = "Auth",value = AUTH_CONTROLLER)
 public class AuthController {
 
   @Value("${auth.token.prefix}")
@@ -91,6 +94,7 @@ public class AuthController {
 
   // This spring tokenEndpoint controller is proxied so that Springfox can include this in the swagger-ui under the
   // Auth controller
+  @ApiOperation(value = POST_ACCESS_TOKEN)
   @RequestMapping(value = "/token", method=RequestMethod.POST)
   public ResponseEntity<OAuth2AccessToken> postAccessToken(Principal principal, @RequestParam
       Map<String, String> parameters) throws HttpRequestMethodNotSupportedException {

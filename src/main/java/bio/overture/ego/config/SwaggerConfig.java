@@ -16,12 +16,15 @@
 
 package bio.overture.ego.config;
 
+import static bio.overture.ego.utils.SwaggerConstants.AUTH_CONTROLLER;
+import static bio.overture.ego.utils.SwaggerConstants.POST_ACCESS_TOKEN;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Stream.concat;
 import static springfox.documentation.builders.RequestHandlerSelectors.basePackage;
 import static springfox.documentation.spi.DocumentationType.SWAGGER_2;
 
+import bio.overture.ego.utils.SwaggerConstants;
 import com.fasterxml.classmate.TypeResolver;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -90,7 +93,7 @@ public class SwaggerConfig {
     return new ParameterBuilderPlugin() {
       @Override
       public void apply(ParameterContext context) {
-        if (context.getGroupName().equals("auth-controller") && context.getOperationContext().getName().equals("postAccessToken")) {
+        if (context.getGroupName().equals(AUTH_CONTROLLER) && context.getOperationContext().getName().equals(POST_ACCESS_TOKEN)) {
           context
               .getOperationContext()
               .operationBuilder()
