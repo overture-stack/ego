@@ -60,6 +60,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.ClientRegistrationException;
@@ -260,9 +261,8 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
     val approvedScopes = mapToSet(extractScopes(application), Scope::toString);
 
-    // spring will throw a 500 if passed an empty set
     if (approvedScopes.isEmpty()) {
-      approvedScopes.add("");
+      throw new InvalidScopeException("Application has no scopes, cannot generate access token.");
     }
 
     // transform application to client details
