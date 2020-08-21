@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -24,12 +23,6 @@ public class ExceptionHandlers {
     val message = buildConstraintViolationMessage(ex);
     log.error(message);
     return new ResponseEntity<Object>(message, new HttpHeaders(), BAD_REQUEST);
-  }
-
-  @ExceptionHandler({InvalidScopeException.class})
-  public ResponseEntity<Object> handleBadRequestExceptions(HttpServletRequest req, Throwable t) {
-    log.error(t.getMessage());
-    return new ResponseEntity<>(t.getMessage(), new HttpHeaders(), BAD_REQUEST);
   }
 
   private static String buildConstraintViolationMessage(ConstraintViolationException ex) {
