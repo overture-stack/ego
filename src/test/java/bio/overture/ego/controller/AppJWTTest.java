@@ -254,12 +254,11 @@ public class AppJWTTest extends AbstractControllerTest {
     params.add("client_secret", app.getClientSecret());
 
     // expect 400 error
-    val tokenResponse =
-        initStringRequest()
-            .endpoint("/oauth/token")
-            .headers(tokenHeaders)
-            .body(params)
-            .postAnd()
-            .assertBadRequest();
+    initStringRequest()
+        .endpoint("/oauth/token")
+        .headers(tokenHeaders)
+        .body(params)
+        .postAnd()
+        .assertBadRequest();
   }
 }

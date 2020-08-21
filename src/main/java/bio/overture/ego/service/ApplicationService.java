@@ -261,6 +261,12 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
     val approvedScopes = mapToSet(extractScopes(application), Scope::toString);
 
+    // Spring is processing exceptions thrown by classes of type ClientDetailService separately from
+    // ControllerAdvice.
+    // Since ControllerAdvice cannot handle this exception, we are throwing it here so that a 400
+    // error is returned.
+    // Without it, a 500 error is returned.
+    // Not worth developer time to understand spring's chaotic processing of this exception.
     if (approvedScopes.isEmpty()) {
       throw new InvalidScopeException("Application has no scopes, cannot generate access token.");
     }
