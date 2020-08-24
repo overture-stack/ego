@@ -17,14 +17,13 @@
 
 package bio.overture.ego.token;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.LanguageType;
 import bio.overture.ego.model.enums.StatusType;
-import bio.overture.ego.service.TokenService;
+import bio.overture.ego.service.*;
 import java.util.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +50,7 @@ public class JwtTest {
   @Test
   @SuppressWarnings("unchecked")
   @SneakyThrows
-  public void jwtContainsUserGroups() {
+  public void userJwtContainsUserGroups() {
     val groupId = UUID.randomUUID().toString();
 
     User user =
