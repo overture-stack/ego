@@ -204,6 +204,7 @@ The Authenticate request details, to recreate manually:
 
 curl example:
 
+
 ```curl -X POST \
   http://localhost:8081/oauth/token \
   -H 'Content-Type: application/x-www-form-urlencoded' \
