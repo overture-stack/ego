@@ -37,5 +37,5 @@ public class UserTokenContext {
   @JsonProperty("user")
   private User userInfo;
 
-  private Set<String> Scope;
+  private Set<String> scope;
 }

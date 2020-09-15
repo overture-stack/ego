@@ -16,5 +16,5 @@ RUN addgroup -S -g $EGO_GROUP_ID $EGO_USER \
     && mkdir -p $EGO_DIR \
     && chown -R $EGO_USER $EGO_DIR 
 USER $EGO_USER_ID
-ENTRYPOINT ["java", "-jar", "/usr/bin/ego.jar"]
+CMD ["java", "-jar", "/usr/bin/ego.jar"]
 EXPOSE 8081/tcp

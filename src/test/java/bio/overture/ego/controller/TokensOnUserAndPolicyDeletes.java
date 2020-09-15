@@ -75,7 +75,8 @@ public class TokensOnUserAndPolicyDeletes extends AbstractControllerTest {
 
   /**
    * Scenario: Two users with tokens that have a scope on a policy. Delete one user. Expected
-   * Behavior: Deleted user shold also have tokens deleted, other user's tokens should remain valid.
+   * Behavior: Deleted user should also have tokens deleted, other user's tokens should remain
+   * valid.
    */
   @Test
   public void deleteUser_ExistingTokens_TokensDeletedSuccess() {

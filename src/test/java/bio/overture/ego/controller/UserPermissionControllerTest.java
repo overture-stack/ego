@@ -32,7 +32,7 @@ import org.springframework.test.context.support.DependencyInjectionTestExecution
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class UserPermissionControllerTest
-    extends AbstractPermissionControllerTest<User, UserPermission> {
+    extends AbstractResolvablePermissionControllerTest<User, UserPermission> {
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
@@ -122,5 +122,15 @@ public class UserPermissionControllerTest
   @Override
   protected String getReadOwnersForPolicyEndpoint(String policyId) {
     return format("policies/%s/users", policyId);
+  }
+
+  @Override
+  protected String getOwnerAndGroupPermissionsForOwnerEndpoint(String ownerId) {
+    return format("users/%s/groups/permissions", ownerId);
+  }
+
+  @Override
+  protected String getAddOwnerToGroupEndpoint(String groupId) {
+    return format("groups/%s/users", groupId);
   }
 }

@@ -17,6 +17,8 @@
 package bio.overture.ego.controller;
 
 import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
+import static bio.overture.ego.utils.SwaggerConstants.AUTH_CONTROLLER;
+import static bio.overture.ego.utils.SwaggerConstants.POST_ACCESS_TOKEN;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
@@ -29,6 +31,9 @@ import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.signer.TokenSigner;
 import bio.overture.ego.utils.Tokens;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import java.security.Principal;
+import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -39,17 +44,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.provider.endpoint.TokenEndpoint;
 import org.springframework.util.StringUtils;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
 @Slf4j
 @RestController
 @RequestMapping("/oauth")
-@Api(tags = "Auth")
+@Api(tags = "Auth", value = AUTH_CONTROLLER)
 public class AuthController {
 
   @Value("${auth.token.prefix}")
@@ -60,9 +68,11 @@ public class AuthController {
   private final FacebookTokenService facebookTokenService;
   private final TokenSigner tokenSigner;
   private final RefreshContextService refreshContextService;
+  private final TokenEndpoint tokenEndpoint;
 
   @Autowired
   public AuthController(
+      @NonNull TokenEndpoint tokenEndpoint,
       @NonNull TokenService tokenService,
       @NonNull GoogleTokenService googleTokenService,
       @NonNull FacebookTokenService facebookTokenService,
@@ -73,6 +83,17 @@ public class AuthController {
     this.facebookTokenService = facebookTokenService;
     this.tokenSigner = tokenSigner;
     this.refreshContextService = refreshContextService;
+    this.tokenEndpoint = tokenEndpoint;
+  }
+
+  // This spring tokenEndpoint controller is proxied so that Springfox can include this in the
+  // swagger-ui under the Auth controller
+  @ApiOperation(value = POST_ACCESS_TOKEN)
+  @RequestMapping(value = "/token", method = RequestMethod.POST)
+  public ResponseEntity<OAuth2AccessToken> postAccessToken(
+      Principal principal, @RequestParam Map<String, String> parameters)
+      throws HttpRequestMethodNotSupportedException {
+    return this.tokenEndpoint.postAccessToken(principal, parameters);
   }
 
   @RequestMapping(method = GET, value = "/google/token")

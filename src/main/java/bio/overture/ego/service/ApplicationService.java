@@ -20,20 +20,22 @@ import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
+import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
+import static bio.overture.ego.service.UserService.extractScopes;
 import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
 import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
-import static bio.overture.ego.token.app.AppTokenClaims.SCOPES;
-import static bio.overture.ego.utils.CollectionUtils.setOf;
+import static bio.overture.ego.utils.CollectionUtils.*;
+import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
 import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
+import static java.util.Objects.isNull;
 import static org.mapstruct.factory.Mappers.getMapper;
 import static org.springframework.data.jpa.domain.Specification.where;
 
 import bio.overture.ego.model.dto.CreateApplicationRequest;
+import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UpdateApplicationRequest;
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.join.GroupApplication;
 import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.model.search.SearchFilter;
@@ -42,12 +44,8 @@ import bio.overture.ego.repository.GroupRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
 import bio.overture.ego.repository.queryspecification.builder.ApplicationSpecificationBuilder;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.google.common.collect.ImmutableList;
+import java.util.*;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -62,6 +60,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.ClientRegistrationException;
@@ -115,6 +114,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
                 new ApplicationSpecificationBuilder()
                     .fetchGroups(true)
                     .fetchUsers(true)
+                    .fetchApplicationAndGroupPermissions(true)
                     .buildByNameIgnoreCase(name));
   }
 
@@ -133,7 +133,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
 
   @Override
   public Application getWithRelationships(@NonNull UUID id) {
-    return get(id, true, true);
+    return get(id, true, true, true);
   }
 
   @SuppressWarnings("unchecked")
@@ -212,6 +212,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
                 new ApplicationSpecificationBuilder()
                     .fetchGroups(true)
                     .fetchUsers(true)
+                    .fetchApplicationAndGroupPermissions(true)
                     .buildByClientIdIgnoreCase(clientId));
   }
 
@@ -225,6 +226,28 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     return result.get();
   }
 
+  private static Collection<AbstractPermission> getResolvedPermissions(
+      @NonNull Application application) {
+    val applicationPermissions = application.getApplicationPermissions();
+    Collection<ApplicationPermission> appPermissions =
+        isNull(applicationPermissions) ? ImmutableList.of() : applicationPermissions;
+
+    val groupApps = application.getGroupApplications();
+    Collection<GroupPermission> groupPermissions =
+        isNull(groupApps)
+            ? ImmutableList.of()
+            : groupApps.stream()
+                .map(GroupApplication::getGroup)
+                .map(Group::getPermissions)
+                .flatMap(Collection::stream)
+                .collect(toImmutableSet());
+    return resolveFinalPermissions(appPermissions, groupPermissions);
+  }
+
+  public static Set<Scope> extractScopes(@NonNull Application application) {
+    return mapToSet(getResolvedPermissions(application), AbstractPermissionService::buildScope);
+  }
+
   @Override
   public ClientDetails loadClientByClientId(@NonNull String clientId)
       throws ClientRegistrationException {
@@ -236,8 +259,19 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
       throw new ClientRegistrationException("Client Access is not approved.");
     }
 
+    val approvedScopes = mapToSet(extractScopes(application), Scope::toString);
+
+    // Spring is processing exceptions thrown by classes of type ClientDetailService separately from
+    // ControllerAdvice.
+    // Since ControllerAdvice cannot handle this exception, we are throwing it here so that a 400
+    // error is returned.
+    // Without it, a 500 error is returned.
+    // Not worth developer time to understand spring's chaotic processing of this exception.
+    if (approvedScopes.isEmpty()) {
+      throw new InvalidScopeException("Application has no scopes, cannot generate access token.");
+    }
+
     // transform application to client details
-    val approvedScopes = Arrays.asList(SCOPES);
     val clientDetails = new BaseClientDetails();
     clientDetails.setClientId(clientId);
     clientDetails.setClientSecret(passwordEncoder.encode(application.getClientSecret()));
@@ -245,6 +279,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     clientDetails.setScope(approvedScopes);
     clientDetails.setRegisteredRedirectUri(setOf(application.getRedirectUri()));
     clientDetails.setAutoApproveScopes(approvedScopes);
+
     val authorities = new HashSet<GrantedAuthority>();
     authorities.add(new SimpleGrantedAuthority(ROLE));
     clientDetails.setAuthorities(authorities);
@@ -279,12 +314,17 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   }
 
   @SuppressWarnings("unchecked")
-  private Application get(UUID id, boolean fetchUsers, boolean fetchGroups) {
+  private Application get(
+      UUID id,
+      boolean fetchUsers,
+      boolean fetchGroups,
+      boolean fetchApplicationAndGroupPermissions) {
     val result =
         (Optional<Application>)
             getRepository()
                 .findOne(
                     new ApplicationSpecificationBuilder()
+                        .fetchApplicationAndGroupPermissions(fetchApplicationAndGroupPermissions)
                         .fetchUsers(fetchUsers)
                         .fetchGroups(fetchGroups)
                         .buildById(id));

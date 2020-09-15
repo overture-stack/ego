@@ -16,9 +16,14 @@
 
 package bio.overture.ego.config;
 
+import static bio.overture.ego.utils.SwaggerConstants.AUTH_CONTROLLER;
+import static bio.overture.ego.utils.SwaggerConstants.POST_ACCESS_TOKEN;
+import static java.util.stream.Collectors.toUnmodifiableList;
 import static springfox.documentation.builders.RequestHandlerSelectors.basePackage;
 import static springfox.documentation.spi.DocumentationType.SWAGGER_2;
 
+import com.fasterxml.classmate.TypeResolver;
+import com.google.common.base.Predicates;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -32,21 +37,30 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
+import springfox.documentation.builders.ParameterBuilder;
+import springfox.documentation.schema.ModelRef;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.ApiKey;
 import springfox.documentation.service.AuthorizationScope;
 import springfox.documentation.service.Contact;
+import springfox.documentation.service.Parameter;
 import springfox.documentation.service.SecurityReference;
 import springfox.documentation.service.VendorExtension;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spi.service.ParameterBuilderPlugin;
+import springfox.documentation.spi.service.contexts.ParameterContext;
 import springfox.documentation.spi.service.contexts.SecurityContext;
 import springfox.documentation.spring.web.paths.RelativePathProvider;
 import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger.common.SwaggerPluginSupport;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @EnableSwagger2
 @Configuration
 public class SwaggerConfig {
 
+  private static final Set<String> POST_ACCESS_TOKEN_PARAMS =
+      Set.of("client_secret", "client_id", "grant_type");
   private static final Set<String> APPLICATION_SCOPED_PATHS =
       Set.of(
           "/o/check_api_key",
@@ -62,26 +76,51 @@ public class SwaggerConfig {
   }
 
   @Bean
+  public ParameterBuilderPlugin parameterBuilderPlugin() {
+    return new ParameterBuilderPlugin() {
+      @Override
+      public void apply(ParameterContext context) {
+        if (context.getGroupName().equals(AUTH_CONTROLLER)
+            && context.getOperationContext().getName().equals(POST_ACCESS_TOKEN)) {
+          context
+              .getOperationContext()
+              .operationBuilder()
+              .parameters(generatePostAccessTokenParameters());
+
+          // hide default "parameters" arg
+          val defaultName = context.resolvedMethodParameter().defaultName();
+          if (defaultName.isPresent() && defaultName.get().equals("parameters")) {
+            context.parameterBuilder().required(false).hidden(true).build();
+          }
+        }
+      }
+
+      @Override
+      public boolean supports(DocumentationType delimiter) {
+        return SwaggerPluginSupport.pluginDoesApply(delimiter);
+      }
+    };
+  }
+
+  @Bean
   public Docket productApi(SwaggerProperties swaggerProperties) {
-    val docket =
-        new Docket(SWAGGER_2)
-            .select()
-            .apis(basePackage("bio.overture.ego.controller"))
-            .build()
-            .host(swaggerProperties.host)
-            .pathProvider(
-                new RelativePathProvider(null) {
-                  @Override
-                  public String getApplicationBasePath() {
-                    return swaggerProperties.getBaseUrl();
-                  }
-                })
-            .securitySchemes(List.of(apiKey()))
-            .securityContexts(List.of(securityContext()))
-            .apiInfo(metaInfo())
-            .produces(Set.of("application/json"))
-            .consumes(Set.of("application/json"));
-    return docket;
+    return new Docket(SWAGGER_2)
+        .select()
+        .apis(Predicates.or(basePackage("bio.overture.ego.controller")))
+        .build()
+        .host(swaggerProperties.host)
+        .pathProvider(
+            new RelativePathProvider(null) {
+              @Override
+              public String getApplicationBasePath() {
+                return swaggerProperties.getBaseUrl();
+              }
+            })
+        .securitySchemes(List.of(apiKey()))
+        .securityContexts(List.of(securityContext()))
+        .apiInfo(metaInfo())
+        .produces(Set.of("application/json"))
+        .consumes(Set.of("application/json"));
   }
 
   private ApiInfo metaInfo() {
@@ -120,6 +159,20 @@ public class SwaggerConfig {
         .reference("Bearer")
         .scopes(new AuthorizationScope[0])
         .build();
+  }
+
+  private static List<Parameter> generatePostAccessTokenParameters() {
+    return POST_ACCESS_TOKEN_PARAMS.stream()
+        .map(
+            name ->
+                new ParameterBuilder()
+                    .type(new TypeResolver().resolve(String.class))
+                    .name(name)
+                    .parameterType("query")
+                    .required(true)
+                    .modelRef(new ModelRef("String"))
+                    .build())
+        .collect(toUnmodifiableList());
   }
 
   @Component

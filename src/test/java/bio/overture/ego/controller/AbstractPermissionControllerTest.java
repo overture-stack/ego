@@ -1,7 +1,6 @@
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.model.enums.AccessLevel.DENY;
-import static bio.overture.ego.model.enums.AccessLevel.WRITE;
+import static bio.overture.ego.model.enums.AccessLevel.*;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
@@ -20,10 +19,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 
 import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.Identifiable;
-import bio.overture.ego.model.entity.NameableEntity;
-import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.service.AbstractPermissionService;
 import bio.overture.ego.service.NamedService;
@@ -33,9 +29,7 @@ import bio.overture.ego.utils.Streams;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.IntStream;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +50,8 @@ public abstract class AbstractPermissionControllerTest<
   protected O owner1;
 
   protected O owner2;
+  protected O owner3;
+
   protected List<Policy> policies;
   protected List<PermissionRequest> permissionRequests;
 
@@ -64,6 +60,8 @@ public abstract class AbstractPermissionControllerTest<
     // Initial setup of entities (run once)
     this.owner1 = generateOwner(generateNonExistentOwnerName());
     this.owner2 = generateOwner(generateNonExistentOwnerName());
+    this.owner3 = generateOwner(generateNonExistentOwnerName());
+
     this.policies =
         IntStream.range(0, 2)
             .boxed()
@@ -963,6 +961,10 @@ public abstract class AbstractPermissionControllerTest<
 
   protected abstract String getReadOwnersForPolicyEndpoint(String policyId);
 
+  protected abstract String getOwnerAndGroupPermissionsForOwnerEndpoint(String ownerId);
+
+  protected abstract String getAddOwnerToGroupEndpoint(String groupId);
+
   /** For convenience */
   private String getReadOwnersForPolicyEndpoint(UUID policyId) {
     return getReadOwnersForPolicyEndpoint(policyId.toString());
@@ -995,5 +997,13 @@ public abstract class AbstractPermissionControllerTest<
 
   public static ObjectNode createMaskJson(String maskStringValue) {
     return MAPPER.createObjectNode().put("mask", maskStringValue);
+  }
+
+  private String getOwnerAndGroupPermissionsForOwnerEndpoint(UUID ownerId) {
+    return getOwnerAndGroupPermissionsForOwnerEndpoint(ownerId.toString());
+  }
+
+  private String getAddOwnerToGroupEndpoint(UUID groupId) {
+    return getAddOwnerToGroupEndpoint(groupId.toString());
   }
 }

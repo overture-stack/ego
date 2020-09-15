@@ -37,7 +37,7 @@ public class AppTokenClaims extends TokenClaims {
   public static final String[] AUTHORIZED_GRANTS = {
     "authorization_code", "client_credentials", "password", "refresh_token"
   };
-  public static final String[] SCOPES = {"read", "write", "delete"};
+
   public static final String ROLE = "ROLE_CLIENT";
 
   @NonNull private AppTokenContext context;

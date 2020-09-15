@@ -5,13 +5,9 @@ import static bio.overture.ego.utils.Joiners.COMMA;
 import static java.lang.String.format;
 
 import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.entity.Group;
-import bio.overture.ego.model.entity.GroupPermission;
-import bio.overture.ego.service.AbstractPermissionService;
-import bio.overture.ego.service.GroupPermissionService;
-import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.NamedService;
-import bio.overture.ego.service.PolicyService;
+import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.entity.ApplicationPermission;
+import bio.overture.ego.service.*;
 import bio.overture.ego.utils.EntityGenerator;
 import java.util.Collection;
 import java.util.UUID;
@@ -32,15 +28,15 @@ import org.springframework.test.context.support.DependencyInjectionTestExecution
 @SpringBootTest(
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class GroupPermissionControllerTest
-    extends AbstractPermissionControllerTest<Group, GroupPermission> {
+public class ApplicationPermissionControllerTest
+    extends AbstractResolvablePermissionControllerTest<Application, ApplicationPermission> {
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
 
   @Autowired private PolicyService policyService;
-  @Autowired private GroupService groupService;
-  @Autowired private GroupPermissionService groupPermissionService;
+  @Autowired private ApplicationService applicationService;
+  @Autowired private ApplicationPermissionService applicationPermissionService;
 
   @Value("${logging.test.controller.enable}")
   private boolean enableLogging;
@@ -61,77 +57,77 @@ public class GroupPermissionControllerTest
   }
 
   @Override
-  protected Class<Group> getOwnerType() {
-    return Group.class;
+  protected Class<Application> getOwnerType() {
+    return Application.class;
   }
 
   @Override
-  protected Class<GroupPermission> getPermissionType() {
-    return GroupPermission.class;
+  protected Class<ApplicationPermission> getPermissionType() {
+    return ApplicationPermission.class;
   }
 
   @Override
-  protected Group generateOwner(String name) {
-    return entityGenerator.setupGroup(name);
+  protected Application generateOwner(String name) {
+    return entityGenerator.setupApplication(name);
   }
 
   @Override
   protected String generateNonExistentOwnerName() {
-    return generateNonExistentName(groupService);
+    return generateNonExistentName(applicationService);
   }
 
   @Override
-  protected NamedService<Group, UUID> getOwnerService() {
-    return groupService;
+  protected NamedService<Application, UUID> getOwnerService() {
+    return applicationService;
   }
 
   @Override
-  protected AbstractPermissionService<Group, GroupPermission> getPermissionService() {
-    return groupPermissionService;
+  protected AbstractPermissionService<Application, ApplicationPermission> getPermissionService() {
+    return applicationPermissionService;
   }
 
   @Override
   protected String getAddPermissionsEndpoint(String ownerId) {
-    return format("groups/%s/permissions", ownerId);
+    return format("applications/%s/permissions", ownerId);
   }
 
   @Override
   protected String getAddPermissionEndpoint(String policyId, String ownerId) {
-    return format("policies/%s/permission/group/%s", policyId, ownerId);
+    return format("policies/%s/permission/application/%s", policyId, ownerId);
   }
 
   @Override
   protected String getReadPermissionsEndpoint(String ownerId) {
-    return format("groups/%s/permissions", ownerId);
+    return format("applications/%s/permissions", ownerId);
   }
 
   @Override
   protected String getDeleteOwnerEndpoint(String ownerId) {
-    return format("groups/%s", ownerId);
+    return format("applications/%s", ownerId);
   }
 
   @Override
   protected String getDeletePermissionsEndpoint(String ownerId, Collection<String> permissionIds) {
-    return format("groups/%s/permissions/%s", ownerId, COMMA.join(permissionIds));
+    return format("applications/%s/permissions/%s", ownerId, COMMA.join(permissionIds));
   }
 
   @Override
   protected String getDeletePermissionEndpoint(String policyId, String ownerId) {
-    return format("policies/%s/permission/group/%s", policyId, ownerId);
+    return format("policies/%s/permission/application/%s", policyId, ownerId);
   }
 
   @Override
   protected String getReadOwnersForPolicyEndpoint(String policyId) {
-    return format("policies/%s/groups", policyId);
+    return format("policies/%s/applications", policyId);
   }
 
   @Override
   protected String getOwnerAndGroupPermissionsForOwnerEndpoint(String ownerId) {
-    return format("groups/%s/permissions", ownerId);
+    return format("applications/%s/groups/permissions", ownerId);
   }
 
   @Override
   protected String getAddOwnerToGroupEndpoint(String groupId) {
-    return "groups";
+    return format("groups/%s/applications", groupId);
   }
 }

@@ -86,4 +86,13 @@ public class Policy implements Identifiable<UUID> {
       orphanRemoval = true,
       fetch = FetchType.LAZY)
   private Set<ApiKeyScope> apiKeyScopes = newHashSet();
+
+  @JsonIgnore
+  @Builder.Default
+  @OneToMany(
+      mappedBy = JavaFields.POLICY,
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
+      fetch = FetchType.LAZY)
+  private Set<ApplicationPermission> applicationPermissions = newHashSet();
 }

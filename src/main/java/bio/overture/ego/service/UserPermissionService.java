@@ -133,24 +133,6 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
             .map(Group::getPermissions)
             .flatMap(Collection::stream)
             .collect(toUnmodifiableSet());
-
-    return resolveFinalPermissions(userPermissions, groupPermissions).stream()
-        .map(
-            x -> {
-              val ownerType = x.getOwner().getClass().getSimpleName().toUpperCase();
-              val accessLevel = x.getAccessLevel();
-              val policy = x.getPolicy();
-              val owner = x.getOwner();
-              val id = x.getId();
-
-              return ResolvedPermissionResponse.builder()
-                  .accessLevel(accessLevel)
-                  .ownerType(ownerType)
-                  .policy(policy)
-                  .owner(owner)
-                  .id(id)
-                  .build();
-            })
-        .collect(toUnmodifiableList());
+    return getResolvedPermissionsResponse(userPermissions, groupPermissions);
   }
 }

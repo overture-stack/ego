@@ -7,8 +7,7 @@ import static bio.overture.ego.model.exceptions.MalformedRequestException.checkM
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
-import static bio.overture.ego.utils.CollectionUtils.difference;
-import static bio.overture.ego.utils.CollectionUtils.mapToSet;
+import static bio.overture.ego.utils.CollectionUtils.*;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.PermissionRequestAnalyzer.analyze;
@@ -19,26 +18,19 @@ import static java.util.Collections.reverse;
 import static java.util.Comparator.comparing;
 import static java.util.Objects.isNull;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.*;
 import static javax.persistence.criteria.JoinType.LEFT;
 
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.PolicyResponse;
+import bio.overture.ego.model.dto.ResolvedPermissionResponse;
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.entity.AbstractPermission;
-import bio.overture.ego.model.entity.NameableEntity;
-import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.entity.*;
 import bio.overture.ego.repository.PermissionRepository;
 import bio.overture.ego.utils.PermissionRequestAnalyzer.PermissionAnalysis;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -346,5 +338,27 @@ public abstract class AbstractPermissionService<
     val ownerPermissions = getPermissionsFromOwner(owner);
     ownerPermissions.add(permission);
     permission.setOwner(owner);
+  }
+
+  public List<ResolvedPermissionResponse> getResolvedPermissionsResponse(
+      Set<P> ownerPermissions, Set<GroupPermission> groupPermissions) {
+    return resolveFinalPermissions(ownerPermissions, groupPermissions).stream()
+        .map(
+            x -> {
+              val ownerType = x.getOwner().getClass().getSimpleName().toUpperCase();
+              val accessLevel = x.getAccessLevel();
+              val policy = x.getPolicy();
+              val permissionOwner = x.getOwner();
+              val id = x.getId();
+
+              return ResolvedPermissionResponse.builder()
+                  .accessLevel(accessLevel)
+                  .ownerType(ownerType)
+                  .policy(policy)
+                  .owner(permissionOwner)
+                  .id(id)
+                  .build();
+            })
+        .collect(toUnmodifiableList());
   }
 }
