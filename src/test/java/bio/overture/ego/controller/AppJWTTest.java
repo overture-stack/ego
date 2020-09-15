@@ -1,6 +1,7 @@
 package bio.overture.ego.controller;
 
 import static bio.overture.ego.controller.AbstractPermissionControllerTest.createMaskJson;
+import static bio.overture.ego.model.dto.Scope.explicitScopes;
 import static bio.overture.ego.model.enums.AccessLevel.*;
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static java.util.Arrays.asList;
@@ -18,6 +19,8 @@ import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.service.*;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.Streams;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +69,47 @@ public class AppJWTTest extends AbstractControllerTest {
 
   @Test
   @SneakyThrows
+  public void applicationHasWritePermission_appHasReadAndWriteScopesForPolicy_Success() {
+    val app =
+        entityGenerator.setupApplication(
+            "Test Explicit Scopes", "testscopesecret", ApplicationType.CLIENT);
+    val policy = entityGenerator.setupSinglePolicy("SONG");
+
+    val appId = app.getId();
+    val policyId = policy.getId();
+
+    // add app write permission
+    val r1 =
+        initStringRequest()
+            .endpoint("/policies/%s/permission/application/%s", policyId, appId)
+            .body(createMaskJson(WRITE.toString()))
+            .postAnd()
+            .assertOk();
+
+    // get app permissions from endpoint
+    val appPermResponse =
+        initStringRequest()
+            .endpoint("/applications/%s/permissions", appId)
+            .getAnd()
+            .assertOk()
+            .assertPageResultHasSize(ApplicationPermission.class, 1)
+            .extractPageResults(ApplicationPermission.class);
+
+    val scopes =
+        explicitScopes(
+                appPermResponse.stream()
+                    .map(AbstractPermissionService::buildScope)
+                    .collect(toSet()))
+            .stream()
+            .map(Scope::toString)
+            .collect(toSet());
+
+    val expectedScopes = new HashSet<String>(Arrays.asList("SONG.READ", "SONG.WRITE"));
+    assertEquals(expectedScopes, scopes);
+  }
+
+  @Test
+  @SneakyThrows
   public void applicationPermsOnly_appJwtHasAllResolvedScopes_Success() {
     val app = entityGenerator.setupApplication("TestApp", "testsecret", ApplicationType.CLIENT);
     val policies = entityGenerator.setupPolicies("SONG", "SCORE", "DACO");
@@ -107,8 +151,11 @@ public class AppJWTTest extends AbstractControllerTest {
             .extractPageResults(ApplicationPermission.class);
 
     val scopes =
-        appPermResponse.stream()
-            .map(AbstractPermissionService::buildScope)
+        explicitScopes(
+                appPermResponse.stream()
+                    .map(AbstractPermissionService::buildScope)
+                    .collect(toSet()))
+            .stream()
             .map(Scope::toString)
             .collect(toSet());
 
@@ -129,6 +176,7 @@ public class AppJWTTest extends AbstractControllerTest {
             .getResponse()
             .getBody();
 
+    assertNotNull(tokenResponse);
     val tokenJson = MAPPER.readTree(tokenResponse);
     val accessToken = tokenJson.get("access_token").asText();
     tokenService.isValidToken(accessToken);
@@ -200,21 +248,25 @@ public class AppJWTTest extends AbstractControllerTest {
             .getResponse()
             .getBody();
 
+    assertNotNull(resolvedPerms);
     val jsonPerms = MAPPER.readTree(resolvedPerms);
     assertNotNull(jsonPerms);
 
     val resolvedScopes =
         Streams.stream(jsonPerms)
-            .map(
+            .<Scope>map(
                 x -> {
                   val acl = x.get("accessLevel").asText();
 
                   val policyInfo = x.get("policy").get("id").asText();
                   val policyId = UUID.fromString(policyInfo);
                   val policy = policyService.getById(policyId);
-                  return Scope.createScope(policy, AccessLevel.fromValue(acl)).toString();
+                  return Scope.createScope(policy, AccessLevel.fromValue(acl));
                 })
             .collect(toSet());
+
+    val explicitResolvedScopes =
+        explicitScopes(resolvedScopes).stream().map(Scope::toString).collect(toSet());
 
     val params = new LinkedMultiValueMap<String, Object>();
     params.add("grant_type", "client_credentials");
@@ -239,7 +291,7 @@ public class AppJWTTest extends AbstractControllerTest {
     val accessTokenScope = tokenService.getAppAccessToken(accessToken).getScope();
 
     // assert jwt scope matches scopes from resolved permissions
-    assertEquals(resolvedScopes, accessTokenScope);
+    assertEquals(explicitResolvedScopes, accessTokenScope);
   }
 
   @Test

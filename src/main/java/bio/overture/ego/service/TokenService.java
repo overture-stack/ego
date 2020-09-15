@@ -567,11 +567,11 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
         .build();
   }
 
-  private static Set<String> extractExplicitScopes(User u){
+  private static Set<String> extractExplicitScopes(User u) {
     return mapToSet(explicitScopes(extractScopes(u)), Scope::toString);
   }
 
-  private static Set<String> extractExplicitScopes(Application a){
+  private static Set<String> extractExplicitScopes(Application a) {
     return mapToSet(explicitScopes(extractScopes(a)), Scope::toString);
   }
 
