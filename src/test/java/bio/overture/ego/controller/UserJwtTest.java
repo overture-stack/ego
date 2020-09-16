@@ -14,7 +14,6 @@ import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.UserPermission;
 import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.service.AbstractPermissionService;
-import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.utils.EntityGenerator;
 import java.util.Arrays;
@@ -67,7 +66,7 @@ public class UserJwtTest extends AbstractControllerTest {
   @SneakyThrows
   public void userHasReadPermission_userHasReadScopeForPolicy_Success() {
     val readUser = entityGenerator.setupUser("Read User", UserType.ADMIN);
-    val policy = entityGenerator.setupSinglePolicy("SONG");
+    val policy = entityGenerator.setupSinglePolicy("song");
 
     val userId = readUser.getId();
     val policyId = policy.getId();
@@ -98,7 +97,7 @@ public class UserJwtTest extends AbstractControllerTest {
             .map(Scope::toString)
             .collect(toSet());
 
-    val expectedScopes = new HashSet<String>(Collections.singletonList("SONG.READ"));
+    val expectedScopes = new HashSet<String>(Collections.singletonList("song.READ"));
     assertEquals(expectedScopes, scopes);
   }
 
@@ -106,7 +105,7 @@ public class UserJwtTest extends AbstractControllerTest {
   @SneakyThrows
   public void userHasWritePermission_userHasReadAndWriteForPolicy_Success() {
     val writeUser = entityGenerator.setupUser("Write User", UserType.ADMIN);
-    val policy = entityGenerator.setupSinglePolicy("SONG");
+    val policy = entityGenerator.setupSinglePolicy("song");
 
     val userId = writeUser.getId();
     val policyId = policy.getId();
@@ -137,7 +136,7 @@ public class UserJwtTest extends AbstractControllerTest {
             .map(Scope::toString)
             .collect(toSet());
 
-    val expectedScopes = new HashSet<String>(Arrays.asList("SONG.READ", "SONG.WRITE"));
+    val expectedScopes = new HashSet<String>(Arrays.asList("song.READ", "song.WRITE"));
     assertEquals(expectedScopes, scopes);
   }
 }

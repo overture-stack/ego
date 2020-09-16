@@ -73,7 +73,7 @@ public class AppJWTTest extends AbstractControllerTest {
     val app =
         entityGenerator.setupApplication(
             "Test Explicit Scopes", "testscopesecret", ApplicationType.CLIENT);
-    val policy = entityGenerator.setupSinglePolicy("SONG");
+    val policy = entityGenerator.setupSinglePolicy("song");
 
     val appId = app.getId();
     val policyId = policy.getId();
@@ -104,7 +104,7 @@ public class AppJWTTest extends AbstractControllerTest {
             .map(Scope::toString)
             .collect(toSet());
 
-    val expectedScopes = new HashSet<String>(Arrays.asList("SONG.READ", "SONG.WRITE"));
+    val expectedScopes = new HashSet<String>(Arrays.asList("song.READ", "song.WRITE"));
     assertEquals(expectedScopes, scopes);
   }
 
@@ -112,7 +112,7 @@ public class AppJWTTest extends AbstractControllerTest {
   @SneakyThrows
   public void applicationPermsOnly_appJwtHasAllResolvedScopes_Success() {
     val app = entityGenerator.setupApplication("TestApp", "testsecret", ApplicationType.CLIENT);
-    val policies = entityGenerator.setupPolicies("SONG", "SCORE", "DACO");
+    val policies = entityGenerator.setupPolicies("song", "score", "daco");
 
     val appId = app.getId();
     val policyId1 = policies.get(0).getId();
@@ -192,7 +192,7 @@ public class AppJWTTest extends AbstractControllerTest {
     val app =
         entityGenerator.setupApplication("TestCombinedApp", "testsecret", ApplicationType.CLIENT);
     val group = entityGenerator.setupGroup("Test Group");
-    val policies = entityGenerator.setupPolicies("SONG", "SCORE");
+    val policies = entityGenerator.setupPolicies("song", "score");
 
     val appId = app.getId();
     val groupId = group.getId();
