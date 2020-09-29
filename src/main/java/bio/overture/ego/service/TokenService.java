@@ -151,7 +151,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     val userId = decodedToken.getBody().getSubject();
     val user = userService.getById(UUID.fromString(userId));
 
-    Set<String> scope = mapToSet(extractScopes(user), Scope::toString);
+    Set<String> scope = extractExplicitScopes(user);
     val tokenClaims = generateUserTokenClaims(user, scope);
     tokenClaims.setValidDuration((int) (expiration - currentTime));
 
@@ -160,8 +160,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
 
   @SneakyThrows
   public String generateUserToken(User u) {
-    Set<String> permissionNames = mapToSet(extractScopes(u), Scope::toString);
-    return generateUserToken(u, permissionNames);
+    return generateUserToken(u, extractExplicitScopes(u));
   }
 
   public Set<Scope> getScopes(Set<ScopeName> scopeNames) {
@@ -278,7 +277,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
 
   @SneakyThrows
   public String generateAppToken(Application application) {
-    val permissionNames = mapToSet(extractScopes(application), Scope::toString);
+    val permissionNames = extractExplicitScopes(application);
     val tokenContext = new AppTokenContext(application);
     val tokenClaims = new AppTokenClaims();
     tokenContext.setScope(permissionNames);
@@ -566,6 +565,14 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
         .expiryDate(apiKey.getExpiryDate())
         .isRevoked(apiKey.isRevoked())
         .build();
+  }
+
+  private static Set<String> extractExplicitScopes(User u) {
+    return mapToSet(explicitScopes(extractScopes(u)), Scope::toString);
+  }
+
+  private static Set<String> extractExplicitScopes(Application a) {
+    return mapToSet(explicitScopes(extractScopes(a)), Scope::toString);
   }
 
   /** DEPRECATED: To be removed in next major release */
