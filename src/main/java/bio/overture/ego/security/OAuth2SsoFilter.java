@@ -61,7 +61,8 @@ public class OAuth2SsoFilter extends CompositeFilter {
       OAuth2ClientResources google,
       OAuth2ClientResources facebook,
       OAuth2ClientResources github,
-      OAuth2ClientResources linkedin) {
+      OAuth2ClientResources linkedin,
+      OAuth2ClientResources orcid) {
     this.oauth2ClientContext = oauth2ClientContext;
     this.applicationService = applicationService;
     val filters = new ArrayList<Filter>();
@@ -70,6 +71,7 @@ public class OAuth2SsoFilter extends CompositeFilter {
     filters.add(new FacebookFilter(facebook));
     filters.add(new GithubFilter(github));
     filters.add(new LinkedInFilter(linkedin));
+    filters.add(new OrcidFilter(orcid));
     setFilters(filters);
   }
 
@@ -190,6 +192,34 @@ public class OAuth2SsoFilter extends CompositeFilter {
               client.getResource().getUserInfoUri(),
               client.getClient().getClientId(),
               super.restTemplate));
+    }
+  }
+
+  class OrcidFilter extends OAuth2SsoChildFilter {
+    public OrcidFilter(OAuth2ClientResources client) {
+      super("/oauth/login/orcid", client);
+      super.setTokenServices(
+        new OAuth2UserInfoTokenServices(
+          client.getResource().getUserInfoUri(),
+          client.getClient().getClientId(),
+          super.restTemplate
+        ) {
+          @Override
+          protected Map<String, Object> transformMap(
+            Map<String, Object> map, String accessToken) {
+            String email = (String) map.get("emailAddress");
+
+            if (email != null) {
+              map.put("email", email);
+              map.put("given_name", map.get("firstName"));
+              map.put("family_name", map.get("lastName"));
+              return map;
+            } else {
+              return Collections.singletonMap("error", "Could not fetch user details");
+            }
+          }
+        }
+      );
     }
   }
 }

@@ -106,6 +106,18 @@ github:
   resource:
     userInfoUri: https://api.github.com/user
 
+orcid:
+  client:
+    clientId:
+    clientSecret:
+    accessTokenUri: https://sandbox.orcid.org/oauth/token
+    tokenName: access_token
+    userAuthorizationUri: https://sandbox.orcid.org/oauth/authorize
+    clientAuthenticationScheme: form
+    scope: "openid"
+  resource:
+    userInfoUri: https://sandbox.orcid.org/oauth/userinfo
+
 # Logging settings.
 logging:
   console:
