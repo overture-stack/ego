@@ -110,13 +110,13 @@ orcid:
   client:
     clientId:
     clientSecret:
-    accessTokenUri: https://sandbox.orcid.org/oauth/token
+    accessTokenUri: https://orcid.org/oauth/token
     tokenName: access_token
-    userAuthorizationUri: https://sandbox.orcid.org/oauth/authorize
+    userAuthorizationUri: https://orcid.org/oauth/authorize
     clientAuthenticationScheme: form
     scope: "openid"
   resource:
-    userInfoUri: https://sandbox.orcid.org/oauth/userinfo
+    userInfoUri: https://orcid.org/oauth/userinfo
 
 # Logging settings.
 logging:
