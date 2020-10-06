@@ -51,5 +51,7 @@ public class OAuth2ClientConfig {
 
   @Bean
   @ConfigurationProperties("orcid")
-  public OAuth2ClientResources orcid() { return new OAuth2ClientResources(); }
+  public OAuth2ClientResources orcid() {
+    return new OAuth2ClientResources();
+  }
 }
