@@ -108,7 +108,7 @@ github:
 
 orcid:
   client:
-    clientId:
+    clientId: APP-O5Z410O5DWC1011N
     clientSecret:
     accessTokenUri: https://orcid.org/oauth/token
     tokenName: access_token
