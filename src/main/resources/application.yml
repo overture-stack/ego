@@ -117,6 +117,7 @@ orcid:
     scope: "openid"
   resource:
     userInfoUri: https://orcid.org/oauth/userinfo
+    userRecordUri: https://pub.orcid.org/v2.0
 
 # Logging settings.
 logging:

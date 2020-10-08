@@ -1,5 +1,9 @@
 package bio.overture.ego.security;
 
+import static org.springframework.http.HttpStatus.OK;
+
+import bio.overture.ego.model.dto.OrcidEmail;
+import bio.overture.ego.model.dto.OrcidEmailResponse;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.utils.Redirects;
 import java.io.IOException;
@@ -12,9 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
+import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestOperations;
@@ -54,6 +59,8 @@ public class OAuth2SsoFilter extends CompositeFilter {
         }
       };
 
+  private String userRecordUri;
+
   @Autowired
   public OAuth2SsoFilter(
       @Qualifier("oauth2ClientContext") OAuth2ClientContext oauth2ClientContext,
@@ -62,9 +69,11 @@ public class OAuth2SsoFilter extends CompositeFilter {
       OAuth2ClientResources facebook,
       OAuth2ClientResources github,
       OAuth2ClientResources linkedin,
-      OAuth2ClientResources orcid) {
+      OAuth2ClientResources orcid,
+      @Value("${orcid.resource.userRecordUri}") String userRecordUri) {
     this.oauth2ClientContext = oauth2ClientContext;
     this.applicationService = applicationService;
+    this.userRecordUri = userRecordUri;
     val filters = new ArrayList<Filter>();
 
     filters.add(new GoogleFilter(google));
@@ -206,13 +215,29 @@ public class OAuth2SsoFilter extends CompositeFilter {
             @Override
             protected Map<String, Object> transformMap(
                 Map<String, Object> map, String accessToken) {
-              String email = (String) map.get("emailAddress");
+              val orcid = map.get("sub");
+              val url = String.format("%s/%s/email", userRecordUri, orcid);
+              HttpHeaders headers = new HttpHeaders();
+              headers.set("Accept", "application/json");
+              HttpEntity<HttpHeaders> request = new HttpEntity<>(headers);
+              ResponseEntity<OrcidEmailResponse> response =
+                  restTemplate.exchange(url, HttpMethod.GET, request, OrcidEmailResponse.class);
 
-              if (email != null) {
-                map.put("email", email);
-                map.put("given_name", map.get("firstName"));
-                map.put("family_name", map.get("lastName"));
-                return map;
+              if (response.getStatusCode() == OK) {
+                val emails = response.getBody().getEmail();
+                val primaryEmail =
+                    emails.stream()
+                        .filter(OrcidEmail::isPrimary)
+                        .filter(OrcidEmail::isVerified)
+                        .findFirst()
+                        .orElse(null)
+                        .getEmail();
+                if (primaryEmail.isEmpty()) {
+                  return Collections.singletonMap("error", "Could not fetch user details");
+                } else {
+                  map.put("email", primaryEmail);
+                  return map;
+                }
               } else {
                 return Collections.singletonMap("error", "Could not fetch user details");
               }
