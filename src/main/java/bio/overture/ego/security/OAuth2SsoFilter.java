@@ -213,7 +213,7 @@ public class OAuth2SsoFilter extends CompositeFilter {
             protected Map<String, Object> transformMap(
                 Map<String, Object> map, String accessToken) {
               val orcid = map.get("sub").toString();
-              OAuth2RestOperations restTemplate = getRestTemplate(accessToken);
+              val restTemplate = getRestTemplate(accessToken);
               return orcidService.getPrimaryEmail(restTemplate, orcid, map);
             }
           });
