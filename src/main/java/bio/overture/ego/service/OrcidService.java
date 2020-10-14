@@ -48,7 +48,7 @@ public class OrcidService {
           err.getStatusCode().value(),
           err.getMessage());
       throw buildInternalServerException(
-          "Invalid {} response from ORCID service.", err.getStatusCode().value());
+          "Invalid %s response from ORCID service.", err.getStatusCode().value());
     }
 
     if (response.getStatusCode() == OK && response.hasBody() && response.getBody() != null) {
