@@ -1,5 +1,6 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.exceptions.InternalServerException.buildInternalServerException;
 import static java.util.Collections.singletonMap;
 import static org.springframework.http.HttpStatus.OK;
 
@@ -14,8 +15,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.client.OAuth2RestOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 
 @Slf4j
 @Service
@@ -34,7 +37,19 @@ public class OrcidService {
     val headers = new HttpHeaders();
     headers.set("Accept", "application/json");
     val request = new HttpEntity<>(headers);
-    val response = restTemplate.exchange(url, HttpMethod.GET, request, OrcidEmailResponse.class);
+    ResponseEntity<OrcidEmailResponse> response = null;
+    try {
+      response = restTemplate.exchange(url, HttpMethod.GET, request, OrcidEmailResponse.class);
+    } catch (HttpStatusCodeException err) {
+      // Notes: not wrapping exception since we do not know if the response from ORCID will contain
+      // anything sensitive.
+      log.error(
+          "Invalid {} response from ORCID service: {}",
+          err.getStatusCode().value(),
+          err.getMessage());
+      throw buildInternalServerException(
+          "Invalid {} response from ORCID service.", err.getStatusCode().value());
+    }
 
     if (response.getStatusCode() == OK && response.hasBody() && response.getBody() != null) {
       val emailList = response.getBody().getEmail();
@@ -46,12 +61,14 @@ public class OrcidService {
               .map(OrcidEmail::getEmail);
 
       if (primaryEmail.isEmpty()) {
+        log.error("No primary email found.");
         return singletonMap("error", "Could not fetch user details");
       } else {
         map.put("email", primaryEmail.get());
         return map;
       }
     } else {
+      log.error("Response body was empty.");
       return singletonMap("error", "Could not fetch user details");
     }
   }
