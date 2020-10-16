@@ -85,7 +85,8 @@ public class OAuth2UserInfoTokenServices
     List<GrantedAuthority> authorities = this.authoritiesExtractor.extractAuthorities(map);
     final OAuth2Request request =
         new OAuth2Request(null, this.clientId, null, true, null, null, null, null, null);
-    val token = new UsernamePasswordAuthenticationToken(principal, "N/A", authorities);
+    final UsernamePasswordAuthenticationToken token =
+        new UsernamePasswordAuthenticationToken(principal, "N/A", authorities);
     token.setDetails(map);
     return new OAuth2Authentication(request, token);
   }
