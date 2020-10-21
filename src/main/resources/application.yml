@@ -106,6 +106,19 @@ github:
   resource:
     userInfoUri: https://api.github.com/user
 
+orcid:
+  client:
+    clientId: APP-O5Z410O5DWC1011N
+    clientSecret:
+    accessTokenUri: https://orcid.org/oauth/token
+    tokenName: access_token
+    userAuthorizationUri: https://orcid.org/oauth/authorize
+    clientAuthenticationScheme: form
+    scope: "openid"
+  resource:
+    userInfoUri: https://orcid.org/oauth/userinfo
+    userRecordUri: https://pub.orcid.org/v2.0
+
 # Logging settings.
 logging:
   console:

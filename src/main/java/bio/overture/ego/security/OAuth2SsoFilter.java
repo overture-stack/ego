@@ -1,6 +1,7 @@
 package bio.overture.ego.security;
 
 import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.OrcidService;
 import bio.overture.ego.utils.Redirects;
 import java.io.IOException;
 import java.util.*;
@@ -14,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
+import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestOperations;
@@ -54,6 +55,8 @@ public class OAuth2SsoFilter extends CompositeFilter {
         }
       };
 
+  private OrcidService orcidService;
+
   @Autowired
   public OAuth2SsoFilter(
       @Qualifier("oauth2ClientContext") OAuth2ClientContext oauth2ClientContext,
@@ -61,15 +64,20 @@ public class OAuth2SsoFilter extends CompositeFilter {
       OAuth2ClientResources google,
       OAuth2ClientResources facebook,
       OAuth2ClientResources github,
-      OAuth2ClientResources linkedin) {
+      OAuth2ClientResources linkedin,
+      OAuth2ClientResources orcid,
+      OrcidService orcidService) {
     this.oauth2ClientContext = oauth2ClientContext;
     this.applicationService = applicationService;
+    this.orcidService = orcidService;
+
     val filters = new ArrayList<Filter>();
 
     filters.add(new GoogleFilter(google));
     filters.add(new FacebookFilter(facebook));
     filters.add(new GithubFilter(github));
     filters.add(new LinkedInFilter(linkedin));
+    filters.add(new OrcidFilter(orcid));
     setFilters(filters);
   }
 
@@ -190,6 +198,25 @@ public class OAuth2SsoFilter extends CompositeFilter {
               client.getResource().getUserInfoUri(),
               client.getClient().getClientId(),
               super.restTemplate));
+    }
+  }
+
+  class OrcidFilter extends OAuth2SsoChildFilter {
+    public OrcidFilter(OAuth2ClientResources client) {
+      super("/oauth/login/orcid", client);
+      super.setTokenServices(
+          new OAuth2UserInfoTokenServices(
+              client.getResource().getUserInfoUri(),
+              client.getClient().getClientId(),
+              super.restTemplate) {
+            @Override
+            protected Map<String, Object> transformMap(
+                Map<String, Object> map, String accessToken) {
+              val orcid = map.get("sub").toString();
+              val restTemplate = getRestTemplate(accessToken);
+              return orcidService.getPrimaryEmail(restTemplate, orcid, map);
+            }
+          });
     }
   }
 }
