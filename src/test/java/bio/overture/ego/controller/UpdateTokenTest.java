@@ -22,6 +22,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.PermissionRequest;
+import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.AccessLevel;
@@ -112,7 +113,6 @@ public class UpdateTokenTest extends AbstractControllerTest {
     val controlToken = tokenService.generateUserToken(user);
 
     val updatedToken = updateResponse.getBody();
-    log.debug(updatedToken);
 
     val firstTokenClaims = tokenService.validateAndReturn(firstToken).getBody();
     val updatedTokenClaims = tokenService.validateAndReturn(updatedToken).getBody();
@@ -132,7 +132,8 @@ public class UpdateTokenTest extends AbstractControllerTest {
     val firstContext = firstTokenClaims.get("context", LinkedHashMap.class);
     val updatedContext = updatedTokenClaims.get("context", LinkedHashMap.class);
 
-    assertTrue(((Collection) firstContext.get("scope")).isEmpty()); // No scopes originally
+    assertEquals(1, ((Collection) firstContext.get("scope")).size()); // No scopes originally means return default scope
+    assertTrue(((Collection) firstContext.get("scope")).contains(Scope.defaultScope().toString()));
     assertFalse(
         ((Collection) updatedContext.get("scope")).isEmpty()); // Has scopes in updated token
 

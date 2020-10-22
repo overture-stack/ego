@@ -79,7 +79,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     val user = entityGenerator.setupUser("Test User");
     val userId = user.getId();
     val standByUser = entityGenerator.setupUser("Test User2");
-    entityGenerator.setupPolicies("aws,no-be-used", "collab,no-be-used");
+    entityGenerator.setupPolicies("aws-no-be-used", "collab-no-be-used");
     entityGenerator.addPermissions(user, entityGenerator.getScopes("aws.READ", "collab.READ"));
 
     val apiKeyRevoke =
