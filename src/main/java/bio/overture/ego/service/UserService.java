@@ -455,7 +455,12 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   public static Set<Scope> extractScopes(@NonNull User user) {
-    return mapToSet(resolveUsersPermissions(user), AbstractPermissionService::buildScope);
+    val resolvedPermissions = resolveUsersPermissions(user);
+    val output = mapToSet(resolvedPermissions, AbstractPermissionService::buildScope);
+    if (output.isEmpty()) {
+      output.add(Scope.defaultScope());
+    }
+    return output;
   }
 
   public static void disassociateUserApplicationsFromUser(
