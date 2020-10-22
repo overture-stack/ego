@@ -21,8 +21,7 @@ import static bio.overture.ego.controller.AbstractPermissionControllerTest.creat
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static org.junit.Assert.assertEquals;
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.*;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.PolicyRequest;
@@ -89,6 +88,17 @@ public class PolicyControllerTest extends AbstractControllerTest {
     log.info(response.getBody());
 
     assertEquals(responseJson.get("name").asText(), "AddPolicy");
+  }
+
+  @Test
+  @SneakyThrows
+  public void addPolicy_invalidCharacter_badRequest() {
+    val policy = PolicyRequest.builder().name("AddPolicy!").build();
+
+    val response = initStringRequest().endpoint("/policies").body(policy).post();
+
+    val responseStatus = response.getStatusCode();
+    assertEquals(responseStatus, BAD_REQUEST);
   }
 
   @Test
