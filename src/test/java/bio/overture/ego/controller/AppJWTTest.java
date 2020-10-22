@@ -296,7 +296,7 @@ public class AppJWTTest extends AbstractControllerTest {
 
   @Test
   @SneakyThrows
-  public void applicationPerms_appHasNoScopes_BadRequest() {
+  public void applicationPerms_appHasNoScopes_getsDefaultScope() {
     // generate app with no permissions
     val app = entityGenerator.setupApplication("Empty App", "emptysecret", ApplicationType.CLIENT);
 
@@ -311,6 +311,27 @@ public class AppJWTTest extends AbstractControllerTest {
         .headers(tokenHeaders)
         .body(params)
         .postAnd()
-        .assertBadRequest();
+        .assertOk();
+
+    // get app jwt scopes
+    val tokenResponse =
+            initStringRequest()
+                    .endpoint("/oauth/token")
+                    .headers(tokenHeaders)
+                    .body(params)
+                    .postAnd()
+                    .assertOk()
+                    .assertHasBody()
+                    .getResponse()
+                    .getBody();
+
+    val tokenJson = MAPPER.readTree(tokenResponse);
+    val accessToken = tokenJson.get("access_token").asText();
+    tokenService.isValidToken(accessToken);
+    val accessTokenScope = tokenService.getAppAccessToken(accessToken).getScope();
+
+    // assert jwt scope matches scopes from resolved permissions
+    assertEquals(1, accessTokenScope.size());
+    assertTrue(accessTokenScope.contains(Scope.defaultScope().toString()));
   }
 }

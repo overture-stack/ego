@@ -175,7 +175,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
   @SneakyThrows
   public void denyPermissionFromUser_ExistingToken_RevokeTokenSuccess() {
     val user = entityGenerator.setupUser("UserFoo DenyPermission");
-    val policy = entityGenerator.setupSinglePolicy("song.abc");
+    val policy = entityGenerator.setupSinglePolicy("songabc");
     val apiKey = userPermissionTestSetup(user, policy, AccessLevel.WRITE, "WRITE");
 
     val permissionDenyRequest =

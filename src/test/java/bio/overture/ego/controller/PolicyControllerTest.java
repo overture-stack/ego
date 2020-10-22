@@ -122,7 +122,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
   }
 
   public void associatePermissionsWithEntity(NameableEntity entity, String entityName) {
-    val policyName = String.format("Add %s Permission", entityName);
+    val policyName = String.format("AddPermission_%s", entityName);
     val policyId = entityGenerator.setupSinglePolicy(policyName).getId().toString();
     val entityId = entity.getId().toString();
 
@@ -152,7 +152,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
   }
 
   public void disassociatePermissionsFromEntity(NameableEntity entity, String entityName) {
-    val policyName = String.format("Delete %s Permission", entityName);
+    val policyName = String.format("DeletePermission_%s", entityName);
     val policyId = entityGenerator.setupSinglePolicy(policyName).getId().toString();
     val entityId = entity.getId().toString();
 
@@ -189,7 +189,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
   @Test
   @SneakyThrows
   public void associatePermissionsWithGroup_ExistingEntitiesButNonExistingRelationship_Success() {
-    val testGroup = entityGenerator.setupGroup("GroupPolicyAdd");
+    val testGroup = entityGenerator.setupGroup("GroupPolicy Add");
     associatePermissionsWithEntity(testGroup, "group");
   }
 
@@ -217,14 +217,14 @@ public class PolicyControllerTest extends AbstractControllerTest {
   @Test
   @SneakyThrows
   public void associatePermissionsWithApplication_ExistingEntitiesButNoRelationship_Success() {
-    val testApp = entityGenerator.setupApplication("AppPolicy Add");
+    val testApp = entityGenerator.setupApplication("AppPolicyAdd");
     associatePermissionsWithEntity(testApp, "application");
   }
 
   @Test
   @SneakyThrows
   public void disassociatePermissionsFromApplication_ExistingEntitiesAndRelationships_Success() {
-    val testApp = entityGenerator.setupApplication("AppPolicy Delete");
+    val testApp = entityGenerator.setupApplication("AppPolicyDelete");
     disassociatePermissionsFromEntity(testApp, "application");
   }
 }
