@@ -30,11 +30,6 @@ The following is the structure of an ego JWT:
       "iat": 1459458458,
       "exp": 1459487258,
       "jti": "56fd919accf2c1c7ec5c5d16",
-      "aud": [
-          "service1-id",
-          "service2-id",
-          "service3-id"
-      ],
       "context": {
           "user": {
               "name": "Demo.User@example.com",
@@ -52,7 +47,6 @@ The following is the structure of an ego JWT:
   .
   [signature]
 Notes
-  - "aud" field can contain one or more client IDs. This field indicates the client services that are authorized to use this JWT.
   - "groups" will differ based on the domain of client services - each domain of service should get list of groups from that domain's ego service.
   - "permissions" will differ based on domain of client service - each domain of service should get list of permissions from that domain's ego service.
   Unit Tests using testcontainers will also run flyway migrations to ensure database has the correct structure

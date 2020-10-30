@@ -16,13 +16,9 @@
 
 package bio.overture.ego.token.user;
 
-import bio.overture.ego.model.entity.Application;
-import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.token.TokenClaims;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -41,12 +37,5 @@ public class UserTokenClaims extends TokenClaims {
     } else {
       return sub;
     }
-  }
-
-  public List<String> getAud() {
-    return this.context.getUserInfo().getUserApplications().stream()
-        .map(UserApplication::getApplication)
-        .map(Application::getName)
-        .collect(Collectors.toList());
   }
 }
