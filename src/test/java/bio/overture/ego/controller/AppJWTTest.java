@@ -315,15 +315,15 @@ public class AppJWTTest extends AbstractControllerTest {
 
     // get app jwt scopes
     val tokenResponse =
-            initStringRequest()
-                    .endpoint("/oauth/token")
-                    .headers(tokenHeaders)
-                    .body(params)
-                    .postAnd()
-                    .assertOk()
-                    .assertHasBody()
-                    .getResponse()
-                    .getBody();
+        initStringRequest()
+            .endpoint("/oauth/token")
+            .headers(tokenHeaders)
+            .body(params)
+            .postAnd()
+            .assertOk()
+            .assertHasBody()
+            .getResponse()
+            .getBody();
 
     val tokenJson = MAPPER.readTree(tokenResponse);
     val accessToken = tokenJson.get("access_token").asText();
