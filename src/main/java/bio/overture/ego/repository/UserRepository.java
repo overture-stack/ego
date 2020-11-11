@@ -17,6 +17,7 @@
 package bio.overture.ego.repository;
 
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.IdProviderType;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -36,4 +37,10 @@ public interface UserRepository extends NamedRepository<User, UUID> {
   default Optional<User> findByName(String name) {
     return getUserByNameIgnoreCase(name);
   }
+
+  Optional<User> findByIdentityProviderAndProviderId(
+      IdProviderType providerType, String providerId);
+
+  boolean existsDistinctByIdentityProviderAndProviderId(
+      IdProviderType providerType, String providerId);
 }

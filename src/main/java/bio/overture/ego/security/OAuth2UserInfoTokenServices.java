@@ -1,5 +1,8 @@
 package bio.overture.ego.security;
 
+import static bio.overture.ego.model.enums.IdProviderType.getIdAccessor;
+
+import bio.overture.ego.model.enums.IdProviderType;
 import bio.overture.ego.token.IDToken;
 import java.util.Collections;
 import java.util.List;
@@ -33,13 +36,19 @@ public class OAuth2UserInfoTokenServices
   private final String clientId;
   private final OAuth2RestOperations restTemplate;
 
+  private final IdProviderType provider;
+
   private AuthoritiesExtractor authoritiesExtractor = new FixedAuthoritiesExtractor();
 
   public OAuth2UserInfoTokenServices(
-      String userInfoEndpointUrl, String clientId, OAuth2RestOperations restTemplate) {
+      String userInfoEndpointUrl,
+      String clientId,
+      OAuth2RestOperations restTemplate,
+      IdProviderType provider) {
     this.userInfoEndpointUrl = userInfoEndpointUrl;
     this.clientId = clientId;
     this.restTemplate = restTemplate;
+    this.provider = provider;
   }
 
   public IDToken extractPrincipal(Map<String, Object> map) {
@@ -54,7 +63,12 @@ public class OAuth2UserInfoTokenServices
     val givenName = (String) map.getOrDefault("given_name", map.getOrDefault("first_name", ""));
     val familyName = (String) map.getOrDefault("family_name", map.getOrDefault("last_name", ""));
 
-    return new IDToken(email, givenName, familyName);
+    // TODO: correct error in getIdAccessor if provider not found
+    val providerIdAccessor = getIdAccessor(provider);
+    // call toString because Github returns an integer id
+    val providerId = map.get(providerIdAccessor).toString();
+
+    return new IDToken(email, givenName, familyName, provider, providerId);
   }
 
   @Override

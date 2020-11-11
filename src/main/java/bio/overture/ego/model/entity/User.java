@@ -25,12 +25,7 @@ import static com.google.common.collect.Sets.newHashSet;
 import static java.util.stream.Collectors.toList;
 
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.enums.JavaFields;
-import bio.overture.ego.model.enums.LanguageType;
-import bio.overture.ego.model.enums.SqlFields;
-import bio.overture.ego.model.enums.StatusType;
-import bio.overture.ego.model.enums.Tables;
-import bio.overture.ego.model.enums.UserType;
+import bio.overture.ego.model.enums.*;
 import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.view.Views;
@@ -63,7 +58,10 @@ import org.hibernate.annotations.TypeDef;
 
 @Slf4j
 @Entity
-@Table(name = Tables.EGOUSER)
+@Table(
+    name = Tables.EGOUSER,
+    uniqueConstraints =
+        @UniqueConstraint(columnNames = {SqlFields.IDENTITYPROVIDER, SqlFields.PROVIDERID}))
 @Data
 @ToString(exclude = {"userGroups", "userApplications", "userPermissions", "tokens", "refreshToken"})
 @JsonPropertyOrder({
@@ -79,7 +77,9 @@ import org.hibernate.annotations.TypeDef;
   JavaFields.LASTNAME,
   JavaFields.CREATEDAT,
   JavaFields.LASTLOGIN,
-  JavaFields.PREFERREDLANGUAGE
+  JavaFields.PREFERREDLANGUAGE,
+  JavaFields.IDENTITYPROVIDER,
+  JavaFields.PROVIDERID
 })
 @JsonInclude()
 @EqualsAndHashCode(of = {"id"})
@@ -98,14 +98,12 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   @GeneratedValue(generator = "user_uuid")
   private UUID id;
 
-  @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = SqlFields.NAME, unique = true, nullable = false)
+  @Column(name = SqlFields.NAME)
   private String name;
 
-  @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = SqlFields.EMAIL, unique = true, nullable = false)
+  @Column(name = SqlFields.EMAIL)
   private String email;
 
   @NotNull
@@ -148,6 +146,18 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   @Column(name = SqlFields.PREFERREDLANGUAGE)
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   private LanguageType preferredLanguage;
+
+  @NotNull
+  @Type(type = EGO_ENUM)
+  @Enumerated(EnumType.STRING)
+  @Column(name = SqlFields.IDENTITYPROVIDER, nullable = false)
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
+  private IdProviderType identityProvider;
+
+  @NotNull
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
+  @Column(name = SqlFields.PROVIDERID, nullable = false)
+  private String providerId;
 
   @JsonIgnore
   @OneToMany(

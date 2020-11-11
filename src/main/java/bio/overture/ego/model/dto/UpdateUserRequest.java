@@ -16,6 +16,7 @@
 
 package bio.overture.ego.model.dto;
 
+import bio.overture.ego.model.enums.IdProviderType;
 import bio.overture.ego.model.enums.LanguageType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
@@ -36,4 +37,6 @@ public class UpdateUserRequest {
   private String firstName;
   private String lastName;
   private LanguageType preferredLanguage;
+  private IdProviderType identityProvider;
+  private String providerId;
 }

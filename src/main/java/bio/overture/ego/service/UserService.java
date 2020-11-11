@@ -39,6 +39,7 @@ import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.*;
+import bio.overture.ego.model.enums.IdProviderType;
 import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
@@ -156,13 +157,17 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .lastName(idToken.getFamily_name())
             .status(userDefaultsConfig.getDefaultUserStatus())
             .type(userDefaultsConfig.getDefaultUserType())
+            .identityProvider(idToken.getIdentity_provider())
+            .providerId(idToken.getProvider_id())
             .build());
   }
 
   public User getUserByToken(@NonNull IDToken idToken) {
-    val userName = idToken.getEmail();
+    val provider = idToken.getIdentity_provider();
+    val providerId = idToken.getProvider_id();
+
     val user =
-        findByName(userName)
+        getByProviderAndProviderId(provider, providerId)
             .orElseGet(
                 () -> {
                   log.info("User not found, creating.");
@@ -170,6 +175,13 @@ public class UserService extends AbstractNamedService<User, UUID> {
                 });
     user.setLastLogin(new Date());
     return user;
+  }
+
+  public Optional<User> getByProviderAndProviderId(IdProviderType provider, String providerId) {
+    val user = userRepository.findByIdentityProviderAndProviderId(provider, providerId);
+    checkNotFound(user.isPresent(), "The user was not found");
+    val name = user.get().getName();
+    return findByName(name);
   }
 
   @Override
@@ -424,11 +436,21 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   private void validateCreateRequest(CreateUserRequest r) {
     checkRequestValid(r);
-    checkEmailUnique(r.getEmail());
+    checkProviderAndProviderIdUnique(r.getIdentityProvider(), r.getProviderId());
   }
 
+  // TODO: don't use email for onUpdateDetected?
   private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
-    onUpdateDetected(originalUser.getEmail(), r.getEmail(), () -> checkEmailUnique(r.getEmail()));
+    onUpdateDetected(
+        originalUser.getEmail(),
+        r.getEmail(),
+        () -> checkProviderAndProviderIdUnique(r.getIdentityProvider(), r.getProviderId()));
+  }
+
+  private void checkProviderAndProviderIdUnique(IdProviderType provider, String providerId) {
+    checkUnique(
+        !userRepository.existsDistinctByIdentityProviderAndProviderId(provider, providerId),
+        "A user with the same provider info already exists");
   }
 
   private void checkEmailUnique(String email) {

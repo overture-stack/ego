@@ -1,5 +1,7 @@
 package bio.overture.ego.security;
 
+import static bio.overture.ego.model.enums.IdProviderType.*;
+
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.OrcidService;
 import bio.overture.ego.utils.Redirects;
@@ -107,7 +109,8 @@ public class OAuth2SsoFilter extends CompositeFilter {
           new OAuth2UserInfoTokenServices(
               client.getResource().getUserInfoUri(),
               client.getClient().getClientId(),
-              super.restTemplate) {
+              super.restTemplate,
+              GITHUB) {
             @Override
             protected Map<String, Object> transformMap(Map<String, Object> map, String accessToken)
                 throws NoSuchElementException {
@@ -160,7 +163,8 @@ public class OAuth2SsoFilter extends CompositeFilter {
           new OAuth2UserInfoTokenServices(
               client.getResource().getUserInfoUri(),
               client.getClient().getClientId(),
-              super.restTemplate) {
+              super.restTemplate,
+              LINKEDIN) {
             @Override
             protected Map<String, Object> transformMap(
                 Map<String, Object> map, String accessToken) {
@@ -186,7 +190,8 @@ public class OAuth2SsoFilter extends CompositeFilter {
           new OAuth2UserInfoTokenServices(
               client.getResource().getUserInfoUri(),
               client.getClient().getClientId(),
-              super.restTemplate));
+              super.restTemplate,
+              GOOGLE));
     }
   }
 
@@ -197,7 +202,8 @@ public class OAuth2SsoFilter extends CompositeFilter {
           new OAuth2UserInfoTokenServices(
               client.getResource().getUserInfoUri(),
               client.getClient().getClientId(),
-              super.restTemplate));
+              super.restTemplate,
+              FACEBOOK));
     }
   }
 
@@ -208,7 +214,8 @@ public class OAuth2SsoFilter extends CompositeFilter {
           new OAuth2UserInfoTokenServices(
               client.getResource().getUserInfoUri(),
               client.getClient().getClientId(),
-              super.restTemplate) {
+              super.restTemplate,
+              ORCID) {
             @Override
             protected Map<String, Object> transformMap(
                 Map<String, Object> map, String accessToken) {
