@@ -165,23 +165,54 @@ public class UserService extends AbstractNamedService<User, UUID> {
   public User getUserByToken(@NonNull IDToken idToken) {
     val provider = idToken.getIdentity_provider();
     val providerId = idToken.getProvider_id();
+    val userName = idToken.getEmail();
 
     val user =
-        getByProviderAndProviderId(provider, providerId)
+        findByProviderAndProviderId(provider, providerId)
+            .or(
+                () -> {
+                  // search by empty provider and providerId to ensure the user with incomplete
+                  // details is found
+                  val userWithName =
+                      userRepository.findFirstByNameAndIdentityProviderAndProviderId(
+                          userName, null, null);
+                  if (userWithName.isEmpty()) {
+                    log.info("no user with name found, returning empty");
+                    return Optional.empty();
+                  } else {
+                    log.info("Found user by name, no provider info" + userWithName);
+                    return findByName(userWithName.get().getName());
+                  }
+                })
             .orElseGet(
                 () -> {
                   log.info("User not found, creating.");
                   return createFromIDToken(idToken);
                 });
+
+    if (!hasValidProvider(user)) {
+      log.info("Existing user does not have valid provider info, setting.");
+      user.setIdentityProvider(idToken.getIdentity_provider());
+      user.setProviderId(idToken.getProvider_id());
+    }
     user.setLastLogin(new Date());
     return user;
   }
 
-  public Optional<User> getByProviderAndProviderId(IdProviderType provider, String providerId) {
-    val user = userRepository.findByIdentityProviderAndProviderId(provider, providerId);
-    checkNotFound(user.isPresent(), "The user was not found");
-    val name = user.get().getName();
-    return findByName(name);
+  private boolean hasValidProvider(User user) {
+    return !isNull(user.getIdentityProvider()) && !isNull(user.getProviderId());
+  }
+
+  private Optional<User> findByProviderAndProviderId(IdProviderType provider, String providerId) {
+    return (Optional<User>)
+        getRepository()
+            .findOne(
+                new UserSpecificationBuilder()
+                    .fetchApplications(true)
+                    .fetchUserGroups(true)
+                    .fetchUserAndGroupPermissions(true)
+                    .fetchRefreshToken(true)
+                    .buildByProviderNameAndId(provider, providerId));
   }
 
   @Override
@@ -436,20 +467,16 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   private void validateCreateRequest(CreateUserRequest r) {
     checkRequestValid(r);
-    checkProviderAndProviderIdUnique(r.getIdentityProvider(), r.getProviderId());
+    checkUserUnique(r.getIdentityProvider(), r.getProviderId());
   }
 
-  // TODO: don't use email for onUpdateDetected?
   private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
-    onUpdateDetected(
-        originalUser.getEmail(),
-        r.getEmail(),
-        () -> checkProviderAndProviderIdUnique(r.getIdentityProvider(), r.getProviderId()));
+    onUpdateDetected(originalUser.getEmail(), r.getEmail(), () -> checkEmailUnique(r.getEmail()));
   }
 
-  private void checkProviderAndProviderIdUnique(IdProviderType provider, String providerId) {
+  private void checkUserUnique(IdProviderType provider, String providerId) {
     checkUnique(
-        !userRepository.existsDistinctByIdentityProviderAndProviderId(provider, providerId),
+        !userRepository.existsByIdentityProviderAndProviderId(provider, providerId),
         "A user with the same provider info already exists");
   }
 

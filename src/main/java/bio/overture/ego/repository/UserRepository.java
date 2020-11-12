@@ -38,9 +38,8 @@ public interface UserRepository extends NamedRepository<User, UUID> {
     return getUserByNameIgnoreCase(name);
   }
 
-  Optional<User> findByIdentityProviderAndProviderId(
-      IdProviderType providerType, String providerId);
+  boolean existsByIdentityProviderAndProviderId(IdProviderType providerType, String providerId);
 
-  boolean existsDistinctByIdentityProviderAndProviderId(
-      IdProviderType providerType, String providerId);
+  Optional<User> findFirstByNameAndIdentityProviderAndProviderId(
+      String name, IdProviderType provider, String id);
 }
