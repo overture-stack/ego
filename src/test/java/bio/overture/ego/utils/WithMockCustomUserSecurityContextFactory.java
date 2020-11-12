@@ -50,6 +50,8 @@ public class WithMockCustomUserSecurityContextFactory
         .status(APPROVED)
         .preferredLanguage(ENGLISH)
         .type(customUser.type())
+        .identityProvider(customUser.identityProvider())
+        .providerId(customUser.providerId())
         .build();
   }
 }

@@ -1,5 +1,7 @@
 package bio.overture.ego.token;
 
+import static bio.overture.ego.model.enums.IdProviderType.GOOGLE;
+import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -38,7 +40,9 @@ public class LastloginTest {
     idToken.setFamily_name("foo");
     idToken.setGiven_name("bar");
     idToken.setEmail("foobar@domain.com");
-    User user = entityGenerator.setupUser("foo bar");
+    idToken.setIdentity_provider(GOOGLE);
+    idToken.setProvider_id("12345");
+    User user = entityGenerator.setupUser("foo bar", ADMIN, "12345", GOOGLE);
 
     assertNull(
         " Verify before generatedUserToken, last login after fetching the user should be null. ",

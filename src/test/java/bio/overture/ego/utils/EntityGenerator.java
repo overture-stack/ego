@@ -1,5 +1,6 @@
 package bio.overture.ego.utils;
 
+import static bio.overture.ego.model.enums.IdProviderType.GOOGLE;
 import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.PENDING;
@@ -119,27 +120,33 @@ public class EntityGenerator {
   }
 
   public User setupUser(String name) {
-    return setupUser(name, ADMIN);
+    return setupUser(name, ADMIN, UUID.randomUUID().toString(), GOOGLE);
   }
 
   public User setupUser(String name, UserType type) {
+    return setupUser(name, type, UUID.randomUUID().toString(), GOOGLE);
+  }
+
+  public User setupUser(String name, UserType type, String providerId, IdProviderType provider) {
     val names = name.split(" ", 2);
     val userName = String.format("%s%s@domain.com", names[0], names[1]);
     return userService
         .findByName(userName)
         .orElseGet(
             () -> {
-              val createUserRequest = createUser(name, type);
+              val createUserRequest = createUser(name, type, provider, providerId);
               return userService.create(createUserRequest);
             });
   }
 
   public List<User> setupUsers(String... users) {
-    return mapToList(listOf(users), user -> setupUser(user, ADMIN));
+    return mapToList(
+        listOf(users), user -> setupUser(user, ADMIN, UUID.randomUUID().toString(), GOOGLE));
   }
 
   public List<User> setupPublicUsers(String... users) {
-    return mapToList(listOf(users), user -> setupUser(user, USER));
+    return mapToList(
+        listOf(users), user -> setupUser(user, USER, UUID.randomUUID().toString(), GOOGLE));
   }
 
   public void setupTestUsers() {
@@ -161,7 +168,12 @@ public class EntityGenerator {
     return groupService.associateUsersWithGroup(group.getId(), userIds);
   }
 
-  private CreateUserRequest createUser(String firstName, String lastName, UserType type) {
+  private CreateUserRequest createUser(
+      String firstName,
+      String lastName,
+      UserType type,
+      IdProviderType provider,
+      String providerId) {
     return CreateUserRequest.builder()
         .email(String.format("%s%s@domain.com", firstName, lastName))
         .firstName(firstName)
@@ -169,12 +181,15 @@ public class EntityGenerator {
         .status(APPROVED)
         .preferredLanguage(ENGLISH)
         .type(type)
+        .identityProvider(provider)
+        .providerId(providerId)
         .build();
   }
 
-  private CreateUserRequest createUser(String name, UserType type) {
+  private CreateUserRequest createUser(
+      String name, UserType type, IdProviderType provider, String providerId) {
     val names = name.split(" ", 2);
-    return createUser(names[0], names[1], type);
+    return createUser(names[0], names[1], type, provider, providerId);
   }
 
   private GroupRequest createGroupRequest(String name) {
@@ -269,6 +284,8 @@ public class EntityGenerator {
             .preferredLanguage(randomLanguageType())
             .firstName(randomStringNoSpaces(5))
             .lastName(randomStringNoSpaces(6))
+            .identityProvider(GOOGLE)
+            .providerId(UUID.randomUUID().toString())
             .build();
     return userService.create(request);
   }
