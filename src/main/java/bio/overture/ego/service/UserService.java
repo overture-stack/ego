@@ -27,7 +27,6 @@ import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.*;
 import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
 import static bio.overture.ego.utils.EntityServices.getManyEntities;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Ids.checkDuplicates;
 import static bio.overture.ego.utils.Joiners.PRETTY_COMMA;
 import static java.util.Objects.isNull;
@@ -471,7 +470,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
-    onUpdateDetected(originalUser.getEmail(), r.getEmail(), () -> checkEmailUnique(r.getEmail()));
+    checkRequestValid(originalUser.getIdentityProvider().equals(r.getIdentityProvider()));
+    checkRequestValid(originalUser.getProviderId().equals(r.getProviderId()));
   }
 
   private void checkUserUnique(IdProviderType provider, String providerId) {

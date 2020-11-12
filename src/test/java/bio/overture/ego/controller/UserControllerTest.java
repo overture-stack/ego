@@ -19,6 +19,7 @@ package bio.overture.ego.controller;
 
 import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
 import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
+import static bio.overture.ego.model.enums.IdProviderType.*;
 import static bio.overture.ego.model.enums.JavaFields.*;
 import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
@@ -49,6 +50,7 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.IdProviderType;
 import bio.overture.ego.model.enums.LanguageType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
@@ -195,8 +197,11 @@ public class UserControllerTest extends AbstractControllerTest {
             .preferredLanguage(randomEnum(LanguageType.class))
             .firstName(randomStringNoSpaces(10))
             .lastName(randomStringNoSpaces(10))
+            .identityProvider(randomEnum(IdProviderType.class))
+            .providerId(UUID.randomUUID().toString())
             .build();
 
+    // TODO: add in providerInfo field checks
     // Create the user
     val user = createUserPostRequestAnd(r).extractOneEntity(User.class);
     assertEquals(user.getEmail(), r.getEmail());
@@ -224,7 +229,7 @@ public class UserControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  public void createUser_EmailAlreadyExists_Conflict() {
+  public void createUser_EmailAlreadyExists_OK() {
     // Generate data
     val data = generateUniqueTestUserData();
     val user0 = data.getUsers().get(0);
@@ -232,7 +237,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // Get an existing name
     val existingName = getUserEntityGetRequestAnd(user0).extractOneEntity(User.class).getName();
 
-    // Create a request with an existing name
+    // Create a request with an existing name and nonexisting provider info
     val r =
         CreateUserRequest.builder()
             .email(existingName)
@@ -241,10 +246,12 @@ public class UserControllerTest extends AbstractControllerTest {
             .preferredLanguage(randomEnum(LanguageType.class))
             .firstName(randomStringNoSpaces(10))
             .lastName(randomStringNoSpaces(10))
+            .identityProvider(GITHUB)
+            .providerId("github123")
             .build();
 
-    // Create the user and assert a conflict
-    createUserPostRequestAnd(r).assertConflict();
+    // Create the user and assert OK
+    createUserPostRequestAnd(r).assertOk();
   }
 
   @Test
@@ -479,7 +486,7 @@ public class UserControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  public void updateUser_EmailAlreadyExists_Conflict() {
+  public void updateUser_EmailAlreadyExists_OK() {
     // Generate data
     val data = generateUniqueTestUserData();
     val user0 = data.getUsers().get(0);
@@ -494,12 +501,12 @@ public class UserControllerTest extends AbstractControllerTest {
         UpdateUserRequest.builder()
             .email(user1.getName())
             .status(randomEnumExcluding(StatusType.class, user0.getStatus()))
+            .identityProvider(user0.getIdentityProvider())
+            .providerId(user0.getProviderId())
             .build();
 
-    // Assert that a CONFLICT error occurs when trying to update a user with a name
-    // that already
-    // exists
-    partialUpdateUserPutRequestAnd(user0.getId(), r1).assertConflict();
+    // Assert that an OK response when trying to update a user with a name that already exists
+    partialUpdateUserPutRequestAnd(user0.getId(), r1).assertOk();
   }
 
   @Test
