@@ -495,6 +495,14 @@ public class EntityGenerator {
     return id;
   }
 
+  public static <T> String generateNonExistentProviderId(UserService userService) {
+    String providerId = UUID.randomUUID().toString();
+    while (userService.existsByProviderId(providerId)) {
+      providerId = UUID.randomUUID().toString();
+    }
+    return providerId;
+  }
+
   private static String generateRandomName(Random r, int length) {
     val sb = new StringBuilder();
     r.ints(length, 65, 90).forEach(sb::append);

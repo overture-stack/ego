@@ -21,7 +21,7 @@ import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
 import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
 import static bio.overture.ego.model.enums.IdProviderType.*;
 import static bio.overture.ego.model.enums.JavaFields.*;
-import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
+import static bio.overture.ego.model.enums.LanguageType.*;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.DISABLED;
 import static bio.overture.ego.model.enums.UserType.USER;
@@ -31,16 +31,13 @@ import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
 import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.convertToIds;
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentName;
-import static bio.overture.ego.utils.EntityGenerator.randomEnum;
-import static bio.overture.ego.utils.EntityGenerator.randomEnumExcluding;
-import static bio.overture.ego.utils.EntityGenerator.randomStringNoSpaces;
+import static bio.overture.ego.utils.EntityGenerator.*;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static org.junit.Assert.*;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.CreateUserRequest;
@@ -56,6 +53,7 @@ import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
+import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -98,6 +96,7 @@ public class UserControllerTest extends AbstractControllerTest {
   @Autowired private UserService userService;
   @Autowired private ApplicationService applicationService;
   @Autowired private GroupService groupService;
+  @Autowired private TokenService tokenService;
 
   @Value("${logging.test.controller.enable}")
   private boolean enableLogging;
@@ -237,7 +236,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // Get an existing name
     val existingName = getUserEntityGetRequestAnd(user0).extractOneEntity(User.class).getName();
 
-    // Create a request with an existing name and nonexisting provider info
+    // Create a request with an existing name and non-existing provider info
     val r =
         CreateUserRequest.builder()
             .email(existingName)
@@ -252,6 +251,194 @@ public class UserControllerTest extends AbstractControllerTest {
 
     // Create the user and assert OK
     createUserPostRequestAnd(r).assertOk();
+  }
+
+  // TODO: add this test in when email required configuration is implemented
+  @Ignore
+  @Test
+  public void createUser_NoEmail_OK() {
+    val nonExistentProviderId = generateNonExistentProviderId(userService);
+    // Create a request without an email provided
+    val r =
+        CreateUserRequest.builder()
+            .status(randomEnum(StatusType.class))
+            .type(randomEnum(UserType.class))
+            .preferredLanguage(randomEnum(LanguageType.class))
+            .firstName(randomStringNoSpaces(10))
+            .lastName(randomStringNoSpaces(10))
+            .identityProvider(GITHUB)
+            .providerId(nonExistentProviderId)
+            .build();
+
+    // Create the user and assert OK
+    createUserPostRequestAnd(r).assertOk();
+  }
+
+  @Test
+  public void createUser_ExistingProviderNonExistingProvId_OK() {
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    val nonExistingProvId = generateNonExistentProviderId(userService);
+    // Create a request with an existing provider and nonexisting providerId
+    val r =
+        CreateUserRequest.builder()
+            .email("user0@email.com")
+            .status(randomEnum(StatusType.class))
+            .type(randomEnum(UserType.class))
+            .preferredLanguage(randomEnum(LanguageType.class))
+            .firstName(randomStringNoSpaces(10))
+            .lastName(randomStringNoSpaces(10))
+            .identityProvider(user0.getIdentityProvider())
+            .providerId(nonExistingProvId)
+            .build();
+
+    createUserPostRequestAnd(r).assertOk();
+  }
+
+  @Test
+  public void createUser_ExistingProviderIdNonExistingProvider_OK() {
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Create a request with an existing provider and nonexisting providerId
+    val r =
+        CreateUserRequest.builder()
+            .email("user0@email.com")
+            .status(randomEnum(StatusType.class))
+            .type(randomEnum(UserType.class))
+            .preferredLanguage(randomEnum(LanguageType.class))
+            .firstName(randomStringNoSpaces(10))
+            .lastName(randomStringNoSpaces(10))
+            .identityProvider(LINKEDIN)
+            .providerId(user0.getProviderId())
+            .build();
+
+    createUserPostRequestAnd(r).assertOk();
+  }
+
+  @Test
+  public void createUser_ExistingProviderIdExistingProvider_Conflict() {
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user0 = data.getUsers().get(0);
+
+    // Create a request with a non-unique identityProvider + providerId
+    val r =
+        CreateUserRequest.builder()
+            .email("user0@email.com")
+            .status(randomEnum(StatusType.class))
+            .type(randomEnum(UserType.class))
+            .preferredLanguage(randomEnum(LanguageType.class))
+            .firstName(randomStringNoSpaces(10))
+            .lastName(randomStringNoSpaces(10))
+            .identityProvider(user0.getIdentityProvider())
+            .providerId(user0.getProviderId())
+            .build();
+
+    createUserPostRequestAnd(r).assertConflict();
+  }
+
+  @Test
+  public void createUser_InvalidProvider_BadRequest() {
+    val invalidProvider = "someProvider";
+    val match = stream(IdProviderType.values()).anyMatch(x -> x.toString().equals(invalidProvider));
+    assertFalse(match);
+
+    val templateR1 =
+        CreateUserRequest.builder()
+            .email(generateNonExistentName(userService) + "@rst.com")
+            .type(USER)
+            .firstName("r")
+            .lastName("st")
+            .preferredLanguage(ENGLISH)
+            .status(APPROVED)
+            .build();
+    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(IDENTITYPROVIDER, invalidProvider);
+    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
+  }
+
+  @Test
+  public void updateUser_InvalidProvider_BadRequest() {
+    val invalidProvider = "someProvider";
+    val match = stream(IdProviderType.values()).anyMatch(x -> x.toString().equals(invalidProvider));
+    assertFalse(match);
+
+    val data = generateUniqueTestUserData();
+    val user = data.getUsers().get(0);
+
+    val templateR2 =
+        UpdateUserRequest.builder()
+            .email(generateNonExistentName(userService) + "@rst.com")
+            .type(USER)
+            .preferredLanguage(ENGLISH)
+            .providerId(user.getProviderId())
+            .build();
+    val r2 = ((ObjectNode) MAPPER.valueToTree(templateR2)).put(IDENTITYPROVIDER, invalidProvider);
+    initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
+  }
+
+  @Test
+  public void validateUpdateRequest_ProviderIdDoesntMatch_Forbidden() {
+    // create a user with providerInfo
+    val data = generateUniqueTestUserData();
+    val user = data.getUsers().get(0);
+
+    val nonExistentProviderId = generateNonExistentProviderId(userService);
+
+    // Assert update with different providerId
+    val r1 =
+        UpdateUserRequest.builder()
+            .identityProvider(user.getIdentityProvider())
+            .providerId(nonExistentProviderId)
+            .preferredLanguage(SPANISH)
+            .build();
+
+    initStringRequest()
+        .endpoint("/users/%s", user.getId())
+        .body(r1)
+        .putAnd()
+        .assertStatusCode(FORBIDDEN);
+  }
+
+  @Test
+  public void validateUpdateRequest_IdentityProviderDoesntMatch_Forbidden() {
+    // create a user with providerInfo
+    val data = generateUniqueTestUserData();
+    val user = data.getUsers().get(0);
+
+    // Assert update with different identityProvider
+    val r1 =
+        UpdateUserRequest.builder()
+            .identityProvider(GITHUB)
+            .providerId(user.getProviderId())
+            .preferredLanguage(FRENCH)
+            .build();
+
+    initStringRequest()
+        .endpoint("/users/%s", user.getId())
+        .body(r1)
+        .putAnd()
+        .assertStatusCode(FORBIDDEN);
+  }
+
+  @Test
+  public void validateUpdateRequest_ProviderInfoMatches_Success() {
+    // create a user with providerInfo
+    val data = generateUniqueTestUserData();
+    val user = data.getUsers().get(0);
+
+    // Assert update with matching identityProvider and providerId
+    val r1 =
+        UpdateUserRequest.builder()
+            .identityProvider(user.getIdentityProvider())
+            .providerId(user.getProviderId())
+            .preferredLanguage(SPANISH)
+            .build();
+
+    initStringRequest().endpoint("/users/%s", user.getId()).body(r1).putAnd().assertOk();
   }
 
   @Test
@@ -444,7 +631,13 @@ public class UserControllerTest extends AbstractControllerTest {
     // create update request 1
     val uniqueName = generateNonExistentName(userService);
     val email = uniqueName + "@xyz.com";
-    val r1 = UpdateUserRequest.builder().firstName("aNewFirstName").email(email).build();
+    val r1 =
+        UpdateUserRequest.builder()
+            .firstName("aNewFirstName")
+            .identityProvider(user0.getIdentityProvider())
+            .providerId(user0.getProviderId())
+            .email(email)
+            .build();
 
     // Update user
     partialUpdateUserPutRequestAnd(user0.getId(), r1).assertOk();
@@ -458,6 +651,8 @@ public class UserControllerTest extends AbstractControllerTest {
     // create update request 2
     val r2 =
         UpdateUserRequest.builder()
+            .identityProvider(user0.getIdentityProvider())
+            .providerId(user0.getProviderId())
             .status(randomEnumExcluding(StatusType.class, user0.getStatus()))
             .type(randomEnumExcluding(UserType.class, user0.getType()))
             .preferredLanguage(

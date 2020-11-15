@@ -17,6 +17,7 @@
 package bio.overture.ego.service;
 
 import static bio.overture.ego.model.enums.UserType.ADMIN;
+import static bio.overture.ego.model.exceptions.InvalidUserException.checkValidUser;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
@@ -166,21 +167,19 @@ public class UserService extends AbstractNamedService<User, UUID> {
     val providerId = idToken.getProvider_id();
     val userName = idToken.getEmail();
 
-    val user =
+    User user =
         findByProviderAndProviderId(provider, providerId)
             .or(
                 () -> {
-                  // search by empty provider and providerId to ensure the user with incomplete
-                  // details is found
                   val userWithName =
                       userRepository.findFirstByNameAndIdentityProviderAndProviderId(
-                          userName, null, null);
+                          userName, provider, providerId);
                   if (userWithName.isEmpty()) {
                     log.info("no user with name found, returning empty");
                     return Optional.empty();
                   } else {
                     log.info("Found user by name, no provider info" + userWithName);
-                    return findByName(userWithName.get().getName());
+                    return userWithName;
                   }
                 })
             .orElseGet(
@@ -202,7 +201,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return !isNull(user.getIdentityProvider()) && !isNull(user.getProviderId());
   }
 
-  private Optional<User> findByProviderAndProviderId(IdProviderType provider, String providerId) {
+  public Optional<User> findByProviderAndProviderId(IdProviderType provider, String providerId) {
     return (Optional<User>)
         getRepository()
             .findOne(
@@ -212,6 +211,10 @@ public class UserService extends AbstractNamedService<User, UUID> {
                     .fetchUserAndGroupPermissions(true)
                     .fetchRefreshToken(true)
                     .buildByProviderNameAndId(provider, providerId));
+  }
+
+  public boolean existsByProviderId(String providerId) {
+    return userRepository.existsByProviderId(providerId);
   }
 
   @Override
@@ -470,8 +473,12 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
-    checkRequestValid(originalUser.getIdentityProvider().equals(r.getIdentityProvider()));
-    checkRequestValid(originalUser.getProviderId().equals(r.getProviderId()));
+    checkValidUser(
+        originalUser.getIdentityProvider().equals(r.getIdentityProvider()),
+        "Invalid identity provider, cannot update user.");
+    checkValidUser(
+        originalUser.getProviderId().equals(r.getProviderId()),
+        "Invalid providerId, cannot update user.");
   }
 
   private void checkUserUnique(IdProviderType provider, String providerId) {
