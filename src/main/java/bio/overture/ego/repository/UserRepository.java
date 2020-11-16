@@ -40,8 +40,5 @@ public interface UserRepository extends NamedRepository<User, UUID> {
 
   boolean existsByIdentityProviderAndProviderId(IdProviderType providerType, String providerId);
 
-  Optional<User> findFirstByNameAndIdentityProviderAndProviderId(
-      String name, IdProviderType provider, String id);
-
   boolean existsByProviderId(String providerId);
 }

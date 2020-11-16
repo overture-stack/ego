@@ -63,7 +63,6 @@ public class OAuth2UserInfoTokenServices
     val givenName = (String) map.getOrDefault("given_name", map.getOrDefault("first_name", ""));
     val familyName = (String) map.getOrDefault("family_name", map.getOrDefault("last_name", ""));
 
-    // TODO: correct error in getIdAccessor if provider not found
     val providerIdAccessor = getIdAccessor(provider);
     // call toString because Github returns an integer id
     val providerId = map.get(providerIdAccessor).toString();

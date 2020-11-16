@@ -171,16 +171,11 @@ public class UserService extends AbstractNamedService<User, UUID> {
         findByProviderAndProviderId(provider, providerId)
             .or(
                 () -> {
-                  val userWithName =
-                      userRepository.findFirstByNameAndIdentityProviderAndProviderId(
-                          userName, provider, providerId);
-                  if (userWithName.isEmpty()) {
-                    log.info("no user with name found, returning empty");
-                    return Optional.empty();
-                  } else {
-                    log.info("Found user by name, no provider info" + userWithName);
-                    return userWithName;
+                  if (!isNull(userName)) {
+                    return findByName(userName);
                   }
+                  log.info("No email provided");
+                  return Optional.empty();
                 })
             .orElseGet(
                 () -> {

@@ -55,6 +55,7 @@ import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
+import bio.overture.ego.token.IDToken;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -200,7 +201,6 @@ public class UserControllerTest extends AbstractControllerTest {
             .providerId(UUID.randomUUID().toString())
             .build();
 
-    // TODO: add in providerInfo field checks
     // Create the user
     val user = createUserPostRequestAnd(r).extractOneEntity(User.class);
     assertEquals(user.getEmail(), r.getEmail());
@@ -209,6 +209,8 @@ public class UserControllerTest extends AbstractControllerTest {
     assertEquals(user.getPreferredLanguage(), r.getPreferredLanguage());
     assertEquals(user.getType(), r.getType());
     assertEquals(user.getStatus(), r.getStatus());
+    assertEquals(user.getIdentityProvider(), r.getIdentityProvider());
+    assertEquals(user.getProviderId(), r.getProviderId());
 
     // Assert the user can be read and matches the request data
     val r1 = getUserEntityGetRequestAnd(user).extractOneEntity(User.class);
@@ -218,6 +220,8 @@ public class UserControllerTest extends AbstractControllerTest {
     assertEquals(r1.getPreferredLanguage(), r.getPreferredLanguage());
     assertEquals(r1.getType(), r.getType());
     assertEquals(r1.getStatus(), r.getStatus());
+    assertEquals(r1.getIdentityProvider(), r.getIdentityProvider());
+    assertEquals(r1.getProviderId(), r.getProviderId());
 
     assertEquals(r1.getEmail(), user.getEmail());
     assertEquals(r1.getFirstName(), user.getFirstName());
@@ -225,6 +229,8 @@ public class UserControllerTest extends AbstractControllerTest {
     assertEquals(r1.getPreferredLanguage(), user.getPreferredLanguage());
     assertEquals(r1.getType(), user.getType());
     assertEquals(r1.getStatus(), user.getStatus());
+    assertEquals(r1.getIdentityProvider(), user.getIdentityProvider());
+    assertEquals(r1.getProviderId(), user.getProviderId());
   }
 
   @Test
@@ -355,9 +361,25 @@ public class UserControllerTest extends AbstractControllerTest {
             .lastName("st")
             .preferredLanguage(ENGLISH)
             .status(APPROVED)
+            .providerId(generateNonExistentProviderId(userService))
             .build();
     val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(IDENTITYPROVIDER, invalidProvider);
     initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
+  }
+
+  @Test
+  public void createUser_MissingProviderInfo_BadRequest() {
+    val templateR1 =
+        CreateUserRequest.builder()
+            .email(generateNonExistentName(userService) + "@rst.com")
+            .type(USER)
+            .firstName("r")
+            .lastName("st")
+            .preferredLanguage(ENGLISH)
+            .status(APPROVED)
+            .build();
+
+    initStringRequest().endpoint("/users").body(templateR1).postAnd().assertBadRequest();
   }
 
   @Test
@@ -439,6 +461,75 @@ public class UserControllerTest extends AbstractControllerTest {
             .build();
 
     initStringRequest().endpoint("/users/%s", user.getId()).body(r1).putAnd().assertOk();
+  }
+
+  @Test
+  public void getUserByToken_ProviderInfoExists_Success() {
+    // create a user with providerInfo
+    val data = generateUniqueTestUserData();
+    val user = data.getUsers().get(0);
+
+    val idToken = new IDToken();
+    idToken.setFamily_name(user.getLastName());
+    idToken.setGiven_name(user.getFirstName());
+    idToken.setEmail(user.getEmail());
+    idToken.setIdentity_provider(user.getIdentityProvider());
+    idToken.setProvider_id(user.getProviderId());
+
+    val userFromToken = userService.getUserByToken(idToken);
+
+    assertEquals(user.getId(), userFromToken.getId());
+    assertEquals(user.getIdentityProvider(), userFromToken.getIdentityProvider());
+    assertEquals(user.getProviderId(), userFromToken.getProviderId());
+    assertEquals(user.getStatus(), userFromToken.getStatus());
+    assertEquals(user.getEmail(), userFromToken.getEmail());
+    assertEquals(user.getType(), userFromToken.getType());
+    assertEquals(user.getLastName(), userFromToken.getLastName());
+    assertEquals(user.getFirstName(), userFromToken.getFirstName());
+  }
+
+  // TODO: how to test this with identityProvider and providerId constraints?
+  @Ignore
+  @Test
+  public void getUserByToken_NonExistingProviderInfoExistingEmail_UpdateUserSuccess() {
+    // create a user with an email but no provider info
+    // see if you can retrieve them with the email
+  }
+
+  @Test
+  public void getUserByToken_NonExistingProviderInfoNonExistingEmail_CreateNewUserSuccess() {
+    val userName = entityGenerator.generateNonExistentUserName();
+    val firstName = userName.split(" ")[0];
+    val lastName = userName.split(" ")[1];
+    val email = String.format("%s@example.com", userName);
+    val provider = FACEBOOK;
+    val providerId = generateNonExistentProviderId(userService);
+
+    val idToken = new IDToken();
+    idToken.setFamily_name(lastName);
+    idToken.setGiven_name(firstName);
+    idToken.setEmail(email);
+    idToken.setIdentity_provider(provider);
+    idToken.setProvider_id(providerId);
+
+    // Assert not found by providerInfo
+    assertTrue(userService.findByProviderAndProviderId(provider, providerId).isEmpty());
+    // Assert not found by email
+    assertTrue(userService.findByName(userName).isEmpty());
+
+    // create user from idToken
+    val userFromToken = userService.getUserByToken(idToken);
+
+    // assert user exists
+    assertEquals(userFromToken.getClass(), User.class);
+    initStringRequest().endpoint("users/%s", userFromToken.getId()).getAnd().assertOk();
+
+    // assert user properties match idToken properties
+    assertEquals(userFromToken.getFirstName(), idToken.getGiven_name());
+    assertEquals(userFromToken.getLastName(), idToken.getFamily_name());
+    assertEquals(userFromToken.getIdentityProvider(), idToken.getIdentity_provider());
+    assertEquals(userFromToken.getProviderId(), idToken.getProvider_id());
+    assertEquals(userFromToken.getEmail(), idToken.getEmail());
   }
 
   @Test
