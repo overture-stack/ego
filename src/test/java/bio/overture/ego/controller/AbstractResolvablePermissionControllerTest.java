@@ -27,9 +27,9 @@ public abstract class AbstractResolvablePermissionControllerTest<
     val group = getEntityGenerator().setupGroup(UUID.randomUUID().toString());
 
     // create policies
-    val readPolicy = getEntityGenerator().setupSinglePolicy("READ Policy");
-    val writePolicy = getEntityGenerator().setupSinglePolicy("WRITE Policy");
-    val denyPolicy = getEntityGenerator().setupSinglePolicy("DENY Policy");
+    val readPolicy = getEntityGenerator().setupSinglePolicy("READPolicy");
+    val writePolicy = getEntityGenerator().setupSinglePolicy("WRITEPolicy");
+    val denyPolicy = getEntityGenerator().setupSinglePolicy("DENYPolicy");
 
     // Add permissions to owner
     val r1 =
@@ -97,9 +97,9 @@ public abstract class AbstractResolvablePermissionControllerTest<
     val group3 = getEntityGenerator().setupGroup(UUID.randomUUID().toString());
 
     // create policies
-    val policy1 = getEntityGenerator().setupSinglePolicy("Policy 1");
-    val policy2 = getEntityGenerator().setupSinglePolicy("Policy 2");
-    val policy3 = getEntityGenerator().setupSinglePolicy("Policy 3");
+    val policy1 = getEntityGenerator().setupSinglePolicy("Policy1");
+    val policy2 = getEntityGenerator().setupSinglePolicy("Policy2");
+    val policy3 = getEntityGenerator().setupSinglePolicy("Policy3");
 
     val ownerId1 = owner1.getId().toString();
     val ownerId2 = owner2.getId().toString();

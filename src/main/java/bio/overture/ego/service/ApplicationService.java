@@ -21,7 +21,6 @@ import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
-import static bio.overture.ego.service.UserService.extractScopes;
 import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
 import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
 import static bio.overture.ego.utils.CollectionUtils.*;
@@ -60,7 +59,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 import org.springframework.security.oauth2.provider.ClientDetails;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
 import org.springframework.security.oauth2.provider.ClientRegistrationException;
@@ -245,7 +243,12 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   }
 
   public static Set<Scope> extractScopes(@NonNull Application application) {
-    return mapToSet(getResolvedPermissions(application), AbstractPermissionService::buildScope);
+    val resolvedPermissions = getResolvedPermissions(application);
+    val output = mapToSet(resolvedPermissions, AbstractPermissionService::buildScope);
+    if (output.isEmpty()) {
+      output.add(Scope.defaultScope());
+    }
+    return output;
   }
 
   @Override
@@ -260,16 +263,6 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
     }
 
     val approvedScopes = mapToSet(extractScopes(application), Scope::toString);
-
-    // Spring is processing exceptions thrown by classes of type ClientDetailService separately from
-    // ControllerAdvice.
-    // Since ControllerAdvice cannot handle this exception, we are throwing it here so that a 400
-    // error is returned.
-    // Without it, a 500 error is returned.
-    // Not worth developer time to understand spring's chaotic processing of this exception.
-    if (approvedScopes.isEmpty()) {
-      throw new InvalidScopeException("Application has no scopes, cannot generate access token.");
-    }
 
     // transform application to client details
     val clientDetails = new BaseClientDetails();

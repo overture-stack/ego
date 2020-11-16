@@ -23,6 +23,7 @@ import javax.persistence.NamedEntityGraph;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -57,6 +58,7 @@ public class Policy implements Identifiable<UUID> {
   private UUID id;
 
   @NotNull
+  @Pattern(regexp = "^[A-Za-z0-9_-]+$")
   @Column(name = SqlFields.NAME, unique = true, nullable = false)
   private String name;
 

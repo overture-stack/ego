@@ -5,7 +5,7 @@
 
     <groupId>bio.overture</groupId>
     <artifactId>ego</artifactId>
-    <version>3.3.0</version>
+    <version>3.4.0</version>
 
     <name>ego</name>
     <description>OAuth 2.0 Authorization service that supports multiple OpenID Connect Providers</description>
@@ -60,7 +60,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.8</version>
+            <version>1.18.16</version>
             <optional>true</optional>
         </dependency>
 

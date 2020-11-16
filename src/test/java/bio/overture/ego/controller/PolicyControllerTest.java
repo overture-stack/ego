@@ -21,8 +21,7 @@ import static bio.overture.ego.controller.AbstractPermissionControllerTest.creat
 import static bio.overture.ego.model.enums.AccessLevel.READ;
 import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static org.junit.Assert.assertEquals;
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.*;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.PolicyRequest;
@@ -93,6 +92,17 @@ public class PolicyControllerTest extends AbstractControllerTest {
 
   @Test
   @SneakyThrows
+  public void addPolicy_invalidCharacter_badRequest() {
+    val policy = PolicyRequest.builder().name("AddPolicy!").build();
+
+    val response = initStringRequest().endpoint("/policies").body(policy).post();
+
+    val responseStatus = response.getStatusCode();
+    assertEquals(responseStatus, BAD_REQUEST);
+  }
+
+  @Test
+  @SneakyThrows
   public void addDuplicatePolicy_Conflict() {
     val policy1 = PolicyRequest.builder().name("PolicyUnique").build();
     val policy2 = PolicyRequest.builder().name("PolicyUnique").build();
@@ -122,7 +132,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
   }
 
   public void associatePermissionsWithEntity(NameableEntity entity, String entityName) {
-    val policyName = String.format("Add %s Permission", entityName);
+    val policyName = String.format("AddPermission_%s", entityName);
     val policyId = entityGenerator.setupSinglePolicy(policyName).getId().toString();
     val entityId = entity.getId().toString();
 
@@ -152,7 +162,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
   }
 
   public void disassociatePermissionsFromEntity(NameableEntity entity, String entityName) {
-    val policyName = String.format("Delete %s Permission", entityName);
+    val policyName = String.format("DeletePermission_%s", entityName);
     val policyId = entityGenerator.setupSinglePolicy(policyName).getId().toString();
     val entityId = entity.getId().toString();
 
@@ -189,7 +199,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
   @Test
   @SneakyThrows
   public void associatePermissionsWithGroup_ExistingEntitiesButNonExistingRelationship_Success() {
-    val testGroup = entityGenerator.setupGroup("GroupPolicyAdd");
+    val testGroup = entityGenerator.setupGroup("GroupPolicy Add");
     associatePermissionsWithEntity(testGroup, "group");
   }
 
@@ -217,14 +227,14 @@ public class PolicyControllerTest extends AbstractControllerTest {
   @Test
   @SneakyThrows
   public void associatePermissionsWithApplication_ExistingEntitiesButNoRelationship_Success() {
-    val testApp = entityGenerator.setupApplication("AppPolicy Add");
+    val testApp = entityGenerator.setupApplication("AppPolicyAdd");
     associatePermissionsWithEntity(testApp, "application");
   }
 
   @Test
   @SneakyThrows
   public void disassociatePermissionsFromApplication_ExistingEntitiesAndRelationships_Success() {
-    val testApp = entityGenerator.setupApplication("AppPolicy Delete");
+    val testApp = entityGenerator.setupApplication("AppPolicyDelete");
     disassociatePermissionsFromEntity(testApp, "application");
   }
 }

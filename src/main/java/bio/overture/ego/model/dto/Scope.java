@@ -120,4 +120,13 @@ public class Scope {
   public static Scope createScope(@NonNull Policy policy, @NonNull AccessLevel accessLevel) {
     return new Scope(policy, accessLevel);
   }
+
+  /**
+   * Provides a default scope with value *.DENY . This can be used when a JWT has received no scopes
+   * and a default value is required. This scope would indicate that the JWT provides no
+   * authorization.
+   */
+  public static Scope defaultScope() {
+    return createScope(Policy.builder().name("*").build(), AccessLevel.DENY);
+  }
 }

@@ -111,20 +111,17 @@ spec:
             when {
                   branch "develop"
             }
-            steps {
-                container('helm') {
-                    withCredentials([file(credentialsId:'4ed1e45c-b552-466b-8f86-729402993e3b', variable: 'KUBECONFIG')]) {
-                        sh 'env'
-                        sh 'helm init --client-only'
-                        sh "helm ls --kubeconfig $KUBECONFIG"
-                        sh "helm repo add overture https://overture-stack.github.io/charts-server/"
-                        sh """
-                            helm upgrade --kubeconfig $KUBECONFIG --install --namespace=overture-qa ego-overture-qa \\
-                            overture/ego --reuse-values --set-string image.tag=${commit}
-                           """
-                    }
-                }
-            }
+			steps {
+				build(job: "/Overture.bio/provision/helm", parameters: [
+						[$class: 'StringParameterValue', name: 'OVERTURE_ENV', value: 'qa' ],
+						[$class: 'StringParameterValue', name: 'OVERTURE_CHART_NAME', value: 'ego'],
+						[$class: 'StringParameterValue', name: 'OVERTURE_RELEASE_NAME', value: 'ego'],
+						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_CHART_VERSION', value: ''], // use latest
+						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REPO_URL', value: "https://overture-stack.github.io/charts-server/"],
+						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REUSE_VALUES', value: "false" ],
+						[$class: 'StringParameterValue', name: 'OVERTURE_ARGS_LINE', value: "--set-string image.tag=${commit}" ]
+				])
+			}
         }
 
         stage('Deploy to Overture Staging') {
@@ -132,18 +129,15 @@ spec:
                   branch "master"
             }
             steps {
-                container('helm') {
-                    withCredentials([file(credentialsId:'4ed1e45c-b552-466b-8f86-729402993e3b', variable: 'KUBECONFIG')]) {
-                        sh 'env'
-                        sh 'helm init --client-only'
-                        sh "helm ls --kubeconfig $KUBECONFIG"
-                        sh "helm repo add overture https://overture-stack.github.io/charts-server/"
-                        sh """
-                            helm upgrade --kubeconfig $KUBECONFIG --install --namespace=overture-staging ego-overture-staging \\
-                            overture/ego --reuse-values --set-string image.tag=${version}
-                           """
-                    }
-                }
+				build(job: "/Overture.bio/provision/helm", parameters: [
+						[$class: 'StringParameterValue', name: 'OVERTURE_ENV', value: 'staging' ],
+						[$class: 'StringParameterValue', name: 'OVERTURE_CHART_NAME', value: 'ego'],
+						[$class: 'StringParameterValue', name: 'OVERTURE_RELEASE_NAME', value: 'ego'],
+						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_CHART_VERSION', value: ''], // use latest
+						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REPO_URL', value: "https://overture-stack.github.io/charts-server/"],
+						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REUSE_VALUES', value: "false" ],
+						[$class: 'StringParameterValue', name: 'OVERTURE_ARGS_LINE', value: "--set-string image.tag=${version}" ]
+				])
             }
         }
 

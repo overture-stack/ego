@@ -48,4 +48,10 @@ public class OAuth2ClientConfig {
   public OAuth2ClientResources linkedin() {
     return new OAuth2ClientResources();
   }
+
+  @Bean
+  @ConfigurationProperties("orcid")
+  public OAuth2ClientResources orcid() {
+    return new OAuth2ClientResources();
+  }
 }

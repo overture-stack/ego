@@ -19,7 +19,6 @@ package bio.overture.ego.token;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
-import java.util.List;
 import java.util.UUID;
 import lombok.*;
 
@@ -36,8 +35,6 @@ public abstract class TokenClaims {
   @Getter protected String sub;
 
   @NonNull protected String iss;
-
-  @Getter protected List<String> aud;
 
   /*
    Defaults
