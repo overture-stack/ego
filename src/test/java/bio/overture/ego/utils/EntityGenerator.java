@@ -46,6 +46,8 @@ public class EntityGenerator {
   private static final String DICTIONARY =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-abcdefghijklmnopqrstuvwxyz";
 
+  private static final IdProviderType DEFAULT_PROVIDER_TYPE = GOOGLE;
+
   @Autowired private TokenService tokenService;
 
   @Autowired private ApplicationService applicationService;
@@ -120,11 +122,11 @@ public class EntityGenerator {
   }
 
   public User setupUser(String name) {
-    return setupUser(name, ADMIN, UUID.randomUUID().toString(), GOOGLE);
+    return setupUser(name, ADMIN, UUID.randomUUID().toString(), DEFAULT_PROVIDER_TYPE);
   }
 
   public User setupUser(String name, UserType type) {
-    return setupUser(name, type, UUID.randomUUID().toString(), GOOGLE);
+    return setupUser(name, type, UUID.randomUUID().toString(), DEFAULT_PROVIDER_TYPE);
   }
 
   public User setupUser(String name, UserType type, String providerId, IdProviderType provider) {
@@ -141,12 +143,14 @@ public class EntityGenerator {
 
   public List<User> setupUsers(String... users) {
     return mapToList(
-        listOf(users), user -> setupUser(user, ADMIN, UUID.randomUUID().toString(), GOOGLE));
+        listOf(users),
+        user -> setupUser(user, ADMIN, UUID.randomUUID().toString(), DEFAULT_PROVIDER_TYPE));
   }
 
   public List<User> setupPublicUsers(String... users) {
     return mapToList(
-        listOf(users), user -> setupUser(user, USER, UUID.randomUUID().toString(), GOOGLE));
+        listOf(users),
+        user -> setupUser(user, USER, UUID.randomUUID().toString(), DEFAULT_PROVIDER_TYPE));
   }
 
   public void setupTestUsers() {
@@ -284,7 +288,7 @@ public class EntityGenerator {
             .preferredLanguage(randomLanguageType())
             .firstName(randomStringNoSpaces(5))
             .lastName(randomStringNoSpaces(6))
-            .identityProvider(GOOGLE)
+            .identityProvider(DEFAULT_PROVIDER_TYPE)
             .providerId(UUID.randomUUID().toString())
             .build();
     return userService.create(request);

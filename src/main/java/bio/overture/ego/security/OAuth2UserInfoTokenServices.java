@@ -1,13 +1,16 @@
 package bio.overture.ego.security;
 
 import static bio.overture.ego.model.enums.IdProviderType.getIdAccessor;
+import static java.util.Objects.isNull;
 
 import bio.overture.ego.model.enums.IdProviderType;
+import bio.overture.ego.model.exceptions.InternalServerException;
 import bio.overture.ego.token.IDToken;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.AuthoritiesExtractor;
@@ -41,10 +44,10 @@ public class OAuth2UserInfoTokenServices
   private AuthoritiesExtractor authoritiesExtractor = new FixedAuthoritiesExtractor();
 
   public OAuth2UserInfoTokenServices(
-      String userInfoEndpointUrl,
-      String clientId,
-      OAuth2RestOperations restTemplate,
-      IdProviderType provider) {
+      @NonNull String userInfoEndpointUrl,
+      @NonNull String clientId,
+      @NonNull OAuth2RestOperations restTemplate,
+      @NonNull IdProviderType provider) {
     this.userInfoEndpointUrl = userInfoEndpointUrl;
     this.clientId = clientId;
     this.restTemplate = restTemplate;
@@ -64,6 +67,10 @@ public class OAuth2UserInfoTokenServices
     val familyName = (String) map.getOrDefault("family_name", map.getOrDefault("last_name", ""));
 
     val providerIdAccessor = getIdAccessor(provider);
+
+    if (isNull(map.get(providerIdAccessor))) {
+      throw new InternalServerException("Invalid providerId accessor.");
+    }
     // call toString because Github returns an integer id
     val providerId = map.get(providerIdAccessor).toString();
 

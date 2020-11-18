@@ -37,11 +37,11 @@ public class LastloginTest {
   public void testLastloginUpdate() {
 
     val idToken = new IDToken();
-    idToken.setFamily_name("foo");
-    idToken.setGiven_name("bar");
+    idToken.setFamilyName("foo");
+    idToken.setGivenName("bar");
     idToken.setEmail("foobar@domain.com");
-    idToken.setIdentity_provider(GOOGLE);
-    idToken.setProvider_id("12345");
+    idToken.setProviderType(GOOGLE);
+    idToken.setProviderId("12345");
     User user = entityGenerator.setupUser("foo bar", ADMIN, "12345", GOOGLE);
 
     assertNull(

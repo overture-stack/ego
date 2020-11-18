@@ -153,18 +153,18 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return create(
         CreateUserRequest.builder()
             .email(idToken.getEmail())
-            .firstName(idToken.getGiven_name())
-            .lastName(idToken.getFamily_name())
+            .firstName(idToken.getGivenName())
+            .lastName(idToken.getFamilyName())
             .status(userDefaultsConfig.getDefaultUserStatus())
             .type(userDefaultsConfig.getDefaultUserType())
-            .identityProvider(idToken.getIdentity_provider())
-            .providerId(idToken.getProvider_id())
+            .identityProvider(idToken.getProviderType())
+            .providerId(idToken.getProviderId())
             .build());
   }
 
   public User getUserByToken(@NonNull IDToken idToken) {
-    val provider = idToken.getIdentity_provider();
-    val providerId = idToken.getProvider_id();
+    val provider = idToken.getProviderType();
+    val providerId = idToken.getProviderId();
     val userName = idToken.getEmail();
 
     User user =
@@ -185,8 +185,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
     if (!hasValidProvider(user)) {
       log.info("Existing user does not have valid provider info, setting.");
-      user.setIdentityProvider(idToken.getIdentity_provider());
-      user.setProviderId(idToken.getProvider_id());
+      user.setIdentityProvider(idToken.getProviderType());
+      user.setProviderId(idToken.getProviderId());
     }
     user.setLastLogin(new Date());
     return user;
@@ -196,6 +196,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return !isNull(user.getIdentityProvider()) && !isNull(user.getProviderId());
   }
 
+  @SuppressWarnings("unchecked")
   public Optional<User> findByProviderAndProviderId(IdProviderType provider, String providerId) {
     return (Optional<User>)
         getRepository()
@@ -238,6 +239,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<User> listUsers(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     val spec = UserSpecification.filterBy(filters);
     return getRepository().findAll(spec, pageable);
@@ -480,11 +482,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
     checkUnique(
         !userRepository.existsByIdentityProviderAndProviderId(provider, providerId),
         "A user with the same provider info already exists");
-  }
-
-  private void checkEmailUnique(String email) {
-    checkUnique(
-        !userRepository.existsByEmailIgnoreCase(email), "A user with same email already exists");
   }
 
   @SuppressWarnings("unchecked")

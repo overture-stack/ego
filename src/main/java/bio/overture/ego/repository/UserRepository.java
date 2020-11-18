@@ -27,8 +27,6 @@ public interface UserRepository extends NamedRepository<User, UUID> {
 
   Optional<User> getUserByNameIgnoreCase(String name);
 
-  boolean existsByEmailIgnoreCase(String email);
-
   Set<User> findAllByIdIn(Collection<UUID> userIds);
 
   /** Refer to NamedRepository.findByName Deprecation note */

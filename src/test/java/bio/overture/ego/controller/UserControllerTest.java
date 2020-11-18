@@ -272,7 +272,7 @@ public class UserControllerTest extends AbstractControllerTest {
             .preferredLanguage(randomEnum(LanguageType.class))
             .firstName(randomStringNoSpaces(10))
             .lastName(randomStringNoSpaces(10))
-            .identityProvider(GITHUB)
+            .identityProvider(randomEnum(IdProviderType.class))
             .providerId(nonExistentProviderId)
             .build();
 
@@ -470,11 +470,11 @@ public class UserControllerTest extends AbstractControllerTest {
     val user = data.getUsers().get(0);
 
     val idToken = new IDToken();
-    idToken.setFamily_name(user.getLastName());
-    idToken.setGiven_name(user.getFirstName());
+    idToken.setFamilyName(user.getLastName());
+    idToken.setGivenName(user.getFirstName());
     idToken.setEmail(user.getEmail());
-    idToken.setIdentity_provider(user.getIdentityProvider());
-    idToken.setProvider_id(user.getProviderId());
+    idToken.setProviderType(user.getIdentityProvider());
+    idToken.setProviderId(user.getProviderId());
 
     val userFromToken = userService.getUserByToken(idToken);
 
@@ -506,11 +506,11 @@ public class UserControllerTest extends AbstractControllerTest {
     val providerId = generateNonExistentProviderId(userService);
 
     val idToken = new IDToken();
-    idToken.setFamily_name(lastName);
-    idToken.setGiven_name(firstName);
+    idToken.setFamilyName(lastName);
+    idToken.setGivenName(firstName);
     idToken.setEmail(email);
-    idToken.setIdentity_provider(provider);
-    idToken.setProvider_id(providerId);
+    idToken.setProviderType(provider);
+    idToken.setProviderId(providerId);
 
     // Assert not found by providerInfo
     assertTrue(userService.findByProviderAndProviderId(provider, providerId).isEmpty());
@@ -525,10 +525,10 @@ public class UserControllerTest extends AbstractControllerTest {
     initStringRequest().endpoint("users/%s", userFromToken.getId()).getAnd().assertOk();
 
     // assert user properties match idToken properties
-    assertEquals(userFromToken.getFirstName(), idToken.getGiven_name());
-    assertEquals(userFromToken.getLastName(), idToken.getFamily_name());
-    assertEquals(userFromToken.getIdentityProvider(), idToken.getIdentity_provider());
-    assertEquals(userFromToken.getProviderId(), idToken.getProvider_id());
+    assertEquals(userFromToken.getFirstName(), idToken.getGivenName());
+    assertEquals(userFromToken.getLastName(), idToken.getFamilyName());
+    assertEquals(userFromToken.getIdentityProvider(), idToken.getProviderType());
+    assertEquals(userFromToken.getProviderId(), idToken.getProviderId());
     assertEquals(userFromToken.getEmail(), idToken.getEmail());
   }
 

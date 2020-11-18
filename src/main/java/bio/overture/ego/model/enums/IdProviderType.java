@@ -1,5 +1,7 @@
 package bio.overture.ego.model.enums;
 
+import static java.lang.String.format;
+
 import bio.overture.ego.model.exceptions.ForbiddenException;
 import lombok.RequiredArgsConstructor;
 
@@ -28,8 +30,7 @@ public enum IdProviderType {
       return "id";
     }
 
-    throw new ForbiddenException(
-        String.format("Provider '%s' is not a valid providerType", provider));
+    throw new ForbiddenException(format("Provider '%s' is not a valid providerType", provider));
   }
 
   @Override
