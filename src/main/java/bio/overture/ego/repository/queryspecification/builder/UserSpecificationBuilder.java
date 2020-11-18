@@ -4,7 +4,7 @@ import static bio.overture.ego.model.enums.JavaFields.*;
 import static javax.persistence.criteria.JoinType.LEFT;
 
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.IdProviderType;
+import bio.overture.ego.model.enums.ProviderType;
 import java.util.UUID;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
@@ -43,17 +43,17 @@ public class UserSpecificationBuilder extends AbstractSpecificationBuilder<User,
   }
 
   public Specification<User> buildByProviderNameAndId(
-      @NonNull IdProviderType provider, @NonNull String providerId) {
+      @NonNull ProviderType providerType, @NonNull String providerId) {
     return (fromUser, query, builder) -> {
       val root = setupFetchStrategy(fromUser);
-      return equalsProviderNameAndIdPredicate(root, builder, provider, providerId);
+      return equalsProviderNameAndIdPredicate(root, builder, providerType, providerId);
     };
   }
 
   private Predicate equalsProviderNameAndIdPredicate(
-      Root<User> root, CriteriaBuilder builder, IdProviderType provider, String providerId) {
+      Root<User> root, CriteriaBuilder builder, ProviderType providerType, String providerId) {
     return builder.and(
         builder.equal(root.get(PROVIDERID), providerId),
-        builder.equal(root.get(IDENTITYPROVIDER), provider));
+        builder.equal(root.get(PROVIDERTYPE), providerType));
   }
 }

@@ -58,7 +58,7 @@ import org.hibernate.annotations.TypeDef;
 @Table(
     name = Tables.EGOUSER,
     uniqueConstraints =
-        @UniqueConstraint(columnNames = {SqlFields.IDENTITYPROVIDER, SqlFields.PROVIDERID}))
+        @UniqueConstraint(columnNames = {SqlFields.PROVIDERTYPE, SqlFields.PROVIDERID}))
 @Data
 @ToString(exclude = {"userGroups", "userApplications", "userPermissions", "tokens", "refreshToken"})
 @JsonPropertyOrder({
@@ -75,7 +75,7 @@ import org.hibernate.annotations.TypeDef;
   JavaFields.CREATEDAT,
   JavaFields.LASTLOGIN,
   JavaFields.PREFERREDLANGUAGE,
-  JavaFields.IDENTITYPROVIDER,
+  JavaFields.PROVIDERTYPE,
   JavaFields.PROVIDERID
 })
 @JsonInclude()
@@ -147,9 +147,9 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   @NotNull
   @Type(type = EGO_ENUM)
   @Enumerated(EnumType.STRING)
-  @Column(name = SqlFields.IDENTITYPROVIDER, nullable = false)
+  @Column(name = SqlFields.PROVIDERTYPE, nullable = false)
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  private IdProviderType identityProvider;
+  private ProviderType providerType;
 
   @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})

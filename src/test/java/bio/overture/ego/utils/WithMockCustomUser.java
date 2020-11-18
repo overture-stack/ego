@@ -1,9 +1,9 @@
 package bio.overture.ego.utils;
 
-import static bio.overture.ego.model.enums.IdProviderType.GOOGLE;
+import static bio.overture.ego.model.enums.ProviderType.GOOGLE;
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 
-import bio.overture.ego.model.enums.IdProviderType;
+import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.enums.UserType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -19,7 +19,7 @@ public @interface WithMockCustomUser {
 
   UserType type() default ADMIN;
 
-  IdProviderType identityProvider() default GOOGLE;
+  ProviderType providerType() default GOOGLE;
 
   String providerId() default "0123";
 }

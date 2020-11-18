@@ -16,8 +16,8 @@
 
 package bio.overture.ego.model.dto;
 
-import bio.overture.ego.model.enums.IdProviderType;
 import bio.overture.ego.model.enums.LanguageType;
+import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
 import javax.validation.constraints.NotNull;
@@ -44,7 +44,7 @@ public class CreateUserRequest {
 
   private LanguageType preferredLanguage;
 
-  @NotNull IdProviderType identityProvider;
+  @NotNull ProviderType providerType;
 
   @NotNull String providerId;
 }

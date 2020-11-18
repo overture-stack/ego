@@ -1,6 +1,6 @@
 package bio.overture.ego.token;
 
-import static bio.overture.ego.model.enums.IdProviderType.GOOGLE;
+import static bio.overture.ego.model.enums.ProviderType.GOOGLE;
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;

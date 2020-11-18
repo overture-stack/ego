@@ -6,7 +6,7 @@ import bio.overture.ego.model.exceptions.ForbiddenException;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public enum IdProviderType {
+public enum ProviderType {
   GOOGLE,
   FACEBOOK,
   LINKEDIN,
@@ -14,7 +14,7 @@ public enum IdProviderType {
   ORCID;
 
   // TODO: verify these are the correct accessor keys for each provider
-  public static String getIdAccessor(IdProviderType provider) {
+  public static String getIdAccessor(ProviderType provider) {
     if (provider.equals(GOOGLE) || provider.equals(ORCID)) {
       return "sub";
     }

@@ -1,6 +1,6 @@
 package bio.overture.ego.grpc.service;
 
-import static bio.overture.ego.model.enums.IdProviderType.GOOGLE;
+import static bio.overture.ego.model.enums.ProviderType.GOOGLE;
 import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static org.junit.Assert.*;
@@ -105,7 +105,7 @@ public class UserServiceGrpcAuthTest {
                   .lastName("")
                   .firstName("")
                   .type(UserType.USER)
-                  .identityProvider(GOOGLE)
+                  .providerType(GOOGLE)
                   .providerId(UUID.randomUUID().toString())
                   .build());
       userAuthMeta.put(JWT_KEY, tokenService.generateUserToken(testUser));
@@ -118,7 +118,7 @@ public class UserServiceGrpcAuthTest {
                   .lastName("")
                   .email("approvedAdminGrpc@example.com")
                   .type(UserType.ADMIN)
-                  .identityProvider(GOOGLE)
+                  .providerType(GOOGLE)
                   .providerId(UUID.randomUUID().toString())
                   .build());
       userAdminAuthMeta.put(JWT_KEY, tokenService.generateUserToken(testAdmin));

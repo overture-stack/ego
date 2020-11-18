@@ -1,9 +1,9 @@
 package bio.overture.ego.security;
 
-import static bio.overture.ego.model.enums.IdProviderType.getIdAccessor;
+import static bio.overture.ego.model.enums.ProviderType.getIdAccessor;
 import static java.util.Objects.isNull;
 
-import bio.overture.ego.model.enums.IdProviderType;
+import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.exceptions.InternalServerException;
 import bio.overture.ego.token.IDToken;
 import java.util.Collections;
@@ -39,7 +39,7 @@ public class OAuth2UserInfoTokenServices
   private final String clientId;
   private final OAuth2RestOperations restTemplate;
 
-  private final IdProviderType provider;
+  private final ProviderType providerType;
 
   private AuthoritiesExtractor authoritiesExtractor = new FixedAuthoritiesExtractor();
 
@@ -47,11 +47,11 @@ public class OAuth2UserInfoTokenServices
       @NonNull String userInfoEndpointUrl,
       @NonNull String clientId,
       @NonNull OAuth2RestOperations restTemplate,
-      @NonNull IdProviderType provider) {
+      @NonNull ProviderType providerType) {
     this.userInfoEndpointUrl = userInfoEndpointUrl;
     this.clientId = clientId;
     this.restTemplate = restTemplate;
-    this.provider = provider;
+    this.providerType = providerType;
   }
 
   public IDToken extractPrincipal(Map<String, Object> map) {
@@ -66,7 +66,7 @@ public class OAuth2UserInfoTokenServices
     val givenName = (String) map.getOrDefault("given_name", map.getOrDefault("first_name", ""));
     val familyName = (String) map.getOrDefault("family_name", map.getOrDefault("last_name", ""));
 
-    val providerIdAccessor = getIdAccessor(provider);
+    val providerIdAccessor = getIdAccessor(providerType);
 
     if (isNull(map.get(providerIdAccessor))) {
       throw new InternalServerException("Invalid providerId accessor.");
@@ -74,7 +74,7 @@ public class OAuth2UserInfoTokenServices
     // call toString because Github returns an integer id
     val providerId = map.get(providerIdAccessor).toString();
 
-    return new IDToken(email, givenName, familyName, provider, providerId);
+    return new IDToken(email, givenName, familyName, providerType, providerId);
   }
 
   @Override

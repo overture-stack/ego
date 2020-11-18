@@ -1,6 +1,6 @@
 package bio.overture.ego.security;
 
-import static bio.overture.ego.model.enums.IdProviderType.*;
+import static bio.overture.ego.model.enums.ProviderType.*;
 
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.OrcidService;

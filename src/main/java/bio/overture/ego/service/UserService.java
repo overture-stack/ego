@@ -39,7 +39,7 @@ import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.*;
-import bio.overture.ego.model.enums.IdProviderType;
+import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
@@ -157,18 +157,18 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .lastName(idToken.getFamilyName())
             .status(userDefaultsConfig.getDefaultUserStatus())
             .type(userDefaultsConfig.getDefaultUserType())
-            .identityProvider(idToken.getProviderType())
+            .providerType(idToken.getProviderType())
             .providerId(idToken.getProviderId())
             .build());
   }
 
   public User getUserByToken(@NonNull IDToken idToken) {
-    val provider = idToken.getProviderType();
+    val providerType = idToken.getProviderType();
     val providerId = idToken.getProviderId();
     val userName = idToken.getEmail();
 
     User user =
-        findByProviderAndProviderId(provider, providerId)
+        findByProviderTypeAndProviderId(providerType, providerId)
             .or(
                 () -> {
                   if (!isNull(userName)) {
@@ -185,7 +185,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
     if (!hasValidProvider(user)) {
       log.info("Existing user does not have valid provider info, setting.");
-      user.setIdentityProvider(idToken.getProviderType());
+      user.setProviderType(idToken.getProviderType());
       user.setProviderId(idToken.getProviderId());
     }
     user.setLastLogin(new Date());
@@ -193,11 +193,12 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   private boolean hasValidProvider(User user) {
-    return !isNull(user.getIdentityProvider()) && !isNull(user.getProviderId());
+    return !isNull(user.getProviderType()) && !isNull(user.getProviderId());
   }
 
   @SuppressWarnings("unchecked")
-  public Optional<User> findByProviderAndProviderId(IdProviderType provider, String providerId) {
+  public Optional<User> findByProviderTypeAndProviderId(
+      ProviderType providerType, String providerId) {
     return (Optional<User>)
         getRepository()
             .findOne(
@@ -206,7 +207,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
                     .fetchUserGroups(true)
                     .fetchUserAndGroupPermissions(true)
                     .fetchRefreshToken(true)
-                    .buildByProviderNameAndId(provider, providerId));
+                    .buildByProviderNameAndId(providerType, providerId));
   }
 
   public boolean existsByProviderId(String providerId) {
@@ -466,21 +467,21 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   private void validateCreateRequest(CreateUserRequest r) {
     checkRequestValid(r);
-    checkUserUnique(r.getIdentityProvider(), r.getProviderId());
+    checkUserUnique(r.getProviderType(), r.getProviderId());
   }
 
   private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
     checkValidUser(
-        originalUser.getIdentityProvider().equals(r.getIdentityProvider()),
-        "Invalid identity provider, cannot update user.");
+        originalUser.getProviderType().equals(r.getProviderType()),
+        "Invalid providerType, cannot update user.");
     checkValidUser(
         originalUser.getProviderId().equals(r.getProviderId()),
         "Invalid providerId, cannot update user.");
   }
 
-  private void checkUserUnique(IdProviderType provider, String providerId) {
+  private void checkUserUnique(ProviderType providerType, String providerId) {
     checkUnique(
-        !userRepository.existsByIdentityProviderAndProviderId(provider, providerId),
+        !userRepository.existsByProviderTypeAndProviderId(providerType, providerId),
         "A user with the same provider info already exists");
   }
 

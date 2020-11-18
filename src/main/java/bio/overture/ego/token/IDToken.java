@@ -16,7 +16,7 @@
 
 package bio.overture.ego.token;
 
-import bio.overture.ego.model.enums.IdProviderType;
+import bio.overture.ego.model.enums.ProviderType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
@@ -38,7 +38,7 @@ public class IDToken {
 
   @JsonProperty("identity_provider")
   @NonNull
-  IdProviderType providerType;
+  ProviderType providerType;
 
   @JsonProperty("provider_id")
   @NonNull

@@ -17,7 +17,7 @@
 package bio.overture.ego.repository;
 
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.IdProviderType;
+import bio.overture.ego.model.enums.ProviderType;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -36,7 +36,7 @@ public interface UserRepository extends NamedRepository<User, UUID> {
     return getUserByNameIgnoreCase(name);
   }
 
-  boolean existsByIdentityProviderAndProviderId(IdProviderType providerType, String providerId);
+  boolean existsByProviderTypeAndProviderId(ProviderType providerType, String providerId);
 
   boolean existsByProviderId(String providerId);
 }

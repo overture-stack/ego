@@ -19,9 +19,9 @@ package bio.overture.ego.controller;
 
 import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
 import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
-import static bio.overture.ego.model.enums.IdProviderType.*;
 import static bio.overture.ego.model.enums.JavaFields.*;
 import static bio.overture.ego.model.enums.LanguageType.*;
+import static bio.overture.ego.model.enums.ProviderType.*;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.DISABLED;
 import static bio.overture.ego.model.enums.UserType.USER;
@@ -47,8 +47,8 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.IdProviderType;
 import bio.overture.ego.model.enums.LanguageType;
+import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.service.ApplicationService;
@@ -197,7 +197,7 @@ public class UserControllerTest extends AbstractControllerTest {
             .preferredLanguage(randomEnum(LanguageType.class))
             .firstName(randomStringNoSpaces(10))
             .lastName(randomStringNoSpaces(10))
-            .identityProvider(randomEnum(IdProviderType.class))
+            .providerType(randomEnum(ProviderType.class))
             .providerId(UUID.randomUUID().toString())
             .build();
 
@@ -209,7 +209,7 @@ public class UserControllerTest extends AbstractControllerTest {
     assertEquals(user.getPreferredLanguage(), r.getPreferredLanguage());
     assertEquals(user.getType(), r.getType());
     assertEquals(user.getStatus(), r.getStatus());
-    assertEquals(user.getIdentityProvider(), r.getIdentityProvider());
+    assertEquals(user.getProviderType(), r.getProviderType());
     assertEquals(user.getProviderId(), r.getProviderId());
 
     // Assert the user can be read and matches the request data
@@ -220,7 +220,7 @@ public class UserControllerTest extends AbstractControllerTest {
     assertEquals(r1.getPreferredLanguage(), r.getPreferredLanguage());
     assertEquals(r1.getType(), r.getType());
     assertEquals(r1.getStatus(), r.getStatus());
-    assertEquals(r1.getIdentityProvider(), r.getIdentityProvider());
+    assertEquals(r1.getProviderType(), r.getProviderType());
     assertEquals(r1.getProviderId(), r.getProviderId());
 
     assertEquals(r1.getEmail(), user.getEmail());
@@ -229,7 +229,7 @@ public class UserControllerTest extends AbstractControllerTest {
     assertEquals(r1.getPreferredLanguage(), user.getPreferredLanguage());
     assertEquals(r1.getType(), user.getType());
     assertEquals(r1.getStatus(), user.getStatus());
-    assertEquals(r1.getIdentityProvider(), user.getIdentityProvider());
+    assertEquals(r1.getProviderType(), user.getProviderType());
     assertEquals(r1.getProviderId(), user.getProviderId());
   }
 
@@ -251,7 +251,7 @@ public class UserControllerTest extends AbstractControllerTest {
             .preferredLanguage(randomEnum(LanguageType.class))
             .firstName(randomStringNoSpaces(10))
             .lastName(randomStringNoSpaces(10))
-            .identityProvider(GITHUB)
+            .providerType(GITHUB)
             .providerId("github123")
             .build();
 
@@ -272,7 +272,7 @@ public class UserControllerTest extends AbstractControllerTest {
             .preferredLanguage(randomEnum(LanguageType.class))
             .firstName(randomStringNoSpaces(10))
             .lastName(randomStringNoSpaces(10))
-            .identityProvider(randomEnum(IdProviderType.class))
+            .providerType(randomEnum(ProviderType.class))
             .providerId(nonExistentProviderId)
             .build();
 
@@ -287,7 +287,7 @@ public class UserControllerTest extends AbstractControllerTest {
     val user0 = data.getUsers().get(0);
 
     val nonExistingProvId = generateNonExistentProviderId(userService);
-    // Create a request with an existing provider and nonexisting providerId
+    // Create a request with an existing providerType and nonexisting providerId
     val r =
         CreateUserRequest.builder()
             .email("user0@email.com")
@@ -296,7 +296,7 @@ public class UserControllerTest extends AbstractControllerTest {
             .preferredLanguage(randomEnum(LanguageType.class))
             .firstName(randomStringNoSpaces(10))
             .lastName(randomStringNoSpaces(10))
-            .identityProvider(user0.getIdentityProvider())
+            .providerType(user0.getProviderType())
             .providerId(nonExistingProvId)
             .build();
 
@@ -309,7 +309,7 @@ public class UserControllerTest extends AbstractControllerTest {
     val data = generateUniqueTestUserData();
     val user0 = data.getUsers().get(0);
 
-    // Create a request with an existing provider and nonexisting providerId
+    // Create a request with an existing providerType and nonexisting providerId
     val r =
         CreateUserRequest.builder()
             .email("user0@email.com")
@@ -318,7 +318,7 @@ public class UserControllerTest extends AbstractControllerTest {
             .preferredLanguage(randomEnum(LanguageType.class))
             .firstName(randomStringNoSpaces(10))
             .lastName(randomStringNoSpaces(10))
-            .identityProvider(LINKEDIN)
+            .providerType(LINKEDIN)
             .providerId(user0.getProviderId())
             .build();
 
@@ -326,12 +326,12 @@ public class UserControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  public void createUser_ExistingProviderIdExistingProvider_Conflict() {
+  public void createUser_ExistingProviderIdExistingProviderType_Conflict() {
     // Generate data
     val data = generateUniqueTestUserData();
     val user0 = data.getUsers().get(0);
 
-    // Create a request with a non-unique identityProvider + providerId
+    // Create a request with a non-unique providerType + providerId
     val r =
         CreateUserRequest.builder()
             .email("user0@email.com")
@@ -340,7 +340,7 @@ public class UserControllerTest extends AbstractControllerTest {
             .preferredLanguage(randomEnum(LanguageType.class))
             .firstName(randomStringNoSpaces(10))
             .lastName(randomStringNoSpaces(10))
-            .identityProvider(user0.getIdentityProvider())
+            .providerType(user0.getProviderType())
             .providerId(user0.getProviderId())
             .build();
 
@@ -349,8 +349,9 @@ public class UserControllerTest extends AbstractControllerTest {
 
   @Test
   public void createUser_InvalidProvider_BadRequest() {
-    val invalidProvider = "someProvider";
-    val match = stream(IdProviderType.values()).anyMatch(x -> x.toString().equals(invalidProvider));
+    val invalidProviderType = "someProvider";
+    val match =
+        stream(ProviderType.values()).anyMatch(x -> x.toString().equals(invalidProviderType));
     assertFalse(match);
 
     val templateR1 =
@@ -363,7 +364,7 @@ public class UserControllerTest extends AbstractControllerTest {
             .status(APPROVED)
             .providerId(generateNonExistentProviderId(userService))
             .build();
-    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(IDENTITYPROVIDER, invalidProvider);
+    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(PROVIDERTYPE, invalidProviderType);
     initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
   }
 
@@ -384,8 +385,9 @@ public class UserControllerTest extends AbstractControllerTest {
 
   @Test
   public void updateUser_InvalidProvider_BadRequest() {
-    val invalidProvider = "someProvider";
-    val match = stream(IdProviderType.values()).anyMatch(x -> x.toString().equals(invalidProvider));
+    val invalidProviderType = "someProvider";
+    val match =
+        stream(ProviderType.values()).anyMatch(x -> x.toString().equals(invalidProviderType));
     assertFalse(match);
 
     val data = generateUniqueTestUserData();
@@ -398,7 +400,7 @@ public class UserControllerTest extends AbstractControllerTest {
             .preferredLanguage(ENGLISH)
             .providerId(user.getProviderId())
             .build();
-    val r2 = ((ObjectNode) MAPPER.valueToTree(templateR2)).put(IDENTITYPROVIDER, invalidProvider);
+    val r2 = ((ObjectNode) MAPPER.valueToTree(templateR2)).put(PROVIDERTYPE, invalidProviderType);
     initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
   }
 
@@ -413,7 +415,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // Assert update with different providerId
     val r1 =
         UpdateUserRequest.builder()
-            .identityProvider(user.getIdentityProvider())
+            .providerType(user.getProviderType())
             .providerId(nonExistentProviderId)
             .preferredLanguage(SPANISH)
             .build();
@@ -426,15 +428,15 @@ public class UserControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  public void validateUpdateRequest_IdentityProviderDoesntMatch_Forbidden() {
+  public void validateUpdateRequest_ProviderTypeDoesntMatch_Forbidden() {
     // create a user with providerInfo
     val data = generateUniqueTestUserData();
     val user = data.getUsers().get(0);
 
-    // Assert update with different identityProvider
+    // Assert update with different providerType
     val r1 =
         UpdateUserRequest.builder()
-            .identityProvider(GITHUB)
+            .providerType(GITHUB)
             .providerId(user.getProviderId())
             .preferredLanguage(FRENCH)
             .build();
@@ -452,10 +454,10 @@ public class UserControllerTest extends AbstractControllerTest {
     val data = generateUniqueTestUserData();
     val user = data.getUsers().get(0);
 
-    // Assert update with matching identityProvider and providerId
+    // Assert update with matching providerType and providerId
     val r1 =
         UpdateUserRequest.builder()
-            .identityProvider(user.getIdentityProvider())
+            .providerType(user.getProviderType())
             .providerId(user.getProviderId())
             .preferredLanguage(SPANISH)
             .build();
@@ -473,13 +475,13 @@ public class UserControllerTest extends AbstractControllerTest {
     idToken.setFamilyName(user.getLastName());
     idToken.setGivenName(user.getFirstName());
     idToken.setEmail(user.getEmail());
-    idToken.setProviderType(user.getIdentityProvider());
+    idToken.setProviderType(user.getProviderType());
     idToken.setProviderId(user.getProviderId());
 
     val userFromToken = userService.getUserByToken(idToken);
 
     assertEquals(user.getId(), userFromToken.getId());
-    assertEquals(user.getIdentityProvider(), userFromToken.getIdentityProvider());
+    assertEquals(user.getProviderType(), userFromToken.getProviderType());
     assertEquals(user.getProviderId(), userFromToken.getProviderId());
     assertEquals(user.getStatus(), userFromToken.getStatus());
     assertEquals(user.getEmail(), userFromToken.getEmail());
@@ -488,7 +490,7 @@ public class UserControllerTest extends AbstractControllerTest {
     assertEquals(user.getFirstName(), userFromToken.getFirstName());
   }
 
-  // TODO: how to test this with identityProvider and providerId constraints?
+  // TODO: how to test this with providerType and providerId constraints?
   @Ignore
   @Test
   public void getUserByToken_NonExistingProviderInfoExistingEmail_UpdateUserSuccess() {
@@ -502,18 +504,18 @@ public class UserControllerTest extends AbstractControllerTest {
     val firstName = userName.split(" ")[0];
     val lastName = userName.split(" ")[1];
     val email = String.format("%s@example.com", userName);
-    val provider = FACEBOOK;
+    val providerType = FACEBOOK;
     val providerId = generateNonExistentProviderId(userService);
 
     val idToken = new IDToken();
     idToken.setFamilyName(lastName);
     idToken.setGivenName(firstName);
     idToken.setEmail(email);
-    idToken.setProviderType(provider);
+    idToken.setProviderType(providerType);
     idToken.setProviderId(providerId);
 
     // Assert not found by providerInfo
-    assertTrue(userService.findByProviderAndProviderId(provider, providerId).isEmpty());
+    assertTrue(userService.findByProviderTypeAndProviderId(providerType, providerId).isEmpty());
     // Assert not found by email
     assertTrue(userService.findByName(userName).isEmpty());
 
@@ -527,7 +529,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // assert user properties match idToken properties
     assertEquals(userFromToken.getFirstName(), idToken.getGivenName());
     assertEquals(userFromToken.getLastName(), idToken.getFamilyName());
-    assertEquals(userFromToken.getIdentityProvider(), idToken.getProviderType());
+    assertEquals(userFromToken.getProviderType(), idToken.getProviderType());
     assertEquals(userFromToken.getProviderId(), idToken.getProviderId());
     assertEquals(userFromToken.getEmail(), idToken.getEmail());
   }
@@ -725,7 +727,7 @@ public class UserControllerTest extends AbstractControllerTest {
     val r1 =
         UpdateUserRequest.builder()
             .firstName("aNewFirstName")
-            .identityProvider(user0.getIdentityProvider())
+            .providerType(user0.getProviderType())
             .providerId(user0.getProviderId())
             .email(email)
             .build();
@@ -742,7 +744,7 @@ public class UserControllerTest extends AbstractControllerTest {
     // create update request 2
     val r2 =
         UpdateUserRequest.builder()
-            .identityProvider(user0.getIdentityProvider())
+            .providerType(user0.getProviderType())
             .providerId(user0.getProviderId())
             .status(randomEnumExcluding(StatusType.class, user0.getStatus()))
             .type(randomEnumExcluding(UserType.class, user0.getType()))
@@ -787,7 +789,7 @@ public class UserControllerTest extends AbstractControllerTest {
         UpdateUserRequest.builder()
             .email(user1.getName())
             .status(randomEnumExcluding(StatusType.class, user0.getStatus()))
-            .identityProvider(user0.getIdentityProvider())
+            .providerType(user0.getProviderType())
             .providerId(user0.getProviderId())
             .build();
 
