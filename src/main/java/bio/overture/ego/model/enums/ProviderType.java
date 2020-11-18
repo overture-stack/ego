@@ -1,8 +1,11 @@
 package bio.overture.ego.model.enums;
 
+import static bio.overture.ego.utils.Joiners.COMMA;
+import static bio.overture.ego.utils.Streams.stream;
 import static java.lang.String.format;
 
 import bio.overture.ego.model.exceptions.ForbiddenException;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -31,6 +34,18 @@ public enum ProviderType {
     }
 
     throw new ForbiddenException(format("Provider '%s' is not a valid providerType", provider));
+  }
+
+  public static ProviderType resolveProviderType(@NonNull String providerType) {
+    return stream(values())
+        .filter(x -> x.toString().equals(providerType))
+        .findFirst()
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException(
+                    format(
+                        "The provider type '%s' cannot be resolved. Must be one of: [%s]",
+                        providerType, COMMA.join(values()))));
   }
 
   @Override

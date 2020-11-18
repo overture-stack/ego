@@ -241,7 +241,9 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
             .setLastLogin(toProtoString(this.getLastLogin()))
             .setPreferredLanguage(toProtoString(this.getPreferredLanguage()))
             .setStatus(toProtoString(this.getStatus()))
-            .setType(toProtoString(this.getType()));
+            .setType(toProtoString(this.getType()))
+            .setProviderType(toProtoString(this.getProviderType()))
+            .setProviderId(toProtoString(this.getProviderId()));
 
     try {
       final Set<String> applications =
@@ -300,6 +302,10 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
       user.setName(proto.getName().getValue());
     }
 
+    if (proto.hasProviderId()) {
+      user.setProviderId(proto.getProviderId().getValue());
+    }
+
     try {
       if (proto.hasCreatedAt()) {
         final String date = proto.getCreatedAt().getValue();
@@ -349,6 +355,15 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
 
     } catch (IllegalArgumentException e) {
       log.debug("Could not set user type from protobuf: ", e.getMessage());
+    }
+
+    try {
+      if (proto.hasProviderType()) {
+        final String providerType = proto.getProviderType().getValue();
+        user.setProviderType(ProviderType.resolveProviderType(providerType));
+      }
+    } catch (IllegalArgumentException e) {
+      log.debug("Could not set provider type from protobuf: ", e.getMessage());
     }
 
     return user;
