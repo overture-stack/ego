@@ -36,7 +36,7 @@ public class IDToken {
   @JsonProperty("family_name")
   private String familyName;
 
-  @JsonProperty("identity_provider")
+  @JsonProperty("provider_type")
   @NonNull
   ProviderType providerType;
 

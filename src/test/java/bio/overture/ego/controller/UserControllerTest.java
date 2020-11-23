@@ -64,6 +64,7 @@ import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -262,8 +263,6 @@ public class UserControllerTest extends AbstractControllerTest {
     createUserPostRequestAnd(r).assertOk();
   }
 
-  // TODO: add this test in when email required configuration is implemented
-  @Ignore
   @Test
   public void createUser_NoEmail_OK() {
     val nonExistentProviderId = generateNonExistentProviderId(userService);
@@ -281,6 +280,36 @@ public class UserControllerTest extends AbstractControllerTest {
 
     // Create the user and assert OK
     createUserPostRequestAnd(r).assertOk();
+  }
+
+  @Test
+  public void idToken_serializedTokenHasAllFields_Success() {
+    val user = entityGenerator.setupUser("IdToken Test");
+
+    val idToken = new IDToken();
+    idToken.setEmail(user.getEmail());
+    idToken.setFamilyName(user.getLastName());
+    idToken.setGivenName(user.getFirstName());
+    idToken.setProviderType(user.getProviderType());
+    idToken.setProviderId(user.getProviderId());
+
+    try {
+      val jsonString = MAPPER.writeValueAsString(idToken);
+      val json = MAPPER.readTree(jsonString);
+
+      Stream.of("given_name", "family_name", "provider_type", "provider_id", "email")
+          .forEach(
+              fieldname -> {
+                assertTrue(json.has(fieldname));
+              });
+      assertEquals(idToken.getEmail(), json.path("email").asText());
+      assertEquals(idToken.getFamilyName(), json.path("family_name").asText());
+      assertEquals(idToken.getGivenName(), json.path("given_name").asText());
+      assertEquals(idToken.getProviderType().toString(), json.path("provider_type").asText());
+      assertEquals(idToken.getProviderId(), json.path("provider_id").asText());
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   @Test

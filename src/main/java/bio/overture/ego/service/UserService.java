@@ -177,15 +177,15 @@ public class UserService extends AbstractNamedService<User, UUID> {
                   // an existing user without provider info will default to GOOGLE and their
                   // existing email
                   if (!isNull(userEmail)) {
-                    val userByEmail =
+                    val userByEmailResult =
                         findByProviderTypeAndProviderId(DEFAULT_PROVIDER_TYPE, userEmail);
-                    log.info("User found, updating provider info.");
-                    if (userByEmail.isPresent()) {
-                      val foundUser = userByEmail.get();
-                      foundUser.setProviderType(idToken.getProviderType());
-                      foundUser.setProviderId(idToken.getProviderId());
-                    }
-                    return userByEmail;
+                    userByEmailResult.ifPresent(
+                        foundUser -> {
+                          log.info("User found, updating provider info.");
+                          foundUser.setProviderType(idToken.getProviderType());
+                          foundUser.setProviderId(idToken.getProviderId());
+                        });
+                    return userByEmailResult;
                   }
                   log.info("No email provided");
                   return Optional.empty();
@@ -211,7 +211,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
                     .fetchUserGroups(true)
                     .fetchUserAndGroupPermissions(true)
                     .fetchRefreshToken(true)
-                    .buildByProviderNameAndId(providerType, providerId));
+                    .buildByProviderTypeAndId(providerType, providerId));
   }
 
   public boolean existsByProviderId(String providerId) {

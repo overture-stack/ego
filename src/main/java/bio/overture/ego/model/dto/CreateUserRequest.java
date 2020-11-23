@@ -32,7 +32,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CreateUserRequest {
 
-  @NotNull private String email;
+  private String email;
 
   @NotNull private UserType type;
 
