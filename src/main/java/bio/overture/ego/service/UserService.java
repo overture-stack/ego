@@ -16,6 +16,7 @@
 
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.ProviderType.GOOGLE;
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.exceptions.InvalidUserException.checkValidUser;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
@@ -69,6 +70,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   /** Constants */
   public static final UserConverter USER_CONVERTER = Mappers.getMapper(UserConverter.class);
+
+  public static final ProviderType DEFAULT_PROVIDER_TYPE = GOOGLE;
 
   /** Dependencies */
   private final GroupRepository groupRepository;
@@ -165,14 +168,24 @@ public class UserService extends AbstractNamedService<User, UUID> {
   public User getUserByToken(@NonNull IDToken idToken) {
     val providerType = idToken.getProviderType();
     val providerId = idToken.getProviderId();
-    val userName = idToken.getEmail();
+    val userEmail = idToken.getEmail();
 
     User user =
         findByProviderTypeAndProviderId(providerType, providerId)
             .or(
                 () -> {
-                  if (!isNull(userName)) {
-                    return findByName(userName);
+                  // an existing user without provider info will default to GOOGLE and their
+                  // existing email
+                  if (!isNull(userEmail)) {
+                    val userByEmail =
+                        findByProviderTypeAndProviderId(DEFAULT_PROVIDER_TYPE, userEmail);
+                    log.info("User found, updating provider info.");
+                    if (userByEmail.isPresent()) {
+                      val foundUser = userByEmail.get();
+                      foundUser.setProviderType(idToken.getProviderType());
+                      foundUser.setProviderId(idToken.getProviderId());
+                    }
+                    return userByEmail;
                   }
                   log.info("No email provided");
                   return Optional.empty();
@@ -183,17 +196,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
                   return createFromIDToken(idToken);
                 });
 
-    if (!hasValidProvider(user)) {
-      log.info("Existing user does not have valid provider info, setting.");
-      user.setProviderType(idToken.getProviderType());
-      user.setProviderId(idToken.getProviderId());
-    }
     user.setLastLogin(new Date());
     return user;
-  }
-
-  private boolean hasValidProvider(User user) {
-    return !isNull(user.getProviderType()) && !isNull(user.getProviderId());
   }
 
   @SuppressWarnings("unchecked")
@@ -465,6 +469,8 @@ public class UserService extends AbstractNamedService<User, UUID> {
             pageable);
   }
 
+  // TODO: current implementation will break, because creating a user in ego ui does not allow
+  // passing provider info. this is unknown to the admin
   private void validateCreateRequest(CreateUserRequest r) {
     checkRequestValid(r);
     checkUserUnique(r.getProviderType(), r.getProviderId());

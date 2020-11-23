@@ -36,6 +36,7 @@ import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
+import static java.lang.String.format;
 import static org.junit.Assert.*;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 
@@ -90,6 +91,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class UserControllerTest extends AbstractControllerTest {
 
   private static boolean hasRunEntitySetup = false;
+  private static final ProviderType DEFAULT_PROVIDER = GOOGLE;
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
@@ -183,6 +185,7 @@ public class UserControllerTest extends AbstractControllerTest {
         "need to implement the test 'findUsers_FindSomeQuery_Success'");
   }
 
+  // TODO: create user endpoint will not work because currently no way to input providerInfo
   @Test
   public void createUser_NonExisting_Success() {
     // Create unique name
@@ -490,12 +493,56 @@ public class UserControllerTest extends AbstractControllerTest {
     assertEquals(user.getFirstName(), userFromToken.getFirstName());
   }
 
-  // TODO: how to test this with providerType and providerId constraints?
-  @Ignore
   @Test
-  public void getUserByToken_NonExistingProviderInfoExistingEmail_UpdateUserSuccess() {
-    // create a user with an email but no provider info
-    // see if you can retrieve them with the email
+  public void getUserByToken_DefaultProviderInfoExistingEmail_UpdateUserSuccess() {
+    val firstName = generateNonExistentName(userService);
+    val lastName = generateNonExistentName(userService);
+    val email = format("%s%s@domain.com", firstName, lastName);
+    val existingUser =
+        entityGenerator.setupUser(
+            format("%s %s", firstName, lastName), USER, email, DEFAULT_PROVIDER);
+    val providerType = FACEBOOK;
+    val providerId = generateNonExistentProviderId(userService);
+
+    // setup incoming user with IDToken, same email
+    val idToken = new IDToken();
+    idToken.setFamilyName(lastName);
+    idToken.setGivenName(firstName);
+    idToken.setEmail(email);
+    idToken.setProviderType(providerType);
+    idToken.setProviderId(providerId);
+
+    //  Assert not found by providerInfo
+    assertTrue(userService.findByProviderTypeAndProviderId(providerType, providerId).isEmpty());
+
+    //  Assert found by email-as-providerid and default providerType
+    assertTrue(userService.findByProviderTypeAndProviderId(DEFAULT_PROVIDER, email).isPresent());
+    // create user from idToken
+    val userFromToken = userService.getUserByToken(idToken);
+
+    // assert user exists
+    assertEquals(userFromToken.getClass(), User.class);
+    initStringRequest().endpoint("users/%s", userFromToken.getId()).getAnd().assertOk();
+
+    //  assert existingUser equals userFromToken
+    assertEquals(existingUser.getId(), userFromToken.getId());
+
+    //  assert user properties match idToken properties
+    assertEquals(userFromToken.getFirstName(), idToken.getGivenName());
+    assertEquals(userFromToken.getLastName(), idToken.getFamilyName());
+    assertEquals(userFromToken.getProviderType(), idToken.getProviderType());
+    assertEquals(userFromToken.getProviderId(), idToken.getProviderId());
+    assertEquals(userFromToken.getEmail(), idToken.getEmail());
+
+    //    assert existingUser properties are updated from userFromToken
+    assertEquals(existingUser.getEmail(), userFromToken.getEmail());
+    assertEquals(existingUser.getFirstName(), userFromToken.getFirstName());
+    assertEquals(existingUser.getLastName(), userFromToken.getLastName());
+    assertEquals(existingUser.getCreatedAt(), userFromToken.getCreatedAt());
+    assertEquals(existingUser.getType(), userFromToken.getType());
+    assertEquals(existingUser.getStatus(), userFromToken.getStatus());
+    assertNotEquals(existingUser.getProviderType(), userFromToken.getProviderType());
+    assertNotEquals(existingUser.getProviderId(), userFromToken.getProviderId());
   }
 
   @Test
@@ -503,7 +550,7 @@ public class UserControllerTest extends AbstractControllerTest {
     val userName = entityGenerator.generateNonExistentUserName();
     val firstName = userName.split(" ")[0];
     val lastName = userName.split(" ")[1];
-    val email = String.format("%s@example.com", userName);
+    val email = format("%s@example.com", userName);
     val providerType = FACEBOOK;
     val providerId = generateNonExistentProviderId(userService);
 
