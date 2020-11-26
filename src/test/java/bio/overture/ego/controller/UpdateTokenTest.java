@@ -132,7 +132,10 @@ public class UpdateTokenTest extends AbstractControllerTest {
     val firstContext = firstTokenClaims.get("context", LinkedHashMap.class);
     val updatedContext = updatedTokenClaims.get("context", LinkedHashMap.class);
 
-    assertEquals(1, ((Collection) firstContext.get("scope")).size()); // No scopes originally means return default scope
+    assertEquals(
+        1,
+        ((Collection) firstContext.get("scope"))
+            .size()); // No scopes originally means return default scope
     assertTrue(((Collection) firstContext.get("scope")).contains(Scope.defaultScope().toString()));
     assertFalse(
         ((Collection) updatedContext.get("scope")).isEmpty()); // Has scopes in updated token
