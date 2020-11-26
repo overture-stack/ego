@@ -37,6 +37,7 @@ import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static org.junit.Assert.*;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 
@@ -186,100 +187,38 @@ public class UserControllerTest extends AbstractControllerTest {
         "need to implement the test 'findUsers_FindSomeQuery_Success'");
   }
 
-  // TODO: create user endpoint will not work because currently no way to input providerInfo
   @Test
-  public void createUser_NonExisting_Success() {
-    // Create unique name
-    val name = generateNonExistentName(userService);
+  public void createUser_IdTokenHasProviderInfoNoEmail_OK() {
+    val idToken = new IDToken();
+    idToken.setProviderType(DEFAULT_PROVIDER);
+    idToken.setProviderId(generateNonExistentProviderId(userService));
+    idToken.setFamilyName("NoEmail");
+    idToken.setGivenName("Has");
+    val userFromToken = userService.getUserByToken(idToken);
 
-    // Create request
-    val r =
-        CreateUserRequest.builder()
-            .email(name + "@gmail.com")
-            .status(randomEnum(StatusType.class))
-            .type(randomEnum(UserType.class))
-            .preferredLanguage(randomEnum(LanguageType.class))
-            .firstName(randomStringNoSpaces(10))
-            .lastName(randomStringNoSpaces(10))
-            .providerType(randomEnum(ProviderType.class))
-            .providerId(UUID.randomUUID().toString())
-            .build();
+    val r = initStringRequest().endpoint("/users/%s", userFromToken.getId()).getAnd();
 
-    // Create the user
-    val user = createUserPostRequestAnd(r).extractOneEntity(User.class);
-    assertEquals(user.getEmail(), r.getEmail());
-    assertEquals(user.getFirstName(), r.getFirstName());
-    assertEquals(user.getLastName(), r.getLastName());
-    assertEquals(user.getPreferredLanguage(), r.getPreferredLanguage());
-    assertEquals(user.getType(), r.getType());
-    assertEquals(user.getStatus(), r.getStatus());
-    assertEquals(user.getProviderType(), r.getProviderType());
-    assertEquals(user.getProviderId(), r.getProviderId());
+    r.assertOk();
+    val newUser = r.extractOneEntity(User.class);
 
-    // Assert the user can be read and matches the request data
-    val r1 = getUserEntityGetRequestAnd(user).extractOneEntity(User.class);
-    assertEquals(r1.getEmail(), r.getEmail());
-    assertEquals(r1.getFirstName(), r.getFirstName());
-    assertEquals(r1.getLastName(), r.getLastName());
-    assertEquals(r1.getPreferredLanguage(), r.getPreferredLanguage());
-    assertEquals(r1.getType(), r.getType());
-    assertEquals(r1.getStatus(), r.getStatus());
-    assertEquals(r1.getProviderType(), r.getProviderType());
-    assertEquals(r1.getProviderId(), r.getProviderId());
+    // assert userFromToken properties match idToken
+    assertEquals(idToken.getProviderType(), userFromToken.getProviderType());
+    assertEquals(idToken.getProviderId(), userFromToken.getProviderId());
+    assertEquals(idToken.getGivenName(), userFromToken.getFirstName());
+    assertEquals(idToken.getFamilyName(), userFromToken.getLastName());
+    assertTrue(isNull(idToken.getEmail()));
+    assertEquals(idToken.getEmail(), userFromToken.getEmail());
 
-    assertEquals(r1.getEmail(), user.getEmail());
-    assertEquals(r1.getFirstName(), user.getFirstName());
-    assertEquals(r1.getLastName(), user.getLastName());
-    assertEquals(r1.getPreferredLanguage(), user.getPreferredLanguage());
-    assertEquals(r1.getType(), user.getType());
-    assertEquals(r1.getStatus(), user.getStatus());
-    assertEquals(r1.getProviderType(), user.getProviderType());
-    assertEquals(r1.getProviderId(), user.getProviderId());
-  }
-
-  @Test
-  public void createUser_EmailAlreadyExists_OK() {
-    // Generate data
-    val data = generateUniqueTestUserData();
-    val user0 = data.getUsers().get(0);
-
-    // Get an existing name
-    val existingName = getUserEntityGetRequestAnd(user0).extractOneEntity(User.class).getName();
-
-    // Create a request with an existing name and non-existing provider info
-    val r =
-        CreateUserRequest.builder()
-            .email(existingName)
-            .status(randomEnum(StatusType.class))
-            .type(randomEnum(UserType.class))
-            .preferredLanguage(randomEnum(LanguageType.class))
-            .firstName(randomStringNoSpaces(10))
-            .lastName(randomStringNoSpaces(10))
-            .providerType(GITHUB)
-            .providerId("github123")
-            .build();
-
-    // Create the user and assert OK
-    createUserPostRequestAnd(r).assertOk();
-  }
-
-  @Test
-  public void createUser_NoEmail_OK() {
-    val nonExistentProviderId = generateNonExistentProviderId(userService);
-    // Create a request without an email provided
-    val r =
-        CreateUserRequest.builder()
-            .status(randomEnum(StatusType.class))
-            .type(randomEnum(UserType.class))
-            .preferredLanguage(randomEnum(LanguageType.class))
-            .firstName(randomStringNoSpaces(10))
-            .lastName(randomStringNoSpaces(10))
-            .providerType(randomEnum(ProviderType.class))
-            .providerId(nonExistentProviderId)
-            .build();
-
-    // Create the user and assert OK
-    createUserPostRequestAnd(r).assertOk();
+    // assert newUser matches userFromToken
+    assertEquals(userFromToken.getId(), newUser.getId());
+    assertEquals(userFromToken.getProviderType(), newUser.getProviderType());
+    assertEquals(userFromToken.getProviderId(), newUser.getProviderId());
+    assertEquals(userFromToken.getStatus(), newUser.getStatus());
+    assertEquals(userFromToken.getCreatedAt(), newUser.getCreatedAt());
+    assertEquals(userFromToken.getType(), newUser.getType());
+    assertEquals(userFromToken.getPreferredLanguage(), newUser.getPreferredLanguage());
+    assertTrue(isNull(userFromToken.getEmail()));
+    assertEquals(userFromToken.getEmail(), newUser.getEmail());
   }
 
   @Test
@@ -313,72 +252,300 @@ public class UserControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  public void createUser_ExistingProviderNonExistingProvId_OK() {
-    // Generate data
+  public void createUser_ExistingProviderTypeNonExistingProviderIdNonExistingEmail_OK() {
+    //  Generate a user with default providerType
     val data = generateUniqueTestUserData();
-    val user0 = data.getUsers().get(0);
+    val user = data.getUsers().get(0);
 
-    val nonExistingProvId = generateNonExistentProviderId(userService);
-    // Create a request with an existing providerType and nonexisting providerId
-    val r =
-        CreateUserRequest.builder()
-            .email("user0@email.com")
-            .status(randomEnum(StatusType.class))
-            .type(randomEnum(UserType.class))
-            .preferredLanguage(randomEnum(LanguageType.class))
-            .firstName(randomStringNoSpaces(10))
-            .lastName(randomStringNoSpaces(10))
-            .providerType(user0.getProviderType())
-            .providerId(nonExistingProvId)
-            .build();
+    // generate an idToken with default providerType
+    val idToken = entityGenerator.setupUserIDToken();
 
-    createUserPostRequestAnd(r).assertOk();
+    assertEquals(user.getProviderType(), idToken.getProviderType());
+    assertNotEquals(user.getProviderId(), idToken.getProviderId());
+
+    val userFromToken = userService.getUserByToken(idToken);
+
+    val r = initStringRequest().endpoint("/users/%s", user.getId()).getAnd();
+    val r1 = initStringRequest().endpoint("/users/%s", userFromToken.getId()).getAnd();
+
+    r.assertOk();
+    r1.assertOk();
+
+    val existingUser = r.extractOneEntity(User.class);
+    val newUser = r1.extractOneEntity(User.class);
+
+    // assert existing and new user are 2 different entities with same providerType
+    assertEquals(existingUser.getProviderType(), newUser.getProviderType());
+    assertNotEquals(existingUser.getProviderId(), newUser.getProviderId());
+    assertNotEquals(existingUser.getId(), newUser.getId());
+
+    // assert existingUser matches initial user
+    assertEquals(user.getId(), existingUser.getId());
+    assertEquals(user.getProviderType(), existingUser.getProviderType());
+    assertEquals(user.getProviderId(), existingUser.getProviderId());
+    assertEquals(user.getStatus(), existingUser.getStatus());
+    assertEquals(user.getType(), existingUser.getType());
+    assertEquals(user.getEmail(), existingUser.getEmail());
+    assertEquals(user.getFirstName(), existingUser.getFirstName());
+    assertEquals(user.getLastName(), existingUser.getLastName());
+    assertEquals(user.getCreatedAt(), existingUser.getCreatedAt());
+
+    // assert newUser matches userFromToken
+    assertEquals(userFromToken.getId(), newUser.getId());
+    assertEquals(userFromToken.getProviderType(), newUser.getProviderType());
+    assertEquals(userFromToken.getProviderId(), newUser.getProviderId());
+    assertEquals(userFromToken.getStatus(), newUser.getStatus());
+    assertEquals(userFromToken.getType(), newUser.getType());
+    assertEquals(userFromToken.getEmail(), newUser.getEmail());
+    assertEquals(userFromToken.getFirstName(), newUser.getFirstName());
+    assertEquals(userFromToken.getLastName(), newUser.getLastName());
+    assertEquals(userFromToken.getCreatedAt(), newUser.getCreatedAt());
   }
 
   @Test
-  public void createUser_ExistingProviderIdNonExistingProvider_OK() {
-    // Generate data
+  public void createUser_ExistingProviderIdNonExistingProviderTypeNonExistingEmail_OK() {
+    //  Generate a user with default providerType
     val data = generateUniqueTestUserData();
-    val user0 = data.getUsers().get(0);
+    val user = data.getUsers().get(0);
 
-    // Create a request with an existing providerType and nonexisting providerId
-    val r =
-        CreateUserRequest.builder()
-            .email("user0@email.com")
-            .status(randomEnum(StatusType.class))
-            .type(randomEnum(UserType.class))
-            .preferredLanguage(randomEnum(LanguageType.class))
-            .firstName(randomStringNoSpaces(10))
-            .lastName(randomStringNoSpaces(10))
-            .providerType(LINKEDIN)
-            .providerId(user0.getProviderId())
-            .build();
+    // generate an idToken with different providerType, same providerId
+    val idToken = entityGenerator.setupUserIDToken(ORCID, user.getProviderId());
 
-    createUserPostRequestAnd(r).assertOk();
+    assertNotEquals(user.getProviderType(), idToken.getProviderType());
+    assertEquals(user.getProviderId(), idToken.getProviderId());
+
+    val userFromToken = userService.getUserByToken(idToken);
+
+    val r = initStringRequest().endpoint("/users/%s", user.getId()).getAnd();
+    val r1 = initStringRequest().endpoint("/users/%s", userFromToken.getId()).getAnd();
+
+    r.assertOk();
+    r1.assertOk();
+
+    val existingUser = r.extractOneEntity(User.class);
+    val newUser = r1.extractOneEntity(User.class);
+
+    // assert existing and new user are 2 different entities with different providerType, same
+    // providerId
+    assertNotEquals(existingUser.getProviderType(), newUser.getProviderType());
+    assertEquals(existingUser.getProviderId(), newUser.getProviderId());
+    assertNotEquals(existingUser.getId(), newUser.getId());
+
+    // assert existingUser matches initial user
+    assertEquals(user.getId(), existingUser.getId());
+    assertEquals(user.getProviderType(), existingUser.getProviderType());
+    assertEquals(user.getProviderId(), existingUser.getProviderId());
+    assertEquals(user.getStatus(), existingUser.getStatus());
+    assertEquals(user.getType(), existingUser.getType());
+    assertEquals(user.getEmail(), existingUser.getEmail());
+    assertEquals(user.getFirstName(), existingUser.getFirstName());
+    assertEquals(user.getLastName(), existingUser.getLastName());
+    assertEquals(user.getCreatedAt(), existingUser.getCreatedAt());
+
+    // assert newUser matches userFromToken
+    assertEquals(userFromToken.getId(), newUser.getId());
+    assertEquals(userFromToken.getProviderType(), newUser.getProviderType());
+    assertEquals(userFromToken.getProviderId(), newUser.getProviderId());
+    assertEquals(userFromToken.getStatus(), newUser.getStatus());
+    assertEquals(userFromToken.getType(), newUser.getType());
+    assertEquals(userFromToken.getEmail(), newUser.getEmail());
+    assertEquals(userFromToken.getFirstName(), newUser.getFirstName());
+    assertEquals(userFromToken.getLastName(), newUser.getLastName());
+    assertEquals(userFromToken.getCreatedAt(), newUser.getCreatedAt());
   }
 
   @Test
-  public void createUser_ExistingProviderIdExistingProviderType_Conflict() {
-    // Generate data
-    val data = generateUniqueTestUserData();
-    val user0 = data.getUsers().get(0);
+  public void createUser_ExistingDefaultProviderTypeNonExistingProviderIdExistingEmail_Success() {
+    val user =
+        entityGenerator.setupUser(
+            "DefaultProvider WithEmail", USER, generateNonExistentProviderId(userService), GOOGLE);
 
-    // Create a request with a non-unique providerType + providerId
-    val r =
-        CreateUserRequest.builder()
-            .email("user0@email.com")
-            .status(randomEnum(StatusType.class))
-            .type(randomEnum(UserType.class))
-            .preferredLanguage(randomEnum(LanguageType.class))
-            .firstName(randomStringNoSpaces(10))
-            .lastName(randomStringNoSpaces(10))
-            .providerType(user0.getProviderType())
-            .providerId(user0.getProviderId())
-            .build();
+    // generate an idToken with default providerType, new providerId, same email
+    val idToken =
+        entityGenerator.setupUserIDToken(
+            GOOGLE, generateNonExistentProviderId(userService), "WithEmail", "DefaultProvider");
 
-    createUserPostRequestAnd(r).assertConflict();
+    assertEquals(user.getProviderType(), idToken.getProviderType());
+    assertNotEquals(user.getProviderId(), idToken.getProviderId());
+
+    val userFromToken = userService.getUserByToken(idToken);
+
+    val r = initStringRequest().endpoint("/users/%s", user.getId()).getAnd();
+    val r1 = initStringRequest().endpoint("/users/%s", userFromToken.getId()).getAnd();
+
+    r.assertOk();
+    r1.assertOk();
+
+    val existingUser = r.extractOneEntity(User.class);
+    val newUser = r1.extractOneEntity(User.class);
+
+    // assert existing and new user are 2 different entities with same providerType, same email
+    assertNotEquals(existingUser.getId(), newUser.getId());
+    assertEquals(existingUser.getProviderType(), newUser.getProviderType());
+    assertNotEquals(existingUser.getProviderId(), newUser.getProviderId());
+    assertEquals(existingUser.getEmail(), newUser.getEmail());
+
+    // assert existingUser matches initial user
+    assertEquals(user.getId(), existingUser.getId());
+    assertEquals(user.getProviderType(), existingUser.getProviderType());
+    assertEquals(user.getProviderId(), existingUser.getProviderId());
+    assertEquals(user.getStatus(), existingUser.getStatus());
+    assertEquals(user.getType(), existingUser.getType());
+    assertEquals(user.getEmail(), existingUser.getEmail());
+    assertEquals(user.getFirstName(), existingUser.getFirstName());
+    assertEquals(user.getLastName(), existingUser.getLastName());
+    assertEquals(user.getCreatedAt(), existingUser.getCreatedAt());
+
+    // assert newUser matches userFromToken
+    assertEquals(userFromToken.getId(), newUser.getId());
+    assertEquals(userFromToken.getProviderType(), newUser.getProviderType());
+    assertEquals(userFromToken.getProviderId(), newUser.getProviderId());
+    assertEquals(userFromToken.getStatus(), newUser.getStatus());
+    assertEquals(userFromToken.getType(), newUser.getType());
+    assertEquals(userFromToken.getEmail(), newUser.getEmail());
+    assertEquals(userFromToken.getFirstName(), newUser.getFirstName());
+    assertEquals(userFromToken.getLastName(), newUser.getLastName());
+    assertEquals(userFromToken.getCreatedAt(), newUser.getCreatedAt());
   }
 
+  @Test
+  public void
+      createUser_ExistingNonDefaultProviderTypeNonExistingProviderIdExistingEmail_Success() {
+    val user =
+        entityGenerator.setupUser(
+            "Existing Email", USER, generateNonExistentProviderId(userService), LINKEDIN);
+
+    // generate an idToken with same providerType, new providerId, same email
+    val idToken =
+        entityGenerator.setupUserIDToken(
+            LINKEDIN, generateNonExistentProviderId(userService), "Email", "Existing");
+
+    assertEquals(user.getProviderType(), idToken.getProviderType());
+    assertNotEquals(user.getProviderId(), idToken.getProviderId());
+
+    val userFromToken = userService.getUserByToken(idToken);
+
+    val r = initStringRequest().endpoint("/users/%s", user.getId()).getAnd();
+    val r1 = initStringRequest().endpoint("/users/%s", userFromToken.getId()).getAnd();
+
+    r.assertOk();
+    r1.assertOk();
+
+    val existingUser = r.extractOneEntity(User.class);
+    val newUser = r1.extractOneEntity(User.class);
+
+    // assert existing and new user are 2 different entities with same providerType, same email
+    assertNotEquals(existingUser.getId(), newUser.getId());
+    assertEquals(existingUser.getProviderType(), newUser.getProviderType());
+    assertNotEquals(existingUser.getProviderId(), newUser.getProviderId());
+    assertEquals(existingUser.getEmail(), newUser.getEmail());
+
+    // assert existingUser matches initial user
+    assertEquals(user.getId(), existingUser.getId());
+    assertEquals(user.getProviderType(), existingUser.getProviderType());
+    assertEquals(user.getProviderId(), existingUser.getProviderId());
+    assertEquals(user.getStatus(), existingUser.getStatus());
+    assertEquals(user.getType(), existingUser.getType());
+    assertEquals(user.getEmail(), existingUser.getEmail());
+    assertEquals(user.getFirstName(), existingUser.getFirstName());
+    assertEquals(user.getLastName(), existingUser.getLastName());
+    assertEquals(user.getCreatedAt(), existingUser.getCreatedAt());
+
+    // assert newUser matches userFromToken
+    assertEquals(userFromToken.getId(), newUser.getId());
+    assertEquals(userFromToken.getProviderType(), newUser.getProviderType());
+    assertEquals(userFromToken.getProviderId(), newUser.getProviderId());
+    assertEquals(userFromToken.getStatus(), newUser.getStatus());
+    assertEquals(userFromToken.getType(), newUser.getType());
+    assertEquals(userFromToken.getEmail(), newUser.getEmail());
+    assertEquals(userFromToken.getFirstName(), newUser.getFirstName());
+    assertEquals(userFromToken.getLastName(), newUser.getLastName());
+    assertEquals(userFromToken.getCreatedAt(), newUser.getCreatedAt());
+  }
+
+  @Test
+  public void createUser_ExistingProviderIdNonExistingProviderTypeExistingEmail_Success() {
+    val providerId = generateNonExistentProviderId(userService);
+    val user = entityGenerator.setupUser("Existing ProviderId", USER, providerId, ORCID);
+
+    // generate an idToken with same providerId, different providerType, same email
+    val idToken = entityGenerator.setupUserIDToken(GITHUB, providerId, "ProviderId", "Existing");
+
+    assertNotEquals(user.getProviderType(), idToken.getProviderType());
+    assertEquals(user.getProviderId(), idToken.getProviderId());
+
+    val userFromToken = userService.getUserByToken(idToken);
+
+    val r = initStringRequest().endpoint("/users/%s", user.getId()).getAnd();
+    val r1 = initStringRequest().endpoint("/users/%s", userFromToken.getId()).getAnd();
+
+    r.assertOk();
+    r1.assertOk();
+
+    val existingUser = r.extractOneEntity(User.class);
+    val newUser = r1.extractOneEntity(User.class);
+
+    // assert existing and new user are 2 different entities with same providerType, same email
+    assertNotEquals(existingUser.getId(), newUser.getId());
+    assertNotEquals(existingUser.getProviderType(), newUser.getProviderType());
+    assertEquals(existingUser.getProviderId(), newUser.getProviderId());
+    assertEquals(existingUser.getEmail(), newUser.getEmail());
+
+    // assert existingUser matches initial user
+    assertEquals(user.getId(), existingUser.getId());
+    assertEquals(user.getProviderType(), existingUser.getProviderType());
+    assertEquals(user.getProviderId(), existingUser.getProviderId());
+    assertEquals(user.getStatus(), existingUser.getStatus());
+    assertEquals(user.getType(), existingUser.getType());
+    assertEquals(user.getEmail(), existingUser.getEmail());
+    assertEquals(user.getFirstName(), existingUser.getFirstName());
+    assertEquals(user.getLastName(), existingUser.getLastName());
+    assertEquals(user.getCreatedAt(), existingUser.getCreatedAt());
+
+    // assert newUser matches userFromToken
+    assertEquals(userFromToken.getId(), newUser.getId());
+    assertEquals(userFromToken.getProviderType(), newUser.getProviderType());
+    assertEquals(userFromToken.getProviderId(), newUser.getProviderId());
+    assertEquals(userFromToken.getStatus(), newUser.getStatus());
+    assertEquals(userFromToken.getType(), newUser.getType());
+    assertEquals(userFromToken.getEmail(), newUser.getEmail());
+    assertEquals(userFromToken.getFirstName(), newUser.getFirstName());
+    assertEquals(userFromToken.getLastName(), newUser.getLastName());
+    assertEquals(userFromToken.getCreatedAt(), newUser.getCreatedAt());
+  }
+
+  @Test
+  public void createUser_ExistingProviderIdExistingProviderType_NoUserCreated() {
+    //  Generate a user with default providerType
+    val data = generateUniqueTestUserData();
+    val user = data.getUsers().get(0);
+
+    // generate an idToken with same providerType, same providerId
+    val idToken = entityGenerator.setupUserIDToken(DEFAULT_PROVIDER, user.getProviderId());
+
+    assertEquals(user.getProviderType(), idToken.getProviderType());
+    assertEquals(user.getProviderId(), idToken.getProviderId());
+
+    val userFromToken = userService.getUserByToken(idToken);
+
+    val r = initStringRequest().endpoint("/users/%s", user.getId()).getAnd();
+    val r1 = initStringRequest().endpoint("/users/%s", userFromToken.getId()).getAnd();
+
+    r.assertOk();
+    r1.assertOk();
+
+    val user1 = r.extractOneEntity(User.class);
+    val user2 = r1.extractOneEntity(User.class);
+
+    // assert userFromToken matches initial user
+    assertEquals(user.getId(), userFromToken.getId());
+
+    // assert user1 matches user2
+    assertEquals(user1.getId(), user2.getId());
+  }
+
+  // TODO: FIX. Do not use users POST.
+  @Ignore("POST '/users' has been removed. how to test invalid provType?")
   @Test
   public void createUser_InvalidProvider_BadRequest() {
     val invalidProviderType = "someProvider";
@@ -400,6 +567,8 @@ public class UserControllerTest extends AbstractControllerTest {
     initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
   }
 
+  // TODO: FIX. Do not use users POST
+  @Ignore("POST '/users' has been removed. how to test missing prov info?")
   @Test
   public void createUser_MissingProviderInfo_BadRequest() {
     val templateR1 =
@@ -498,32 +667,7 @@ public class UserControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  public void getUserByToken_ProviderInfoExists_Success() {
-    // create a user with providerInfo
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    val idToken = new IDToken();
-    idToken.setFamilyName(user.getLastName());
-    idToken.setGivenName(user.getFirstName());
-    idToken.setEmail(user.getEmail());
-    idToken.setProviderType(user.getProviderType());
-    idToken.setProviderId(user.getProviderId());
-
-    val userFromToken = userService.getUserByToken(idToken);
-
-    assertEquals(user.getId(), userFromToken.getId());
-    assertEquals(user.getProviderType(), userFromToken.getProviderType());
-    assertEquals(user.getProviderId(), userFromToken.getProviderId());
-    assertEquals(user.getStatus(), userFromToken.getStatus());
-    assertEquals(user.getEmail(), userFromToken.getEmail());
-    assertEquals(user.getType(), userFromToken.getType());
-    assertEquals(user.getLastName(), userFromToken.getLastName());
-    assertEquals(user.getFirstName(), userFromToken.getFirstName());
-  }
-
-  @Test
-  public void getUserByToken_DefaultProviderInfoExistingEmail_UpdateUserSuccess() {
+  public void updateUser_DefaultProviderInfoExistingEmail_Success() {
     val firstName = generateNonExistentName(userService);
     val lastName = generateNonExistentName(userService);
     val email = format("%s%s@domain.com", firstName, lastName);
@@ -553,17 +697,17 @@ public class UserControllerTest extends AbstractControllerTest {
     assertEquals(userFromToken.getClass(), User.class);
     initStringRequest().endpoint("users/%s", userFromToken.getId()).getAnd().assertOk();
 
-    //  assert existingUser equals userFromToken
+    // assert existingUser equals userFromToken
     assertEquals(existingUser.getId(), userFromToken.getId());
 
-    //  assert user properties match idToken properties
+    // assert user properties match idToken properties
     assertEquals(userFromToken.getFirstName(), idToken.getGivenName());
     assertEquals(userFromToken.getLastName(), idToken.getFamilyName());
     assertEquals(userFromToken.getProviderType(), idToken.getProviderType());
     assertEquals(userFromToken.getProviderId(), idToken.getProviderId());
     assertEquals(userFromToken.getEmail(), idToken.getEmail());
 
-    //    assert existingUser properties are updated from userFromToken
+    // assert existingUser properties are updated from userFromToken
     assertEquals(existingUser.getEmail(), userFromToken.getEmail());
     assertEquals(existingUser.getFirstName(), userFromToken.getFirstName());
     assertEquals(existingUser.getLastName(), userFromToken.getLastName());
@@ -572,10 +716,25 @@ public class UserControllerTest extends AbstractControllerTest {
     assertEquals(existingUser.getStatus(), userFromToken.getStatus());
     assertNotEquals(existingUser.getProviderType(), userFromToken.getProviderType());
     assertNotEquals(existingUser.getProviderId(), userFromToken.getProviderId());
+
+    // assert the user can be read and matches userFromToken
+    val r1 =
+        initStringRequest()
+            .endpoint("/users/%s", existingUser.getId())
+            .getAnd()
+            .extractOneEntity(User.class);
+    assertEquals(r1.getEmail(), userFromToken.getEmail());
+    assertEquals(r1.getFirstName(), userFromToken.getFirstName());
+    assertEquals(r1.getLastName(), userFromToken.getLastName());
+    assertEquals(r1.getPreferredLanguage(), userFromToken.getPreferredLanguage());
+    assertEquals(r1.getType(), userFromToken.getType());
+    assertEquals(r1.getStatus(), userFromToken.getStatus());
+    assertEquals(r1.getProviderType(), userFromToken.getProviderType());
+    assertEquals(r1.getProviderId(), userFromToken.getProviderId());
   }
 
   @Test
-  public void getUserByToken_NonExistingProviderInfoNonExistingEmail_CreateNewUserSuccess() {
+  public void createUser_NonExistingProviderInfoNonExistingEmail_Success() {
     val userName = entityGenerator.generateNonExistentUserName();
     val firstName = userName.split(" ")[0];
     val lastName = userName.split(" ")[1];
@@ -600,14 +759,28 @@ public class UserControllerTest extends AbstractControllerTest {
 
     // assert user exists
     assertEquals(userFromToken.getClass(), User.class);
-    initStringRequest().endpoint("users/%s", userFromToken.getId()).getAnd().assertOk();
 
-    // assert user properties match idToken properties
+    val r = initStringRequest().endpoint("users/%s", userFromToken.getId()).getAnd();
+    r.assertOk();
+    val newUser = r.extractOneEntity(User.class);
+
+    // assert userFromToken matches idToken properties
     assertEquals(userFromToken.getFirstName(), idToken.getGivenName());
     assertEquals(userFromToken.getLastName(), idToken.getFamilyName());
     assertEquals(userFromToken.getProviderType(), idToken.getProviderType());
     assertEquals(userFromToken.getProviderId(), idToken.getProviderId());
     assertEquals(userFromToken.getEmail(), idToken.getEmail());
+
+    // assert userFromToken matches newUser
+    assertEquals(userFromToken.getId(), newUser.getId());
+    assertEquals(userFromToken.getProviderType(), newUser.getProviderType());
+    assertEquals(userFromToken.getProviderId(), newUser.getProviderId());
+    assertEquals(userFromToken.getStatus(), newUser.getStatus());
+    assertEquals(userFromToken.getType(), newUser.getType());
+    assertEquals(userFromToken.getEmail(), newUser.getEmail());
+    assertEquals(userFromToken.getFirstName(), newUser.getFirstName());
+    assertEquals(userFromToken.getLastName(), newUser.getLastName());
+    assertEquals(userFromToken.getCreatedAt(), newUser.getCreatedAt());
   }
 
   @Test
@@ -873,6 +1046,8 @@ public class UserControllerTest extends AbstractControllerTest {
     partialUpdateUserPutRequestAnd(user0.getId(), r1).assertOk();
   }
 
+  // TODO: FIX do not use /users POST
+  // with new createUser implementation, status is not handled until update
   @Test
   public void statusValidation_MalformedStatus_BadRequest() {
     val invalidStatus = "something123";
@@ -883,16 +1058,16 @@ public class UserControllerTest extends AbstractControllerTest {
     val user = data.getUsers().get(0);
 
     // Assert createUsers
-    val templateR1 =
-        CreateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@xyz.com")
-            .type(USER)
-            .lastName("")
-            .lastName("")
-            .preferredLanguage(ENGLISH)
-            .build();
-    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(STATUS, invalidStatus);
-    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
+    //    val templateR1 =
+    //        CreateUserRequest.builder()
+    //            .email(generateNonExistentName(userService) + "@xyz.com")
+    //            .type(USER)
+    //            .lastName("")
+    //            .lastName("")
+    //            .preferredLanguage(ENGLISH)
+    //            .build();
+    //    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(STATUS, invalidStatus);
+    //    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
 
     // Assert updateUser
     val templateR2 =
@@ -905,6 +1080,8 @@ public class UserControllerTest extends AbstractControllerTest {
     initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
   }
 
+  // TODO: FIX do not use /users POST
+  // with new createUser implementation, type is not handled until update
   @Test
   public void typeValidation_MalformedType_BadRequest() {
     val invalidType = "something123";
@@ -915,16 +1092,16 @@ public class UserControllerTest extends AbstractControllerTest {
     val user = data.getUsers().get(0);
 
     // Assert createUsers
-    val templateR1 =
-        CreateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@xyz.com")
-            .status(APPROVED)
-            .preferredLanguage(ENGLISH)
-            .firstName("")
-            .lastName("")
-            .build();
-    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(TYPE, invalidType);
-    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
+    //    val templateR1 =
+    //        CreateUserRequest.builder()
+    //            .email(generateNonExistentName(userService) + "@xyz.com")
+    //            .status(APPROVED)
+    //            .preferredLanguage(ENGLISH)
+    //            .firstName("")
+    //            .lastName("")
+    //            .build();
+    //    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(TYPE, invalidType);
+    //    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
 
     // Assert updateUser
     val templateR2 =
@@ -937,6 +1114,8 @@ public class UserControllerTest extends AbstractControllerTest {
     initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
   }
 
+  // TODO: FIX do not use /users POST
+  // with new createUser implementation, preferredLanguage is not handled until update
   @Test
   public void preferredLanguageValidation_MalformedPreferredLanguage_BadRequest() {
     val invalidLanguage = "something123";
@@ -947,16 +1126,17 @@ public class UserControllerTest extends AbstractControllerTest {
     val user = data.getUsers().get(0);
 
     // Assert createUsers
-    val templateR1 =
-        CreateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@xyz.com")
-            .status(APPROVED)
-            .type(USER)
-            .firstName("")
-            .lastName("")
-            .build();
-    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(PREFERREDLANGUAGE, invalidLanguage);
-    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
+    //    val templateR1 =
+    //        CreateUserRequest.builder()
+    //            .email(generateNonExistentName(userService) + "@xyz.com")
+    //            .status(APPROVED)
+    //            .type(USER)
+    //            .firstName("")
+    //            .lastName("")
+    //            .build();
+    //    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(PREFERREDLANGUAGE,
+    // invalidLanguage);
+    //    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
 
     // Assert updateUser
     val templateR2 =

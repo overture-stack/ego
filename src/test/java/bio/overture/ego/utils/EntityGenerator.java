@@ -12,6 +12,7 @@ import static bio.overture.ego.utils.Splitters.COMMA_SPLITTER;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Math.abs;
+import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -23,6 +24,7 @@ import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.enums.*;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.service.*;
+import bio.overture.ego.token.IDToken;
 import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -83,11 +85,11 @@ public class EntityGenerator {
 
   public void setupTestApplications(String postfix) {
     setupApplications(
-        String.format("111111_%s", postfix),
-        String.format("222222_%s", postfix),
-        String.format("333333_%s", postfix),
-        String.format("444444_%s", postfix),
-        String.format("555555_%s", postfix));
+        format("111111_%s", postfix),
+        format("222222_%s", postfix),
+        format("333333_%s", postfix),
+        format("444444_%s", postfix),
+        format("555555_%s", postfix));
   }
 
   public void setupTestApplications() {
@@ -131,7 +133,7 @@ public class EntityGenerator {
 
   public User setupUser(String name, UserType type, String providerId, ProviderType providerType) {
     val names = name.split(" ", 2);
-    val userName = String.format("%s%s@domain.com", names[0], names[1]);
+    val userName = format("%s%s@domain.com", names[0], names[1]);
     return userService
         .findByName(userName)
         .orElseGet(
@@ -179,7 +181,7 @@ public class EntityGenerator {
       ProviderType providerType,
       String providerId) {
     return CreateUserRequest.builder()
-        .email(String.format("%s%s@domain.com", firstName, lastName))
+        .email(format("%s%s@domain.com", firstName, lastName))
         .firstName(firstName)
         .lastName(lastName)
         .status(APPROVED)
@@ -305,9 +307,9 @@ public class EntityGenerator {
 
   public void setupTestGroups(String postfix) {
     setupGroups(
-        String.format("Group One_%s", postfix),
-        String.format("Group Two_%s", postfix),
-        String.format("Group Three_%s", postfix));
+        format("Group One_%s", postfix),
+        format("Group Two_%s", postfix),
+        format("Group Three_%s", postfix));
   }
 
   public void setupTestGroups() {
@@ -423,7 +425,7 @@ public class EntityGenerator {
   }
 
   private String createApplicationName(String clientId) {
-    return String.format("Application %s", clientId);
+    return format("Application %s", clientId);
   }
 
   private String reverse(String value) {
@@ -537,5 +539,32 @@ public class EntityGenerator {
     val userToken = tokenService.generateUserToken(user);
     val refreshToken = refreshContextService.createRefreshToken(userToken);
     return refreshToken.getUser();
+  }
+
+  public IDToken setupUserIDToken() {
+    return setupUserIDToken(
+        DEFAULT_PROVIDER_TYPE,
+        generateNonExistentProviderId(userService),
+        generateNonExistentName(userService),
+        generateNonExistentName(userService));
+  }
+
+  public IDToken setupUserIDToken(ProviderType providerType, String providerId) {
+    return setupUserIDToken(
+        providerType,
+        providerId,
+        generateNonExistentName(userService),
+        generateNonExistentName(userService));
+  }
+
+  public IDToken setupUserIDToken(
+      ProviderType providerType, String providerId, String familyName, String givenName) {
+    val idToken = new IDToken();
+    idToken.setProviderType(providerType);
+    idToken.setProviderId(providerId);
+    idToken.setEmail(format("%s%s@domain.com", givenName, familyName));
+    idToken.setFamilyName(familyName);
+    idToken.setGivenName(givenName);
+    return idToken;
   }
 }

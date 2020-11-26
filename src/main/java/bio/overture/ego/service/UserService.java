@@ -469,8 +469,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
             pageable);
   }
 
-  // TODO: current implementation will break, because creating a user in ego ui does not allow
-  // passing provider info. this is unknown to the admin
   private void validateCreateRequest(CreateUserRequest r) {
     checkRequestValid(r);
     checkUserUnique(r.getProviderType(), r.getProviderId());
