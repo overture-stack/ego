@@ -19,6 +19,7 @@ package bio.overture.ego.service;
 import static bio.overture.ego.model.enums.ProviderType.GOOGLE;
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.exceptions.InvalidUserException.checkValidUser;
+import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
@@ -471,6 +472,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   private void validateCreateRequest(CreateUserRequest r) {
     checkRequestValid(r);
+    checkMalformedRequest(!r.getProviderId().isBlank(), "Provider id cannot be blank.");
     checkUserUnique(r.getProviderType(), r.getProviderId());
   }
 

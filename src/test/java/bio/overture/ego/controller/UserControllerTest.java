@@ -53,6 +53,7 @@ import bio.overture.ego.model.enums.LanguageType;
 import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
+import bio.overture.ego.model.exceptions.MalformedRequestException;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.TokenService;
@@ -75,7 +76,9 @@ import org.apache.commons.lang.NotImplementedException;
 import org.hibernate.LazyInitializationException;
 import org.junit.Assert;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -102,6 +105,8 @@ public class UserControllerTest extends AbstractControllerTest {
   @Autowired private ApplicationService applicationService;
   @Autowired private GroupService groupService;
   @Autowired private TokenService tokenService;
+
+  @Rule public ExpectedException exceptionRule = ExpectedException.none();
 
   @Value("${logging.test.controller.enable}")
   private boolean enableLogging;
@@ -582,6 +587,15 @@ public class UserControllerTest extends AbstractControllerTest {
             .build();
 
     initStringRequest().endpoint("/users").body(templateR1).postAnd().assertBadRequest();
+  }
+
+  @Test
+  public void createUser_BlankProviderId_BadRequest() {
+    val idToken = entityGenerator.setupUserIDToken(DEFAULT_PROVIDER, "");
+
+    exceptionRule.expect(MalformedRequestException.class);
+    exceptionRule.expectMessage("Provider id cannot be blank.");
+    userService.getUserByToken(idToken);
   }
 
   @Test
