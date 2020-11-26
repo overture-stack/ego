@@ -3,7 +3,10 @@ server:
 
 jwt:
   secret: testsecretisalsoasecret
-  durationMs: 10800000 #in milliseconds 10800000 = 3hrs, max = 2147483647
+  user:
+    durationMs: 10800000 #in milliseconds 10800000 = 3hrs, max = 2147483647
+  app:
+    durationMs: 10800000
 
 apitoken:
   durationDays: 365 # in days
