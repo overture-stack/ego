@@ -109,11 +109,11 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   private final UserRepository userRepository;
 
   /** Configuration */
-  private final int USER_JWT_DURATION;
+  private final int userJwtDuration;
 
-  private final int APP_JWT_DURATION;
+  private final int appJwtDuration;
 
-  private final int API_TOKEN_DURATION;
+  private final int apiTokenDuration;
 
   public TokenService(
       @NonNull TokenSigner tokenSigner,
@@ -123,9 +123,9 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
       @NonNull PolicyService policyService,
       @NonNull TokenStoreRepository tokenStoreRepository,
       @NonNull UserRepository userRepository,
-      @Value("${jwt.user.durationMs:10800000}") int USER_JWT_DURATION,
-      @Value("${jwt.app.durationMs:10800000}") int APP_JWT_DURATION,
-      @Value("${apitoken.durationDays:365}") int API_TOKEN_DURATION) {
+      @Value("${jwt.user.durationMs:10800000}") int userJwtDuration,
+      @Value("${jwt.app.durationMs:10800000}") int appJwtDuration,
+      @Value("${apitoken.durationDays:365}") int apiTokenDuration) {
     super(ApiKey.class, tokenStoreRepository);
     this.tokenSigner = tokenSigner;
     this.userService = userService;
@@ -133,9 +133,9 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     this.apiKeyStoreService = apiKeyStoreService;
     this.policyService = policyService;
     this.userRepository = userRepository;
-    this.USER_JWT_DURATION = USER_JWT_DURATION;
-    this.APP_JWT_DURATION = APP_JWT_DURATION;
-    this.API_TOKEN_DURATION = API_TOKEN_DURATION;
+    this.userJwtDuration = userJwtDuration;
+    this.appJwtDuration = appJwtDuration;
+    this.apiTokenDuration = apiTokenDuration;
   }
 
   @Override
@@ -225,7 +225,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     log.info(format("Generated apiKey string '%s'", str(apiKeyString)));
 
     val cal = Calendar.getInstance();
-    cal.add(Calendar.DAY_OF_YEAR, API_TOKEN_DURATION);
+    cal.add(Calendar.DAY_OF_YEAR, apiTokenDuration);
     val expiryDate = cal.getTime();
 
     val today = Calendar.getInstance();
@@ -268,7 +268,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     tokenContext.setScope(scope);
     val tokenClaims = new UserTokenClaims();
     tokenClaims.setIss(ISSUER_NAME);
-    tokenClaims.setValidDuration(USER_JWT_DURATION);
+    tokenClaims.setValidDuration(userJwtDuration);
     tokenClaims.setContext(tokenContext);
 
     return tokenClaims;
@@ -281,43 +281,39 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     val tokenClaims = new AppTokenClaims();
     tokenContext.setScope(permissionNames);
     tokenClaims.setIss(ISSUER_NAME);
-    tokenClaims.setValidDuration(APP_JWT_DURATION);
+    tokenClaims.setValidDuration(appJwtDuration);
     tokenClaims.setContext(tokenContext);
     return getSignedToken(tokenClaims);
   }
 
   public boolean isValidToken(String token) {
-    Jws<Claims> decodedToken = null;
-    val tokenKey =
-        tokenSigner
-            .getKey()
-            .orElseThrow(() -> new InternalServerException("Internal issue with token signer."));
-    try {
-      decodedToken = Jwts.parser().setSigningKey(tokenKey).parseClaimsJws(token);
-    } catch (JwtException e) {
-      log.error("JWT token is invalid", e);
-    }
-    return (decodedToken != null);
+    return processValidToken(token).isPresent();
   }
 
   public Jws<Claims> validateAndReturn(String token) {
+    return processValidToken(token)
+        .orElseThrow(
+            () -> {
+              log.error("JWT token was null when trying to validate and return.");
+              return new ForbiddenException("Authorization is required for this action.");
+            });
+  }
+
+  private Optional<Jws<Claims>> processValidToken(@NonNull String token) {
     Jws<Claims> decodedToken;
     val tokenKey =
         tokenSigner
             .getKey()
             .orElseThrow(() -> new InternalServerException("Internal issue with token signer."));
+
     try {
       decodedToken = Jwts.parser().setSigningKey(tokenKey).parseClaimsJws(token);
     } catch (JwtException e) {
       log.error("JWT token is invalid", e);
       throw new ForbiddenException("Authorization is required for this action.");
     }
-    if (decodedToken == null) {
-      log.error("JWT token was null when trying to validate and return.");
-      throw new ForbiddenException("Authorization is required for this action.");
-    }
 
-    return decodedToken;
+    return decodedToken == null ? Optional.empty() : Optional.of(decodedToken);
   }
 
   public User getTokenUserInfo(String token) {
