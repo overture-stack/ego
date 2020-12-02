@@ -1,7 +1,6 @@
 package bio.overture.ego.utils;
 
 import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
-import static bio.overture.ego.model.enums.ProviderType.GOOGLE;
 import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.PENDING;
 import static bio.overture.ego.model.enums.UserType.ADMIN;
@@ -48,7 +47,8 @@ public class EntityGenerator {
   private static final String DICTIONARY =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-abcdefghijklmnopqrstuvwxyz";
 
-  private static final ProviderType DEFAULT_PROVIDER_TYPE = GOOGLE;
+  @Value("${providerType.default:GOOGLE}")
+  private ProviderType DEFAULT_PROVIDER_TYPE;
 
   @Autowired private TokenService tokenService;
 
@@ -539,14 +539,6 @@ public class EntityGenerator {
     val userToken = tokenService.generateUserToken(user);
     val refreshToken = refreshContextService.createRefreshToken(userToken);
     return refreshToken.getUser();
-  }
-
-  public IDToken setupUserIDToken() {
-    return setupUserIDToken(
-        DEFAULT_PROVIDER_TYPE,
-        generateNonExistentProviderId(userService),
-        generateNonExistentName(userService),
-        generateNonExistentName(userService));
   }
 
   public IDToken setupUserIDToken(ProviderType providerType, String providerId) {

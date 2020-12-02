@@ -46,7 +46,6 @@ import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.LanguageType;
-import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.service.ApplicationService;
@@ -89,7 +88,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class UserControllerTest extends AbstractControllerTest {
 
   private static boolean hasRunEntitySetup = false;
-  private static final ProviderType DEFAULT_PROVIDER = GOOGLE;
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;

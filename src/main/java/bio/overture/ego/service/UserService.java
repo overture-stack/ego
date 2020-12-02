@@ -16,7 +16,6 @@
 
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.enums.ProviderType.GOOGLE;
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.exceptions.InvalidUserException.checkValidUser;
 import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
@@ -71,8 +70,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   /** Constants */
   public static final UserConverter USER_CONVERTER = Mappers.getMapper(UserConverter.class);
-
-  public static final ProviderType DEFAULT_PROVIDER_TYPE = GOOGLE;
 
   /** Dependencies */
   private final GroupRepository groupRepository;

@@ -49,7 +49,9 @@ public class CreateUserControllerTest extends AbstractControllerTest {
 
   private static boolean hasRunEntitySetup = false;
   private MockMvc mockMvc;
-  private static final ProviderType DEFAULT_PROVIDER = GOOGLE;
+
+  @Value("${providerType.default:GOOGLE}")
+  private ProviderType DEFAULT_PROVIDER_TYPE;
 
   private IDToken idToken = new IDToken();
 
@@ -186,7 +188,7 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     val firstName = entityGenerator.generateNonExistentUserName();
     val lastName = entityGenerator.generateNonExistentUserName();
 
-    idToken.setProviderType(DEFAULT_PROVIDER);
+    idToken.setProviderType(DEFAULT_PROVIDER_TYPE);
     idToken.setProviderId(generateNonExistentProviderId(userService));
     idToken.setEmail(format("%s%s@domain.com", firstName, lastName));
     idToken.setGivenName(firstName);
@@ -358,7 +360,10 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     // setup for a migrated user with default providerType
     val migratedUser =
         entityGenerator.setupUser(
-            "ExistingUser WithEmail", USER, "ExistingUserWithEmail@domain.com", DEFAULT_PROVIDER);
+            "ExistingUser WithEmail",
+            USER,
+            "ExistingUserWithEmail@domain.com",
+            DEFAULT_PROVIDER_TYPE);
 
     // create idToken for a user with same providerType and email, and actual providerId
     idToken.setProviderType(migratedUser.getProviderType());
@@ -482,7 +487,7 @@ public class CreateUserControllerTest extends AbstractControllerTest {
 
     val nonExistingProviderId = generateNonExistentProviderId(userService);
 
-    idToken.setProviderType(DEFAULT_PROVIDER);
+    idToken.setProviderType(DEFAULT_PROVIDER_TYPE);
     idToken.setProviderId(nonExistingProviderId);
     idToken.setEmail(user.getEmail());
     idToken.setFamilyName(user.getLastName());
@@ -595,7 +600,7 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     val user = entityGenerator.setupUser(entityGenerator.generateNonExistentUserName());
 
     // setup idToken with same providerId, email as user, different providerType
-    idToken.setProviderType(randomEnumExcluding(ProviderType.class, DEFAULT_PROVIDER));
+    idToken.setProviderType(randomEnumExcluding(ProviderType.class, DEFAULT_PROVIDER_TYPE));
     idToken.setProviderId(user.getProviderId());
     idToken.setEmail(user.getEmail());
     idToken.setFamilyName(user.getLastName());
@@ -652,7 +657,7 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     // setup an existing user with default providerType and providerId from migration
     val migratedUser =
         entityGenerator.setupUser(
-            "Migrated User", USER, "MigratedUser@domain.com", DEFAULT_PROVIDER);
+            "Migrated User", USER, "MigratedUser@domain.com", DEFAULT_PROVIDER_TYPE);
 
     // setup idToken with same email, actual providerType and providerId
     idToken.setProviderType(GITHUB);
@@ -747,7 +752,7 @@ public class CreateUserControllerTest extends AbstractControllerTest {
 
   @Test
   public void createUser_BlankProviderId_BadRequest() {
-    val idToken = entityGenerator.setupUserIDToken(DEFAULT_PROVIDER, "");
+    val idToken = entityGenerator.setupUserIDToken(DEFAULT_PROVIDER_TYPE, "");
 
     exceptionRule.expect(MalformedRequestException.class);
     exceptionRule.expectMessage("Provider id cannot be blank.");
