@@ -177,9 +177,10 @@ public class UserService extends AbstractNamedService<User, UUID> {
                 () -> {
                   // an existing user without provider info will default to GOOGLE and their
                   // existing email
+                  // in this scenario only a login from the DEFAULT provider will find the user
                   if (!isNull(userEmail)) {
                     val userByEmailResult =
-                        findByProviderTypeAndProviderId(DEFAULT_PROVIDER_TYPE, userEmail);
+                        findByProviderTypeAndProviderId(idToken.getProviderType(), userEmail);
                     userByEmailResult.ifPresent(
                         foundUser -> {
                           log.info("User found, updating provider info.");

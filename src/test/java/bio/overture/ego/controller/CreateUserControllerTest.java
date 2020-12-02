@@ -351,21 +351,21 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     assertNotEquals(newUser.getProviderId(), existingUser.getProviderId());
   }
 
-  // existing provider(default/non default)	existing id-as-email	  existing email	  user found,
-  // update email OK
+  // existing provider(default)	existing id-as-email	  existing email	  user found,
+  // update providerId OK
   @Test
-  public void existingProviderTypeExistingProviderIdAsEmailExistingEmail_updateUser() {
-    // setup for existing user with default providerType
-    val user =
+  public void existingDefaultProviderTypeExistingProviderIdAsEmailExistingEmail_updateUser() {
+    // setup for a migrated user with default providerType
+    val migratedUser =
         entityGenerator.setupUser(
             "ExistingUser WithEmail", USER, "ExistingUserWithEmail@domain.com", DEFAULT_PROVIDER);
 
     // create idToken for a user with same providerType and email, and actual providerId
-    idToken.setProviderType(user.getProviderType());
+    idToken.setProviderType(migratedUser.getProviderType());
     idToken.setProviderId(generateNonExistentProviderId(userService));
-    idToken.setEmail(user.getEmail());
-    idToken.setGivenName(user.getFirstName());
-    idToken.setFamilyName(user.getLastName());
+    idToken.setEmail(migratedUser.getEmail());
+    idToken.setGivenName(migratedUser.getFirstName());
+    idToken.setFamilyName(migratedUser.getLastName());
 
     val response =
         initStringRequest()
@@ -396,7 +396,7 @@ public class CreateUserControllerTest extends AbstractControllerTest {
 
     val existingUser =
         initStringRequest()
-            .endpoint("/users/%s", user.getId())
+            .endpoint("/users/%s", migratedUser.getId())
             .getAnd()
             .assertOk()
             .extractOneEntity(User.class);
@@ -406,9 +406,11 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     assertEquals(updatedUser.getProviderType(), existingUser.getProviderType());
     assertEquals(updatedUser.getProviderId(), existingUser.getProviderId());
     assertEquals(updatedUser.getEmail(), existingUser.getEmail());
-  }
 
-  // TODO: implement setToken with idToken = entityGenerator.setupUserIDToken(); !!!!
+    // assert migrated user and updatedUser are the same, but providerId was updated
+    assertEquals(migratedUser.getId(), updatedUser.getId());
+    assertNotEquals(migratedUser.getProviderId(), updatedUser.getProviderId());
+  }
 
   // existing provider(default/non default)	existing id 	email not in db	  user found, update email
   // OK
@@ -646,7 +648,7 @@ public class CreateUserControllerTest extends AbstractControllerTest {
   // existing email
   // user found, update providerType,providerId OK
   @Test
-  public void nonDefaultNonExistingProviderTypeProviderIdAsEmailExistingEmail() {
+  public void nonDefaultNonExistingProviderTypeProviderIdAsEmailExistingEmail_createUser() {
     // setup an existing user with default providerType and providerId from migration
     val migratedUser =
         entityGenerator.setupUser(
@@ -672,7 +674,7 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     assertTrue(tokenService.isValidToken(response));
 
     val tokenInfo = tokenService.getTokenUserInfo(response);
-    val updatedUser =
+    val newUser =
         initStringRequest()
             .endpoint("/users/%s", tokenInfo.getId())
             .getAnd()
@@ -680,11 +682,11 @@ public class CreateUserControllerTest extends AbstractControllerTest {
             .extractOneEntity(User.class);
 
     // assert next user matches idToken
-    assertEquals(updatedUser.getProviderType(), idToken.getProviderType());
-    assertEquals(updatedUser.getProviderId(), idToken.getProviderId());
-    assertEquals(updatedUser.getEmail(), idToken.getEmail());
-    assertEquals(updatedUser.getFirstName(), idToken.getGivenName());
-    assertEquals(updatedUser.getLastName(), idToken.getFamilyName());
+    assertEquals(newUser.getProviderType(), idToken.getProviderType());
+    assertEquals(newUser.getProviderId(), idToken.getProviderId());
+    assertEquals(newUser.getEmail(), idToken.getEmail());
+    assertEquals(newUser.getFirstName(), idToken.getGivenName());
+    assertEquals(newUser.getLastName(), idToken.getFamilyName());
 
     val existingUser =
         initStringRequest()
@@ -693,21 +695,15 @@ public class CreateUserControllerTest extends AbstractControllerTest {
             .assertOk()
             .extractOneEntity(User.class);
 
-    // assert user1 and user2 are the same and providerType and providerId have been updated from
-    // defaults
-    assertEquals(updatedUser.getId(), existingUser.getId());
-    assertEquals(updatedUser.getProviderType(), existingUser.getProviderType());
-    assertEquals(updatedUser.getProviderId(), existingUser.getProviderId());
-    assertEquals(updatedUser.getEmail(), existingUser.getEmail());
-    assertEquals(updatedUser.getLastName(), existingUser.getLastName());
-    assertEquals(updatedUser.getFirstName(), existingUser.getFirstName());
-    assertEquals(updatedUser.getPreferredLanguage(), existingUser.getPreferredLanguage());
-    assertEquals(updatedUser.getStatus(), existingUser.getStatus());
-    assertEquals(updatedUser.getType(), existingUser.getType());
+    // assert user1 and user2 are distinct users with same email
+    assertNotEquals(newUser.getId(), existingUser.getId());
+    assertNotEquals(newUser.getProviderType(), existingUser.getProviderType());
+    assertNotEquals(newUser.getProviderId(), existingUser.getProviderId());
+    assertEquals(newUser.getEmail(), existingUser.getEmail());
 
-    assertEquals(updatedUser.getId(), migratedUser.getId());
-    assertNotEquals(updatedUser.getProviderType(), migratedUser.getProviderType());
-    assertNotEquals(updatedUser.getProviderId(), migratedUser.getProviderId());
+    // assert migratedUser has not updated providerId
+    assertEquals(migratedUser.getProviderId(), migratedUser.getEmail());
+    assertEquals(migratedUser.getProviderId(), existingUser.getProviderId());
   }
 
   @Test
