@@ -6,7 +6,7 @@ ALTER TABLE egouser DROP CONSTRAINT egouser_name_key;
 
 CREATE TYPE providerType AS ENUM('GOOGLE', 'FACEBOOK', 'LINKEDIN', 'GITHUB', 'ORCID');
 ALTER TABLE egouser ADD COLUMN providertype providerType;
-ALTER TABLE egouser ALTER COLUMN providertype SET DEFAULT 'GOOGLE';
+ALTER TABLE egouser ALTER COLUMN providertype SET DEFAULT '${default_provider}';
 -- default values are not added to existing rows, need to explicitly update where providertype is NULL
 UPDATE egouser SET providertype = DEFAULT WHERE providertype IS NULL;
 -- then set not null constraint

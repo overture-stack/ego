@@ -50,7 +50,6 @@ import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -95,7 +94,6 @@ public class UserControllerTest extends AbstractControllerTest {
   @Autowired private UserService userService;
   @Autowired private ApplicationService applicationService;
   @Autowired private GroupService groupService;
-  @Autowired private TokenService tokenService;
 
   @Rule public ExpectedException exceptionRule = ExpectedException.none();
 

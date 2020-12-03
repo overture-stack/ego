@@ -205,10 +205,15 @@ spring:
 ###############################################################################
 spring:
   profiles: test
+  flyway:
+    placeholders:
+      default_provider: GOOGLE
+
+
+
 
 # To log the httpRequests and httpResponses for the controllers, set to true
 logging.test.controller.enable: false
-
 
 spring.datasource:
   driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
