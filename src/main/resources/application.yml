@@ -34,6 +34,8 @@ spring.datasource:
 spring:
   flyway:
     enabled: false
+    placeholders:
+      default_provider: GOOGLE
   jackson:
     deserialization:
       FAIL_ON_UNKNOWN_PROPERTIES: false
@@ -205,9 +207,6 @@ spring:
 ###############################################################################
 spring:
   profiles: test
-  flyway:
-    placeholders:
-      default_provider: GOOGLE
 
 
 
