@@ -50,7 +50,7 @@ public class CreateUserControllerTest extends AbstractControllerTest {
   private static boolean hasRunEntitySetup = false;
   private MockMvc mockMvc;
 
-  @Value("${providerType.default:GOOGLE}")
+  @Value("${spring.flyway.placeholders.default_provider:GOOGLE}")
   private ProviderType DEFAULT_PROVIDER_TYPE;
 
   private IDToken idToken = new IDToken();

@@ -2,6 +2,7 @@ package bio.overture.ego.test;
 
 import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.isNull;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
@@ -23,11 +24,18 @@ import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 public class FlywayInit {
   private static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory());
 
+  // retrieving placeholders with yaml_mapper because this implementation of Flyway does not allow
+  // access to placeholders
+  // Other options found look hackier:
+  // https://github.com/flyway/flyway/issues/1062#issuecomment-357265175
+  // https://blog.8bitzen.com/posts/using-flyway-java-migrations-with-spring-boot/
+  // **intending to remove this file in https://github.com/overture-stack/ego/issues/527**
   public static void initTestContainers(Connection connection) throws SQLException {
     log.info("init test containers with flyway ******************************");
     val appYaml = readApplicationYaml();
     val placeholders = parsePlaceholders(appYaml);
 
+    // assert tests here??
     Flyway.configure()
         .locations("classpath:flyway/sql", "classpath:db/migration")
         .dataSource(new SingleConnectionDataSource(connection, true))
@@ -46,6 +54,9 @@ public class FlywayInit {
     val springNode = checkAndGet(applicationProps, "spring");
     val flywayNode = checkAndGet(springNode, "flyway");
     val placeholdersNode = checkAndGet(flywayNode, "placeholders");
+    checkArgument(
+        !isNull(placeholdersNode),
+        "Placeholders node cannot be null. Check spring.flyway.placeholders configuration in app.properties.");
     return stream(placeholdersNode.fieldNames())
         .collect(toUnmodifiableMap(identity(), x -> placeholdersNode.path(x).asText()));
   }

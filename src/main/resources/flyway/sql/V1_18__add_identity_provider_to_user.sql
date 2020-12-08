@@ -17,3 +17,10 @@ UPDATE egouser SET providerid = email WHERE providerid IS NULL;
 ALTER TABLE egouser ALTER COLUMN providerid SET NOT NULL;
 
 ALTER TABLE egouser ADD UNIQUE(providertype, providerid);
+
+-- create tripwire table for verifying configured default provider
+CREATE TABLE defaultprovidertripwire (
+    id VARCHAR(255) PRIMARY KEY
+);
+
+INSERT INTO defaultprovidertripwire (id) VALUES ('${default_provider}');

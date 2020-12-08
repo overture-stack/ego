@@ -20,4 +20,5 @@ public class Tables {
   public static final String TOKENSCOPE = "tokenscope";
   public static final String REFRESHTOKEN = "refreshtoken";
   public static final String APPLICATION_PERMISSION = "applicationpermission";
+  public static final String DEFAULTPROVIDERTRIPWIRE = "defaultprovidertripwire";
 }
