@@ -7,25 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-// @Slf4j
-// @Service
-// @Transactional
-// public class DefaultProviderService extends AbstractNamedService<DefaultProvider, String> {
-//
-//  private final DefaultProviderRepository defaultProviderRepository;
-//
-//  @Autowired
-//  public DefaultProviderService(@NonNull DefaultProviderRepository defaultProviderRepository) {
-//    super(DefaultProvider.class, defaultProviderRepository);
-//    this.defaultProviderRepository = defaultProviderRepository;
-//  }
-
-//  @Override
-//  public DefaultProvider getWithRelationships(String s) {
-//    return null;
-//  }
-// }
-
 @Slf4j
 @Service
 public class DefaultProviderService extends AbstractBaseService<DefaultProvider, String> {
