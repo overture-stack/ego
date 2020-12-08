@@ -30,6 +30,7 @@ public class DefaultProviderServiceTest {
 
   @Test
   public void defaultProviderConfigured_Success() {
+    assertNotNull(configuredDefaultProvider);
     defaultProviderService.findById(configuredDefaultProvider);
     val defaultProvider = defaultProviderService.getById(configuredDefaultProvider);
     assertNotNull(defaultProvider);
@@ -38,6 +39,7 @@ public class DefaultProviderServiceTest {
 
   @Test
   public void defaultProviderConfigured_Failure() {
+    assertNotNull(configuredDefaultProvider);
     val defaultProviderType = Enum.valueOf(ProviderType.class, configuredDefaultProvider);
     val mockedDefaultProvider =
         entityGenerator.randomEnumExcluding(ProviderType.class, defaultProviderType);

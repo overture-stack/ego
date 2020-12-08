@@ -20,6 +20,8 @@ import lombok.val;
 import org.flywaydb.core.Flyway;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
+import static org.junit.Assert.*;
+
 @Slf4j
 public class FlywayInit {
   private static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory());
@@ -35,7 +37,9 @@ public class FlywayInit {
     val appYaml = readApplicationYaml();
     val placeholders = parsePlaceholders(appYaml);
 
-    // assert tests here??
+    assertTrue(placeholders.size() > 0);
+    assertTrue(placeholders.containsKey("default_provider"));
+
     Flyway.configure()
         .locations("classpath:flyway/sql", "classpath:db/migration")
         .dataSource(new SingleConnectionDataSource(connection, true))
