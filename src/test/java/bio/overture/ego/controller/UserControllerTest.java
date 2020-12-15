@@ -505,8 +505,6 @@ public class UserControllerTest extends AbstractControllerTest {
     partialUpdateUserPutRequestAnd(user0.getId(), r1).assertOk();
   }
 
-  // TODO: FIX do not use /users POST
-  // with new createUser implementation, status is not handled until update
   @Test
   public void statusValidation_MalformedStatus_BadRequest() {
     val invalidStatus = "something123";
@@ -515,18 +513,6 @@ public class UserControllerTest extends AbstractControllerTest {
 
     val data = generateUniqueTestUserData();
     val user = data.getUsers().get(0);
-
-    // Assert createUsers
-    //    val templateR1 =
-    //        CreateUserRequest.builder()
-    //            .email(generateNonExistentName(userService) + "@xyz.com")
-    //            .type(USER)
-    //            .lastName("")
-    //            .lastName("")
-    //            .preferredLanguage(ENGLISH)
-    //            .build();
-    //    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(STATUS, invalidStatus);
-    //    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
 
     // Assert updateUser
     val templateR2 =
@@ -539,8 +525,6 @@ public class UserControllerTest extends AbstractControllerTest {
     initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
   }
 
-  // TODO: FIX do not use /users POST
-  // with new createUser implementation, type is not handled until update
   @Test
   public void typeValidation_MalformedType_BadRequest() {
     val invalidType = "something123";
@@ -549,18 +533,6 @@ public class UserControllerTest extends AbstractControllerTest {
 
     val data = generateUniqueTestUserData();
     val user = data.getUsers().get(0);
-
-    // Assert createUsers
-    //    val templateR1 =
-    //        CreateUserRequest.builder()
-    //            .email(generateNonExistentName(userService) + "@xyz.com")
-    //            .status(APPROVED)
-    //            .preferredLanguage(ENGLISH)
-    //            .firstName("")
-    //            .lastName("")
-    //            .build();
-    //    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(TYPE, invalidType);
-    //    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
 
     // Assert updateUser
     val templateR2 =
@@ -573,8 +545,6 @@ public class UserControllerTest extends AbstractControllerTest {
     initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
   }
 
-  // TODO: FIX do not use /users POST
-  // with new createUser implementation, preferredLanguage is not handled until update
   @Test
   public void preferredLanguageValidation_MalformedPreferredLanguage_BadRequest() {
     val invalidLanguage = "something123";
@@ -583,19 +553,6 @@ public class UserControllerTest extends AbstractControllerTest {
 
     val data = generateUniqueTestUserData();
     val user = data.getUsers().get(0);
-
-    // Assert createUsers
-    //    val templateR1 =
-    //        CreateUserRequest.builder()
-    //            .email(generateNonExistentName(userService) + "@xyz.com")
-    //            .status(APPROVED)
-    //            .type(USER)
-    //            .firstName("")
-    //            .lastName("")
-    //            .build();
-    //    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(PREFERREDLANGUAGE,
-    // invalidLanguage);
-    //    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
 
     // Assert updateUser
     val templateR2 =
