@@ -3,8 +3,7 @@ package bio.overture.ego.controller;
 import static bio.overture.ego.model.enums.ProviderType.*;
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.enums.UserType.USER;
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentProviderId;
-import static bio.overture.ego.utils.EntityGenerator.randomEnumExcluding;
+import static bio.overture.ego.utils.EntityGenerator.*;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static org.junit.Assert.*;
@@ -21,6 +20,7 @@ import bio.overture.ego.service.UserService;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.utils.EntityGenerator;
 import java.util.stream.Stream;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.*;
@@ -47,15 +47,15 @@ import org.springframework.web.context.WebApplicationContext;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class CreateUserControllerTest extends AbstractControllerTest {
 
-  private static boolean hasRunEntitySetup = false;
+  private boolean hasRunEntitySetup = false;
   private MockMvc mockMvc;
 
   @Value("${spring.flyway.placeholders.default_provider:GOOGLE}")
-  private ProviderType DEFAULT_PROVIDER_TYPE;
+  private ProviderType defaultProviderType;
 
-  private IDToken idToken = new IDToken();
+  private IDToken idToken;
 
-  private HttpHeaders tokenHeaders = new HttpHeaders();
+  private final HttpHeaders tokenHeaders = new HttpHeaders();
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
@@ -85,14 +85,16 @@ public class CreateUserControllerTest extends AbstractControllerTest {
       entityGenerator.setupTestUsers();
       hasRunEntitySetup = true;
     }
-  }
 
-  @Before
-  public void beforeEachTest() {
+    // we are mocking the googleTokenService because we're not looking to test the response from the
+    // IdPs,
+    // we just need a dummy accessToken to test the login flow once ego receives this token from a
+    // given IdP
     tokenHeaders.set("token", "aValidTokenHeader");
     this.mockMvc = webAppContextSetup(webApplicationContext).build();
 
     val mockGoogleTokenService = mock(GoogleTokenService.class);
+    idToken = entityGenerator.createNewIdToken();
 
     Mockito.when(mockGoogleTokenService.validToken(Mockito.anyString())).thenReturn(true);
     Mockito.when(mockGoogleTokenService.decode(Mockito.anyString())).thenReturn(idToken);
@@ -108,56 +110,46 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     ReflectionTestUtils.setField(authController, "googleTokenService", actualGoogleTokenService);
   }
 
+  private String getTokenResponse() {
+    return initStringRequest()
+        .endpoint("/oauth/google/token")
+        .headers(tokenHeaders)
+        .getAnd()
+        .assertOk()
+        .getResponse()
+        .getBody();
+  }
+
+  @SneakyThrows
   @Test
   public void idToken_serializedTokenHasAllFields_Success() {
     val user = entityGenerator.setupUser("IdToken Test");
 
-    val idToken = new IDToken();
     idToken.setEmail(user.getEmail());
     idToken.setFamilyName(user.getLastName());
     idToken.setGivenName(user.getFirstName());
     idToken.setProviderType(user.getProviderType());
     idToken.setProviderId(user.getProviderId());
 
-    try {
-      val jsonString = MAPPER.writeValueAsString(idToken);
-      val json = MAPPER.readTree(jsonString);
+    val jsonString = MAPPER.writeValueAsString(idToken);
+    val json = MAPPER.readTree(jsonString);
 
-      Stream.of("given_name", "family_name", "provider_type", "provider_id", "email")
-          .forEach(
-              fieldname -> {
-                assertTrue(json.has(fieldname));
-              });
-      assertEquals(idToken.getEmail(), json.path("email").asText());
-      assertEquals(idToken.getFamilyName(), json.path("family_name").asText());
-      assertEquals(idToken.getGivenName(), json.path("given_name").asText());
-      assertEquals(idToken.getProviderType().toString(), json.path("provider_type").asText());
-      assertEquals(idToken.getProviderId(), json.path("provider_id").asText());
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+    Stream.of("given_name", "family_name", "provider_type", "provider_id", "email")
+        .forEach(
+            fieldname -> {
+              assertTrue(json.has(fieldname));
+            });
+    assertEquals(idToken.getEmail(), json.path("email").asText());
+    assertEquals(idToken.getFamilyName(), json.path("family_name").asText());
+    assertEquals(idToken.getGivenName(), json.path("given_name").asText());
+    assertEquals(idToken.getProviderType().toString(), json.path("provider_type").asText());
+    assertEquals(idToken.getProviderId(), json.path("provider_id").asText());
   }
 
   // not in db (default/non default)	not in db	  not in db	  create OK	  Empty Slate
   @Test
   public void nonExistingProviderTypeAndIdNonExistingEmail_createUser() {
-    val firstName = entityGenerator.generateNonExistentUserName();
-    val lastName = entityGenerator.generateNonExistentUserName();
-
-    idToken.setProviderType(GOOGLE);
-    idToken.setProviderId(generateNonExistentProviderId(userService));
-    idToken.setEmail(format("%s%s@domain.com", firstName, lastName));
-    idToken.setGivenName(firstName);
-    idToken.setFamilyName(lastName);
-
-    val response =
-        initStringRequest()
-            .endpoint("/oauth/google/token")
-            .headers(tokenHeaders)
-            .getAnd()
-            .assertOk()
-            .getResponse()
-            .getBody();
+    val response = getTokenResponse();
 
     // assert valid token is returned
     assertTrue(tokenService.isValidToken(response));
@@ -184,24 +176,7 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     // set up user with default providerType
     val user = entityGenerator.setupUser("Existing ProviderType");
 
-    // create idToken for a user with same providerType
-    val firstName = entityGenerator.generateNonExistentUserName();
-    val lastName = entityGenerator.generateNonExistentUserName();
-
-    idToken.setProviderType(DEFAULT_PROVIDER_TYPE);
-    idToken.setProviderId(generateNonExistentProviderId(userService));
-    idToken.setEmail(format("%s%s@domain.com", firstName, lastName));
-    idToken.setGivenName(firstName);
-    idToken.setFamilyName(lastName);
-
-    val response =
-        initStringRequest()
-            .endpoint("/oauth/google/token")
-            .headers(tokenHeaders)
-            .getAnd()
-            .assertOk()
-            .getResponse()
-            .getBody();
+    val response = getTokenResponse();
 
     // assert valid token is returned
     assertTrue(tokenService.isValidToken(response));
@@ -244,23 +219,10 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     val user = entityGenerator.setupUser("Existing ProviderType");
 
     // create idToken for a user with same providerId, different providerType
-    val firstName = entityGenerator.generateNonExistentUserName();
-    val lastName = entityGenerator.generateNonExistentUserName();
-
-    idToken.setProviderType(GITHUB);
+    idToken.setProviderType(entityGenerator.createNonDefaultProviderType());
     idToken.setProviderId(user.getProviderId());
-    idToken.setEmail(format("%s%s@domain.com", firstName, lastName));
-    idToken.setGivenName(firstName);
-    idToken.setFamilyName(lastName);
 
-    val response =
-        initStringRequest()
-            .endpoint("/oauth/google/token")
-            .headers(tokenHeaders)
-            .getAnd()
-            .assertOk()
-            .getResponse()
-            .getBody();
+    val response = getTokenResponse();
 
     // assert valid token is returned
     assertTrue(tokenService.isValidToken(response));
@@ -300,27 +262,23 @@ public class CreateUserControllerTest extends AbstractControllerTest {
   @Test
   public void nonExistingProviderTypeAndIdExistingEmail_createUser() {
     // setup for existing user with default providerType
-    val firstName = entityGenerator.generateNonExistentUserName();
-    val lastName = entityGenerator.generateNonExistentUserName();
+    val names = entityGenerator.generateNonExistentUserName().split(" ");
+    val firstName = names[0];
+    val lastName = names[1];
     val user =
         entityGenerator.setupUser(
-            format(firstName, lastName), ADMIN, generateNonExistentProviderId(userService), GITHUB);
+            format("%s %s", firstName, lastName),
+            ADMIN,
+            generateNonExistentProviderId(userService),
+            GITHUB);
 
     // create idToken for a user with same email, non existing providerType and providerId
-    idToken.setProviderType(FACEBOOK);
-    idToken.setProviderId(generateNonExistentProviderId(userService));
+    idToken.setProviderType(randomEnumExcluding(ProviderType.class, user.getProviderType()));
     idToken.setEmail(user.getEmail());
     idToken.setGivenName(user.getFirstName());
     idToken.setFamilyName(user.getLastName());
 
-    val response =
-        initStringRequest()
-            .endpoint("/oauth/google/token")
-            .headers(tokenHeaders)
-            .getAnd()
-            .assertOk()
-            .getResponse()
-            .getBody();
+    val response = getTokenResponse();
 
     // assert valid token is returned
     assertTrue(tokenService.isValidToken(response));
@@ -363,23 +321,18 @@ public class CreateUserControllerTest extends AbstractControllerTest {
             "ExistingUser WithEmail",
             USER,
             "ExistingUserWithEmail@domain.com",
-            DEFAULT_PROVIDER_TYPE);
+            defaultProviderType);
 
-    // create idToken for a user with same providerType and email, and actual providerId
+    // assert providerId matches email
+    assertEquals(migratedUser.getEmail(), migratedUser.getProviderId());
+
+    // create idToken for a user with same providerType and email, and valid providerId
     idToken.setProviderType(migratedUser.getProviderType());
-    idToken.setProviderId(generateNonExistentProviderId(userService));
     idToken.setEmail(migratedUser.getEmail());
     idToken.setGivenName(migratedUser.getFirstName());
     idToken.setFamilyName(migratedUser.getLastName());
 
-    val response =
-        initStringRequest()
-            .endpoint("/oauth/google/token")
-            .headers(tokenHeaders)
-            .getAnd()
-            .assertOk()
-            .getResponse()
-            .getBody();
+    val response = getTokenResponse();
 
     // assert valid token is returned
     assertTrue(tokenService.isValidToken(response));
@@ -419,6 +372,7 @@ public class CreateUserControllerTest extends AbstractControllerTest {
 
   // existing provider(default/non default)	existing id 	email not in db	  user found, update email
   // OK
+  // TODO: implement in https://github.com/overture-stack/ego/issues/532
   @Ignore("Will be implemented with updateUser modification ticket")
   @Test
   public void existingProviderTypeExistingProviderIdNonExistingEmail_updateUser() {
@@ -434,14 +388,7 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     idToken.setGivenName(user.getFirstName());
     idToken.setFamilyName(user.getLastName());
 
-    val response =
-        initStringRequest()
-            .endpoint("/oauth/google/token")
-            .headers(tokenHeaders)
-            .getAnd()
-            .assertOk()
-            .getResponse()
-            .getBody();
+    val response = getTokenResponse();
 
     // assert valid token is returned
     assertTrue(tokenService.isValidToken(response));
@@ -487,20 +434,13 @@ public class CreateUserControllerTest extends AbstractControllerTest {
 
     val nonExistingProviderId = generateNonExistentProviderId(userService);
 
-    idToken.setProviderType(DEFAULT_PROVIDER_TYPE);
+    //    idToken.setProviderType(defaultProviderType);
     idToken.setProviderId(nonExistingProviderId);
     idToken.setEmail(user.getEmail());
     idToken.setFamilyName(user.getLastName());
     idToken.setGivenName(user.getFirstName());
 
-    val response =
-        initStringRequest()
-            .endpoint("/oauth/google/token")
-            .headers(tokenHeaders)
-            .getAnd()
-            .assertOk()
-            .getResponse()
-            .getBody();
+    val response = getTokenResponse();
 
     // assert valid token is returned
     assertTrue(tokenService.isValidToken(response));
@@ -547,14 +487,7 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     idToken.setFamilyName(user.getLastName());
     idToken.setGivenName(user.getFirstName());
 
-    val response =
-        initStringRequest()
-            .endpoint("/oauth/google/token")
-            .headers(tokenHeaders)
-            .getAnd()
-            .assertOk()
-            .getResponse()
-            .getBody();
+    val response = getTokenResponse();
 
     // assert valid token is returned
     assertTrue(tokenService.isValidToken(response));
@@ -599,21 +532,16 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     // setup existing user with default providerType
     val user = entityGenerator.setupUser(entityGenerator.generateNonExistentUserName());
 
+    // assert user has default providerType
+    assertEquals(user.getProviderType(), defaultProviderType);
     // setup idToken with same providerId, email as user, different providerType
-    idToken.setProviderType(randomEnumExcluding(ProviderType.class, DEFAULT_PROVIDER_TYPE));
+    idToken.setProviderType(entityGenerator.createNonDefaultProviderType());
     idToken.setProviderId(user.getProviderId());
     idToken.setEmail(user.getEmail());
     idToken.setFamilyName(user.getLastName());
     idToken.setGivenName(user.getFirstName());
 
-    val response =
-        initStringRequest()
-            .endpoint("/oauth/google/token")
-            .headers(tokenHeaders)
-            .getAnd()
-            .assertOk()
-            .getResponse()
-            .getBody();
+    val response = getTokenResponse();
 
     // assert valid token is returned
     assertTrue(tokenService.isValidToken(response));
@@ -657,23 +585,19 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     // setup an existing user with default providerType and providerId from migration
     val migratedUser =
         entityGenerator.setupUser(
-            "Migrated User", USER, "MigratedUser@domain.com", DEFAULT_PROVIDER_TYPE);
+            "Migrated User", USER, "MigratedUser@domain.com", defaultProviderType);
+
+    // assert migratedUser providerId matches email
+    assertEquals(migratedUser.getProviderId(), migratedUser.getEmail());
 
     // setup idToken with same email, actual providerType and providerId
-    idToken.setProviderType(GITHUB);
-    idToken.setProviderId(generateNonExistentProviderId(userService));
+    idToken.setProviderType(entityGenerator.createNonDefaultProviderType());
+    //    idToken.setProviderId(generateNonExistentProviderId(userService));
     idToken.setEmail(migratedUser.getEmail());
     idToken.setGivenName(migratedUser.getFirstName());
     idToken.setFamilyName(migratedUser.getLastName());
 
-    val response =
-        initStringRequest()
-            .endpoint("/oauth/google/token")
-            .headers(tokenHeaders)
-            .getAnd()
-            .assertOk()
-            .getResponse()
-            .getBody();
+    val response = getTokenResponse();
 
     // assert valid token is returned
     assertTrue(tokenService.isValidToken(response));
@@ -713,19 +637,11 @@ public class CreateUserControllerTest extends AbstractControllerTest {
 
   @Test
   public void idTokenHasProviderInfoButNoEmail_createUser() {
-    idToken.setProviderType(GOOGLE);
-    idToken.setProviderId(generateNonExistentProviderId(userService));
     idToken.setGivenName("UserHas");
     idToken.setFamilyName("NoEmail");
+    idToken.setEmail(null);
 
-    val response =
-        initStringRequest()
-            .endpoint("/oauth/google/token")
-            .headers(tokenHeaders)
-            .getAnd()
-            .assertOk()
-            .getResponse()
-            .getBody();
+    val response = getTokenResponse();
 
     // assert valid token is returned
     assertTrue(tokenService.isValidToken(response));
@@ -750,9 +666,10 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     assertTrue(isNull(newUser.getEmail()));
   }
 
+  // no test required for a blank providerType as this value is hardcoded in each SSOFilter
   @Test
   public void createUser_BlankProviderId_BadRequest() {
-    val idToken = entityGenerator.setupUserIDToken(DEFAULT_PROVIDER_TYPE, "");
+    val idToken = entityGenerator.setupUserIDToken(defaultProviderType, "");
 
     exceptionRule.expect(MalformedRequestException.class);
     exceptionRule.expectMessage("Provider id cannot be blank.");

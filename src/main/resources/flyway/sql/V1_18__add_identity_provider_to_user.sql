@@ -20,7 +20,7 @@ ALTER TABLE egouser ADD UNIQUE(providertype, providerid);
 
 -- create tripwire table for verifying configured default provider
 CREATE TABLE defaultprovidertripwire (
-    id VARCHAR(255) PRIMARY KEY
+    id providerType PRIMARY KEY
 );
 
 INSERT INTO defaultprovidertripwire (id) VALUES ('${default_provider}');

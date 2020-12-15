@@ -1,6 +1,9 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
+
 import bio.overture.ego.model.entity.DefaultProvider;
+import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.repository.DefaultProviderRepository;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -9,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class DefaultProviderService extends AbstractBaseService<DefaultProvider, String> {
+public class DefaultProviderService extends AbstractBaseService<DefaultProvider, ProviderType> {
 
   private final DefaultProviderRepository defaultProviderRepository;
 
@@ -20,7 +23,9 @@ public class DefaultProviderService extends AbstractBaseService<DefaultProvider,
   }
 
   @Override
-  public DefaultProvider getWithRelationships(String s) {
-    return null;
+  public DefaultProvider getWithRelationships(ProviderType id) {
+    return defaultProviderRepository
+        .findById(id)
+        .orElseThrow(() -> buildNotFoundException("Could not find default provider type '%s'", id));
   }
 }

@@ -208,9 +208,6 @@ spring:
 spring:
   profiles: test
 
-
-
-
 # To log the httpRequests and httpResponses for the controllers, set to true
 logging.test.controller.enable: false
 

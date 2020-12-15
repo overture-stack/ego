@@ -559,4 +559,22 @@ public class EntityGenerator {
     idToken.setGivenName(givenName);
     return idToken;
   }
+
+  public IDToken createNewIdToken() {
+    val token = new IDToken();
+
+    val names = generateNonExistentUserName().split(" ");
+    val firstName = names[0];
+    val lastName = names[1];
+    token.setProviderType(DEFAULT_PROVIDER_TYPE);
+    token.setProviderId(generateNonExistentProviderId(userService));
+    token.setEmail(format("%s%s@domain.com", firstName, lastName));
+    token.setGivenName(firstName);
+    token.setFamilyName(lastName);
+    return token;
+  }
+
+  public ProviderType createNonDefaultProviderType() {
+    return randomEnumExcluding(ProviderType.class, DEFAULT_PROVIDER_TYPE);
+  }
 }

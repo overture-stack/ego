@@ -172,10 +172,14 @@ public class UserService extends AbstractNamedService<User, UUID> {
         findByProviderTypeAndProviderId(providerType, providerId)
             .or(
                 () -> {
-                  // an existing user without provider info will default to GOOGLE and their
-                  // existing email
-                  // in this scenario only a login from the DEFAULT provider will find the user
                   if (!isNull(userEmail)) {
+                    // For users that existed before the data migration, their data will be migrated
+                    // to use the DEFAULT provider as their providerType and their email as the
+                    // providerId, since the email was previously unique.
+                    // In this scenario, since a user was not found using the idToken providerType +
+                    // providerId, a secondary search is done on the user's email as the providerId
+                    // and the idToken.providerType.
+                    // If the user is found, their record is `healed` to use the correct providerId.
                     val userByEmailResult =
                         findByProviderTypeAndProviderId(idToken.getProviderType(), userEmail);
                     userByEmailResult.ifPresent(

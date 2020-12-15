@@ -12,7 +12,7 @@ The goal is to map the enum to the database. In the end, solution 3 was chosen.
 ##### 1. Middleware Level Enum Handling without Hibernate Annotations
 Set the type of the field in the database to a `VARCHAR` and only use the `@Enumerated` JPA annotation
 Pros:
-    - Hibernate will handle the logic of converting an AccessLevel to a string. This means Enum conversion is handelled by the middleware naturally.
+    - Hibernate will handle the logic of converting an AccessLevel to a string. This means Enum conversion is handled by the middleware naturally.
     - Simple and clean solution using only JPA annotations
 Cons:
     - Enum type is represented as an Enum at the application level but as a VARCHAR at the database level. If someone was to backdoor the database and update the `accessLevel` of a policy, they could potentially break the application. There is no safeguard outside of hibernate/JPA
