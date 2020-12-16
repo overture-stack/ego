@@ -173,13 +173,6 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     return new Scope(policy, name.getAccessLevel());
   }
 
-  public Set<Scope> missingScopes(String userName, Set<ScopeName> scopeNames) {
-    val user = userService.getByName(userName);
-    val userScopes = extractScopes(user);
-    val requestedScopes = getScopes(scopeNames);
-    return Scope.missingScopes(userScopes, requestedScopes);
-  }
-
   public String str(Object o) {
     if (o == null) {
       return "null";
@@ -395,7 +388,6 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     val contents = BasicAuthToken.decode(authToken);
 
     val clientId = contents.get().getClientId();
-    val application = applicationService.findByClientId(clientId);
 
     val aK =
         findByApiKeyString(apiKey).orElseThrow(() -> new InvalidTokenException("ApiKey not found"));
@@ -410,13 +402,13 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
 
     val owner = aK.getOwner();
     val scopes = explicitScopes(effectiveScopes(extractScopes(owner), aK.scopes()));
-    val names = mapToSet(scopes, Scope::toString);
+    val scopeNames = mapToSet(scopes, Scope::toString);
 
-    return new ApiKeyScopeResponse(owner.getName(), clientId, aK.getSecondsUntilExpiry(), names);
+    return new ApiKeyScopeResponse(owner.getId(), clientId, aK.getSecondsUntilExpiry(), scopeNames);
   }
 
-  public UserScopesResponse userScopes(@NonNull String userName) {
-    val user = userService.getByName(userName);
+  public UserScopesResponse userScopes(@NonNull UUID userId) {
+    val user = userService.getById(userId);
     val scopes = extractScopes(user);
     val names = mapToSet(scopes, Scope::toString);
 

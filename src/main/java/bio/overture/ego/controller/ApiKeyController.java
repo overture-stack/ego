@@ -120,8 +120,8 @@ public class ApiKeyController {
   public @ResponseBody UserScopesResponse getUserScope(
       @ApiIgnore @RequestHeader(value = "Authorization", required = true)
           final String authorization,
-      @RequestParam(value = "userName") final String userName) {
-    return tokenService.userScopes(userName);
+      @RequestParam(value = "userId") final UUID userId) {
+    return tokenService.userScopes(userId);
   }
 
   @RequestMapping(method = POST, value = "/api_key")
