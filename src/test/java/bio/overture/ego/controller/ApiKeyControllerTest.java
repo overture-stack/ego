@@ -129,7 +129,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
   public void issueApiKeyExactScope() {
     // if scopes are exactly the same as user scopes, issue api key should be successful,
 
-    val user = userService.getByName("FirstUser@domain.com");
+    val user = entityGenerator.setupUser("First User");
     val userId = user.getId();
     val study001 = policyService.getByName("Study001");
     val study001id = study001.getId();
@@ -171,7 +171,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
   public void issueApiKeyWithExcessiveScope() {
     // If api key has scopes that user doesn't, api key won't be issued.
 
-    val user = userService.getByName("SecondUser@domain.com");
+    val user = entityGenerator.setupUser("Second User");
     val userId = user.getId();
     val study001 = policyService.getByName("Study001");
     val study001id = study001.getId();
@@ -205,7 +205,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
   public void issueApiKeyForLimitedScopes() {
     // if scopes are subset of user scopes, issue api key should be successful
 
-    val user = userService.getByName("UserTwo@domain.com");
+    val user = entityGenerator.setupUser("User Two");
     val userId = user.getId();
 
     val study001 = policyService.getByName("Study001");
@@ -250,7 +250,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
   public void issueTokenForInvalidScope() {
     // If requested scopes don't exist, should get 404
 
-    val user = userService.getByName("UserOne@domain.com");
+    val user = entityGenerator.setupUser("User One");
     val userId = user.getId();
 
     val study001 = policyService.getByName("Study001");
@@ -310,7 +310,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
   @SneakyThrows
   @Test
   public void checkRevokedApiKey() {
-    val user = userService.getByName("UserThree@domain.com");
+    val user = entityGenerator.setupUser("User Three");
     val apiKeyName = "601044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.WRITE", "id.WRITE", "portal.WRITE");
     entityGenerator.setupApiKey(user, apiKeyName, true, 1000, "test token", scopes);
@@ -329,7 +329,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
   @SneakyThrows
   @Test
   public void checkValidApiKey() {
-    val user = userService.getByName("UserThree@domain.com");
+    val user = entityGenerator.setupUser("User Three");
     val apiKeyName = "501044a1-3ffd-4164-a6a0-0e1e666b28dc";
     val scopes = test.getScopes("song.WRITE", "id.WRITE", "portal.WRITE");
     entityGenerator.setupApiKey(user, apiKeyName, false, 1000, "test token", scopes);
@@ -364,7 +364,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
   @SneakyThrows
   @Test
   public void getUserScope() {
-    val user = userService.getByName("ThirdUser@domain.com");
+    val user = entityGenerator.setupUser("Third User");
     val userName = "ThirdUser@domain.com";
 
     val study001 = policyService.getByName("Study001");
