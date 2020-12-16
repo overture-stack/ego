@@ -46,11 +46,16 @@ public class LastloginTest {
 
     assertNull(
         " Verify before generatedUserToken, last login after fetching the user should be null. ",
-        userService.getByProviderTypeAndProviderId(idToken.getProviderType(), idToken.getProviderId()).getLastLogin());
+        userService
+            .getByProviderTypeAndProviderId(idToken.getProviderType(), idToken.getProviderId())
+            .getLastLogin());
 
     tokenService.generateUserToken(idToken);
 
-    val lastLogin = userService.getByProviderTypeAndProviderId(idToken.getProviderType(), idToken.getProviderId()).getLastLogin();
+    val lastLogin =
+        userService
+            .getByProviderTypeAndProviderId(idToken.getProviderType(), idToken.getProviderId())
+            .getLastLogin();
     userService.delete(user.getId());
 
     assertNotNull("Verify after generatedUserToken, last login is not null.", lastLogin);

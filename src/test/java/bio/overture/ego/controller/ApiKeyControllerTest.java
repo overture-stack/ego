@@ -365,7 +365,6 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
   @Test
   public void getUserScope() {
     val user = entityGenerator.setupUser("Third User");
-    val userName = "ThirdUser@domain.com";
 
     val study001 = policyService.getByName("Study001");
     val study001id = study001.getId();
@@ -384,7 +383,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
     userPermissionService.addPermissions(user.getId(), permissions);
 
-    val response = initStringRequest().endpoint("o/scopes?userName=%s", userName).get();
+    val response = initStringRequest().endpoint("o/scopes?userId=%s", user.getId()).get();
 
     val statusCode = response.getStatusCode();
     assertEquals(statusCode, HttpStatus.OK);
@@ -397,8 +396,8 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
   @SneakyThrows
   @Test
   public void getUserScopeInvalidUserName() {
-    val userName = "randomUser@domain.com";
-    val response = initStringRequest().endpoint("o/scopes?userName=%s", userName).get();
+    val userId = entityGenerator.generateNonExistentId(userService);
+    val response = initStringRequest().endpoint("o/scopes?userId=%s", userId).get();
 
     val statusCode = response.getStatusCode();
     assertEquals(HttpStatus.NOT_FOUND, statusCode);

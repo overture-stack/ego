@@ -135,7 +135,7 @@ public class EntityGenerator {
     val names = name.split(" ", 2);
     val userName = format("%s%s@domain.com", names[0], names[1]);
     return userService
-        .findByName(userName)
+        .findByProviderTypeAndProviderId(providerType, providerId)
         .orElseGet(
             () -> {
               val createUserRequest = createUser(name, type, providerType, providerId);
@@ -271,12 +271,12 @@ public class EntityGenerator {
 
   private String randomUserEmail() {
     String email;
-    Optional<User> result;
+    List<User> result;
 
     do {
       email = randomStringNoSpaces(5) + "@xyz.com";
-      result = userService.findByName(email);
-    } while (result.isPresent());
+      result = userService.findByEmail(email);
+    } while (result.size() > 0);
 
     return email;
   }
@@ -402,12 +402,13 @@ public class EntityGenerator {
     String name;
     Optional<User> result;
 
-    do {
-      name = generateRandomUserName(r, 5);
-      result = userService.findByName(name);
-    } while (result.isPresent());
+    //    do {
+    //      name = generateRandomUserName(r, 5);
+    //      result = userService.findByName(name);
+    //    } while (result.isPresent());
 
-    return name;
+    //    return name;
+    return generateRandomUserName(r, 5);
   }
 
   public Set<Scope> getScopes(String... scope) {
@@ -543,10 +544,9 @@ public class EntityGenerator {
 
   public IDToken setupUserIDToken(ProviderType providerType, String providerId) {
     return setupUserIDToken(
-        providerType,
-        providerId,
-        generateNonExistentName(userService),
-        generateNonExistentName(userService));
+        providerType, providerId, generateNonExistentUserName(), generateNonExistentUserName());
+    //        generateNonExistentName(userService),
+    //        generateNonExistentName(userService));
   }
 
   public IDToken setupUserIDToken(

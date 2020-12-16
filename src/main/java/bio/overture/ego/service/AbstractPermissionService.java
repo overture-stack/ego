@@ -44,7 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Transactional
 public abstract class AbstractPermissionService<
-        O extends NameableEntity<UUID>, P extends AbstractPermission<O>>
+        O extends Identifiable<UUID>, P extends AbstractPermission<O>>
     extends AbstractBaseService<P, UUID> {
 
   /** Dependencies */
@@ -305,10 +305,9 @@ public abstract class AbstractPermissionService<
   }
 
   protected PolicyResponse convertToPolicyResponse(@NonNull P p) {
-    val name = p.getOwner().getName();
     val id = p.getOwner().getId().toString();
     val mask = p.getAccessLevel();
-    return PolicyResponse.builder().name(name).id(id).mask(mask).build();
+    return PolicyResponse.builder().id(id).mask(mask).build();
   }
 
   /**

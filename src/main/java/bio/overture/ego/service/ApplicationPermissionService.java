@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class ApplicationPermissionService
-    extends AbstractPermissionService<Application, ApplicationPermission> {
+    extends AbstractNameablePermissionService<Application, ApplicationPermission> {
 
   /** Dependencies * */
   private final ApplicationService applicationService;

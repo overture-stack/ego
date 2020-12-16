@@ -25,7 +25,7 @@ import static org.springframework.http.HttpStatus.*;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.PolicyRequest;
-import bio.overture.ego.model.entity.NameableEntity;
+import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -131,7 +131,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
     assertEquals(responseJson.get("name").asText(), "Study001");
   }
 
-  public void associatePermissionsWithEntity(NameableEntity entity, String entityName) {
+  public void associatePermissionsWithEntity(Identifiable entity, String entityName) {
     val policyName = String.format("AddPermission_%s", entityName);
     val policyId = entityGenerator.setupSinglePolicy(policyName).getId().toString();
     val entityId = entity.getId().toString();
@@ -161,7 +161,7 @@ public class PolicyControllerTest extends AbstractControllerTest {
     }
   }
 
-  public void disassociatePermissionsFromEntity(NameableEntity entity, String entityName) {
+  public void disassociatePermissionsFromEntity(Identifiable entity, String entityName) {
     val policyName = String.format("DeletePermission_%s", entityName);
     val policyId = entityGenerator.setupSinglePolicy(policyName).getId().toString();
     val entityId = entity.getId().toString();

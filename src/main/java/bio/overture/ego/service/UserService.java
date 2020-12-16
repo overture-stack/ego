@@ -66,7 +66,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @Transactional
-public class UserService extends AbstractNamedService<User, UUID> {
+public class UserService extends AbstractBaseService<User, UUID> {
 
   /** Constants */
   public static final UserConverter USER_CONVERTER = Mappers.getMapper(UserConverter.class);
@@ -103,17 +103,16 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   @SuppressWarnings("unchecked")
-  @Override
-  public Optional<User> findByName(String name) {
-    return (Optional<User>)
+  public List<User> findByEmail(String email) {
+    return (List<User>)
         getRepository()
-            .findOne(
+            .findAll(
                 new UserSpecificationBuilder()
                     .fetchApplications(true)
                     .fetchUserGroups(true)
                     .fetchUserAndGroupPermissions(true)
                     .fetchRefreshToken(true)
-                    .buildByNameIgnoreCase(name));
+                    .buildByEmail(email));
   }
 
   @SuppressWarnings("unchecked")
@@ -148,6 +147,16 @@ public class UserService extends AbstractNamedService<User, UUID> {
             .fetchUserGroups(fetchUserGroups)
             .fetchApplications(fetchApplications);
     return getMany(ids, spec);
+  }
+
+  public User getByProviderTypeAndProviderId(ProviderType providerType, String providerId) {
+    val result = findByProviderTypeAndProviderId(providerType, providerId);
+    checkNotFound(
+        result.isPresent(),
+        "The user with providerType %s and providerId %s does not exist",
+        providerType,
+        providerId);
+    return result.get();
   }
 
   public User createFromIDToken(IDToken idToken) {
@@ -576,9 +585,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
     @AfterMapping
     protected void correctUserData(@MappingTarget User userToUpdate) {
-      // Set UserName to equal the email.
-      userToUpdate.setName(userToUpdate.getEmail());
-
       // Set Created At date to Now if not defined
       if (isNull(userToUpdate.getCreatedAt())) {
         userToUpdate.setCreatedAt(new Date());
