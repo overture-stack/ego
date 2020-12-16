@@ -55,7 +55,7 @@ public class SessionConfig {
     serializer.setUseSecureCookie(properties.isSecure());
     serializer.setCookieMaxAge(properties.getMaxAge());
 
-    // These shouldn't be useful configurable. ALWAYS make sure its HTTP Only.
+    // These shouldn't be user configurable. ALWAYS make sure its HTTP Only.
     serializer.setUseHttpOnlyCookie(true);
     serializer.setCookiePath("/");
     serializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
