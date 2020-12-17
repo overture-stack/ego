@@ -1,6 +1,7 @@
 package bio.overture.ego.controller;
 
 import static bio.overture.ego.model.enums.ApplicationType.CLIENT;
+import static bio.overture.ego.model.enums.ProviderType.GOOGLE;
 import static bio.overture.ego.model.enums.UserType.USER;
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertFalse;
@@ -151,7 +152,12 @@ public class RevokeApiKeyControllerTest {
     assertFalse(revokedApiKey.isRevoked());
   }
 
-  @WithMockCustomUser(firstName = "Regular", lastName = "User", type = USER)
+  @WithMockCustomUser(
+      firstName = "Regular",
+      lastName = "User",
+      type = USER,
+      providerType = GOOGLE,
+      providerId = "regularUser0123")
   @SneakyThrows
   @Test
   public void revokeOwnApiKeyAsRegularUser() {
@@ -159,9 +165,11 @@ public class RevokeApiKeyControllerTest {
 
     val apiKeyName = randomUUID().toString();
     val scopes = test.getScopes("song.READ");
+    // creating a single mockUser that matches withMockCustomUser because users are not unique on email (previously name field)
+    val mockUser = entityGenerator.setupUser("Regular User", USER, "regularUser0123", GOOGLE);
+    entityGenerator.addPermissions(mockUser, test.getScopes("song.READ", "collab.READ"));
     val apiKey =
-        entityGenerator.setupApiKey(
-            test.regularUser, apiKeyName, false, 1000, "test token", scopes);
+        entityGenerator.setupApiKey(mockUser, apiKeyName, false, 1000, "test token", scopes);
 
     assertFalse(apiKey.isRevoked());
 
