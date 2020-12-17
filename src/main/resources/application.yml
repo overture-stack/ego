@@ -152,6 +152,17 @@ default:
   user:
     type: USER
     status: APPROVED
+
+initialization:
+  enabled: false
+  applications: []
+#    - name: my-app
+#      type: CLIENT # or ADMIN
+#      clientId: some-client-id  # should be >2 chars
+#      clientSecret: some-client-secret  # should be >14 chars
+#      redirectUri: https://example.org  # optional
+#      description: Some description about this application  # optional
+
 ---
 ###############################################################################
 # Profile - "jks"
