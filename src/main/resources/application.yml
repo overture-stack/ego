@@ -163,6 +163,17 @@ default:
   user:
     type: USER
     status: APPROVED
+
+initialization:
+  enabled: false
+  applications:
+    - name: my-app
+      type: ADMIN
+      clientId: myClientId
+      clientSecret: myClientSecret123
+      redirectUri: https://example.org  # optional
+      description: Some description about this application  # optional
+
 ---
 ###############################################################################
 # Profile - "jks"
