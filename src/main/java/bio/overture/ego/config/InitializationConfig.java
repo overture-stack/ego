@@ -1,6 +1,11 @@
 package bio.overture.ego.config;
 
 import bio.overture.ego.model.enums.ApplicationType;
+import java.util.ArrayList;
+import java.util.List;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -8,13 +13,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.util.ArrayList;
-import java.util.List;
 
 @Setter
 @Getter
@@ -33,10 +31,16 @@ public class InitializationConfig {
   public static class InitialApplication {
     @NotBlank private String name;
     @NotNull private ApplicationType type;
-    @NotBlank @Size(min=3) private String clientId;
-    @NotBlank @Size(min=15) private String clientSecret;
+
+    @NotBlank
+    @Size(min = 3)
+    private String clientId;
+
+    @NotBlank
+    @Size(min = 15)
+    private String clientSecret;
+
     private String redirectUri;
     private String description;
   }
-
 }

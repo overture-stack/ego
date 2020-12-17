@@ -1,20 +1,19 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.model.enums.StatusType.APPROVED;
+import static bio.overture.ego.model.exceptions.InternalServerException.checkInternalServerException;
+import static java.util.Objects.nonNull;
+
 import bio.overture.ego.config.InitializationConfig;
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.entity.InitTripWire;
 import bio.overture.ego.repository.InitTripWireRepository;
+import javax.transaction.Transactional;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import javax.transaction.Transactional;
-
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static bio.overture.ego.model.exceptions.InternalServerException.checkInternalServerException;
-import static java.util.Objects.nonNull;
 
 @Slf4j
 @Service
@@ -25,7 +24,8 @@ public class InitializationService {
   private final InitializationConfig config;
 
   @Autowired
-  public InitializationService(@NonNull InitTripWireRepository initTripWireRepository,
+  public InitializationService(
+      @NonNull InitTripWireRepository initTripWireRepository,
       @NonNull ApplicationService applicationService,
       @NonNull InitializationConfig config) {
     this.initTripWireRepository = initTripWireRepository;
@@ -34,14 +34,13 @@ public class InitializationService {
   }
 
   @Transactional
-  public void initialize(){
-    if (isInitialized()){
+  public void initialize() {
+    if (isInitialized()) {
       log.info("[InitTripWire]: Already tripped, skipping initialization");
     } else {
       log.info("[InitTripWire]: Not tripped, initializing applications");
-      if (nonNull(config.getApplications()) && !config.getApplications().isEmpty()){
-        config.getApplications()
-            .stream()
+      if (nonNull(config.getApplications()) && !config.getApplications().isEmpty()) {
+        config.getApplications().stream()
             .map(InitializationService::convertToApplication)
             .forEach(applicationService::create);
       }
@@ -50,10 +49,12 @@ public class InitializationService {
     }
   }
 
-  public boolean isInitialized(){
+  public boolean isInitialized() {
     val results = initTripWireRepository.findAll();
-    checkInternalServerException(results.size() < 2, "Returned more than 1 result, when only a maximum of 1 result was expected");
-    if (!results.isEmpty()){
+    checkInternalServerException(
+        results.size() < 2,
+        "Returned more than 1 result, when only a maximum of 1 result was expected");
+    if (!results.isEmpty()) {
       val initTripWire = results.get(0);
       return initTripWire.getInitialized() > 0;
     }
@@ -61,7 +62,7 @@ public class InitializationService {
   }
 
   private static CreateApplicationRequest convertToApplication(
-      InitializationConfig.InitialApplication initialApplication){
+      InitializationConfig.InitialApplication initialApplication) {
     return CreateApplicationRequest.builder()
         .name(initialApplication.getName())
         .clientId(initialApplication.getClientId())
@@ -72,5 +73,4 @@ public class InitializationService {
         .status(APPROVED)
         .build();
   }
-
 }
