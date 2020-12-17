@@ -439,10 +439,6 @@ public class UserControllerTest extends AbstractControllerTest {
             .providerId(user0.getProviderId())
             .build();
 
-    // TODO: why does the partial update req r1 create a bunch of null values if the fields are not
-    // populated?
-    // this overwrites the existing user fields
-
     // Update user
     partialUpdateUserPutRequestAnd(user0.getId(), r1).assertOk();
 

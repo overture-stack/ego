@@ -165,7 +165,8 @@ public class RevokeApiKeyControllerTest {
 
     val apiKeyName = randomUUID().toString();
     val scopes = test.getScopes("song.READ");
-    // creating a single mockUser that matches withMockCustomUser because users are not unique on email (previously name field)
+    // creating a single mockUser that matches withMockCustomUser because users are not unique on
+    // email (previously name field)
     val mockUser = entityGenerator.setupUser("Regular User", USER, "regularUser0123", GOOGLE);
     entityGenerator.addPermissions(mockUser, test.getScopes("song.READ", "collab.READ"));
     val apiKey =
