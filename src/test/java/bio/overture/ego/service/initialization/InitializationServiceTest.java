@@ -10,6 +10,7 @@ import bio.overture.ego.repository.ApplicationRepository;
 import bio.overture.ego.repository.InitTripWireRepository;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.InitializationService;
+import bio.overture.ego.utils.EntityGenerator;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Rule;
@@ -22,11 +23,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.transaction.annotation.Transactional;
 
+import javax.transaction.Transactional;
 import java.util.Arrays;
 import java.util.Set;
 
+import static bio.overture.ego.model.enums.ApplicationType.ADMIN;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentClientId;
+import static bio.overture.ego.utils.EntityGenerator.generateNonExistentName;
 import static java.util.Arrays.stream;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -46,18 +50,20 @@ public class InitializationServiceTest {
   @Autowired private InitializationService initializationService;
   @Autowired private ApplicationRepository applicationRepository;
   @Autowired private ApplicationService applicationService;
+  @Autowired private EntityGenerator entityGenerator;
 
   @Rule public ExpectedException exceptionRule = ExpectedException.none();
 
   @Test
   public void initialize_emptyConfig_trippedWithNoApplications(){
-    // Create an empty config, meaning there are no applications to intialize
+    // Create an empty config, meaning there are no applications to initialize
     val config = createConfig();
 
-    // Assert the trip wire was not already set, and that there are no applications yet
+    // Assert the trip wire was not already set
     assertEquals(0,initTripWireRepository.count());
     assertFalse(initializationService.isInitialized());
-    assertEquals(0,applicationRepository.count());
+
+    val referenceAppCount = applicationRepository.count();
 
     // Run the initialization using the empty config
     val service = new InitializationService(initTripWireRepository, applicationService, config);
@@ -67,32 +73,41 @@ public class InitializationServiceTest {
     assertEquals(1,initTripWireRepository.count());
     assertEquals(1, initTripWireRepository.findAll().stream().findFirst().get().getInitialized());
     assertTrue(initializationService.isInitialized());
+
     // Assert no applications were created
-    assertEquals(0,applicationRepository.count());
+    assertEquals(referenceAppCount,applicationRepository.count());
   }
 
   @Test
   public void initialize_multipleApps_success(){
     // Create an empty config, meaning there are no applications to intialize
+    val appName1 = generateNonExistentName(applicationService);
+    val appClientId1 = generateNonExistentClientId(applicationService);
+    val appName2 = generateNonExistentName(applicationService);
+    val appClientId2 = generateNonExistentClientId(applicationService);
+
     val config = createConfig(
         InitialApplication.builder()
-            .name("app1")
-            .clientId("clientId1")
+            .name(appName1)
+            .clientId(appClientId1)
             .clientSecret("clientSecret")
-            .type(ApplicationType.ADMIN)
+            .type(ADMIN)
             .build(),
         InitialApplication.builder()
-            .name("app2")
-            .clientId("clientId2")
+            .name(appName2)
+            .clientId(appClientId2)
             .clientSecret("clientSecret")
-            .type(ApplicationType.ADMIN)
+            .type(ADMIN)
             .build()
     );
 
     // Assert the trip wire was not already set, and that there are no applications yet
     assertEquals(0,initTripWireRepository.count());
     assertFalse(initializationService.isInitialized());
-    assertEquals(0,applicationRepository.count());
+
+    // Assert the applications do not exist
+    assertFalse(applicationService.findByClientId(appClientId1).isPresent());
+    assertFalse(applicationService.findByClientId(appClientId2).isPresent());
 
     // Run the initialization using the empty config
     val service = new InitializationService(initTripWireRepository, applicationService, config);
@@ -103,34 +118,41 @@ public class InitializationServiceTest {
     assertEquals(1, initTripWireRepository.findAll().stream().findFirst().get().getInitialized());
     assertTrue(initializationService.isInitialized());
 
-    // Assert 2 applications exist
-    assertEquals(2,applicationRepository.count());
-    applicationService.getByClientId("clientId1");
-    applicationService.getByClientId("clientId2");
+    // Assert the applications exist
+    assertTrue(applicationService.findByClientId(appClientId1).isPresent());
+    assertTrue(applicationService.findByClientId(appClientId2).isPresent());
   }
 
   @Test
   public void initialize_conflictingApplication_conflictAndRollback(){
-    // Create an empty config, meaning there are no applications to intialize
+    val appName1 = generateNonExistentName(applicationService);
+    val appClientId1 = generateNonExistentClientId(applicationService);
+    val appName2 = generateNonExistentName(applicationService);
+
+    // Create an empty config, meaning there are no applications to initialize
     val config = createConfig(
         InitialApplication.builder()
-            .name("app1")
-            .clientId("clientId1")
+            .name(appName1)
+            .clientId(appClientId1)
             .clientSecret("clientSecret")
-            .type(ApplicationType.ADMIN)
+            .type(ADMIN)
             .build(),
         InitialApplication.builder()
-            .name("app2")
-            .clientId("clientId1")
+            .name(appName2)
+            .clientId(appClientId1) // same as previous clientId
             .clientSecret("clientSecret")
-            .type(ApplicationType.ADMIN)
+            .type(ADMIN)
             .build()
     );
 
     // Assert the trip wire was not already set, and that there are no applications yet
     assertEquals(0,initTripWireRepository.count());
     assertFalse(initializationService.isInitialized());
-    assertEquals(0,applicationRepository.count());
+
+    // Assert the applications do not exist
+    assertFalse(applicationService.findByClientId(appClientId1).isPresent());
+    assertFalse(applicationService.findByName(appName1).isPresent());
+    assertFalse(applicationService.findByName(appName2).isPresent());
 
     // Run the initialization using the empty config
     val service = new InitializationService(initTripWireRepository, applicationService, config);
@@ -142,8 +164,10 @@ public class InitializationServiceTest {
     assertEquals(0, initTripWireRepository.findAll().stream().findFirst().get().getInitialized());
     assertFalse(initializationService.isInitialized());
 
-    // Assert 0 applications exist
-    assertEquals(0,applicationRepository.count());
+    // Assert the applications were not created
+    assertFalse(applicationService.findByClientId(appClientId1).isPresent());
+    assertFalse(applicationService.findByName(appName1).isPresent());
+    assertFalse(applicationService.findByName(appName2).isPresent());
   }
 
   private static InitializationConfig createConfig(InitialApplication ... applications){

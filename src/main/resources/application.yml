@@ -155,13 +155,13 @@ default:
 
 initialization:
   enabled: false
-  applications: []
-#    - name: my-app
-#      type: CLIENT # or ADMIN
-#      clientId: some-client-id  # should be >2 chars
-#      clientSecret: some-client-secret  # should be >14 chars
-#      redirectUri: https://example.org  # optional
-#      description: Some description about this application  # optional
+  applications:
+    - name: my-app
+      type: ADMIN
+      clientId: myClientId
+      clientSecret: myClientSecret123
+      redirectUri: https://example.org  # optional
+      description: Some description about this application  # optional
 
 ---
 ###############################################################################

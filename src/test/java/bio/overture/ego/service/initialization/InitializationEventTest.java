@@ -1,5 +1,6 @@
 package bio.overture.ego.service.initialization;
 
+import bio.overture.ego.repository.InitTripWireRepository;
 import bio.overture.ego.service.InitializationService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -13,17 +14,22 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.junit.Assert.assertTrue;
 
 @Slf4j
-@Transactional
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 @SpringBootTest(properties = "initialization.enabled=true")
 public class InitializationEventTest {
 
   @Autowired private InitializationService service;
+  @Autowired private InitTripWireRepository repository;
 
   @Test
   public void testInitializationUsingSpringEvents(){
     assertTrue(service.isInitialized());
+    // Note: this is necessary since this will persist the initialization flag for other tests.
+    // This is out of context of a test transaction because the initialization happens at when spring boots,
+    // which is before the execution of this test.
+    // Because of this, we need to delete the initialization value from the database for other tests.
+    repository.deleteAll();
   }
 
 }
