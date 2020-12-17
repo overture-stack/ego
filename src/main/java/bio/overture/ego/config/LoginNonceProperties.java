@@ -30,4 +30,5 @@ public class LoginNonceProperties {
   private String sameSite;
   private boolean secure;
   private int maxAge;
+  private String domainPattern;
 }

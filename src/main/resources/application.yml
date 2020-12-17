@@ -10,6 +10,7 @@ login:
     sameSite: none
     secure: true
     maxAge: 120
+    domainPattern: ^.+?\.(\w+\.[a-z]+)$
 
 jwt:
   secret: testsecretisalsoasecret

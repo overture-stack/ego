@@ -18,6 +18,7 @@
 package bio.overture.ego.config;
 
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.session.MapSessionRepository;
@@ -30,7 +31,8 @@ public class SessionConfig {
 
   private final LoginNonceProperties properties;
 
-  public SessionConfig(@Autowired LoginNonceProperties properties) {
+  @Autowired
+  public SessionConfig(@NonNull LoginNonceProperties properties) {
     this.properties = properties;
   }
 
@@ -54,11 +56,11 @@ public class SessionConfig {
     serializer.setSameSite(properties.getSameSite());
     serializer.setUseSecureCookie(properties.isSecure());
     serializer.setCookieMaxAge(properties.getMaxAge());
+    serializer.setDomainNamePattern(properties.getDomainPattern());
 
     // These shouldn't be user configurable. ALWAYS make sure its HTTP Only.
     serializer.setUseHttpOnlyCookie(true);
     serializer.setCookiePath("/");
-    serializer.setDomainNamePattern("^.+?\\.(\\w+\\.[a-z]+)$");
     return serializer;
   }
 }
