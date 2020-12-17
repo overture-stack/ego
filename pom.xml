@@ -313,6 +313,20 @@
 
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-help-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>show-profiles</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>active-profiles</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>com.coveo</groupId>
                 <artifactId>fmt-maven-plugin</artifactId>
                 <version>2.8</version>
@@ -426,4 +440,69 @@
             </snapshots>
         </repository>
     </repositories>
+    <!-- Client code generation -->
+    <profiles>
+        <profile>
+            <id>GenerateSwagger</id>
+            <activation>
+                <file>
+                    <exists>target/generated-test-sources/swagger.json</exists>
+                </file>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.openapitools</groupId>
+                    <artifactId>jackson-databind-nullable</artifactId>
+                    <version>0.2.1</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.openapitools</groupId>
+                        <artifactId>openapi-generator-maven-plugin</artifactId>
+                        <version>4.3.1</version>
+                        <executions>
+                            <execution>
+                                <id>java-client-code-generation</id>
+                                <goals>
+                                    <goal>generate</goal>
+                                </goals>
+                                <configuration>
+                                    <inputSpec>${project.build.directory}/generated-test-sources/swagger.json</inputSpec>
+<!--                                    <output>${project.build.directory}/ego-java-client</output>-->
+<!--                                    <generatorName>spring</generatorName>-->
+                                    <generateSupportingFiles>true</generateSupportingFiles>
+                                    <supportingFilesToGenerate>
+                                        ApiUtil.java,ApplicationsApiController.java
+                                    </supportingFilesToGenerate>
+                                    <language>spring</language>
+                                    <library>spring-boot</library>
+                                    <!--
+                                        Use this option to dump the configuration help for the specified generator
+                                        instead of generating sources:
+                                        <configHelp>true</configHelp>
+                                    -->
+
+                                    <configOptions>
+                                        <serializableModel>true</serializableModel>
+                                        <java8>false</java8>
+                                        <dateLibrary>java8</dateLibrary>
+                                        <interfaceOnly>false</interfaceOnly>
+                                        <groupId>${project.groupId}</groupId>
+                                        <artifactId>${project.artifactId}</artifactId>
+                                        <artifactVersion>${project.version}</artifactVersion>
+                                        <!--
+                                            Put generator-specific parameters here, e.g. for typescript-angular:
+                                            <apiModulePrefix>Backend</apiModulePrefix>
+                                         -->
+                                    </configOptions>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

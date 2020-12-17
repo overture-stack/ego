@@ -119,6 +119,7 @@ public class SwaggerConfig {
         .securitySchemes(List.of(apiKey()))
         .securityContexts(List.of(securityContext()))
         .apiInfo(metaInfo())
+        .forCodeGeneration(swaggerProperties.enableCodeGeneration)
         .produces(Set.of("application/json"))
         .consumes(Set.of("application/json"));
   }
@@ -179,7 +180,7 @@ public class SwaggerConfig {
   @ConfigurationProperties(prefix = "swagger")
   @Setter
   @Getter
-  class SwaggerProperties {
+  public class SwaggerProperties {
     /** Specify host if ego is running behind proxy. */
     private String host = "";
 
@@ -188,5 +189,13 @@ public class SwaggerConfig {
      * not empty.
      */
     private String baseUrl = "";
+
+    /**
+     * Without this, PageDTO<<X>> is used, and the < and > are represented as non-ascii characters
+     * in swagger.json, which cant be processed during java code generation. By enabling this switch
+     * in the Docket, PageDTO<<X>> is represented as PageDTOOfX in the swagger.json making it
+     * processable.
+     */
+    private boolean enableCodeGeneration = false;
   }
 }
