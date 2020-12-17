@@ -126,7 +126,11 @@ public class RevokeApiKeyControllerTest {
     assertTrue(revokedApiKey.isRevoked());
   }
 
-  @WithMockCustomUser(firstName = "Regular", lastName = "User", type = USER)
+  @WithMockCustomUser(
+      firstName = "Regular",
+      type = USER,
+      providerType = GOOGLE,
+      providerId = "regularUser0123")
   @SneakyThrows
   @Test
   public void revokeAnyApiKeyAsRegularUser() {
@@ -134,8 +138,13 @@ public class RevokeApiKeyControllerTest {
 
     val apiKeyName = randomUUID().toString();
     val scopes = test.getScopes("id.WRITE");
+    // creating a single mockUser that is unique from withMockCustomUser based on providerInfo,
+    // because users are not unique on
+    // email (previously name field)
+    val mockUser = entityGenerator.setupUser("Regular User", USER, "regularUser0456", GOOGLE);
+    entityGenerator.addPermissions(mockUser, test.getScopes("id.WRITE"));
     val apiKey =
-        entityGenerator.setupApiKey(test.user1, apiKeyName, false, 1000, "test token", scopes);
+        entityGenerator.setupApiKey(mockUser, apiKeyName, false, 1000, "test token", scopes);
 
     assertFalse(apiKey.isRevoked());
 
@@ -154,7 +163,6 @@ public class RevokeApiKeyControllerTest {
 
   @WithMockCustomUser(
       firstName = "Regular",
-      lastName = "User",
       type = USER,
       providerType = GOOGLE,
       providerId = "regularUser0123")
