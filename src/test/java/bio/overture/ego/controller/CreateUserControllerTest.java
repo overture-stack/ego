@@ -7,18 +7,11 @@ import static bio.overture.ego.utils.EntityGenerator.*;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.exceptions.MalformedRequestException;
-import bio.overture.ego.provider.google.GoogleTokenService;
-import bio.overture.ego.service.TokenService;
-import bio.overture.ego.service.UserService;
-import bio.overture.ego.token.IDToken;
-import bio.overture.ego.utils.EntityGenerator;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -26,17 +19,10 @@ import lombok.val;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.context.WebApplicationContext;
 
 @Slf4j
 @AutoConfigureMockMvc
@@ -45,80 +31,9 @@ import org.springframework.web.context.WebApplicationContext;
 @SpringBootTest(
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class CreateUserControllerTest extends AbstractControllerTest {
-
-  private boolean hasRunEntitySetup = false;
-  private MockMvc mockMvc;
-
-  @Value("${spring.flyway.placeholders.default_provider:GOOGLE}")
-  private ProviderType defaultProviderType;
-
-  private IDToken idToken;
-
-  private final HttpHeaders tokenHeaders = new HttpHeaders();
-
-  /** Dependencies */
-  @Autowired private EntityGenerator entityGenerator;
-
-  @Autowired private UserService userService;
-  @Autowired private TokenService tokenService;
-  @Autowired private AuthController authController;
-
-  @Autowired private WebApplicationContext webApplicationContext;
-
-  private GoogleTokenService actualGoogleTokenService;
+public class CreateUserControllerTest extends AbstractMockedTokenControllerTest {
 
   @Rule public ExpectedException exceptionRule = ExpectedException.none();
-
-  @Value("${logging.test.controller.enable}")
-  private boolean enableLogging;
-
-  @Override
-  protected boolean enableLogging() {
-    return enableLogging;
-  }
-
-  @Override
-  protected void beforeTest() {
-    // Initial setup of entities (run once)
-    if (!hasRunEntitySetup) {
-      entityGenerator.setupTestUsers();
-      hasRunEntitySetup = true;
-    }
-
-    // we are mocking the googleTokenService because we're not looking to test the response from the
-    // IdPs,
-    // we just need a dummy accessToken to test the login flow once ego receives this token from a
-    // given IdP
-    tokenHeaders.set("token", "aValidTokenHeader");
-    this.mockMvc = webAppContextSetup(webApplicationContext).build();
-
-    val mockGoogleTokenService = mock(GoogleTokenService.class);
-    idToken = entityGenerator.createNewIdToken();
-
-    Mockito.when(mockGoogleTokenService.validToken(Mockito.anyString())).thenReturn(true);
-    Mockito.when(mockGoogleTokenService.decode(Mockito.anyString())).thenReturn(idToken);
-
-    actualGoogleTokenService =
-        (GoogleTokenService) ReflectionTestUtils.getField(authController, "googleTokenService");
-    ReflectionTestUtils.setField(authController, "googleTokenService", mockGoogleTokenService);
-  }
-
-  @After
-  public void removeMocks() {
-    // replace mock tokenServices with actual services
-    ReflectionTestUtils.setField(authController, "googleTokenService", actualGoogleTokenService);
-  }
-
-  private String getTokenResponse() {
-    return initStringRequest()
-        .endpoint("/oauth/google/token")
-        .headers(tokenHeaders)
-        .getAnd()
-        .assertOk()
-        .getResponse()
-        .getBody();
-  }
 
   @SneakyThrows
   @Test
@@ -309,121 +224,6 @@ public class CreateUserControllerTest extends AbstractControllerTest {
     assertNotEquals(newUser.getId(), existingUser.getId());
     assertNotEquals(newUser.getProviderType(), existingUser.getProviderType());
     assertNotEquals(newUser.getProviderId(), existingUser.getProviderId());
-  }
-
-  // existing provider(default)	existing id-as-email	  existing email	  user found,
-  // update providerId OK
-  @Test
-  public void existingDefaultProviderTypeExistingProviderIdAsEmailExistingEmail_updateUser() {
-    // setup for a migrated user with default providerType
-    val migratedUser =
-        entityGenerator.setupUser(
-            "ExistingUser WithEmail",
-            USER,
-            "ExistingUserWithEmail@domain.com",
-            defaultProviderType);
-
-    // assert providerId matches email
-    assertEquals(migratedUser.getEmail(), migratedUser.getProviderId());
-
-    // create idToken for a user with same providerType and email, and valid providerId
-    idToken.setProviderType(migratedUser.getProviderType());
-    idToken.setEmail(migratedUser.getEmail());
-    idToken.setGivenName(migratedUser.getFirstName());
-    idToken.setFamilyName(migratedUser.getLastName());
-
-    val response = getTokenResponse();
-
-    // assert valid token is returned
-    assertTrue(tokenService.isValidToken(response));
-
-    val userTokenInfo = tokenService.getTokenUserInfo(response);
-    val updatedUser =
-        initStringRequest()
-            .endpoint("/users/%s", userTokenInfo.getId())
-            .getAnd()
-            .assertOk()
-            .extractOneEntity(User.class);
-
-    // assert new user matches idToken
-    assertEquals(updatedUser.getProviderType(), idToken.getProviderType());
-    assertEquals(updatedUser.getProviderId(), idToken.getProviderId());
-    assertEquals(updatedUser.getEmail(), idToken.getEmail());
-    assertEquals(updatedUser.getFirstName(), idToken.getGivenName());
-    assertEquals(updatedUser.getLastName(), idToken.getFamilyName());
-
-    val existingUser =
-        initStringRequest()
-            .endpoint("/users/%s", migratedUser.getId())
-            .getAnd()
-            .assertOk()
-            .extractOneEntity(User.class);
-
-    // assert updatedUser and existingUser are the same
-    assertEquals(updatedUser.getId(), existingUser.getId());
-    assertEquals(updatedUser.getProviderType(), existingUser.getProviderType());
-    assertEquals(updatedUser.getProviderId(), existingUser.getProviderId());
-    assertEquals(updatedUser.getEmail(), existingUser.getEmail());
-
-    // assert migrated user and updatedUser are the same, but providerId was updated
-    assertEquals(migratedUser.getId(), updatedUser.getId());
-    assertNotEquals(migratedUser.getProviderId(), updatedUser.getProviderId());
-  }
-
-  // existing provider(default/non default)	existing id 	email not in db	  user found, update email
-  // OK
-  // TODO: implement in https://github.com/overture-stack/ego/issues/532
-  @Ignore("Will be implemented with updateUser modification ticket")
-  @Test
-  public void existingProviderTypeExistingProviderIdNonExistingEmail_updateUser() {
-    // setup for existing user with default providerType
-    val user =
-        entityGenerator.setupUser(
-            "Old Email", USER, generateNonExistentProviderId(userService), GITHUB);
-
-    // create idToken for a user with same providerType and email, and providerId-as-email
-    idToken.setProviderType(user.getProviderType());
-    idToken.setProviderId(user.getProviderId());
-    idToken.setEmail(format("NewEmail@domain.com"));
-    idToken.setGivenName(user.getFirstName());
-    idToken.setFamilyName(user.getLastName());
-
-    val response = getTokenResponse();
-
-    // assert valid token is returned
-    assertTrue(tokenService.isValidToken(response));
-
-    val userTokenInfo = tokenService.getTokenUserInfo(response);
-    val updatedUser =
-        initStringRequest()
-            .endpoint("/users/%s", userTokenInfo.getId())
-            .getAnd()
-            .assertOk()
-            .extractOneEntity(User.class);
-
-    // assert new user matches idToken
-    assertEquals(updatedUser.getProviderType(), idToken.getProviderType());
-    assertEquals(updatedUser.getProviderId(), idToken.getProviderId());
-    assertEquals(updatedUser.getEmail(), idToken.getEmail());
-    assertEquals(updatedUser.getFirstName(), idToken.getGivenName());
-    assertEquals(updatedUser.getLastName(), idToken.getFamilyName());
-
-    val existingUser =
-        initStringRequest()
-            .endpoint("/users/%s", user.getId())
-            .getAnd()
-            .assertOk()
-            .extractOneEntity(User.class);
-
-    // assert initial user is the same as updatedUser
-    assertEquals(user.getId(), updatedUser.getId());
-    assertNotEquals(user.getEmail(), updatedUser.getEmail());
-
-    // assert updatedUser and existingUser are the same
-    assertEquals(updatedUser.getId(), existingUser.getId());
-    assertEquals(updatedUser.getProviderType(), existingUser.getProviderType());
-    assertEquals(updatedUser.getProviderId(), existingUser.getProviderId());
-    assertEquals(updatedUser.getEmail(), existingUser.getEmail());
   }
 
   //  existing provider(default/non default)	providerId not in db	  existing email	Create OK

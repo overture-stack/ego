@@ -172,13 +172,26 @@ public class UserService extends AbstractBaseService<User, UUID> {
             .build());
   }
 
+  private User updateUserFromToken(User user, IDToken idToken) {
+    user.setFirstName(idToken.getGivenName());
+    user.setLastName(idToken.getFamilyName());
+    user.setEmail(idToken.getEmail());
+
+    return user;
+  }
+
+  private Optional<User> findUserAndUpdate(IDToken idToken) {
+    val optionalUser =
+        findByProviderTypeAndProviderId(idToken.getProviderType(), idToken.getProviderId());
+    optionalUser.ifPresent(user -> updateUserFromToken(user, idToken));
+    return optionalUser;
+  }
+
   public User getUserByToken(@NonNull IDToken idToken) {
-    val providerType = idToken.getProviderType();
-    val providerId = idToken.getProviderId();
     val userEmail = idToken.getEmail();
 
     User user =
-        findByProviderTypeAndProviderId(providerType, providerId)
+        findUserAndUpdate(idToken)
             .or(
                 () -> {
                   if (!isNull(userEmail)) {
@@ -196,6 +209,7 @@ public class UserService extends AbstractBaseService<User, UUID> {
                           log.info("User found, updating provider info.");
                           foundUser.setProviderType(idToken.getProviderType());
                           foundUser.setProviderId(idToken.getProviderId());
+                          updateUserFromToken(foundUser, idToken);
                         });
                     return userByEmailResult;
                   }
@@ -488,6 +502,7 @@ public class UserService extends AbstractBaseService<User, UUID> {
   }
 
   private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
+    checkRequestValid(r);
     checkValidUser(
         originalUser.getProviderType().equals(r.getProviderType()),
         "Invalid providerType, cannot update user.");

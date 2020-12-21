@@ -22,8 +22,6 @@ import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
 import static bio.overture.ego.model.enums.JavaFields.*;
 import static bio.overture.ego.model.enums.LanguageType.*;
 import static bio.overture.ego.model.enums.ProviderType.*;
-import static bio.overture.ego.model.enums.StatusType.DISABLED;
-import static bio.overture.ego.model.enums.UserType.USER;
 import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
@@ -36,24 +34,18 @@ import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static org.junit.Assert.*;
-import static org.springframework.http.HttpStatus.FORBIDDEN;
 
 import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.LanguageType;
-import bio.overture.ego.model.enums.StatusType;
-import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Set;
@@ -181,67 +173,6 @@ public class UserControllerTest extends AbstractControllerTest {
   public void findUsers_FindSomeQuery_Success() {
     throw new NotImplementedException(
         "need to implement the test 'findUsers_FindSomeQuery_Success'");
-  }
-
-  @Test
-  public void validateUpdateRequest_ProviderIdDoesntMatch_Forbidden() {
-    // create a user with providerInfo
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    val nonExistentProviderId = generateNonExistentProviderId(userService);
-
-    // Assert update with different providerId
-    val r1 =
-        UpdateUserRequest.builder()
-            .providerType(user.getProviderType())
-            .providerId(nonExistentProviderId)
-            .preferredLanguage(SPANISH)
-            .build();
-
-    initStringRequest()
-        .endpoint("/users/%s", user.getId())
-        .body(r1)
-        .putAnd()
-        .assertStatusCode(FORBIDDEN);
-  }
-
-  @Test
-  public void validateUpdateRequest_ProviderTypeDoesntMatch_Forbidden() {
-    // create a user with providerInfo
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    // Assert update with different providerType
-    val r1 =
-        UpdateUserRequest.builder()
-            .providerType(GITHUB)
-            .providerId(user.getProviderId())
-            .preferredLanguage(FRENCH)
-            .build();
-
-    initStringRequest()
-        .endpoint("/users/%s", user.getId())
-        .body(r1)
-        .putAnd()
-        .assertStatusCode(FORBIDDEN);
-  }
-
-  @Test
-  public void validateUpdateRequest_ProviderInfoMatches_Success() {
-    // create a user with providerInfo
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    // Assert update with matching providerType and providerId
-    val r1 =
-        UpdateUserRequest.builder()
-            .providerType(user.getProviderType())
-            .providerId(user.getProviderId())
-            .preferredLanguage(SPANISH)
-            .build();
-
-    initStringRequest().endpoint("/users/%s", user.getId()).body(r1).putAnd().assertOk();
   }
 
   @Test
@@ -422,149 +353,6 @@ public class UserControllerTest extends AbstractControllerTest {
                 e.printStackTrace();
               }
             });
-  }
-
-  @Test
-  @SneakyThrows
-  public void updateUser_ExistingUser_Success() {
-    // Generate data
-    val data = generateUniqueTestUserData();
-    val user0 = data.getUsers().get(0);
-
-    // create update request 1
-    val r1 =
-        UpdateUserRequest.builder()
-            .firstName("aNewFirstName")
-            .providerType(user0.getProviderType())
-            .providerId(user0.getProviderId())
-            .build();
-
-    // Update user
-    partialUpdateUserPutRequestAnd(user0.getId(), r1).assertOk();
-
-    // Assert update was correct
-    val actualUser1 = getUserEntityGetRequestAnd(user0).extractOneEntity(User.class);
-
-    assertEquals(actualUser1.getFirstName(), r1.getFirstName());
-    assertEquals(actualUser1.getProviderType(), r1.getProviderType());
-    assertEquals(actualUser1.getProviderId(), r1.getProviderId());
-
-    // create update request 2
-    val r2 =
-        UpdateUserRequest.builder()
-            .providerType(user0.getProviderType())
-            .providerId(user0.getProviderId())
-            .status(randomEnumExcluding(StatusType.class, user0.getStatus()))
-            .type(randomEnumExcluding(UserType.class, user0.getType()))
-            .preferredLanguage(
-                randomEnumExcluding(LanguageType.class, user0.getPreferredLanguage()))
-            .build();
-
-    // Update user
-    partialUpdateUserPutRequestAnd(user0.getId(), r2).assertOk();
-
-    // Assert update was correct
-    val actualUser2 = getUserEntityGetRequestAnd(user0).extractOneEntity(User.class);
-    assertEquals(actualUser2.getStatus(), r2.getStatus());
-    assertEquals(actualUser2.getType(), r2.getType());
-    assertEquals(actualUser2.getPreferredLanguage(), r2.getPreferredLanguage());
-  }
-
-  @Test
-  public void updateUser_NonExistentUser_NotFound() {
-    // Create non existent user id
-    val nonExistentId = generateNonExistentId(userService);
-
-    val dummyUpdateUserRequest = UpdateUserRequest.builder().build();
-
-    // Assert that you cannot get a non-existent id
-    partialUpdateUserPutRequestAnd(nonExistentId, dummyUpdateUserRequest).assertNotFound();
-  }
-
-  @Test
-  public void updateUser_EmailAlreadyExists_OK() {
-    // Generate data
-    val data = generateUniqueTestUserData();
-    val user0 = data.getUsers().get(0);
-    val user1 = data.getUsers().get(1);
-
-    // Assumptions
-    assertNotEquals(user0.getEmail(), user1.getEmail());
-
-    // Create update request with same email
-    val r1 =
-        UpdateUserRequest.builder()
-            .email(user1.getEmail())
-            .status(randomEnumExcluding(StatusType.class, user0.getStatus()))
-            .providerType(user0.getProviderType())
-            .providerId(user0.getProviderId())
-            .build();
-
-    // Assert that an OK response when trying to update a user with an email that already exists
-    partialUpdateUserPutRequestAnd(user0.getId(), r1).assertOk();
-  }
-
-  @Test
-  public void statusValidation_MalformedStatus_BadRequest() {
-    val invalidStatus = "something123";
-    val match = stream(StatusType.values()).anyMatch(x -> x.toString().equals(invalidStatus));
-    assertFalse(match);
-
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    // Assert updateUser
-    val templateR2 =
-        UpdateUserRequest.builder()
-            .providerType(user.getProviderType())
-            .providerId(user.getProviderId())
-            .type(USER)
-            .preferredLanguage(ENGLISH)
-            .build();
-    val r2 = ((ObjectNode) MAPPER.valueToTree(templateR2)).put(STATUS, invalidStatus);
-    initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
-  }
-
-  @Test
-  public void typeValidation_MalformedType_BadRequest() {
-    val invalidType = "something123";
-    val match = stream(UserType.values()).anyMatch(x -> x.toString().equals(invalidType));
-    assertFalse(match);
-
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    // Assert updateUser
-    val templateR2 =
-        UpdateUserRequest.builder()
-            .providerType(user.getProviderType())
-            .providerId(user.getProviderId())
-            .status(DISABLED)
-            .preferredLanguage(ENGLISH)
-            .build();
-    val r2 = ((ObjectNode) MAPPER.valueToTree(templateR2)).put(TYPE, invalidType);
-    initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
-  }
-
-  @Test
-  public void preferredLanguageValidation_MalformedPreferredLanguage_BadRequest() {
-    val invalidLanguage = "something123";
-    val match = stream(LanguageType.values()).anyMatch(x -> x.toString().equals(invalidLanguage));
-    assertFalse(match);
-
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    // Assert updateUser
-    val templateR2 =
-        UpdateUserRequest.builder()
-            .providerType(user.getProviderType())
-            .providerId(user.getProviderId())
-            .status(DISABLED)
-            .type(USER)
-            .build();
-    val r2 = ((ObjectNode) MAPPER.valueToTree(templateR2)).put(PREFERREDLANGUAGE, invalidLanguage);
-    initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
   }
 
   @Test
