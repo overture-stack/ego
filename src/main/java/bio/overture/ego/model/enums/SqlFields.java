@@ -36,4 +36,5 @@ public class SqlFields {
   public static final String USER_ID = "user_id";
   public static final String PROVIDERTYPE = "providertype";
   public static final String PROVIDERID = "providerid";
+  public static final String INITIALIZED = "initialized";
 }

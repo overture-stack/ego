@@ -16,10 +16,7 @@
 
 package bio.overture.ego.config;
 
-import bio.overture.ego.security.AuthorizationManager;
-import bio.overture.ego.security.JWTAuthorizationFilter;
-import bio.overture.ego.security.OAuth2SsoFilter;
-import bio.overture.ego.security.SecureAuthorizationManager;
+import bio.overture.ego.security.*;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;

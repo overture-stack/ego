@@ -19,8 +19,6 @@ package bio.overture.ego.token.app;
 import bio.overture.ego.token.TokenClaims;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.common.collect.ImmutableList;
-import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -48,9 +46,5 @@ public class AppTokenClaims extends TokenClaims {
     } else {
       return sub;
     }
-  }
-
-  public List<String> getAud() {
-    return ImmutableList.of(this.context.getAppInfo().getName());
   }
 }
