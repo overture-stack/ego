@@ -5,7 +5,7 @@
 
     <groupId>bio.overture</groupId>
     <artifactId>ego</artifactId>
-    <version>3.4.0-SNAPSHOT</version>
+    <version>3.7.0-SNAPSHOT</version>
 
     <name>ego</name>
     <description>OAuth 2.0 Authorization service that supports multiple OpenID Connect Providers</description>
@@ -22,7 +22,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>11</java.version>
         <mapstruct.version>1.2.0.Final</mapstruct.version>
-        <grpc.version>1.19.0</grpc.version>
+        <grpc.version>1.34.1</grpc.version>
     </properties>
 
     <dependencies>
@@ -101,6 +101,10 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-jwt</artifactId>
             <version>1.0.8.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session-core</artifactId>
         </dependency>
 
         <!-- JDBC -->
@@ -364,10 +368,10 @@
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>0.5.1</version>
                 <configuration>
-                    <protocArtifact>com.google.protobuf:protoc:3.6.1:exe:${os.detected.classifier}</protocArtifact>
+                    <protocArtifact>com.google.protobuf:protoc:3.12.0:exe:${os.detected.classifier}</protocArtifact>
                     <protoSourceRoot>${basedir}/src/main/proto</protoSourceRoot>
                     <pluginId>grpc-java</pluginId>
-                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.19.0:exe:${os.detected.classifier}</pluginArtifact>
+                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.34.1:exe:${os.detected.classifier}</pluginArtifact>
                 </configuration>
                 <executions>
                     <execution>
@@ -406,16 +410,8 @@
             <url>https://artifacts.oicr.on.ca/artifactory/dcc-dependencies</url>
         </repository>
         <repository>
-            <id>spring-snapshots</id>
-            <name>Spring Snapshots</name>
-            <url>https://repo.spring.io/libs-snapshot</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-        <repository>
             <id>spring-releases</id>
-            <url>https://repo.spring.io/libs-release</url>
+            <url>https://repo.spring.io/release</url>
         </repository>
         <repository>
             <id>spring-milestones</id>

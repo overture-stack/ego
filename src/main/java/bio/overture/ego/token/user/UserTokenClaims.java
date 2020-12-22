@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.springframework.util.StringUtils;
@@ -34,6 +35,8 @@ import org.springframework.util.StringUtils;
 public class UserTokenClaims extends TokenClaims {
 
   @NonNull private UserTokenContext context;
+
+  @Getter protected List<String> aud;
 
   public String getSub() {
     if (StringUtils.isEmpty(sub)) {
