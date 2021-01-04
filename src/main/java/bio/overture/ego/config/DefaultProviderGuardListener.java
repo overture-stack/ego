@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.service.DefaultProviderService;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +16,19 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class DefaultProviderConfig implements ApplicationListener<ContextRefreshedEvent> {
+public class DefaultProviderGuardListener implements ApplicationListener<ContextRefreshedEvent> {
 
-  @Autowired private DefaultProviderService defaultProviderService;
+  private final DefaultProviderService defaultProviderService;
 
-  @Value("${spring.flyway.placeholders.default_provider}")
-  private ProviderType configuredProvider;
+  private final ProviderType configuredProvider;
+
+  @Autowired
+  public DefaultProviderGuardListener(
+      @NonNull DefaultProviderService defaultProviderService,
+      @Value("${spring.flyway.placeholders.default_provider}") ProviderType configuredProvider) {
+    this.defaultProviderService = defaultProviderService;
+    this.configuredProvider = configuredProvider;
+  }
 
   @Override
   public void onApplicationEvent(ContextRefreshedEvent event) {
@@ -42,7 +50,7 @@ public class DefaultProviderConfig implements ApplicationListener<ContextRefresh
 
     log.info(
         String.format(
-            "Configured default_provider '%s' matches previously configured '%s, finished initializing.",
+            "Configured default_provider '%s' matches previously configured '%s, finished bootstrap check.",
             configuredProvider, storedProvider));
   }
 }
