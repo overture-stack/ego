@@ -28,11 +28,13 @@ import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
+@Ignore
 public class LoadAdminUITest extends AbstractSeleniumTest {
 
   /** Dependencies */

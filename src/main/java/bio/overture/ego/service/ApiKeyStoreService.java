@@ -65,11 +65,11 @@ public class ApiKeyStoreService extends AbstractNamedService<ApiKey, UUID> {
     return result.get();
   }
 
+  @SuppressWarnings("unused")
   public ApiKey create(@NonNull CreateTokenRequest createTokenRequest) {
     throw new NotImplementedException();
   }
 
-  @Deprecated
   public ApiKey create(@NonNull ApiKey scopedAccessApiKey) {
     ApiKey res = tokenRepository.save(scopedAccessApiKey);
     tokenRepository.revokeRedundantTokens(scopedAccessApiKey.getOwner().getId());

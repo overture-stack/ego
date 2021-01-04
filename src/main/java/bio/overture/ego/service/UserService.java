@@ -175,33 +175,10 @@ public class UserService extends AbstractBaseService<User, UUID> {
   public User getUserByToken(@NonNull IDToken idToken) {
     val providerType = idToken.getProviderType();
     val providerId = idToken.getProviderId();
-    val userEmail = idToken.getEmail();
 
     User user =
         findByProviderTypeAndProviderId(providerType, providerId)
-            .or(
-                () -> {
-                  if (!isNull(userEmail)) {
-                    // For users that existed before the data migration, their data will be migrated
-                    // to use the DEFAULT provider as their providerType and their email as the
-                    // providerId, since the email was previously unique.
-                    // In this scenario, since a user was not found using the idToken providerType +
-                    // providerId, a secondary search is done on the user's email as the providerId
-                    // and the idToken.providerType.
-                    // If the user is found, their record is `healed` to use the correct providerId.
-                    val userByEmailResult =
-                        findByProviderTypeAndProviderId(idToken.getProviderType(), userEmail);
-                    userByEmailResult.ifPresent(
-                        foundUser -> {
-                          log.info("User found, updating provider info.");
-                          foundUser.setProviderType(idToken.getProviderType());
-                          foundUser.setProviderId(idToken.getProviderId());
-                        });
-                    return userByEmailResult;
-                  }
-                  log.info("No email provided");
-                  return Optional.empty();
-                })
+            .or(() -> findByProviderTypeAndEmail(idToken))
             .orElseGet(
                 () -> {
                   log.info("User not found, creating.");
@@ -224,6 +201,29 @@ public class UserService extends AbstractBaseService<User, UUID> {
                     .fetchUserAndGroupPermissions(true)
                     .fetchRefreshToken(true)
                     .buildByProviderTypeAndId(providerType, providerId));
+  }
+
+  private Optional<User> findByProviderTypeAndEmail(IDToken idToken) {
+    val userEmail = idToken.getEmail();
+    if (!isNull(userEmail)) {
+      // For users that existed before the data migration, their data will be migrated
+      // to use the DEFAULT provider as their providerType and their email as the
+      // providerId, since the email was previously unique.
+      // In this scenario, since a user was not found using the idToken providerType +
+      // providerId, a secondary search is done on the user's email as the providerId
+      // and the idToken.providerType.
+      // If the user is found, their record is `healed` to use the correct providerId.
+      val userByEmailResult = findByProviderTypeAndProviderId(idToken.getProviderType(), userEmail);
+      userByEmailResult.ifPresent(
+          foundUser -> {
+            log.info("User found, updating provider info.");
+            foundUser.setProviderType(idToken.getProviderType());
+            foundUser.setProviderId(idToken.getProviderId());
+          });
+      return userByEmailResult;
+    }
+    log.info("No email provided");
+    return Optional.empty();
   }
 
   public boolean existsByProviderId(String providerId) {

@@ -23,7 +23,7 @@ public class DefaultProviderService extends AbstractBaseService<DefaultProvider,
   }
 
   @Override
-  public DefaultProvider getWithRelationships(ProviderType id) {
+  public DefaultProvider getWithRelationships(@NonNull ProviderType id) {
     return defaultProviderRepository
         .findById(id)
         .orElseThrow(() -> buildNotFoundException("Could not find default provider type '%s'", id));
