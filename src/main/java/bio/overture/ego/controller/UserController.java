@@ -136,19 +136,6 @@ public class UserController {
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.POST, value = "")
-  @ApiResponses(
-      value = {
-        @ApiResponse(code = 200, message = "Create new user", response = User.class),
-      })
-  public @ResponseBody User createUser(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
-          final String authorization,
-      @RequestBody(required = true) CreateUserRequest request) {
-    return userService.create(request);
-  }
-
-  @AdminScoped
   @RequestMapping(method = RequestMethod.GET, value = "/{id}")
   @ApiResponses(value = {@ApiResponse(code = 200, message = "User Details", response = User.class)})
   @JsonView(Views.REST.class)

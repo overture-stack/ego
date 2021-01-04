@@ -16,9 +16,9 @@
 
 package bio.overture.ego.service;
 
-import static bio.overture.ego.model.enums.ProviderType.GOOGLE;
 import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static bio.overture.ego.model.exceptions.InvalidUserException.checkValidUser;
+import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
@@ -70,8 +70,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   /** Constants */
   public static final UserConverter USER_CONVERTER = Mappers.getMapper(UserConverter.class);
-
-  public static final ProviderType DEFAULT_PROVIDER_TYPE = GOOGLE;
 
   /** Dependencies */
   private final GroupRepository groupRepository;
@@ -168,28 +166,10 @@ public class UserService extends AbstractNamedService<User, UUID> {
   public User getUserByToken(@NonNull IDToken idToken) {
     val providerType = idToken.getProviderType();
     val providerId = idToken.getProviderId();
-    val userEmail = idToken.getEmail();
 
     User user =
         findByProviderTypeAndProviderId(providerType, providerId)
-            .or(
-                () -> {
-                  // an existing user without provider info will default to GOOGLE and their
-                  // existing email
-                  if (!isNull(userEmail)) {
-                    val userByEmailResult =
-                        findByProviderTypeAndProviderId(DEFAULT_PROVIDER_TYPE, userEmail);
-                    userByEmailResult.ifPresent(
-                        foundUser -> {
-                          log.info("User found, updating provider info.");
-                          foundUser.setProviderType(idToken.getProviderType());
-                          foundUser.setProviderId(idToken.getProviderId());
-                        });
-                    return userByEmailResult;
-                  }
-                  log.info("No email provided");
-                  return Optional.empty();
-                })
+            .or(() -> findByProviderTypeAndEmail(idToken))
             .orElseGet(
                 () -> {
                   log.info("User not found, creating.");
@@ -212,6 +192,29 @@ public class UserService extends AbstractNamedService<User, UUID> {
                     .fetchUserAndGroupPermissions(true)
                     .fetchRefreshToken(true)
                     .buildByProviderTypeAndId(providerType, providerId));
+  }
+
+  private Optional<User> findByProviderTypeAndEmail(IDToken idToken) {
+    val userEmail = idToken.getEmail();
+    if (!isNull(userEmail)) {
+      // For users that existed before the data migration, their data will be migrated
+      // to use the DEFAULT provider as their providerType and their email as the
+      // providerId, since the email was previously unique.
+      // In this scenario, since a user was not found using the idToken providerType +
+      // providerId, a secondary search is done on the user's email as the providerId
+      // and the idToken.providerType.
+      // If the user is found, their record is `healed` to use the correct providerId.
+      val userByEmailResult = findByProviderTypeAndProviderId(idToken.getProviderType(), userEmail);
+      userByEmailResult.ifPresent(
+          foundUser -> {
+            log.info("User found, updating provider info.");
+            foundUser.setProviderType(idToken.getProviderType());
+            foundUser.setProviderId(idToken.getProviderId());
+          });
+      return userByEmailResult;
+    }
+    log.info("No email provided");
+    return Optional.empty();
   }
 
   public boolean existsByProviderId(String providerId) {
@@ -469,10 +472,9 @@ public class UserService extends AbstractNamedService<User, UUID> {
             pageable);
   }
 
-  // TODO: current implementation will break, because creating a user in ego ui does not allow
-  // passing provider info. this is unknown to the admin
   private void validateCreateRequest(CreateUserRequest r) {
     checkRequestValid(r);
+    checkMalformedRequest(!r.getProviderId().isBlank(), "Provider id cannot be blank.");
     checkUserUnique(r.getProviderType(), r.getProviderId());
   }
 

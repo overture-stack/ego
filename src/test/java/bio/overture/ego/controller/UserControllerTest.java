@@ -22,7 +22,6 @@ import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
 import static bio.overture.ego.model.enums.JavaFields.*;
 import static bio.overture.ego.model.enums.LanguageType.*;
 import static bio.overture.ego.model.enums.ProviderType.*;
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
 import static bio.overture.ego.model.enums.StatusType.DISABLED;
 import static bio.overture.ego.model.enums.UserType.USER;
 import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
@@ -36,12 +35,10 @@ import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
-import static java.lang.String.format;
 import static org.junit.Assert.*;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 
 import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
@@ -49,14 +46,11 @@ import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.LanguageType;
-import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
-import bio.overture.ego.token.IDToken;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -64,7 +58,6 @@ import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -74,7 +67,9 @@ import org.apache.commons.lang.NotImplementedException;
 import org.hibernate.LazyInitializationException;
 import org.junit.Assert;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -92,7 +87,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class UserControllerTest extends AbstractControllerTest {
 
   private static boolean hasRunEntitySetup = false;
-  private static final ProviderType DEFAULT_PROVIDER = GOOGLE;
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
@@ -100,7 +94,8 @@ public class UserControllerTest extends AbstractControllerTest {
   @Autowired private UserService userService;
   @Autowired private ApplicationService applicationService;
   @Autowired private GroupService groupService;
-  @Autowired private TokenService tokenService;
+
+  @Rule public ExpectedException exceptionRule = ExpectedException.none();
 
   @Value("${logging.test.controller.enable}")
   private boolean enableLogging;
@@ -112,7 +107,7 @@ public class UserControllerTest extends AbstractControllerTest {
 
   @Override
   protected void beforeTest() {
-    // Initial setup of entities (run once
+    // Initial setup of entities (run once)
     if (!hasRunEntitySetup) {
       entityGenerator.setupTestUsers();
       entityGenerator.setupTestApplications();
@@ -186,256 +181,6 @@ public class UserControllerTest extends AbstractControllerTest {
         "need to implement the test 'findUsers_FindSomeQuery_Success'");
   }
 
-  // TODO: create user endpoint will not work because currently no way to input providerInfo
-  @Test
-  public void createUser_NonExisting_Success() {
-    // Create unique name
-    val name = generateNonExistentName(userService);
-
-    // Create request
-    val r =
-        CreateUserRequest.builder()
-            .email(name + "@gmail.com")
-            .status(randomEnum(StatusType.class))
-            .type(randomEnum(UserType.class))
-            .preferredLanguage(randomEnum(LanguageType.class))
-            .firstName(randomStringNoSpaces(10))
-            .lastName(randomStringNoSpaces(10))
-            .providerType(randomEnum(ProviderType.class))
-            .providerId(UUID.randomUUID().toString())
-            .build();
-
-    // Create the user
-    val user = createUserPostRequestAnd(r).extractOneEntity(User.class);
-    assertEquals(user.getEmail(), r.getEmail());
-    assertEquals(user.getFirstName(), r.getFirstName());
-    assertEquals(user.getLastName(), r.getLastName());
-    assertEquals(user.getPreferredLanguage(), r.getPreferredLanguage());
-    assertEquals(user.getType(), r.getType());
-    assertEquals(user.getStatus(), r.getStatus());
-    assertEquals(user.getProviderType(), r.getProviderType());
-    assertEquals(user.getProviderId(), r.getProviderId());
-
-    // Assert the user can be read and matches the request data
-    val r1 = getUserEntityGetRequestAnd(user).extractOneEntity(User.class);
-    assertEquals(r1.getEmail(), r.getEmail());
-    assertEquals(r1.getFirstName(), r.getFirstName());
-    assertEquals(r1.getLastName(), r.getLastName());
-    assertEquals(r1.getPreferredLanguage(), r.getPreferredLanguage());
-    assertEquals(r1.getType(), r.getType());
-    assertEquals(r1.getStatus(), r.getStatus());
-    assertEquals(r1.getProviderType(), r.getProviderType());
-    assertEquals(r1.getProviderId(), r.getProviderId());
-
-    assertEquals(r1.getEmail(), user.getEmail());
-    assertEquals(r1.getFirstName(), user.getFirstName());
-    assertEquals(r1.getLastName(), user.getLastName());
-    assertEquals(r1.getPreferredLanguage(), user.getPreferredLanguage());
-    assertEquals(r1.getType(), user.getType());
-    assertEquals(r1.getStatus(), user.getStatus());
-    assertEquals(r1.getProviderType(), user.getProviderType());
-    assertEquals(r1.getProviderId(), user.getProviderId());
-  }
-
-  @Test
-  public void createUser_EmailAlreadyExists_OK() {
-    // Generate data
-    val data = generateUniqueTestUserData();
-    val user0 = data.getUsers().get(0);
-
-    // Get an existing name
-    val existingName = getUserEntityGetRequestAnd(user0).extractOneEntity(User.class).getName();
-
-    // Create a request with an existing name and non-existing provider info
-    val r =
-        CreateUserRequest.builder()
-            .email(existingName)
-            .status(randomEnum(StatusType.class))
-            .type(randomEnum(UserType.class))
-            .preferredLanguage(randomEnum(LanguageType.class))
-            .firstName(randomStringNoSpaces(10))
-            .lastName(randomStringNoSpaces(10))
-            .providerType(GITHUB)
-            .providerId("github123")
-            .build();
-
-    // Create the user and assert OK
-    createUserPostRequestAnd(r).assertOk();
-  }
-
-  @Test
-  public void createUser_NoEmail_OK() {
-    val nonExistentProviderId = generateNonExistentProviderId(userService);
-    // Create a request without an email provided
-    val r =
-        CreateUserRequest.builder()
-            .status(randomEnum(StatusType.class))
-            .type(randomEnum(UserType.class))
-            .preferredLanguage(randomEnum(LanguageType.class))
-            .firstName(randomStringNoSpaces(10))
-            .lastName(randomStringNoSpaces(10))
-            .providerType(randomEnum(ProviderType.class))
-            .providerId(nonExistentProviderId)
-            .build();
-
-    // Create the user and assert OK
-    createUserPostRequestAnd(r).assertOk();
-  }
-
-  @Test
-  public void idToken_serializedTokenHasAllFields_Success() {
-    val user = entityGenerator.setupUser("IdToken Test");
-
-    val idToken = new IDToken();
-    idToken.setEmail(user.getEmail());
-    idToken.setFamilyName(user.getLastName());
-    idToken.setGivenName(user.getFirstName());
-    idToken.setProviderType(user.getProviderType());
-    idToken.setProviderId(user.getProviderId());
-
-    try {
-      val jsonString = MAPPER.writeValueAsString(idToken);
-      val json = MAPPER.readTree(jsonString);
-
-      Stream.of("given_name", "family_name", "provider_type", "provider_id", "email")
-          .forEach(
-              fieldname -> {
-                assertTrue(json.has(fieldname));
-              });
-      assertEquals(idToken.getEmail(), json.path("email").asText());
-      assertEquals(idToken.getFamilyName(), json.path("family_name").asText());
-      assertEquals(idToken.getGivenName(), json.path("given_name").asText());
-      assertEquals(idToken.getProviderType().toString(), json.path("provider_type").asText());
-      assertEquals(idToken.getProviderId(), json.path("provider_id").asText());
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
-
-  @Test
-  public void createUser_ExistingProviderNonExistingProvId_OK() {
-    // Generate data
-    val data = generateUniqueTestUserData();
-    val user0 = data.getUsers().get(0);
-
-    val nonExistingProvId = generateNonExistentProviderId(userService);
-    // Create a request with an existing providerType and nonexisting providerId
-    val r =
-        CreateUserRequest.builder()
-            .email("user0@email.com")
-            .status(randomEnum(StatusType.class))
-            .type(randomEnum(UserType.class))
-            .preferredLanguage(randomEnum(LanguageType.class))
-            .firstName(randomStringNoSpaces(10))
-            .lastName(randomStringNoSpaces(10))
-            .providerType(user0.getProviderType())
-            .providerId(nonExistingProvId)
-            .build();
-
-    createUserPostRequestAnd(r).assertOk();
-  }
-
-  @Test
-  public void createUser_ExistingProviderIdNonExistingProvider_OK() {
-    // Generate data
-    val data = generateUniqueTestUserData();
-    val user0 = data.getUsers().get(0);
-
-    // Create a request with an existing providerType and nonexisting providerId
-    val r =
-        CreateUserRequest.builder()
-            .email("user0@email.com")
-            .status(randomEnum(StatusType.class))
-            .type(randomEnum(UserType.class))
-            .preferredLanguage(randomEnum(LanguageType.class))
-            .firstName(randomStringNoSpaces(10))
-            .lastName(randomStringNoSpaces(10))
-            .providerType(LINKEDIN)
-            .providerId(user0.getProviderId())
-            .build();
-
-    createUserPostRequestAnd(r).assertOk();
-  }
-
-  @Test
-  public void createUser_ExistingProviderIdExistingProviderType_Conflict() {
-    // Generate data
-    val data = generateUniqueTestUserData();
-    val user0 = data.getUsers().get(0);
-
-    // Create a request with a non-unique providerType + providerId
-    val r =
-        CreateUserRequest.builder()
-            .email("user0@email.com")
-            .status(randomEnum(StatusType.class))
-            .type(randomEnum(UserType.class))
-            .preferredLanguage(randomEnum(LanguageType.class))
-            .firstName(randomStringNoSpaces(10))
-            .lastName(randomStringNoSpaces(10))
-            .providerType(user0.getProviderType())
-            .providerId(user0.getProviderId())
-            .build();
-
-    createUserPostRequestAnd(r).assertConflict();
-  }
-
-  @Test
-  public void createUser_InvalidProvider_BadRequest() {
-    val invalidProviderType = "someProvider";
-    val match =
-        stream(ProviderType.values()).anyMatch(x -> x.toString().equals(invalidProviderType));
-    assertFalse(match);
-
-    val templateR1 =
-        CreateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@rst.com")
-            .type(USER)
-            .firstName("r")
-            .lastName("st")
-            .preferredLanguage(ENGLISH)
-            .status(APPROVED)
-            .providerId(generateNonExistentProviderId(userService))
-            .build();
-    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(PROVIDERTYPE, invalidProviderType);
-    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
-  }
-
-  @Test
-  public void createUser_MissingProviderInfo_BadRequest() {
-    val templateR1 =
-        CreateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@rst.com")
-            .type(USER)
-            .firstName("r")
-            .lastName("st")
-            .preferredLanguage(ENGLISH)
-            .status(APPROVED)
-            .build();
-
-    initStringRequest().endpoint("/users").body(templateR1).postAnd().assertBadRequest();
-  }
-
-  @Test
-  public void updateUser_InvalidProvider_BadRequest() {
-    val invalidProviderType = "someProvider";
-    val match =
-        stream(ProviderType.values()).anyMatch(x -> x.toString().equals(invalidProviderType));
-    assertFalse(match);
-
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    val templateR2 =
-        UpdateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@rst.com")
-            .type(USER)
-            .preferredLanguage(ENGLISH)
-            .providerId(user.getProviderId())
-            .build();
-    val r2 = ((ObjectNode) MAPPER.valueToTree(templateR2)).put(PROVIDERTYPE, invalidProviderType);
-    initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
-  }
-
   @Test
   public void validateUpdateRequest_ProviderIdDoesntMatch_Forbidden() {
     // create a user with providerInfo
@@ -495,119 +240,6 @@ public class UserControllerTest extends AbstractControllerTest {
             .build();
 
     initStringRequest().endpoint("/users/%s", user.getId()).body(r1).putAnd().assertOk();
-  }
-
-  @Test
-  public void getUserByToken_ProviderInfoExists_Success() {
-    // create a user with providerInfo
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    val idToken = new IDToken();
-    idToken.setFamilyName(user.getLastName());
-    idToken.setGivenName(user.getFirstName());
-    idToken.setEmail(user.getEmail());
-    idToken.setProviderType(user.getProviderType());
-    idToken.setProviderId(user.getProviderId());
-
-    val userFromToken = userService.getUserByToken(idToken);
-
-    assertEquals(user.getId(), userFromToken.getId());
-    assertEquals(user.getProviderType(), userFromToken.getProviderType());
-    assertEquals(user.getProviderId(), userFromToken.getProviderId());
-    assertEquals(user.getStatus(), userFromToken.getStatus());
-    assertEquals(user.getEmail(), userFromToken.getEmail());
-    assertEquals(user.getType(), userFromToken.getType());
-    assertEquals(user.getLastName(), userFromToken.getLastName());
-    assertEquals(user.getFirstName(), userFromToken.getFirstName());
-  }
-
-  @Test
-  public void getUserByToken_DefaultProviderInfoExistingEmail_UpdateUserSuccess() {
-    val firstName = generateNonExistentName(userService);
-    val lastName = generateNonExistentName(userService);
-    val email = format("%s%s@domain.com", firstName, lastName);
-    val existingUser =
-        entityGenerator.setupUser(
-            format("%s %s", firstName, lastName), USER, email, DEFAULT_PROVIDER);
-    val providerType = FACEBOOK;
-    val providerId = generateNonExistentProviderId(userService);
-
-    // setup incoming user with IDToken, same email
-    val idToken = new IDToken();
-    idToken.setFamilyName(lastName);
-    idToken.setGivenName(firstName);
-    idToken.setEmail(email);
-    idToken.setProviderType(providerType);
-    idToken.setProviderId(providerId);
-
-    //  Assert not found by providerInfo
-    assertTrue(userService.findByProviderTypeAndProviderId(providerType, providerId).isEmpty());
-
-    //  Assert found by email-as-providerid and default providerType
-    assertTrue(userService.findByProviderTypeAndProviderId(DEFAULT_PROVIDER, email).isPresent());
-    // create user from idToken
-    val userFromToken = userService.getUserByToken(idToken);
-
-    // assert user exists
-    assertEquals(userFromToken.getClass(), User.class);
-    initStringRequest().endpoint("users/%s", userFromToken.getId()).getAnd().assertOk();
-
-    //  assert existingUser equals userFromToken
-    assertEquals(existingUser.getId(), userFromToken.getId());
-
-    //  assert user properties match idToken properties
-    assertEquals(userFromToken.getFirstName(), idToken.getGivenName());
-    assertEquals(userFromToken.getLastName(), idToken.getFamilyName());
-    assertEquals(userFromToken.getProviderType(), idToken.getProviderType());
-    assertEquals(userFromToken.getProviderId(), idToken.getProviderId());
-    assertEquals(userFromToken.getEmail(), idToken.getEmail());
-
-    //    assert existingUser properties are updated from userFromToken
-    assertEquals(existingUser.getEmail(), userFromToken.getEmail());
-    assertEquals(existingUser.getFirstName(), userFromToken.getFirstName());
-    assertEquals(existingUser.getLastName(), userFromToken.getLastName());
-    assertEquals(existingUser.getCreatedAt(), userFromToken.getCreatedAt());
-    assertEquals(existingUser.getType(), userFromToken.getType());
-    assertEquals(existingUser.getStatus(), userFromToken.getStatus());
-    assertNotEquals(existingUser.getProviderType(), userFromToken.getProviderType());
-    assertNotEquals(existingUser.getProviderId(), userFromToken.getProviderId());
-  }
-
-  @Test
-  public void getUserByToken_NonExistingProviderInfoNonExistingEmail_CreateNewUserSuccess() {
-    val userName = entityGenerator.generateNonExistentUserName();
-    val firstName = userName.split(" ")[0];
-    val lastName = userName.split(" ")[1];
-    val email = format("%s@example.com", userName);
-    val providerType = FACEBOOK;
-    val providerId = generateNonExistentProviderId(userService);
-
-    val idToken = new IDToken();
-    idToken.setFamilyName(lastName);
-    idToken.setGivenName(firstName);
-    idToken.setEmail(email);
-    idToken.setProviderType(providerType);
-    idToken.setProviderId(providerId);
-
-    // Assert not found by providerInfo
-    assertTrue(userService.findByProviderTypeAndProviderId(providerType, providerId).isEmpty());
-    // Assert not found by email
-    assertTrue(userService.findByName(userName).isEmpty());
-
-    // create user from idToken
-    val userFromToken = userService.getUserByToken(idToken);
-
-    // assert user exists
-    assertEquals(userFromToken.getClass(), User.class);
-    initStringRequest().endpoint("users/%s", userFromToken.getId()).getAnd().assertOk();
-
-    // assert user properties match idToken properties
-    assertEquals(userFromToken.getFirstName(), idToken.getGivenName());
-    assertEquals(userFromToken.getLastName(), idToken.getFamilyName());
-    assertEquals(userFromToken.getProviderType(), idToken.getProviderType());
-    assertEquals(userFromToken.getProviderId(), idToken.getProviderId());
-    assertEquals(userFromToken.getEmail(), idToken.getEmail());
   }
 
   @Test
@@ -882,18 +514,6 @@ public class UserControllerTest extends AbstractControllerTest {
     val data = generateUniqueTestUserData();
     val user = data.getUsers().get(0);
 
-    // Assert createUsers
-    val templateR1 =
-        CreateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@xyz.com")
-            .type(USER)
-            .lastName("")
-            .lastName("")
-            .preferredLanguage(ENGLISH)
-            .build();
-    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(STATUS, invalidStatus);
-    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
-
     // Assert updateUser
     val templateR2 =
         UpdateUserRequest.builder()
@@ -914,18 +534,6 @@ public class UserControllerTest extends AbstractControllerTest {
     val data = generateUniqueTestUserData();
     val user = data.getUsers().get(0);
 
-    // Assert createUsers
-    val templateR1 =
-        CreateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@xyz.com")
-            .status(APPROVED)
-            .preferredLanguage(ENGLISH)
-            .firstName("")
-            .lastName("")
-            .build();
-    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(TYPE, invalidType);
-    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
-
     // Assert updateUser
     val templateR2 =
         UpdateUserRequest.builder()
@@ -945,18 +553,6 @@ public class UserControllerTest extends AbstractControllerTest {
 
     val data = generateUniqueTestUserData();
     val user = data.getUsers().get(0);
-
-    // Assert createUsers
-    val templateR1 =
-        CreateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@xyz.com")
-            .status(APPROVED)
-            .type(USER)
-            .firstName("")
-            .lastName("")
-            .build();
-    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(PREFERREDLANGUAGE, invalidLanguage);
-    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
 
     // Assert updateUser
     val templateR2 =

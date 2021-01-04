@@ -69,7 +69,7 @@ public class UserSelfAssignApiKeyTest extends AbstractControllerTest {
 
   @Override
   protected void beforeTest() {
-    // Initial setup of entities (run once
+    // Initial setup of entities (run once)
     if (!hasRunEntitySetup) {
       hasRunEntitySetup = true;
 
