@@ -55,8 +55,9 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
   protected PolicyResponse convertToPolicyResponse(@NonNull UserPermission userPermission) {
     val id = userPermission.getOwner().getId().toString();
     val mask = userPermission.getAccessLevel();
-    val name = userPermission.getOwner().getEmail();
-    return PolicyResponse.builder().name(name).id(id).mask(mask).build();
+    // setting name value to user.id because email is no longer a unique identifier
+    // this is more secure and consistent for tracking user permissions
+    return PolicyResponse.builder().name(id).id(id).mask(mask).build();
   }
 
   public Page<PolicyResponse> listUserPermissionsByPolicy(
