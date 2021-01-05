@@ -59,5 +59,6 @@ message User {
     google.protobuf.StringValue provider_type = 14;
     google.protobuf.StringValue provider_id = 15;
 
+    // removed name = 7 field as part of EGO-530
     reserved 7;
 }
