@@ -52,6 +52,13 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
     this.apiKeyEventsPublisher = apiKeyEventsPublisher;
   }
 
+  protected PolicyResponse convertToPolicyResponse(@NonNull UserPermission userPermission) {
+    val id = userPermission.getOwner().getId().toString();
+    val mask = userPermission.getAccessLevel();
+    val name = userPermission.getOwner().getEmail();
+    return PolicyResponse.builder().name(name).id(id).mask(mask).build();
+  }
+
   public Page<PolicyResponse> listUserPermissionsByPolicy(
       @NonNull UUID policyId, List<SearchFilter> filters, @NonNull Pageable pageable) {
     // Note: Since userPermissions needs users and policies fetched,
