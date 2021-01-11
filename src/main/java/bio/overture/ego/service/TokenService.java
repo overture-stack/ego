@@ -418,13 +418,13 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
 
     val owner = aK.getOwner();
     val scopes = explicitScopes(effectiveScopes(extractScopes(owner), aK.scopes()));
-    val names = mapToSet(scopes, Scope::toString);
+    val scopeNames = mapToSet(scopes, Scope::toString);
 
-    return new ApiKeyScopeResponse(owner.getName(), clientId, aK.getSecondsUntilExpiry(), names);
+    return new ApiKeyScopeResponse(owner.getId(), clientId, aK.getSecondsUntilExpiry(), scopeNames);
   }
 
-  public UserScopesResponse userScopes(@NonNull String userName) {
-    val user = userService.getByName(userName);
+  public UserScopesResponse userScopes(@NonNull UUID userId) {
+    val user = userService.getById(userId);
     val scopes = extractScopes(user);
     val names = mapToSet(scopes, Scope::toString);
 

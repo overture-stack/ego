@@ -63,7 +63,6 @@ import org.hibernate.annotations.TypeDef;
 @ToString(exclude = {"userGroups", "userApplications", "userPermissions", "tokens", "refreshToken"})
 @JsonPropertyOrder({
   JavaFields.ID,
-  JavaFields.NAME,
   JavaFields.EMAIL,
   JavaFields.USERTYPE,
   JavaFields.STATUS,
@@ -86,7 +85,7 @@ import org.hibernate.annotations.TypeDef;
 @JsonView(Views.REST.class)
 @TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
 @FieldNameConstants
-public class User implements PolicyOwner, NameableEntity<UUID> {
+public class User implements PolicyOwner, Identifiable<UUID> {
 
   // TODO: find JPA equivalent for GenericGenerator
   @Id
@@ -94,10 +93,6 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   @GenericGenerator(name = "user_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "user_uuid")
   private UUID id;
-
-  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = SqlFields.NAME)
-  private String name;
 
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.EMAIL)
@@ -236,7 +231,6 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
             .setEmail(toProtoString(this.getEmail()))
             .setFirstName(toProtoString(this.getFirstName()))
             .setLastName(toProtoString(this.getLastName()))
-            .setName(toProtoString(this.getName()))
             .setCreatedAt(toProtoString(this.getCreatedAt()))
             .setLastLogin(toProtoString(this.getLastLogin()))
             .setPreferredLanguage(toProtoString(this.getPreferredLanguage()))
@@ -296,10 +290,6 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
 
     if (proto.hasLastName()) {
       user.setLastName(proto.getLastName().getValue());
-    }
-
-    if (proto.hasName()) {
-      user.setName(proto.getName().getValue());
     }
 
     if (proto.hasProviderId()) {

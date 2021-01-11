@@ -58,7 +58,6 @@ public class JwtTest {
             User.builder()
                 .id(UUID.randomUUID())
                 .email("foobar@example.com")
-                .name("foobar@example.com")
                 .firstName("foo")
                 .lastName("bar")
                 .status(StatusType.APPROVED)

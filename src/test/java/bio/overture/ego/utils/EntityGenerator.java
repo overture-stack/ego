@@ -132,10 +132,8 @@ public class EntityGenerator {
   }
 
   public User setupUser(String name, UserType type, String providerId, ProviderType providerType) {
-    val names = name.split(" ", 2);
-    val userName = format("%s%s@domain.com", names[0], names[1]);
     return userService
-        .findByName(userName)
+        .findByProviderTypeAndProviderId(providerType, providerId)
         .orElseGet(
             () -> {
               val createUserRequest = createUser(name, type, providerType, providerId);
@@ -271,12 +269,12 @@ public class EntityGenerator {
 
   private String randomUserEmail() {
     String email;
-    Optional<User> result;
+    List<User> result;
 
     do {
       email = randomStringNoSpaces(5) + "@xyz.com";
-      result = userService.findByName(email);
-    } while (result.isPresent());
+      result = userService.findByEmail(email);
+    } while (result.size() > 0);
 
     return email;
   }
@@ -400,12 +398,14 @@ public class EntityGenerator {
   public String generateNonExistentUserName() {
     val r = new Random();
     String name;
-    Optional<User> result;
+    List<User> result;
 
     do {
       name = generateRandomUserName(r, 5);
-      result = userService.findByName(name);
-    } while (result.isPresent());
+      val names = name.split(" ");
+      val email = format("%s%s@xyz.com", names[0], names[1]);
+      result = userService.findByEmail(email);
+    } while (result.size() > 0);
 
     return name;
   }
@@ -543,10 +543,7 @@ public class EntityGenerator {
 
   public IDToken setupUserIDToken(ProviderType providerType, String providerId) {
     return setupUserIDToken(
-        providerType,
-        providerId,
-        generateNonExistentName(userService),
-        generateNonExistentName(userService));
+        providerType, providerId, generateNonExistentUserName(), generateNonExistentUserName());
   }
 
   public IDToken setupUserIDToken(

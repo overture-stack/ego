@@ -11,12 +11,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
-import bio.overture.ego.model.dto.GenericResponse;
-import bio.overture.ego.model.dto.MaskDTO;
-import bio.overture.ego.model.dto.PageDTO;
-import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.dto.PolicyRequest;
-import bio.overture.ego.model.dto.PolicyResponse;
+import bio.overture.ego.model.dto.*;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Policy;

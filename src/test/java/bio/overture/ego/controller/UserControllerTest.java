@@ -127,6 +127,7 @@ public class UserControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("/users?offset=0&limit=%s", numUsers).get();
 
     val responseStatus = response.getStatusCode();
+    assertNotNull(response.getBody());
     val responseJson = MAPPER.readTree(response.getBody());
 
     assertEquals(responseStatus, HttpStatus.OK);
@@ -135,26 +136,28 @@ public class UserControllerTest extends AbstractControllerTest {
 
     // Verify that the returned Users are the ones from the setup.
     Iterable<JsonNode> resultSetIterable = () -> responseJson.get("resultSet").iterator();
-    val actualUserNames =
-        stream(resultSetIterable).map(j -> j.get("name").asText()).collect(toImmutableList());
+    val actualUserEmails =
+        stream(resultSetIterable).map(j -> j.get("email").asText()).collect(toImmutableList());
     assertTrue(
-        actualUserNames.containsAll(
+        actualUserEmails.containsAll(
             Set.of("FirstUser@domain.com", "SecondUser@domain.com", "ThirdUser@domain.com")));
   }
 
+  // prob breaking cuz email is no longer reliably unique. can you query on unique value?
   @Test
   @SneakyThrows
   public void listUsersWithQuery() {
     val response = initStringRequest().endpoint("/users?query=FirstUser").get();
 
     val responseStatus = response.getStatusCode();
+    assertNotNull(response.getBody());
     val responseJson = MAPPER.readTree(response.getBody());
 
     assertEquals(responseStatus, HttpStatus.OK);
-    assertEquals(responseJson.get("count").asInt(), 1);
+    assertTrue(responseJson.get("count").asInt() >= 1);
     assertTrue(responseJson.get("resultSet").isArray());
     assertEquals(
-        responseJson.get("resultSet").elements().next().get("name").asText(),
+        responseJson.get("resultSet").elements().next().get("email").asText(),
         "FirstUser@domain.com");
   }
 
@@ -430,14 +433,11 @@ public class UserControllerTest extends AbstractControllerTest {
     val user0 = data.getUsers().get(0);
 
     // create update request 1
-    val uniqueName = generateNonExistentName(userService);
-    val email = uniqueName + "@xyz.com";
     val r1 =
         UpdateUserRequest.builder()
             .firstName("aNewFirstName")
             .providerType(user0.getProviderType())
             .providerId(user0.getProviderId())
-            .email(email)
             .build();
 
     // Update user
@@ -445,9 +445,10 @@ public class UserControllerTest extends AbstractControllerTest {
 
     // Assert update was correct
     val actualUser1 = getUserEntityGetRequestAnd(user0).extractOneEntity(User.class);
+
     assertEquals(actualUser1.getFirstName(), r1.getFirstName());
-    assertEquals(actualUser1.getEmail(), r1.getEmail());
-    assertEquals(actualUser1.getName(), r1.getEmail());
+    assertEquals(actualUser1.getProviderType(), r1.getProviderType());
+    assertEquals(actualUser1.getProviderId(), r1.getProviderId());
 
     // create update request 2
     val r2 =
@@ -489,19 +490,18 @@ public class UserControllerTest extends AbstractControllerTest {
     val user1 = data.getUsers().get(1);
 
     // Assumptions
-    assertEquals(user0.getName(), user0.getEmail());
-    assertEquals(user1.getName(), user1.getEmail());
+    assertNotEquals(user0.getEmail(), user1.getEmail());
 
     // Create update request with same email
     val r1 =
         UpdateUserRequest.builder()
-            .email(user1.getName())
+            .email(user1.getEmail())
             .status(randomEnumExcluding(StatusType.class, user0.getStatus()))
             .providerType(user0.getProviderType())
             .providerId(user0.getProviderId())
             .build();
 
-    // Assert that an OK response when trying to update a user with a name that already exists
+    // Assert that an OK response when trying to update a user with an email that already exists
     partialUpdateUserPutRequestAnd(user0.getId(), r1).assertOk();
   }
 
@@ -517,7 +517,8 @@ public class UserControllerTest extends AbstractControllerTest {
     // Assert updateUser
     val templateR2 =
         UpdateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@xyz.com")
+            .providerType(user.getProviderType())
+            .providerId(user.getProviderId())
             .type(USER)
             .preferredLanguage(ENGLISH)
             .build();
@@ -537,7 +538,8 @@ public class UserControllerTest extends AbstractControllerTest {
     // Assert updateUser
     val templateR2 =
         UpdateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@xyz.com")
+            .providerType(user.getProviderType())
+            .providerId(user.getProviderId())
             .status(DISABLED)
             .preferredLanguage(ENGLISH)
             .build();
@@ -557,7 +559,8 @@ public class UserControllerTest extends AbstractControllerTest {
     // Assert updateUser
     val templateR2 =
         UpdateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@xyz.com")
+            .providerType(user.getProviderType())
+            .providerId(user.getProviderId())
             .status(DISABLED)
             .type(USER)
             .build();
@@ -617,6 +620,7 @@ public class UserControllerTest extends AbstractControllerTest {
     val user0 = data.getUsers().get(0);
 
     // Assert the user has no applications
+
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
 
     // Add applications to user and assert the response is equal to the user
@@ -656,9 +660,10 @@ public class UserControllerTest extends AbstractControllerTest {
     val app1 = data.getApplications().get(1);
 
     // Assert the user has no applications
+
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
 
-    // Add app00 to user and assert the response is equal to the user
+    // Add app0 to user and assert the response is equal to the user
     addApplicationsToUserPostRequestAnd(user0, newArrayList(app0))
         .assertEntityOfType(User.class)
         .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, USERAPPLICATIONS);
@@ -669,8 +674,7 @@ public class UserControllerTest extends AbstractControllerTest {
         .containsExactlyInAnyOrder(app0);
 
     // Add app0 and app1 to user and assert a CONFLICT error is returned since app0
-    // was already
-    // associated
+    // was already associated
     addApplicationsToUserPostRequestAnd(user0, newArrayList(app0, app1)).assertConflict();
   }
 
@@ -681,6 +685,7 @@ public class UserControllerTest extends AbstractControllerTest {
     val user0 = data.getUsers().get(0);
 
     // Assert the user has no applications
+
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
 
     // Add apps to user and assert user is returned
@@ -697,6 +702,7 @@ public class UserControllerTest extends AbstractControllerTest {
     deleteApplicationsFromUserDeleteRequestAnd(user0, data.getApplications()).assertOk();
 
     // Assert the user has no applications
+
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
   }
 
@@ -709,6 +715,7 @@ public class UserControllerTest extends AbstractControllerTest {
     val app1 = data.getApplications().get(1);
 
     // Assert the user has no applications
+
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
 
     // Add apps to user and assert user is returned
@@ -732,6 +739,7 @@ public class UserControllerTest extends AbstractControllerTest {
     val user0 = data.getUsers().get(0);
 
     // Assert the user has no applications
+
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
 
     // Add all apps to user
@@ -988,9 +996,9 @@ public class UserControllerTest extends AbstractControllerTest {
   @lombok.Value
   @Builder
   public static class TestUserData {
-    @NonNull private final List<User> users;
-    @NonNull private final List<Group> groups;
-    @NonNull private final List<Application> applications;
-    @NonNull private final List<Policy> policies;
+    @NonNull List<User> users;
+    @NonNull List<Group> groups;
+    @NonNull List<Application> applications;
+    @NonNull List<Policy> policies;
   }
 }

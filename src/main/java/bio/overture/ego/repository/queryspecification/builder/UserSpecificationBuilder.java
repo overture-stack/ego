@@ -56,4 +56,15 @@ public class UserSpecificationBuilder extends AbstractSpecificationBuilder<User,
         builder.equal(root.get(PROVIDERID), providerId),
         builder.equal(root.get(PROVIDERTYPE), providerType));
   }
+
+  public Specification<User> buildByEmail(@NonNull String email) {
+    return (fromUser, query, builder) -> {
+      val root = setupFetchStrategy(fromUser);
+      return equalsEmailPredicate(root, builder, email);
+    };
+  }
+
+  private Predicate equalsEmailPredicate(Root<User> root, CriteriaBuilder builder, String email) {
+    return builder.and(builder.equal(root.get(EMAIL), email));
+  }
 }

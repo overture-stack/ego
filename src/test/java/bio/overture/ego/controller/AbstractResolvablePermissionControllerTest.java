@@ -8,7 +8,7 @@ import static org.springframework.http.HttpStatus.OK;
 import bio.overture.ego.model.dto.ResolvedPermissionResponse;
 import bio.overture.ego.model.entity.AbstractPermission;
 import bio.overture.ego.model.entity.GroupPermission;
-import bio.overture.ego.model.entity.NameableEntity;
+import bio.overture.ego.model.entity.Identifiable;
 import java.util.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import org.junit.Test;
 
 @Slf4j
 public abstract class AbstractResolvablePermissionControllerTest<
-        O extends NameableEntity<UUID>, P extends AbstractPermission<O>>
+        O extends Identifiable<UUID>, P extends AbstractPermission<O>>
     extends AbstractPermissionControllerTest<O, P> {
 
   @Test

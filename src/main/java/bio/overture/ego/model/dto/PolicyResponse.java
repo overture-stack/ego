@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PolicyResponse {
 
-  public String id;
-  public String name;
-  public AccessLevel mask;
+  private String id;
+  private String name;
+  private AccessLevel mask;
 }

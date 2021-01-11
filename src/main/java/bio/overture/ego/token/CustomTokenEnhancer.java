@@ -16,12 +16,12 @@
 
 package bio.overture.ego.token;
 
+import bio.overture.ego.model.entity.User;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.token.app.AppJWTAccessToken;
 import bio.overture.ego.token.app.AppTokenClaims;
-import bio.overture.ego.token.user.UserJWTAccessToken;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
@@ -38,19 +38,15 @@ public class CustomTokenEnhancer implements TokenEnhancer {
   public OAuth2AccessToken enhance(
       OAuth2AccessToken oAuth2AccessToken, OAuth2Authentication oAuth2Authentication) {
 
-    // get user or application token
-    return oAuth2Authentication.getAuthorities() != null
-            && oAuth2Authentication.getAuthorities().stream()
-                .anyMatch(authority -> AppTokenClaims.ROLE.equals(authority.getAuthority()))
-        ? getApplicationAccessToken(oAuth2Authentication.getPrincipal().toString())
-        : getUserAccessToken(oAuth2Authentication.getPrincipal().toString());
-  }
-
-  private UserJWTAccessToken getUserAccessToken(String userName) {
-    val user = userService.getByName(userName);
-    val token = tokenService.generateUserToken(user);
-
-    return tokenService.getUserAccessToken(token);
+    if (oAuth2Authentication.getAuthorities() != null
+        && oAuth2Authentication.getAuthorities().stream()
+            .anyMatch(authority -> AppTokenClaims.ROLE.equals(authority.getAuthority()))) {
+      return getApplicationAccessToken(oAuth2Authentication.getPrincipal().toString());
+    } else {
+      val user = (User) oAuth2Authentication.getPrincipal();
+      val token = tokenService.generateUserToken(userService.getById(user.getId()));
+      return tokenService.getUserAccessToken(token);
+    }
   }
 
   private AppJWTAccessToken getApplicationAccessToken(String clientId) {

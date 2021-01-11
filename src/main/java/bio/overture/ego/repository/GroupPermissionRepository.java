@@ -8,7 +8,8 @@ import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.EntityGraph;
 
-public interface GroupPermissionRepository extends PermissionRepository<Group, GroupPermission> {
+public interface GroupPermissionRepository
+    extends NameablePermissionRepository<Group, GroupPermission> {
 
   @EntityGraph(value = "group-permission-entity-with-relationships", type = FETCH)
   Set<GroupPermission> findAllByOwner_Id(UUID id);
