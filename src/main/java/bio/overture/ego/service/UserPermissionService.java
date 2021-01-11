@@ -52,12 +52,13 @@ public class UserPermissionService extends AbstractPermissionService<User, UserP
     this.apiKeyEventsPublisher = apiKeyEventsPublisher;
   }
 
-  protected PolicyResponse convertToPolicyResponse(@NonNull UserPermission userPermission) {
-    val id = userPermission.getOwner().getId().toString();
+  private PolicyResponse convertToPolicyResponse(@NonNull UserPermission userPermission) {
+    val permissionOwner = userPermission.getOwner();
+    val id = permissionOwner.getId().toString();
     val mask = userPermission.getAccessLevel();
-    // setting name value to user.id because email is no longer a unique identifier
-    // this is more secure and consistent for tracking user permissions
-    return PolicyResponse.builder().name(id).id(id).mask(mask).build();
+    val name =
+        String.format("%s %s", permissionOwner.getFirstName(), permissionOwner.getLastName());
+    return PolicyResponse.builder().id(id).name(name).mask(mask).build();
   }
 
   public Page<PolicyResponse> listUserPermissionsByPolicy(
