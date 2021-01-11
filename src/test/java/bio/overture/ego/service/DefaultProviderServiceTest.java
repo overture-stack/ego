@@ -1,9 +1,9 @@
 package bio.overture.ego.service;
 
+import static bio.overture.ego.utils.EntityGenerator.randomEnumExcluding;
 import static org.junit.Assert.*;
 
 import bio.overture.ego.model.enums.ProviderType;
-import bio.overture.ego.utils.EntityGenerator;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Test;
@@ -21,7 +21,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class DefaultProviderServiceTest {
 
   @Autowired DefaultProviderService defaultProviderService;
-  @Autowired private EntityGenerator entityGenerator;
 
   @Value("${spring.flyway.placeholders.default_provider}")
   private ProviderType configuredDefaultProvider;
@@ -32,13 +31,15 @@ public class DefaultProviderServiceTest {
     val defaultProviderResult = defaultProviderService.findById(configuredDefaultProvider);
     assertTrue(defaultProviderResult.isPresent());
     assertEquals(defaultProviderResult.get().getId(), configuredDefaultProvider);
+    val refreshedProviderResult = defaultProviderService.findById(configuredDefaultProvider);
+    assertTrue(refreshedProviderResult.isPresent());
+    assertEquals(refreshedProviderResult.get().getId(), configuredDefaultProvider);
   }
 
   @Test
   public void defaultProviderConfigured_Failure() {
     assertNotNull(configuredDefaultProvider);
-    val mockedDefaultProvider =
-        entityGenerator.randomEnumExcluding(ProviderType.class, configuredDefaultProvider);
+    val mockedDefaultProvider = randomEnumExcluding(ProviderType.class, configuredDefaultProvider);
     val provider = defaultProviderService.findById(mockedDefaultProvider);
     assertTrue(provider.isEmpty());
     assertNotEquals(provider, configuredDefaultProvider);

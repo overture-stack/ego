@@ -48,7 +48,6 @@ message User {
 
     google.protobuf.StringValue created_at = 5;
     google.protobuf.StringValue last_login = 6;
-    google.protobuf.StringValue name = 7;
     google.protobuf.StringValue preferred_language = 8;
     google.protobuf.StringValue status = 9;
     google.protobuf.StringValue type = 10;
@@ -59,4 +58,7 @@ message User {
 
     google.protobuf.StringValue provider_type = 14;
     google.protobuf.StringValue provider_id = 15;
+
+    // removed name = 7 field as part of EGO-530
+    reserved 7;
 }

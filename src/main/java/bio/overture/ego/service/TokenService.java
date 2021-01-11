@@ -26,6 +26,7 @@ import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
 import static bio.overture.ego.utils.TypeUtils.convertToAnotherType;
 import static java.lang.String.format;
 import static java.util.UUID.fromString;
+import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.springframework.data.jpa.domain.Specification.where;
 import static org.springframework.util.DigestUtils.md5Digest;
 
@@ -34,6 +35,8 @@ import bio.overture.ego.model.entity.ApiKey;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.ForbiddenException;
+import bio.overture.ego.model.exceptions.InternalServerException;
+import bio.overture.ego.model.exceptions.UnauthorizedException;
 import bio.overture.ego.model.params.ScopeName;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.TokenStoreRepository;
@@ -60,7 +63,6 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashSet;
@@ -99,17 +101,19 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   /*
    * Dependencies
    */
-  private TokenSigner tokenSigner;
-  private UserService userService;
-  private ApplicationService applicationService;
-  private ApiKeyStoreService apiKeyStoreService;
-  private PolicyService policyService;
+  private final TokenSigner tokenSigner;
+  private final UserService userService;
+  private final ApplicationService applicationService;
+  private final ApiKeyStoreService apiKeyStoreService;
+  private final PolicyService policyService;
   private final UserRepository userRepository;
 
   /** Configuration */
-  private int JWT_DURATION;
+  private final int userJwtDuration;
 
-  private int API_TOKEN_DURATION;
+  private final int appJwtDuration;
+
+  private final int apiTokenDuration;
 
   public TokenService(
       @NonNull TokenSigner tokenSigner,
@@ -119,8 +123,9 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
       @NonNull PolicyService policyService,
       @NonNull TokenStoreRepository tokenStoreRepository,
       @NonNull UserRepository userRepository,
-      @Value("${jwt.durationMs:10800000}") int JWT_DURATION,
-      @Value("${apitoken.durationDays:365}") int API_TOKEN_DURATION) {
+      @Value("${jwt.user.durationMs:10800000}") int userJwtDuration,
+      @Value("${jwt.app.durationMs:10800000}") int appJwtDuration,
+      @Value("${apitoken.durationDays:365}") int apiTokenDuration) {
     super(ApiKey.class, tokenStoreRepository);
     this.tokenSigner = tokenSigner;
     this.userService = userService;
@@ -128,8 +133,9 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     this.apiKeyStoreService = apiKeyStoreService;
     this.policyService = policyService;
     this.userRepository = userRepository;
-    this.JWT_DURATION = JWT_DURATION;
-    this.API_TOKEN_DURATION = API_TOKEN_DURATION;
+    this.userJwtDuration = userJwtDuration;
+    this.appJwtDuration = appJwtDuration;
+    this.apiTokenDuration = apiTokenDuration;
   }
 
   @Override
@@ -181,11 +187,11 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     }
   }
 
-  public String strList(Collection collection) {
+  public String strList(Collection<?> collection) {
     if (collection == null) {
       return "null";
     }
-    val l = new ArrayList(collection);
+    val l = collection.stream().collect(toUnmodifiableList());
     return l.toString();
   }
 
@@ -219,7 +225,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     log.info(format("Generated apiKey string '%s'", str(apiKeyString)));
 
     val cal = Calendar.getInstance();
-    cal.add(Calendar.DAY_OF_YEAR, API_TOKEN_DURATION);
+    cal.add(Calendar.DAY_OF_YEAR, apiTokenDuration);
     val expiryDate = cal.getTime();
 
     val today = Calendar.getInstance();
@@ -262,7 +268,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     tokenContext.setScope(scope);
     val tokenClaims = new UserTokenClaims();
     tokenClaims.setIss(ISSUER_NAME);
-    tokenClaims.setValidDuration(JWT_DURATION);
+    tokenClaims.setValidDuration(userJwtDuration);
     tokenClaims.setContext(tokenContext);
 
     return tokenClaims;
@@ -275,35 +281,39 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     val tokenClaims = new AppTokenClaims();
     tokenContext.setScope(permissionNames);
     tokenClaims.setIss(ISSUER_NAME);
-    tokenClaims.setValidDuration(JWT_DURATION);
+    tokenClaims.setValidDuration(appJwtDuration);
     tokenClaims.setContext(tokenContext);
     return getSignedToken(tokenClaims);
   }
 
   public boolean isValidToken(String token) {
-    Jws<Claims> decodedToken = null;
-    try {
-      decodedToken = Jwts.parser().setSigningKey(tokenSigner.getKey().get()).parseClaimsJws(token);
-    } catch (JwtException e) {
-      log.error("JWT token is invalid", e);
-    }
-    return (decodedToken != null);
+    return processValidToken(token).isPresent();
   }
 
   public Jws<Claims> validateAndReturn(String token) {
-    Jws<Claims> decodedToken = null;
+    return processValidToken(token)
+        .orElseThrow(
+            () -> {
+              log.error("JWT token was null when trying to validate and return.");
+              return new ForbiddenException("Authorization is required for this action.");
+            });
+  }
+
+  private Optional<Jws<Claims>> processValidToken(@NonNull String token) {
+    Jws<Claims> decodedToken;
+    val tokenKey =
+        tokenSigner
+            .getKey()
+            .orElseThrow(() -> new InternalServerException("Internal issue with token signer."));
+
     try {
-      decodedToken = Jwts.parser().setSigningKey(tokenSigner.getKey().get()).parseClaimsJws(token);
+      decodedToken = Jwts.parser().setSigningKey(tokenKey).parseClaimsJws(token);
     } catch (JwtException e) {
       log.error("JWT token is invalid", e);
       throw new ForbiddenException("Authorization is required for this action.");
     }
-    if (decodedToken == null) {
-      log.error("JWT token was null when trying to validate and return.");
-      throw new ForbiddenException("Authorization is required for this action.");
-    }
 
-    return decodedToken;
+    return decodedToken == null ? Optional.empty() : Optional.of(decodedToken);
   }
 
   public User getTokenUserInfo(String token) {
@@ -387,7 +397,13 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     log.debug(format("apiKey ='%s'", apiKey));
     val contents = BasicAuthToken.decode(authToken);
 
-    val clientId = contents.get().getClientId();
+    val clientId =
+        contents
+            .orElseThrow(() -> new UnauthorizedException("Cannot validate client id"))
+            .getClientId();
+    applicationService
+        .findByClientId(clientId)
+        .orElseThrow(() -> new UnauthorizedException("Not Authorized."));
 
     val aK =
         findByApiKeyString(apiKey).orElseThrow(() -> new InvalidTokenException("ApiKey not found"));
@@ -430,13 +446,11 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   }
 
   private void revokeApiKeyAsUser(String apiKeyName, User user) {
-    if (userService.isAdmin(user) && userService.isActiveUser(user)) {
-      revoke(apiKeyName);
-    } else {
+    if (!userService.isAdmin(user) || !userService.isActiveUser(user)) {
       // if it's a regular user, check if the api key belongs to the user
       verifyApiKey(apiKeyName, user.getId());
-      revoke(apiKeyName);
     }
+    revoke(apiKeyName);
   }
 
   private void revokeApiKeyAsApplication(String apiKeyName, Application application) {
