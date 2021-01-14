@@ -28,12 +28,9 @@ import lombok.*;
 @NoArgsConstructor
 public class UpdateUserRequest {
 
-  private String email;
   private UserType type;
   private StatusType status;
-  private String firstName;
-  private String lastName;
   private LanguageType preferredLanguage;
-  private ProviderType providerType;
-  private String providerId;
+  @NonNull private ProviderType providerType;
+  @NonNull private String providerId;
 }
