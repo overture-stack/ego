@@ -32,5 +32,5 @@ public class UpdateUserRequest {
   private StatusType status;
   private LanguageType preferredLanguage;
   @NonNull private ProviderType providerType;
-  @NonNull private String providerId;
+  @NonNull private String providerSubjectId;
 }

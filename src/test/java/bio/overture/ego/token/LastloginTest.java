@@ -41,20 +41,22 @@ public class LastloginTest {
     idToken.setGivenName("bar");
     idToken.setEmail("foobar@domain.com");
     idToken.setProviderType(GOOGLE);
-    idToken.setProviderId("12345");
+    idToken.setProviderSubjectId("12345");
     User user = entityGenerator.setupUser("foo bar", ADMIN, "12345", GOOGLE);
 
     assertNull(
         " Verify before generatedUserToken, last login after fetching the user should be null. ",
         userService
-            .getByProviderTypeAndProviderId(idToken.getProviderType(), idToken.getProviderId())
+            .getByProviderTypeAndProviderSubjectId(
+                idToken.getProviderType(), idToken.getProviderSubjectId())
             .getLastLogin());
 
     tokenService.generateUserToken(idToken);
 
     val lastLogin =
         userService
-            .getByProviderTypeAndProviderId(idToken.getProviderType(), idToken.getProviderId())
+            .getByProviderTypeAndProviderSubjectId(
+                idToken.getProviderType(), idToken.getProviderSubjectId())
             .getLastLogin();
     userService.delete(user.getId());
 

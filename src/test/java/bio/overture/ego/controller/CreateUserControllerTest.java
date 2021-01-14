@@ -44,12 +44,12 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
     idToken.setFamilyName(user.getLastName());
     idToken.setGivenName(user.getFirstName());
     idToken.setProviderType(user.getProviderType());
-    idToken.setProviderId(user.getProviderId());
+    idToken.setProviderSubjectId(user.getProviderSubjectId());
 
     val jsonString = MAPPER.writeValueAsString(idToken);
     val json = MAPPER.readTree(jsonString);
 
-    Stream.of("given_name", "family_name", "provider_type", "provider_id", "email")
+    Stream.of("given_name", "family_name", "provider_type", "provider_subject_id", "email")
         .forEach(
             fieldname -> {
               assertTrue(json.has(fieldname));
@@ -58,7 +58,7 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
     assertEquals(idToken.getFamilyName(), json.path("family_name").asText());
     assertEquals(idToken.getGivenName(), json.path("given_name").asText());
     assertEquals(idToken.getProviderType().toString(), json.path("provider_type").asText());
-    assertEquals(idToken.getProviderId(), json.path("provider_id").asText());
+    assertEquals(idToken.getProviderSubjectId(), json.path("provider_subject_id").asText());
   }
 
   // not in db (default/non default)	not in db	  not in db	  create OK	  Empty Slate
@@ -79,7 +79,7 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
 
     // assert new user matches idToken
     assertEquals(newUser.getProviderType(), idToken.getProviderType());
-    assertEquals(newUser.getProviderId(), idToken.getProviderId());
+    assertEquals(newUser.getProviderSubjectId(), idToken.getProviderSubjectId());
     assertEquals(newUser.getEmail(), idToken.getEmail());
     assertEquals(newUser.getFirstName(), idToken.getGivenName());
     assertEquals(newUser.getLastName(), idToken.getFamilyName());
@@ -87,7 +87,7 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
 
   // existing (default/non default)	not in db	  not in db	  create OK
   @Test
-  public void existingProviderTypeNonExistingProviderIdNonExistingEmail_createUser() {
+  public void existingProviderTypeNonExistingProviderSubjectIdNonExistingEmail_createUser() {
     // set up user with default providerType
     val user = entityGenerator.setupUser("Existing ProviderType");
 
@@ -106,7 +106,7 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
 
     // assert new user matches idToken
     assertEquals(newUser.getProviderType(), idToken.getProviderType());
-    assertEquals(newUser.getProviderId(), idToken.getProviderId());
+    assertEquals(newUser.getProviderSubjectId(), idToken.getProviderSubjectId());
     assertEquals(newUser.getEmail(), idToken.getEmail());
     assertEquals(newUser.getFirstName(), idToken.getGivenName());
     assertEquals(newUser.getLastName(), idToken.getFamilyName());
@@ -121,7 +121,7 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
     // assert new user does not match existing user with same providerType
     assertNotEquals(newUser.getId(), existingUser.getId());
     assertEquals(newUser.getProviderType(), existingUser.getProviderType());
-    assertNotEquals(newUser.getProviderId(), existingUser.getProviderId());
+    assertNotEquals(newUser.getProviderSubjectId(), existingUser.getProviderSubjectId());
     assertNotEquals(newUser.getEmail(), existingUser.getEmail());
     assertNotEquals(newUser.getFirstName(), existingUser.getFirstName());
     assertNotEquals(newUser.getLastName(), existingUser.getLastName());
@@ -129,13 +129,13 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
 
   // not in db (default/non default)	existing id 	email not in db	  create OK
   @Test
-  public void nonExistingProviderTypeExistingProviderIdNonExistingEmail_createUser() {
+  public void nonExistingProviderTypeExistingProviderSubjectIdNonExistingEmail_createUser() {
     // set up user with default providerType
     val user = entityGenerator.setupUser("Existing ProviderType");
 
-    // create idToken for a user with same providerId, different providerType
+    // create idToken for a user with same providerSubjectId, different providerType
     idToken.setProviderType(entityGenerator.createNonDefaultProviderType());
-    idToken.setProviderId(user.getProviderId());
+    idToken.setProviderSubjectId(user.getProviderSubjectId());
 
     val response = getTokenResponse();
 
@@ -152,7 +152,7 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
 
     // assert new user matches idToken
     assertEquals(newUser.getProviderType(), idToken.getProviderType());
-    assertEquals(newUser.getProviderId(), idToken.getProviderId());
+    assertEquals(newUser.getProviderSubjectId(), idToken.getProviderSubjectId());
     assertEquals(newUser.getEmail(), idToken.getEmail());
     assertEquals(newUser.getFirstName(), idToken.getGivenName());
     assertEquals(newUser.getLastName(), idToken.getFamilyName());
@@ -167,7 +167,7 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
     // assert new user does not match existing user with same providerType
     assertNotEquals(newUser.getId(), existingUser.getId());
     assertNotEquals(newUser.getProviderType(), existingUser.getProviderType());
-    assertEquals(newUser.getProviderId(), existingUser.getProviderId());
+    assertEquals(newUser.getProviderSubjectId(), existingUser.getProviderSubjectId());
     assertNotEquals(newUser.getEmail(), existingUser.getEmail());
     assertNotEquals(newUser.getFirstName(), existingUser.getFirstName());
     assertNotEquals(newUser.getLastName(), existingUser.getLastName());
@@ -184,10 +184,10 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
         entityGenerator.setupUser(
             format("%s %s", firstName, lastName),
             ADMIN,
-            generateNonExistentProviderId(userService),
+            generateNonExistentProviderSubjectId(userService),
             GITHUB);
 
-    // create idToken for a user with same email, non existing providerType and providerId
+    // create idToken for a user with same email, non existing providerType and providerSubjectId
     idToken.setProviderType(randomEnumExcluding(ProviderType.class, user.getProviderType()));
     idToken.setEmail(user.getEmail());
     idToken.setGivenName(user.getFirstName());
@@ -208,7 +208,7 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
 
     // assert new user matches idToken
     assertEquals(newUser.getProviderType(), idToken.getProviderType());
-    assertEquals(newUser.getProviderId(), idToken.getProviderId());
+    assertEquals(newUser.getProviderSubjectId(), idToken.getProviderSubjectId());
     assertEquals(newUser.getEmail(), idToken.getEmail());
     assertEquals(newUser.getFirstName(), idToken.getGivenName());
     assertEquals(newUser.getLastName(), idToken.getFamilyName());
@@ -223,19 +223,19 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
     // assert new user does not match existing user
     assertNotEquals(newUser.getId(), existingUser.getId());
     assertNotEquals(newUser.getProviderType(), existingUser.getProviderType());
-    assertNotEquals(newUser.getProviderId(), existingUser.getProviderId());
+    assertNotEquals(newUser.getProviderSubjectId(), existingUser.getProviderSubjectId());
   }
 
-  //  existing provider(default/non default)	providerId not in db	  existing email	Create OK
+  //  existing provider(default/non default)	providerSubjectId not in db	  existing email	Create OK
   @Test
-  public void existingProviderTypeNonExistingProviderIdExistingEmail_createUser() {
+  public void existingProviderTypeNonExistingProviderSubjectIdExistingEmail_createUser() {
     // setup existing user
     val user = entityGenerator.setupUser(entityGenerator.generateNonExistentUserName());
 
-    val nonExistingProviderId = generateNonExistentProviderId(userService);
+    val nonExistingProviderSubjectId = generateNonExistentProviderSubjectId(userService);
 
     //    idToken.setProviderType(defaultProviderType);
-    idToken.setProviderId(nonExistingProviderId);
+    idToken.setProviderSubjectId(nonExistingProviderSubjectId);
     idToken.setEmail(user.getEmail());
     idToken.setFamilyName(user.getLastName());
     idToken.setGivenName(user.getFirstName());
@@ -261,7 +261,7 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
 
     // assert newUser matches idToken
     assertEquals(newUser.getProviderType(), idToken.getProviderType());
-    assertEquals(newUser.getProviderId(), idToken.getProviderId());
+    assertEquals(newUser.getProviderSubjectId(), idToken.getProviderSubjectId());
     assertEquals(newUser.getEmail(), idToken.getEmail());
     assertEquals(newUser.getFirstName(), idToken.getGivenName());
     assertEquals(newUser.getLastName(), idToken.getFamilyName());
@@ -269,9 +269,9 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
     // assert newUser is different from existingUser
     assertNotEquals(newUser.getId(), existingUser.getId());
 
-    // assert newUser has same provider type but different providerId
+    // assert newUser has same provider type but different providerSubjectId
     assertEquals(newUser.getProviderType(), existingUser.getProviderType());
-    assertNotEquals(newUser.getProviderId(), existingUser.getProviderId());
+    assertNotEquals(newUser.getProviderSubjectId(), existingUser.getProviderSubjectId());
   }
 
   // existing provider (default/non default)	existing id 	existing email	user found, no change
@@ -282,7 +282,7 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
 
     // set idToken with user fields
     idToken.setProviderType(user.getProviderType());
-    idToken.setProviderId(user.getProviderId());
+    idToken.setProviderSubjectId(user.getProviderSubjectId());
     idToken.setEmail(user.getEmail());
     idToken.setFamilyName(user.getLastName());
     idToken.setGivenName(user.getFirstName());
@@ -302,7 +302,7 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
 
     // assert next user matches idToken
     assertEquals(user1.getProviderType(), idToken.getProviderType());
-    assertEquals(user1.getProviderId(), idToken.getProviderId());
+    assertEquals(user1.getProviderSubjectId(), idToken.getProviderSubjectId());
     assertEquals(user1.getEmail(), idToken.getEmail());
     assertEquals(user1.getFirstName(), idToken.getGivenName());
     assertEquals(user1.getLastName(), idToken.getFamilyName());
@@ -317,7 +317,7 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
     // assert user1 and user2 are the same and no properties have been updated
     assertEquals(user1.getId(), user2.getId());
     assertEquals(user1.getProviderType(), user2.getProviderType());
-    assertEquals(user1.getProviderId(), user2.getProviderId());
+    assertEquals(user1.getProviderSubjectId(), user2.getProviderSubjectId());
     assertEquals(user1.getEmail(), user2.getEmail());
     assertEquals(user1.getLastName(), user2.getLastName());
     assertEquals(user1.getFirstName(), user2.getFirstName());
@@ -328,15 +328,15 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
 
   // provider not in db (default/non default type)	existing id 	existing email	create OK
   @Test
-  public void nonExistingProviderTypeExistingProviderIdExistingEmail_createUser() {
+  public void nonExistingProviderTypeExistingProviderSubjectIdExistingEmail_createUser() {
     // setup existing user with default providerType
     val user = entityGenerator.setupUser(entityGenerator.generateNonExistentUserName());
 
     // assert user has default providerType
     assertEquals(user.getProviderType(), defaultProviderType);
-    // setup idToken with same providerId, email as user, different providerType
+    // setup idToken with same providerSubjectId, email as user, different providerType
     idToken.setProviderType(entityGenerator.createNonDefaultProviderType());
-    idToken.setProviderId(user.getProviderId());
+    idToken.setProviderSubjectId(user.getProviderSubjectId());
     idToken.setEmail(user.getEmail());
     idToken.setFamilyName(user.getLastName());
     idToken.setGivenName(user.getFirstName());
@@ -362,7 +362,7 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
 
     // assert newUser matches idToken
     assertEquals(newUser.getProviderType(), idToken.getProviderType());
-    assertEquals(newUser.getProviderId(), idToken.getProviderId());
+    assertEquals(newUser.getProviderSubjectId(), idToken.getProviderSubjectId());
     assertEquals(newUser.getEmail(), idToken.getEmail());
     assertEquals(newUser.getFirstName(), idToken.getGivenName());
     assertEquals(newUser.getLastName(), idToken.getFamilyName());
@@ -370,29 +370,28 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
     // assert newUser is different from existingUser
     assertNotEquals(newUser.getId(), existingUser.getId());
 
-    // assert newUser has same providerId and email but different providerType
+    // assert newUser has same providerSubjectId and email but different providerType
     assertNotEquals(newUser.getProviderType(), existingUser.getProviderType());
-    assertEquals(newUser.getProviderId(), existingUser.getProviderId());
+    assertEquals(newUser.getProviderSubjectId(), existingUser.getProviderSubjectId());
     assertEquals(newUser.getEmail(), existingUser.getEmail());
   }
 
   // not in db (non default)
-  // providerId existing as email
+  // providerSubjectId existing as email
   // existing email
-  // user found, update providerType,providerId OK
+  // user found, update providerType, providerSubjectId OK
   @Test
-  public void nonDefaultNonExistingProviderTypeProviderIdAsEmailExistingEmail_createUser() {
-    // setup an existing user with default providerType and providerId from migration
+  public void nonDefaultNonExistingProviderTypeProviderSubjectIdAsEmailExistingEmail_createUser() {
+    // setup an existing user with default providerType and providerSubjectId from migration
     val migratedUser =
         entityGenerator.setupUser(
             "Migrated User", USER, "MigratedUser@domain.com", defaultProviderType);
 
-    // assert migratedUser providerId matches email
-    assertEquals(migratedUser.getProviderId(), migratedUser.getEmail());
+    // assert migratedUser providerSubjectId matches email
+    assertEquals(migratedUser.getProviderSubjectId(), migratedUser.getEmail());
 
-    // setup idToken with same email, actual providerType and providerId
+    // setup idToken with same email, actual providerType and providerSubjectId
     idToken.setProviderType(entityGenerator.createNonDefaultProviderType());
-    //    idToken.setProviderId(generateNonExistentProviderId(userService));
     idToken.setEmail(migratedUser.getEmail());
     idToken.setGivenName(migratedUser.getFirstName());
     idToken.setFamilyName(migratedUser.getLastName());
@@ -412,7 +411,7 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
 
     // assert next user matches idToken
     assertEquals(newUser.getProviderType(), idToken.getProviderType());
-    assertEquals(newUser.getProviderId(), idToken.getProviderId());
+    assertEquals(newUser.getProviderSubjectId(), idToken.getProviderSubjectId());
     assertEquals(newUser.getEmail(), idToken.getEmail());
     assertEquals(newUser.getFirstName(), idToken.getGivenName());
     assertEquals(newUser.getLastName(), idToken.getFamilyName());
@@ -427,12 +426,12 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
     // assert user1 and user2 are distinct users with same email
     assertNotEquals(newUser.getId(), existingUser.getId());
     assertNotEquals(newUser.getProviderType(), existingUser.getProviderType());
-    assertNotEquals(newUser.getProviderId(), existingUser.getProviderId());
+    assertNotEquals(newUser.getProviderSubjectId(), existingUser.getProviderSubjectId());
     assertEquals(newUser.getEmail(), existingUser.getEmail());
 
-    // assert migratedUser has not updated providerId
-    assertEquals(migratedUser.getProviderId(), migratedUser.getEmail());
-    assertEquals(migratedUser.getProviderId(), existingUser.getProviderId());
+    // assert migratedUser has not updated providerSubjectId
+    assertEquals(migratedUser.getProviderSubjectId(), migratedUser.getEmail());
+    assertEquals(migratedUser.getProviderSubjectId(), existingUser.getProviderSubjectId());
   }
 
   @Test
@@ -457,7 +456,7 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
 
     // assert new user matches idToken
     assertEquals(newUser.getProviderType(), idToken.getProviderType());
-    assertEquals(newUser.getProviderId(), idToken.getProviderId());
+    assertEquals(newUser.getProviderSubjectId(), idToken.getProviderSubjectId());
     assertEquals(newUser.getEmail(), idToken.getEmail());
     assertEquals(newUser.getFirstName(), idToken.getGivenName());
     assertEquals(newUser.getLastName(), idToken.getFamilyName());
@@ -468,11 +467,11 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
 
   // no test required for a blank providerType as this value is hardcoded in each SSOFilter
   @Test
-  public void createUser_BlankProviderId_BadRequest() {
+  public void createUser_BlankProviderSubjectId_BadRequest() {
     val idToken = entityGenerator.setupUserIDToken(defaultProviderType, "");
 
     exceptionRule.expect(MalformedRequestException.class);
-    exceptionRule.expectMessage("Provider id cannot be blank.");
+    exceptionRule.expectMessage("ProviderSubjectId cannot be blank.");
     userService.getUserByToken(idToken);
   }
 }

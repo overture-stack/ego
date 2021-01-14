@@ -26,7 +26,8 @@ public interface UserRepository extends BaseRepository<User, UUID> {
 
   Set<User> findAllByIdIn(Collection<UUID> userIds);
 
-  boolean existsByProviderTypeAndProviderId(ProviderType providerType, String providerId);
+  boolean existsByProviderTypeAndProviderSubjectId(
+      ProviderType providerType, String providerSubjectId);
 
-  boolean existsByProviderId(String providerId);
+  boolean existsByProviderSubjectId(String providerSubjectId);
 }

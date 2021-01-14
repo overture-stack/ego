@@ -46,5 +46,5 @@ public class CreateUserRequest {
 
   @NotNull ProviderType providerType;
 
-  @NotNull String providerId;
+  @NotNull String providerSubjectId;
 }

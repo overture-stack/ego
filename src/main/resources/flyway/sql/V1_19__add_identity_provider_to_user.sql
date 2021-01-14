@@ -11,11 +11,11 @@ UPDATE egouser SET providertype = DEFAULT WHERE providertype IS NULL;
 -- then set not null constraint
 ALTER TABLE egouser ALTER COLUMN providertype SET NOT NULL;
 
-ALTER TABLE egouser ADD COLUMN providerid VARCHAR(255);
-UPDATE egouser SET providerid = email WHERE providerid IS NULL;
-ALTER TABLE egouser ALTER COLUMN providerid SET NOT NULL;
+ALTER TABLE egouser ADD COLUMN providersubjectid VARCHAR(255);
+UPDATE egouser SET providersubjectid = email WHERE providersubjectid IS NULL;
+ALTER TABLE egouser ALTER COLUMN providersubjectid SET NOT NULL;
 
-ALTER TABLE egouser ADD UNIQUE(providertype, providerid);
+ALTER TABLE egouser ADD UNIQUE(providertype, providersubjectid);
 
 -- create tripwire table for verifying configured default provider
 CREATE TABLE defaultprovidertripwire (
