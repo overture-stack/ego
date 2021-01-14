@@ -173,6 +173,8 @@ public class UserService extends AbstractBaseService<User, UUID> {
   }
 
   private User updateUserFromToken(User user, IDToken idToken) {
+    user.setProviderType(idToken.getProviderType());
+    user.setProviderId(idToken.getProviderId());
     user.setFirstName(idToken.getGivenName());
     user.setLastName(idToken.getFamilyName());
     user.setEmail(idToken.getEmail());
@@ -229,8 +231,6 @@ public class UserService extends AbstractBaseService<User, UUID> {
       userByEmailResult.ifPresent(
           foundUser -> {
             log.info("User found, updating provider info.");
-            foundUser.setProviderType(idToken.getProviderType());
-            foundUser.setProviderId(idToken.getProviderId());
             updateUserFromToken(foundUser, idToken);
           });
       return userByEmailResult;
