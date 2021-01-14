@@ -106,7 +106,7 @@ public class UserServiceGrpcAuthTest {
                   .firstName("")
                   .type(UserType.USER)
                   .providerType(GOOGLE)
-                  .providerId(UUID.randomUUID().toString())
+                  .providerSubjectId(UUID.randomUUID().toString())
                   .build());
       userAuthMeta.put(JWT_KEY, tokenService.generateUserToken(testUser));
 
@@ -119,7 +119,7 @@ public class UserServiceGrpcAuthTest {
                   .email("approvedAdminGrpc@example.com")
                   .type(UserType.ADMIN)
                   .providerType(GOOGLE)
-                  .providerId(UUID.randomUUID().toString())
+                  .providerSubjectId(UUID.randomUUID().toString())
                   .build());
       userAdminAuthMeta.put(JWT_KEY, tokenService.generateUserToken(testAdmin));
 

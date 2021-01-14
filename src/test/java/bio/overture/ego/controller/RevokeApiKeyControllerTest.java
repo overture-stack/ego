@@ -130,7 +130,7 @@ public class RevokeApiKeyControllerTest {
       firstName = "Regular",
       type = USER,
       providerType = GOOGLE,
-      providerId = "regularUser0123")
+      providerSubjectId = "regularUser0123")
   @SneakyThrows
   @Test
   public void revokeAnyApiKeyAsRegularUser() {
@@ -165,7 +165,7 @@ public class RevokeApiKeyControllerTest {
       firstName = "Regular",
       type = USER,
       providerType = GOOGLE,
-      providerId = "regularUser0123")
+      providerSubjectId = "regularUser0123")
   @SneakyThrows
   @Test
   public void revokeOwnApiKeyAsRegularUser() {

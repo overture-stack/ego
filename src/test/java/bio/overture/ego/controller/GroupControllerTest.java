@@ -199,8 +199,8 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     // Check user-group relationship is there
     val userWithGroup =
-        userService.getByProviderTypeAndProviderId(
-            userOne.getProviderType(), userOne.getProviderId());
+        userService.getByProviderTypeAndProviderSubjectId(
+            userOne.getProviderType(), userOne.getProviderSubjectId());
     val expectedGroups = mapToSet(userWithGroup.getUserGroups(), UserGroup::getGroup);
     assertTrue(extractGroupIds(expectedGroups).contains(groupId));
 
@@ -249,11 +249,11 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     // Check that each user is associated with the group
     val userOneWithGroups =
-        userService.getByProviderTypeAndProviderId(
-            userOne.getProviderType(), userOne.getProviderId());
+        userService.getByProviderTypeAndProviderSubjectId(
+            userOne.getProviderType(), userOne.getProviderSubjectId());
     val userTwoWithGroups =
-        userService.getByProviderTypeAndProviderId(
-            userTwo.getProviderType(), userTwo.getProviderId());
+        userService.getByProviderTypeAndProviderSubjectId(
+            userTwo.getProviderType(), userTwo.getProviderSubjectId());
 
     assertTrue(mapToSet(userOneWithGroups.getUserGroups(), UserGroup::getGroup).contains(group));
     assertTrue(mapToSet(userTwoWithGroups.getUserGroups(), UserGroup::getGroup).contains(group));

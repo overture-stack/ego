@@ -42,18 +42,22 @@ public class UserSpecificationBuilder extends AbstractSpecificationBuilder<User,
     return root;
   }
 
-  public Specification<User> buildByProviderTypeAndId(
-      @NonNull ProviderType providerType, @NonNull String providerId) {
+  public Specification<User> buildByProviderTypeAndSubjectId(
+      @NonNull ProviderType providerType, @NonNull String providerSubjectId) {
     return (fromUser, query, builder) -> {
       val root = setupFetchStrategy(fromUser);
-      return equalsProviderTypeAndIdPredicate(root, builder, providerType, providerId);
+      return equalsProviderTypeAndSubjectIdPredicate(
+          root, builder, providerType, providerSubjectId);
     };
   }
 
-  private Predicate equalsProviderTypeAndIdPredicate(
-      Root<User> root, CriteriaBuilder builder, ProviderType providerType, String providerId) {
+  private Predicate equalsProviderTypeAndSubjectIdPredicate(
+      Root<User> root,
+      CriteriaBuilder builder,
+      ProviderType providerType,
+      String providerSubjectId) {
     return builder.and(
-        builder.equal(root.get(PROVIDERID), providerId),
+        builder.equal(root.get(PROVIDERSUBJECTID), providerSubjectId),
         builder.equal(root.get(PROVIDERTYPE), providerType));
   }
 

@@ -66,15 +66,15 @@ public class OAuth2UserInfoTokenServices
     val givenName = (String) map.getOrDefault("given_name", map.getOrDefault("first_name", ""));
     val familyName = (String) map.getOrDefault("family_name", map.getOrDefault("last_name", ""));
 
-    val providerIdAccessor = getIdAccessor(providerType);
+    val providerSubjectIdAccessor = getIdAccessor(providerType);
 
-    if (isNull(map.get(providerIdAccessor))) {
-      throw new InternalServerException("Invalid providerId accessor.");
+    if (isNull(map.get(providerSubjectIdAccessor))) {
+      throw new InternalServerException("Invalid providerSubjectId accessor.");
     }
     // call toString because Github returns an integer id
-    val providerId = map.get(providerIdAccessor).toString();
+    val providerSubjectId = map.get(providerSubjectIdAccessor).toString();
 
-    return new IDToken(email, givenName, familyName, providerType, providerId);
+    return new IDToken(email, givenName, familyName, providerType, providerSubjectId);
   }
 
   @Override

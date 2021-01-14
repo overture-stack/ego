@@ -64,5 +64,5 @@ public class JavaFields {
   public static final String USERAPPLICATIONS = "userApplications";
   public static final String REFRESH_ID = "refreshId";
   public static final String PROVIDERTYPE = "providerType";
-  public static final String PROVIDERID = "providerId";
+  public static final String PROVIDERSUBJECTID = "providerSubjectId";
 }

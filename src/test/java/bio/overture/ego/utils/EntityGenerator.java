@@ -131,12 +131,13 @@ public class EntityGenerator {
     return setupUser(name, type, UUID.randomUUID().toString(), DEFAULT_PROVIDER_TYPE);
   }
 
-  public User setupUser(String name, UserType type, String providerId, ProviderType providerType) {
+  public User setupUser(
+      String name, UserType type, String providerSubjectId, ProviderType providerType) {
     return userService
-        .findByProviderTypeAndProviderId(providerType, providerId)
+        .findByProviderTypeAndProviderSubjectId(providerType, providerSubjectId)
         .orElseGet(
             () -> {
-              val createUserRequest = createUser(name, type, providerType, providerId);
+              val createUserRequest = createUser(name, type, providerType, providerSubjectId);
               return userService.create(createUserRequest);
             });
   }
@@ -177,7 +178,7 @@ public class EntityGenerator {
       String lastName,
       UserType type,
       ProviderType providerType,
-      String providerId) {
+      String providerSubjectId) {
     return CreateUserRequest.builder()
         .email(format("%s%s@domain.com", firstName, lastName))
         .firstName(firstName)
@@ -186,14 +187,14 @@ public class EntityGenerator {
         .preferredLanguage(ENGLISH)
         .type(type)
         .providerType(providerType)
-        .providerId(providerId)
+        .providerSubjectId(providerSubjectId)
         .build();
   }
 
   private CreateUserRequest createUser(
-      String name, UserType type, ProviderType providerType, String providerId) {
+      String name, UserType type, ProviderType providerType, String providerSubjectId) {
     val names = name.split(" ", 2);
-    return createUser(names[0], names[1], type, providerType, providerId);
+    return createUser(names[0], names[1], type, providerType, providerSubjectId);
   }
 
   private GroupRequest createGroupRequest(String name) {
@@ -289,7 +290,7 @@ public class EntityGenerator {
             .firstName(randomStringNoSpaces(5))
             .lastName(randomStringNoSpaces(6))
             .providerType(DEFAULT_PROVIDER_TYPE)
-            .providerId(UUID.randomUUID().toString())
+            .providerSubjectId(UUID.randomUUID().toString())
             .build();
     return userService.create(request);
   }
@@ -501,12 +502,12 @@ public class EntityGenerator {
     return id;
   }
 
-  public static <T> String generateNonExistentProviderId(UserService userService) {
-    String providerId = UUID.randomUUID().toString();
-    while (userService.existsByProviderId(providerId)) {
-      providerId = UUID.randomUUID().toString();
+  public static <T> String generateNonExistentProviderSubjectId(UserService userService) {
+    String providerSubjectId = UUID.randomUUID().toString();
+    while (userService.existsByProviderSubjectId(providerSubjectId)) {
+      providerSubjectId = UUID.randomUUID().toString();
     }
-    return providerId;
+    return providerSubjectId;
   }
 
   private static String generateRandomName(Random r, int length) {
@@ -541,16 +542,19 @@ public class EntityGenerator {
     return refreshToken.getUser();
   }
 
-  public IDToken setupUserIDToken(ProviderType providerType, String providerId) {
+  public IDToken setupUserIDToken(ProviderType providerType, String providerSubjectId) {
     return setupUserIDToken(
-        providerType, providerId, generateNonExistentUserName(), generateNonExistentUserName());
+        providerType,
+        providerSubjectId,
+        generateNonExistentUserName(),
+        generateNonExistentUserName());
   }
 
   public IDToken setupUserIDToken(
-      ProviderType providerType, String providerId, String familyName, String givenName) {
+      ProviderType providerType, String providerSubjectId, String familyName, String givenName) {
     val idToken = new IDToken();
     idToken.setProviderType(providerType);
-    idToken.setProviderId(providerId);
+    idToken.setProviderSubjectId(providerSubjectId);
     idToken.setEmail(format("%s%s@domain.com", givenName, familyName));
     idToken.setFamilyName(familyName);
     idToken.setGivenName(givenName);
@@ -564,7 +568,7 @@ public class EntityGenerator {
     val firstName = names[0];
     val lastName = names[1];
     token.setProviderType(DEFAULT_PROVIDER_TYPE);
-    token.setProviderId(generateNonExistentProviderId(userService));
+    token.setProviderSubjectId(generateNonExistentProviderSubjectId(userService));
     token.setEmail(format("%s%s@domain.com", firstName, lastName));
     token.setGivenName(firstName);
     token.setFamilyName(lastName);

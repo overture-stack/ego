@@ -58,7 +58,7 @@ import org.hibernate.annotations.TypeDef;
 @Table(
     name = Tables.EGOUSER,
     uniqueConstraints =
-        @UniqueConstraint(columnNames = {SqlFields.PROVIDERTYPE, SqlFields.PROVIDERID}))
+        @UniqueConstraint(columnNames = {SqlFields.PROVIDERTYPE, SqlFields.PROVIDERSUBJECTID}))
 @Data
 @ToString(exclude = {"userGroups", "userApplications", "userPermissions", "tokens", "refreshToken"})
 @JsonPropertyOrder({
@@ -75,7 +75,7 @@ import org.hibernate.annotations.TypeDef;
   JavaFields.LASTLOGIN,
   JavaFields.PREFERREDLANGUAGE,
   JavaFields.PROVIDERTYPE,
-  JavaFields.PROVIDERID
+  JavaFields.PROVIDERSUBJECTID
 })
 @JsonInclude()
 @EqualsAndHashCode(of = {"id"})
@@ -148,8 +148,8 @@ public class User implements PolicyOwner, Identifiable<UUID> {
 
   @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = SqlFields.PROVIDERID, nullable = false)
-  private String providerId;
+  @Column(name = SqlFields.PROVIDERSUBJECTID, nullable = false)
+  private String providerSubjectId;
 
   @JsonIgnore
   @OneToMany(
@@ -237,7 +237,7 @@ public class User implements PolicyOwner, Identifiable<UUID> {
             .setStatus(toProtoString(this.getStatus()))
             .setType(toProtoString(this.getType()))
             .setProviderType(toProtoString(this.getProviderType()))
-            .setProviderId(toProtoString(this.getProviderId()));
+            .setProviderSubjectId(toProtoString(this.getProviderSubjectId()));
 
     try {
       final Set<String> applications =
@@ -292,8 +292,8 @@ public class User implements PolicyOwner, Identifiable<UUID> {
       user.setLastName(proto.getLastName().getValue());
     }
 
-    if (proto.hasProviderId()) {
-      user.setProviderId(proto.getProviderId().getValue());
+    if (proto.hasProviderSubjectId()) {
+      user.setProviderSubjectId(proto.getProviderSubjectId().getValue());
     }
 
     try {

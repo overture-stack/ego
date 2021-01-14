@@ -149,13 +149,14 @@ public class UserService extends AbstractBaseService<User, UUID> {
     return getMany(ids, spec);
   }
 
-  public User getByProviderTypeAndProviderId(ProviderType providerType, String providerId) {
-    val result = findByProviderTypeAndProviderId(providerType, providerId);
+  public User getByProviderTypeAndProviderSubjectId(
+      ProviderType providerType, String providerSubjectId) {
+    val result = findByProviderTypeAndProviderSubjectId(providerType, providerSubjectId);
     checkNotFound(
         result.isPresent(),
-        "The user with providerType %s and providerId %s does not exist",
+        "The user with providerType %s and providerSubjectId %s does not exist",
         providerType,
-        providerId);
+        providerSubjectId);
     return result.get();
   }
 
@@ -168,13 +169,13 @@ public class UserService extends AbstractBaseService<User, UUID> {
             .status(userDefaultsConfig.getDefaultUserStatus())
             .type(userDefaultsConfig.getDefaultUserType())
             .providerType(idToken.getProviderType())
-            .providerId(idToken.getProviderId())
+            .providerSubjectId(idToken.getProviderSubjectId())
             .build());
   }
 
   private User updateUserFromToken(User user, IDToken idToken) {
     user.setProviderType(idToken.getProviderType());
-    user.setProviderId(idToken.getProviderId());
+    user.setProviderSubjectId(idToken.getProviderSubjectId());
     user.setFirstName(idToken.getGivenName());
     user.setLastName(idToken.getFamilyName());
     user.setEmail(idToken.getEmail());
@@ -184,7 +185,8 @@ public class UserService extends AbstractBaseService<User, UUID> {
 
   private Optional<User> findUserAndUpdate(IDToken idToken) {
     val optionalUser =
-        findByProviderTypeAndProviderId(idToken.getProviderType(), idToken.getProviderId());
+        findByProviderTypeAndProviderSubjectId(
+            idToken.getProviderType(), idToken.getProviderSubjectId());
     optionalUser.ifPresent(user -> updateUserFromToken(user, idToken));
     return optionalUser;
   }
@@ -204,8 +206,8 @@ public class UserService extends AbstractBaseService<User, UUID> {
   }
 
   @SuppressWarnings("unchecked")
-  public Optional<User> findByProviderTypeAndProviderId(
-      ProviderType providerType, String providerId) {
+  public Optional<User> findByProviderTypeAndProviderSubjectId(
+      ProviderType providerType, String providerSubjectId) {
     return (Optional<User>)
         getRepository()
             .findOne(
@@ -214,7 +216,7 @@ public class UserService extends AbstractBaseService<User, UUID> {
                     .fetchUserGroups(true)
                     .fetchUserAndGroupPermissions(true)
                     .fetchRefreshToken(true)
-                    .buildByProviderTypeAndId(providerType, providerId));
+                    .buildByProviderTypeAndSubjectId(providerType, providerSubjectId));
   }
 
   private Optional<User> findByProviderTypeAndEmail(IDToken idToken) {
@@ -222,12 +224,13 @@ public class UserService extends AbstractBaseService<User, UUID> {
     if (!isNull(userEmail)) {
       // For users that existed before the data migration, their data will be migrated
       // to use the DEFAULT provider as their providerType and their email as the
-      // providerId, since the email was previously unique.
+      // providerSubjectId, since the email was previously unique.
       // In this scenario, since a user was not found using the idToken providerType +
-      // providerId, a secondary search is done on the user's email as the providerId
+      // providerSubjectId, a secondary search is done on the user's email as the providerSubjectId
       // and the idToken.providerType.
-      // If the user is found, their record is `healed` to use the correct providerId.
-      val userByEmailResult = findByProviderTypeAndProviderId(idToken.getProviderType(), userEmail);
+      // If the user is found, their record is `healed` to use the correct providerSubjectId.
+      val userByEmailResult =
+          findByProviderTypeAndProviderSubjectId(idToken.getProviderType(), userEmail);
       userByEmailResult.ifPresent(
           foundUser -> {
             log.info("User found, updating provider info.");
@@ -239,8 +242,8 @@ public class UserService extends AbstractBaseService<User, UUID> {
     return Optional.empty();
   }
 
-  public boolean existsByProviderId(String providerId) {
-    return userRepository.existsByProviderId(providerId);
+  public boolean existsByProviderSubjectId(String providerSubjectId) {
+    return userRepository.existsByProviderSubjectId(providerSubjectId);
   }
 
   @Override
@@ -496,8 +499,9 @@ public class UserService extends AbstractBaseService<User, UUID> {
 
   private void validateCreateRequest(CreateUserRequest r) {
     checkRequestValid(r);
-    checkMalformedRequest(!r.getProviderId().isBlank(), "Provider id cannot be blank.");
-    checkUserUnique(r.getProviderType(), r.getProviderId());
+    checkMalformedRequest(
+        !r.getProviderSubjectId().isBlank(), "ProviderSubjectId cannot be blank.");
+    checkUserUnique(r.getProviderType(), r.getProviderSubjectId());
   }
 
   private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
@@ -506,13 +510,13 @@ public class UserService extends AbstractBaseService<User, UUID> {
         originalUser.getProviderType().equals(r.getProviderType()),
         "Invalid providerType, cannot update user.");
     checkValidUser(
-        originalUser.getProviderId().equals(r.getProviderId()),
-        "Invalid providerId, cannot update user.");
+        originalUser.getProviderSubjectId().equals(r.getProviderSubjectId()),
+        "Invalid providerSubjectId, cannot update user.");
   }
 
-  private void checkUserUnique(ProviderType providerType, String providerId) {
+  private void checkUserUnique(ProviderType providerType, String providerSubjectId) {
     checkUnique(
-        !userRepository.existsByProviderTypeAndProviderId(providerType, providerId),
+        !userRepository.existsByProviderTypeAndProviderSubjectId(providerType, providerSubjectId),
         "A user with the same provider info already exists");
   }
 

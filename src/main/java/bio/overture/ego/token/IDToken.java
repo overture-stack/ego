@@ -40,7 +40,7 @@ public class IDToken {
   @NonNull
   ProviderType providerType;
 
-  @JsonProperty("provider_id")
+  @JsonProperty("provider_subject_id")
   @NonNull
-  String providerId;
+  String providerSubjectId;
 }

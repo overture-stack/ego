@@ -21,5 +21,5 @@ public @interface WithMockCustomUser {
 
   ProviderType providerType() default GOOGLE;
 
-  String providerId() default "0123";
+  String providerSubjectId() default "0123";
 }
