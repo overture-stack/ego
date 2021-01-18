@@ -91,8 +91,8 @@ public class UserPermissionSpecification {
         // Permission.accessLevel
         queryPredicates.add(scb.filterByField(accessLevel, finalText));
 
-        // Owner ID and NAME
-        Stream.of(ID, NAME)
+        // Owner ID
+        Stream.of(ID)
             .map(fieldName -> ownerSp.filterByField(fieldName, finalText))
             .forEach(queryPredicates::add);
         // Query predicates should be ORed together
