@@ -303,9 +303,7 @@ public class PolicyController {
       @ApiIgnore @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
-      @ApiParam(
-              value = "Query string compares to AccessLevel and user Id and Name fields.",
-              required = false)
+      @ApiParam(value = "Query string compares to AccessLevel and user Id field.", required = false)
           @RequestParam(value = "query", required = false)
           String query,
       @ApiIgnore @Filters List<SearchFilter> filters,
