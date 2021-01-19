@@ -25,7 +25,7 @@ public class DefaultProviderGuardListener implements ApplicationListener<Context
   @Autowired
   public DefaultProviderGuardListener(
       @NonNull DefaultProviderService defaultProviderService,
-      @Value("${spring.flyway.placeholders.default_provider}") ProviderType configuredProvider) {
+      @Value("${spring.flyway.placeholders.default-provider}") ProviderType configuredProvider) {
     this.defaultProviderService = defaultProviderService;
     this.configuredProvider = configuredProvider;
   }
@@ -44,13 +44,13 @@ public class DefaultProviderGuardListener implements ApplicationListener<Context
     val storedProvider = storedProviderResult.get().getId();
     checkState(
         configuredProvider.equals(storedProvider),
-        "Configured default_provider '%s' does not match what was previously configured '%s'",
+        "Configured default-provider '%s' does not match what was previously configured '%s'",
         configuredProvider,
         storedProvider);
 
     log.info(
         String.format(
-            "Configured default_provider '%s' matches previously configured '%s, finished bootstrap check.",
+            "Configured default-provider '%s' matches previously configured '%s, finished bootstrap check.",
             configuredProvider, storedProvider));
   }
 }

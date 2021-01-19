@@ -37,7 +37,7 @@ public class FlywayInit {
     val placeholders = parsePlaceholders(appYaml);
 
     assertTrue(placeholders.size() > 0);
-    assertTrue(placeholders.containsKey("default_provider"));
+    assertTrue(placeholders.containsKey("default-provider"));
 
     Flyway.configure()
         .locations("classpath:flyway/sql", "classpath:db/migration")

@@ -22,7 +22,7 @@ public class DefaultProviderServiceTest {
 
   @Autowired DefaultProviderService defaultProviderService;
 
-  @Value("${spring.flyway.placeholders.default_provider}")
+  @Value("${spring.flyway.placeholders.default-provider}")
   private ProviderType configuredDefaultProvider;
 
   @Test

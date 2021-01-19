@@ -24,7 +24,7 @@ public abstract class AbstractMockedTokenControllerTest extends AbstractControll
   protected boolean hasRunEntitySetup = false;
   protected MockMvc mockMvc;
 
-  @Value("${spring.flyway.placeholders.default_provider:GOOGLE}")
+  @Value("${spring.flyway.placeholders.default-provider:GOOGLE}")
   protected ProviderType defaultProviderType;
 
   protected IDToken idToken;
