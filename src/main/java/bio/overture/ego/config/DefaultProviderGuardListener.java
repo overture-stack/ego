@@ -19,7 +19,6 @@ import org.springframework.stereotype.Component;
 public class DefaultProviderGuardListener implements ApplicationListener<ContextRefreshedEvent> {
 
   private final DefaultProviderService defaultProviderService;
-
   private final ProviderType configuredProvider;
 
   @Autowired
@@ -37,20 +36,17 @@ public class DefaultProviderGuardListener implements ApplicationListener<Context
     checkState(isDefined(configuredProvider.toString()), "Default provider is not defined!");
     val storedProviderResult = defaultProviderService.findById(configuredProvider);
     // it is assumed that before boot the tripwire default provider has been set by running the
-    // flyway migration
+    // flyway migration. there will be a sql error if the table does not exist, indicating the
+    // migration has not run.
     checkState(
         storedProviderResult.isPresent(),
-        "Tripwire was not set! This means the flyway migration did not run yet.");
-    val storedProvider = storedProviderResult.get().getId();
-    checkState(
-        configuredProvider.equals(storedProvider),
-        "Configured default-provider '%s' does not match what was previously configured '%s'",
-        configuredProvider,
-        storedProvider);
+        "Configured default-provider '%s' does not match what was previously configured. Check the defaultprovidertripwire table.",
+        configuredProvider);
+    ;
 
     log.info(
         String.format(
             "Configured default-provider '%s' matches previously configured '%s, finished bootstrap check.",
-            configuredProvider, storedProvider));
+            configuredProvider, storedProviderResult.get().getId()));
   }
 }
