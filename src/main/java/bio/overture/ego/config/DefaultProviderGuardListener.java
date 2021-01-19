@@ -1,11 +1,13 @@
 package bio.overture.ego.config;
 
+import static bio.overture.ego.utils.CollectionUtils.convertToUnmodifiableList;
 import static bio.overture.ego.utils.Strings.isDefined;
 import static com.google.common.base.Preconditions.checkState;
 
 import bio.overture.ego.model.entity.DefaultProvider;
 import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.service.DefaultProviderService;
+import bio.overture.ego.utils.CollectionUtils;
 import bio.overture.ego.utils.Streams;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,27 +43,23 @@ public class DefaultProviderGuardListener implements ApplicationListener<Context
         isDefined(configuredProvider.toString()), "Configured default provider is not defined!");
     // it is assumed that before boot the tripwire default provider has been set by running the
     // flyway migration.
-    val foundDefaultProvider = defaultProviderService.getRepository().findAll().iterator();
-    List<DefaultProvider> actualStoredDefaultProvider =
-        Streams.stream(foundDefaultProvider).collect(Collectors.toUnmodifiableList());
+
+    val actualStoredDefaultProvider = defaultProviderService.findAll();
 
     checkState(
         actualStoredDefaultProvider.size() == 1,
         "Tripwire was not set! This means the flyway migration did not run yet.");
 
-    val storedProviderResult = defaultProviderService.findById(configuredProvider);
     val storedProvider = actualStoredDefaultProvider.get(0).getId();
-
     checkState(
-        storedProviderResult.isPresent(),
+        storedProvider.equals(configuredProvider),
         "Configured default-provider '%s' does not match what was previously configured '%s'",
         configuredProvider,
         storedProvider);
-    ;
 
     log.info(
         String.format(
-            "Configured default-provider '%s' matches previously configured '%s, finished bootstrap check.",
+            "Configured default-provider '%s' matches previously configured '%s', finished bootstrap check.",
             configuredProvider, storedProvider));
   }
 }
