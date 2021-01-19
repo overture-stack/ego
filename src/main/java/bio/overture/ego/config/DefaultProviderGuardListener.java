@@ -44,13 +44,13 @@ public class DefaultProviderGuardListener implements ApplicationListener<Context
     // it is assumed that before boot the tripwire default provider has been set by running the
     // flyway migration.
 
-    val storedProviders = defaultProviderService.findAll();
+    val storedDefaultProviders = defaultProviderService.findAll();
 
     checkState(
-        storedProviders.size() == 1,
+        storedDefaultProviders.size() == 1,
         "Tripwire was not set! This means the flyway migration did not run yet.");
 
-    val storedProvider = storedProviders.get(0).getId();
+    val storedProvider = storedDefaultProviders.get(0).getId();
     checkState(
         storedProvider.equals(configuredProvider),
         "Configured default-provider '%s' does not match what was previously configured '%s'",
