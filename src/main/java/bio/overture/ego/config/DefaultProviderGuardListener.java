@@ -3,8 +3,12 @@ package bio.overture.ego.config;
 import static bio.overture.ego.utils.Strings.isDefined;
 import static com.google.common.base.Preconditions.checkState;
 
+import bio.overture.ego.model.entity.DefaultProvider;
 import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.service.DefaultProviderService;
+import bio.overture.ego.utils.Streams;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -33,20 +37,31 @@ public class DefaultProviderGuardListener implements ApplicationListener<Context
   public void onApplicationEvent(ContextRefreshedEvent event) {
     log.info("ApplicationContext refreshed, checking default provider configuration.");
 
-    checkState(isDefined(configuredProvider.toString()), "Default provider is not defined!");
-    val storedProviderResult = defaultProviderService.findById(configuredProvider);
+    checkState(
+        isDefined(configuredProvider.toString()), "Configured default provider is not defined!");
     // it is assumed that before boot the tripwire default provider has been set by running the
-    // flyway migration. there will be a sql error if the table does not exist, indicating the
-    // migration has not run.
+    // flyway migration.
+    val foundDefaultProvider = defaultProviderService.getRepository().findAll().iterator();
+    List<DefaultProvider> actualStoredDefaultProvider =
+        Streams.stream(foundDefaultProvider).collect(Collectors.toUnmodifiableList());
+
+    checkState(
+        actualStoredDefaultProvider.size() == 1,
+        "Tripwire was not set! This means the flyway migration did not run yet.");
+
+    val storedProviderResult = defaultProviderService.findById(configuredProvider);
+    val storedProvider = actualStoredDefaultProvider.get(0).getId();
+
     checkState(
         storedProviderResult.isPresent(),
-        "Configured default-provider '%s' does not match what was previously configured. Check the defaultprovidertripwire table.",
-        configuredProvider);
+        "Configured default-provider '%s' does not match what was previously configured '%s'",
+        configuredProvider,
+        storedProvider);
     ;
 
     log.info(
         String.format(
             "Configured default-provider '%s' matches previously configured '%s, finished bootstrap check.",
-            configuredProvider, storedProviderResult.get().getId()));
+            configuredProvider, storedProvider));
   }
 }
