@@ -6,13 +6,11 @@ import static bio.overture.ego.utils.CollectionUtils.convertToUnmodifiableList;
 import bio.overture.ego.model.entity.DefaultProvider;
 import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.repository.DefaultProviderRepository;
+import java.util.List;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Slf4j
 @Service
@@ -33,8 +31,7 @@ public class DefaultProviderService extends AbstractBaseService<DefaultProvider,
         .orElseThrow(() -> buildNotFoundException("Could not find default provider type '%s'", id));
   }
 
-  public List<DefaultProvider> findAll(){
+  public List<DefaultProvider> findAll() {
     return convertToUnmodifiableList(getRepository().findAll());
   }
-
 }

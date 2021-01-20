@@ -1,16 +1,10 @@
 package bio.overture.ego.config;
 
-import static bio.overture.ego.utils.CollectionUtils.convertToUnmodifiableList;
 import static bio.overture.ego.utils.Strings.isDefined;
 import static com.google.common.base.Preconditions.checkState;
 
-import bio.overture.ego.model.entity.DefaultProvider;
 import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.service.DefaultProviderService;
-import bio.overture.ego.utils.CollectionUtils;
-import bio.overture.ego.utils.Streams;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
