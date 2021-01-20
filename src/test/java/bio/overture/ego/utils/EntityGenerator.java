@@ -47,7 +47,7 @@ public class EntityGenerator {
   private static final String DICTIONARY =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-abcdefghijklmnopqrstuvwxyz";
 
-  @Value("${spring.flyway.placeholders.default_provider:GOOGLE}")
+  @Value("${spring.flyway.placeholders.default-provider:GOOGLE}")
   private ProviderType DEFAULT_PROVIDER_TYPE;
 
   @Autowired private TokenService tokenService;

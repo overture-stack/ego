@@ -19,13 +19,12 @@ import org.springframework.stereotype.Component;
 public class DefaultProviderGuardListener implements ApplicationListener<ContextRefreshedEvent> {
 
   private final DefaultProviderService defaultProviderService;
-
   private final ProviderType configuredProvider;
 
   @Autowired
   public DefaultProviderGuardListener(
       @NonNull DefaultProviderService defaultProviderService,
-      @Value("${spring.flyway.placeholders.default_provider}") ProviderType configuredProvider) {
+      @Value("${spring.flyway.placeholders.default-provider}") ProviderType configuredProvider) {
     this.defaultProviderService = defaultProviderService;
     this.configuredProvider = configuredProvider;
   }
@@ -34,23 +33,27 @@ public class DefaultProviderGuardListener implements ApplicationListener<Context
   public void onApplicationEvent(ContextRefreshedEvent event) {
     log.info("ApplicationContext refreshed, checking default provider configuration.");
 
-    checkState(isDefined(configuredProvider.toString()), "Default provider is not defined!");
-    val storedProviderResult = defaultProviderService.findById(configuredProvider);
+    checkState(
+        isDefined(configuredProvider.toString()), "Configured default provider is not defined!");
     // it is assumed that before boot the tripwire default provider has been set by running the
-    // flyway migration
+    // flyway migration.
+
+    val storedDefaultProviders = defaultProviderService.findAll();
+
     checkState(
-        storedProviderResult.isPresent(),
+        storedDefaultProviders.size() == 1,
         "Tripwire was not set! This means the flyway migration did not run yet.");
-    val storedProvider = storedProviderResult.get().getId();
+
+    val storedProvider = storedDefaultProviders.get(0).getId();
     checkState(
-        configuredProvider.equals(storedProvider),
-        "Configured default_provider '%s' does not match what was previously configured '%s'",
+        storedProvider.equals(configuredProvider),
+        "Configured default-provider '%s' does not match what was previously configured '%s'",
         configuredProvider,
         storedProvider);
 
     log.info(
         String.format(
-            "Configured default_provider '%s' matches previously configured '%s, finished bootstrap check.",
+            "Configured default-provider '%s' matches previously configured '%s', finished bootstrap check.",
             configuredProvider, storedProvider));
   }
 }

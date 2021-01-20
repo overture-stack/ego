@@ -5,7 +5,7 @@ ALTER TABLE egouser DROP COLUMN name;
 
 CREATE TYPE providerType AS ENUM('GOOGLE', 'FACEBOOK', 'LINKEDIN', 'GITHUB', 'ORCID');
 ALTER TABLE egouser ADD COLUMN providertype providerType;
-ALTER TABLE egouser ALTER COLUMN providertype SET DEFAULT '${default_provider}';
+ALTER TABLE egouser ALTER COLUMN providertype SET DEFAULT '${default-provider}';
 -- default values are not added to existing rows, need to explicitly update where providertype is NULL
 UPDATE egouser SET providertype = DEFAULT WHERE providertype IS NULL;
 -- then set not null constraint
@@ -22,4 +22,4 @@ CREATE TABLE defaultprovidertripwire (
     id providerType PRIMARY KEY
 );
 
-INSERT INTO defaultprovidertripwire (id) VALUES ('${default_provider}');
+INSERT INTO defaultprovidertripwire (id) VALUES ('${default-provider}');

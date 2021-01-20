@@ -49,7 +49,7 @@ spring:
   flyway:
     enabled: false
     placeholders:
-      default_provider: GOOGLE
+      default-provider: GOOGLE
   jackson:
     deserialization:
       FAIL_ON_UNKNOWN_PROPERTIES: false
