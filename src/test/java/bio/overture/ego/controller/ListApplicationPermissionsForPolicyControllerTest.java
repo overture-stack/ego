@@ -27,7 +27,7 @@ import org.springframework.test.context.support.DependencyInjectionTestExecution
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ListApplicationPermissionsForPolicyControllerTest
-    extends AbstractListOwnerPermissionsForPolicyControllerTest<
+    extends AbstractListNameableOwnerPermissionsForPolicyControllerTest<
         Application, ApplicationPermission> {
   @Autowired private EntityGenerator entityGenerator;
 

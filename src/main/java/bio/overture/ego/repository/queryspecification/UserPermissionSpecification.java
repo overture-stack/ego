@@ -31,7 +31,6 @@ import bio.overture.ego.utils.QueryUtils;
 import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
 import javax.persistence.criteria.Predicate;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -91,10 +90,8 @@ public class UserPermissionSpecification {
         // Permission.accessLevel
         queryPredicates.add(scb.filterByField(accessLevel, finalText));
 
-        // Owner ID and NAME
-        Stream.of(ID, NAME)
-            .map(fieldName -> ownerSp.filterByField(fieldName, finalText))
-            .forEach(queryPredicates::add);
+        // Owner ID
+        queryPredicates.add(ownerSp.filterByField(ID, finalText));
         // Query predicates should be ORed together
         val orPredicate = builder.or(queryPredicates.toArray(Predicate[]::new));
 

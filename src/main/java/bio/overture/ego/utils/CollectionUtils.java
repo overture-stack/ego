@@ -6,6 +6,7 @@ import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.IntStream.range;
 
 import com.google.common.collect.ImmutableSet;
@@ -26,6 +27,15 @@ public class CollectionUtils {
 
   public static <T, U> Set<U> mapToImmutableSet(Collection<T> collection, Function<T, U> mapper) {
     return collection.stream().map(mapper).collect(toImmutableSet());
+  }
+
+  public static <T, U> List<U> mapToUnmodifiableList(
+      Collection<T> collection, Function<T, U> mapper) {
+    return collection.stream().map(mapper).collect(toUnmodifiableList());
+  }
+
+  public static <T> List<T> convertToUnmodifiableList(@NonNull Iterable<T> iterable) {
+    return Streams.stream(iterable).collect(toUnmodifiableList());
   }
 
   public static <T, U> List<U> mapToList(Collection<T> collection, Function<T, U> mapper) {

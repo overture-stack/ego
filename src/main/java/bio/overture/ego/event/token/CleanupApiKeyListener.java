@@ -56,7 +56,7 @@ public class CleanupApiKeyListener implements ApplicationListener<CleanupUserApi
   }
 
   private void cleanupApiKeysForUser(@NonNull User user) {
-    val scopes = tokenService.userScopes(user.getName()).getScopes();
+    val scopes = tokenService.userScopes(user.getId()).getScopes();
     val apiKeys = tokenService.listApiKey(user.getId());
     apiKeys.forEach(t -> verifyApiKey(t, scopes));
   }

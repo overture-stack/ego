@@ -28,7 +28,8 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class GroupPermissionService extends AbstractPermissionService<Group, GroupPermission> {
+public class GroupPermissionService
+    extends AbstractNameablePermissionService<Group, GroupPermission> {
 
   /** Dependencies */
   private final GroupService groupService;

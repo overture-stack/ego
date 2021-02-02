@@ -17,6 +17,8 @@
 package bio.overture.ego.service;
 
 import static bio.overture.ego.model.enums.UserType.ADMIN;
+import static bio.overture.ego.model.exceptions.InvalidUserException.checkValidUser;
+import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
@@ -27,7 +29,6 @@ import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.*;
 import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
 import static bio.overture.ego.utils.EntityServices.getManyEntities;
-import static bio.overture.ego.utils.FieldUtils.onUpdateDetected;
 import static bio.overture.ego.utils.Ids.checkDuplicates;
 import static bio.overture.ego.utils.Joiners.PRETTY_COMMA;
 import static java.util.Objects.isNull;
@@ -39,6 +40,7 @@ import bio.overture.ego.model.dto.CreateUserRequest;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.*;
+import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
@@ -64,7 +66,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @Transactional
-public class UserService extends AbstractNamedService<User, UUID> {
+public class UserService extends AbstractBaseService<User, UUID> {
 
   /** Constants */
   public static final UserConverter USER_CONVERTER = Mappers.getMapper(UserConverter.class);
@@ -101,17 +103,16 @@ public class UserService extends AbstractNamedService<User, UUID> {
   }
 
   @SuppressWarnings("unchecked")
-  @Override
-  public Optional<User> findByName(String name) {
-    return (Optional<User>)
+  public List<User> findByEmail(String email) {
+    return (List<User>)
         getRepository()
-            .findOne(
+            .findAll(
                 new UserSpecificationBuilder()
                     .fetchApplications(true)
                     .fetchUserGroups(true)
                     .fetchUserAndGroupPermissions(true)
                     .fetchRefreshToken(true)
-                    .buildByNameIgnoreCase(name));
+                    .buildByEmail(email));
   }
 
   @SuppressWarnings("unchecked")
@@ -148,28 +149,101 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getMany(ids, spec);
   }
 
+  public User getByProviderTypeAndProviderSubjectId(
+      ProviderType providerType, String providerSubjectId) {
+    val result = findByProviderTypeAndProviderSubjectId(providerType, providerSubjectId);
+    checkNotFound(
+        result.isPresent(),
+        "The user with providerType %s and providerSubjectId %s does not exist",
+        providerType,
+        providerSubjectId);
+    return result.get();
+  }
+
   public User createFromIDToken(IDToken idToken) {
     return create(
         CreateUserRequest.builder()
             .email(idToken.getEmail())
-            .firstName(idToken.getGiven_name())
-            .lastName(idToken.getFamily_name())
+            .firstName(idToken.getGivenName())
+            .lastName(idToken.getFamilyName())
             .status(userDefaultsConfig.getDefaultUserStatus())
             .type(userDefaultsConfig.getDefaultUserType())
+            .providerType(idToken.getProviderType())
+            .providerSubjectId(idToken.getProviderSubjectId())
             .build());
   }
 
+  private User updateUserFromToken(User user, IDToken idToken) {
+    user.setProviderType(idToken.getProviderType());
+    user.setProviderSubjectId(idToken.getProviderSubjectId());
+    user.setFirstName(idToken.getGivenName());
+    user.setLastName(idToken.getFamilyName());
+    user.setEmail(idToken.getEmail());
+
+    return user;
+  }
+
+  private Optional<User> findUserAndUpdate(IDToken idToken) {
+    val optionalUser =
+        findByProviderTypeAndProviderSubjectId(
+            idToken.getProviderType(), idToken.getProviderSubjectId());
+    optionalUser.ifPresent(user -> updateUserFromToken(user, idToken));
+    return optionalUser;
+  }
+
   public User getUserByToken(@NonNull IDToken idToken) {
-    val userName = idToken.getEmail();
-    val user =
-        findByName(userName)
+    User user =
+        findUserAndUpdate(idToken)
+            .or(() -> findByProviderTypeAndEmail(idToken))
             .orElseGet(
                 () -> {
                   log.info("User not found, creating.");
                   return createFromIDToken(idToken);
                 });
+
     user.setLastLogin(new Date());
     return user;
+  }
+
+  @SuppressWarnings("unchecked")
+  public Optional<User> findByProviderTypeAndProviderSubjectId(
+      ProviderType providerType, String providerSubjectId) {
+    return (Optional<User>)
+        getRepository()
+            .findOne(
+                new UserSpecificationBuilder()
+                    .fetchApplications(true)
+                    .fetchUserGroups(true)
+                    .fetchUserAndGroupPermissions(true)
+                    .fetchRefreshToken(true)
+                    .buildByProviderTypeAndSubjectId(providerType, providerSubjectId));
+  }
+
+  private Optional<User> findByProviderTypeAndEmail(IDToken idToken) {
+    val userEmail = idToken.getEmail();
+    if (!isNull(userEmail)) {
+      // For users that existed before the data migration, their data will be migrated
+      // to use the DEFAULT provider as their providerType and their email as the
+      // providerSubjectId, since the email was previously unique.
+      // In this scenario, since a user was not found using the idToken providerType +
+      // providerSubjectId, a secondary search is done on the user's email as the providerSubjectId
+      // and the idToken.providerType.
+      // If the user is found, their record is `healed` to use the correct providerSubjectId.
+      val userByEmailResult =
+          findByProviderTypeAndProviderSubjectId(idToken.getProviderType(), userEmail);
+      userByEmailResult.ifPresent(
+          foundUser -> {
+            log.info("User found, updating provider info.");
+            updateUserFromToken(foundUser, idToken);
+          });
+      return userByEmailResult;
+    }
+    log.info("No email provided");
+    return Optional.empty();
+  }
+
+  public boolean existsByProviderSubjectId(String providerSubjectId) {
+    return userRepository.existsByProviderSubjectId(providerSubjectId);
   }
 
   @Override
@@ -198,6 +272,7 @@ public class UserService extends AbstractNamedService<User, UUID> {
     return getRepository().save(user);
   }
 
+  @SuppressWarnings("unchecked")
   public Page<User> listUsers(@NonNull List<SearchFilter> filters, @NonNull Pageable pageable) {
     val spec = UserSpecification.filterBy(filters);
     return getRepository().findAll(spec, pageable);
@@ -424,16 +499,25 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
   private void validateCreateRequest(CreateUserRequest r) {
     checkRequestValid(r);
-    checkEmailUnique(r.getEmail());
+    checkMalformedRequest(
+        !r.getProviderSubjectId().isBlank(), "ProviderSubjectId cannot be blank.");
+    checkUserUnique(r.getProviderType(), r.getProviderSubjectId());
   }
 
   private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
-    onUpdateDetected(originalUser.getEmail(), r.getEmail(), () -> checkEmailUnique(r.getEmail()));
+    checkRequestValid(r);
+    checkValidUser(
+        originalUser.getProviderType().equals(r.getProviderType()),
+        "Invalid providerType, cannot update user.");
+    checkValidUser(
+        originalUser.getProviderSubjectId().equals(r.getProviderSubjectId()),
+        "Invalid providerSubjectId, cannot update user.");
   }
 
-  private void checkEmailUnique(String email) {
+  private void checkUserUnique(ProviderType providerType, String providerSubjectId) {
     checkUnique(
-        !userRepository.existsByEmailIgnoreCase(email), "A user with same email already exists");
+        !userRepository.existsByProviderTypeAndProviderSubjectId(providerType, providerSubjectId),
+        "A user with the same provider info already exists");
   }
 
   @SuppressWarnings("unchecked")
@@ -519,9 +603,6 @@ public class UserService extends AbstractNamedService<User, UUID> {
 
     @AfterMapping
     protected void correctUserData(@MappingTarget User userToUpdate) {
-      // Set UserName to equal the email.
-      userToUpdate.setName(userToUpdate.getEmail());
-
       // Set Created At date to Now if not defined
       if (isNull(userToUpdate.getCreatedAt())) {
         userToUpdate.setCreatedAt(new Date());

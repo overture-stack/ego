@@ -7,11 +7,7 @@ import static java.lang.String.format;
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
-import bio.overture.ego.service.AbstractPermissionService;
-import bio.overture.ego.service.GroupPermissionService;
-import bio.overture.ego.service.GroupService;
-import bio.overture.ego.service.NamedService;
-import bio.overture.ego.service.PolicyService;
+import bio.overture.ego.service.*;
 import bio.overture.ego.utils.EntityGenerator;
 import java.util.Collection;
 import java.util.UUID;
@@ -33,7 +29,7 @@ import org.springframework.test.context.support.DependencyInjectionTestExecution
     classes = AuthorizationServiceMain.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class GroupPermissionControllerTest
-    extends AbstractPermissionControllerTest<Group, GroupPermission> {
+    extends AbstractNameablePermissionControllerTest<Group, GroupPermission> {
 
   /** Dependencies */
   @Autowired private EntityGenerator entityGenerator;
@@ -86,7 +82,7 @@ public class GroupPermissionControllerTest
   }
 
   @Override
-  protected AbstractPermissionService<Group, GroupPermission> getPermissionService() {
+  protected AbstractNameablePermissionService<Group, GroupPermission> getPermissionService() {
     return groupPermissionService;
   }
 

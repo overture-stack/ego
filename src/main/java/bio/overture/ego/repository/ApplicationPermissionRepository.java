@@ -9,7 +9,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface ApplicationPermissionRepository
-    extends PermissionRepository<Application, ApplicationPermission> {
+    extends NameablePermissionRepository<Application, ApplicationPermission> {
 
   @EntityGraph(value = "application-permission-entity-with-relationships", type = FETCH)
   Set<ApplicationPermission> findAllByOwner_Id(UUID id);

@@ -1,5 +1,7 @@
 package bio.overture.ego.token;
 
+import static bio.overture.ego.model.enums.ProviderType.GOOGLE;
+import static bio.overture.ego.model.enums.UserType.ADMIN;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -35,18 +37,27 @@ public class LastloginTest {
   public void testLastloginUpdate() {
 
     val idToken = new IDToken();
-    idToken.setFamily_name("foo");
-    idToken.setGiven_name("bar");
+    idToken.setFamilyName("foo");
+    idToken.setGivenName("bar");
     idToken.setEmail("foobar@domain.com");
-    User user = entityGenerator.setupUser("foo bar");
+    idToken.setProviderType(GOOGLE);
+    idToken.setProviderSubjectId("12345");
+    User user = entityGenerator.setupUser("foo bar", ADMIN, "12345", GOOGLE);
 
     assertNull(
         " Verify before generatedUserToken, last login after fetching the user should be null. ",
-        userService.getByName(idToken.getEmail()).getLastLogin());
+        userService
+            .getByProviderTypeAndProviderSubjectId(
+                idToken.getProviderType(), idToken.getProviderSubjectId())
+            .getLastLogin());
 
     tokenService.generateUserToken(idToken);
 
-    val lastLogin = userService.getByName(idToken.getEmail()).getLastLogin();
+    val lastLogin =
+        userService
+            .getByProviderTypeAndProviderSubjectId(
+                idToken.getProviderType(), idToken.getProviderSubjectId())
+            .getLastLogin();
     userService.delete(user.getId());
 
     assertNotNull("Verify after generatedUserToken, last login is not null.", lastLogin);

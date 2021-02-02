@@ -21,8 +21,8 @@ import static org.springframework.http.HttpStatus.OK;
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.enums.AccessLevel;
-import bio.overture.ego.service.AbstractPermissionService;
-import bio.overture.ego.service.BaseService;
+import bio.overture.ego.service.AbstractNameablePermissionService;
+import bio.overture.ego.service.NamedService;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.Streams;
@@ -39,8 +39,8 @@ import org.springframework.http.HttpStatus;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 @Slf4j
-public abstract class AbstractPermissionControllerTest<
-        O extends Identifiable<UUID>, P extends AbstractPermission<O>>
+public abstract class AbstractNameablePermissionControllerTest<
+        O extends NameableEntity<UUID>, P extends AbstractPermission<O>>
     extends AbstractControllerTest {
 
   /** Constants */
@@ -685,10 +685,11 @@ public abstract class AbstractPermissionControllerTest<
         .forEach(
             n -> {
               val actualOwnerId = UUID.fromString(n.path("id").asText());
+              val actualOwnerName = n.path("name").asText();
               val actualMask = AccessLevel.fromValue(n.path("mask").asText());
               assertTrue(expectedMap.containsKey(actualOwnerId));
               val expectedOwner = expectedMap.get(actualOwnerId);
-              assertEquals(actualOwnerId, expectedOwner.getId());
+              assertEquals(actualOwnerName, expectedOwner.getName());
               assertEquals(actualMask, permRequest.getMask());
             });
   }
@@ -935,14 +936,14 @@ public abstract class AbstractPermissionControllerTest<
 
   protected abstract O generateOwner(String name);
 
-  protected abstract BaseService<O, UUID> getOwnerService();
+  protected abstract NamedService<O, UUID> getOwnerService();
 
   protected abstract String generateNonExistentOwnerName();
 
   // Permission specific
   protected abstract Class<P> getPermissionType();
 
-  protected abstract AbstractPermissionService<O, P> getPermissionService();
+  protected abstract AbstractNameablePermissionService<O, P> getPermissionService();
 
   // Endpoints
   protected abstract String getAddPermissionsEndpoint(String ownerId);

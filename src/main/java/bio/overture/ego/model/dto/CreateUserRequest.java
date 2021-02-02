@@ -17,6 +17,7 @@
 package bio.overture.ego.model.dto;
 
 import bio.overture.ego.model.enums.LanguageType;
+import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
 import javax.validation.constraints.NotNull;
@@ -31,7 +32,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CreateUserRequest {
 
-  @NotNull private String email;
+  private String email;
 
   @NotNull private UserType type;
 
@@ -42,4 +43,8 @@ public class CreateUserRequest {
   @NotNull private String lastName;
 
   private LanguageType preferredLanguage;
+
+  @NotNull ProviderType providerType;
+
+  @NotNull String providerSubjectId;
 }

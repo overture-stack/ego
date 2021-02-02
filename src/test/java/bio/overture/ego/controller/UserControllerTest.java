@@ -20,21 +20,15 @@ package bio.overture.ego.controller;
 import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
 import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
 import static bio.overture.ego.model.enums.JavaFields.*;
-import static bio.overture.ego.model.enums.LanguageType.ENGLISH;
-import static bio.overture.ego.model.enums.StatusType.APPROVED;
-import static bio.overture.ego.model.enums.StatusType.DISABLED;
-import static bio.overture.ego.model.enums.UserType.USER;
+import static bio.overture.ego.model.enums.LanguageType.*;
+import static bio.overture.ego.model.enums.ProviderType.*;
 import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
 import static bio.overture.ego.utils.Collectors.toImmutableList;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.Converters.convertToIds;
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentId;
-import static bio.overture.ego.utils.EntityGenerator.generateNonExistentName;
-import static bio.overture.ego.utils.EntityGenerator.randomEnum;
-import static bio.overture.ego.utils.EntityGenerator.randomEnumExcluding;
-import static bio.overture.ego.utils.EntityGenerator.randomStringNoSpaces;
+import static bio.overture.ego.utils.EntityGenerator.*;
 import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
@@ -42,22 +36,16 @@ import static com.google.common.collect.Sets.newHashSet;
 import static org.junit.Assert.*;
 
 import bio.overture.ego.AuthorizationServiceMain;
-import bio.overture.ego.model.dto.CreateUserRequest;
-import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
-import bio.overture.ego.model.enums.LanguageType;
-import bio.overture.ego.model.enums.StatusType;
-import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.utils.EntityGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Set;
@@ -71,7 +59,9 @@ import org.apache.commons.lang.NotImplementedException;
 import org.hibernate.LazyInitializationException;
 import org.junit.Assert;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -97,6 +87,8 @@ public class UserControllerTest extends AbstractControllerTest {
   @Autowired private ApplicationService applicationService;
   @Autowired private GroupService groupService;
 
+  @Rule public ExpectedException exceptionRule = ExpectedException.none();
+
   @Value("${logging.test.controller.enable}")
   private boolean enableLogging;
 
@@ -107,7 +99,7 @@ public class UserControllerTest extends AbstractControllerTest {
 
   @Override
   protected void beforeTest() {
-    // Initial setup of entities (run once
+    // Initial setup of entities (run once)
     if (!hasRunEntitySetup) {
       entityGenerator.setupTestUsers();
       entityGenerator.setupTestApplications();
@@ -127,6 +119,7 @@ public class UserControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("/users?offset=0&limit=%s", numUsers).get();
 
     val responseStatus = response.getStatusCode();
+    assertNotNull(response.getBody());
     val responseJson = MAPPER.readTree(response.getBody());
 
     assertEquals(responseStatus, HttpStatus.OK);
@@ -135,26 +128,28 @@ public class UserControllerTest extends AbstractControllerTest {
 
     // Verify that the returned Users are the ones from the setup.
     Iterable<JsonNode> resultSetIterable = () -> responseJson.get("resultSet").iterator();
-    val actualUserNames =
-        stream(resultSetIterable).map(j -> j.get("name").asText()).collect(toImmutableList());
+    val actualUserEmails =
+        stream(resultSetIterable).map(j -> j.get("email").asText()).collect(toImmutableList());
     assertTrue(
-        actualUserNames.containsAll(
+        actualUserEmails.containsAll(
             Set.of("FirstUser@domain.com", "SecondUser@domain.com", "ThirdUser@domain.com")));
   }
 
+  // prob breaking cuz email is no longer reliably unique. can you query on unique value?
   @Test
   @SneakyThrows
   public void listUsersWithQuery() {
     val response = initStringRequest().endpoint("/users?query=FirstUser").get();
 
     val responseStatus = response.getStatusCode();
+    assertNotNull(response.getBody());
     val responseJson = MAPPER.readTree(response.getBody());
 
     assertEquals(responseStatus, HttpStatus.OK);
-    assertEquals(responseJson.get("count").asInt(), 1);
+    assertTrue(responseJson.get("count").asInt() >= 1);
     assertTrue(responseJson.get("resultSet").isArray());
     assertEquals(
-        responseJson.get("resultSet").elements().next().get("name").asText(),
+        responseJson.get("resultSet").elements().next().get("email").asText(),
         "FirstUser@domain.com");
   }
 
@@ -179,72 +174,6 @@ public class UserControllerTest extends AbstractControllerTest {
   public void findUsers_FindSomeQuery_Success() {
     throw new NotImplementedException(
         "need to implement the test 'findUsers_FindSomeQuery_Success'");
-  }
-
-  @Test
-  public void createUser_NonExisting_Success() {
-    // Create unique name
-    val name = generateNonExistentName(userService);
-
-    // Create request
-    val r =
-        CreateUserRequest.builder()
-            .email(name + "@gmail.com")
-            .status(randomEnum(StatusType.class))
-            .type(randomEnum(UserType.class))
-            .preferredLanguage(randomEnum(LanguageType.class))
-            .firstName(randomStringNoSpaces(10))
-            .lastName(randomStringNoSpaces(10))
-            .build();
-
-    // Create the user
-    val user = createUserPostRequestAnd(r).extractOneEntity(User.class);
-    assertEquals(user.getEmail(), r.getEmail());
-    assertEquals(user.getFirstName(), r.getFirstName());
-    assertEquals(user.getLastName(), r.getLastName());
-    assertEquals(user.getPreferredLanguage(), r.getPreferredLanguage());
-    assertEquals(user.getType(), r.getType());
-    assertEquals(user.getStatus(), r.getStatus());
-
-    // Assert the user can be read and matches the request data
-    val r1 = getUserEntityGetRequestAnd(user).extractOneEntity(User.class);
-    assertEquals(r1.getEmail(), r.getEmail());
-    assertEquals(r1.getFirstName(), r.getFirstName());
-    assertEquals(r1.getLastName(), r.getLastName());
-    assertEquals(r1.getPreferredLanguage(), r.getPreferredLanguage());
-    assertEquals(r1.getType(), r.getType());
-    assertEquals(r1.getStatus(), r.getStatus());
-
-    assertEquals(r1.getEmail(), user.getEmail());
-    assertEquals(r1.getFirstName(), user.getFirstName());
-    assertEquals(r1.getLastName(), user.getLastName());
-    assertEquals(r1.getPreferredLanguage(), user.getPreferredLanguage());
-    assertEquals(r1.getType(), user.getType());
-    assertEquals(r1.getStatus(), user.getStatus());
-  }
-
-  @Test
-  public void createUser_EmailAlreadyExists_Conflict() {
-    // Generate data
-    val data = generateUniqueTestUserData();
-    val user0 = data.getUsers().get(0);
-
-    // Get an existing name
-    val existingName = getUserEntityGetRequestAnd(user0).extractOneEntity(User.class).getName();
-
-    // Create a request with an existing name
-    val r =
-        CreateUserRequest.builder()
-            .email(existingName)
-            .status(randomEnum(StatusType.class))
-            .type(randomEnum(UserType.class))
-            .preferredLanguage(randomEnum(LanguageType.class))
-            .firstName(randomStringNoSpaces(10))
-            .lastName(randomStringNoSpaces(10))
-            .build();
-
-    // Create the user and assert a conflict
-    createUserPostRequestAnd(r).assertConflict();
   }
 
   @Test
@@ -428,177 +357,6 @@ public class UserControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  @SneakyThrows
-  public void updateUser_ExistingUser_Success() {
-    // Generate data
-    val data = generateUniqueTestUserData();
-    val user0 = data.getUsers().get(0);
-
-    // create update request 1
-    val uniqueName = generateNonExistentName(userService);
-    val email = uniqueName + "@xyz.com";
-    val r1 = UpdateUserRequest.builder().firstName("aNewFirstName").email(email).build();
-
-    // Update user
-    partialUpdateUserPutRequestAnd(user0.getId(), r1).assertOk();
-
-    // Assert update was correct
-    val actualUser1 = getUserEntityGetRequestAnd(user0).extractOneEntity(User.class);
-    assertEquals(actualUser1.getFirstName(), r1.getFirstName());
-    assertEquals(actualUser1.getEmail(), r1.getEmail());
-    assertEquals(actualUser1.getName(), r1.getEmail());
-
-    // create update request 2
-    val r2 =
-        UpdateUserRequest.builder()
-            .status(randomEnumExcluding(StatusType.class, user0.getStatus()))
-            .type(randomEnumExcluding(UserType.class, user0.getType()))
-            .preferredLanguage(
-                randomEnumExcluding(LanguageType.class, user0.getPreferredLanguage()))
-            .build();
-
-    // Update user
-    partialUpdateUserPutRequestAnd(user0.getId(), r2).assertOk();
-
-    // Assert update was correct
-    val actualUser2 = getUserEntityGetRequestAnd(user0).extractOneEntity(User.class);
-    assertEquals(actualUser2.getStatus(), r2.getStatus());
-    assertEquals(actualUser2.getType(), r2.getType());
-    assertEquals(actualUser2.getPreferredLanguage(), r2.getPreferredLanguage());
-  }
-
-  @Test
-  public void updateUser_NonExistentUser_NotFound() {
-    // Create non existent user id
-    val nonExistentId = generateNonExistentId(userService);
-
-    val dummyUpdateUserRequest = UpdateUserRequest.builder().build();
-
-    // Assert that you cannot get a non-existent id
-    partialUpdateUserPutRequestAnd(nonExistentId, dummyUpdateUserRequest).assertNotFound();
-  }
-
-  @Test
-  public void updateUser_EmailAlreadyExists_Conflict() {
-    // Generate data
-    val data = generateUniqueTestUserData();
-    val user0 = data.getUsers().get(0);
-    val user1 = data.getUsers().get(1);
-
-    // Assumptions
-    assertEquals(user0.getName(), user0.getEmail());
-    assertEquals(user1.getName(), user1.getEmail());
-
-    // Create update request with same email
-    val r1 =
-        UpdateUserRequest.builder()
-            .email(user1.getName())
-            .status(randomEnumExcluding(StatusType.class, user0.getStatus()))
-            .build();
-
-    // Assert that a CONFLICT error occurs when trying to update a user with a name
-    // that already
-    // exists
-    partialUpdateUserPutRequestAnd(user0.getId(), r1).assertConflict();
-  }
-
-  @Test
-  public void statusValidation_MalformedStatus_BadRequest() {
-    val invalidStatus = "something123";
-    val match = stream(StatusType.values()).anyMatch(x -> x.toString().equals(invalidStatus));
-    assertFalse(match);
-
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    // Assert createUsers
-    val templateR1 =
-        CreateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@xyz.com")
-            .type(USER)
-            .lastName("")
-            .lastName("")
-            .preferredLanguage(ENGLISH)
-            .build();
-    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(STATUS, invalidStatus);
-    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
-
-    // Assert updateUser
-    val templateR2 =
-        UpdateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@xyz.com")
-            .type(USER)
-            .preferredLanguage(ENGLISH)
-            .build();
-    val r2 = ((ObjectNode) MAPPER.valueToTree(templateR2)).put(STATUS, invalidStatus);
-    initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
-  }
-
-  @Test
-  public void typeValidation_MalformedType_BadRequest() {
-    val invalidType = "something123";
-    val match = stream(UserType.values()).anyMatch(x -> x.toString().equals(invalidType));
-    assertFalse(match);
-
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    // Assert createUsers
-    val templateR1 =
-        CreateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@xyz.com")
-            .status(APPROVED)
-            .preferredLanguage(ENGLISH)
-            .firstName("")
-            .lastName("")
-            .build();
-    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(TYPE, invalidType);
-    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
-
-    // Assert updateUser
-    val templateR2 =
-        UpdateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@xyz.com")
-            .status(DISABLED)
-            .preferredLanguage(ENGLISH)
-            .build();
-    val r2 = ((ObjectNode) MAPPER.valueToTree(templateR2)).put(TYPE, invalidType);
-    initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
-  }
-
-  @Test
-  public void preferredLanguageValidation_MalformedPreferredLanguage_BadRequest() {
-    val invalidLanguage = "something123";
-    val match = stream(LanguageType.values()).anyMatch(x -> x.toString().equals(invalidLanguage));
-    assertFalse(match);
-
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    // Assert createUsers
-    val templateR1 =
-        CreateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@xyz.com")
-            .status(APPROVED)
-            .type(USER)
-            .firstName("")
-            .lastName("")
-            .build();
-    val r1 = ((ObjectNode) MAPPER.valueToTree(templateR1)).put(PREFERREDLANGUAGE, invalidLanguage);
-    initStringRequest().endpoint("/users").body(r1).postAnd().assertBadRequest();
-
-    // Assert updateUser
-    val templateR2 =
-        UpdateUserRequest.builder()
-            .email(generateNonExistentName(userService) + "@xyz.com")
-            .status(DISABLED)
-            .type(USER)
-            .build();
-    val r2 = ((ObjectNode) MAPPER.valueToTree(templateR2)).put(PREFERREDLANGUAGE, invalidLanguage);
-    initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
-  }
-
-  @Test
   public void getApplicationsFromUser_FindAllQuery_Success() {
     // Generate data
     val data = generateUniqueTestUserData();
@@ -650,6 +408,7 @@ public class UserControllerTest extends AbstractControllerTest {
     val user0 = data.getUsers().get(0);
 
     // Assert the user has no applications
+
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
 
     // Add applications to user and assert the response is equal to the user
@@ -689,9 +448,10 @@ public class UserControllerTest extends AbstractControllerTest {
     val app1 = data.getApplications().get(1);
 
     // Assert the user has no applications
+
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
 
-    // Add app00 to user and assert the response is equal to the user
+    // Add app0 to user and assert the response is equal to the user
     addApplicationsToUserPostRequestAnd(user0, newArrayList(app0))
         .assertEntityOfType(User.class)
         .isEqualToIgnoringGivenFields(user0, USERPERMISSIONS, TOKENS, USERGROUPS, USERAPPLICATIONS);
@@ -702,8 +462,7 @@ public class UserControllerTest extends AbstractControllerTest {
         .containsExactlyInAnyOrder(app0);
 
     // Add app0 and app1 to user and assert a CONFLICT error is returned since app0
-    // was already
-    // associated
+    // was already associated
     addApplicationsToUserPostRequestAnd(user0, newArrayList(app0, app1)).assertConflict();
   }
 
@@ -714,6 +473,7 @@ public class UserControllerTest extends AbstractControllerTest {
     val user0 = data.getUsers().get(0);
 
     // Assert the user has no applications
+
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
 
     // Add apps to user and assert user is returned
@@ -730,6 +490,7 @@ public class UserControllerTest extends AbstractControllerTest {
     deleteApplicationsFromUserDeleteRequestAnd(user0, data.getApplications()).assertOk();
 
     // Assert the user has no applications
+
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
   }
 
@@ -742,6 +503,7 @@ public class UserControllerTest extends AbstractControllerTest {
     val app1 = data.getApplications().get(1);
 
     // Assert the user has no applications
+
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
 
     // Add apps to user and assert user is returned
@@ -765,6 +527,7 @@ public class UserControllerTest extends AbstractControllerTest {
     val user0 = data.getUsers().get(0);
 
     // Assert the user has no applications
+
     getApplicationsForUserGetRequestAnd(user0).assertPageResultsOfType(Application.class).isEmpty();
 
     // Add all apps to user
@@ -1021,9 +784,9 @@ public class UserControllerTest extends AbstractControllerTest {
   @lombok.Value
   @Builder
   public static class TestUserData {
-    @NonNull private final List<User> users;
-    @NonNull private final List<Group> groups;
-    @NonNull private final List<Application> applications;
-    @NonNull private final List<Policy> policies;
+    @NonNull List<User> users;
+    @NonNull List<Group> groups;
+    @NonNull List<Application> applications;
+    @NonNull List<Policy> policies;
   }
 }

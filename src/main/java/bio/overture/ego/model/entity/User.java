@@ -25,12 +25,7 @@ import static com.google.common.collect.Sets.newHashSet;
 import static java.util.stream.Collectors.toList;
 
 import bio.overture.ego.model.dto.Scope;
-import bio.overture.ego.model.enums.JavaFields;
-import bio.overture.ego.model.enums.LanguageType;
-import bio.overture.ego.model.enums.SqlFields;
-import bio.overture.ego.model.enums.StatusType;
-import bio.overture.ego.model.enums.Tables;
-import bio.overture.ego.model.enums.UserType;
+import bio.overture.ego.model.enums.*;
 import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.view.Views;
@@ -41,10 +36,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -63,12 +55,14 @@ import org.hibernate.annotations.TypeDef;
 
 @Slf4j
 @Entity
-@Table(name = Tables.EGOUSER)
+@Table(
+    name = Tables.EGOUSER,
+    uniqueConstraints =
+        @UniqueConstraint(columnNames = {SqlFields.PROVIDERTYPE, SqlFields.PROVIDERSUBJECTID}))
 @Data
 @ToString(exclude = {"userGroups", "userApplications", "userPermissions", "tokens", "refreshToken"})
 @JsonPropertyOrder({
   JavaFields.ID,
-  JavaFields.NAME,
   JavaFields.EMAIL,
   JavaFields.USERTYPE,
   JavaFields.STATUS,
@@ -79,7 +73,9 @@ import org.hibernate.annotations.TypeDef;
   JavaFields.LASTNAME,
   JavaFields.CREATEDAT,
   JavaFields.LASTLOGIN,
-  JavaFields.PREFERREDLANGUAGE
+  JavaFields.PREFERREDLANGUAGE,
+  JavaFields.PROVIDERTYPE,
+  JavaFields.PROVIDERSUBJECTID
 })
 @JsonInclude()
 @EqualsAndHashCode(of = {"id"})
@@ -89,7 +85,7 @@ import org.hibernate.annotations.TypeDef;
 @JsonView(Views.REST.class)
 @TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
 @FieldNameConstants
-public class User implements PolicyOwner, NameableEntity<UUID> {
+public class User implements PolicyOwner, Identifiable<UUID> {
 
   // TODO: find JPA equivalent for GenericGenerator
   @Id
@@ -98,14 +94,8 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   @GeneratedValue(generator = "user_uuid")
   private UUID id;
 
-  @NotNull
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = SqlFields.NAME, unique = true, nullable = false)
-  private String name;
-
-  @NotNull
-  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
-  @Column(name = SqlFields.EMAIL, unique = true, nullable = false)
+  @Column(name = SqlFields.EMAIL)
   private String email;
 
   @NotNull
@@ -148,6 +138,18 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
   @Column(name = SqlFields.PREFERREDLANGUAGE)
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   private LanguageType preferredLanguage;
+
+  @NotNull
+  @Type(type = EGO_ENUM)
+  @Enumerated(EnumType.STRING)
+  @Column(name = SqlFields.PROVIDERTYPE, nullable = false)
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
+  private ProviderType providerType;
+
+  @NotNull
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
+  @Column(name = SqlFields.PROVIDERSUBJECTID, nullable = false)
+  private String providerSubjectId;
 
   @JsonIgnore
   @OneToMany(
@@ -229,12 +231,13 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
             .setEmail(toProtoString(this.getEmail()))
             .setFirstName(toProtoString(this.getFirstName()))
             .setLastName(toProtoString(this.getLastName()))
-            .setName(toProtoString(this.getName()))
             .setCreatedAt(toProtoString(this.getCreatedAt()))
             .setLastLogin(toProtoString(this.getLastLogin()))
             .setPreferredLanguage(toProtoString(this.getPreferredLanguage()))
             .setStatus(toProtoString(this.getStatus()))
-            .setType(toProtoString(this.getType()));
+            .setType(toProtoString(this.getType()))
+            .setProviderType(toProtoString(this.getProviderType()))
+            .setProviderSubjectId(toProtoString(this.getProviderSubjectId()));
 
     try {
       final Set<String> applications =
@@ -289,8 +292,8 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
       user.setLastName(proto.getLastName().getValue());
     }
 
-    if (proto.hasName()) {
-      user.setName(proto.getName().getValue());
+    if (proto.hasProviderSubjectId()) {
+      user.setProviderSubjectId(proto.getProviderSubjectId().getValue());
     }
 
     try {
@@ -342,6 +345,15 @@ public class User implements PolicyOwner, NameableEntity<UUID> {
 
     } catch (IllegalArgumentException e) {
       log.debug("Could not set user type from protobuf: ", e.getMessage());
+    }
+
+    try {
+      if (proto.hasProviderType()) {
+        final String providerType = proto.getProviderType().getValue();
+        user.setProviderType(ProviderType.resolveProviderType(providerType));
+      }
+    } catch (IllegalArgumentException e) {
+      log.debug("Could not set provider type from protobuf: ", e.getMessage());
     }
 
     return user;

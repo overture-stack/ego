@@ -132,10 +132,6 @@ public abstract class AbstractControllerTest {
     return deleteUsersFromGroupDeleteRequestAnd(g.getId(), userIds);
   }
 
-  protected StringResponseOption createUserPostRequestAnd(CreateUserRequest r) {
-    return initStringRequest().endpoint("/users").body(r).postAnd();
-  }
-
   protected StringResponseOption createApplicationPostRequestAnd(CreateApplicationRequest r) {
     return initStringRequest().endpoint("/applications").body(r).postAnd();
   }

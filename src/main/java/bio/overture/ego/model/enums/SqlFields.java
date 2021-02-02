@@ -34,5 +34,7 @@ public class SqlFields {
   public static final String JTI = "jti";
   public static final String REFRESHID = "refresh_id";
   public static final String USER_ID = "user_id";
+  public static final String PROVIDERTYPE = "providertype";
+  public static final String PROVIDERSUBJECTID = "providersubjectid";
   public static final String INITIALIZED = "initialized";
 }
