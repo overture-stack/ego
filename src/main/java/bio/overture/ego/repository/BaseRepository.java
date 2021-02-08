@@ -10,5 +10,6 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 public interface BaseRepository<T, ID>
     extends PagingAndSortingRepository<T, ID>, JpaSpecificationExecutor {
   T findFirstBy();
+
   Set<T> findAllByIdIn(Collection<ID> ids);
 }

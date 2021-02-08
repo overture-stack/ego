@@ -32,6 +32,7 @@ public class UserServiceTest {
 
   @Test
   public void testFirstUserShouldNotBeAdminByDefault() {
+    userService.getRepository().deleteAll();
     val usersCount = userService.countAll();
     Assert.assertEquals(0, usersCount);
     User u = entityGenerator.setupUser("First User", UserType.USER);

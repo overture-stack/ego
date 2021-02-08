@@ -28,16 +28,16 @@ public class FirstUserAsAdminTest {
 
   @Test
   public void testOnlyFirstUserShouldBeAdminByDefault() {
+    userService.getRepository().deleteAll();
     val usersCount = userService.countAll();
     Assert.assertEquals(0, usersCount);
     User u = entityGenerator.setupUser("First User", UserType.USER);
     val user = userService.findById(u.getId()).get();
     Assert.assertEquals(user.getType(), UserType.ADMIN);
 
-    //add another user make sure they don't get ADMIN type
+    // add another user make sure they don't get ADMIN type
     User u2 = entityGenerator.setupUser("Second User", UserType.USER);
     val user2 = userService.findById(u2.getId()).get();
     Assert.assertEquals(user2.getType(), UserType.USER);
   }
-
 }
