@@ -4,6 +4,8 @@ import static bio.overture.ego.model.enums.AccessLevel.WRITE;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
 import static java.util.stream.Collectors.toList;
 
+import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.UserType;
 import bio.overture.ego.utils.EntityGenerator;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -27,6 +29,15 @@ public class UserServiceTest {
   @Autowired private EntityGenerator entityGenerator;
   @Autowired private RefreshContextService refreshContextService;
   @Autowired private TokenService tokenService;
+
+  @Test
+  public void testFirstUserShouldNotBeAdminByDefault() {
+    val usersCount = userService.countAll();
+    Assert.assertEquals(0, usersCount);
+    User u = entityGenerator.setupUser("First User", UserType.USER);
+    val user = userService.findById(u.getId()).get();
+    Assert.assertEquals(user.getType(), UserType.USER);
+  }
 
   @Test
   public void testGetManyUsersWithRelations() {

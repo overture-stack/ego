@@ -163,6 +163,8 @@ token:
 # Default values available for creation of entities
 default:
   user:
+    # flag to automatically register first user as an admin
+    firstUserAsAdmin: false
     type: USER
     status: APPROVED
 
