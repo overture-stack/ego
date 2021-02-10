@@ -3,6 +3,7 @@ package bio.overture.ego.controller;
 import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
+import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.provider.google.GoogleTokenService;
 import bio.overture.ego.service.TokenService;
@@ -19,9 +20,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.List;
+
 public abstract class AbstractMockedTokenControllerTest extends AbstractControllerTest {
 
   protected boolean hasRunEntitySetup = false;
+  protected List<User> testUsers;
   protected MockMvc mockMvc;
 
   @Value("${spring.flyway.placeholders.default-provider:GOOGLE}")
@@ -54,7 +58,7 @@ public abstract class AbstractMockedTokenControllerTest extends AbstractControll
   protected void beforeTest() {
     // Initial setup of entities (run once)
     if (!hasRunEntitySetup) {
-      entityGenerator.setupTestUsers();
+      testUsers = entityGenerator.setupTestUsers();
       hasRunEntitySetup = true;
     }
 

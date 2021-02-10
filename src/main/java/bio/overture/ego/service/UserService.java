@@ -41,6 +41,7 @@ import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.dto.UpdateUserRequest;
 import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.enums.ProviderType;
+import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.join.UserApplication;
 import bio.overture.ego.model.join.UserGroup;
 import bio.overture.ego.model.search.SearchFilter;
@@ -99,6 +100,11 @@ public class UserService extends AbstractBaseService<User, UUID> {
   public User create(@NonNull CreateUserRequest request) {
     validateCreateRequest(request);
     val user = USER_CONVERTER.convertToUser(request);
+    val existingRandomUser = getRepository().findFirstBy();
+    if (userDefaultsConfig.isFirstUserAsAdmin() && existingRandomUser == null) {
+      user.setType(ADMIN);
+      user.setStatus(StatusType.APPROVED);
+    }
     return getRepository().save(user);
   }
 
