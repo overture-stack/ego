@@ -154,8 +154,9 @@ public class EntityGenerator {
         user -> setupUser(user, USER, UUID.randomUUID().toString(), DEFAULT_PROVIDER_TYPE));
   }
 
-  public void setupTestUsers() {
-    setupUsers("First User", "Second User", "Third User");
+  public List<User> setupTestUsers() {
+    val users = setupUsers("First User", "Second User", "Third User");
+    return users;
   }
 
   public Group setupGroup(String name) {
