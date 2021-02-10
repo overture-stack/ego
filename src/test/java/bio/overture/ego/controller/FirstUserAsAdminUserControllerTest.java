@@ -32,15 +32,12 @@ import static org.junit.Assert.*;
 @TestPropertySource(properties = "default.user.firstUserAsAdmin=true")
 public class FirstUserAsAdminUserControllerTest extends AbstractMockedTokenControllerTest {
 
-  public FirstUserAsAdminUserControllerTest() {
-    this.createTestUsers = false;
-  }
-
   @Rule
   public ExpectedException exceptionRule = ExpectedException.none();
 
   @Test
   public void createFirstUserShouldBeAdmin() {
+    this.userService.getRepository().deleteAll();
     val user1 = createUserAndFetchInfo("first@gmail.com", "first", "last");
     assertEquals(ADMIN, user1.getType());
 

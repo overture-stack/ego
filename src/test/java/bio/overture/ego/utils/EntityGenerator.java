@@ -155,8 +155,7 @@ public class EntityGenerator {
   }
 
   public List<User> setupTestUsers() {
-    val users = setupUsers("First User", "Second User", "Third User");
-    return users;
+    return setupUsers("First User", "Second User", "Third User");
   }
 
   public Group setupGroup(String name) {

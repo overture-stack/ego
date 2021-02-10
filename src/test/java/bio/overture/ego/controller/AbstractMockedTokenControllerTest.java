@@ -25,7 +25,6 @@ import java.util.List;
 public abstract class AbstractMockedTokenControllerTest extends AbstractControllerTest {
 
   protected boolean hasRunEntitySetup = false;
-  protected boolean createTestUsers = true;
   protected List<User> testUsers;
   protected MockMvc mockMvc;
 
@@ -58,7 +57,7 @@ public abstract class AbstractMockedTokenControllerTest extends AbstractControll
   @Override
   protected void beforeTest() {
     // Initial setup of entities (run once)
-    if (!hasRunEntitySetup && createTestUsers) {
+    if (!hasRunEntitySetup) {
       testUsers = entityGenerator.setupTestUsers();
       hasRunEntitySetup = true;
     }
