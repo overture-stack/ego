@@ -1,6 +1,7 @@
 package bio.overture.ego.security;
 
 import static bio.overture.ego.model.enums.ProviderType.*;
+import static bio.overture.ego.utils.Joiners.BLANK;
 
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.OrcidService;
@@ -142,11 +143,23 @@ public class OAuth2SsoFilter extends CompositeFilter {
                 map.put("email", email);
 
                 String name = (String) map.get("name");
-                String[] names = name.split(" ");
-                if (names.length == 2) {
-                  map.put("given_name", names[0]);
-                  map.put("family_name", names[1]);
+                // github allows the name field to be null
+                if (name != null) {
+                  List<String> names = Arrays.asList(name.split(" "));
+                  val numNames = names.size();
+
+                  if (numNames > 0) {
+                    if (numNames == 1) {
+                      map.put("given_name", names.get(0));
+                    } else {
+                      List<String> firstNames = names.subList(0, numNames - 1);
+                      List<String> lastName = names.subList(numNames - 1, numNames);
+                      map.put("given_name", BLANK.join(firstNames));
+                      map.put("family_name", lastName.get(0));
+                    }
+                  }
                 }
+
                 return map;
               } else {
                 return Collections.singletonMap("error", "Could not fetch user details");
