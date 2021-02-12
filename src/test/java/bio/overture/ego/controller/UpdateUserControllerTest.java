@@ -118,6 +118,87 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
     assertEquals(updatedUser.getStatus(), r1.getStatus());
     assertEquals(updatedUser.getType(), r1.getType());
     assertEquals(updatedUser.getPreferredLanguage(), r1.getPreferredLanguage());
+
+    val r2 =
+        UpdateUserRequest.builder()
+            .providerType(user.getProviderType())
+            .providerSubjectId(user.getProviderSubjectId())
+            .firstName("DifferentFirstName")
+            .lastName("DifferentLastName")
+            .build();
+
+    partialUpdateUserPutRequestAnd(user.getId(), r2).assertOk();
+
+    val updatedUser2 = getUserEntityGetRequestAnd(user).extractOneEntity(User.class);
+
+    // assert updatedUser2 and initial user have matching provider info
+    assertEquals(updatedUser2.getProviderType(), user.getProviderType());
+    assertEquals(updatedUser2.getProviderSubjectId(), user.getProviderSubjectId());
+
+    // assert updatedUser2 and initial user have different first and lastName values
+    assertNotEquals(user.getFirstName(), updatedUser2.getFirstName());
+    assertNotEquals(user.getLastName(), updatedUser2.getLastName());
+
+    // assert updatedUser2 first and lastName values match r2
+    assertEquals(r2.getFirstName(), updatedUser2.getFirstName());
+    assertEquals(r2.getLastName(), updatedUser2.getLastName());
+  }
+
+  @Test
+  public void updateUser_EmptyFirstNameAndLastName_Success() {
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user = data.getUsers().get(0);
+
+    // create update request 1
+    val r1 =
+        UpdateUserRequest.builder()
+            .firstName("")
+            .lastName("")
+            .providerType(user.getProviderType())
+            .providerSubjectId(user.getProviderSubjectId())
+            .build();
+
+    // Update user
+    partialUpdateUserPutRequestAnd(user.getId(), r1).assertOk();
+
+    // Assert update was correct
+    val updatedUser = getUserEntityGetRequestAnd(user).extractOneEntity(User.class);
+
+    assertEquals(updatedUser.getProviderType(), user.getProviderType());
+    assertEquals(updatedUser.getProviderSubjectId(), user.getProviderSubjectId());
+
+    assertNotEquals(updatedUser.getFirstName(), user.getFirstName());
+    assertEquals(updatedUser.getFirstName(), "");
+
+    assertNotEquals(updatedUser.getLastName(), user.getLastName());
+    assertEquals(updatedUser.getLastName(), "");
+  }
+
+  @Test
+  public void updateUser_MissingProviderSubjectId_BadRequest() {
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user = data.getUsers().get(0);
+
+    // create update request 1
+    val r1 = UpdateUserRequest.builder().providerType(user.getProviderType()).build();
+
+    // assert request fails
+    partialUpdateUserPutRequestAnd(user.getId(), r1).assertBadRequest();
+  }
+
+  @Test
+  public void updateUser_MissingProviderType_BadRequest() {
+    // Generate data
+    val data = generateUniqueTestUserData();
+    val user = data.getUsers().get(0);
+
+    // create update request 1
+    val r1 = UpdateUserRequest.builder().providerSubjectId(user.getProviderSubjectId()).build();
+
+    // assert request fails
+    partialUpdateUserPutRequestAnd(user.getId(), r1).assertBadRequest();
   }
 
   @Test
@@ -204,7 +285,7 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
   // existing provider(default/non default)	existing id 	email not in db	  user found, update email
   // OK
   @Test
-  public void existingProviderTypeExistingProviderSubjectIdNewEmailFromToken_updateUser() {
+  public void existingProviderTypeExistingProviderSubjectId_NewEmailFromToken_updateUser() {
     val user =
         entityGenerator.setupUser(
             "Old Email", USER, generateNonExistentProviderSubjectId(userService), GITHUB);
@@ -260,7 +341,8 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
   // firstName
   // OK
   @Test
-  public void existingProviderTypeExistingProviderSubjectIdNewFirstNameFromToken_updateUser() {
+  public void
+      existingProviderTypeExistingProviderSubjectId_NewFirstNameFromToken_firstNameNotUpdated() {
     val user =
         entityGenerator.setupUser(
             "Old FirstName", USER, generateNonExistentProviderSubjectId(userService), FACEBOOK);
@@ -289,8 +371,9 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
     assertEquals(updatedUser.getProviderType(), idToken.getProviderType());
     assertEquals(updatedUser.getProviderSubjectId(), idToken.getProviderSubjectId());
     assertEquals(updatedUser.getEmail(), idToken.getEmail());
-    assertEquals(updatedUser.getFirstName(), idToken.getGivenName());
     assertEquals(updatedUser.getLastName(), idToken.getFamilyName());
+    // assert updatedUser.firstName does not match idToken.firstName
+    assertNotEquals(updatedUser.getFirstName(), idToken.getGivenName());
 
     val existingUser =
         initStringRequest()
@@ -301,7 +384,8 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
 
     // assert initial user is the same as updatedUser
     assertEquals(user.getId(), updatedUser.getId());
-    assertNotEquals(user.getFirstName(), updatedUser.getFirstName());
+    // assert initial user.firstName matches updatedUser.firstName
+    assertEquals(user.getFirstName(), updatedUser.getFirstName());
 
     // assert updatedUser and existingUser are the same
     assertEquals(updatedUser.getId(), existingUser.getId());
@@ -316,7 +400,8 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
   // lastName
   // OK
   @Test
-  public void existingProviderTypeExistingProviderSubjectIdNewLastNameFromToken_updateUser() {
+  public void
+      existingProviderTypeExistingProviderSubjectId_NewLastNameFromToken_lastNameNotUpdated() {
     val user =
         entityGenerator.setupUser(
             "Old LastName", USER, generateNonExistentProviderSubjectId(userService), GITHUB);
@@ -345,8 +430,9 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
     assertEquals(updatedUser.getProviderType(), idToken.getProviderType());
     assertEquals(updatedUser.getProviderSubjectId(), idToken.getProviderSubjectId());
     assertEquals(updatedUser.getEmail(), idToken.getEmail());
-    assertEquals(updatedUser.getFirstName(), idToken.getGivenName());
-    assertEquals(updatedUser.getLastName(), idToken.getFamilyName());
+
+    // assert lastName was not updated from differing value in idToken
+    assertNotEquals(updatedUser.getLastName(), idToken.getFamilyName());
 
     val existingUser =
         initStringRequest()
@@ -357,7 +443,8 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
 
     // assert initial user is the same as updatedUser
     assertEquals(user.getId(), updatedUser.getId());
-    assertNotEquals(user.getLastName(), updatedUser.getLastName());
+    // assert initial user and updateUser have same lastName
+    assertEquals(user.getLastName(), updatedUser.getLastName());
 
     // assert updatedUser and existingUser are the same
     assertEquals(updatedUser.getId(), existingUser.getId());

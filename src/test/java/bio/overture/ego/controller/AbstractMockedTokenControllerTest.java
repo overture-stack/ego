@@ -10,6 +10,7 @@ import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.utils.EntityGenerator;
+import java.util.List;
 import lombok.val;
 import org.junit.After;
 import org.mockito.Mockito;
@@ -19,8 +20,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
-
-import java.util.List;
 
 public abstract class AbstractMockedTokenControllerTest extends AbstractControllerTest {
 

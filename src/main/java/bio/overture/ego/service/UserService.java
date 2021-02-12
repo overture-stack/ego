@@ -182,8 +182,6 @@ public class UserService extends AbstractBaseService<User, UUID> {
   private User updateUserFromToken(User user, IDToken idToken) {
     user.setProviderType(idToken.getProviderType());
     user.setProviderSubjectId(idToken.getProviderSubjectId());
-    user.setFirstName(idToken.getGivenName());
-    user.setLastName(idToken.getFamilyName());
     user.setEmail(idToken.getEmail());
 
     return user;

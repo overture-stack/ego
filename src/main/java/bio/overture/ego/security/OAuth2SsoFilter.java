@@ -1,9 +1,10 @@
 package bio.overture.ego.security;
 
 import static bio.overture.ego.model.enums.ProviderType.*;
-import static bio.overture.ego.utils.Joiners.BLANK;
+import static java.util.Objects.isNull;
 
 import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.GithubService;
 import bio.overture.ego.service.OrcidService;
 import bio.overture.ego.utils.Redirects;
 import java.io.IOException;
@@ -17,7 +18,6 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
@@ -59,6 +59,7 @@ public class OAuth2SsoFilter extends CompositeFilter {
       };
 
   private OrcidService orcidService;
+  private GithubService githubService;
 
   @Autowired
   public OAuth2SsoFilter(
@@ -69,10 +70,12 @@ public class OAuth2SsoFilter extends CompositeFilter {
       OAuth2ClientResources github,
       OAuth2ClientResources linkedin,
       OAuth2ClientResources orcid,
-      OrcidService orcidService) {
+      OrcidService orcidService,
+      GithubService githubService) {
     this.oauth2ClientContext = oauth2ClientContext;
     this.applicationService = applicationService;
     this.orcidService = orcidService;
+    this.githubService = githubService;
 
     val filters = new ArrayList<Filter>();
 
@@ -119,45 +122,18 @@ public class OAuth2SsoFilter extends CompositeFilter {
               String email;
 
               try {
-                // [{email, primary, verified}]
-                email =
-                    (String)
-                        restTemplate
-                            .exchange(
-                                "https://api.github.com/user/emails",
-                                HttpMethod.GET,
-                                null,
-                                new ParameterizedTypeReference<List<Map<String, Object>>>() {})
-                            .getBody().stream()
-                            .filter(
-                                x ->
-                                    x.get("verified").equals(true) && x.get("primary").equals(true))
-                            .findAny()
-                            .orElse(Collections.emptyMap())
-                            .get("email");
+                email = githubService.getVerifiedEmail(restTemplate);
               } catch (RestClientException | ClassCastException ex) {
                 return Collections.singletonMap("error", "Could not fetch user details");
               }
 
-              if (email != null) {
+              if (!isNull(email)) {
                 map.put("email", email);
 
                 String name = (String) map.get("name");
                 // github allows the name field to be null
-                if (name != null) {
-                  List<String> names = Arrays.asList(name.split(" "));
-                  val numNames = names.size();
-
-                  if (numNames > 0) {
-                    if (numNames == 1) {
-                      map.put("given_name", names.get(0));
-                    } else {
-                      List<String> firstNames = names.subList(0, numNames - 1);
-                      List<String> lastName = names.subList(numNames - 1, numNames);
-                      map.put("given_name", BLANK.join(firstNames));
-                      map.put("family_name", lastName.get(0));
-                    }
-                  }
+                if (!isNull(name)) {
+                  githubService.parseName(name, map);
                 }
 
                 return map;

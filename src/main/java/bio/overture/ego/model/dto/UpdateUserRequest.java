@@ -20,6 +20,7 @@ import bio.overture.ego.model.enums.LanguageType;
 import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
+import javax.validation.constraints.NotNull;
 import lombok.*;
 
 @Data
@@ -31,6 +32,8 @@ public class UpdateUserRequest {
   private UserType type;
   private StatusType status;
   private LanguageType preferredLanguage;
-  @NonNull private ProviderType providerType;
-  @NonNull private String providerSubjectId;
+  private String firstName;
+  private String lastName;
+  @NotNull private ProviderType providerType;
+  @NotNull private String providerSubjectId;
 }
