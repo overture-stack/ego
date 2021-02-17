@@ -94,6 +94,10 @@ public abstract class AbstractWebResource<
     return doRequest(this.body, HttpMethod.PUT);
   }
 
+  public ResponseEntity<T> patch() {
+    return doRequest(this.body, HttpMethod.PATCH);
+  }
+
   public ResponseEntity<T> post() {
     return doRequest(this.body, HttpMethod.POST);
   }
@@ -112,6 +116,10 @@ public abstract class AbstractWebResource<
 
   public O putAnd() {
     return createResponseOption(put());
+  }
+
+  public O patchAnd() {
+    return createResponseOption(patch());
   }
 
   public O postAnd() {

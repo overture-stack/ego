@@ -17,7 +17,6 @@
 package bio.overture.ego.service;
 
 import static bio.overture.ego.model.enums.UserType.ADMIN;
-import static bio.overture.ego.model.exceptions.InvalidUserException.checkValidUser;
 import static bio.overture.ego.model.exceptions.MalformedRequestException.checkMalformedRequest;
 import static bio.overture.ego.model.exceptions.NotFoundException.buildNotFoundException;
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
@@ -271,7 +270,6 @@ public class UserService extends AbstractBaseService<User, UUID> {
    */
   public User partialUpdate(@NonNull UUID id, @NonNull UpdateUserRequest r) {
     val user = getById(id);
-    validateUpdateRequest(user, r);
     USER_CONVERTER.updateUser(r, user);
     return getRepository().save(user);
   }
@@ -506,16 +504,6 @@ public class UserService extends AbstractBaseService<User, UUID> {
     checkMalformedRequest(
         !r.getProviderSubjectId().isBlank(), "ProviderSubjectId cannot be blank.");
     checkUserUnique(r.getProviderType(), r.getProviderSubjectId());
-  }
-
-  private void validateUpdateRequest(User originalUser, UpdateUserRequest r) {
-    checkRequestValid(r);
-    checkValidUser(
-        originalUser.getProviderType().equals(r.getProviderType()),
-        "Invalid providerType, cannot update user.");
-    checkValidUser(
-        originalUser.getProviderSubjectId().equals(r.getProviderSubjectId()),
-        "Invalid providerSubjectId, cannot update user.");
   }
 
   private void checkUserUnique(ProviderType providerType, String providerSubjectId) {

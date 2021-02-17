@@ -11,7 +11,6 @@ import static bio.overture.ego.utils.EntityGenerator.*;
 import static bio.overture.ego.utils.Streams.stream;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
-import static org.springframework.http.HttpStatus.FORBIDDEN;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.UpdateUserRequest;
@@ -42,52 +41,8 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
 
   /** * --- ui user update tests --- ** */
   @Test
-  public void validateUpdateRequest_ProviderSubjectIdDoesntMatch_Forbidden() {
-    // create a user with providerInfo
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    val nonExistentProviderSubjectId = generateNonExistentProviderSubjectId(userService);
-
-    // Assert update with different providerSubjectId
-    val r1 =
-        UpdateUserRequest.builder()
-            .providerType(user.getProviderType())
-            .providerSubjectId(nonExistentProviderSubjectId)
-            .preferredLanguage(SPANISH)
-            .build();
-
-    initStringRequest()
-        .endpoint("/users/%s", user.getId())
-        .body(r1)
-        .putAnd()
-        .assertStatusCode(FORBIDDEN);
-  }
-
-  @Test
-  public void validateUpdateRequest_ProviderTypeDoesntMatch_Forbidden() {
-    // create a user with providerInfo
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    // Assert update with different providerType
-    val r1 =
-        UpdateUserRequest.builder()
-            .providerType(GITHUB)
-            .providerSubjectId(user.getProviderSubjectId())
-            .preferredLanguage(FRENCH)
-            .build();
-
-    initStringRequest()
-        .endpoint("/users/%s", user.getId())
-        .body(r1)
-        .putAnd()
-        .assertStatusCode(FORBIDDEN);
-  }
-
-  @Test
   @SneakyThrows
-  public void updateUser_ExistingUserProviderInfoMatches_Success() {
+  public void updateUser_ExistingUser_Success() {
     // Generate data
     val data = generateUniqueTestUserData();
     val user = data.getUsers().get(0);
@@ -98,18 +53,13 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
             .preferredLanguage(randomEnumExcluding(LanguageType.class, user.getPreferredLanguage()))
             .status(randomEnumExcluding(StatusType.class, user.getStatus()))
             .type(randomEnumExcluding(UserType.class, user.getType()))
-            .providerType(user.getProviderType())
-            .providerSubjectId(user.getProviderSubjectId())
             .build();
 
     // Update user
-    partialUpdateUserPutRequestAnd(user.getId(), r1).assertOk();
+    partialUpdateUserPatchRequestAnd(user.getId(), r1).assertOk();
 
     // Assert update was correct
     val updatedUser = getUserEntityGetRequestAnd(user).extractOneEntity(User.class);
-
-    assertEquals(updatedUser.getProviderType(), r1.getProviderType());
-    assertEquals(updatedUser.getProviderSubjectId(), r1.getProviderSubjectId());
 
     assertNotEquals(updatedUser.getStatus(), user.getStatus());
     assertNotEquals(updatedUser.getType(), user.getType());
@@ -121,13 +71,11 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
 
     val r2 =
         UpdateUserRequest.builder()
-            .providerType(user.getProviderType())
-            .providerSubjectId(user.getProviderSubjectId())
             .firstName("DifferentFirstName")
             .lastName("DifferentLastName")
             .build();
 
-    partialUpdateUserPutRequestAnd(user.getId(), r2).assertOk();
+    partialUpdateUserPatchRequestAnd(user.getId(), r2).assertOk();
 
     val updatedUser2 = getUserEntityGetRequestAnd(user).extractOneEntity(User.class);
 
@@ -151,16 +99,10 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
     val user = data.getUsers().get(0);
 
     // create update request 1
-    val r1 =
-        UpdateUserRequest.builder()
-            .firstName("")
-            .lastName("")
-            .providerType(user.getProviderType())
-            .providerSubjectId(user.getProviderSubjectId())
-            .build();
+    val r1 = UpdateUserRequest.builder().firstName("").lastName("").build();
 
     // Update user
-    partialUpdateUserPutRequestAnd(user.getId(), r1).assertOk();
+    partialUpdateUserPatchRequestAnd(user.getId(), r1).assertOk();
 
     // Assert update was correct
     val updatedUser = getUserEntityGetRequestAnd(user).extractOneEntity(User.class);
@@ -176,45 +118,15 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
   }
 
   @Test
-  public void updateUser_MissingProviderSubjectId_BadRequest() {
-    // Generate data
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    // create update request 1
-    val r1 = UpdateUserRequest.builder().providerType(user.getProviderType()).build();
-
-    // assert request fails
-    partialUpdateUserPutRequestAnd(user.getId(), r1).assertBadRequest();
-  }
-
-  @Test
-  public void updateUser_MissingProviderType_BadRequest() {
-    // Generate data
-    val data = generateUniqueTestUserData();
-    val user = data.getUsers().get(0);
-
-    // create update request 1
-    val r1 = UpdateUserRequest.builder().providerSubjectId(user.getProviderSubjectId()).build();
-
-    // assert request fails
-    partialUpdateUserPutRequestAnd(user.getId(), r1).assertBadRequest();
-  }
-
-  @Test
   public void updateUser_NonExistentUser_NotFound() {
     // Create non existent user id
     val nonExistentId = generateNonExistentId(userService);
 
     // Create a request with dummy providerInfo
-    val dummyUpdateUserRequest =
-        UpdateUserRequest.builder()
-            .providerType(defaultProviderType)
-            .providerSubjectId(generateNonExistentProviderSubjectId(userService))
-            .build();
+    val dummyUpdateUserRequest = UpdateUserRequest.builder().build();
 
     // Assert that you cannot get a non-existent id
-    partialUpdateUserPutRequestAnd(nonExistentId, dummyUpdateUserRequest).assertNotFound();
+    partialUpdateUserPatchRequestAnd(nonExistentId, dummyUpdateUserRequest).assertNotFound();
   }
 
   @Test
@@ -227,15 +139,9 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
     val user = data.getUsers().get(0);
 
     // Assert updateUser
-    val templateR2 =
-        UpdateUserRequest.builder()
-            .providerType(user.getProviderType())
-            .providerSubjectId(user.getProviderSubjectId())
-            .type(USER)
-            .preferredLanguage(ENGLISH)
-            .build();
+    val templateR2 = UpdateUserRequest.builder().type(USER).preferredLanguage(ENGLISH).build();
     val r2 = ((ObjectNode) MAPPER.valueToTree(templateR2)).put(STATUS, invalidStatus);
-    initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
+    initStringRequest().endpoint("/users/%s", user.getId()).body(r2).patchAnd().assertBadRequest();
   }
 
   @Test
@@ -249,14 +155,9 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
 
     // Assert updateUser
     val templateR2 =
-        UpdateUserRequest.builder()
-            .providerType(user.getProviderType())
-            .providerSubjectId(user.getProviderSubjectId())
-            .status(DISABLED)
-            .preferredLanguage(ENGLISH)
-            .build();
+        UpdateUserRequest.builder().status(DISABLED).preferredLanguage(ENGLISH).build();
     val r2 = ((ObjectNode) MAPPER.valueToTree(templateR2)).put(TYPE, invalidType);
-    initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
+    initStringRequest().endpoint("/users/%s", user.getId()).body(r2).patchAnd().assertBadRequest();
   }
 
   @Test
@@ -269,15 +170,9 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
     val user = data.getUsers().get(0);
 
     // Assert updateUser
-    val templateR2 =
-        UpdateUserRequest.builder()
-            .providerType(user.getProviderType())
-            .providerSubjectId(user.getProviderSubjectId())
-            .status(DISABLED)
-            .type(USER)
-            .build();
+    val templateR2 = UpdateUserRequest.builder().status(DISABLED).type(USER).build();
     val r2 = ((ObjectNode) MAPPER.valueToTree(templateR2)).put(PREFERREDLANGUAGE, invalidLanguage);
-    initStringRequest().endpoint("/users/%s", user.getId()).body(r2).putAnd().assertBadRequest();
+    initStringRequest().endpoint("/users/%s", user.getId()).body(r2).patchAnd().assertBadRequest();
   }
 
   /** * --- login path user update tests --- ** */
