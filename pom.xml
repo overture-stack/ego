@@ -131,17 +131,17 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
-            <version>1.15.0</version>
+            <version>1.15.1</version>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>jdbc</artifactId>
-            <version>1.15.0</version>
+            <version>1.15.1</version>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
-            <version>1.15.0</version>
+            <version>1.15.1</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
