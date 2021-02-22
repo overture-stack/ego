@@ -17,7 +17,6 @@
 package bio.overture.ego.model.dto;
 
 import bio.overture.ego.model.enums.LanguageType;
-import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
 import lombok.*;
@@ -31,6 +30,6 @@ public class UpdateUserRequest {
   private UserType type;
   private StatusType status;
   private LanguageType preferredLanguage;
-  @NonNull private ProviderType providerType;
-  @NonNull private String providerSubjectId;
+  private String firstName;
+  private String lastName;
 }

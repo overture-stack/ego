@@ -146,7 +146,7 @@ public class UserController {
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
+  @RequestMapping(method = RequestMethod.PATCH, value = "/{id}")
   @ApiResponses(
       value = {
         @ApiResponse(

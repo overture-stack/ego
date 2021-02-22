@@ -263,7 +263,7 @@ public class UserControllerTest extends AbstractControllerTest {
 
     initStringRequest().endpoint("/users/%s", badUUID).deleteAnd().assertBadRequest();
     initStringRequest().endpoint("/users/%s", badUUID).getAnd().assertBadRequest();
-    initStringRequest().endpoint("/users/%s", badUUID).putAnd().assertBadRequest();
+    initStringRequest().endpoint("/users/%s", badUUID).patchAnd().assertBadRequest();
 
     initStringRequest().endpoint("/users/%s/applications", badUUID).getAnd().assertBadRequest();
     initStringRequest().endpoint("/users/%s/applications", badUUID).postAnd().assertBadRequest();
