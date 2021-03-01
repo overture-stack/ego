@@ -34,7 +34,8 @@ public class WithMockCustomUserSecurityContextFactory
     val names = name.split(" ", 2);
     val userName = String.format("%s%s@domain.com", names[0], names[1]);
     return userService
-        .findByName(userName)
+        .findByProviderTypeAndProviderSubjectId(
+            customUser.providerType(), customUser.providerSubjectId())
         .orElseGet(
             () -> {
               val createUserRequest = createUser(userName, customUser);
@@ -50,6 +51,8 @@ public class WithMockCustomUserSecurityContextFactory
         .status(APPROVED)
         .preferredLanguage(ENGLISH)
         .type(customUser.type())
+        .providerType(customUser.providerType())
+        .providerSubjectId(customUser.providerSubjectId())
         .build();
   }
 }

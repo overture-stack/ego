@@ -22,7 +22,7 @@ import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.entity.*;
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.service.AbstractPermissionService;
-import bio.overture.ego.service.NamedService;
+import bio.overture.ego.service.BaseService;
 import bio.overture.ego.service.PolicyService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.Streams;
@@ -40,7 +40,7 @@ import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 @Slf4j
 public abstract class AbstractPermissionControllerTest<
-        O extends NameableEntity<UUID>, P extends AbstractPermission<O>>
+        O extends Identifiable<UUID>, P extends AbstractPermission<O>>
     extends AbstractControllerTest {
 
   /** Constants */
@@ -685,11 +685,10 @@ public abstract class AbstractPermissionControllerTest<
         .forEach(
             n -> {
               val actualOwnerId = UUID.fromString(n.path("id").asText());
-              val actualOwnerName = n.path("name").asText();
               val actualMask = AccessLevel.fromValue(n.path("mask").asText());
               assertTrue(expectedMap.containsKey(actualOwnerId));
               val expectedOwner = expectedMap.get(actualOwnerId);
-              assertEquals(actualOwnerName, expectedOwner.getName());
+              assertEquals(actualOwnerId, expectedOwner.getId());
               assertEquals(actualMask, permRequest.getMask());
             });
   }
@@ -936,7 +935,7 @@ public abstract class AbstractPermissionControllerTest<
 
   protected abstract O generateOwner(String name);
 
-  protected abstract NamedService<O, UUID> getOwnerService();
+  protected abstract BaseService<O, UUID> getOwnerService();
 
   protected abstract String generateNonExistentOwnerName();
 

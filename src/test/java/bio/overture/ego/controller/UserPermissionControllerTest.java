@@ -6,11 +6,7 @@ import static java.lang.String.format;
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.entity.UserPermission;
-import bio.overture.ego.service.AbstractPermissionService;
-import bio.overture.ego.service.NamedService;
-import bio.overture.ego.service.PolicyService;
-import bio.overture.ego.service.UserPermissionService;
-import bio.overture.ego.service.UserService;
+import bio.overture.ego.service.*;
 import bio.overture.ego.utils.EntityGenerator;
 import java.util.Collection;
 import java.util.UUID;
@@ -80,7 +76,7 @@ public class UserPermissionControllerTest
   }
 
   @Override
-  protected NamedService<User, UUID> getOwnerService() {
+  protected BaseService<User, UUID> getOwnerService() {
     return userService;
   }
 

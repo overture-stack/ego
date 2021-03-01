@@ -48,6 +48,8 @@ spring.datasource:
 spring:
   flyway:
     enabled: false
+    placeholders:
+      default-provider: GOOGLE
   jackson:
     deserialization:
       FAIL_ON_UNKNOWN_PROPERTIES: false
@@ -161,6 +163,8 @@ token:
 # Default values available for creation of entities
 default:
   user:
+    # flag to automatically register first user as an admin
+    firstUserAsAdmin: false
     type: USER
     status: APPROVED
 
@@ -233,7 +237,6 @@ spring:
 
 # To log the httpRequests and httpResponses for the controllers, set to true
 logging.test.controller.enable: false
-
 
 spring.datasource:
   driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver

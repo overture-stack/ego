@@ -1,10 +1,16 @@
 package bio.overture.ego.security;
 
+import static bio.overture.ego.model.enums.ProviderType.getIdAccessor;
+import static java.util.Objects.isNull;
+
+import bio.overture.ego.model.enums.ProviderType;
+import bio.overture.ego.model.exceptions.InternalServerException;
 import bio.overture.ego.token.IDToken;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.AuthoritiesExtractor;
@@ -33,13 +39,19 @@ public class OAuth2UserInfoTokenServices
   private final String clientId;
   private final OAuth2RestOperations restTemplate;
 
+  private final ProviderType providerType;
+
   private AuthoritiesExtractor authoritiesExtractor = new FixedAuthoritiesExtractor();
 
   public OAuth2UserInfoTokenServices(
-      String userInfoEndpointUrl, String clientId, OAuth2RestOperations restTemplate) {
+      @NonNull String userInfoEndpointUrl,
+      @NonNull String clientId,
+      @NonNull OAuth2RestOperations restTemplate,
+      @NonNull ProviderType providerType) {
     this.userInfoEndpointUrl = userInfoEndpointUrl;
     this.clientId = clientId;
     this.restTemplate = restTemplate;
+    this.providerType = providerType;
   }
 
   public IDToken extractPrincipal(Map<String, Object> map) {
@@ -54,7 +66,15 @@ public class OAuth2UserInfoTokenServices
     val givenName = (String) map.getOrDefault("given_name", map.getOrDefault("first_name", ""));
     val familyName = (String) map.getOrDefault("family_name", map.getOrDefault("last_name", ""));
 
-    return new IDToken(email, givenName, familyName);
+    val providerSubjectIdAccessor = getIdAccessor(providerType);
+
+    if (isNull(map.get(providerSubjectIdAccessor))) {
+      throw new InternalServerException("Invalid providerSubjectId accessor.");
+    }
+    // call toString because Github returns an integer id
+    val providerSubjectId = map.get(providerSubjectIdAccessor).toString();
+
+    return new IDToken(email, givenName, familyName, providerType, providerSubjectId);
   }
 
   @Override

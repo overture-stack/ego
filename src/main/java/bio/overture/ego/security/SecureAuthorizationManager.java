@@ -42,7 +42,7 @@ public class SecureAuthorizationManager implements AuthorizationManager {
 
     if (authentication.getPrincipal() instanceof User) {
       User user = (User) authentication.getPrincipal();
-      log.info("Trying to authorize user '" + user.getName() + "' as admin");
+      log.info("Trying to authorize user '" + user.getId() + "' as admin");
       status = user.getType() == ADMIN && isActiveUser(user);
     } else if (authentication.getPrincipal() instanceof Application) {
       Application application = (Application) authentication.getPrincipal();

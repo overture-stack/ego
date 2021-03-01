@@ -121,8 +121,7 @@ public class UserController {
       @ApiIgnore @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @ApiParam(
-              value =
-                  "Query string compares to Users Name, Email, First Name, and Last Name fields.",
+              value = "Query string compares to Users Email, First Name, and Last Name fields.",
               required = false)
           @RequestParam(value = "query", required = false)
           String query,
@@ -133,19 +132,6 @@ public class UserController {
     } else {
       return new PageDTO<>(userService.findUsers(query, filters, pageable));
     }
-  }
-
-  @AdminScoped
-  @RequestMapping(method = RequestMethod.POST, value = "")
-  @ApiResponses(
-      value = {
-        @ApiResponse(code = 200, message = "Create new user", response = User.class),
-      })
-  public @ResponseBody User createUser(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
-          final String authorization,
-      @RequestBody(required = true) CreateUserRequest request) {
-    return userService.create(request);
   }
 
   @AdminScoped
@@ -160,7 +146,7 @@ public class UserController {
   }
 
   @AdminScoped
-  @RequestMapping(method = RequestMethod.PUT, value = "/{id}")
+  @RequestMapping(method = RequestMethod.PATCH, value = "/{id}")
   @ApiResponses(
       value = {
         @ApiResponse(

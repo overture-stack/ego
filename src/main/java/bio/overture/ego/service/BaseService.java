@@ -34,6 +34,8 @@ public interface BaseService<T, ID> {
 
   void delete(ID id);
 
+  long countAll();
+
   Page<T> findAll(Specification specification, Pageable pageable);
 
   Page<T> findAll(AbstractSpecificationBuilder<T, ID> specificationBuilder, Pageable pageable);

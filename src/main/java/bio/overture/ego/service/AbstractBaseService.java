@@ -57,6 +57,11 @@ public abstract class AbstractBaseService<T extends Identifiable<ID>, ID>
   }
 
   @Override
+  public long countAll() {
+    return getRepository().count();
+  }
+
+  @Override
   @SuppressWarnings("unchecked")
   public Page<T> findAll(@NonNull Specification specification, @NonNull Pageable pageable) {
     return getRepository().findAll(specification, pageable);

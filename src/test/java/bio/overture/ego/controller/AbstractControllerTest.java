@@ -132,10 +132,6 @@ public abstract class AbstractControllerTest {
     return deleteUsersFromGroupDeleteRequestAnd(g.getId(), userIds);
   }
 
-  protected StringResponseOption createUserPostRequestAnd(CreateUserRequest r) {
-    return initStringRequest().endpoint("/users").body(r).postAnd();
-  }
-
   protected StringResponseOption createApplicationPostRequestAnd(CreateApplicationRequest r) {
     return initStringRequest().endpoint("/applications").body(r).postAnd();
   }
@@ -221,9 +217,9 @@ public abstract class AbstractControllerTest {
     return deleteUserDeleteRequestAnd(g.getId());
   }
 
-  protected StringResponseOption partialUpdateUserPutRequestAnd(
+  protected StringResponseOption partialUpdateUserPatchRequestAnd(
       UUID userId, UpdateUserRequest updateRequest) {
-    return initStringRequest().endpoint("/users/%s", userId).body(updateRequest).putAnd();
+    return initStringRequest().endpoint("/users/%s", userId).body(updateRequest).patchAnd();
   }
 
   protected StringResponseOption partialUpdateGroupPutRequestAnd(

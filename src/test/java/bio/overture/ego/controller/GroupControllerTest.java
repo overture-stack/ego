@@ -198,7 +198,9 @@ public class GroupControllerTest extends AbstractControllerTest {
     addApplicationsToGroupPostRequestAnd(group, appsBody).assertOk();
 
     // Check user-group relationship is there
-    val userWithGroup = userService.getByName("TempGroupUser@domain.com");
+    val userWithGroup =
+        userService.getByProviderTypeAndProviderSubjectId(
+            userOne.getProviderType(), userOne.getProviderSubjectId());
     val expectedGroups = mapToSet(userWithGroup.getUserGroups(), UserGroup::getGroup);
     assertTrue(extractGroupIds(expectedGroups).contains(groupId));
 
@@ -233,8 +235,8 @@ public class GroupControllerTest extends AbstractControllerTest {
 
     val group = entityGenerator.setupGroup("GroupWithUsers");
 
-    val userOne = userService.getByName("FirstUser@domain.com");
-    val userTwo = userService.getByName("SecondUser@domain.com");
+    val userOne = entityGenerator.setupUser("User 1");
+    val userTwo = entityGenerator.setupUser("User 2");
 
     val body = asList(userOne, userTwo);
     addUsersToGroupPostRequestAnd(group, body).assertOk();
@@ -246,8 +248,12 @@ public class GroupControllerTest extends AbstractControllerTest {
             .containsAll(Set.of(userOne.getId(), userTwo.getId())));
 
     // Check that each user is associated with the group
-    val userOneWithGroups = userService.getByName("FirstUser@domain.com");
-    val userTwoWithGroups = userService.getByName("SecondUser@domain.com");
+    val userOneWithGroups =
+        userService.getByProviderTypeAndProviderSubjectId(
+            userOne.getProviderType(), userOne.getProviderSubjectId());
+    val userTwoWithGroups =
+        userService.getByProviderTypeAndProviderSubjectId(
+            userTwo.getProviderType(), userTwo.getProviderSubjectId());
 
     assertTrue(mapToSet(userOneWithGroups.getUserGroups(), UserGroup::getGroup).contains(group));
     assertTrue(mapToSet(userTwoWithGroups.getUserGroups(), UserGroup::getGroup).contains(group));

@@ -4,7 +4,7 @@ env.sh
 
 ### Java Wrapper Logs ###
 *wrapper*.log
-
+*.log
 
 ### STS ###
 .apt_generated
@@ -30,7 +30,6 @@ nbdist/
 
 ### VSCode ###
 .vscode
-
 .env
 
 ### Docs ###
@@ -42,3 +41,4 @@ _templates/
 classes/
 
 local.log
+*.local.yaml

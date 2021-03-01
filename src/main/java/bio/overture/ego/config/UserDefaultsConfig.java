@@ -19,10 +19,14 @@ public class UserDefaultsConfig {
 
   @Getter private final StatusType defaultUserStatus;
 
+  @Getter private final boolean firstUserAsAdmin;
+
   public UserDefaultsConfig(
       @Value("${default.user.type}") String userType,
-      @Value("${default.user.status}") String userStatus) {
+      @Value("${default.user.status}") String userStatus,
+      @Value("${default.user.firstUserAsAdmin:false}") boolean firstUserAsAdmin) {
     this.defaultUserType = isEmpty(userType) ? USER : resolveUserType(userType);
     this.defaultUserStatus = isEmpty(userStatus) ? PENDING : resolveStatusType(userStatus);
+    this.firstUserAsAdmin = firstUserAsAdmin;
   }
 }

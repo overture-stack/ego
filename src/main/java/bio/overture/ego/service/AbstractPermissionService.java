@@ -22,7 +22,6 @@ import static java.util.stream.Collectors.*;
 import static javax.persistence.criteria.JoinType.LEFT;
 
 import bio.overture.ego.model.dto.PermissionRequest;
-import bio.overture.ego.model.dto.PolicyResponse;
 import bio.overture.ego.model.dto.ResolvedPermissionResponse;
 import bio.overture.ego.model.dto.Scope;
 import bio.overture.ego.model.entity.*;
@@ -44,7 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Transactional
 public abstract class AbstractPermissionService<
-        O extends NameableEntity<UUID>, P extends AbstractPermission<O>>
+        O extends Identifiable<UUID>, P extends AbstractPermission<O>>
     extends AbstractBaseService<P, UUID> {
 
   /** Dependencies */
@@ -302,13 +301,6 @@ public abstract class AbstractPermissionService<
     permissions.sort(comparing(AbstractPermission::getAccessLevel));
     reverse(permissions);
     return permissions.get(0);
-  }
-
-  protected PolicyResponse convertToPolicyResponse(@NonNull P p) {
-    val name = p.getOwner().getName();
-    val id = p.getOwner().getId().toString();
-    val mask = p.getAccessLevel();
-    return PolicyResponse.builder().name(name).id(id).mask(mask).build();
   }
 
   /**
