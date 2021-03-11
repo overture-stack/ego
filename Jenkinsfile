@@ -86,7 +86,7 @@ spec:
                 container('maven') {
                     configFileProvider(
                         [configFile(fileId: '01ae7759-03a9-47c0-9db6-925aebb50ae1', variable: 'MAVEN_SETTINGS')]) {
-                        sh 'mvn -s $MAVEN_SETTINGS clean package deploy'
+                        sh 'mvn -s $MAVEN_SETTINGS clean package deploy -DskipTests'
                     }
                 }
             }
