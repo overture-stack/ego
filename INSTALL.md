@@ -19,7 +19,7 @@ curl  https://artifacts.oicr.on.ca/artifactory/dcc-release/bio/overture/ego/[REL
 ```
 
 ### Extract 
-Now decompress and untar the distribution.
+Now extract the distribution.
 
 ```
 tar zxvf ego-dist.tar.gz
