@@ -19,15 +19,13 @@ curl  https://artifacts.oicr.on.ca/artifactory/dcc-release/bio/overture/ego/[REL
 ```
 
 ### Extract 
-Now extract the distribution.
+Once downloaded, extract the distribution.
 
 ```
 tar zxvf ego-dist.tar.gz
 ```
 
-This should create a folder with the name of `ego-<version>` where `<version>` is the version number of the release. 
-
-We recommend moving Ego out of you home directory, to a directory like `/srv`. You may need to use elevated priveledges to do this.
+This should create a folder with the name of `ego-<version>` where `<version>` is the version number of the release. We recommend moving Ego out of you home directory, to a directory like `/srv`. You may need to use elevated priveledges to do this.
 
 ```
 $ sudo mv ego-4.1.0 /srv/
@@ -83,7 +81,7 @@ spring.datasource:
   min-idle: 1
 ```
 
-Next, as we have not applied any database migrations, we will want to enable flyway to automatically apply outstanding migrations on startup. Look for the `spring.flyway.enabled` setting and set it to `true`. Also, we will need to tell flyway where to find the migrations. As we are using the build in migrations, we can add: `locations: classpath:flyway/sql,classpath:db.migration`. 
+Next, as we have not applied any database migrations, we will want to enable flyway to automatically apply outstanding migrations on startup. Look for the `spring.flyway.enabled` setting and set it to `true`. Also, we will need to tell flyway where to find the migrations. As we are using the built in migrations, we can add: `locations: classpath:flyway/sql,classpath:db.migration`. 
 
 ```
 spring:
