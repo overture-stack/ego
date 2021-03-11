@@ -25,7 +25,7 @@ Once downloaded, extract the distribution.
 tar zxvf ego-dist.tar.gz
 ```
 
-This should create a folder with the name of `ego-<version>` where `<version>` is the version number of the release. We recommend moving Ego out of you home directory, to a directory like `/srv`. You may need to use elevated priveledges to do this.
+This should create a folder with the name of `ego-<version>` where `<version>` is the version number of the release. We recommend moving Ego out of you home directory, to a directory like `/srv`. You may need to use elevated privileges to do this.
 
 ```shell
 $ sudo mv ego-4.1.0 /srv/
