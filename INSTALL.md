@@ -6,6 +6,7 @@ On the platform of your choice (we recommend Linux) please ensure you have the f
     * Ensure you have a user you can use that has the ability to apply database migrations to the Ego database and to create extensions.
 * Java Runtime Environment version 11.
 * A configured OAuth2 OIDC provider with a clientId and clientSecret. (For example Google).
+* The UI ready to be hosted or already hosted somewhere. 
 
 ## Installation
 
@@ -129,8 +130,65 @@ INFO   | jvm 1    | 2021/03/11 19:35:02 | 2021-03-11 19:35:02,492 [WrapperSimple
 INFO   | jvm 1    | 2021/03/11 19:35:02 | 2021-03-11 19:35:02,497 [WrapperSimpleAppMain] INFO  b.o.e.AuthorizationServiceMain - Started AuthorizationServiceMain in 22.659 seconds (JVM running for 24.385)
 ```
 
-## First User and Application
+## Auth Setup
 Now that Ego is up and running we want to configure the first user and application that can use Ego for Authorization.
 
-### Identify Provider
+### Identity Provider
 
+For the identity provider of your choosing, find the relevant section in the `application.yml` configuration file and the client id and secret you have configured with that IdP. For example is Google is your IdP:
+
+
+```yml
+google:
+  client:
+    clientId: <cliend_id>
+    clientSecret: <client_secret>
+    accessTokenUri: https://www.googleapis.com/oauth2/v4/token
+    userAuthorizationUri: https://accounts.google.com/o/oauth2/v2/auth
+    clientAuthenticationScheme: form
+    scope:
+      - email
+      - profile
+  resource:
+    userInfoUri: https://www.googleapis.com/oauth2/v3/userinfo
+```
+
+### First Application
+Before users can login we need to setup the UI application inside of Ego. This can be done by setting `intialization.enabled` to true and configuring the rest of the settings to match the settings you will use in your UI application.
+
+```yml
+initialization:
+  enabled: true # Set to true
+  applications:
+    - name: <name_of_your_ui_app>
+      type: CLIENT
+      clientId: <client_id_of_ui>
+      clientSecret: <some_secret> 
+      redirectUri: <url to redirect to in UI, for Ego UI this would be root>
+      description: Some description about this application  # optional
+```
+
+### First User
+Users by default do not have the `ADMIN` role and therefor cannot modify Ego or use the Ego UI. We want to allow the first user to login to be an ADMIN user. We can do that by using the following configuration in `application.yml`:
+
+```yml
+# Default values available for creation of entities
+default:
+  user:
+    # flag to automatically register first user as an admin
+    firstUserAsAdmin: true
+    type: ADMIN
+    status: APPROVED
+```
+
+### Putting it together.
+Now that we have updated our config we can restart Ego, and try to login via the UI.
+```shell
+bin/ego restart
+```
+
+## Cleanup
+
+Assuming all is well, and the Ego database is properly configured and the first user and application are working, you will most likely want to disable the initialization of the first application and user. 
+
+Also, if you prefer to manage migrations yourself and not have Ego automatically apply them when you update Ego, disable the flyway migration as well. 
