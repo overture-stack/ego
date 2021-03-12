@@ -5,6 +5,7 @@ import static java.util.Objects.isNull;
 
 import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.exceptions.InternalServerException;
+import bio.overture.ego.model.exceptions.NoPrimaryEmailException;
 import bio.overture.ego.token.IDToken;
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +26,8 @@ import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.OAuth2Request;
+import org.springframework.security.oauth2.provider.error.DefaultWebResponseExceptionTranslator;
+import org.springframework.security.oauth2.provider.error.WebResponseExceptionTranslator;
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
 
 // This class make sure email is in the user info. User info endpoint of Github does not contain
@@ -87,6 +90,9 @@ public class OAuth2UserInfoTokenServices
         log.debug("userinfo returned error: " + map.get("error"));
       }
       throw new InvalidTokenException(accessToken);
+    }
+    if (map.containsKey("primaryEmailError")) {
+      throw new NoPrimaryEmailException("no primary email exception");
     }
     return extractAuthentication(map);
   }
