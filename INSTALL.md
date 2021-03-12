@@ -49,7 +49,7 @@ lrwxrwxrwx  1 root   root      9 Mar 11 18:56 ego-current -> ego-4.1.0
 
 ### Database Configuration
 
-The directory structure inside of the Ego directory is self explainatory: 
+The directory structure inside of the Ego directory is self-explanatory: 
 
 ```shell
 /srv/ego-current$ ls -l
@@ -135,7 +135,7 @@ Now that Ego is up and running we want to configure the first user and applicati
 
 ### Identity Provider
 
-For the identity provider of your choosing, find the relevant section in the `application.yml` configuration file and the client id and secret you have configured with that IdP. For example is Google is your IdP:
+For the identity provider of your choosing, find the relevant section in the `application.yml` configuration file and the client id and secret you have configured with that IdP. For example if Google is your IdP:
 
 
 ```yml
@@ -169,7 +169,7 @@ initialization:
 ```
 
 ### First User
-Users by default do not have the `ADMIN` role and therefor cannot modify Ego or use the Ego UI. We want to allow the first user to login to be an ADMIN user. We can do that by using the following configuration in `application.yml`:
+Users by default do not have the `ADMIN` role and therefore cannot modify Ego or use the Ego UI. We want to allow the first user to login to be an ADMIN user. We can do that by using the following configuration in `application.yml`:
 
 ```yml
 # Default values available for creation of entities
@@ -189,6 +189,6 @@ bin/ego restart
 
 ## Cleanup
 
-Assuming all is well, and the Ego database is properly configured and the first user and application are working, you will most likely want to disable the initialization of the first application and user. 
+Assuming all is well, and the Ego database is properly configured and the first user and application are working, you will most likely want to disable the initialization of the first application and user. This means seetting the `firstUserAsAdmin` and `initialization.enabled` to `false`.
 
 Also, if you prefer to manage migrations yourself and not have Ego automatically apply them when you update Ego, disable the flyway migration as well. 
