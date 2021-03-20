@@ -1,7 +1,5 @@
 package bio.overture.ego.model.dto;
 
-import static java.util.Objects.isNull;
-
 import bio.overture.ego.model.enums.LinkedinContactType;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -21,16 +19,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class LinkedinEmail {
 
+  @Builder.Default
   @JsonProperty("handle~")
-  private LinkedHashMap<String, String> handle;
+  private LinkedHashMap<String, String> handle = new LinkedHashMap<>();
 
   private boolean primary;
   private LinkedinContactType type;
 
   public String getEmail() {
-    if (isNull(this.handle) || isNull(this.handle.get("emailAddress"))) {
-      return null;
-    }
     return this.handle.get("emailAddress");
   }
 }
