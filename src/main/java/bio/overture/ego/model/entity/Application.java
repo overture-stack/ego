@@ -71,6 +71,7 @@ import org.hibernate.annotations.TypeDef;
   JavaFields.REDIRECTURI,
   JavaFields.DESCRIPTION,
   JavaFields.STATUS,
+  JavaFields.ERRORREDIRECTURI
 })
 @EqualsAndHashCode(of = {"id"})
 @Builder
@@ -117,6 +118,10 @@ public class Application implements PolicyOwner, NameableEntity<UUID> {
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.DESCRIPTION)
   private String description;
+
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
+  @Column(name = SqlFields.ERRORREDIRECTURI)
+  private String errorRedirectUri;
 
   @NotNull
   @Type(type = EGO_ENUM)

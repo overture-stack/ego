@@ -36,7 +36,10 @@ public class RedirectsTest {
     val app = appWithUrls("https://example.com");
 
     val redirect = getRedirectUri(app, null);
+    val errorRedirect = getErrorRedirectUri(app, null);
+
     assertEquals("https://example.com", redirect);
+    assertEquals("https://example.com", errorRedirect);
   }
 
   @Test
@@ -44,7 +47,10 @@ public class RedirectsTest {
     val app = appWithUrls("https://example.com");
 
     val redirect = getRedirectUri(app, "");
+    val errorRedirect = getRedirectUri(app, "");
+
     assertEquals("https://example.com", redirect);
+    assertEquals("https://example.com", errorRedirect);
   }
 
   @Test
@@ -52,7 +58,10 @@ public class RedirectsTest {
     val app = appWithUrls("https://example.com");
 
     val redirect = getRedirectUri(app, "          ");
+    val errorRedirect = getRedirectUri(app, "          ");
+
     assertEquals("https://example.com", redirect);
+    assertEquals("https://example.com", errorRedirect);
   }
 
   @Test
@@ -60,7 +69,10 @@ public class RedirectsTest {
     val app = appWithUrls("https://example.com");
 
     val redirect = getRedirectUri(app, "https://example.com");
+    val errorRedirect = getRedirectUri(app, "https://example.com");
+
     assertEquals("https://example.com", redirect);
+    assertEquals("https://example.com", errorRedirect);
   }
 
   @Test
@@ -68,7 +80,10 @@ public class RedirectsTest {
     val app = appWithUrls("https://example.com");
 
     val redirect = getRedirectUri(app, "https://example.com?foo=1&bar=2");
+    val errorRedirect = getRedirectUri(app, "https://example.com?foo=1&bar=2");
+
     assertEquals("https://example.com?foo=1&bar=2", redirect);
+    assertEquals("https://example.com?foo=1&bar=2", errorRedirect);
   }
 
   @Test
@@ -76,7 +91,10 @@ public class RedirectsTest {
     val app = appWithUrls("https://example.com");
 
     val redirect = getRedirectUri(app, "https://example.com/foobar");
+    val errorRedirect = getRedirectUri(app, "https://example.com/foobar");
+
     assertEquals("https://example.com/foobar", redirect);
+    assertEquals("https://example.com/foobar", errorRedirect);
   }
 
   @Test
@@ -84,7 +102,10 @@ public class RedirectsTest {
     val app = appWithUrls("https://example.com");
 
     val redirect = getRedirectUri(app, "https://example.com/foobar?over=9000");
+    val errorRedirect = getRedirectUri(app, "https://example.com/foobar?over=9000");
+
     assertEquals("https://example.com/foobar?over=9000", redirect);
+    assertEquals("https://example.com/foobar?over=9000", errorRedirect);
   }
 
   @Test
@@ -92,7 +113,10 @@ public class RedirectsTest {
     val app = appWithUrls("https://example.com:5555,https://other.example.com,https://google.ca");
 
     val redirect = getRedirectUri(app, "");
+    val errorRedirect = getRedirectUri(app, "");
+
     assertEquals("https://example.com:5555", redirect);
+    assertEquals("https://example.com:5555", errorRedirect);
   }
 
   @Test
@@ -100,7 +124,10 @@ public class RedirectsTest {
     val app = appWithUrls("https://example.com:5555,https://other.example.com,https://google.ca");
 
     val redirect = getRedirectUri(app, "https://other.example.com");
+    val errorRedirect = getRedirectUri(app, "https://other.example.com");
+
     assertEquals("https://other.example.com", redirect);
+    assertEquals("https://other.example.com", errorRedirect);
   }
 
   @Test
@@ -108,7 +135,10 @@ public class RedirectsTest {
     val app = appWithUrls("https://example.com:5555,https://other.example.com,https://google.ca");
 
     val redirect = getRedirectUri(app, "https://other.example.com/super/secret/path");
+    val errorRedirect = getRedirectUri(app, "https://other.example.com/super/secret/path");
+
     assertEquals("https://other.example.com/super/secret/path", redirect);
+    assertEquals("https://other.example.com/super/secret/path", errorRedirect);
   }
 
   @Test
@@ -116,7 +146,11 @@ public class RedirectsTest {
     val app = appWithUrls("https://example.com:5555,https://other.example.com,https://google.ca");
 
     val redirect = getRedirectUri(app, "https://other.example.com/super/secret/path?maximum=power");
+    val errorRedirect =
+        getRedirectUri(app, "https://other.example.com/super/secret/path?maximum=power");
+
     assertEquals("https://other.example.com/super/secret/path?maximum=power", redirect);
+    assertEquals("https://other.example.com/super/secret/path?maximum=power", errorRedirect);
   }
 
   @Test
@@ -124,7 +158,11 @@ public class RedirectsTest {
     val app = appWithUrls("https://example.com:5555,https://other.example.com,https://google.ca");
 
     val redirect = getRedirectUri(app, "https://other.example.com/super/secret/path?foo=1&bar=2");
+    val errorRedirect =
+        getRedirectUri(app, "https://other.example.com/super/secret/path?foo=1&bar=2");
+
     assertEquals("https://other.example.com/super/secret/path?foo=1&bar=2", redirect);
+    assertEquals("https://other.example.com/super/secret/path?foo=1&bar=2", errorRedirect);
   }
 
   @Test
@@ -132,6 +170,9 @@ public class RedirectsTest {
     val app = appWithUrls("https://example.com:5555,https://other.example.com,https://google.ca");
     exceptionRule.expect(UnauthorizedClientException.class);
     getRedirectUri(app, "https://example.com:8080");
+
+    exceptionRule.expect(UnauthorizedClientException.class);
+    getErrorRedirectUri(app, "https://example.com:8080");
   }
 
   @Test
@@ -139,11 +180,15 @@ public class RedirectsTest {
     val app = appWithUrls("https://example.com:5555,https://other.example.com,https://google.ca");
     exceptionRule.expect(UnauthorizedClientException.class);
     getRedirectUri(app, "http://example.com:8080");
+
+    exceptionRule.expect(UnauthorizedClientException.class);
+    getErrorRedirectUri(app, "http://example.com:8080");
   }
 
   private static Application appWithUrls(String urls) {
     val app = new Application();
     app.setRedirectUri(urls);
+    app.setErrorRedirectUri(urls);
     return app;
   }
 }

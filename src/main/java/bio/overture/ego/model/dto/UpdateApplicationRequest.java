@@ -36,4 +36,5 @@ public class UpdateApplicationRequest {
   private String redirectUri;
   private String description;
   private StatusType status;
+  private String errorRedirectUri;
 }

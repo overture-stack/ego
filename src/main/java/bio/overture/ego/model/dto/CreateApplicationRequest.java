@@ -43,4 +43,6 @@ public class CreateApplicationRequest {
   private String description;
 
   @NotNull private StatusType status;
+
+  private String errorRedirectUri;
 }

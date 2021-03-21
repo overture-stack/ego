@@ -61,7 +61,7 @@ public class OrcidService {
               .map(OrcidEmail::getEmail);
 
       if (primaryEmail.isEmpty()) {
-//        log.error("No primary email found.");
+        log.error("No primary email found.");
         return singletonMap("primaryEmailError", "Could not fetch user details");
       } else {
         map.put("email", primaryEmail.get());

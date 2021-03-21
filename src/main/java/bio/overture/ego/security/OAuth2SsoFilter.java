@@ -1,13 +1,19 @@
 package bio.overture.ego.security;
 
 import static bio.overture.ego.model.enums.ProviderType.*;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 
+import bio.overture.ego.model.enums.ProviderType;
+import bio.overture.ego.model.exceptions.InternalServerException;
+import bio.overture.ego.model.exceptions.NoPrimaryEmailException;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GithubService;
 import bio.overture.ego.service.OrcidService;
 import bio.overture.ego.utils.Redirects;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.*;
 import javax.servlet.Filter;
 import javax.servlet.ServletException;
@@ -15,16 +21,18 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.http.client.utils.URIBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestOperations;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.filter.OAuth2ClientAuthenticationProcessingFilter;
 import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
+import org.springframework.security.oauth2.common.exceptions.UserDeniedAuthorizationException;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
@@ -61,6 +69,54 @@ public class OAuth2SsoFilter extends CompositeFilter {
   private OrcidService orcidService;
   private GithubService githubService;
 
+  private AuthenticationFailureHandler failureHandler =
+      (request, response, exception) -> {
+        val rootExceptionThrowable = exception.getCause();
+        val application =
+            applicationService.getByClientId(
+                (String) request.getSession().getAttribute("ego_client_id"));
+        String errorRedirectUri =
+            (String) request.getSession().getAttribute("ego_error_redirect_uri");
+
+        val errorRedirect = Redirects.getErrorRedirectUri(application, errorRedirectUri);
+        URIBuilder errorUri;
+
+        if (rootExceptionThrowable instanceof NoPrimaryEmailException) {
+          try {
+            val reqUri = new ArrayList<String>(asList(request.getRequestURI().split("/")));
+            val provider = reqUri.get(reqUri.size() - 1).toUpperCase();
+            errorUri = new URIBuilder(errorRedirect);
+            errorUri.addParameter("error_code", "403");
+            errorUri.addParameter("error_type", rootExceptionThrowable.getMessage());
+            try {
+              ProviderType.resolveProviderType(provider);
+              errorUri.addParameter("provider_type", provider);
+            } catch (IllegalArgumentException e) {
+              log.warn(format("Invalid provider: '%s'", provider));
+            }
+            response.setStatus(403);
+            response.sendRedirect(errorUri.build().toString());
+          } catch (URISyntaxException e) {
+            log.error("Invalid redirect uri");
+          }
+        } else if (rootExceptionThrowable instanceof UserDeniedAuthorizationException) {
+          // User denies Ego access/cancels login
+          val errorCode =
+              ((UserDeniedAuthorizationException) rootExceptionThrowable).getOAuth2ErrorCode();
+          try {
+            errorUri = new URIBuilder(errorRedirect);
+            errorUri.addParameter("error_code", "403");
+            errorUri.addParameter("error_type", errorCode);
+            response.setStatus(403);
+            response.sendRedirect(errorUri.build().toString());
+          } catch (URISyntaxException e) {
+            log.warn("Invalid redirect uri");
+          }
+        } else {
+          throw new InternalServerException("Invalid error from OAuth Service.");
+        }
+      };
+
   @Autowired
   public OAuth2SsoFilter(
       @Qualifier("oauth2ClientContext") OAuth2ClientContext oauth2ClientContext,
@@ -93,6 +149,7 @@ public class OAuth2SsoFilter extends CompositeFilter {
       OAuth2RestTemplate template = new OAuth2RestTemplate(client.getClient(), oauth2ClientContext);
       super.setRestTemplate(template);
       super.setAuthenticationSuccessHandler(simpleUrlAuthenticationSuccessHandler);
+      super.setAuthenticationFailureHandler(failureHandler);
     }
 
     @Override

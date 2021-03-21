@@ -16,7 +16,6 @@
 
 package bio.overture.ego.config;
 
-import bio.overture.ego.model.exceptions.NoPrimaryEmailHandler;
 import bio.overture.ego.security.*;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +33,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.filter.OAuth2ClientContextFilter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
-import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
@@ -61,7 +59,6 @@ public class SecureServerConfig {
 
   private OAuth2SsoFilter oAuth2SsoFilter;
 
-
   @SneakyThrows
   @Autowired
   public SecureServerConfig(
@@ -84,10 +81,6 @@ public class SecureServerConfig {
     return registration;
   }
 
-  @Bean
-  public AccessDeniedHandler accessDeniedHandler() {
-    return new NoPrimaryEmailHandler();
-  }
   // Do not register OAuth2SsoFilter in global scope
   @Bean
   public FilterRegistrationBean oAuth2SsoFilterRegistration(OAuth2SsoFilter filter) {
@@ -128,7 +121,7 @@ public class SecureServerConfig {
           .anyRequest()
           .permitAll()
           .and()
-          .addFilterAfter(oAuth2SsoFilter, BasicAuthenticationFilter.class).exceptionHandling().accessDeniedHandler(accessDeniedHandler());
+          .addFilterAfter(oAuth2SsoFilter, BasicAuthenticationFilter.class);
     }
   }
 

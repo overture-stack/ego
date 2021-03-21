@@ -65,4 +65,5 @@ public class JavaFields {
   public static final String REFRESH_ID = "refreshId";
   public static final String PROVIDERTYPE = "providerType";
   public static final String PROVIDERSUBJECTID = "providerSubjectId";
+  public static final String ERRORREDIRECTURI = "errorRedirectUri";
 }
