@@ -104,7 +104,8 @@ public class OAuth2SsoFilter extends CompositeFilter {
           try {
             errorUri = new URIBuilder(errorRedirect);
             errorUri.addParameter("error_code", "403");
-            // setting explicitly to "access_denied" because LinkedIn error_code differs from other providers
+            // setting explicitly to "access_denied" because LinkedIn error_code differs from other
+            // providers
             errorUri.addParameter("error_type", "access_denied");
             response.setStatus(403);
             response.sendRedirect(errorUri.build().toString());

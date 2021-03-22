@@ -1,7 +1,6 @@
 package bio.overture.ego.security;
 
 import static bio.overture.ego.model.enums.ProviderType.getIdAccessor;
-import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
 import bio.overture.ego.model.enums.ProviderType;
