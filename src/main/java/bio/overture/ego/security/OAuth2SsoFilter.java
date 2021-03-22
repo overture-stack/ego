@@ -101,12 +101,11 @@ public class OAuth2SsoFilter extends CompositeFilter {
           }
         } else if (rootExceptionThrowable instanceof UserDeniedAuthorizationException) {
           // User denies Ego access/cancels login
-          val errorCode =
-              ((UserDeniedAuthorizationException) rootExceptionThrowable).getOAuth2ErrorCode();
           try {
             errorUri = new URIBuilder(errorRedirect);
             errorUri.addParameter("error_code", "403");
-            errorUri.addParameter("error_type", errorCode);
+            // setting explicitly to "access_denied" because LinkedIn error_code differs from other providers
+            errorUri.addParameter("error_type", "access_denied");
             response.setStatus(403);
             response.sendRedirect(errorUri.build().toString());
           } catch (URISyntaxException e) {
