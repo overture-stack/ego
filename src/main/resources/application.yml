@@ -108,8 +108,10 @@ linkedIn:
     accessTokenUri: https://www.linkedin.com/oauth/v2/accessToken
     userAuthorizationUri: https://www.linkedin.com/oauth/v2/authorization
     clientAuthenticationScheme: query
+    scope: "r_liteprofile r_emailaddress"
   resource:
-    userInfoUri: https://api.linkedin.com/v1/people/~:(email-address,first-name,last-name)?format=json
+    userInfoUri: https://api.linkedin.com/v2/me
+    userEmailUri: https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))
 
 github:
   client:

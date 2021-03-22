@@ -10,6 +10,7 @@ import bio.overture.ego.model.exceptions.InternalServerException;
 import bio.overture.ego.model.exceptions.NoPrimaryEmailException;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GithubService;
+import bio.overture.ego.service.LinkedinService;
 import bio.overture.ego.service.OrcidService;
 import bio.overture.ego.utils.Redirects;
 import java.io.IOException;
@@ -68,6 +69,7 @@ public class OAuth2SsoFilter extends CompositeFilter {
 
   private OrcidService orcidService;
   private GithubService githubService;
+  private LinkedinService linkedinService;
 
   private AuthenticationFailureHandler failureHandler =
       (request, response, exception) -> {
@@ -127,11 +129,13 @@ public class OAuth2SsoFilter extends CompositeFilter {
       OAuth2ClientResources linkedin,
       OAuth2ClientResources orcid,
       OrcidService orcidService,
-      GithubService githubService) {
+      GithubService githubService,
+      LinkedinService linkedinService) {
     this.oauth2ClientContext = oauth2ClientContext;
     this.applicationService = applicationService;
     this.orcidService = orcidService;
     this.githubService = githubService;
+    this.linkedinService = linkedinService;
 
     val filters = new ArrayList<Filter>();
 
@@ -214,16 +218,8 @@ public class OAuth2SsoFilter extends CompositeFilter {
             @Override
             protected Map<String, Object> transformMap(
                 Map<String, Object> map, String accessToken) {
-              String email = (String) map.get("emailAddress");
-
-              if (email != null) {
-                map.put("email", email);
-                map.put("given_name", map.get("firstName"));
-                map.put("family_name", map.get("lastName"));
-                return map;
-              } else {
-                return Collections.singletonMap("error", "Could not fetch user details");
-              }
+              val restTemplate = getRestTemplate(accessToken);
+              return linkedinService.getPrimaryEmail(restTemplate, map);
             }
           });
     }
