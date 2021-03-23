@@ -71,7 +71,7 @@ import org.hibernate.annotations.TypeDef;
   JavaFields.REDIRECTURI,
   JavaFields.DESCRIPTION,
   JavaFields.STATUS,
-  JavaFields.ERRORREDIRECTURI
+  JavaFields.ERROR_REDIRECT_URI
 })
 @EqualsAndHashCode(of = {"id"})
 @Builder

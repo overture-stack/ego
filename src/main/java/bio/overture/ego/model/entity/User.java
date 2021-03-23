@@ -75,7 +75,7 @@ import org.hibernate.annotations.TypeDef;
   JavaFields.LASTLOGIN,
   JavaFields.PREFERREDLANGUAGE,
   JavaFields.PROVIDERTYPE,
-  JavaFields.PROVIDERSUBJECTID
+  JavaFields.PROVIDER_SUBJECT_ID
 })
 @JsonInclude()
 @EqualsAndHashCode(of = {"id"})

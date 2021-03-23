@@ -67,17 +67,17 @@ public class OAuth2SsoFilter extends CompositeFilter {
 
   @Autowired
   public OAuth2SsoFilter(
-    @Qualifier("oauth2ClientContext") OAuth2ClientContext oauth2ClientContext,
-    ApplicationService applicationService,
-    OAuth2ClientResources google,
-    OAuth2ClientResources facebook,
-    OAuth2ClientResources github,
-    OAuth2ClientResources linkedin,
-    OAuth2ClientResources orcid,
-    OrcidService orcidService,
-    GithubService githubService,
-    LinkedinService linkedinService,
-    SSOAuthenticationFailureHandler ssoAuthenticationFailureHandler) {
+      @Qualifier("oauth2ClientContext") OAuth2ClientContext oauth2ClientContext,
+      ApplicationService applicationService,
+      OAuth2ClientResources google,
+      OAuth2ClientResources facebook,
+      OAuth2ClientResources github,
+      OAuth2ClientResources linkedin,
+      OAuth2ClientResources orcid,
+      OrcidService orcidService,
+      GithubService githubService,
+      LinkedinService linkedinService,
+      SSOAuthenticationFailureHandler ssoAuthenticationFailureHandler) {
     this.oauth2ClientContext = oauth2ClientContext;
     this.applicationService = applicationService;
     this.orcidService = orcidService;
