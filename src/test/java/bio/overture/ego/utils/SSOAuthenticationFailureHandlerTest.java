@@ -65,11 +65,11 @@ public class SSOAuthenticationFailureHandlerTest {
   @Test
   public void noPrimaryEmail_validProviderParam_createRedirectWithParams() {
     val app = appWithUrls("https://example-ego.com/redirect");
-    val validProvider = ProviderType.GITHUB.toString().toLowerCase();
+    val validProvider = ProviderType.GITHUB;
     MockHttpServletRequest request = new MockHttpServletRequest();
     request.setScheme("https");
     request.setServerName("www.example-ego.com");
-    request.setRequestURI(String.format("/oauth/login/%s", validProvider));
+    request.setRequestURI(String.format("/oauth/login/%s", validProvider.toString().toLowerCase()));
     URIBuilder uri = null;
     try {
       uri = new URIBuilder(app.getErrorRedirectUri());
@@ -93,7 +93,7 @@ public class SSOAuthenticationFailureHandlerTest {
     assertTrue(errorParams.containsKey(PROVIDER_TYPE_PARAM));
     assertEquals(errorParams.get(ERROR_TYPE_PARAM), "no_primary_email");
     assertEquals(errorParams.get(ERROR_CODE_PARAM), "403");
-    assertEquals(errorParams.get(PROVIDER_TYPE_PARAM), validProvider);
+    assertEquals(errorParams.get(PROVIDER_TYPE_PARAM), validProvider.toString());
   }
 
   @SneakyThrows

@@ -70,10 +70,10 @@ public class SSOAuthenticationFailureHandler implements AuthenticationFailureHan
   public URIBuilder buildNoPrimaryExceptionResponse(HttpServletRequest req, URIBuilder uri)
       throws InternalServerException {
     val reqUri = new ArrayList<>(asList(req.getRequestURI().split("/")));
-    val provider = reqUri.get(reqUri.size() - 1);
+    val provider = reqUri.get(reqUri.size() - 1).toUpperCase();
     uri.addParameter(ERROR_TYPE_PARAM, "no_primary_email");
     try {
-      ProviderType.resolveProviderType(provider.toUpperCase());
+      ProviderType.resolveProviderType(provider);
       uri.addParameter(PROVIDER_TYPE_PARAM, provider);
     } catch (IllegalArgumentException e) {
       val errMessage = format("Invalid provider: '%s'", provider);
