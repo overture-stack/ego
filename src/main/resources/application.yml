@@ -88,6 +88,19 @@ facebook:
   resource:
     userInfoUri: https://graph.facebook.com/me?fields=email,first_name,last_name
 
+keycloak:
+  client:
+    clientId: ego
+    clientSecret:
+    accessTokenUri: http://localhost:8080/auth/realms/covid/protocol/openid-connect/token
+    userAuthorizationUri: http://localhost:8080/auth/realms/covid/protocol/openid-connect/auth
+    clientAuthenticationScheme: form
+    scope:
+      - email
+      - profile
+  resource:
+    userInfoUri: http://localhost:8080/auth/realms/covid/protocol/openid-connect/userinfo
+
 google:
   client:
     clientId: 144611473365-k1aarg8qs6rlh67r3t7dssi1e34b6061.apps.googleusercontent.com
