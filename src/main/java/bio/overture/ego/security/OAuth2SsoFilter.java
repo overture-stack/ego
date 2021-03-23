@@ -3,7 +3,7 @@ package bio.overture.ego.security;
 import static bio.overture.ego.model.enums.ProviderType.*;
 import static java.util.Objects.isNull;
 
-import bio.overture.ego.model.exceptions.SSOAuthenticationHandler;
+import bio.overture.ego.model.exceptions.SSOAuthenticationFailureHandler;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GithubService;
 import bio.overture.ego.service.LinkedinService;
@@ -63,27 +63,27 @@ public class OAuth2SsoFilter extends CompositeFilter {
   private GithubService githubService;
   private LinkedinService linkedinService;
 
-  private SSOAuthenticationHandler ssoAuthenticationHandler;
+  private SSOAuthenticationFailureHandler ssoAuthenticationFailureHandler;
 
   @Autowired
   public OAuth2SsoFilter(
-      @Qualifier("oauth2ClientContext") OAuth2ClientContext oauth2ClientContext,
-      ApplicationService applicationService,
-      OAuth2ClientResources google,
-      OAuth2ClientResources facebook,
-      OAuth2ClientResources github,
-      OAuth2ClientResources linkedin,
-      OAuth2ClientResources orcid,
-      OrcidService orcidService,
-      GithubService githubService,
-      LinkedinService linkedinService,
-      SSOAuthenticationHandler ssoAuthenticationHandler) {
+    @Qualifier("oauth2ClientContext") OAuth2ClientContext oauth2ClientContext,
+    ApplicationService applicationService,
+    OAuth2ClientResources google,
+    OAuth2ClientResources facebook,
+    OAuth2ClientResources github,
+    OAuth2ClientResources linkedin,
+    OAuth2ClientResources orcid,
+    OrcidService orcidService,
+    GithubService githubService,
+    LinkedinService linkedinService,
+    SSOAuthenticationFailureHandler ssoAuthenticationFailureHandler) {
     this.oauth2ClientContext = oauth2ClientContext;
     this.applicationService = applicationService;
     this.orcidService = orcidService;
     this.githubService = githubService;
     this.linkedinService = linkedinService;
-    this.ssoAuthenticationHandler = ssoAuthenticationHandler;
+    this.ssoAuthenticationFailureHandler = ssoAuthenticationFailureHandler;
 
     val filters = new ArrayList<Filter>();
 
@@ -101,7 +101,7 @@ public class OAuth2SsoFilter extends CompositeFilter {
       OAuth2RestTemplate template = new OAuth2RestTemplate(client.getClient(), oauth2ClientContext);
       super.setRestTemplate(template);
       super.setAuthenticationSuccessHandler(simpleUrlAuthenticationSuccessHandler);
-      super.setAuthenticationFailureHandler(ssoAuthenticationHandler);
+      super.setAuthenticationFailureHandler(ssoAuthenticationFailureHandler);
     }
 
     @Override

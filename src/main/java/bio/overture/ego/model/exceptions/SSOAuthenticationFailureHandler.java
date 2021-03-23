@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class SSOAuthenticationHandler implements AuthenticationFailureHandler {
+public class SSOAuthenticationFailureHandler implements AuthenticationFailureHandler {
 
   // constants
   private static final String ERROR_CODE_PARAM = "error_code";
@@ -31,7 +31,7 @@ public class SSOAuthenticationHandler implements AuthenticationFailureHandler {
 
   private ApplicationService applicationService;
 
-  public SSOAuthenticationHandler(@NonNull ApplicationService applicationService) {
+  public SSOAuthenticationFailureHandler(@NonNull ApplicationService applicationService) {
     this.applicationService = applicationService;
   }
 
@@ -52,15 +52,17 @@ public class SSOAuthenticationHandler implements AuthenticationFailureHandler {
       errorUri.addParameter(ERROR_CODE_PARAM, "403");
       if (rootExceptionThrowable instanceof NoPrimaryEmailException) {
         errorUri = buildNoPrimaryExceptionResponse(request, errorUri);
-      }
-      if (rootExceptionThrowable instanceof OAuth2Exception) {
+      } else if (rootExceptionThrowable instanceof OAuth2Exception) {
         errorUri = buildOAuth2ExceptionResponse(errorUri);
+      } else {
+        throw new InternalServerException("Invalid response from OAuth Service");
       }
       response.setStatus(403);
       response.sendRedirect(errorUri.toString());
     } catch (URISyntaxException e) {
-      log.warn("Invalid redirect uri from application");
-      throw new InternalServerException("Invalid redirect uri");
+      val errMessage = format("Invalid redirect uri from application: '%s", application.getName());
+      log.warn(errMessage);
+      throw new InternalServerException(errMessage);
     }
   }
 
@@ -74,13 +76,14 @@ public class SSOAuthenticationHandler implements AuthenticationFailureHandler {
       ProviderType.resolveProviderType(provider);
       uri.addParameter(PROVIDER_TYPE_PARAM, provider);
     } catch (IllegalArgumentException e) {
-      log.warn(format("Invalid provider: '%s'", provider));
-      throw new IllegalArgumentException(format("Invalid provider: '%s'", provider));
+      val errMessage = format("Invalid provider: '%s'", provider);
+      log.warn(errMessage);
+      throw new IllegalArgumentException(errMessage);
     }
     return uri;
   }
 
-  // A user denies Ego access/cancels login
+  // A user denies Ego access/cancels login, catch both as "access_denied"
   // - Google does not have a cancel/deny option
   // - Orcid and Github throw a UserDeniedAuthorizationException, with params
   // error=access_denied
