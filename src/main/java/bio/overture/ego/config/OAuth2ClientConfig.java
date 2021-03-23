@@ -54,4 +54,10 @@ public class OAuth2ClientConfig {
   public OAuth2ClientResources orcid() {
     return new OAuth2ClientResources();
   }
+
+  @Bean
+  @ConfigurationProperties("keycloak")
+  public OAuth2ClientResources keycloak() {
+    return new OAuth2ClientResources();
+  }
 }
