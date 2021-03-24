@@ -57,7 +57,7 @@ public class UserSpecificationBuilder extends AbstractSpecificationBuilder<User,
       ProviderType providerType,
       String providerSubjectId) {
     return builder.and(
-        builder.equal(root.get(PROVIDERSUBJECTID), providerSubjectId),
+        builder.equal(root.get(PROVIDER_SUBJECT_ID), providerSubjectId),
         builder.equal(root.get(PROVIDERTYPE), providerType));
   }
 

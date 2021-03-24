@@ -21,5 +21,7 @@ public @interface WithMockCustomApplication {
 
   String description() default "Mock Application";
 
+  String errorRedirectUri() default "mock.com/error";
+
   ApplicationType type() default ADMIN;
 }

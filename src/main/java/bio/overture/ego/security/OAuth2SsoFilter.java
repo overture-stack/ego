@@ -3,6 +3,7 @@ package bio.overture.ego.security;
 import static bio.overture.ego.model.enums.ProviderType.*;
 import static java.util.Objects.isNull;
 
+import bio.overture.ego.model.exceptions.SSOAuthenticationFailureHandler;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GithubService;
 import bio.overture.ego.service.LinkedinService;
@@ -19,7 +20,6 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestOperations;
@@ -63,6 +63,8 @@ public class OAuth2SsoFilter extends CompositeFilter {
   private final GithubService githubService;
   private final LinkedinService linkedinService;
 
+  private SSOAuthenticationFailureHandler ssoAuthenticationFailureHandler;
+
   @Autowired
   public OAuth2SsoFilter(
       @Qualifier("oauth2ClientContext") OAuth2ClientContext oauth2ClientContext,
@@ -75,12 +77,14 @@ public class OAuth2SsoFilter extends CompositeFilter {
       OAuth2ClientResources keycloak,
       OrcidService orcidService,
       GithubService githubService,
-      LinkedinService linkedinService) {
+      LinkedinService linkedinService,
+      SSOAuthenticationFailureHandler ssoAuthenticationFailureHandler) {
     this.oauth2ClientContext = oauth2ClientContext;
     this.applicationService = applicationService;
     this.orcidService = orcidService;
     this.githubService = githubService;
     this.linkedinService = linkedinService;
+    this.ssoAuthenticationFailureHandler = ssoAuthenticationFailureHandler;
 
     val filters = new ArrayList<Filter>();
 
@@ -99,6 +103,7 @@ public class OAuth2SsoFilter extends CompositeFilter {
       OAuth2RestTemplate template = new OAuth2RestTemplate(client.getClient(), oauth2ClientContext);
       super.setRestTemplate(template);
       super.setAuthenticationSuccessHandler(simpleUrlAuthenticationSuccessHandler);
+      super.setAuthenticationFailureHandler(ssoAuthenticationFailureHandler);
     }
 
     @Override

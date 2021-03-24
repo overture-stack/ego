@@ -62,7 +62,7 @@ public class OrcidService {
 
       if (primaryEmail.isEmpty()) {
         log.error("No primary email found.");
-        return singletonMap("error", "Could not fetch user details");
+        return singletonMap("primaryEmailError", "Could not fetch user details");
       } else {
         map.put("email", primaryEmail.get());
         // orcid allows a null value for the family_name field, which breaks the @NotNull constraint
