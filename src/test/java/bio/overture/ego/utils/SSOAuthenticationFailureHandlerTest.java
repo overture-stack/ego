@@ -82,15 +82,20 @@ public class SSOAuthenticationFailureHandlerTest {
     }
 
     assertNotNull(uri);
-    val errorUri = ssoAuthenticationFailureHandler.buildNoPrimaryExceptionResponse(request, uri);
+    val errorUri =
+        ssoAuthenticationFailureHandler.buildNoPrimaryEmailExceptionResponse(
+            uri, validProvider.toString());
 
     Map<String, String> errorParams =
         errorUri.getQueryParams().stream()
             .collect(Collectors.toImmutableMap(NameValuePair::getName, NameValuePair::getValue));
 
+    // assert all params are present
     assertTrue(errorParams.containsKey(ERROR_TYPE_PARAM));
     assertTrue(errorParams.containsKey(ERROR_CODE_PARAM));
     assertTrue(errorParams.containsKey(PROVIDER_TYPE_PARAM));
+
+    // assert param values match expected values
     assertEquals(errorParams.get(ERROR_TYPE_PARAM), "no_primary_email");
     assertEquals(errorParams.get(ERROR_CODE_PARAM), "403");
     assertEquals(errorParams.get(PROVIDER_TYPE_PARAM), validProvider.toString());
@@ -118,13 +123,18 @@ public class SSOAuthenticationFailureHandlerTest {
 
     assertNotNull(uri);
     exceptionRule.expect(IllegalArgumentException.class);
-    ssoAuthenticationFailureHandler.buildNoPrimaryExceptionResponse(request, uri);
+    ssoAuthenticationFailureHandler.buildNoPrimaryEmailExceptionResponse(uri, invalidProvider);
   }
 
   @SneakyThrows
   @Test
-  public void oAuth2Exception_validErrorRedirect_createResponseWithParams() {
+  public void oAuth2Exception_validProviderParam_createRedirectWithParams() {
     val app = appWithUrls("https://example-ego.com/redirect");
+    val validProvider = ProviderType.LINKEDIN;
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    request.setScheme("https");
+    request.setServerName("www.example-ego.com");
+    request.setRequestURI(String.format("/oauth/login/%s", validProvider.toString().toLowerCase()));
     URIBuilder uri = null;
 
     try {
@@ -138,16 +148,47 @@ public class SSOAuthenticationFailureHandlerTest {
     }
     assertNotNull(uri);
 
-    val errorUri = ssoAuthenticationFailureHandler.buildOAuth2ExceptionResponse(uri);
+    val errorUri =
+        ssoAuthenticationFailureHandler.buildOAuth2ExceptionResponse(uri, validProvider.toString());
 
     Map<String, String> errorParams =
         errorUri.getQueryParams().stream()
             .collect(Collectors.toImmutableMap(NameValuePair::getName, NameValuePair::getValue));
 
+    // assert all params are present
     assertTrue(errorParams.containsKey(ERROR_TYPE_PARAM));
     assertTrue(errorParams.containsKey(ERROR_CODE_PARAM));
+    assertTrue(errorParams.containsKey(PROVIDER_TYPE_PARAM));
+
+    // assert param values match expected values
     assertEquals(errorParams.get(ERROR_TYPE_PARAM), "access_denied");
     assertEquals(errorParams.get(ERROR_CODE_PARAM), "403");
+    assertEquals(errorParams.get(PROVIDER_TYPE_PARAM), validProvider.toString());
+  }
+
+  @SneakyThrows
+  @Test
+  public void oAuth2Exception_invalidProvider_IllegalArgumentException() {
+    val app = appWithUrls("https://example-ego.com/redirect");
+    val invalidProvider = "veryInvalid";
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    request.setScheme("https");
+    request.setServerName("www.example-ego.com");
+    request.setRequestURI(String.format("/oauth/login/%s", invalidProvider));
+    URIBuilder uri = null;
+    try {
+      uri = new URIBuilder(app.getErrorRedirectUri());
+      uri.addParameter(ERROR_CODE_PARAM, "403");
+    } catch (URISyntaxException e) {
+      assertEquals(
+          format("Invalid redirect uri from application: '%s", app.getName()),
+          URISyntaxException.class,
+          e.getClass());
+    }
+
+    assertNotNull(uri);
+    exceptionRule.expect(IllegalArgumentException.class);
+    ssoAuthenticationFailureHandler.buildOAuth2ExceptionResponse(uri, invalidProvider);
   }
 
   @SneakyThrows
