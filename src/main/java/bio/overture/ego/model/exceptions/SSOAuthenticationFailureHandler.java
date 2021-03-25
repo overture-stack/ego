@@ -50,10 +50,12 @@ public class SSOAuthenticationFailureHandler implements AuthenticationFailureHan
     try {
       URIBuilder errorUri = new URIBuilder(errorRedirect);
       errorUri.addParameter(ERROR_CODE_PARAM, "403");
+      val reqUri = new ArrayList<>(asList(request.getRequestURI().split("/")));
+      val providerType = reqUri.get(reqUri.size() - 1).toUpperCase();
       if (rootExceptionThrowable instanceof NoPrimaryEmailException) {
-        errorUri = buildNoPrimaryExceptionResponse(request, errorUri);
+        errorUri = buildNoPrimaryEmailExceptionResponse(errorUri, providerType);
       } else if (rootExceptionThrowable instanceof OAuth2Exception) {
-        errorUri = buildOAuth2ExceptionResponse(errorUri);
+        errorUri = buildOAuth2ExceptionResponse(errorUri, providerType);
       } else {
         throw new InternalServerException("Invalid response from OAuth Service");
       }
@@ -67,20 +69,10 @@ public class SSOAuthenticationFailureHandler implements AuthenticationFailureHan
   }
 
   // A user's email is not visible in the IdP token response
-  public URIBuilder buildNoPrimaryExceptionResponse(HttpServletRequest req, URIBuilder uri)
+  public URIBuilder buildNoPrimaryEmailExceptionResponse(URIBuilder uri, String providerType)
       throws InternalServerException {
-    val reqUri = new ArrayList<>(asList(req.getRequestURI().split("/")));
-    val provider = reqUri.get(reqUri.size() - 1).toUpperCase();
     uri.addParameter(ERROR_TYPE_PARAM, "no_primary_email");
-    try {
-      ProviderType.resolveProviderType(provider);
-      uri.addParameter(PROVIDER_TYPE_PARAM, provider);
-    } catch (IllegalArgumentException e) {
-      val errMessage = format("Invalid provider: '%s'", provider);
-      log.warn(errMessage);
-      throw new IllegalArgumentException(errMessage);
-    }
-    return uri;
+    return buildUriWithProviderTypeParam(uri, providerType);
   }
 
   // A user denies Ego access/cancels login, catch both as "access_denied"
@@ -90,8 +82,20 @@ public class SSOAuthenticationFailureHandler implements AuthenticationFailureHan
   // - LinkedIn throws an OAuth2Exception with param error=invalid_request,
   // so catching this + Orcid and Github under that ex type, as UserDeniedAuthorizationException
   // inherits from OAuth2Exception
-  public URIBuilder buildOAuth2ExceptionResponse(URIBuilder uri) {
+  public URIBuilder buildOAuth2ExceptionResponse(URIBuilder uri, String providerType) {
     uri.addParameter(ERROR_TYPE_PARAM, "access_denied");
+    return buildUriWithProviderTypeParam(uri, providerType);
+  }
+
+  private URIBuilder buildUriWithProviderTypeParam(URIBuilder uri, String provider) {
+    try {
+      ProviderType.resolveProviderType(provider);
+      uri.addParameter(PROVIDER_TYPE_PARAM, provider);
+    } catch (IllegalArgumentException e) {
+      val errMessage = format("Invalid provider: '%s'", provider);
+      log.warn(errMessage);
+      throw new IllegalArgumentException(errMessage);
+    }
     return uri;
   }
 }
