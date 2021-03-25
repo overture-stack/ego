@@ -48,6 +48,7 @@ public class WithMockCustomApplicationSecurityContextFactory
         .clientSecret(customApplication.clientSecret())
         .status(APPROVED)
         .redirectUri(customApplication.redirectUri())
+        .errorRedirectUri(customApplication.errorRedirectUri())
         .description(customApplication.description())
         .build();
   }

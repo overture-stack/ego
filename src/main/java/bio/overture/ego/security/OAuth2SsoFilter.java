@@ -3,6 +3,7 @@ package bio.overture.ego.security;
 import static bio.overture.ego.model.enums.ProviderType.*;
 import static java.util.Objects.isNull;
 
+import bio.overture.ego.model.exceptions.SSOAuthenticationFailureHandler;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GithubService;
 import bio.overture.ego.service.LinkedinService;
@@ -19,7 +20,6 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestOperations;
@@ -36,9 +36,9 @@ import org.springframework.web.filter.CompositeFilter;
 @Profile("auth")
 public class OAuth2SsoFilter extends CompositeFilter {
 
-  private OAuth2ClientContext oauth2ClientContext;
-  private ApplicationService applicationService;
-  private SimpleUrlAuthenticationSuccessHandler simpleUrlAuthenticationSuccessHandler =
+  private final OAuth2ClientContext oauth2ClientContext;
+  private final ApplicationService applicationService;
+  private final SimpleUrlAuthenticationSuccessHandler simpleUrlAuthenticationSuccessHandler =
       new SimpleUrlAuthenticationSuccessHandler() {
         public void onAuthenticationSuccess(
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
@@ -59,9 +59,11 @@ public class OAuth2SsoFilter extends CompositeFilter {
         }
       };
 
-  private OrcidService orcidService;
-  private GithubService githubService;
-  private LinkedinService linkedinService;
+  private final OrcidService orcidService;
+  private final GithubService githubService;
+  private final LinkedinService linkedinService;
+
+  private SSOAuthenticationFailureHandler ssoAuthenticationFailureHandler;
 
   @Autowired
   public OAuth2SsoFilter(
@@ -72,14 +74,17 @@ public class OAuth2SsoFilter extends CompositeFilter {
       OAuth2ClientResources github,
       OAuth2ClientResources linkedin,
       OAuth2ClientResources orcid,
+      OAuth2ClientResources keycloak,
       OrcidService orcidService,
       GithubService githubService,
-      LinkedinService linkedinService) {
+      LinkedinService linkedinService,
+      SSOAuthenticationFailureHandler ssoAuthenticationFailureHandler) {
     this.oauth2ClientContext = oauth2ClientContext;
     this.applicationService = applicationService;
     this.orcidService = orcidService;
     this.githubService = githubService;
     this.linkedinService = linkedinService;
+    this.ssoAuthenticationFailureHandler = ssoAuthenticationFailureHandler;
 
     val filters = new ArrayList<Filter>();
 
@@ -88,6 +93,7 @@ public class OAuth2SsoFilter extends CompositeFilter {
     filters.add(new GithubFilter(github));
     filters.add(new LinkedInFilter(linkedin));
     filters.add(new OrcidFilter(orcid));
+    filters.add(new KeycloakFilter(keycloak));
     setFilters(filters);
   }
 
@@ -97,6 +103,7 @@ public class OAuth2SsoFilter extends CompositeFilter {
       OAuth2RestTemplate template = new OAuth2RestTemplate(client.getClient(), oauth2ClientContext);
       super.setRestTemplate(template);
       super.setAuthenticationSuccessHandler(simpleUrlAuthenticationSuccessHandler);
+      super.setAuthenticationFailureHandler(ssoAuthenticationFailureHandler);
     }
 
     @Override
@@ -177,6 +184,18 @@ public class OAuth2SsoFilter extends CompositeFilter {
               client.getClient().getClientId(),
               super.restTemplate,
               GOOGLE));
+    }
+  }
+
+  class KeycloakFilter extends OAuth2SsoChildFilter {
+    public KeycloakFilter(OAuth2ClientResources client) {
+      super("/oauth/login/keycloak", client);
+      super.setTokenServices(
+          new OAuth2UserInfoTokenServices(
+              client.getResource().getUserInfoUri(),
+              client.getClient().getClientId(),
+              super.restTemplate,
+              KEYCLOAK));
     }
   }
 

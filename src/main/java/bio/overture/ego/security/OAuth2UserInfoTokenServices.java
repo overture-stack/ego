@@ -1,10 +1,12 @@
 package bio.overture.ego.security;
 
 import static bio.overture.ego.model.enums.ProviderType.getIdAccessor;
+import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
 import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.exceptions.InternalServerException;
+import bio.overture.ego.model.exceptions.NoPrimaryEmailException;
 import bio.overture.ego.token.IDToken;
 import java.util.Collections;
 import java.util.List;
@@ -60,7 +62,8 @@ public class OAuth2UserInfoTokenServices
     if (map.get("email") instanceof String) {
       email = (String) map.get("email");
     } else {
-      return null;
+      throw new NoPrimaryEmailException(
+          format("No primary email found for this %s account.", this.providerType));
     }
 
     val givenName = (String) map.getOrDefault("given_name", map.getOrDefault("first_name", ""));

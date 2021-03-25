@@ -25,6 +25,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -34,14 +35,35 @@ import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientE
 public class Redirects {
 
   /**
-   * Returns redirect uri based on combination between provided URI and those registed in the passed
-   * application. Checks validity and throws 403 if unauthorized URI is provided.
+   * Returns redirect uri based on combination between provided URI and those registered in the
+   * passed application. Checks validity and throws 403 if unauthorized URI is provided.
    *
    * @return Returns URI as a String that Ego will redirect to
    */
   public static String getRedirectUri(@NonNull Application app, String redirect) {
     val redirects = Arrays.stream(app.getRedirectUri().split(","));
+    return verifyRedirectUri(redirect, redirects);
+  }
 
+  private static Optional<URI> toUri(String uri) {
+    try {
+      return Optional.of(new URI(uri));
+    } catch (URISyntaxException e) {
+      log.error(format("Could not parse URI %s", uri), e);
+      return Optional.empty();
+    }
+  }
+
+  private static Predicate<URI> getMatcher(URI target) {
+    return (URI u) -> u.getHost().equals(target.getHost()) && u.getPort() == target.getPort();
+  }
+
+  public static String getErrorRedirectUri(@NonNull Application app, String redirect) {
+    val redirects = Arrays.stream(app.getErrorRedirectUri().split(","));
+    return verifyRedirectUri(redirect, redirects);
+  }
+
+  public static String verifyRedirectUri(String redirect, Stream<String> redirects) {
     // Short return if no redirect URI is provided
     if (redirect == null || redirect.isBlank()) {
       return redirects
@@ -71,18 +93,5 @@ public class Redirects {
       log.error(msg);
       throw new UnauthorizedClientException(msg);
     }
-  }
-
-  private static Optional<URI> toUri(String uri) {
-    try {
-      return Optional.of(new URI(uri));
-    } catch (URISyntaxException e) {
-      log.error(format("Could not parse URI %s", uri), e);
-      return Optional.empty();
-    }
-  }
-
-  private static Predicate<URI> getMatcher(URI target) {
-    return (URI u) -> u.getHost().equals(target.getHost()) && u.getPort() == target.getPort();
   }
 }
