@@ -20,7 +20,7 @@ services:
     depends_on:
       - postgres
   postgres:
-    image: postgres:9.5
+    image: postgres:12.6
     restart: always
     environment:
       - POSTGRES_DB=ego
