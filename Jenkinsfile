@@ -90,7 +90,7 @@ spec:
 
         stage('Tag & Release hot fix') {
             when {
-                branch "hotifx/${version}"
+                branch "hotfix/${version}"
             }
             steps {
                 container('docker') {
