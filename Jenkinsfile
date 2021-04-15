@@ -55,6 +55,7 @@ spec:
                 }
             }
         }
+
         stage('Test') {
             environment {
                 SELENIUM_TEST_TYPE = 'BROWSERSTACK'
@@ -71,9 +72,30 @@ spec:
                 }
             }
         }
+
+        stage('Tag & Release hot fix') {
+            when {
+                expression { BRANCH_NAME ==~ /(hotfix)/ }
+            }
+            steps {
+                container('docker') {
+                    withCredentials([usernamePassword(credentialsId: 'OvertureBioGithub', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                        sh "git tag ${version}"
+                        sh "git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/overture-stack/ego --tags"
+                    }
+                    withCredentials([usernamePassword(credentialsId:'OvertureDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh 'docker login -u $USERNAME -p $PASSWORD'
+                    }
+                    sh "docker build --network=host -f Dockerfile . -t overture/ego:${version}"
+                    sh "docker push overture/ego:${version}"
+                }
+            }
+        }
+
         stage('Build & Publish Develop') {
             when {
-                branch "develop"
+                // hf-rc : hotfix release candidate, used to build an image to test hotfixes
+                expression { BRANCH_NAME ==~ /(hf-rc)/ || BRANCH_NAME == "develop" }
             }
             steps {
                 container('docker') {
