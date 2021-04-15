@@ -73,9 +73,24 @@ spec:
             }
         }
 
+        stage('Build & Publish hotfix RC') {
+            when {
+                branch "rc/hotfix/${version}"
+            }
+            steps {
+                container('docker') {
+                    withCredentials([usernamePassword(credentialsId:'OvertureDockerHub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh 'docker login -u $USERNAME -p $PASSWORD'
+                    }
+                    sh "docker build --network=host -f Dockerfile . -t overture/ego:${commit}"
+                    sh "docker push overture/ego:${commit}"
+                }
+            }
+        }
+
         stage('Tag & Release hot fix') {
             when {
-                expression { BRANCH_NAME ==~ /(hotfix)/ }
+                branch "hotifx/${version}"
             }
             steps {
                 container('docker') {
@@ -94,8 +109,7 @@ spec:
 
         stage('Build & Publish Develop') {
             when {
-                // hf-rc : hotfix release candidate, used to build an image to test hotfixes
-                expression { BRANCH_NAME ==~ /(hf-rc)/ || BRANCH_NAME == "develop" }
+                branch "develop"
             }
             steps {
                 container('docker') {
