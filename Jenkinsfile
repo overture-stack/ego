@@ -136,7 +136,7 @@ spec:
 						[$class: 'StringParameterValue', name: 'OVERTURE_ENV', value: 'qa' ],
 						[$class: 'StringParameterValue', name: 'OVERTURE_CHART_NAME', value: 'ego'],
 						[$class: 'StringParameterValue', name: 'OVERTURE_RELEASE_NAME', value: 'ego'],
-						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_CHART_VERSION', value: '2.5.0'], // use latest
+						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_CHART_VERSION', value: '3.0.0'],
 						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REPO_URL', value: "https://overture-stack.github.io/charts-server/"],
 						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REUSE_VALUES', value: "false" ],
 						[$class: 'StringParameterValue', name: 'OVERTURE_ARGS_LINE', value: "--set-string image.tag=${commit}" ]
@@ -153,7 +153,7 @@ spec:
 						[$class: 'StringParameterValue', name: 'OVERTURE_ENV', value: 'staging' ],
 						[$class: 'StringParameterValue', name: 'OVERTURE_CHART_NAME', value: 'ego'],
 						[$class: 'StringParameterValue', name: 'OVERTURE_RELEASE_NAME', value: 'ego'],
-						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_CHART_VERSION', value: '2.5.0'], // use latest
+						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_CHART_VERSION', value: '3.0.0'],
 						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REPO_URL', value: "https://overture-stack.github.io/charts-server/"],
 						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REUSE_VALUES', value: "false" ],
 						[$class: 'StringParameterValue', name: 'OVERTURE_ARGS_LINE', value: "--set-string image.tag=${version}" ]
