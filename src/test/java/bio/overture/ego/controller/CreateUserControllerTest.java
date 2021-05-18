@@ -435,6 +435,63 @@ public class CreateUserControllerTest extends AbstractMockedTokenControllerTest 
   }
 
   @Test
+  public void
+      nonDefaultNonExistingProviderTypeProviderSubjectIdAsEmailExistingEmailMixedCase_createUser() {
+    // setup an existing user with default providerType and providerSubjectId from migration
+    val migratedUser =
+        entityGenerator.setupUser(
+            "Migrated User", USER, "MigratedUser@domain.com", defaultProviderType);
+
+    // assert migratedUser providerSubjectId matches email
+    assertEquals(migratedUser.getProviderSubjectId(), migratedUser.getEmail());
+
+    val emailWithMixedCase = "mIGRatedUsER@domain.com";
+    // setup idToken with same email but mixed case, actual providerType and providerSubjectId
+    idToken.setProviderType(entityGenerator.createNonDefaultProviderType());
+    idToken.setEmail(emailWithMixedCase);
+    idToken.setGivenName(migratedUser.getFirstName());
+    idToken.setFamilyName(migratedUser.getLastName());
+
+    val response = getTokenResponse();
+
+    // assert valid token is returned
+    assertTrue(tokenService.isValidToken(response));
+
+    val tokenInfo = tokenService.getTokenUserInfo(response);
+    val newUser =
+        initStringRequest()
+            .endpoint("/users/%s", tokenInfo.getId())
+            .getAnd()
+            .assertOk()
+            .extractOneEntity(User.class);
+
+    // assert next user matches idToken
+    assertEquals(newUser.getProviderType(), idToken.getProviderType());
+    assertEquals(newUser.getProviderSubjectId(), idToken.getProviderSubjectId());
+    assertEquals(newUser.getEmail(), idToken.getEmail());
+    assertEquals(newUser.getFirstName(), idToken.getGivenName());
+    assertEquals(newUser.getLastName(), idToken.getFamilyName());
+
+    val existingUser =
+        initStringRequest()
+            .endpoint("/users/%s", migratedUser.getId())
+            .getAnd()
+            .assertOk()
+            .extractOneEntity(User.class);
+
+    // assert user1 and user2 are distinct users with same email (ignoring case)
+    assertNotEquals(newUser.getId(), existingUser.getId());
+    assertNotEquals(newUser.getProviderType(), existingUser.getProviderType());
+    assertNotEquals(newUser.getProviderSubjectId(), existingUser.getProviderSubjectId());
+    assertNotEquals(newUser.getEmail(), existingUser.getEmail());
+    assertTrue(newUser.getEmail().equalsIgnoreCase(existingUser.getEmail()));
+
+    // assert migratedUser has not updated providerSubjectId
+    assertEquals(migratedUser.getProviderSubjectId(), migratedUser.getEmail());
+    assertEquals(migratedUser.getProviderSubjectId(), existingUser.getProviderSubjectId());
+  }
+
+  @Test
   public void idTokenHasProviderInfoButNoEmail_createUser() {
     idToken.setGivenName("UserHas");
     idToken.setFamilyName("NoEmail");
