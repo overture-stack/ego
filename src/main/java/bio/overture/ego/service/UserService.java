@@ -233,7 +233,9 @@ public class UserService extends AbstractBaseService<User, UUID> {
       // and the idToken.providerType.
       // If the user is found, their record is `healed` to use the correct providerSubjectId.
       val userByEmailResult =
-          findByProviderTypeAndProviderSubjectId(idToken.getProviderType(), userEmail);
+          userRepository.findByProviderSubjectIdIgnoreCaseAndProviderType(
+              userEmail, idToken.getProviderType());
+
       userByEmailResult.ifPresent(
           foundUser -> {
             log.info("User found, updating provider info.");

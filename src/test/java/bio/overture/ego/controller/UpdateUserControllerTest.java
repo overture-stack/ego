@@ -410,6 +410,65 @@ public class UpdateUserControllerTest extends AbstractMockedTokenControllerTest 
     assertNotEquals(migratedUser.getProviderSubjectId(), updatedUser.getProviderSubjectId());
   }
 
+  @Test
+  public void
+      existingDefaultProviderTypeExistingProviderSubjectIdAsEmailExistingEmailMixedCase_updateUser() {
+    // setup for a migrated user with default providerType
+    val migratedUser =
+        entityGenerator.setupUser(
+            "ExistingUser WithEmail",
+            USER,
+            "ExistingUserWithEmail@domain.com",
+            defaultProviderType);
+
+    // assert providerSubjectId matches email
+    assertEquals(migratedUser.getEmail(), migratedUser.getProviderSubjectId());
+
+    // create idToken for a user with same providerType, but same email with different casing, and
+    // valid providerSubjectId
+    idToken.setProviderType(migratedUser.getProviderType());
+    idToken.setEmail("ExIStinGuseRWithEmaIL@domain.com");
+    idToken.setGivenName(migratedUser.getFirstName());
+    idToken.setFamilyName(migratedUser.getLastName());
+
+    val response = getTokenResponse();
+
+    // assert valid token is returned
+    assertTrue(tokenService.isValidToken(response));
+
+    val userTokenInfo = tokenService.getTokenUserInfo(response);
+    val updatedUser =
+        initStringRequest()
+            .endpoint("/users/%s", userTokenInfo.getId())
+            .getAnd()
+            .assertOk()
+            .extractOneEntity(User.class);
+
+    // assert new user matches idToken
+    assertEquals(updatedUser.getProviderType(), idToken.getProviderType());
+    assertEquals(updatedUser.getProviderSubjectId(), idToken.getProviderSubjectId());
+    assertEquals(updatedUser.getEmail(), idToken.getEmail());
+    assertEquals(updatedUser.getFirstName(), idToken.getGivenName());
+    assertEquals(updatedUser.getLastName(), idToken.getFamilyName());
+
+    val existingUser =
+        initStringRequest()
+            .endpoint("/users/%s", migratedUser.getId())
+            .getAnd()
+            .assertOk()
+            .extractOneEntity(User.class);
+
+    // assert updatedUser and existingUser are the same
+    assertEquals(updatedUser.getId(), existingUser.getId());
+    assertEquals(updatedUser.getProviderType(), existingUser.getProviderType());
+    assertEquals(updatedUser.getProviderSubjectId(), existingUser.getProviderSubjectId());
+    assertEquals(updatedUser.getEmail(), existingUser.getEmail());
+
+    // assert migrated user and updatedUser are the same, but providerSubjectId was updated
+    assertEquals(migratedUser.getId(), updatedUser.getId());
+    assertNotEquals(migratedUser.getProviderSubjectId(), updatedUser.getProviderSubjectId());
+  }
+
   @SneakyThrows
   private TestUserData generateUniqueTestUserData() {
     val users = repeatedCallsOf(() -> entityGenerator.generateRandomUser(), 2);
