@@ -19,6 +19,7 @@ package bio.overture.ego.repository;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.ProviderType;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -30,4 +31,7 @@ public interface UserRepository extends BaseRepository<User, UUID> {
       ProviderType providerType, String providerSubjectId);
 
   boolean existsByProviderSubjectId(String providerSubjectId);
+
+  Optional<User> findByProviderSubjectIdIgnoreCaseAndProviderType(
+      String providerSubjectId, ProviderType providerType);
 }
