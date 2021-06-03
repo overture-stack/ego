@@ -16,15 +16,7 @@
 
 package bio.overture.ego.repository.queryspecification;
 
-import static bio.overture.ego.model.enums.JavaFields.APPLICATION;
-import static bio.overture.ego.model.enums.JavaFields.EMAIL;
-import static bio.overture.ego.model.enums.JavaFields.FIRSTNAME;
-import static bio.overture.ego.model.enums.JavaFields.GROUP;
-import static bio.overture.ego.model.enums.JavaFields.ID;
-import static bio.overture.ego.model.enums.JavaFields.LASTNAME;
-import static bio.overture.ego.model.enums.JavaFields.STATUS;
-import static bio.overture.ego.model.enums.JavaFields.USERAPPLICATIONS;
-import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
+import static bio.overture.ego.model.enums.JavaFields.*;
 
 import bio.overture.ego.model.entity.Application;
 import bio.overture.ego.model.entity.Group;
@@ -47,7 +39,8 @@ public class UserSpecification extends SpecificationBase<User> {
     return (root, query, builder) -> {
       query.distinct(true);
       return builder.or(
-          getQueryPredicates(builder, root, finalText, EMAIL, FIRSTNAME, LASTNAME, STATUS));
+          getQueryPredicates(
+              builder, root, finalText, EMAIL, FIRSTNAME, LASTNAME, STATUS, PROVIDERTYPE));
     };
   }
 
