@@ -34,6 +34,7 @@ import static bio.overture.ego.utils.Streams.stream;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static org.junit.Assert.*;
+import static org.springframework.http.HttpStatus.OK;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.entity.Application;
@@ -66,7 +67,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -122,7 +122,7 @@ public class UserControllerTest extends AbstractControllerTest {
     assertNotNull(response.getBody());
     val responseJson = MAPPER.readTree(response.getBody());
 
-    assertEquals(responseStatus, HttpStatus.OK);
+    assertEquals(responseStatus, OK);
     assertTrue(responseJson.get("count").asInt() >= 3);
     assertTrue(responseJson.get("resultSet").isArray());
 
@@ -135,6 +135,86 @@ public class UserControllerTest extends AbstractControllerTest {
             Set.of("FirstUser@domain.com", "SecondUser@domain.com", "ThirdUser@domain.com")));
   }
 
+  @Test
+  @SneakyThrows
+  public void listUsersWithFilter_Success() {
+    val numUsers = userService.getRepository().count();
+    // verify there are > 1 users
+    assertTrue(numUsers > 1);
+
+    // filter by email
+    val emailFilter = "FirstUser@domain.com";
+    val emailFilteredResponse =
+        initStringRequest().endpoint("/users?offset=0&email=%s", emailFilter).getAnd();
+    emailFilteredResponse.assertOk();
+    emailFilteredResponse.assertHasBody();
+    emailFilteredResponse.assertPageResultsOfType(User.class);
+
+    // verify 1 user is returned in the response
+    val emailFilteredResults = emailFilteredResponse.extractPageResults(User.class);
+    assertEquals(emailFilteredResults.size(), 1);
+    // assert response user's email equals original email filter
+    assertEquals(emailFilteredResults.get(0).getEmail(), emailFilter);
+
+    // filter by providerType
+    val providerTypeFilter = GOOGLE;
+    val providerTypeFilteredResponse =
+        initStringRequest()
+            .endpoint("/users?offset=0&providerType=%s", providerTypeFilter)
+            .getAnd();
+
+    // verify response is ok
+    providerTypeFilteredResponse.assertOk();
+    providerTypeFilteredResponse.assertHasBody();
+    providerTypeFilteredResponse.assertPageResultsOfType(User.class);
+
+    // verify users from result all match original providerType filter
+    val providerTypeFilteredResults = providerTypeFilteredResponse.extractPageResults(User.class);
+    assertTrue(
+        stream(providerTypeFilteredResults)
+            .allMatch(x -> x.getProviderType().equals(providerTypeFilter)));
+  }
+
+  @Test
+  @SneakyThrows
+  public void listUsersWithFilter_NoResults() {
+    val numUsers = userService.getRepository().count();
+    // verify there are > 1 users
+    assertTrue(numUsers > 1);
+
+    //    val extraUser = entityGenerator.setupUser("AnOrcid User", USER,
+    // generateNonExistentProviderSubjectId(userService), ORCID);
+
+    // filter by non-existing email
+    val emailFilter = "anOrcidUser@example.com";
+    val emailFilteredResponse =
+        initStringRequest().endpoint("/users?offset=0&email=%s", emailFilter).getAnd();
+
+    // assert response is ok
+    emailFilteredResponse.assertOk();
+    emailFilteredResponse.assertHasBody();
+
+    // assert there are no users returned
+    assertEquals(emailFilteredResponse.extractPageResults(User.class).size(), 0);
+    emailFilteredResponse.assertPageResultsOfType(User.class);
+
+    // filter by non-existing providerType
+    val providerTypeFilter = ORCID;
+    val providerTypeFilteredResponse =
+        initStringRequest()
+            .endpoint("/users?offset=0&providerType=%s", providerTypeFilter)
+            .getAnd();
+
+    // verify response is ok
+    providerTypeFilteredResponse.assertOk();
+    providerTypeFilteredResponse.assertHasBody();
+    providerTypeFilteredResponse.assertPageResultsOfType(User.class);
+
+    // verify no users are returned
+    val providerTypeFilteredResults = providerTypeFilteredResponse.extractPageResults(User.class);
+    assertEquals(providerTypeFilteredResults.size(), 0);
+  }
+
   // prob breaking cuz email is no longer reliably unique. can you query on unique value?
   @Test
   @SneakyThrows
@@ -145,7 +225,7 @@ public class UserControllerTest extends AbstractControllerTest {
     assertNotNull(response.getBody());
     val responseJson = MAPPER.readTree(response.getBody());
 
-    assertEquals(responseStatus, HttpStatus.OK);
+    assertEquals(responseStatus, OK);
     assertTrue(responseJson.get("count").asInt() >= 1);
     assertTrue(responseJson.get("resultSet").isArray());
     assertEquals(
