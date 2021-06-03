@@ -42,6 +42,7 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.Identifiable;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.entity.User;
+import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
@@ -139,28 +140,31 @@ public class UserControllerTest extends AbstractControllerTest {
   @SneakyThrows
   public void listUsersWithFilter_Success() {
     val numUsers = userService.getRepository().count();
-    // verify there are > 1 users
-    assertTrue(numUsers > 1);
 
-    // filter by email
-    val emailFilter = "FirstUser@domain.com";
+    val existingUsersResponse =
+        initStringRequest().endpoint("/users?limit=%s&offset=0", numUsers).getAnd();
+    existingUsersResponse.assertOk().assertHasBody().assertPageResultsOfType(User.class);
+    val existingUser = existingUsersResponse.extractPageResults(User.class).get(0);
+
+    // filter by existing email
+    val emailFilter = existingUser.getEmail();
     val emailFilteredResponse =
         initStringRequest().endpoint("/users?offset=0&email=%s", emailFilter).getAnd();
     emailFilteredResponse.assertOk();
     emailFilteredResponse.assertHasBody();
     emailFilteredResponse.assertPageResultsOfType(User.class);
 
-    // verify 1 user is returned in the response
     val emailFilteredResults = emailFilteredResponse.extractPageResults(User.class);
-    assertEquals(emailFilteredResults.size(), 1);
-    // assert response user's email equals original email filter
-    assertEquals(emailFilteredResults.get(0).getEmail(), emailFilter);
+    assertTrue(emailFilteredResults.size() >= 1);
+
+    // assert response users' email equals original email filter
+    assertTrue(emailFilteredResults.stream().allMatch(u -> u.getEmail().equals(emailFilter)));
 
     // filter by providerType
-    val providerTypeFilter = GOOGLE;
+    val providerTypeFilter = existingUser.getProviderType();
     val providerTypeFilteredResponse =
         initStringRequest()
-            .endpoint("/users?offset=0&providerType=%s", providerTypeFilter)
+            .endpoint("/users?offset=0&providerType=%s", providerTypeFilter.toString())
             .getAnd();
 
     // verify response is ok
@@ -170,6 +174,7 @@ public class UserControllerTest extends AbstractControllerTest {
 
     // verify users from result all match original providerType filter
     val providerTypeFilteredResults = providerTypeFilteredResponse.extractPageResults(User.class);
+    assertTrue(providerTypeFilteredResults.size() >= 1);
     assertTrue(
         stream(providerTypeFilteredResults)
             .allMatch(x -> x.getProviderType().equals(providerTypeFilter)));
@@ -179,14 +184,10 @@ public class UserControllerTest extends AbstractControllerTest {
   @SneakyThrows
   public void listUsersWithFilter_NoResults() {
     val numUsers = userService.getRepository().count();
-    // verify there are > 1 users
-    assertTrue(numUsers > 1);
-
-    //    val extraUser = entityGenerator.setupUser("AnOrcid User", USER,
-    // generateNonExistentProviderSubjectId(userService), ORCID);
 
     // filter by non-existing email
-    val emailFilter = "anOrcidUser@example.com";
+    val nonExistingName = entityGenerator.generateNonExistentUserName().split(" ");
+    val emailFilter = String.format("%s%s@domain.com", nonExistingName[0], nonExistingName[1]);
     val emailFilteredResponse =
         initStringRequest().endpoint("/users?offset=0&email=%s", emailFilter).getAnd();
 
@@ -199,7 +200,20 @@ public class UserControllerTest extends AbstractControllerTest {
     emailFilteredResponse.assertPageResultsOfType(User.class);
 
     // filter by non-existing providerType
-    val providerTypeFilter = ORCID;
+    val existingUsersResponse =
+        initStringRequest().endpoint("/users?limit=%s&offset=0", numUsers).getAnd();
+    existingUsersResponse.assertOk().assertHasBody().assertPageResultsOfType(User.class);
+    val existingUsers = existingUsersResponse.extractPageResults(User.class);
+    val existingProviderResult =
+        existingUsers.stream().map(User::getProviderType).distinct().collect(toImmutableList());
+
+    // create a providerType filter param that does not exist
+    ProviderType nonExistingProvider;
+    do {
+      nonExistingProvider = randomEnum(ProviderType.class);
+    } while (existingProviderResult.contains(nonExistingProvider));
+
+    val providerTypeFilter = randomEnumExcluding(ProviderType.class, nonExistingProvider);
     val providerTypeFilteredResponse =
         initStringRequest()
             .endpoint("/users?offset=0&providerType=%s", providerTypeFilter)
