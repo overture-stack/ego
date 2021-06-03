@@ -22,6 +22,7 @@ import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
 import static bio.overture.ego.model.enums.JavaFields.*;
 import static bio.overture.ego.model.enums.LanguageType.*;
 import static bio.overture.ego.model.enums.ProviderType.*;
+import static bio.overture.ego.model.enums.UserType.USER;
 import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static bio.overture.ego.utils.CollectionUtils.repeatedCallsOf;
@@ -141,12 +142,15 @@ public class UserControllerTest extends AbstractControllerTest {
   public void listUsersWithFilter_Success() {
     val numUsers = userService.getRepository().count();
 
+    // Since previous test may introduce new users. If there are more users than the
+    // default page
+    // size, only a subset will be returned and could cause a test failure
     val existingUsersResponse =
         initStringRequest().endpoint("/users?limit=%s&offset=0", numUsers).getAnd();
     existingUsersResponse.assertOk().assertHasBody().assertPageResultsOfType(User.class);
-    val existingUser = existingUsersResponse.extractPageResults(User.class).get(0);
 
     // filter by existing email
+    val existingUser = existingUsersResponse.extractPageResults(User.class).get(0);
     val emailFilter = existingUser.getEmail();
     val emailFilteredResponse =
         initStringRequest().endpoint("/users?offset=0&email=%s", emailFilter).getAnd();
@@ -157,10 +161,21 @@ public class UserControllerTest extends AbstractControllerTest {
     val emailFilteredResults = emailFilteredResponse.extractPageResults(User.class);
     assertTrue(emailFilteredResults.size() >= 1);
 
-    // assert response users' email equals original email filter
+    // assert all users from response have email equal to original email filter
     assertTrue(emailFilteredResults.stream().allMatch(u -> u.getEmail().equals(emailFilter)));
 
-    // filter by providerType
+    // filter by existing providerType
+    // generate another user with a different providerType from existingUser
+    entityGenerator.setupUser(
+        entityGenerator.generateNonExistentUserName(),
+        USER,
+        generateNonExistentProviderSubjectId(userService),
+        randomEnumExcluding(ProviderType.class, existingUser.getProviderType()));
+    val unfilteredRequest =
+        initStringRequest().endpoint("/users?offset=0&limit=%s", numUsers).getAnd();
+    val unfilteredResponse =
+        unfilteredRequest.assertOk().assertHasBody().extractPageResults(User.class);
+
     val providerTypeFilter = existingUser.getProviderType();
     val providerTypeFilteredResponse =
         initStringRequest()
@@ -172,9 +187,12 @@ public class UserControllerTest extends AbstractControllerTest {
     providerTypeFilteredResponse.assertHasBody();
     providerTypeFilteredResponse.assertPageResultsOfType(User.class);
 
-    // verify users from result all match original providerType filter
+    // verify unfilteredResponse has more items than filtered response
     val providerTypeFilteredResults = providerTypeFilteredResponse.extractPageResults(User.class);
     assertTrue(providerTypeFilteredResults.size() >= 1);
+    assertTrue(unfilteredResponse.size() > providerTypeFilteredResults.size());
+
+    // verify users from result all match original providerType filter
     assertTrue(
         stream(providerTypeFilteredResults)
             .allMatch(x -> x.getProviderType().equals(providerTypeFilter)));
@@ -194,10 +212,10 @@ public class UserControllerTest extends AbstractControllerTest {
     // assert response is ok
     emailFilteredResponse.assertOk();
     emailFilteredResponse.assertHasBody();
+    emailFilteredResponse.assertPageResultsOfType(User.class);
 
     // assert there are no users returned
     assertEquals(emailFilteredResponse.extractPageResults(User.class).size(), 0);
-    emailFilteredResponse.assertPageResultsOfType(User.class);
 
     // filter by non-existing providerType
     val existingUsersResponse =
@@ -207,16 +225,14 @@ public class UserControllerTest extends AbstractControllerTest {
     val existingProviderResult =
         existingUsers.stream().map(User::getProviderType).distinct().collect(toImmutableList());
 
-    // create a providerType filter param that does not exist
+    // create a filter param from a providerType that does not exist
     ProviderType nonExistingProvider;
     do {
       nonExistingProvider = randomEnum(ProviderType.class);
     } while (existingProviderResult.contains(nonExistingProvider));
-
-    val providerTypeFilter = randomEnumExcluding(ProviderType.class, nonExistingProvider);
     val providerTypeFilteredResponse =
         initStringRequest()
-            .endpoint("/users?offset=0&providerType=%s", providerTypeFilter)
+            .endpoint("/users?offset=0&providerType=%s", nonExistingProvider)
             .getAnd();
 
     // verify response is ok
