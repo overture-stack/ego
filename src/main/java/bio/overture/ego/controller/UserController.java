@@ -121,7 +121,8 @@ public class UserController {
       @ApiIgnore @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @ApiParam(
-              value = "Query string compares to Users Email, First Name, and Last Name fields.",
+              value =
+                  "Query string compares to Users Email, First Name, Last Name, Status and ProviderType fields.",
               required = false)
           @RequestParam(value = "query", required = false)
           String query,
