@@ -93,7 +93,7 @@ public class ApplicationAuthInterceptor implements AuthInterceptor {
     val claims = tokenService.getTokenAppInfo(token);
     return claims == null
         ? Optional.empty()
-        : applicationService.findByClientId(claims.getClientId());
+        : applicationService.findByClientId2(claims.getClientId());
   }
 
   @Getter

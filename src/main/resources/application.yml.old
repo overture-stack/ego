@@ -47,8 +47,7 @@ spring.datasource:
 
 spring:
   flyway:
-    enabled: true
-    locations: classpath:flyway/sql,classpath:db/migration
+    enabled: false
     placeholders:
       default-provider: GOOGLE
   jackson:
@@ -58,29 +57,6 @@ spring:
       FAIL_ON_NUMBERS_FOR_ENUMS: true
       FAIL_ON_READING_DUP_TREE_KEY: true
 
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ...
-            client-secret: ..
-            authorization-grant-type: authorization_code
-            redirect-uri: "http://localhost:8081/oauth/code/google"
-            scope:
-              - openid
-              - email
-              - profile
-            client-name: ego-google-client
-          github:
-            client-name: ego-local
-            client-id: 06bf2..
-            clientSecret: ...
-            redirect-uri: "http://localhost:8081/oauth/code/github"
-            clientAuthenticationScheme: form
-            scope:
-              - "read:user"
-              - "user:email"
 
 # set this flag in Spring 2.0 because of this open issue: https://hibernate.atlassian.net/browse/HHH-12368
 spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
@@ -92,8 +68,6 @@ log4j:
 
 oauth:
   redirectFrontendUri: http://localhost:3501
-
-
 
 facebook:
   client:
@@ -129,8 +103,8 @@ keycloak:
 
 google:
   client:
-    clientId: ...
-    clientSecret: ...
+    clientId: 144611473365-k1aarg8qs6rlh67r3t7dssi1e34b6061.apps.googleusercontent.com
+    clientSecret:
     accessTokenUri: https://www.googleapis.com/oauth2/v4/token
     userAuthorizationUri: https://accounts.google.com/o/oauth2/v2/auth
     clientAuthenticationScheme: form
@@ -165,7 +139,7 @@ github:
 
 orcid:
   client:
-    clientId: APP-...
+    clientId: APP-O5Z410O5DWC1011N
     clientSecret:
     accessTokenUri: https://orcid.org/oauth/token
     tokenName: access_token
@@ -184,7 +158,7 @@ logging:
   loggers:
     "org.skife.jdbi.v2": TRACE
   level:
-    root: INFO
+    root: ERROR
     #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     #org.springframework.boot: INFO
     bio.overture.ego: INFO
@@ -198,26 +172,25 @@ logging:
 #logging.level.org.hibernate: TRACE
 
 token:
-  issuer: http://localhost:8081
-  private-key: ..
-  public-key: ..
+  private-key: MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDSU6oy48sJW6xzqzOSU1dAvUUeFKQSBHsCf7wGWUGpOxEczhtFiiyx4YUJtg+fyvwWxa4wO3GnQLBPIxBHY8JsnvjQN2lsTUoLqMB9nGpwF617uA/S2igm1u+cDpfi82kbi6SG1Sg30PM047R6oxTRGDLLkeMRF1gRaTBM0HfSL0j6ccU5KPgwYsFLE2We6jeR56iYJGC2KYLH4v8rcc2jRAdMbUntHMtUByF9BPSW7elQnyQH5Qzr/o0b59XLKwnJFn2Bp2yviC8cdyTDyhQGna0e+oESQR1j6u3Ux/mOmm3slRXscA8sH+pHmOEAtjYVf/ww36U8uZv+ctBCJyFVAgMBAAECggEBALrEeJqAFUfWFCkSmdUSFKT0bW/svFUTjXgGnZy1ncz9GpENpMH3lQDQVibteKpYwcom+Cr0XlQ66VUcudPrDjcOY7vhuMfnSh1YWLYyM4IeRHtcUxDVkFoM+vEFNHLf2zIOqqbgmboW3iDVIurT7iRO7KxAe/YtWJL9aVqMtBn7Lu7S7OvAU4ji5iLIBxjl82JYA+9lu/aQ6YGaoZuSO7bcU8Sivi+DKAahqN9XMKiB1XpC+PpaS/aec2S7xIlTdzoDGxEALRGlMe+xBEeQTBVJHBWrRIDPoHLTREeRC/9Pp+1Y4Dz8hd5Bi0n8/5r/q0liD+0vtmjsdU4E2QrktYECgYEA73qWvhCYHPMREAFtwz1mpp9ZhDCW6SF+njG7fBKcjz8OLcy15LXiTGc268ewtQqTMjPQlm1n2C6hGccGAIlMibQJo3KZHlTs125FUzDpTVgdlei6vU7M+gmfRSZed00J6jC04/qMR1tnV3HME3np7eRTKTA6Ts+zBwEvkbCetSkCgYEA4NY5iSBO1ybouIecDdD15uI2ItLPCBNMzu7IiK7IygIzuf+SyKyjhtFSR4vEi0gScOM7UMlwCMOVU10e4nMDknIWCDG9iFvmIEkGHGxgRrN5hX1Wrq74wF212lvvagH1IVWSHa8cVpMe+UwKu5Q1h4yzuYt6Q9wPQ7Qtn5emBE0CgYB2syispMUA9GnsqQii0Xhj9nAEWaEzhOqhtrzbTs5TIkoA4Yr3BkBY5oAOdjhcRBWZuJ0XMrtaKCKqCEAtW+CYEKkGXvMOWcHbNkkeZwv8zkQ73dNRqhFnjgVn3RDNyV20uteueK23YNLkQP+KV89fnuCpdcIw9joiqq/NYuIHoQKBgB5WaZ8KH/lCA8babYEjv/pubZWXUl4plISbja17wBYZ4/bl+F1hhhMr7Wk//743dF2NG7TT6W0VTvHXr9IoaMP65uQmKgfbNpsGn294ZClGEFClz+t0KpZyTpZvL0fjibr8u+GLfkxkP5qt2wjif7KRlrKjklTTva+KAVn2cW1FAoGBAMkX9ekIwhx/7uY6ndxKl8ZMDerjr6MhV0b08hHp3RxHbYVbcpN0UKspoYvZVgHwP18xlDij8yWRE2fapwgi4m82ZmYlg0qqJmyqIU9vBB3Jow903h1KPQrkmQEZxJ/4H8yrbgVf2HT+WUfjTFgaDZRl01bI3YkydCw91/Ub9HU6
+  public-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0lOqMuPLCVusc6szklNXQL1FHhSkEgR7An+8BllBqTsRHM4bRYosseGFCbYPn8r8FsWuMDtxp0CwTyMQR2PCbJ740DdpbE1KC6jAfZxqcBete7gP0tooJtbvnA6X4vNpG4ukhtUoN9DzNOO0eqMU0Rgyy5HjERdYEWkwTNB30i9I+nHFOSj4MGLBSxNlnuo3keeomCRgtimCx+L/K3HNo0QHTG1J7RzLVAchfQT0lu3pUJ8kB+UM6/6NG+fVyysJyRZ9gadsr4gvHHckw8oUBp2tHvqBEkEdY+rt1Mf5jppt7JUV7HAPLB/qR5jhALY2FX/8MN+lPLmb/nLQQichVQIDAQAB
 
 # Default values available for creation of entities
 default:
   user:
     # flag to automatically register first user as an admin
-    firstUserAsAdmin: true
+    firstUserAsAdmin: false
     type: USER
     status: APPROVED
 
 initialization:
-  enabled: true
+  enabled: false
   applications:
-    - name: ego-ui
+    - name: my-app
       type: ADMIN
-      clientId: ego-ui
+      clientId: myClientId
       clientSecret: myClientSecret123
-      redirectUri: http://localhost:8080  # optional
+      redirectUri: https://example.org  # optional
       description: Some description about this application  # optional
 
 ---
@@ -225,9 +198,7 @@ initialization:
 # Profile - "jks"
 ###############################################################################
 spring:
-  config:
-    activate:
-      on-profile: jks
+  profiles: jks
 
 token:
   key-store: src/main/resources/ego-jwt.jks
@@ -239,9 +210,8 @@ token:
 # Profile - "auth"
 ###############################################################################
 spring:
-  config:
-    activate:
-      on-profile: auth
+  profiles: auth
+  profiles.include: secure
 
 # security
 auth:

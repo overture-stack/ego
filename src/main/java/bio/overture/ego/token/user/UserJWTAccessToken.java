@@ -19,63 +19,54 @@ package bio.overture.ego.token.user;
 import bio.overture.ego.service.TokenService;
 import io.jsonwebtoken.Claims;
 import java.util.*;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.common.OAuth2RefreshToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 
 @Slf4j
-@Data
-public class UserJWTAccessToken implements OAuth2AccessToken {
+public class UserJWTAccessToken extends OAuth2AccessToken {
 
   private Claims tokenClaims = null;
   private String token = null;
 
   public UserJWTAccessToken(String token, TokenService tokenService) {
+    super(
+        TokenType.BEARER,
+        token,
+        tokenService.getTokenClaims(token).getIssuedAt().toInstant(),
+        tokenService.getTokenClaims(token).getExpiration().toInstant());
     this.token = token;
     this.tokenClaims = tokenService.getTokenClaims(token);
   }
 
-  @Override
   public Map<String, Object> getAdditionalInformation() {
     val output = new HashMap<String, Object>();
     output.put("groups", getUser().get("groups"));
     return output;
   }
 
-  @Override
   public Set<String> getScope() {
     val scope = ((UserTokenContext) tokenClaims.get("context")).getScope();
     return new HashSet<>(scope);
   }
 
-  @Override
   public OAuth2RefreshToken getRefreshToken() {
     return null;
   }
 
-  @Override
-  public String getTokenType() {
-    return "Bearer";
-  }
-
-  @Override
   public boolean isExpired() {
     return getExpiresIn() <= 0;
   }
 
-  @Override
   public Date getExpiration() {
     return tokenClaims.getExpiration();
   }
 
-  @Override
   public int getExpiresIn() {
     return (int) ((System.currentTimeMillis() - tokenClaims.getExpiration().getTime()) / 1000L);
   }
 
-  @Override
   public String getValue() {
     return token;
   }

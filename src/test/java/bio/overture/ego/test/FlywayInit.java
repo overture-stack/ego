@@ -66,6 +66,6 @@ public class FlywayInit {
 
   @SneakyThrows
   private static JsonNode readApplicationYaml() {
-    return YAML_MAPPER.readTree(Resources.getResource("application.yml"));
+    return YAML_MAPPER.readTree(Resources.getResource("application.yml.old"));
   }
 }

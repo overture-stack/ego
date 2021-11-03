@@ -36,7 +36,6 @@ import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -44,7 +43,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -152,12 +150,12 @@ public class TransactionController {
     }
   }
 
-  @ExceptionHandler({InvalidRequestException.class})
-  public ResponseEntity<Object> handleInvalidRequestException(
-      HttpServletRequest req, InvalidRequestException ex) {
-    log.error(format("Invalid request: %s", ex.getMessage()));
-    return new ResponseEntity<>("{\"error\": \"%s\"}".format(ex.getMessage()), BAD_REQUEST);
-  }
+  //  @ExceptionHandler({InvalidRequestException.class})
+  //  public ResponseEntity<Object> handleInvalidRequestException(
+  //      HttpServletRequest req, InvalidRequestException ex) {
+  //    log.error(format("Invalid request: %s", ex.getMessage()));
+  //    return new ResponseEntity<>("{\"error\": \"%s\"}".format(ex.getMessage()), BAD_REQUEST);
+  //  }
 
   private String jsonEscape(String text) {
     return text.replace("\"", "\\\"");

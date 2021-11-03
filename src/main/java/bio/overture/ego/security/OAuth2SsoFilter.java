@@ -11,6 +11,7 @@ import bio.overture.ego.service.OrcidService;
 import bio.overture.ego.utils.Redirects;
 import java.io.IOException;
 import java.util.*;
+import javax.annotation.PostConstruct;
 import javax.servlet.Filter;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -19,30 +20,40 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.OAuth2ClientContext;
-import org.springframework.security.oauth2.client.OAuth2RestOperations;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
-import org.springframework.security.oauth2.client.filter.OAuth2ClientAuthenticationProcessingFilter;
-import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.CompositeFilter;
 
 @Slf4j
 @Component
-@Profile("auth")
+//@Order()
+// @Profile("auth")
 public class OAuth2SsoFilter extends CompositeFilter {
 
-  private final OAuth2ClientContext oauth2ClientContext;
+  //  private final OAuth2ClientContext oauth2ClientContext;
   private final ApplicationService applicationService;
+  private final OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
+  private final ClientRegistrationRepository clientRegistrationRepository;
+
   private final SimpleUrlAuthenticationSuccessHandler simpleUrlAuthenticationSuccessHandler =
       new SimpleUrlAuthenticationSuccessHandler() {
         public void onAuthenticationSuccess(
             HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException, ServletException {
+          // todo fix redirect state
           val application =
               applicationService.getByClientId(
                   (String) request.getSession().getAttribute("ego_client_id"));
@@ -54,180 +65,139 @@ public class OAuth2SsoFilter extends CompositeFilter {
             this.setDefaultTargetUrl(redirect);
             super.onAuthenticationSuccess(request, response, authentication);
           } else {
-            throw new UnauthorizedClientException("Incorrect redirect uri for ego client.");
+            throw new RuntimeException("Incorrect redirect uri for ego client.");
           }
         }
       };
 
   private final OrcidService orcidService;
-  private final GithubService githubService;
   private final LinkedinService linkedinService;
 
+  @Autowired
+  private AuthenticationManager authenticationManager;
   private SSOAuthenticationFailureHandler ssoAuthenticationFailureHandler;
 
   @Autowired
   public OAuth2SsoFilter(
-      @Qualifier("oauth2ClientContext") OAuth2ClientContext oauth2ClientContext,
+      OAuth2AuthorizedClientService oAuth2AuthorizedClientService,
+      ClientRegistrationRepository registrationRepository,
       ApplicationService applicationService,
-      OAuth2ClientResources google,
-      OAuth2ClientResources facebook,
-      OAuth2ClientResources github,
-      OAuth2ClientResources linkedin,
-      OAuth2ClientResources orcid,
-      OAuth2ClientResources keycloak,
+      //      OAuth2ClientResources google,
+      //      OAuth2ClientResources facebook,
+      //      OAuth2ClientResources github,
+      //      OAuth2ClientResources linkedin,
+      //      OAuth2ClientResources orcid,
+      //      OAuth2ClientResources keycloak,
       OrcidService orcidService,
-      GithubService githubService,
       LinkedinService linkedinService,
+//      @Qualifier("oauth2LoginAuthManager") AuthenticationManager authenticationManager,
       SSOAuthenticationFailureHandler ssoAuthenticationFailureHandler) {
-    this.oauth2ClientContext = oauth2ClientContext;
+
     this.applicationService = applicationService;
     this.orcidService = orcidService;
-    this.githubService = githubService;
     this.linkedinService = linkedinService;
     this.ssoAuthenticationFailureHandler = ssoAuthenticationFailureHandler;
+    this.oAuth2AuthorizedClientService = oAuth2AuthorizedClientService;
+    this.clientRegistrationRepository = registrationRepository;
+  }
 
+  @PostConstruct
+  public void postProcess() {
+    //    RestTemplate restTemplate = new RestTemplate();
     val filters = new ArrayList<Filter>();
-
-    filters.add(new GoogleFilter(google));
-    filters.add(new FacebookFilter(facebook));
-    filters.add(new GithubFilter(github));
-    filters.add(new LinkedInFilter(linkedin));
-    filters.add(new OrcidFilter(orcid));
-    filters.add(new KeycloakFilter(keycloak));
+    filters.add(new GithubFilter2(clientRegistrationRepository.findByRegistrationId("github")));
+    filters.add(new GoogleFilter2(clientRegistrationRepository.findByRegistrationId("google")));
     setFilters(filters);
   }
 
-  class OAuth2SsoChildFilter extends OAuth2ClientAuthenticationProcessingFilter {
-    public OAuth2SsoChildFilter(String path, OAuth2ClientResources client) {
-      super(path);
-      OAuth2RestTemplate template = new OAuth2RestTemplate(client.getClient(), oauth2ClientContext);
-      super.setRestTemplate(template);
+  class OAuth2SsoChildFilter extends OAuth2LoginAuthenticationFilter {
+    protected ClientRegistration clientRegistration;
+
+    // TODO: - check how we can eliminate OAuth2ChildSso Filters and only have main one since now we rely on custom user info service
+    public OAuth2SsoChildFilter(String path, ClientRegistration client) {
+      super(clientRegistrationRepository, oAuth2AuthorizedClientService);
+      super.setFilterProcessesUrl(path);
+      super.setAuthenticationManager(authenticationManager);
       super.setAuthenticationSuccessHandler(simpleUrlAuthenticationSuccessHandler);
       super.setAuthenticationFailureHandler(ssoAuthenticationFailureHandler);
-    }
-
-    @Override
-    public Authentication attemptAuthentication(
-        HttpServletRequest request, HttpServletResponse response)
-        throws IOException, ServletException {
-      // Don't use the existing access token, otherwise, it would attempt to get github user info
-      // with linkedin access token
-      this.restTemplate.getOAuth2ClientContext().setAccessToken(null);
-      return super.attemptAuthentication(request, response);
+      this.clientRegistration = client;
     }
   }
 
-  class GithubFilter extends OAuth2SsoChildFilter {
-    public GithubFilter(OAuth2ClientResources client) {
-      super("/oauth/login/github", client);
-      super.setTokenServices(
-          new OAuth2UserInfoTokenServices(
-              client.getResource().getUserInfoUri(),
-              client.getClient().getClientId(),
-              super.restTemplate,
-              GITHUB) {
-            @Override
-            protected Map<String, Object> transformMap(Map<String, Object> map, String accessToken)
-                throws NoSuchElementException {
-              OAuth2RestOperations restTemplate = getRestTemplate(accessToken);
-              String email;
-
-              try {
-                email = githubService.getVerifiedEmail(restTemplate);
-              } catch (RestClientException | ClassCastException ex) {
-                return Collections.singletonMap("error", "Could not fetch user details");
-              }
-
-              if (!isNull(email)) {
-                map.put("email", email);
-
-                String name = (String) map.get("name");
-                // github allows the name field to be null
-                if (!isNull(name)) {
-                  githubService.parseName(name, map);
-                }
-
-                return map;
-              } else {
-                return Collections.singletonMap("error", "Could not fetch user details");
-              }
-            }
-          });
+  class GithubFilter2 extends OAuth2SsoChildFilter {
+    public GithubFilter2(ClientRegistration client) {
+      super("/oauth/code/github", client);
     }
   }
 
-  class LinkedInFilter extends OAuth2SsoChildFilter {
-    public LinkedInFilter(OAuth2ClientResources client) {
-      super("/oauth/login/linkedin", client);
-      super.setTokenServices(
-          new OAuth2UserInfoTokenServices(
-              client.getResource().getUserInfoUri(),
-              client.getClient().getClientId(),
-              super.restTemplate,
-              LINKEDIN) {
-            @Override
-            protected Map<String, Object> transformMap(
-                Map<String, Object> map, String accessToken) {
-              val restTemplate = getRestTemplate(accessToken);
-              return linkedinService.getPrimaryEmail(restTemplate, map);
-            }
-          });
-    }
-  }
+  //
+  //  class LinkedInFilter extends OAuth2SsoChildFilter {
+  //    public LinkedInFilter(OAuth2ClientResources client) {
+  //      super("/oauth/login/linkedin", client);
+  //      super.setTokenServices(
+  //          new OAuth2UserInfoTokenServices(
+  //              client.getResource().getUserInfoUri(),
+  //              client.getClient().getClientId(),
+  //              super.restTemplate,
+  //              LINKEDIN) {
+  //            @Override
+  //            protected Map<String, Object> transformMap(
+  //                Map<String, Object> map, String accessToken) {
+  //              val restTemplate = getRestTemplate(accessToken);
+  //              return linkedinService.getPrimaryEmail(restTemplate, map);
+  //            }
+  //          });
+  //    }
+  //  }
+  //
 
-  class GoogleFilter extends OAuth2SsoChildFilter {
-    public GoogleFilter(OAuth2ClientResources client) {
-      super("/oauth/login/google", client);
-      super.setTokenServices(
-          new OAuth2UserInfoTokenServices(
-              client.getResource().getUserInfoUri(),
-              client.getClient().getClientId(),
-              super.restTemplate,
-              GOOGLE));
+  class GoogleFilter2 extends OAuth2SsoChildFilter {
+    public GoogleFilter2(ClientRegistration client) {
+      super("/oauth/code/google", client);
     }
   }
-
-  class KeycloakFilter extends OAuth2SsoChildFilter {
-    public KeycloakFilter(OAuth2ClientResources client) {
-      super("/oauth/login/keycloak", client);
-      super.setTokenServices(
-          new OAuth2UserInfoTokenServices(
-              client.getResource().getUserInfoUri(),
-              client.getClient().getClientId(),
-              super.restTemplate,
-              KEYCLOAK));
-    }
-  }
-
-  class FacebookFilter extends OAuth2SsoChildFilter {
-    public FacebookFilter(OAuth2ClientResources client) {
-      super("/oauth/login/facebook", client);
-      super.setTokenServices(
-          new OAuth2UserInfoTokenServices(
-              client.getResource().getUserInfoUri(),
-              client.getClient().getClientId(),
-              super.restTemplate,
-              FACEBOOK));
-    }
-  }
-
-  class OrcidFilter extends OAuth2SsoChildFilter {
-    public OrcidFilter(OAuth2ClientResources client) {
-      super("/oauth/login/orcid", client);
-      super.setTokenServices(
-          new OAuth2UserInfoTokenServices(
-              client.getResource().getUserInfoUri(),
-              client.getClient().getClientId(),
-              super.restTemplate,
-              ORCID) {
-            @Override
-            protected Map<String, Object> transformMap(
-                Map<String, Object> map, String accessToken) {
-              val orcid = map.get("sub").toString();
-              val restTemplate = getRestTemplate(accessToken);
-              return orcidService.getPrimaryEmail(restTemplate, orcid, map);
-            }
-          });
-    }
-  }
+  //
+  //  class KeycloakFilter extends OAuth2SsoChildFilter {
+  //    public KeycloakFilter(OAuth2ClientResources client) {
+  //      super("/oauth/login/keycloak", client);
+  //      super.setTokenServices(
+  //          new OAuth2UserInfoTokenServices(
+  //              client.getResource().getUserInfoUri(),
+  //              client.getClient().getClientId(),
+  //              super.restTemplate,
+  //              KEYCLOAK));
+  //    }
+  //  }
+  //
+  //  class FacebookFilter extends OAuth2SsoChildFilter {
+  //    public FacebookFilter(OAuth2ClientResources client) {
+  //      super("/oauth/login/facebook", client);
+  //      super.setTokenServices(
+  //          new OAuth2UserInfoTokenServices(
+  //              client.getResource().getUserInfoUri(),
+  //              client.getClient().getClientId(),
+  //              super.restTemplate,
+  //              FACEBOOK));
+  //    }
+  //  }
+  //
+  //  class OrcidFilter extends OAuth2SsoChildFilter {
+  //    public OrcidFilter(OAuth2ClientResources client) {
+  //      super("/oauth/login/orcid", client);
+  //      super.setTokenServices(
+  //          new OAuth2UserInfoTokenServices(
+  //              client.getResource().getUserInfoUri(),
+  //              client.getClient().getClientId(),
+  //              super.restTemplate,
+  //              ORCID) {
+  //            @Override
+  //            protected Map<String, Object> transformMap(
+  //                Map<String, Object> map, String accessToken) {
+  //              val orcid = map.get("sub").toString();
+  //              val restTemplate = getRestTemplate(accessToken);
+  //              return orcidService.getPrimaryEmail(restTemplate, orcid, map);
+  //            }
+  //          });
+  //    }
+  //  }
 }

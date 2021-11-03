@@ -66,6 +66,11 @@ public class IgnoreCaseSortDecorator implements Pageable {
   }
 
   @Override
+  public Pageable withPage(int i) {
+    return null;
+  }
+
+  @Override
   public boolean hasPrevious() {
     return delegate.hasPrevious();
   }

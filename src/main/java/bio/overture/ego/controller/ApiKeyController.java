@@ -22,10 +22,8 @@ import static bio.overture.ego.model.dto.GenericResponse.createGenericResponse;
 import static bio.overture.ego.utils.CollectionUtils.mapToList;
 import static bio.overture.ego.utils.CollectionUtils.mapToSet;
 import static java.lang.String.format;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.MULTI_STATUS;
 import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.MediaType.*;
 import static org.springframework.util.StringUtils.isEmpty;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
@@ -48,7 +46,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -59,10 +56,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
-import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
-import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
@@ -251,33 +244,34 @@ public class ApiKeyController {
     return tokenService.listTokens(userId);
   }
 
-  @ExceptionHandler({InvalidTokenException.class})
-  public ResponseEntity<Object> handleInvalidApiKeyException(
-      HttpServletRequest req, InvalidTokenException ex) {
-    log.error(format("ID ScopedAccessApiKey not found.:%s", ex.toString()));
-    return errorResponse(UNAUTHORIZED, "Invalid apiKey: %s", ex);
-  }
-
-  @ExceptionHandler({InvalidScopeException.class})
-  public ResponseEntity<Object> handleInvalidScopeException(
-      HttpServletRequest req, InvalidTokenException ex) {
-    log.error(format("Invalid PolicyIdStringWithMaskName: %s", ex.getMessage()));
-    return new ResponseEntity<>("{\"error\": \"Invalid Scope\"}", new HttpHeaders(), UNAUTHORIZED);
-  }
-
-  @ExceptionHandler({InvalidRequestException.class})
-  public ResponseEntity<Object> handleInvalidRequestException(
-      HttpServletRequest req, InvalidRequestException ex) {
-    log.error(format("Invalid request: %s", ex.getMessage()));
-    return new ResponseEntity<>("{\"error\": \"%s\"}".format(ex.getMessage()), BAD_REQUEST);
-  }
-
-  @ExceptionHandler({UsernameNotFoundException.class})
-  public ResponseEntity<Object> handleUserNotFoundException(
-      HttpServletRequest req, InvalidTokenException ex) {
-    log.error(format("User not found: %s", ex.getMessage()));
-    return new ResponseEntity<>("{\"error\": \"User not found\"}", UNAUTHORIZED);
-  }
+  //  @ExceptionHandler({InvalidTokenException.class})
+  //  public ResponseEntity<Object> handleInvalidApiKeyException(
+  //      HttpServletRequest req, InvalidTokenException ex) {
+  //    log.error(format("ID ScopedAccessApiKey not found.:%s", ex.toString()));
+  //    return errorResponse(UNAUTHORIZED, "Invalid apiKey: %s", ex);
+  //  }
+  //
+  //  @ExceptionHandler({InvalidScopeException.class})
+  //  public ResponseEntity<Object> handleInvalidScopeException(
+  //      HttpServletRequest req, InvalidTokenException ex) {
+  //    log.error(format("Invalid PolicyIdStringWithMaskName: %s", ex.getMessage()));
+  //    return new ResponseEntity<>("{\"error\": \"Invalid Scope\"}", new HttpHeaders(),
+  // UNAUTHORIZED);
+  //  }
+  //
+  //  @ExceptionHandler({InvalidRequestException.class})
+  //  public ResponseEntity<Object> handleInvalidRequestException(
+  //      HttpServletRequest req, InvalidRequestException ex) {
+  //    log.error(format("Invalid request: %s", ex.getMessage()));
+  //    return new ResponseEntity<>("{\"error\": \"%s\"}".format(ex.getMessage()), BAD_REQUEST);
+  //  }
+  //
+  //  @ExceptionHandler({UsernameNotFoundException.class})
+  //  public ResponseEntity<Object> handleUserNotFoundException(
+  //      HttpServletRequest req, InvalidTokenException ex) {
+  //    log.error(format("User not found: %s", ex.getMessage()));
+  //    return new ResponseEntity<>("{\"error\": \"User not found\"}", UNAUTHORIZED);
+  //  }
 
   private String jsonEscape(String text) {
     return text.replace("\"", "\\\"");

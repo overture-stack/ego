@@ -1,0 +1,9 @@
+#spring:
+#  cloud:
+#    vault:
+#      enabled: false
+#      host: localhost
+#      port: 8200
+#      scheme: https
+#      authentication: TOKEN
+#      token: 123

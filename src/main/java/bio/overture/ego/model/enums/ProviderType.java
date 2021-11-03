@@ -39,7 +39,7 @@ public enum ProviderType {
 
   public static ProviderType resolveProviderType(@NonNull String providerType) {
     return stream(values())
-        .filter(x -> x.toString().equals(providerType))
+        .filter(x -> x.toString().equalsIgnoreCase(providerType))
         .findFirst()
         .orElseThrow(
             () ->

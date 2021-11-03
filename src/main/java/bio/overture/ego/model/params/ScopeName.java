@@ -4,7 +4,6 @@ import static java.lang.String.format;
 
 import bio.overture.ego.model.enums.AccessLevel;
 import lombok.Data;
-import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
 
 @Data
 public class ScopeName {
@@ -12,7 +11,7 @@ public class ScopeName {
 
   public ScopeName(String name) {
     if (name.indexOf(".") == -1) {
-      throw new InvalidScopeException(
+      throw new RuntimeException(
           format("Bad scope name '%s'. Must be of the form \"<policyName>.<permission>\"", name));
     }
     scopeName = name;

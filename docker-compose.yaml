@@ -1,0 +1,19 @@
+version: '3.7'
+services:
+  ego-ui:
+    image: overture/ego-ui:edge
+    network_mode: host
+    environment:
+      REACT_APP_API: http://localhost:8081
+      REACT_APP_EGO_CLIENT_ID: ego-ui
+
+  postgres:
+    image: postgres:12.6
+    restart: always
+    environment:
+      - POSTGRES_DB=ego
+      - POSTGRES_PASSWORD=password
+    expose:
+      - "5432"
+    ports:
+      - "5432:5432"

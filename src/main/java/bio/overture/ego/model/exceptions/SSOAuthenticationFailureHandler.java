@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.http.client.utils.URIBuilder;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
@@ -39,7 +39,7 @@ public class SSOAuthenticationFailureHandler implements AuthenticationFailureHan
   public void onAuthenticationFailure(
       HttpServletRequest request, HttpServletResponse response, AuthenticationException exception)
       throws IOException {
-    val rootExceptionThrowable = exception.getCause();
+    val rootExceptionThrowable = exception.getCause() == null ? exception : exception.getCause();
     val application =
         applicationService.getByClientId(
             (String) request.getSession().getAttribute("ego_client_id"));
@@ -54,7 +54,7 @@ public class SSOAuthenticationFailureHandler implements AuthenticationFailureHan
       val providerType = reqUri.get(reqUri.size() - 1).toUpperCase();
       if (rootExceptionThrowable instanceof NoPrimaryEmailException) {
         errorUri = buildNoPrimaryEmailExceptionResponse(errorUri, providerType);
-      } else if (rootExceptionThrowable instanceof OAuth2Exception) {
+      } else if (rootExceptionThrowable instanceof OAuth2AuthenticationException) {
         errorUri = buildOAuth2ExceptionResponse(errorUri, providerType);
       } else {
         throw new InternalServerException("Invalid response from OAuth Service");

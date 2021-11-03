@@ -71,7 +71,7 @@ public class EntityGenerator {
 
   public Application setupApplication(String clientId) {
     return applicationService
-        .findByClientId(clientId)
+        .findByClientId2(clientId)
         .orElseGet(
             () -> {
               val request = createApplicationCreateRequest(clientId);
@@ -99,7 +99,7 @@ public class EntityGenerator {
   public Application setupApplication(
       String clientId, String clientSecret, ApplicationType applicationType) {
     return applicationService
-        .findByClientId(clientId)
+        .findByClientId2(clientId)
         .orElseGet(
             () -> {
               val request =

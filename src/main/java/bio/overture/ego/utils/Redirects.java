@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
 
 @Slf4j
 public class Redirects {
@@ -68,7 +67,7 @@ public class Redirects {
     if (redirect == null || redirect.isBlank()) {
       return redirects
           .findFirst()
-          .orElseThrow(() -> new UnauthorizedClientException("Cannot find valid redirect URI"));
+          .orElseThrow(() -> new RuntimeException("Cannot find valid redirect URI"));
     }
 
     val msg = format("Unauthorized redirect URI: %s", redirect);
@@ -77,7 +76,7 @@ public class Redirects {
       redirectUri = new URI(redirect);
     } catch (URISyntaxException e) {
       log.error(msg);
-      throw new UnauthorizedClientException(msg);
+      throw new RuntimeException(msg);
     }
 
     val isValid =
@@ -91,7 +90,7 @@ public class Redirects {
       return redirect;
     } else {
       log.error(msg);
-      throw new UnauthorizedClientException(msg);
+      throw new RuntimeException(msg);
     }
   }
 }

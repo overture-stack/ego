@@ -41,21 +41,22 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.util.StringUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
-public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
+public class JWTAuthorizationFilter extends OncePerRequestFilter {
 
   private String[] publicEndpoints = null;
+  private TokenService tokenService;
+  private ApplicationService applicationService;
 
   @Value("${auth.token.prefix}")
   private String TOKEN_PREFIX = "Bearer";
 
-  @Autowired private TokenService tokenService;
-  @Autowired private ApplicationService applicationService;
-
-  public JWTAuthorizationFilter(AuthenticationManager authManager, String[] publicEndpoints) {
-    super(authManager);
+  public JWTAuthorizationFilter(String[] publicEndpoints, TokenService tokenService, ApplicationService applicationService) {
     this.publicEndpoints = publicEndpoints;
+    this.tokenService = tokenService;
+    this.applicationService = applicationService;
   }
 
   @Override
@@ -141,7 +142,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     val clientSecret = token.get().getClientSecret();
 
     // Deny access if they don't have a valid clientId from one of our applications
-    val applicationOpt = applicationService.findByClientId(clientId);
+    val applicationOpt = applicationService.findByClientId2(clientId);
 
     if (applicationOpt == null || applicationOpt.isEmpty()) {
       SecurityContextHolder.clearContext();

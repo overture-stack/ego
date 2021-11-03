@@ -31,7 +31,7 @@ public class WithMockCustomApplicationSecurityContextFactory
 
   private Application setupApplication(WithMockCustomApplication customApplication) {
     return applicationService
-        .findByClientId(customApplication.clientId())
+        .findByClientId2(customApplication.clientId())
         .orElseGet(
             () -> {
               val request = createApplicationCreateRequest(customApplication);

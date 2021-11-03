@@ -17,61 +17,48 @@
 package bio.overture.ego.config;
 
 import bio.overture.ego.security.*;
+import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.TokenService;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.client.filter.OAuth2ClientContextFilter;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
-@EnableOAuth2Client
-@Profile("auth")
+// @EnableOAuth2Client
+// @Profile("auth")
+@Import(OAuth2LoginConfig.class)
 public class SecureServerConfig {
 
   /** Constants */
   private final String[] PUBLIC_ENDPOINTS =
       new String[] {
-        "/oauth/token",
-        "/oauth/google/token",
-        "/oauth/facebook/token",
-        "/oauth/token/public_key",
-        "/oauth/token/verify",
-        "/oauth/ego-token",
-        "/oauth/update-ego-token",
-        "/oauth/refresh"
+          "/oauth/token",
+          "/oauth/google/token",
+          "/oauth/facebook/token",
+          "/oauth/token/public_key",
+          "/oauth/token/verify",
+          "/oauth/ego-token",
+          "/oauth/update-ego-token",
+          "/oauth/refresh"
       };
-
-  /** Dependencies */
-  private AuthenticationManager authenticationManager;
-
-  private OAuth2SsoFilter oAuth2SsoFilter;
-
-  @SneakyThrows
-  @Autowired
-  public SecureServerConfig(
-      AuthenticationManager authenticationManager, OAuth2SsoFilter oAuth2SsoFilter) {
-    this.authenticationManager = authenticationManager;
-    this.oAuth2SsoFilter = oAuth2SsoFilter;
-  }
-
-  @Bean
-  @SneakyThrows
-  public JWTAuthorizationFilter authorizationFilter() {
-    return new JWTAuthorizationFilter(authenticationManager, PUBLIC_ENDPOINTS);
-  }
 
   // Do not register JWTAuthorizationFilter in global scope
   @Bean
@@ -90,30 +77,54 @@ public class SecureServerConfig {
   }
 
   @Bean
+  @SneakyThrows
+  public JWTAuthorizationFilter authorizationFilter(TokenService tokenService, ApplicationService applicationService) {
+    return new JWTAuthorizationFilter(PUBLIC_ENDPOINTS, tokenService, applicationService);
+  }
+
+
+  @Bean
   public AuthorizationManager authorizationManager() {
     return new SecureAuthorizationManager();
   }
 
-  // Register oauth2 filter earlier so it can handle redirects signaled by exceptions in
-  // authentication requests.
-  @Bean
-  public FilterRegistrationBean<OAuth2ClientContextFilter> oauth2ClientFilterRegistration(
-      OAuth2ClientContextFilter filter) {
-    FilterRegistrationBean<OAuth2ClientContextFilter> registration = new FilterRegistrationBean<>();
-    registration.setFilter(filter);
-    registration.setOrder(-100);
-    return registration;
-  }
-
   //  int LOWEST_PRECEDENCE = Integer.MAX_VALUE;
-  @Configuration
+
+  /**
+   * Security rules configuration for the OAuth endpoints, should be checked before basic auth note
+   * the @order here
+   */
+  @Configuration()
   @Order(SecurityProperties.BASIC_AUTH_ORDER - 3)
   public class OAuthConfigurerAdapter extends WebSecurityConfigurerAdapter {
+    final OAuth2AuthorizationRequestResolver oAuth2RequestResolver;
+
+    @Autowired
+    private OAuth2SsoFilter OAuth2SsoFilter;
+
+    @Autowired
+    CustomOAuth2UserInfoService customOAuth2UserInfoService;
+
+    public OAuthConfigurerAdapter(
+        OAuth2AuthorizationRequestResolver requestResolver) {
+      this.oAuth2RequestResolver = requestResolver;
+    }
+
+    @Override
+    @Bean()
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+      return super.authenticationManagerBean();
+    }
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
       http.requestMatchers()
           .antMatchers(
-              "/oauth/login/*", "/oauth/ego-token", "/oauth/update-ego-token", "/oauth/refresh")
+              "/oauth/code/*",
+              "/oauth/login/*",
+              "/oauth/ego-token",
+              "/oauth/update-ego-token",
+              "/oauth/refresh")
           .and()
           .csrf()
           .disable()
@@ -121,17 +132,36 @@ public class SecureServerConfig {
           .anyRequest()
           .permitAll()
           .and()
-          .addFilterAfter(oAuth2SsoFilter, BasicAuthenticationFilter.class);
+          .oauth2Login(
+              x -> {
+                x.authorizationEndpoint(y -> y.authorizationRequestResolver(oAuth2RequestResolver));
+                x.userInfoEndpoint().userService(customOAuth2UserInfoService);
+              }
+          )
+          .addFilterAfter(OAuth2SsoFilter, BasicAuthenticationFilter.class)
+      ;
     }
   }
 
   @Configuration
   @Order(SecurityProperties.BASIC_AUTH_ORDER + 3)
   public class AppConfigurerAdapter extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    JWTAuthorizationFilter authorizationFilter;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-      http.csrf()
+
+      // add the authorization server endpoints/filters to the security filter chain
+      OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
+          new OAuth2AuthorizationServerConfigurer<>();
+
+      http
+          .csrf()
           .disable()
+          .apply(authorizationServerConfigurer)
+          .and()
           .authorizeRequests()
           .antMatchers(
               "/",
@@ -151,7 +181,7 @@ public class SecureServerConfig {
           .anyRequest()
           .authenticated()
           .and()
-          .addFilterBefore(authorizationFilter(), BasicAuthenticationFilter.class)
+          .addFilterBefore(authorizationFilter, BasicAuthenticationFilter.class)
           .sessionManagement()
           .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }

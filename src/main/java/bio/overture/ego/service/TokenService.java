@@ -82,9 +82,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
-import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
-import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -258,6 +255,10 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     return UUID.randomUUID().toString();
   }
 
+  public UserTokenClaims getUserTokenClaims(@NonNull User u) {
+    return generateUserTokenClaims(u, extractExplicitScopes(u));
+  }
+
   public String generateUserToken(@NonNull User u, @NonNull Set<String> scope) {
     val tokenClaims = generateUserTokenClaims(u, scope);
     return getSignedToken(tokenClaims);
@@ -402,7 +403,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
             .orElseThrow(() -> new UnauthorizedException("Cannot validate client id"))
             .getClientId();
     applicationService
-        .findByClientId(clientId)
+        .findByClientId2(clientId)
         .orElseThrow(() -> new UnauthorizedException("Not Authorized."));
 
     val aK =
