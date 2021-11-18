@@ -38,7 +38,6 @@ spring.main.allow-bean-definition-overriding: true
 spring.datasource:
   driver-class-name: org.postgresql.Driver
   url: jdbc:postgresql://localhost:5432/ego?stringtype=unspecified
-
   username: postgres
   password: password
   max-active: 10
@@ -46,6 +45,9 @@ spring.datasource:
   min-idle: 1
 
 spring:
+  cloud:
+    vault:
+      enabled: false
   flyway:
     enabled: false
     placeholders:
@@ -198,7 +200,9 @@ initialization:
 # Profile - "jks"
 ###############################################################################
 spring:
-  profiles: jks
+  config:
+    activate:
+      on-profile: jks
 
 token:
   key-store: src/main/resources/ego-jwt.jks
@@ -210,8 +214,9 @@ token:
 # Profile - "auth"
 ###############################################################################
 spring:
-  profiles: auth
-  profiles.include: secure
+  config:
+    activate:
+      on-profile: auth
 
 # security
 auth:
@@ -231,7 +236,9 @@ logging:
 # Profile - "demo"
 ###############################################################################
 spring:
-  profiles: grpc
+  config:
+    activate:
+      on-profile: grpc
 
 grpc:
   port: 50051
@@ -241,14 +248,17 @@ grpc:
 # Profile - "demo"
 ###############################################################################
 spring:
-  profiles: demo
-
+  config:
+    activate:
+      on-profile: demo
 ---
 ###############################################################################
 # Profile - "test"
 ###############################################################################
 spring:
-  profiles: test
+  config:
+    activate:
+      on-profile: test
 
 # To log the httpRequests and httpResponses for the controllers, set to true
 logging.test.controller.enable: false

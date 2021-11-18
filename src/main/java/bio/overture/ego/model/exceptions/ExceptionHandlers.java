@@ -2,8 +2,11 @@ package bio.overture.ego.model.exceptions;
 
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 import bio.overture.ego.utils.Joiners;
+import java.util.Date;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +19,21 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @Slf4j
 @ControllerAdvice
 public class ExceptionHandlers {
+
+  @ExceptionHandler(NotFoundException.class)
+  public ResponseEntity<Object> handleConstraintViolationException(
+      HttpServletRequest req, NotFoundException ex) {
+    val message = ex.getMessage();
+    log.error(message);
+    return new ResponseEntity<Object>(
+        Map.of(
+            "message", ex.getMessage(),
+            "timestamp", new Date(),
+            "path", req.getServletPath(),
+            "error", NOT_FOUND.getReasonPhrase()),
+        new HttpHeaders(),
+        NOT_FOUND);
+  }
 
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<Object> handleConstraintViolationException(

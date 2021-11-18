@@ -88,6 +88,11 @@ public class ProtoUtils {
       }
 
       @Override
+      public Pageable withPage(int pageNumber) {
+        throw new RuntimeException("Not implemented");
+      }
+
+      @Override
       public boolean hasPrevious() {
         return false;
       }
@@ -97,7 +102,7 @@ public class ProtoUtils {
   public static Sort parseSort(String sort) {
     if (sort.isEmpty()) {
       // Sort results by creation time, ensure static order for the page_token to refer to
-      return new Sort(Sort.Direction.ASC, JavaFields.CREATEDAT);
+      return Sort.by(Sort.Direction.ASC, JavaFields.CREATEDAT);
     } else {
       val orders =
           Arrays.stream(sort.split(","))
