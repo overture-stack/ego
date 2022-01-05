@@ -96,7 +96,7 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
         // TODO: this is a hack for now to provide default sort on id field
         // ideally we should not be making assumption about field name as "id" - it will break if
         // field doesn't exist
-        return new Sort(direction, StringUtils.isEmpty(sort) ? "id" : sort);
+        return Sort.by(direction, StringUtils.isEmpty(sort) ? "id" : sort);
       }
 
       @Override
@@ -112,6 +112,11 @@ public class PageableResolver implements HandlerMethodArgumentResolver {
       @Override
       public Pageable first() {
         return null;
+      }
+
+      @Override
+      public Pageable withPage(int pageNumber) {
+        throw new RuntimeException("Not implemented");
       }
 
       @Override

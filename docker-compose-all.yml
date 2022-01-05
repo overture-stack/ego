@@ -1,0 +1,31 @@
+version: '3.7'
+services:
+  api:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ego?stringtype=unspecified
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_LOCATIONS: "classpath:flyway/sql,classpath:db/migration"
+      SPRING_PROFILES: demo, auth
+    expose:
+      - "8080"
+    ports:
+      - "$API_HOST_PORT:8080"
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:12.6
+    restart: always
+    environment:
+      - POSTGRES_DB=ego
+      - POSTGRES_PASSWORD=password
+    expose:
+      - "5432"
+    ports:
+      - "8432:5432"
