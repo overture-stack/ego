@@ -23,8 +23,11 @@ import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
-import bio.overture.ego.provider.facebook.FacebookTokenService;
+import bio.overture.ego.model.enums.ProviderType;
+import bio.overture.ego.model.exceptions.InvalidScopeException;
+import bio.overture.ego.model.exceptions.InvalidTokenException;
 import bio.overture.ego.provider.google.GoogleTokenService;
+import bio.overture.ego.security.CustomOAuth2User;
 import bio.overture.ego.service.RefreshContextService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.IDToken;
@@ -44,10 +47,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.common.exceptions.InvalidScopeException;
-import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.provider.endpoint.TokenEndpoint;
 import org.springframework.util.StringUtils;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -65,7 +67,6 @@ public class AuthController {
 
   private final TokenService tokenService;
   private final GoogleTokenService googleTokenService;
-  private final FacebookTokenService facebookTokenService;
   private final TokenSigner tokenSigner;
   private final RefreshContextService refreshContextService;
   private final TokenEndpoint tokenEndpoint;
@@ -75,12 +76,10 @@ public class AuthController {
       @NonNull TokenEndpoint tokenEndpoint,
       @NonNull TokenService tokenService,
       @NonNull GoogleTokenService googleTokenService,
-      @NonNull FacebookTokenService facebookTokenService,
       @NonNull TokenSigner tokenSigner,
       @NonNull RefreshContextService refreshContextService) {
     this.tokenService = tokenService;
     this.googleTokenService = googleTokenService;
-    this.facebookTokenService = facebookTokenService;
     this.tokenSigner = tokenSigner;
     this.refreshContextService = refreshContextService;
     this.tokenEndpoint = tokenEndpoint;
@@ -105,21 +104,6 @@ public class AuthController {
       throw new InvalidTokenException("Invalid user token:" + idToken);
     val authInfo = googleTokenService.decode(idToken);
     return tokenService.generateUserToken(authInfo);
-  }
-
-  @RequestMapping(method = GET, value = "/facebook/token")
-  @ResponseStatus(value = OK)
-  @SneakyThrows
-  public @ResponseBody String exchangeFacebookTokenForAuth(
-      @RequestHeader(value = "token") final String idToken) {
-    if (!facebookTokenService.validToken(idToken))
-      throw new InvalidTokenException("Invalid user token:" + idToken);
-    val authInfo = facebookTokenService.getAuthInfo(idToken);
-    if (authInfo.isPresent()) {
-      return tokenService.generateUserToken(authInfo.get());
-    } else {
-      throw new InvalidTokenException("Unable to generate auth token for this user");
-    }
   }
 
   @RequestMapping(method = GET, value = "/token/verify")
@@ -148,11 +132,41 @@ public class AuthController {
       value = "/ego-token")
   @SneakyThrows
   public ResponseEntity<String> user(
-      OAuth2Authentication authentication, HttpServletResponse response) {
+      OAuth2AuthenticationToken authentication, HttpServletResponse response) {
     if (authentication == null) {
       return new ResponseEntity<>("Please login", UNAUTHORIZED);
     }
-    String token = tokenService.generateUserToken((IDToken) authentication.getPrincipal());
+    if (authentication.getPrincipal() == null) {
+      throw new RuntimeException("no user");
+    }
+    CustomOAuth2User user;
+    if (authentication.getPrincipal() instanceof OidcUser) {
+      val p = (OidcUser) authentication.getPrincipal();
+      user =
+          CustomOAuth2User.builder()
+              .subjectId(p.getUserInfo().getSubject())
+              .givenName(p.getUserInfo().getGivenName())
+              .familyName(p.getUserInfo().getFamilyName())
+              .email(p.getUserInfo().getEmail())
+              .oauth2User(p)
+              .build();
+    } else if (authentication.getPrincipal() instanceof CustomOAuth2User) {
+      user = (CustomOAuth2User) authentication.getPrincipal();
+    } else {
+      throw new RuntimeException();
+    }
+
+    String token =
+        tokenService.generateUserToken(
+            IDToken.builder()
+                .providerSubjectId(user.getSubjectId())
+                .email(user.getEmail())
+                .familyName(user.getFamilyName())
+                .givenName(user.getGivenName())
+                .providerType(
+                    ProviderType.resolveProviderType(
+                        authentication.getAuthorizedClientRegistrationId()))
+                .build());
 
     val outgoingRefreshContext = refreshContextService.createInitialRefreshContext(token);
     val cookie =

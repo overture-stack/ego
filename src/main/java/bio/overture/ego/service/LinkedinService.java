@@ -17,9 +17,9 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.security.oauth2.client.OAuth2RestOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Service
@@ -28,12 +28,14 @@ public class LinkedinService {
   private String userEmailUri;
 
   @Autowired
-  public LinkedinService(@NonNull @Value("${linkedIn.resource.userEmailUri}") String userEmailUri) {
+  public LinkedinService(
+      @NonNull @Value("${spring.security.oauth2.client.provider.linkedin.userEmailUri}")
+          String userEmailUri) {
     this.userEmailUri = userEmailUri;
   }
 
   public Map<String, Object> getPrimaryEmail(
-      OAuth2RestOperations restTemplate, @NonNull Map<String, Object> map) {
+      RestTemplate restTemplate, @NonNull Map<String, Object> map) {
     val headers = new HttpHeaders();
     headers.set(ACCEPT, APPLICATION_JSON_VALUE);
     val request = new HttpEntity<>(headers);

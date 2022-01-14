@@ -45,7 +45,7 @@ public class GoogleTokenService {
   /*
    * Dependencies
    */
-  @Value("${google.client.clientId}")
+  @Value("${spring.security.oauth2.client.registration.google.client-id}")
   private String clientIDs;
 
   /*

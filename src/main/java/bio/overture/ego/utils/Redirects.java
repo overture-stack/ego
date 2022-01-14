@@ -20,6 +20,7 @@ package bio.overture.ego.utils;
 import static java.lang.String.format;
 
 import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.exceptions.UnauthorizedClientException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -29,7 +30,6 @@ import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
 
 @Slf4j
 public class Redirects {

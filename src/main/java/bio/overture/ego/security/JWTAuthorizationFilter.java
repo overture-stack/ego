@@ -36,14 +36,13 @@ import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.util.StringUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
-public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
+public class JWTAuthorizationFilter extends OncePerRequestFilter {
 
   private String[] publicEndpoints = null;
 
@@ -53,8 +52,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
   @Autowired private TokenService tokenService;
   @Autowired private ApplicationService applicationService;
 
-  public JWTAuthorizationFilter(AuthenticationManager authManager, String[] publicEndpoints) {
-    super(authManager);
+  public JWTAuthorizationFilter(String[] publicEndpoints) {
     this.publicEndpoints = publicEndpoints;
   }
 

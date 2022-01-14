@@ -17,47 +17,25 @@
 
 package bio.overture.ego.config;
 
-import bio.overture.ego.security.OAuth2ClientResources;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import bio.overture.ego.security.CorsFilter;
+import bio.overture.ego.security.OAuth2RequestResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 
 @Configuration
 public class OAuth2ClientConfig {
-
   @Bean
-  @ConfigurationProperties("google")
-  public OAuth2ClientResources google() {
-    return new OAuth2ClientResources();
+  public OAuth2AuthorizationRequestResolver oAuth2AuthorizationRequestResolver(
+      ClientRegistrationRepository clientRegistrationRepository) {
+    return new OAuth2RequestResolver(clientRegistrationRepository, "/oauth/login/");
   }
 
   @Bean
-  @ConfigurationProperties("facebook")
-  public OAuth2ClientResources facebook() {
-    return new OAuth2ClientResources();
-  }
-
-  @Bean
-  @ConfigurationProperties("github")
-  public OAuth2ClientResources github() {
-    return new OAuth2ClientResources();
-  }
-
-  @Bean
-  @ConfigurationProperties("linkedin")
-  public OAuth2ClientResources linkedin() {
-    return new OAuth2ClientResources();
-  }
-
-  @Bean
-  @ConfigurationProperties("orcid")
-  public OAuth2ClientResources orcid() {
-    return new OAuth2ClientResources();
-  }
-
-  @Bean
-  @ConfigurationProperties("keycloak")
-  public OAuth2ClientResources keycloak() {
-    return new OAuth2ClientResources();
+  @Primary
+  public CorsFilter corsFilter() {
+    return new CorsFilter();
   }
 }

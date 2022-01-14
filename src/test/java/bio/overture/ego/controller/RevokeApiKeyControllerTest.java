@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import bio.overture.ego.AuthorizationServiceMain;
+import bio.overture.ego.model.exceptions.InvalidTokenException;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.utils.EntityGenerator;
 import bio.overture.ego.utils.TestData;
@@ -25,7 +26,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;

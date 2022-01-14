@@ -16,9 +16,9 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.client.OAuth2RestOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Service
@@ -27,12 +27,14 @@ public class OrcidService {
   private String userRecordUri;
 
   @Autowired
-  public OrcidService(@NonNull @Value("${orcid.resource.userRecordUri}") String userRecordUri) {
+  public OrcidService(
+      @NonNull @Value("${spring.security.oauth2.client.provider.orcid.userRecordUri}")
+          String userRecordUri) {
     this.userRecordUri = userRecordUri;
   }
 
   public Map<String, Object> getPrimaryEmail(
-      OAuth2RestOperations restTemplate, @NonNull String orcid, @NonNull Map<String, Object> map) {
+      RestTemplate restTemplate, @NonNull String orcid, @NonNull Map<String, Object> map) {
     val url = String.format("%s/%s/email", userRecordUri, orcid);
     val headers = new HttpHeaders();
     headers.set("Accept", "application/json");
