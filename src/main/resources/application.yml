@@ -51,7 +51,7 @@ spring:
         registration:
           google:
             clientName: ego
-            clientId:
+            clientId: ego-client
             clientSecret:
             authorizationGrantType: authorization_code
             clientAuthenticationMethod: post
@@ -63,7 +63,7 @@ spring:
 
           github:
             clientName: ego
-            clientId:
+            clientId: ego-client
             clientSecret:
             redirectUri: "http://localhost:8081/oauth/code/github"
             clientAuthenticationMethod: post
@@ -73,8 +73,8 @@ spring:
               - "user:email"
 
           linkedin:
-            clientName:
-            clientId:
+            clientName: ego-client
+            clientId: ego-client
             clientSecret:
             authorizationGrantType: authorization_code
             redirectUri: "http://localhost:8081/oauth/code/linkedin"
@@ -83,14 +83,14 @@ spring:
               - "r_emailaddress"
 
           orcid:
-            clientId:
+            clientId: ego-client
             clientSecret:
             redirectUri: "http://localhost:8081/oauth/code/orcid"
             authorizationGrantType: authorization_code
             scope: "openid"
 
           keycloak:
-            clientId:
+            clientId: ego-client
             clientSecret:
             redirectUri: "http://localhost:8081/oauth/code/keycloak"
             authorizationGrantType: authorization_code
