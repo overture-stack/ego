@@ -1,12 +1,26 @@
 version: '3.7'
 services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:16.1.0
+    ports:
+      - 8083:8080
+    environment:
+        KEYCLOAK_USER: admin
+        KEYCLOAK_PASSWORD: admin
+        DB_VENDOR: POSTGRES
+        DB_ADDR: postgres
+        DB_DATABASE: ego
+        DB_USER: postgres
+        DB_SCHEMA: public
+        DB_PASSWORD: password
   ego-ui:
     image: overture/ego-ui:edge
-    network_mode: host
+    ports:
+      - "8080:8080"
     environment:
       REACT_APP_API: http://localhost:8081
-      REACT_APP_EGO_CLIENT_ID: ego-ui
-
+      REACT_APP_EGO_CLIENT_ID: ego-local
+      REACT_APP_KEYCLOAK_ENABLED: "true"
   postgres:
     image: postgres:12.6
     restart: always
@@ -17,4 +31,7 @@ services:
       - "5432"
     ports:
       - "5432:5432"
-
+    volumes:
+      - "psql_data:/var/lib/postgresql/data"
+volumes:
+  psql_data:

@@ -21,11 +21,11 @@ import static bio.overture.ego.utils.Redirects.*;
 import static org.junit.Assert.*;
 
 import bio.overture.ego.model.entity.Application;
+import bio.overture.ego.model.exceptions.UnauthorizedClientException;
 import lombok.val;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
 
 public class RedirectsTest {
 

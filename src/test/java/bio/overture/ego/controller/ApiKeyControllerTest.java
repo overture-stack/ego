@@ -323,7 +323,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/check_api_key").body(params).post();
 
     val statusCode = response.getStatusCode();
-    assertEquals(statusCode, HttpStatus.UNAUTHORIZED);
+    assertEquals(HttpStatus.UNAUTHORIZED, statusCode);
   }
 
   @SneakyThrows

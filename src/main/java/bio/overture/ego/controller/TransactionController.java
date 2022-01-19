@@ -27,6 +27,7 @@ import bio.overture.ego.model.entity.Group;
 import bio.overture.ego.model.entity.GroupPermission;
 import bio.overture.ego.model.entity.Policy;
 import bio.overture.ego.model.enums.AccessLevel;
+import bio.overture.ego.model.exceptions.InvalidRequestException;
 import bio.overture.ego.security.ApplicationScoped;
 import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.GroupService;
@@ -44,7 +45,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.common.exceptions.InvalidRequestException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 

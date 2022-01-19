@@ -10,13 +10,13 @@ import lombok.NonNull;
 import lombok.val;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.oauth2.client.OAuth2RestOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class GithubService {
 
-  public String getVerifiedEmail(OAuth2RestOperations restTemplate) {
+  public String getVerifiedEmail(RestTemplate restTemplate) {
     String email;
     email =
         (String)
