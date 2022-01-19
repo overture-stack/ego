@@ -8,6 +8,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -40,11 +41,11 @@ public class OAuth2RequestResolver implements OAuth2AuthorizationRequestResolver
     val queryParams = uriComponents.getQueryParams();
 
     val clientId = queryParams.getFirst("client_id");
-    if (clientId != null && !clientId.isEmpty()) {
+    if (StringUtils.hasText(clientId)) {
       session.setAttribute("ego_client_id", clientId);
     }
     val redirectUri = queryParams.getFirst("redirect_uri");
-    if (redirectUri != null && !redirectUri.isEmpty()) {
+    if (StringUtils.hasText(redirectUri)) {
       session.setAttribute("ego_redirect_uri", redirectUri);
     } else {
       session.setAttribute("ego_redirect_uri", "");

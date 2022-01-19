@@ -3,6 +3,7 @@ package bio.overture.ego.security;
 import java.util.Collection;
 import java.util.Map;
 import lombok.Builder;
+import lombok.NonNull;
 import org.apache.commons.lang.NotImplementedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
@@ -19,6 +20,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 public class CustomOAuth2User implements OidcUser {
   private String givenName = "";
   private String familyName = "";
+  @NonNull
   private String subjectId;
   private String email;
   private OAuth2User oauth2User;

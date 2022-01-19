@@ -37,6 +37,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.security.Principal;
 import java.util.Map;
+import java.util.Objects;
 import javax.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -136,7 +137,7 @@ public class AuthController {
     if (authentication == null) {
       return new ResponseEntity<>("Please login", UNAUTHORIZED);
     }
-    if (authentication.getPrincipal() == null) {
+    if (Objects.isNull(authentication.getPrincipal())) {
       throw new RuntimeException("no user");
     }
     CustomOAuth2User user;

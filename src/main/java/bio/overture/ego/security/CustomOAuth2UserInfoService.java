@@ -8,6 +8,8 @@ import bio.overture.ego.service.LinkedinService;
 import bio.overture.ego.service.OrcidService;
 import java.util.HashMap;
 import java.util.Map;
+
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -20,22 +22,18 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import static org.springframework.security.oauth2.core.oidc.StandardClaimNames.*;
 
 @Component
+@Slf4j
 public class CustomOAuth2UserInfoService extends DefaultOAuth2UserService {
-
-  public static final String EMAIL = "email";
-  public static final String FAMILY_NAME = "family_name";
-  public static final String GIVEN_NAME = "given_name";
   final GithubService githubService;
-  private final OrcidService orcidService;
   private final LinkedinService linkedinService;
 
   @Autowired
   public CustomOAuth2UserInfoService(
-      GithubService githubService, OrcidService orcidService, LinkedinService linkedinService) {
+      GithubService githubService, LinkedinService linkedinService) {
     this.githubService = githubService;
-    this.orcidService = orcidService;
     this.linkedinService = linkedinService;
   }
 
@@ -50,7 +48,7 @@ public class CustomOAuth2UserInfoService extends DefaultOAuth2UserService {
         val info = getGithubUserEmail(oAuth2User, oAuth2UserRequest);
         return CustomOAuth2User.builder()
             .oauth2User(new DefaultOAuth2User(oAuth2User.getAuthorities(), info, idName))
-            .subjectId(info.getOrDefault(idName, "").toString())
+            .subjectId(info.get(idName).toString())
             .email(info.getOrDefault(EMAIL, "").toString())
             .familyName(info.getOrDefault(FAMILY_NAME, "").toString())
             .givenName(info.getOrDefault(GIVEN_NAME, "").toString())
@@ -61,7 +59,7 @@ public class CustomOAuth2UserInfoService extends DefaultOAuth2UserService {
         val info = getLinkedInUserInfo(oAuth2User, oAuth2UserRequest);
         return CustomOAuth2User.builder()
             .oauth2User(new DefaultOAuth2User(oAuth2User.getAuthorities(), info, idName))
-            .subjectId(info.getOrDefault(idName, "").toString())
+            .subjectId(info.get(idName).toString())
             .email(info.getOrDefault(EMAIL, "").toString())
             .familyName(info.getOrDefault(FAMILY_NAME, "").toString())
             .givenName(info.getOrDefault(GIVEN_NAME, "").toString())
@@ -72,7 +70,7 @@ public class CustomOAuth2UserInfoService extends DefaultOAuth2UserService {
     } catch (AuthenticationException ex) {
       throw ex;
     } catch (Exception ex) {
-      ex.printStackTrace();
+      log.error("failed to load oauth user info", ex);
       // Throwing an instance of AuthenticationException will trigger the
       // OAuth2AuthenticationFailureHandler
       throw new RuntimeException(ex.getMessage(), ex.getCause());
@@ -105,14 +103,6 @@ public class CustomOAuth2UserInfoService extends DefaultOAuth2UserService {
     val attributes = new HashMap<>(user.getAttributes());
     RestTemplate restTemplate = getTemplate(oAuth2UserRequest);
     return linkedinService.getPrimaryEmail(restTemplate, attributes);
-  }
-
-  public Map<String, Object> getOrcidUserInfo(
-      OAuth2User user, OAuth2UserRequest oAuth2UserRequest) {
-    val attributes = new HashMap<>(user.getAttributes());
-    RestTemplate restTemplate = getTemplate(oAuth2UserRequest);
-    val orcid = attributes.get("sub").toString();
-    return orcidService.getPrimaryEmail(restTemplate, orcid, attributes);
   }
 
   private RestTemplate getTemplate(OAuth2UserRequest oAuth2UserRequest) {

@@ -4,6 +4,8 @@ import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.service.OrcidService;
 import java.util.HashMap;
 import java.util.Map;
+
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -18,13 +20,11 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-@Component
-public class CustomOidc2UserInfoService extends OidcUserService {
+import static org.springframework.security.oauth2.core.oidc.StandardClaimNames.*;
 
-  public static final String EMAIL = "email";
-  public static final String FAMILY_NAME = "family_name";
-  public static final String GIVEN_NAME = "given_name";
-  public static final String SUB = "sub";
+@Component
+@Slf4j
+public class CustomOidc2UserInfoService extends OidcUserService {
   private final OrcidService orcidService;
 
   @Autowired
@@ -42,7 +42,7 @@ public class CustomOidc2UserInfoService extends OidcUserService {
         val info = getOrcidUserInfo(oidcUser, oAuth2UserRequest);
         return CustomOAuth2User.builder()
             .oauth2User(new DefaultOAuth2User(oidcUser.getAuthorities(), info, idName))
-            .subjectId(info.getOrDefault(idName, "").toString())
+            .subjectId(info.get(idName).toString())
             .email(info.getOrDefault(EMAIL, "").toString())
             .familyName(info.getOrDefault(FAMILY_NAME, "").toString())
             .givenName(info.getOrDefault(GIVEN_NAME, "").toString())
@@ -52,7 +52,7 @@ public class CustomOidc2UserInfoService extends OidcUserService {
     } catch (AuthenticationException ex) {
       throw ex;
     } catch (Exception ex) {
-      ex.printStackTrace();
+      log.error("failed to load OIDC user info", ex);
       // Throwing an instance of AuthenticationException will trigger the
       // OAuth2AuthenticationFailureHandler
       throw new RuntimeException(ex.getMessage(), ex.getCause());
