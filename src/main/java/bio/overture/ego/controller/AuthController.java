@@ -140,23 +140,8 @@ public class AuthController {
     if (Objects.isNull(authentication.getPrincipal())) {
       throw new RuntimeException("no user");
     }
-    CustomOAuth2User user;
-    if (authentication.getPrincipal() instanceof OidcUser) {
-      val p = (OidcUser) authentication.getPrincipal();
-      user =
-          CustomOAuth2User.builder()
-              .subjectId(p.getUserInfo().getSubject())
-              .givenName(p.getUserInfo().getGivenName())
-              .familyName(p.getUserInfo().getFamilyName())
-              .email(p.getUserInfo().getEmail())
-              .oauth2User(p)
-              .build();
-    } else if (authentication.getPrincipal() instanceof CustomOAuth2User) {
-      user = (CustomOAuth2User) authentication.getPrincipal();
-    } else {
-      throw new RuntimeException();
-    }
 
+    val user = (CustomOAuth2User) authentication.getPrincipal();
     String token =
         tokenService.generateUserToken(
             IDToken.builder()

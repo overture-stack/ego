@@ -53,9 +53,7 @@ public class CustomOAuth2UserInfoService extends DefaultOAuth2UserService {
             .familyName(info.getOrDefault(FAMILY_NAME, "").toString())
             .givenName(info.getOrDefault(GIVEN_NAME, "").toString())
             .build();
-      }
-
-      if (provider.equalsIgnoreCase(ProviderType.LINKEDIN.toString())) {
+      } else if (provider.equalsIgnoreCase(ProviderType.LINKEDIN.toString())) {
         val info = getLinkedInUserInfo(oAuth2User, oAuth2UserRequest);
         return CustomOAuth2User.builder()
             .oauth2User(new DefaultOAuth2User(oAuth2User.getAuthorities(), info, idName))
@@ -64,9 +62,10 @@ public class CustomOAuth2UserInfoService extends DefaultOAuth2UserService {
             .familyName(info.getOrDefault(FAMILY_NAME, "").toString())
             .givenName(info.getOrDefault(GIVEN_NAME, "").toString())
             .build();
+      } else {
+        throw new RuntimeException("unhandled provider type " + provider);
       }
 
-      return CustomOAuth2User.builder().oauth2User(oAuth2User).build();
     } catch (AuthenticationException ex) {
       throw ex;
     } catch (Exception ex) {
