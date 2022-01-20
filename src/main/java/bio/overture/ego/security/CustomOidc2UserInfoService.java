@@ -48,7 +48,13 @@ public class CustomOidc2UserInfoService extends OidcUserService {
             .givenName(info.getOrDefault(GIVEN_NAME, "").toString())
             .build();
       }
-      return CustomOAuth2User.builder().oauth2User(oidcUser).build();
+      return CustomOAuth2User.builder()
+          .oauth2User(oidcUser)
+          .subjectId(oidcUser.getSubject())
+          .email(oidcUser.getEmail())
+          .familyName(oidcUser.getFamilyName())
+          .givenName(oidcUser.getGivenName())
+          .build();
     } catch (AuthenticationException ex) {
       throw ex;
     } catch (Exception ex) {
