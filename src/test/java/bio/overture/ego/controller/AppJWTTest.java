@@ -9,6 +9,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.*;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import bio.overture.ego.AuthorizationServiceMain;
 import bio.overture.ego.model.dto.Scope;
@@ -36,7 +37,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
 
 @Slf4j
-@ActiveProfiles({"test"})
+@ActiveProfiles({"test", "auth"})
 @RunWith(SpringRunner.class)
 @SpringBootTest(
     classes = AuthorizationServiceMain.class,
@@ -64,7 +65,7 @@ public class AppJWTTest extends AbstractControllerTest {
     val adminUser = entityGenerator.setupUser("Admin App");
     val bearerToken = tokenService.generateUserToken(adminUser);
     tokenHeaders.add(AUTHORIZATION, "Bearer " + bearerToken);
-    tokenHeaders.setContentType(APPLICATION_FORM_URLENCODED);
+    tokenHeaders.setContentType(APPLICATION_JSON);
   }
 
   @Test
@@ -83,6 +84,7 @@ public class AppJWTTest extends AbstractControllerTest {
         initStringRequest()
             .endpoint("/policies/%s/permission/application/%s", policyId, appId)
             .body(createMaskJson(WRITE.toString()))
+            .headers(tokenHeaders)
             .postAnd()
             .assertOk();
 
@@ -90,6 +92,7 @@ public class AppJWTTest extends AbstractControllerTest {
     val appPermResponse =
         initStringRequest()
             .endpoint("/applications/%s/permissions", appId)
+            .headers(tokenHeaders)
             .getAnd()
             .assertOk()
             .assertPageResultHasSize(ApplicationPermission.class, 1)
@@ -123,6 +126,7 @@ public class AppJWTTest extends AbstractControllerTest {
     val r1 =
         initStringRequest()
             .endpoint("/policies/%s/permission/application/%s", policyId1, appId)
+            .headers(tokenHeaders)
             .body(createMaskJson(READ.toString()))
             .postAnd()
             .assertOk();
@@ -130,6 +134,7 @@ public class AppJWTTest extends AbstractControllerTest {
     val r2 =
         initStringRequest()
             .endpoint("/policies/%s/permission/application/%s", policyId2, appId)
+            .headers(tokenHeaders)
             .body(createMaskJson(WRITE.toString()))
             .postAnd()
             .assertOk();
@@ -137,6 +142,7 @@ public class AppJWTTest extends AbstractControllerTest {
     val r3 =
         initStringRequest()
             .endpoint("/policies/%s/permission/application/%s", policyId3, appId)
+            .headers(tokenHeaders)
             .body(createMaskJson(DENY.toString()))
             .postAnd()
             .assertOk();
@@ -145,6 +151,7 @@ public class AppJWTTest extends AbstractControllerTest {
     val appPermResponse =
         initStringRequest()
             .endpoint("/applications/%s/permissions", appId)
+            .headers(tokenHeaders)
             .getAnd()
             .assertOk()
             .assertPageResultHasSize(ApplicationPermission.class, 3)
@@ -165,11 +172,13 @@ public class AppJWTTest extends AbstractControllerTest {
     params.add("client_secret", app.getClientSecret());
 
     // get app jwt scopes
+    val reqHeaders = new HttpHeaders();
+    reqHeaders.setContentType(APPLICATION_FORM_URLENCODED);
     val tokenResponse =
         initStringRequest()
             .endpoint("/oauth/token")
-            .headers(tokenHeaders)
-            .body(params)
+            .headers(reqHeaders)
+            .body(String.format("client_id=%s&client_secret=%s&grant_type=%s", app.getClientId(), app.getClientSecret(), "client_credentials"))
             .postAnd()
             .assertOk()
             .assertHasBody()
@@ -202,24 +211,28 @@ public class AppJWTTest extends AbstractControllerTest {
     // associate app with group
     initStringRequest()
         .endpoint("/groups/%s/applications", groupId)
+        .headers(tokenHeaders)
         .body(asList(appId))
         .postAnd()
         .assertOk();
 
     initStringRequest()
         .endpoint("/policies/%s/permission/application/%s", policyId1, appId)
+        .headers(tokenHeaders)
         .body(createMaskJson(READ.toString()))
         .postAnd()
         .assertOk();
 
     initStringRequest()
         .endpoint("/policies/%s/permission/application/%s", policyId2, appId)
+        .headers(tokenHeaders)
         .body(createMaskJson(READ.toString()))
         .postAnd()
         .assertOk();
 
     initStringRequest()
         .endpoint("/policies/%s/permission/group/%s", policyId1, groupId)
+        .headers(tokenHeaders)
         .body(createMaskJson(WRITE.toString()))
         .postAnd()
         .assertOk();
@@ -227,6 +240,7 @@ public class AppJWTTest extends AbstractControllerTest {
     // get app permissions
     initStringRequest()
         .endpoint("/applications/%s/permissions", appId)
+        .headers(tokenHeaders)
         .getAnd()
         .assertOk()
         .assertPageResultHasSize(ApplicationPermission.class, 2);
@@ -234,6 +248,7 @@ public class AppJWTTest extends AbstractControllerTest {
     // get group permissions
     initStringRequest()
         .endpoint("/groups/%s/permissions", groupId)
+        .headers(tokenHeaders)
         .getAnd()
         .assertOk()
         .assertPageResultHasSize(GroupPermission.class, 1);
@@ -242,6 +257,7 @@ public class AppJWTTest extends AbstractControllerTest {
     val resolvedPerms =
         initStringRequest()
             .endpoint("/applications/%s/groups/permissions", appId)
+            .headers(tokenHeaders)
             .getAnd()
             .assertOk()
             .assertHasBody()
@@ -257,7 +273,6 @@ public class AppJWTTest extends AbstractControllerTest {
             .<Scope>map(
                 x -> {
                   val acl = x.get("accessLevel").asText();
-
                   val policyInfo = x.get("policy").get("id").asText();
                   val policyId = UUID.fromString(policyInfo);
                   val policy = policyService.getById(policyId);
@@ -274,11 +289,14 @@ public class AppJWTTest extends AbstractControllerTest {
     params.add("client_secret", app.getClientSecret());
 
     // get app jwt scopes
+    val reqHeaders = new HttpHeaders();
+    reqHeaders.setContentType(APPLICATION_FORM_URLENCODED);
+
     val tokenResponse =
         initStringRequest()
             .endpoint("/oauth/token")
-            .headers(tokenHeaders)
-            .body(params)
+            .headers(reqHeaders)
+            .body(String.format("client_id=%s&client_secret=%s&grant_type=%s", app.getClientId(), app.getClientSecret(), "client_credentials"))
             .postAnd()
             .assertOk()
             .assertHasBody()
@@ -298,27 +316,22 @@ public class AppJWTTest extends AbstractControllerTest {
   @SneakyThrows
   public void applicationPerms_appHasNoScopes_getsDefaultScope() {
     // generate app with no permissions
-    val app = entityGenerator.setupApplication("Empty App", "emptysecret", ApplicationType.CLIENT);
+    val app = entityGenerator.setupApplication("EmptyApp", "emptysecret", ApplicationType.CLIENT);
 
     val params = new LinkedMultiValueMap<String, Object>();
     params.add("grant_type", "client_credentials");
     params.add("client_id", app.getClientId());
     params.add("client_secret", app.getClientSecret());
 
-    // expect 400 error
-    initStringRequest()
-        .endpoint("/oauth/token")
-        .headers(tokenHeaders)
-        .body(params)
-        .postAnd()
-        .assertOk();
-
     // get app jwt scopes
+    val reqHeaders = new HttpHeaders();
+    reqHeaders.setContentType(APPLICATION_FORM_URLENCODED);
+
     val tokenResponse =
         initStringRequest()
             .endpoint("/oauth/token")
-            .headers(tokenHeaders)
-            .body(params)
+            .headers(reqHeaders)
+            .body(String.format("client_id=%s&client_secret=%s&grant_type=%s", app.getClientId(), app.getClientSecret(), "client_credentials"))
             .postAnd()
             .assertOk()
             .assertHasBody()

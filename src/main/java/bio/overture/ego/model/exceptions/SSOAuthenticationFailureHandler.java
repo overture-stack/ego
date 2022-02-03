@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.http.client.utils.URIBuilder;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 

@@ -21,38 +21,61 @@ import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.token.app.AppJWTAccessToken;
-import bio.overture.ego.token.app.AppTokenClaims;
+import java.time.Instant;
+import java.util.List;
+
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.security.oauth2.provider.token.TokenEnhancer;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
+import org.springframework.stereotype.Component;
 
-public class CustomTokenEnhancer implements TokenEnhancer {
+// This class is responsible to modify and customize the jwt claims
+@Component
+public class CustomTokenEnhancer implements OAuth2TokenCustomizer<JwtEncodingContext> {
 
-  @Autowired private TokenService tokenService;
-  @Autowired private UserService userService;
-  @Autowired private ApplicationService applicationService;
+  private final TokenService tokenService;
+  private final UserService userService;
+  private final ApplicationService applicationService;
+
+  @Autowired
+  public CustomTokenEnhancer(TokenService tokenService, UserService userService, ApplicationService applicationService) {
+    this.tokenService = tokenService;
+    this.userService = userService;
+    this.applicationService = applicationService;
+  }
 
   @Override
-  public OAuth2AccessToken enhance(
-      OAuth2AccessToken oAuth2AccessToken, OAuth2Authentication oAuth2Authentication) {
-
-    if (oAuth2Authentication.getAuthorities() != null
-        && oAuth2Authentication.getAuthorities().stream()
-            .anyMatch(authority -> AppTokenClaims.ROLE.equals(authority.getAuthority()))) {
-      return getApplicationAccessToken(oAuth2Authentication.getPrincipal().toString());
+  public void customize(JwtEncodingContext context) {
+    val client = context.getRegisteredClient();
+    val isAppToken =
+        context.getAuthorizationGrantType().equals(AuthorizationGrantType.CLIENT_CREDENTIALS);
+    if (isAppToken) {
+      val appToken = getApplicationAccessToken(client.getClientId());
+      context.getClaims().claim("context", appToken.getTokenClaims().get("context"));
+      context.getClaims().expiresAt(appToken.getTokenClaims().getExpiration().toInstant());
+      context.getClaims().issuer(appToken.getTokenClaims().getIssuer());
+      context.getClaims().issuedAt(appToken.getTokenClaims().getIssuedAt().toInstant());
+      context.getClaims().subject(appToken.getTokenClaims().getSubject());
+      context.getClaims().id(appToken.getTokenClaims().getId());
+      context.getClaims().audience(List.of());
     } else {
-      val user = (User) oAuth2Authentication.getPrincipal();
-      val token = tokenService.generateUserToken(userService.getById(user.getId()));
-      return tokenService.getUserAccessToken(token);
+      val user = (User) context.getPrincipal();
+      val claims = tokenService.getUserTokenClaims(userService.getById(user.getId()));
+      context.getClaims().issuedAt(Instant.ofEpochSecond(claims.iat));
+      context.getClaims().expiresAt(Instant.ofEpochSecond(claims.exp));
+      context.getClaims().issuer(claims.iss);
+      context.getClaims().subject(claims.sub);
+      context.getClaims().id(claims.getJti());
+      context.getClaims().audience(List.of());
+      context.getClaims().claim("context", claims.getContext());
     }
   }
 
   private AppJWTAccessToken getApplicationAccessToken(String clientId) {
     val app = applicationService.getByClientId(clientId);
     val token = tokenService.generateAppToken(app);
-
     return tokenService.getAppAccessToken(token);
   }
 }

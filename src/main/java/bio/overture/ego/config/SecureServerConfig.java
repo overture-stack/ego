@@ -19,6 +19,7 @@ package bio.overture.ego.config;
 import bio.overture.ego.model.exceptions.SSOAuthenticationFailureHandler;
 import bio.overture.ego.security.*;
 import bio.overture.ego.service.ApplicationService;
+import bio.overture.ego.service.TokenService;
 import bio.overture.ego.utils.Redirects;
 import java.io.IOException;
 import java.util.Arrays;
@@ -27,6 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.*;
@@ -36,6 +38,7 @@ import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
@@ -178,20 +181,27 @@ public class SecureServerConfig {
     }
   }
 
+  @Bean
+  @SneakyThrows
+  public JWTAuthorizationFilter authorizationFilter(
+      TokenService tokenService, ApplicationService applicationService) {
+    return new JWTAuthorizationFilter(PUBLIC_ENDPOINTS, tokenService, applicationService);
+  }
+
   @Configuration
   @Order(SecurityProperties.BASIC_AUTH_ORDER + 3)
   public class AppConfigurerAdapter extends WebSecurityConfigurerAdapter {
 
-    @Bean
-    @SneakyThrows
-    public JWTAuthorizationFilter authorizationFilter() {
-      return new JWTAuthorizationFilter(PUBLIC_ENDPOINTS);
-    }
+    OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
+        new OAuth2AuthorizationServerConfigurer<>();
+    @Autowired JWTAuthorizationFilter authorizationFilter;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
       http.csrf()
           .disable()
+          .apply(authorizationServerConfigurer)
+          .and()
           .authorizeRequests()
           .antMatchers(
               "/",
@@ -211,7 +221,7 @@ public class SecureServerConfig {
           .anyRequest()
           .authenticated()
           .and()
-          .addFilterBefore(authorizationFilter(), BasicAuthenticationFilter.class)
+          .addFilterBefore(authorizationFilter, BasicAuthenticationFilter.class)
           .sessionManagement()
           .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
