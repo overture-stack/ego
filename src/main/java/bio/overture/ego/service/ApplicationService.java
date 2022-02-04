@@ -211,7 +211,7 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
   @Override
   public RegisteredClient findByClientId(String clientId) {
     val application = getByClientId(clientId);
-    if (application == null) {
+    if (Objects.isNull(application)) {
       return null;
     }
     if (application.getStatus() != APPROVED) {
