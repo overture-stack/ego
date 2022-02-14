@@ -33,7 +33,7 @@ public class SecurityTest {
     app.setClientSecret("secret");
     when(applicationService.findByClientId("id")).thenReturn(Optional.of(app));
 
-    val authorizationFilter = new JWTAuthorizationFilter(authManager, new String[0]);
+    val authorizationFilter = new JWTAuthorizationFilter(new String[0]);
     ReflectionTestUtils.setField(authorizationFilter, "applicationService", applicationService);
     ReflectionTestUtils.setField(authorizationFilter, "tokenService", tokenService);
     return authorizationFilter;

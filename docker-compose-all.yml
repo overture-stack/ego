@@ -1,31 +1,45 @@
 version: '3.7'
 services:
-  api:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    restart: always
+  ego-ui:
+    image: overture/ego-ui:edge
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
     environment:
-      SERVER_PORT: 8080
+      REACT_APP_API: http://localhost:8081
+      REACT_APP_EGO_CLIENT_ID: ego-ui
+  api:
+    # change the image tag to the target image as needed
+    image: overture/ego:4c1969bf
+    environment:
+      SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ego?stringtype=unspecified
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
       SPRING_FLYWAY_ENABLED: "true"
       SPRING_FLYWAY_LOCATIONS: "classpath:flyway/sql,classpath:db/migration"
-      SPRING_PROFILES: demo, auth
+      SPRING_PROFILES_ACTIVE: auth
+      google.client.clientId: $EGO_GOOGLE_CLIENT_ID
+      google.client.clientSecret: $EGO_GOOGLE_SECRET
+      default.user.firstUserAsAdmin: "true"
+      logging.level.root: INFO
     expose:
-      - "8080"
+      - "8081"
     ports:
-      - "$API_HOST_PORT:8080"
+      - "8081:8081"
     depends_on:
       - postgres
   postgres:
     image: postgres:12.6
-    restart: always
     environment:
       - POSTGRES_DB=ego
       - POSTGRES_PASSWORD=password
     expose:
       - "5432"
     ports:
-      - "8432:5432"
+      - "5432:5432"
+    volumes:
+      - "ego_data:/var/lib/postgresql/data"
+volumes:
+  ego_data:

@@ -45,11 +45,86 @@ spring.datasource:
   min-idle: 1
 
 spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            clientName: ego
+            clientId: ego-client
+            clientSecret:
+            authorizationGrantType: authorization_code
+            clientAuthenticationMethod: post
+            redirectUri: "http://localhost:8081/oauth/code/google"
+            scope:
+              - openid
+              - email
+              - profile
+
+          github:
+            clientName: ego
+            clientId: ego-client
+            clientSecret:
+            redirectUri: "http://localhost:8081/oauth/code/github"
+            clientAuthenticationMethod: post
+            authorizationGrantType: authorization_code
+            scope:
+              - "read:user"
+              - "user:email"
+
+          linkedin:
+            clientName: ego-client
+            clientId: ego-client
+            clientSecret:
+            authorizationGrantType: authorization_code
+            redirectUri: "http://localhost:8081/oauth/code/linkedin"
+            scope:
+              - "r_liteprofile"
+              - "r_emailaddress"
+
+          orcid:
+            clientId: ego-client
+            clientSecret:
+            redirectUri: "http://localhost:8081/oauth/code/orcid"
+            authorizationGrantType: authorization_code
+            scope: "openid"
+
+          keycloak:
+            clientId: ego-client
+            clientSecret:
+            redirectUri: "http://localhost:8081/oauth/code/keycloak"
+            authorizationGrantType: authorization_code
+            scope:
+              - email
+              - profile
+              - openid
+
+        provider:
+          keycloak:
+            authorizationUri: http://localhost:8083/auth/realms/master/protocol/openid-connect/auth
+            userInfoUri: http://localhost:8083/auth/realms/master/protocol/openid-connect/userinfo
+            tokenUri: http://localhost:8083/auth/realms/master/protocol/openid-connect/token
+            jwkSetUri: http://localhost:8083/auth/realms/master/protocol/openid-connect/certs
+            userNameAttribute: sub
+          linkedin:
+            authorizationUri: https://www.linkedin.com/oauth/v2/authorization
+            userInfoUri: https://api.linkedin.com/v2/me
+            tokenUri: https://www.linkedin.com/oauth/v2/accessToken
+            userNameAttribute: localizedFirstName
+            userEmailUri: https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))
+          orcid:
+            tokenUri: https://orcid.org/oauth/token
+            authorizationUri: https://orcid.org/oauth/authorize
+            userInfoUri: https://orcid.org/oauth/userinfo
+            userNameAttribute: sub
+            userRecordUri: https://pub.orcid.org/v2.0
+            jwkSetUri: https://orcid.org/oauth/jwks
   cloud:
     vault:
       enabled: false
   flyway:
-    enabled: false
+    enabled: true
+    locations: "classpath:flyway/sql,classpath:db/migration"
     placeholders:
       default-provider: GOOGLE
   jackson:
@@ -67,90 +142,8 @@ log4j:
     org:
       hibernate: TRACE
 
-
 oauth:
   redirectFrontendUri: http://localhost:3501
-
-facebook:
-  client:
-    clientId:
-    clientSecret:
-    accessTokenUri: https://graph.facebook.com/oauth/access_token
-    userAuthorizationUri: https://www.facebook.com/dialog/oauth
-    tokenValidateUri: https://graph.facebook.com/debug_token
-    tokenName: oauth_token
-    authenticationScheme: query
-    clientAuthenticationScheme: form
-    scope:
-      - email
-    timeout:
-      connect: 5000
-      read: 5000
-    user-authorization-uri: https://www.facebook.com/dialog/oauth
-  resource:
-    userInfoUri: https://graph.facebook.com/me?fields=email,first_name,last_name
-
-keycloak:
-  client:
-    clientId: ego
-    clientSecret:
-    accessTokenUri: http://localhost:8080/auth/realms/covid/protocol/openid-connect/token
-    userAuthorizationUri: http://localhost:8080/auth/realms/covid/protocol/openid-connect/auth
-    clientAuthenticationScheme: form
-    scope:
-      - email
-      - profile
-  resource:
-    userInfoUri: http://localhost:8080/auth/realms/covid/protocol/openid-connect/userinfo
-
-google:
-  client:
-    clientId: 144611473365-k1aarg8qs6rlh67r3t7dssi1e34b6061.apps.googleusercontent.com
-    clientSecret:
-    accessTokenUri: https://www.googleapis.com/oauth2/v4/token
-    userAuthorizationUri: https://accounts.google.com/o/oauth2/v2/auth
-    clientAuthenticationScheme: form
-    scope:
-      - email
-      - profile
-  resource:
-    userInfoUri: https://www.googleapis.com/oauth2/v3/userinfo
-
-linkedIn:
-  client:
-    clientID: 
-    clientSecret: 
-    accessTokenUri: https://www.linkedin.com/oauth/v2/accessToken
-    userAuthorizationUri: https://www.linkedin.com/oauth/v2/authorization
-    clientAuthenticationScheme: query
-    scope: "r_liteprofile r_emailaddress"
-  resource:
-    userInfoUri: https://api.linkedin.com/v2/me
-    userEmailUri: https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))
-
-github:
-  client:
-    clientId: 
-    clientSecret: 
-    accessTokenUri: https://github.com/login/oauth/access_token
-    userAuthorizationUri: https://github.com/login/oauth/authorize
-    clientAuthenticationScheme: form
-    scope: "user:email"
-  resource:
-    userInfoUri: https://api.github.com/user
-
-orcid:
-  client:
-    clientId: APP-O5Z410O5DWC1011N
-    clientSecret:
-    accessTokenUri: https://orcid.org/oauth/token
-    tokenName: access_token
-    userAuthorizationUri: https://orcid.org/oauth/authorize
-    clientAuthenticationScheme: form
-    scope: "openid"
-  resource:
-    userInfoUri: https://orcid.org/oauth/userinfo
-    userRecordUri: https://pub.orcid.org/v2.0
 
 # Logging settings.
 logging:
@@ -160,7 +153,7 @@ logging:
   loggers:
     "org.skife.jdbi.v2": TRACE
   level:
-    root: ERROR
+    root: INFO
     #org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
     #org.springframework.boot: INFO
     bio.overture.ego: INFO

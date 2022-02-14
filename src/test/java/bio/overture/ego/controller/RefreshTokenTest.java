@@ -1,5 +1,6 @@
 package bio.overture.ego.controller;
 
+import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
 import static org.junit.Assert.*;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.*;
@@ -12,6 +13,8 @@ import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.service.RefreshContextService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.utils.EntityGenerator;
+import bio.overture.ego.utils.web.StringResponseOption;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -95,8 +98,7 @@ public class RefreshTokenTest extends AbstractControllerTest {
     val statusCode = response.getResponse().getStatusCode();
 
     assertEquals(statusCode, NOT_FOUND);
-    val headers = response.getResponse().getHeaders();
-    assertNull(headers.get("Set-Cookie"));
+    assertNoRefreshIdCookie(response);
   }
 
   @Test
@@ -105,8 +107,7 @@ public class RefreshTokenTest extends AbstractControllerTest {
     val statusCode = response.getResponse().getStatusCode();
 
     assertEquals(statusCode, UNAUTHORIZED);
-    val headers = response.getResponse().getHeaders();
-    assertNull(headers.get("Set-Cookie"));
+    assertNoRefreshIdCookie(response);
   }
 
   @Test
@@ -123,8 +124,7 @@ public class RefreshTokenTest extends AbstractControllerTest {
     val statusCode = response.getResponse().getStatusCode();
 
     assertEquals(statusCode, FORBIDDEN);
-    val headers = response.getResponse().getHeaders();
-    assertNull(headers.get("Set-Cookie"));
+    assertNoRefreshIdCookie(response);
   }
 
   @Test
@@ -158,8 +158,7 @@ public class RefreshTokenTest extends AbstractControllerTest {
     val responseStatus = response.getResponse().getStatusCode();
     assertEquals(responseStatus, NOT_FOUND);
 
-    val newCookie = response.getResponse().getHeaders().get("Set-Cookie");
-    assertNull(newCookie);
+    assertNoRefreshIdCookie(response);
   }
 
   @Test
@@ -168,7 +167,15 @@ public class RefreshTokenTest extends AbstractControllerTest {
     val statusCode = response.getResponse().getStatusCode();
 
     assertEquals(statusCode, UNAUTHORIZED);
-    val headers = response.getResponse().getHeaders();
-    assertNull(headers.get("Set-Cookie"));
+    assertNoRefreshIdCookie(response);
+  }
+
+  private void assertNoRefreshIdCookie(StringResponseOption response) {
+    val cookies = response.getResponse().getHeaders().get("Set-Cookie");
+    Objects.requireNonNull(cookies)
+        .forEach(
+            c -> {
+              assertFalse(c.contains(REFRESH_ID));
+            });
   }
 }
