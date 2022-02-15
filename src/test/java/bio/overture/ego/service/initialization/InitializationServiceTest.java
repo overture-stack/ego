@@ -97,8 +97,8 @@ public class InitializationServiceTest {
     assertFalse(initializationService.isInitialized());
 
     // Assert the applications do not exist
-    assertFalse(applicationService.findByClientId(appClientId1).isPresent());
-    assertFalse(applicationService.findByClientId(appClientId2).isPresent());
+    assertFalse(applicationService.getClientApplication(appClientId1).isPresent());
+    assertFalse(applicationService.getClientApplication(appClientId2).isPresent());
 
     // Run the initialization using the empty config
     val service = new InitializationService(initTripWireRepository, applicationService, config);
@@ -110,8 +110,8 @@ public class InitializationServiceTest {
     assertTrue(initializationService.isInitialized());
 
     // Assert the applications exist
-    assertTrue(applicationService.findByClientId(appClientId1).isPresent());
-    assertTrue(applicationService.findByClientId(appClientId2).isPresent());
+    assertTrue(applicationService.getClientApplication(appClientId1).isPresent());
+    assertTrue(applicationService.getClientApplication(appClientId2).isPresent());
   }
 
   @Test
@@ -141,7 +141,7 @@ public class InitializationServiceTest {
     assertFalse(initializationService.isInitialized());
 
     // Assert the applications do not exist
-    assertFalse(applicationService.findByClientId(appClientId1).isPresent());
+    assertFalse(applicationService.getClientApplication(appClientId1).isPresent());
     assertFalse(applicationService.findByName(appName1).isPresent());
     assertFalse(applicationService.findByName(appName2).isPresent());
 
@@ -156,7 +156,7 @@ public class InitializationServiceTest {
     assertFalse(initializationService.isInitialized());
 
     // Assert the applications were not created
-    assertFalse(applicationService.findByClientId(appClientId1).isPresent());
+    assertFalse(applicationService.getClientApplication(appClientId1).isPresent());
     assertFalse(applicationService.findByName(appName1).isPresent());
     assertFalse(applicationService.findByName(appName2).isPresent());
   }

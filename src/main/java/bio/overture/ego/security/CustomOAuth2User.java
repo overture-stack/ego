@@ -20,8 +20,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 public class CustomOAuth2User implements OidcUser {
   private String givenName = "";
   private String familyName = "";
-  @NonNull
-  private String subjectId;
+  @NonNull private String subjectId;
   private String email;
   private OAuth2User oauth2User;
 

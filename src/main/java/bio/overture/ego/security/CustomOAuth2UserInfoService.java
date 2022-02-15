@@ -1,14 +1,13 @@
 package bio.overture.ego.security;
 
 import static java.util.Objects.isNull;
+import static org.springframework.security.oauth2.core.oidc.StandardClaimNames.*;
 
 import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.service.GithubService;
 import bio.overture.ego.service.LinkedinService;
-import bio.overture.ego.service.OrcidService;
 import java.util.HashMap;
 import java.util.Map;
-
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +21,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-import static org.springframework.security.oauth2.core.oidc.StandardClaimNames.*;
 
 @Component
 @Slf4j
@@ -31,8 +29,7 @@ public class CustomOAuth2UserInfoService extends DefaultOAuth2UserService {
   private final LinkedinService linkedinService;
 
   @Autowired
-  public CustomOAuth2UserInfoService(
-      GithubService githubService, LinkedinService linkedinService) {
+  public CustomOAuth2UserInfoService(GithubService githubService, LinkedinService linkedinService) {
     this.githubService = githubService;
     this.linkedinService = linkedinService;
   }

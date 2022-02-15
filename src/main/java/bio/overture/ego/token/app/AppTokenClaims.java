@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.util.StringUtils;
 
 @Data
@@ -32,10 +33,11 @@ public class AppTokenClaims extends TokenClaims {
   /*
    Constants
   */
-  public static final String[] AUTHORIZED_GRANTS = {
-    "authorization_code", "client_credentials", "password", "refresh_token"
+  public static final AuthorizationGrantType[] AUTHORIZED_GRANT_TYPES = {
+    AuthorizationGrantType.AUTHORIZATION_CODE,
+    AuthorizationGrantType.CLIENT_CREDENTIALS,
+    AuthorizationGrantType.REFRESH_TOKEN
   };
-
   public static final String ROLE = "ROLE_CLIENT";
 
   @NonNull private AppTokenContext context;

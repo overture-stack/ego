@@ -34,9 +34,6 @@ import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.signer.TokenSigner;
 import bio.overture.ego.utils.Tokens;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import java.security.Principal;
-import java.util.Map;
 import java.util.Objects;
 import javax.servlet.http.HttpServletResponse;
 import lombok.NonNull;
@@ -49,11 +46,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.provider.endpoint.TokenEndpoint;
 import org.springframework.util.StringUtils;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
@@ -70,11 +63,9 @@ public class AuthController {
   private final GoogleTokenService googleTokenService;
   private final TokenSigner tokenSigner;
   private final RefreshContextService refreshContextService;
-  private final TokenEndpoint tokenEndpoint;
 
   @Autowired
   public AuthController(
-      @NonNull TokenEndpoint tokenEndpoint,
       @NonNull TokenService tokenService,
       @NonNull GoogleTokenService googleTokenService,
       @NonNull TokenSigner tokenSigner,
@@ -83,17 +74,6 @@ public class AuthController {
     this.googleTokenService = googleTokenService;
     this.tokenSigner = tokenSigner;
     this.refreshContextService = refreshContextService;
-    this.tokenEndpoint = tokenEndpoint;
-  }
-
-  // This spring tokenEndpoint controller is proxied so that Springfox can include this in the
-  // swagger-ui under the Auth controller
-  @ApiOperation(value = POST_ACCESS_TOKEN)
-  @RequestMapping(value = "/token", method = RequestMethod.POST)
-  public ResponseEntity<OAuth2AccessToken> postAccessToken(
-      Principal principal, @RequestParam Map<String, String> parameters)
-      throws HttpRequestMethodNotSupportedException {
-    return this.tokenEndpoint.postAccessToken(principal, parameters);
   }
 
   @RequestMapping(method = GET, value = "/google/token")
@@ -111,7 +91,7 @@ public class AuthController {
   @ResponseStatus(value = OK)
   @SneakyThrows
   public @ResponseBody boolean verifyJWToken(@RequestHeader(value = "token") final String token) {
-    if (StringUtils.isEmpty(token)) {
+    if (!StringUtils.hasText(token)) {
       throw new InvalidTokenException("ScopedAccessToken is empty");
     }
 

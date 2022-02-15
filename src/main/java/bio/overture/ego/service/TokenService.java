@@ -159,8 +159,22 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     return getSignedToken(tokenClaims);
   }
 
+  public UserTokenClaims getUserTokenClaims(@NonNull User u) {
+    return generateUserTokenClaims(u, extractExplicitScopes(u));
+  }
+
   @SneakyThrows
   public String generateUserToken(User u) {
+    return generateUserToken(u, extractExplicitScopes(u));
+  }
+
+  @SneakyThrows
+  public String generateUserToken(UUID userId) {
+    val user = userService.findById(userId);
+    if (user.isEmpty()) {
+      throw new NotFoundException("user not found");
+    }
+    val u = user.get();
     return generateUserToken(u, extractExplicitScopes(u));
   }
 
@@ -353,7 +367,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
       return getTokenClaims(token);
     } catch (ExpiredJwtException exception) {
       val claims = exception.getClaims();
-      if (StringUtils.isEmpty(claims.getId())) {
+      if (!StringUtils.hasText(claims.getId())) {
         throw new ForbiddenException("Invalid token claims, cannot refresh expired token.");
       }
       log.info("Refreshing expired token: {}", claims.getId());
@@ -397,7 +411,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
             .orElseThrow(() -> new UnauthorizedException("Cannot validate client id"))
             .getClientId();
     applicationService
-        .findByClientId(clientId)
+        .getClientApplication(clientId)
         .orElseThrow(() -> new UnauthorizedException("Not Authorized."));
 
     val aK =

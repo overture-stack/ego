@@ -21,8 +21,7 @@ import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 import static bio.overture.ego.service.AbstractPermissionService.resolveFinalPermissions;
-import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANTS;
-import static bio.overture.ego.token.app.AppTokenClaims.ROLE;
+import static bio.overture.ego.token.app.AppTokenClaims.AUTHORIZED_GRANT_TYPES;
 import static bio.overture.ego.utils.CollectionUtils.*;
 import static bio.overture.ego.utils.Collectors.toImmutableSet;
 import static bio.overture.ego.utils.EntityServices.checkEntityExistence;
@@ -44,6 +43,7 @@ import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
 import bio.overture.ego.repository.queryspecification.builder.ApplicationSpecificationBuilder;
 import com.google.common.collect.ImmutableList;
+import java.time.Duration;
 import java.util.*;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -56,19 +56,17 @@ import org.mapstruct.TargetType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.provider.ClientDetails;
-import org.springframework.security.oauth2.provider.ClientDetailsService;
-import org.springframework.security.oauth2.provider.ClientRegistrationException;
-import org.springframework.security.oauth2.provider.client.BaseClientDetails;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class ApplicationService extends AbstractNamedService<Application, UUID>
-    implements ClientDetailsService {
+    implements RegisteredClientRepository {
 
   /** Constants */
   public static final ApplicationConverter APPLICATION_CONVERTER =
@@ -202,8 +200,53 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
             pageable);
   }
 
+  @Override
+  public void save(RegisteredClient registeredClient) {}
+
+  @Override
+  public RegisteredClient findById(String s) {
+    return null;
+  }
+
+  @Override
+  public RegisteredClient findByClientId(String clientId) {
+    val application = getByClientId(clientId);
+    if (Objects.isNull(application)) {
+      return null;
+    }
+    if (application.getStatus() != APPROVED) {
+      throw new RuntimeException("Client Access is not approved.");
+    }
+
+    val approvedScopes = mapToSet(extractScopes(application), Scope::toString);
+
+    // transform application to client details
+    val clientDetails =
+        RegisteredClient.withId(application.getId().toString())
+            .clientSecret(passwordEncoder.encode(application.getClientSecret()));
+
+    approvedScopes.forEach(clientDetails::scope);
+    clientDetails.redirectUri(application.getRedirectUri());
+    Arrays.stream(AUTHORIZED_GRANT_TYPES).forEach(clientDetails::authorizationGrantType);
+
+    clientDetails.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC);
+    clientDetails.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST);
+    clientDetails.clientId(clientId);
+    return clientDetails.build();
+  }
+
+  public Application getByClientId(@NonNull String clientId) {
+    val result = getClientApplication(clientId);
+    checkNotFound(
+        result.isPresent(),
+        "The '%s' entity with clientId '%s' was not found",
+        Application.class.getSimpleName(),
+        clientId);
+    return result.get();
+  }
+
   @SuppressWarnings("unchecked")
-  public Optional<Application> findByClientId(@NonNull String clientId) {
+  public Optional<Application> getClientApplication(@NonNull String clientId) {
     return (Optional<Application>)
         getRepository()
             .findOne(
@@ -212,16 +255,6 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
                     .fetchUsers(true)
                     .fetchApplicationAndGroupPermissions(true)
                     .buildByClientIdIgnoreCase(clientId));
-  }
-
-  public Application getByClientId(@NonNull String clientId) {
-    val result = findByClientId(clientId);
-    checkNotFound(
-        result.isPresent(),
-        "The '%s' entity with clientId '%s' was not found",
-        Application.class.getSimpleName(),
-        clientId);
-    return result.get();
   }
 
   private static Collection<AbstractPermission> getResolvedPermissions(
@@ -249,34 +282,6 @@ public class ApplicationService extends AbstractNamedService<Application, UUID>
       output.add(Scope.defaultScope());
     }
     return output;
-  }
-
-  @Override
-  public ClientDetails loadClientByClientId(@NonNull String clientId)
-      throws ClientRegistrationException {
-    // find client using clientid
-
-    val application = getByClientId(clientId);
-
-    if (application.getStatus() != APPROVED) {
-      throw new ClientRegistrationException("Client Access is not approved.");
-    }
-
-    val approvedScopes = mapToSet(extractScopes(application), Scope::toString);
-
-    // transform application to client details
-    val clientDetails = new BaseClientDetails();
-    clientDetails.setClientId(clientId);
-    clientDetails.setClientSecret(passwordEncoder.encode(application.getClientSecret()));
-    clientDetails.setAuthorizedGrantTypes(Arrays.asList(AUTHORIZED_GRANTS));
-    clientDetails.setScope(approvedScopes);
-    clientDetails.setRegisteredRedirectUri(setOf(application.getRedirectUri()));
-    clientDetails.setAutoApproveScopes(approvedScopes);
-
-    val authorities = new HashSet<GrantedAuthority>();
-    authorities.add(new SimpleGrantedAuthority(ROLE));
-    clientDetails.setAuthorities(authorities);
-    return clientDetails;
   }
 
   private void validateUpdateRequest(Application originalApplication, UpdateApplicationRequest r) {

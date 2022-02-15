@@ -31,7 +31,7 @@ public class SecurityTest {
     val app = new Application();
     app.setClientId("id");
     app.setClientSecret("secret");
-    when(applicationService.findByClientId("id")).thenReturn(Optional.of(app));
+    when(applicationService.getClientApplication("id")).thenReturn(Optional.of(app));
 
     val authorizationFilter = new JWTAuthorizationFilter(new String[0]);
     ReflectionTestUtils.setField(authorizationFilter, "applicationService", applicationService);
@@ -47,7 +47,7 @@ public class SecurityTest {
     val app = new Application();
     app.setClientId("id");
     app.setClientSecret("secret");
-    when(applicationService.findByClientId("id")).thenReturn(Optional.of(app));
+    when(applicationService.getClientApplication("id")).thenReturn(Optional.of(app));
 
     val authorizationFilter = getAuthorizationFilter(applicationService, tokenService);
     ReflectionTestUtils.setField(authorizationFilter, "applicationService", applicationService);
@@ -61,12 +61,12 @@ public class SecurityTest {
     val app2 = new Application();
     app2.setClientId("id");
     app2.setClientSecret("wrong");
-    when(applicationService.findByClientId("id")).thenReturn(Optional.of(app2));
+    when(applicationService.getClientApplication("id")).thenReturn(Optional.of(app2));
     authorizationFilter.authenticateApplication(token);
     val result2 = SecurityContextHolder.getContext().getAuthentication();
     assertNull("wrong password", result2);
 
-    when(applicationService.findByClientId("id")).thenReturn(Optional.empty());
+    when(applicationService.getClientApplication("id")).thenReturn(Optional.empty());
 
     app.setClientSecret("secret");
     authorizationFilter.authenticateApplication(token);
