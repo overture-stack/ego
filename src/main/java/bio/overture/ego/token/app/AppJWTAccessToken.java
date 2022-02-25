@@ -18,66 +18,43 @@ package bio.overture.ego.token.app;
 
 import bio.overture.ego.service.TokenService;
 import io.jsonwebtoken.Claims;
+import java.time.Instant;
 import java.util.*;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.common.OAuth2RefreshToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 
 @Data
 @Slf4j
-public class AppJWTAccessToken implements OAuth2AccessToken {
+public class AppJWTAccessToken extends OAuth2AccessToken {
 
   private Claims tokenClaims = null;
   private String token = null;
 
+  @Deprecated
   public AppJWTAccessToken(String token, TokenService tokenService) {
+    super(
+        TokenType.BEARER,
+        token,
+        tokenService.getTokenClaims(token).getIssuedAt().toInstant(),
+        tokenService.getTokenClaims(token).getExpiration().toInstant());
     this.token = token;
     this.tokenClaims = tokenService.getTokenClaims(token);
   }
 
-  @Override
-  public Map<String, Object> getAdditionalInformation() {
-    val output = new HashMap<String, Object>();
-    output.put("groups", getApp().get("groups"));
-    return output;
-  }
-
   @SuppressWarnings("unchecked")
-  @Override
   public Set<String> getScope() {
     val claims = (LinkedHashMap<String, List<String>>) tokenClaims.get("context");
     val scopes = claims.get("scope");
     return new HashSet<>(scopes);
   }
 
-  @Override
   public OAuth2RefreshToken getRefreshToken() {
     return null;
   }
 
-  @Override
-  public String getTokenType() {
-    return "Bearer";
-  }
-
-  @Override
-  public boolean isExpired() {
-    return getExpiresIn() <= 0;
-  }
-
-  @Override
-  public Date getExpiration() {
-    return tokenClaims.getExpiration();
-  }
-
-  @Override
-  public int getExpiresIn() {
-    return (int) ((System.currentTimeMillis() - tokenClaims.getExpiration().getTime()) / 1000L);
-  }
-
-  @Override
   public String getValue() {
     return token;
   }

@@ -31,13 +31,13 @@ public class UserServiceTest {
   @Autowired private TokenService tokenService;
 
   @Test
-  public void testFirstUserShouldNotBeAdminByDefault() {
+  public void testFirstUserShouldBeAdminByDefault() {
     userService.getRepository().deleteAll();
     val usersCount = userService.countAll();
     Assert.assertEquals(0, usersCount);
     User u = entityGenerator.setupUser("First User", UserType.USER);
     val user = userService.findById(u.getId()).get();
-    Assert.assertEquals(user.getType(), UserType.USER);
+    Assert.assertEquals(user.getType(), UserType.ADMIN);
   }
 
   @Test

@@ -1,10 +1,11 @@
 package bio.overture.ego.security;
 
+import static org.springframework.security.oauth2.core.oidc.StandardClaimNames.*;
+
 import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.service.OrcidService;
 import java.util.HashMap;
 import java.util.Map;
-
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +20,6 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-
-import static org.springframework.security.oauth2.core.oidc.StandardClaimNames.*;
 
 @Component
 @Slf4j

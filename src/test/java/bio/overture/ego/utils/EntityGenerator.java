@@ -71,7 +71,7 @@ public class EntityGenerator {
 
   public Application setupApplication(String clientId) {
     return applicationService
-        .findByClientId(clientId)
+        .getClientApplication(clientId)
         .orElseGet(
             () -> {
               val request = createApplicationCreateRequest(clientId);
@@ -99,7 +99,7 @@ public class EntityGenerator {
   public Application setupApplication(
       String clientId, String clientSecret, ApplicationType applicationType) {
     return applicationService
-        .findByClientId(clientId)
+        .getClientApplication(clientId)
         .orElseGet(
             () -> {
               val request =
@@ -107,6 +107,8 @@ public class EntityGenerator {
                       .name(clientId)
                       .type(applicationType)
                       .clientSecret(clientSecret)
+                      .redirectUri("http://" + clientId + "/")
+                      .errorRedirectUri("http://" + clientId + "/")
                       .clientId(clientId)
                       .status(APPROVED)
                       .build();

@@ -56,6 +56,13 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
     this.publicEndpoints = publicEndpoints;
   }
 
+  public JWTAuthorizationFilter(
+      String[] publicEndpoints, TokenService tokenService, ApplicationService applicationService) {
+    this.publicEndpoints = publicEndpoints;
+    this.tokenService = tokenService;
+    this.applicationService = applicationService;
+  }
+
   @Override
   @SneakyThrows
   public void doFilterInternal(
@@ -139,9 +146,9 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
     val clientSecret = token.get().getClientSecret();
 
     // Deny access if they don't have a valid clientId from one of our applications
-    val applicationOpt = applicationService.findByClientId(clientId);
+    val applicationOpt = applicationService.getClientApplication(clientId);
 
-    if (applicationOpt == null || applicationOpt.isEmpty()) {
+    if (!applicationOpt.isPresent() || applicationOpt.isEmpty()) {
       SecurityContextHolder.clearContext();
       log.warn("AuthenticateApplication: No application found for clientId " + clientId);
       return;
@@ -165,7 +172,7 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
   }
 
   private boolean isValidToken(String token) {
-    return !StringUtils.isEmpty(token)
+    return StringUtils.hasText(token)
         && token.contains(TOKEN_PREFIX)
         && tokenService.isValidToken(removeTokenPrefix(token));
   }
