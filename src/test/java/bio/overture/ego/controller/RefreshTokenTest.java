@@ -1,6 +1,7 @@
 package bio.overture.ego.controller;
 
 import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
+import static java.util.Objects.isNull;
 import static org.junit.Assert.*;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.*;
@@ -172,7 +173,7 @@ public class RefreshTokenTest extends AbstractControllerTest {
 
   private void assertNoRefreshIdCookie(StringResponseOption response) {
     val cookies = response.getResponse().getHeaders().get("Set-Cookie");
-    if (Objects.isNull(cookies)) {
+    if (isNull(cookies)) {
       return;
     }
     Objects.requireNonNull(cookies)
