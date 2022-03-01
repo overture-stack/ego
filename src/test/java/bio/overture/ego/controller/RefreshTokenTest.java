@@ -172,6 +172,9 @@ public class RefreshTokenTest extends AbstractControllerTest {
 
   private void assertNoRefreshIdCookie(StringResponseOption response) {
     val cookies = response.getResponse().getHeaders().get("Set-Cookie");
+    if (Objects.isNull(cookies)) {
+      return;
+    }
     Objects.requireNonNull(cookies)
         .forEach(
             c -> {
