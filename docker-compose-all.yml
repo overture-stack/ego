@@ -11,7 +11,7 @@ services:
       REACT_APP_EGO_CLIENT_ID: ego-ui
   api:
     # change the image tag to the target image as needed
-    image: overture/ego:4c1969bf
+    image: overture/ego:5.2.0
     environment:
       SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ego?stringtype=unspecified
