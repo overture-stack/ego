@@ -18,7 +18,6 @@ package bio.overture.ego.controller;
 
 import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
 import static bio.overture.ego.utils.SwaggerConstants.AUTH_CONTROLLER;
-import static bio.overture.ego.utils.SwaggerConstants.POST_ACCESS_TOKEN;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.*;

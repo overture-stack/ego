@@ -1,5 +1,7 @@
 package bio.overture.ego.security;
 
+import static java.util.Objects.isNull;
+
 import java.net.URI;
 import javax.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
@@ -13,8 +15,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import static java.util.Objects.isNull;
 
 /**
  * Custom request resolver to capture request info before sending it to oauth2 providers and store

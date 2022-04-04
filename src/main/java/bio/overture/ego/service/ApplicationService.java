@@ -43,7 +43,6 @@ import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.ApplicationSpecification;
 import bio.overture.ego.repository.queryspecification.builder.ApplicationSpecificationBuilder;
 import com.google.common.collect.ImmutableList;
-import java.time.Duration;
 import java.util.*;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +59,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
 import org.springframework.stereotype.Service;
 
 @Service
