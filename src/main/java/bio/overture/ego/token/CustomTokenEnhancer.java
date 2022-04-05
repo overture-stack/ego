@@ -23,7 +23,6 @@ import bio.overture.ego.service.UserService;
 import bio.overture.ego.token.app.AppJWTAccessToken;
 import java.time.Instant;
 import java.util.List;
-
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -40,7 +39,8 @@ public class CustomTokenEnhancer implements OAuth2TokenCustomizer<JwtEncodingCon
   private final ApplicationService applicationService;
 
   @Autowired
-  public CustomTokenEnhancer(TokenService tokenService, UserService userService, ApplicationService applicationService) {
+  public CustomTokenEnhancer(
+      TokenService tokenService, UserService userService, ApplicationService applicationService) {
     this.tokenService = tokenService;
     this.userService = userService;
     this.applicationService = applicationService;

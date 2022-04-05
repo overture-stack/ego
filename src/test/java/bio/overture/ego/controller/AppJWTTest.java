@@ -178,7 +178,10 @@ public class AppJWTTest extends AbstractControllerTest {
         initStringRequest()
             .endpoint("/oauth/token")
             .headers(reqHeaders)
-            .body(String.format("client_id=%s&client_secret=%s&grant_type=%s", app.getClientId(), app.getClientSecret(), "client_credentials"))
+            .body(
+                String.format(
+                    "client_id=%s&client_secret=%s&grant_type=%s",
+                    app.getClientId(), app.getClientSecret(), "client_credentials"))
             .postAnd()
             .assertOk()
             .assertHasBody()
@@ -296,7 +299,10 @@ public class AppJWTTest extends AbstractControllerTest {
         initStringRequest()
             .endpoint("/oauth/token")
             .headers(reqHeaders)
-            .body(String.format("client_id=%s&client_secret=%s&grant_type=%s", app.getClientId(), app.getClientSecret(), "client_credentials"))
+            .body(
+                String.format(
+                    "client_id=%s&client_secret=%s&grant_type=%s",
+                    app.getClientId(), app.getClientSecret(), "client_credentials"))
             .postAnd()
             .assertOk()
             .assertHasBody()
@@ -331,7 +337,10 @@ public class AppJWTTest extends AbstractControllerTest {
         initStringRequest()
             .endpoint("/oauth/token")
             .headers(reqHeaders)
-            .body(String.format("client_id=%s&client_secret=%s&grant_type=%s", app.getClientId(), app.getClientSecret(), "client_credentials"))
+            .body(
+                String.format(
+                    "client_id=%s&client_secret=%s&grant_type=%s",
+                    app.getClientId(), app.getClientSecret(), "client_credentials"))
             .postAnd()
             .assertOk()
             .assertHasBody()
