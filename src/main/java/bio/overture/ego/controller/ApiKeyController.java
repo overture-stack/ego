@@ -95,7 +95,7 @@ public class ApiKeyController {
   public @ResponseBody ApiKeyScopeResponse checkApiKey(
       @RequestHeader(value = "Authorization", required = true) final String authorization,
       @RequestParam(value = "apiKey") final String apiKey) {
-    return tokenService.checkApiKey(authorization, apiKey);
+    return tokenService.checkApiKey(apiKey);
   }
 
   /** DEPRECATED: GET /check_token to be removed in next major release */
@@ -111,7 +111,7 @@ public class ApiKeyController {
       @RequestHeader(value = "Authorization", required = true) final String authorization,
       @RequestParam(value = "token") final String token) {
 
-    return tokenService.checkApiKey(authorization, token);
+    return tokenService.checkApiKey(token);
   }
 
   @RequestMapping(method = GET, value = "/scopes")
