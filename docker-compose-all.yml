@@ -11,7 +11,7 @@ services:
       REACT_APP_EGO_CLIENT_ID: ego-ui
   api:
     # change the image tag to the target image as needed
-    image: overture/ego:5.2.0
+    image: overture/ego:latest
     environment:
       SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ego?stringtype=unspecified
@@ -20,8 +20,13 @@ services:
       SPRING_FLYWAY_ENABLED: "true"
       SPRING_FLYWAY_LOCATIONS: "classpath:flyway/sql,classpath:db/migration"
       SPRING_PROFILES_ACTIVE: auth
-      google.client.clientId: $EGO_GOOGLE_CLIENT_ID
-      google.client.clientSecret: $EGO_GOOGLE_SECRET
+
+      # example on how to configure ego google oauth2 login
+      spring.security.oauth2.client.registration.google.clientId : ".."
+      spring.security.oauth2.client.registration.google.clientSecret: ".."
+      # this should be registered as the authorized redirect URI in google cloud console
+      spring.security.oauth2.client.registration.google.redirectUri : "http://localhost:8081/oauth/code/google"
+
       default.user.firstUserAsAdmin: "true"
       logging.level.root: INFO
     expose:

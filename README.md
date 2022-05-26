@@ -68,15 +68,29 @@ The application is written in JAVA using Spring Boot and Spring Security Framewo
 ## Quick Start
 
 The goal of this quick start is to get a working application quickly up and running.
+to start a dockerized version of EGO you can do the following:
 
-Set the `API_HOST_PORT` where ego is to be run, then run docker compose:
+1- Setup a google oauth client app in google cloud console
+https://www.overture.bio/documentation/ego/installation/prereq/#google
+use the following redirect URI: `http://localhost:8081/oauth/code/google`
+
+2- Update `docker-compose-all.yml` set the client id and secret:
+```
+# example on how to configure ego google oauth2 login
+spring.security.oauth2.client.registration.google.clientId : ".."
+spring.security.oauth2.client.registration.google.clientSecret: ".."
+``` 
+
+3- Run docker compose 
 
 ```
-API_HOST_PORT=8080 docker-compose up -d
-```
+docker-compose -f docker-compose-all.yml up 
+``` 
+wait for all services to be up (ego ui takes few minutes)
 
-Ego should now be deployed locally with the swagger ui at
-`http://localhost:8080/swagger-ui.html`
+4- you can access EGO ui (an admin dashboard) on `http://localhost:8080/` and sign in with google
+
+5- Ego swagger ui located at `http://localhost:8080/swagger-ui.html`
 
 ## Development Install
 
