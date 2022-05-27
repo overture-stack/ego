@@ -88,9 +88,15 @@ docker-compose -f docker-compose-all.yml up
 ``` 
 wait for all services to be up (ego ui takes few minutes)
 
-4- you can access EGO ui (an admin dashboard) on `http://localhost:8080/` and sign in with google
+4- EGO needs some seed data to authorize EGO UI as a client
+you can refer to this make file for the exact command or if you have Make installed run: `make init-db`
+```
+docker exec ego_postgres_1  psql -h localhost -p 5432 -U postgres -d ego --command "INSERT INTO EGOAPPLICATION (name, clientId, clientSecret, redirectUri, description, status, errorredirecturi) VALUES ('ego ui', 'ego-ui', 'secret', 'http://localhost:8080/', '...', 'APPROVED', 'http://localhost:8080/error') on conflict do nothing"
+```
 
-5- Ego swagger ui located at `http://localhost:8080/swagger-ui.html`
+5- you can access EGO ui (an admin dashboard) on `http://localhost:8080/` and sign in with google
+
+6- Ego swagger ui located at `http://localhost:8080/swagger-ui.html`
 
 ## Development Install
 
