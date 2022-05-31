@@ -330,7 +330,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
       val tokenClaims =
           convertToAnotherType(body, UserTokenClaims.class, Views.JWTAccessToken.class);
       return userService.getById(fromString(tokenClaims.getSub()));
-    } catch (JwtException | ClassCastException | IOException e) {
+    } catch (JwtException | ClassCastException | IOException | NotFoundException e) {
       log.error("Issue handling user token (MD5sum) {}", new String(md5Digest(token.getBytes())));
       return null;
     }
@@ -342,7 +342,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
       val tokenClaims =
           convertToAnotherType(body, AppTokenClaims.class, Views.JWTAccessToken.class);
       return applicationService.getById(fromString(tokenClaims.getSub()));
-    } catch (JwtException | ClassCastException | IOException e) {
+    } catch (JwtException | ClassCastException | IOException | NotFoundException e) {
       log.error(
           "Issue handling application token (MD5sum) {}", new String(md5Digest(token.getBytes())));
       return null;
