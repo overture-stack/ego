@@ -128,6 +128,7 @@ spring:
     placeholders:
       default-provider: GOOGLE
   jackson:
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
     deserialization:
       FAIL_ON_UNKNOWN_PROPERTIES: false
       FAIL_ON_NULL_FOR_PRIMITIVES: true
