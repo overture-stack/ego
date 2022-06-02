@@ -18,7 +18,6 @@ package bio.overture.ego.token.app;
 
 import bio.overture.ego.service.TokenService;
 import io.jsonwebtoken.Claims;
-import java.time.Instant;
 import java.util.*;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

@@ -75,9 +75,10 @@ public class UserSelfAssignApiKeyTest extends AbstractControllerTest {
 
       List<User> userList = new ArrayList<>();
 
-      userList.addAll(entityGenerator.setupPublicUsers("User SelfAssign", "User OtherAssign"));
+      // order of adding users matters here since firstUserAsAdmin is true
       userList.addAll(
           entityGenerator.setupUsers("User SelfAssignAdminOne", "User SelfAssignAdminTwo"));
+      userList.addAll(entityGenerator.setupPublicUsers("User SelfAssign", "User OtherAssign"));
 
       val policy = entityGenerator.setupSinglePolicy("USERSELFASSIGNMENTPOLICY");
       entityGenerator.addPermissionToUsers(userList, policy, AccessLevel.WRITE);

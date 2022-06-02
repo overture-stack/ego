@@ -7,6 +7,7 @@ import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.ApplicationType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
+import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.service.UserService;
@@ -83,17 +84,24 @@ public class ApplicationAuthInterceptor implements AuthInterceptor {
 
   @SneakyThrows
   private Optional<User> getUserInfo(String token) {
-    val claims = tokenService.getTokenUserInfo(token);
-
-    return claims == null ? Optional.empty() : userService.findById(claims.getId());
+    try {
+      val claims = tokenService.getTokenUserInfo(token);
+      return claims == null ? Optional.empty() : userService.findById(claims.getId());
+    } catch (NotFoundException e) {
+      return Optional.empty();
+    }
   }
 
   @SneakyThrows
   private Optional<Application> getAppInfo(String token) {
-    val claims = tokenService.getTokenAppInfo(token);
-    return claims == null
-        ? Optional.empty()
-        : applicationService.getClientApplication(claims.getClientId());
+    try {
+      val claims = tokenService.getTokenAppInfo(token);
+      return claims == null
+          ? Optional.empty()
+          : applicationService.getClientApplication(claims.getClientId());
+    } catch (Exception e) {
+      return Optional.empty();
+    }
   }
 
   @Getter

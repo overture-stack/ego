@@ -40,7 +40,6 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.repository.TokenStoreRepository;
 import bio.overture.ego.repository.UserRepository;
 import bio.overture.ego.repository.queryspecification.TokenStoreSpecification;
-import bio.overture.ego.security.BasicAuthToken;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.TokenClaims;
 import bio.overture.ego.token.app.AppJWTAccessToken;
@@ -397,22 +396,13 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   }
 
   @SneakyThrows
-  public ApiKeyScopeResponse checkApiKey(String authToken, String apiKey) {
+  public ApiKeyScopeResponse checkApiKey(final String apiKey) {
     if (apiKey == null) {
       log.debug("Null apiKey");
       throw new InvalidTokenException("No apiKey field found in POST request");
     }
 
     log.debug(format("apiKey ='%s'", apiKey));
-    val contents = BasicAuthToken.decode(authToken);
-
-    val clientId =
-        contents
-            .orElseThrow(() -> new UnauthorizedException("Cannot validate client id"))
-            .getClientId();
-    applicationService
-        .getClientApplication(clientId)
-        .orElseThrow(() -> new UnauthorizedException("Not Authorized."));
 
     val aK =
         findByApiKeyString(apiKey).orElseThrow(() -> new InvalidTokenException("ApiKey not found"));
@@ -429,7 +419,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     val scopes = explicitScopes(effectiveScopes(extractScopes(owner), aK.scopes()));
     val scopeNames = mapToSet(scopes, Scope::toString);
 
-    return new ApiKeyScopeResponse(owner.getId(), clientId, aK.getSecondsUntilExpiry(), scopeNames);
+    return new ApiKeyScopeResponse(owner.getId(), aK.getSecondsUntilExpiry(), scopeNames);
   }
 
   public UserScopesResponse userScopes(@NonNull UUID userId) {

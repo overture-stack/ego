@@ -178,7 +178,10 @@ public class AppJWTTest extends AbstractControllerTest {
         initStringRequest()
             .endpoint("/oauth/token")
             .headers(reqHeaders)
-            .body(String.format("client_id=%s&client_secret=%s&grant_type=%s", app.getClientId(), app.getClientSecret(), "client_credentials"))
+            .body(
+                String.format(
+                    "client_id=%s&client_secret=%s&grant_type=%s",
+                    app.getClientId(), app.getClientSecret(), "client_credentials"))
             .postAnd()
             .assertOk()
             .assertHasBody()
@@ -296,7 +299,10 @@ public class AppJWTTest extends AbstractControllerTest {
         initStringRequest()
             .endpoint("/oauth/token")
             .headers(reqHeaders)
-            .body(String.format("client_id=%s&client_secret=%s&grant_type=%s", app.getClientId(), app.getClientSecret(), "client_credentials"))
+            .body(
+                String.format(
+                    "client_id=%s&client_secret=%s&grant_type=%s",
+                    app.getClientId(), app.getClientSecret(), "client_credentials"))
             .postAnd()
             .assertOk()
             .assertHasBody()
@@ -331,7 +337,10 @@ public class AppJWTTest extends AbstractControllerTest {
         initStringRequest()
             .endpoint("/oauth/token")
             .headers(reqHeaders)
-            .body(String.format("client_id=%s&client_secret=%s&grant_type=%s", app.getClientId(), app.getClientSecret(), "client_credentials"))
+            .body(
+                String.format(
+                    "client_id=%s&client_secret=%s&grant_type=%s",
+                    app.getClientId(), app.getClientSecret(), "client_credentials"))
             .postAnd()
             .assertOk()
             .assertHasBody()
@@ -347,4 +356,56 @@ public class AppJWTTest extends AbstractControllerTest {
     assertEquals(1, accessTokenScope.size());
     assertTrue(accessTokenScope.contains(Scope.defaultScope().toString()));
   }
+
+  @Test
+  @SneakyThrows
+  public void applicationJwtIsValidAndUsable() {
+    // generate app with no permissions
+    val app = entityGenerator.setupApplication("EmptyApp", "emptysecret", ApplicationType.ADMIN);
+
+    val params = new LinkedMultiValueMap<String, Object>();
+    params.add("grant_type", "client_credentials");
+    params.add("client_id", app.getClientId());
+    params.add("client_secret", app.getClientSecret());
+
+    // get app jwt scopes
+    val reqHeaders = new HttpHeaders();
+    reqHeaders.setContentType(APPLICATION_FORM_URLENCODED);
+
+    val tokenResponse =
+        initStringRequest()
+            .endpoint("/oauth/token")
+            .headers(reqHeaders)
+            .body(
+                String.format(
+                    "client_id=%s&client_secret=%s&grant_type=%s",
+                    app.getClientId(), app.getClientSecret(), "client_credentials"))
+            .postAnd()
+            .assertOk()
+            .assertHasBody()
+            .getResponse()
+            .getBody();
+
+    val tokenJson = MAPPER.readTree(tokenResponse);
+    val accessToken = tokenJson.get("access_token").asText();
+
+    val customHeaders = new HttpHeaders();
+    customHeaders.add(AUTHORIZATION, "Bearer " + accessToken);
+    customHeaders.setContentType(APPLICATION_JSON);
+
+    val resolvedUsers =
+        initStringRequest()
+            .endpoint("/users")
+            .headers(customHeaders)
+            .getAnd()
+            .assertOk()
+            .assertHasBody()
+            .getResponse()
+            .getBody();
+
+    assertNotNull(resolvedUsers);
+    val users = MAPPER.readTree(resolvedUsers);
+    assertNotNull(users);
+  }
+
 }

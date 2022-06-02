@@ -17,6 +17,7 @@
 package bio.overture.ego.utils;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -26,6 +27,7 @@ public class TypeUtils {
   public static <T> T convertToAnotherType(
       Object fromObject, Class<T> tClass, Class<?> serializationView) throws IOException {
     val mapper = new ObjectMapper();
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
     mapper.configure(MapperFeature.DEFAULT_VIEW_INCLUSION, false);
     val serializedValue = mapper.writerWithView(serializationView).writeValueAsBytes(fromObject);
@@ -35,6 +37,7 @@ public class TypeUtils {
   public static <T> T convertToAnotherType(Object fromObject, Class<T> tClass) {
     val mapper = new ObjectMapper();
     mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     return mapper.convertValue(fromObject, tClass);
   }
 }

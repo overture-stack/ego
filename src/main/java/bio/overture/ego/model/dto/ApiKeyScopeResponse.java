@@ -12,7 +12,6 @@ import lombok.Getter;
 @JsonView(Views.REST.class)
 public class ApiKeyScopeResponse {
   private UUID user_id;
-  private String client_id;
   private Long exp;
   private Set<String> scope;
 }
