@@ -1,5 +1,6 @@
 def commit = "UNKNOWN"
 def version = "UNKNOWN"
+def chartversion = "3.1.0"
 
 pipeline {
     agent {
@@ -17,17 +18,17 @@ spec:
   - name: jdk
     tty: true
     image: adoptopenjdk/openjdk11:jdk-11.0.7_10-alpine-slim
-    env: 
-      - name: DOCKER_HOST 
-        value: tcp://localhost:2375 
-  - name: dind-daemon 
+    env:
+      - name: DOCKER_HOST
+        value: tcp://localhost:2375
+  - name: dind-daemon
     image: docker:18.06-dind
-    securityContext: 
-        privileged: true 
+    securityContext:
+        privileged: true
         runAsUser: 0
-    volumeMounts: 
-      - name: docker-graph-storage 
-        mountPath: /var/lib/docker 
+    volumeMounts:
+      - name: docker-graph-storage
+        mountPath: /var/lib/docker
   - name: helm
     image: alpine/helm:2.12.3
     command:
@@ -36,15 +37,15 @@ spec:
   - name: docker
     image: docker:18-git
     tty: true
-    env: 
-    - name: DOCKER_HOST 
+    env:
+    - name: DOCKER_HOST
       value: tcp://localhost:2375
     - name: HOME
       value: /home/jenkins/agent
   securityContext:
     runAsUser: 1000
   volumes:
-  - name: docker-graph-storage 
+  - name: docker-graph-storage
     emptyDir: {}
 """
         }
@@ -137,7 +138,7 @@ spec:
 						[$class: 'StringParameterValue', name: 'OVERTURE_ENV', value: 'qa' ],
 						[$class: 'StringParameterValue', name: 'OVERTURE_CHART_NAME', value: 'ego'],
 						[$class: 'StringParameterValue', name: 'OVERTURE_RELEASE_NAME', value: 'ego'],
-						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_CHART_VERSION', value: '3.0.0'],
+						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_CHART_VERSION', value: "${chartversion}"],
 						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REPO_URL', value: "https://overture-stack.github.io/charts-server/"],
 						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REUSE_VALUES', value: "false" ],
 						[$class: 'StringParameterValue', name: 'OVERTURE_ARGS_LINE', value: "--set-string image.tag=${commit}" ]
@@ -154,7 +155,7 @@ spec:
 						[$class: 'StringParameterValue', name: 'OVERTURE_ENV', value: 'staging' ],
 						[$class: 'StringParameterValue', name: 'OVERTURE_CHART_NAME', value: 'ego'],
 						[$class: 'StringParameterValue', name: 'OVERTURE_RELEASE_NAME', value: 'ego'],
-						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_CHART_VERSION', value: '3.0.0'],
+						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_CHART_VERSION', value: "${chartversion}"],
 						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REPO_URL', value: "https://overture-stack.github.io/charts-server/"],
 						[$class: 'StringParameterValue', name: 'OVERTURE_HELM_REUSE_VALUES', value: "false" ],
 						[$class: 'StringParameterValue', name: 'OVERTURE_ARGS_LINE', value: "--set-string image.tag=${version}" ]
