@@ -20,11 +20,13 @@ import static bio.overture.ego.controller.resolver.PageableResolver.LIMIT;
 import static bio.overture.ego.controller.resolver.PageableResolver.OFFSET;
 import static bio.overture.ego.controller.resolver.PageableResolver.SORT;
 import static bio.overture.ego.controller.resolver.PageableResolver.SORTORDER;
+import static bio.overture.ego.service.UserService.extractScopes;
+import static java.lang.String.format;
 import static org.springframework.util.StringUtils.isEmpty;
 
 import bio.overture.ego.model.dto.*;
 import bio.overture.ego.model.entity.*;
-import bio.overture.ego.model.enums.Fields;
+import bio.overture.ego.model.enums.*;
 import bio.overture.ego.model.search.Filters;
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.AdminScoped;
@@ -37,14 +39,17 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -212,6 +217,33 @@ public class UserController {
       @PathVariable(value = "id", required = true) UUID id,
       @ApiIgnore Pageable pageable) {
     return new PageDTO<>(userPermissionService.getPermissions(id, pageable));
+  }
+
+  @AdminScoped
+  @RequestMapping(method = RequestMethod.POST, value = "/{id}/claims")
+  public @ResponseBody List<String> getUserClaims(
+      @PathVariable(value = "id", required = true) String id,
+      @RequestBody CreateUserCommand request
+   ) {
+
+    val u =
+        userService
+            .findByProviderTypeAndProviderSubjectId(ProviderType.KEYCLOAK, id)
+            .orElseGet(
+                () -> userService.create(
+                    CreateUserRequest.builder()
+                    .firstName(request.firstName)
+                    .email(request.email)
+                    .lastName(request.lastName)
+                    .providerSubjectId(request.providerSubjectId)
+                    .providerType(ProviderType.valueOf(request.providerType))
+                    .status(StatusType.APPROVED)
+                    .type(UserType.USER).build()
+                )
+            );
+
+    log.info(format("Got user with id '%s'", u.getId()));
+    return extractScopes(u).stream().map(Scope::toString).collect(Collectors.toList());
   }
 
   @AdminScoped
