@@ -515,30 +515,53 @@ public class UserService extends AbstractBaseService<User, UUID> {
   }
 
   @SuppressWarnings("unchecked")
-  public static Set<AbstractPermission> resolveUsersPermissions(User user) {
+
+  public static Set<AbstractPermission> resolveUsersPermissions(User user, boolean includeGa4ghPermissions, String ga4ghAccessToken) {
     val up = user.getUserPermissions();
     Collection<UserPermission> userPermissions = isNull(up) ? ImmutableList.of() : up;
 
     val userGroups = user.getUserGroups();
 
+    // call ga4gh broker user info
+    // TODO: fetch user info and visas by access token and map them to ga4gh permissions
+    if (includeGa4ghPermissions && ga4ghAccessToken != null) {
+      // 1- fetch visas from broker
+
+      // 2- validate visas
+
+      // 3- find Visa Ids by matching fields
+
+      // 4- return Permissions Collection By VisaId
+    }
+
     Collection<GroupPermission> groupPermissions =
         isNull(userGroups)
             ? ImmutableList.of()
             : userGroups.stream()
-                .map(UserGroup::getGroup)
-                .map(Group::getPermissions)
-                .flatMap(Collection::stream)
-                .collect(toImmutableSet());
+            .map(UserGroup::getGroup)
+            .map(Group::getPermissions)
+            .flatMap(Collection::stream)
+            .collect(toImmutableSet());
+
     return resolveFinalPermissions(userPermissions, groupPermissions);
   }
 
-  public static Set<Scope> extractScopes(@NonNull User user) {
+  public static Set<AbstractPermission> resolveUsersPermissions(User user) {
+    return resolveUsersPermissions(user, false, null);
+  }
+
+  public static Set<Scope> extractScopes(@NonNull User user, boolean includeGa4ghPermissions, String ga4ghAccessToken) {
     val resolvedPermissions = resolveUsersPermissions(user);
     val output = mapToSet(resolvedPermissions, AbstractPermissionService::buildScope);
     if (output.isEmpty()) {
       output.add(Scope.defaultScope());
     }
     return output;
+  }
+
+
+  public static Set<Scope> extractScopes(@NonNull User user) {
+    return extractScopes(user, false, null);
   }
 
   public static void disassociateUserApplicationsFromUser(

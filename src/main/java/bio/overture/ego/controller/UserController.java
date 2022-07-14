@@ -243,7 +243,13 @@ public class UserController {
             );
 
     log.info(format("Got user with id '%s'", u.getId()));
-    return extractScopes(u).stream().map(Scope::toString).collect(Collectors.toList());
+
+
+    val scopes = extractScopes(u,
+        request.includeGa4ghPermissions,
+        request.providerAccessToken).stream().map(Scope::toString).collect(Collectors.toList());
+
+    return scopes;
   }
 
   @AdminScoped

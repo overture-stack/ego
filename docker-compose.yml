@@ -2,7 +2,7 @@ version: '3.7'
 services:
 
   keycloak:
-    image: custom-keycloak:9
+    image: custom-keycloak:21
     ports:
       - 8083:8080
       - 5555:5555
@@ -17,7 +17,7 @@ services:
         DB_SCHEMA: public
         DB_PASSWORD: password
         HOSTNAME: keycloak
-        KEYCLOAK_EXTRA_ARGS: --hostname=keycloak
+        KEYCLOAK_EXTRA_ARGS: --hostname=keycloak.ba
   ego-ui:
     image: overture/ego-ui:edge
     ports:

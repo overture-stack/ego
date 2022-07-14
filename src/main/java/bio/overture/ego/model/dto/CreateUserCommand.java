@@ -12,4 +12,8 @@ public class CreateUserCommand {
   @NotNull public String providerType;
 
   @NotNull public String providerSubjectId;
+
+  @NotNull public String providerAccessToken;
+
+  @NotNull public Boolean includeGa4ghPermissions;
 }
