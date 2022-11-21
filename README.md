@@ -1,5 +1,7 @@
 <!--Ego ReadMe-->
 
+<!--less OICR move marketing towards the bottom, what it does how to set it up towards the top. Ego UI ref-->
+
 <br />
 
 <p align="center"><a href="https://www.overture.bio/" target="_blank"><img src="Overture_logo.png" width="66%"></a></p>
@@ -19,11 +21,9 @@ In this Overture repository, we (the [OICR Genome Informatics Team](https://soft
 
 <p align="center"><img alt="Ego in action" src="https://www.overture.bio/static/screenshot-21fc2cfc0ac1c3fd9bd7e62196477554.png"></p>
 
-Access to sensitive and valuable information requires complex and secure methods to verify users and authorize what data and applications they are allowed to access. Ego simplifies user management by providing a secure system to authenticate and authorize users of your application. Ego uses well-known single-sign-on identity providers like Google, GitHub, LinkedIn and ORCiD in place of managing usernames and passwords. 
+Access to sensitive and valuable information necessitates complex and secure methods to verify users and authorize what data and applications they are allowed to access. [Ego](https://www.overture.bio/products/ego/)  simplifies user management by providing a secure system to authenticate and authorize users of your application. [Ego](https://www.overture.bio/products/ego/) uses well-known single-sign-on identity providers like Google, GitHub, LinkedIn and ORCiD in place of managing usernames and passwords. 
 
 Ego is [OAuth 2.0](https://oauth.net/2/) and [OpenID Connect](https://auth0.com/docs/authenticate/protocols/openid-connect-protocol) compliant. It is written in JAVA and uses [Sprint Boot](https://spring.io/projects/spring-boot) and [Spring Security Frameworks](https://spring.io/projects/spring-security). Because it uses [JSON Web Tokens (JWT)](https://jwt.io/) for stateless authorization, it can scale to accommodate many users. See our thorough [documentation](https://www.overture.bio/documentation/ego/) for further details. 
-
-<!--Where is ego being used?-->
 
 ## Related Products 
 
@@ -37,7 +37,7 @@ See the links below for additional information on our other modular solutions:
 |---|---|
 |[Ego](https://www.overture.bio/products/ego/)|A stateless authorization and user management service|
 |[Score](https://www.overture.bio/products/score/)| Transfer data quickly and easily to and from any cloud-based storage system|
-|[Song](https://www.overture.bio/products/song/)|Quickly and reliably track genomic metadata scattered across multiple Cloud storage systems|
+|[Song](https://www.overture.bio/products/song/)|Quickly and reliably track genome metadata scattered across multiple Cloud storage systems|
 |[Maestro](https://www.overture.bio/products/maestro/)|Organizing your distributed data into one index|
 |[Arranger](https://www.overture.bio/products/arranger/)|Organize an intuitive data search interface, complete with customizable components, tables, and search terms|
 
@@ -45,19 +45,24 @@ See the links below for additional information on our other modular solutions:
 
 ## Table of Contents
 
-- [Quick Start](#quickstart)
-- [Setup](#setup)
+- [Developer Setup](#developer-setup)
+- [Installation](#installation)
 - [Usage](#usage)
-- [Contribution](#how-to-contribute)
+- [Contribution](#contribute)
 - [Feedback](#feedback)
 - [Code of Conduct](#code-of-conduct)
 - [License](#license)
 
-## Quick Start
+
+## Developer Setup
+
+<!--Requirements Post-gres & JDK?-->
 
 This is a step-by-step guide for setting up a dockerized version of Ego. See our [setup section](#setup) below for a comprehensive setup guide.
 
-**1.** Set up a google oauth client app ([see here](https://www.overture.bio/documentation/ego/installation/prereq/#google)). 
+**1.** Set up a google oauth client app, [see here](https://www.overture.bio/documentation/ego/installation/prereq/#google). 
+
+- Note it may take **5 minutes to a few hours** for settings to take effect.
 
 **2.** Clone or Download the repository and update the  ```docker-compose-all.yml``` file with the provided client id and secret.
 
@@ -66,16 +71,15 @@ spring.security.oauth2.client.registration.google.clientId : "<insert-provided-c
 spring.security.oauth2.client.registration.google.clientSecret: "<insert-provided-clientSecret>"
 ```
 
-**3.** Run docker compose from your CLI
+**3.** Open Docker desktop and then run the following command from your CLI.
 
 ```
 docker-compose -f docker-compose-all.yml up 
 ```
 
-**4.** Ego will require seed data to authorize the Ego UI as a client. 
-
+**4.** Ego will require seed data to authorize the Ego UI as a client.
 ```
-docker exec ego_postgres_1  psql -h localhost -p 5432 -U postgres -d ego --command "INSERT INTO EGOAPPLICATION (name, clientId, clientSecret, redirectUri, description, status, errorredirecturi) VALUES ('ego ui', 'ego-ui', 'secret', 'http://localhost:8080/', '...', 'APPROVED', 'http://localhost:8080/error') on conflict do nothing"
+docker exec ego-postgres-1  psql -h localhost -p 5432 -U postgres -d ego --command "INSERT INTO EGOAPPLICATION (name, clientId, clientSecret, redirectUri, description, status, errorredirecturi) VALUES ('ego ui', 'ego-ui', 'secret', 'http://localhost:8080/', '...', 'APPROVED', 'http://localhost:8080/error') on conflict do nothing"
 ```
 
 *Alternatively if you have ```Make``` installed you can run  ```make init-db```*
@@ -85,7 +89,8 @@ docker exec ego_postgres_1  psql -h localhost -p 5432 -U postgres -d ego --comma
 - Once signed in you will have access to the admin dashboard (image above).
 - The Ego swagger ui can be located at ```http://localhost:8080/swagger-ui.html```
 
-## Setup
+
+## Installation
 
 Please see the documentation linked below:
 
@@ -101,15 +106,16 @@ Please see the documentation linked below:
 - [Using the Admin UI](https://www.overture.bio/documentation/ego/user-guide/admin-ui/)
 - [Using the API](https://www.overture.bio/documentation/ego/user-guide/api/)
 
+
 ## Contribute
 
-* [Making a Contribution](CONTRIBUTING.md)
-* [Filing an issue](https://github.com/overture-stack/ego/issues)
+- [Making a Contribution](CONTRIBUTING.md)
+- [Filing an issue](https://github.com/overture-stack/ego/issues)
 
 ## Feedback
 
-* Connect with us on [Slack](http://slack.overture.bio)
-* [Upvote](https://github.com/overture-stack/ego/issues?q=is%3Aopen+is%3Aissue+label%3Anew-feature+sort%3Areactions-%2B1-desc) feature requests
+- Connect with us on [Slack](http://slack.overture.bio)
+- [Upvote](https://github.com/overture-stack/ego/issues?q=is%3Aopen+is%3Aissue+label%3Anew-feature+sort%3Areactions-%2B1-desc) feature requests
 
 ## Code of Conduct
 
