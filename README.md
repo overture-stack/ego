@@ -1,126 +1,109 @@
-<!--Ego ReadMe-->
+# Ego - Authentication and Authorization Microservice
 
-<!--less OICR move marketing towards the bottom, what it does how to set it up towards the top. Ego UI ref-->
+[<img hspace="5" src="https://img.shields.io/docker/pulls/overture/ego?style=for-the-badge">](#docker-setup)
+[<img hspace="5" src="https://img.shields.io/badge/chat-on--slack-blue?style=for-the-badge">](http://slack.overture.bio)
+[<img hspace="5" src="https://img.shields.io/badge/License-gpl--v3.0-blue?style=for-the-badge">](https://github.com/overture-stack/ego/blob/develop/LICENSE)
+[<img hspace="5" src="https://img.shields.io/badge/Code%20of%20Conduct-2.1-blue?style=for-the-badge">](code_of_conduct.md)
 
-<br />
+<div>
+<img align="right" width="66vw" vspace="5" src="icon-ego.png" alt="ego-logo" hspace="30"/>
+</div>
 
-<p align="center"><a href="https://www.overture.bio/" target="_blank"><img src="Overture_logo.png" width="66%"></a></p>
+Biomedical data requires secure protocols for authenticating users and authorizing the information and applications those users can access. [Ego](https://www.overture.bio/products/ego/) addresses this by facilitating user registration and providing a secure permission management system. 
+An [Ego UI tool](https://github.com/overture-stack/ego-ui) was also developed to make these services accessible to all collaborators.
 
-<br />
+<!--Blockqoute-->
 
-<!-- Replace slack with discourse once setup -->
+</br>
 
-[<img src="https://img.shields.io/badge/chat-on--slack-blue">](http://slack.overture.bio) 
-[<img src="https://img.shields.io/badge/License-gpl--v3.0-blue">](https://github.com/overture-stack/ego/blob/develop/LICENSE)
+> 
+> <div>
+> <img align="left" src="ov-logo.png" height="90" hspace="0"/>
+> </div>
+> 
+> *Ego is a vital service within the [Overture](https://www.overture.bio/) research software ecosystem. With our genomics data management solutions, scientists can significantly improve the lifecycle of their data and the quality of their research. See our [related products](#related-products) for more information on what Overture can offer.*
+> 
+> 
 
-## Worry Less Science More
+<!--Blockqoute-->
 
-In this Overture repository, we (the [OICR Genome Informatics Team](https://softeng.oicr.on.ca/team/)) develop [Ego](https://www.overture.bio/products/ego/), our open-source authentication and authorization microservice. [Overture](https://www.overture.bio/) is an ensemble of modular solutions for big-data genomic science. Our core products work in concert to manage, explore and visualize molecular and clinical data. Visit our [website](https://www.overture.bio/) for more information on what Overture offers, and check out our other projects on [GitHub](https://github.com/overture-stack/).
+## Technical Specifications
 
-## Ego - Secure Authentication & Authorization
+- Written in JAVA 
+- Uses well-known single-sign-on identity providers such as Google, GitHub, LinkedIn and ORCiD.
+- [OAuth 2.0](https://oauth.net/2/) and [OpenID Connect](https://auth0.com/docs/authenticate/protocols/openid-connect-protocol) compliant
+- Developed with [Sprint Boot](https://spring.io/projects/spring-boot) and [Spring Security Frameworks](https://spring.io/projects/spring-security)
+- Scalable with [JSON Web Tokens (JWT)](https://jwt.io/)
+- For more information visit our [wiki](https://www.overture.bio/documentation/ego/)
 
-<p align="center"><img alt="Ego in action" src="https://www.overture.bio/static/screenshot-21fc2cfc0ac1c3fd9bd7e62196477554.png"></p>
+## Documentation
 
-Access to sensitive and valuable information necessitates complex and secure methods to verify users and authorize what data and applications they are allowed to access. [Ego](https://www.overture.bio/products/ego/)  simplifies user management by providing a secure system to authenticate and authorize users of your application. [Ego](https://www.overture.bio/products/ego/) uses well-known single-sign-on identity providers like Google, GitHub, LinkedIn and ORCiD in place of managing usernames and passwords. 
+- See our Developer [wiki](https://github.com/overture-stack/ego/wiki)
+- For our user installation guide see our website [here](https://www.overture.bio/documentation/ego/installation/)
+- For administrative guidance see our website [here](https://www.overture.bio/documentation/ego/user-guide/admin-ui/)
 
-Ego is [OAuth 2.0](https://oauth.net/2/) and [OpenID Connect](https://auth0.com/docs/authenticate/protocols/openid-connect-protocol) compliant. It is written in JAVA and uses [Sprint Boot](https://spring.io/projects/spring-boot) and [Spring Security Frameworks](https://spring.io/projects/spring-security). Because it uses [JSON Web Tokens (JWT)](https://jwt.io/) for stateless authorization, it can scale to accommodate many users. See our thorough [documentation](https://www.overture.bio/documentation/ego/) for further details. 
+## Docker Setup
 
-## Related Products 
+This is a step-by-step guide for setting up a dockerized version of Ego.
 
-<p align="left"><img alt="Overture overview" src="https://www.overture.bio/static/124ca0fede460933c64fe4e50465b235/a6d66/system-diagram.png"></p>
+1. Set up a google oauth client app. [See here](https://www.overture.bio/documentation/ego/installation/prereq/#google) for more details
 
-Overtures' modular architecture allows you to utilize and mix any of our products to fulfill your individual needs. Our core technologies, however, can also work in concert as an end-to-end data management system (DMS) designed to satisfy the needs of modern large-scale genomic research. For more information on our DMS, please see our [DMS documentation](https://www.overture.bio/documentation/dms/).
+- *Note it may take **5 minutes to a few hours** for settings to take effect*
 
-See the links below for additional information on our other modular solutions:
-
-|Product|Description|
-|---|---|
-|[Ego](https://www.overture.bio/products/ego/)|A stateless authorization and user management service|
-|[Score](https://www.overture.bio/products/score/)| Transfer data quickly and easily to and from any cloud-based storage system|
-|[Song](https://www.overture.bio/products/song/)|Quickly and reliably track genome metadata scattered across multiple Cloud storage systems|
-|[Maestro](https://www.overture.bio/products/maestro/)|Organizing your distributed data into one index|
-|[Arranger](https://www.overture.bio/products/arranger/)|Organize an intuitive data search interface, complete with customizable components, tables, and search terms|
-
-<!--Additional programs?-->
-
-## Table of Contents
-
-- [Developer Setup](#developer-setup)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Contribution](#contribute)
-- [Feedback](#feedback)
-- [Code of Conduct](#code-of-conduct)
-- [License](#license)
-
-
-## Developer Setup
-
-<!--Requirements Post-gres & JDK?-->
-
-This is a step-by-step guide for setting up a dockerized version of Ego. See our [setup section](#setup) below for a comprehensive setup guide.
-
-**1.** Set up a google oauth client app, [see here](https://www.overture.bio/documentation/ego/installation/prereq/#google). 
-
-- Note it may take **5 minutes to a few hours** for settings to take effect.
-
-**2.** Clone or Download the repository and update the  ```docker-compose-all.yml``` file with the provided client id and secret.
+2. Clone or Download the repository and update the  ```docker-compose-all.yml``` file with your client id and secret
 
 ```
 spring.security.oauth2.client.registration.google.clientId : "<insert-provided-client-Id>"
 spring.security.oauth2.client.registration.google.clientSecret: "<insert-provided-clientSecret>"
 ```
 
-**3.** Open Docker desktop and then run the following command from your CLI.
+3. Open Docker desktop and then run the following command from your CLI
 
 ```
 docker-compose -f docker-compose-all.yml up 
 ```
 
-**4.** Ego will require seed data to authorize the Ego UI as a client.
+4. Ego requires seed data to authorize the Ego UI as a client using the following command
+
+*Alternatively if you have ```Make``` installed you can run  ```make init-db```*
 ```
 docker exec ego-postgres-1  psql -h localhost -p 5432 -U postgres -d ego --command "INSERT INTO EGOAPPLICATION (name, clientId, clientSecret, redirectUri, description, status, errorredirecturi) VALUES ('ego ui', 'ego-ui', 'secret', 'http://localhost:8080/', '...', 'APPROVED', 'http://localhost:8080/error') on conflict do nothing"
 ```
 
-*Alternatively if you have ```Make``` installed you can run  ```make init-db```*
-
-**5.** You can now access the Ego UI through ```http://localhost:8080/ego-ui```
+5. You can now access the Ego UI through ```http://localhost:8080/ego-ui```
 - This will require your google sign in 
-- Once signed in you will have access to the admin dashboard (image above).
+- Once signed in you will have access to the admin dashboard
 - The Ego swagger ui can be located at ```http://localhost:8080/swagger-ui.html```
 
+## Support & Contributions
 
-## Installation
-
-Please see the documentation linked below:
-
-- [Setup Prerequisites](https://www.overture.bio/documentation/ego/installation/prereq/)
-- [Installation](https://www.overture.bio/documentation/ego/installation/installation/)
-- [Configuration](https://www.overture.bio/documentation/ego/installation/configuration/)
-- [Authentication](https://www.overture.bio/documentation/ego/installation/authentication/)
-
-## Usage
-
-Please see the documentation linked below:
-
-- [Using the Admin UI](https://www.overture.bio/documentation/ego/user-guide/admin-ui/)
-- [Using the API](https://www.overture.bio/documentation/ego/user-guide/api/)
-
-
-## Contribute
-
-- [Making a Contribution](CONTRIBUTING.md)
-- [Filing an issue](https://github.com/overture-stack/ego/issues)
-
-## Feedback
-
+- Filing an [issue](https://github.com/overture-stack/ego/issues)
+- Making a [contribution](CONTRIBUTING.md)
 - Connect with us on [Slack](http://slack.overture.bio)
-- [Upvote](https://github.com/overture-stack/ego/issues?q=is%3Aopen+is%3Aissue+label%3Anew-feature+sort%3Areactions-%2B1-desc) feature requests
+- Add or Upvote a [feature request](https://github.com/overture-stack/ego/issues?q=is%3Aopen+is%3Aissue+label%3Anew-feature+sort%3Areactions-%2B1-desc)
 
-## Code of Conduct
+## Related Products 
 
-&emsp; [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
+<div>
+  <img align="right" alt="Overture overview" src="https://www.overture.bio/static/124ca0fede460933c64fe4e50465b235/a6d66/system-diagram.png" width="45%" hspace="5">
+</div>
 
-## License
+Overture is an ecosystem of research software tools, each with narrow responsibilities, designed to address the adapting needs of genomics research. 
 
-Licensed under the [GNU Lesser General Public License v3.0](LICENSE.txt) license.
+The DMS is a fully functional and customizable data portal built from a packaged collection of Overtures microservices. For more information on our DMS, read our [DMS documentation](https://www.overture.bio/documentation/dms/).
+
+<!--Read our architecture overview to see how these services relate-->
+
+See the links below for additional information on our other research software tools:
+
+</br>
+
+|Product|Description|
+|---|---|
+|[Ego](https://www.overture.bio/products/ego/)|An authorization and user management service|
+|[Ego UI](https://www.overture.bio/products/ego-ui/)|A UI for managing EGO authentication and authorization services|
+|[Score](https://www.overture.bio/products/score/)| Transfer data quickly and easily to and from any cloud-based storage system|
+|[Song](https://www.overture.bio/products/song/)|Catalog and manage metadata of genomics data spread across cloud storage systems|
+|[Maestro](https://www.overture.bio/products/maestro/)|Organizing your distributed data into a centralized Elasticsearch index|
+|[Arranger](https://www.overture.bio/products/arranger/)|Organize an intuitive data search interface, complete with customizable components, tables, and search terms|
+
