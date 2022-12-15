@@ -1,239 +1,108 @@
-<h1 align="center"> EGO </h1><br>
+# Ego - Authentication and Authorization Microservice
 
+[<img hspace="5" src="https://img.shields.io/badge/chat-on--slack-blue?style=for-the-badge">](http://slack.overture.bio)
+[<img hspace="5" src="https://img.shields.io/badge/License-gpl--v3.0-blue?style=for-the-badge">](https://github.com/overture-stack/ego/blob/develop/LICENSE)
+[<img hspace="5" src="https://img.shields.io/badge/Code%20of%20Conduct-2.1-blue?style=for-the-badge">](code_of_conduct.md)
 
-<p align="center">
-  A scalable stateless Authorization Service for Federated Identities including Google and Facebook
-</p>
+<div>
+<img align="right" width="66vw" vspace="5" src="icon-ego.png" alt="ego-logo" hspace="30"/>
+</div>
 
-<p align="center">
-  <a href="http://www.overture.bio/products/ego" target="_blank"><img alt="General Availability" title="General Availability" src="http://www.overture.bio/img/progress-horizontal-GA.svg" width="320" /></a>
-</p>
+Biomedical data requires secure protocols for authenticating users and authorizing the information and applications those users can access. [Ego](https://www.overture.bio/products/ego/) addresses this by facilitating user registration and providing a secure permission management system. 
+An [Ego UI](https://github.com/overture-stack/ego-ui) was also developed to make these services accessible to all collaborators.
 
-[![BrowserStack Status](https://www.browserstack.com/automate/badge.svg?badge_key=U3dLZnRFNWI2MWNFY2NGcXVtVTB3WDcyU2dPVjlVeEFYUEdxUnpYZlhrUT0tLTFzY0taYTA0MVFEa3ErNkRZdTBRWVE9PQ==--690f89a41a0eedf7b4975bd7df2eac162e04e775% )](https://www.browserstack.com/automate/public-build/U3dLZnRFNWI2MWNFY2NGcXVtVTB3WDcyU2dPVjlVeEFYUEdxUnpYZlhrUT0tLTFzY0taYTA0MVFEa3ErNkRZdTBRWVE9PQ==--690f89a41a0eedf7b4975bd7df2eac162e04e775%)
-[![Slack](http://slack.overture.bio/badge.svg)](http://slack.overture.bio)
+<!--Blockqoute-->
 
-## Table of Contents
-- [Documentation](#documentation)
-- [Introduction](#introduction)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Quick Start](#quick-start)
-- [Development Install](#development-install)
-  - [Step 1 - Setup Database](#step-1---setup-database)
-  - [Step 2 - Run](#step-2---run)
-- [Tech Specifications](#tech-specification)
-- [Usage](#usage)
-- [Shoutouts](#shoutouts)
-  - [Browserstack](#browserstack)
+</br>
+
+> 
+> <div>
+> <img align="left" src="ov-logo.png" height="90" hspace="0"/>
+> </div>
+> 
+> *Ego is a vital service within the [Overture](https://www.overture.bio/) research software ecosystem. With our genomics data management solutions, scientists can significantly improve the lifecycle of their data and the quality of their research. See our [related products](#related-products) for more information on what Overture can offer.*
+> 
+> 
+
+<!--Blockqoute-->
+
+## Technical Specifications
+
+- Written in JAVA 
+- Uses well-known single-sign-on identity providers such as Google, GitHub, LinkedIn and ORCiD.
+- [OAuth 2.0](https://oauth.net/2/) and [OpenID Connect](https://auth0.com/docs/authenticate/protocols/openid-connect-protocol) compliant
+- Developed with [Sprint Boot](https://spring.io/projects/spring-boot) and [Spring Security Frameworks](https://spring.io/projects/spring-security)
+- Scalable with [JSON Web Tokens (JWT)](https://jwt.io/)
+- For more information visit our [wiki](https://www.overture.bio/documentation/ego/)
 
 ## Documentation
 
-Explore documentation with the Ego [Read the Docs](https://ego.readthedocs.io/en/latest/).
+- See our Developer [wiki](https://github.com/overture-stack/ego/wiki)
+- For our user installation guide see our website [here](https://www.overture.bio/documentation/ego/installation/)
+- For administrative guidance see our website [here](https://www.overture.bio/documentation/ego/user-guide/admin-ui/)
 
-## Introduction
+## Docker Setup
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+This is a step-by-step guide for setting up a dockerized version of Ego.
 
-Authorization Service built to provide Single Sign On for various microservices in an application. EGO works with Identity Providers such as Google, Facebook to provide social logins in the application. EGO provides stateless authorization using [JWT (JSON Web Tokens)](https://jwt.io/) and can scale very well to a large number of users.
+1. Set up a google oauth client app. [See here](https://www.overture.bio/documentation/ego/installation/prereq/#google) for more details
 
-Interactive documentation of the API is provided using Swagger UI.
+- *Note it may take **5 minutes to a few hours** for settings to take effect*
 
-When run locally this can be found at: [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
+2. Clone or Download the repository and update the  ```docker-compose-all.yml``` file with your client id and secret
 
-<p align="center">
-    <img alt="arch" title="EGO Architecture" src="/docs/ego-arch.png" width="480">
-</p>
-<p align="center">
-  EGO Architecture
-</p>
-
-## Features
-
-Here are some of the features of EGO:
-
-- Single Sign on for microservices
-- User-authentication through Federated Identities such as Google, Facebook, Github (Coming Soon), ORCID (Coming Soon)
-- Uses JWT(Json Web Tokens) for Authorization Tokens
-- Provides ability to create permission lists for users and/or groups on user-defined permission entities
-- Built using well established Frameworks - Spring Boot, Spring Security
-
-## Tech Stack
-
-The application is written in JAVA using Spring Boot and Spring Security Frameworks.
-
-- [Spring Security](https://projects.spring.io/spring-security/)
-- [JWT (JSON Web Tokens)](https://jwt.io/): This project uses [jjwt library](https://github.com/jwtk/jjwt) for JWT related features.
-- [OpenID Connect](http://openid.net/connect/)
-
-## Quick Start
-
-The goal of this quick start is to get a working application quickly up and running.
-to start a dockerized version of EGO you can do the following:
-
-1- Setup a google oauth client app in google cloud console
-https://www.overture.bio/documentation/ego/installation/prereq/#google
-use the following redirect URI: `http://localhost:8081/oauth/code/google`
-
-2- Update `docker-compose-all.yml` set the client id and secret:
 ```
-# example on how to configure ego google oauth2 login
-spring.security.oauth2.client.registration.google.clientId : ".."
-spring.security.oauth2.client.registration.google.clientSecret: ".."
-``` 
+spring.security.oauth2.client.registration.google.clientId : "<insert-provided-client-Id>"
+spring.security.oauth2.client.registration.google.clientSecret: "<insert-provided-clientSecret>"
+```
 
-3- Run docker compose 
+3. Open Docker desktop and then run the following command from your CLI
 
 ```
 docker-compose -f docker-compose-all.yml up 
-``` 
-wait for all services to be up (ego ui takes few minutes)
-
-4- EGO needs some seed data to authorize EGO UI as a client
-you can refer to this make file for the exact command or if you have Make installed run: `make init-db`
-```
-docker exec ego_postgres_1  psql -h localhost -p 5432 -U postgres -d ego --command "INSERT INTO EGOAPPLICATION (name, clientId, clientSecret, redirectUri, description, status, errorredirecturi) VALUES ('ego ui', 'ego-ui', 'secret', 'http://localhost:8080/', '...', 'APPROVED', 'http://localhost:8080/error') on conflict do nothing"
 ```
 
-5- you can access EGO ui (an admin dashboard) on `http://localhost:8080/` and sign in with google
+4. Ego requires seed data to authorize the Ego UI as a client using the following command
 
-6- Ego swagger ui located at `http://localhost:8080/swagger-ui.html`
-
-## Development Install
-
-### Step 1 - Setup Database
-
-1. Install Postgres
-2. Create a Database: ego with user postgres and empty password
-3. Run the migrations found here: [SQL Script](/src/main/resources/flyway/sql/) to setup tables.
-
-#### Database Migrations with Flyway
-
-Database migrations and versioning is managed by [flyway](https://flywaydb.org/).
-
-1. Download the flyway cli client here: [flyway-commandline](https://flywaydb.org/download/community)
-2. Unpack the client in a directory of your choosing
-3. Execute the flyway client pointing it to the configuration and migration directories in this repository.
-
-Get current version information:
-
-```bash
-./fly
+*Alternatively if you have ```Make``` installed you can run  ```make init-db```*
+```
+docker exec ego-postgres-1  psql -h localhost -p 5432 -U postgres -d ego --command "INSERT INTO EGOAPPLICATION (name, clientId, clientSecret, redirectUri, description, status, errorredirecturi) VALUES ('ego ui', 'ego-ui', 'secret', 'http://localhost:8080/', '...', 'APPROVED', 'http://localhost:8080/error') on conflict do nothing"
 ```
 
-Run outstanding migrations:
+5. You can now access the Ego UI through ```http://localhost:8080/ego-ui```
+- This will require your google sign in 
+- Once signed in you will have access to the admin dashboard
+- The Ego swagger ui can be located at ```http://localhost:8080/swagger-ui.html```
 
-```bash
-./fly migrate
-```
+## Support & Contributions
 
-To see the migration naming convention, [click here.](https://flywaydb.org/documentation/migrations#naming)
+- Filing an [issue](https://github.com/overture-stack/ego/issues)
+- Making a [contribution](CONTRIBUTING.md)
+- Connect with us on [Slack](http://slack.overture.bio)
+- Add or Upvote a [feature request](https://github.com/overture-stack/ego/issues?q=is%3Aopen+is%3Aissue+label%3Anew-feature+sort%3Areactions-%2B1-desc)
 
-### Step 2 - Run
+## Related Products 
 
-- EGO currently supports three Profiles:
-  - default: Use this to run the most simple setup. This lets you test various API endpoints without a valid JWT in
-    authorization header.
-  - auth: Run this to include validations for JWT.
-  - secure: Run this profile to enable https
-- Run using Maven. Maven can be used to prepare a runnable jar file, as well as the uber-jar for deployment:
+<div>
+  <img align="right" alt="Overture overview" src="https://www.overture.bio/static/124ca0fede460933c64fe4e50465b235/a6d66/system-diagram.png" width="45%" hspace="5">
+</div>
 
-```bash
-$ mvn clean package
-```
+Overture is an ecosystem of research software tools, each with narrow responsibilities, designed to address the adapting needs of genomics research. 
 
-To run from command line with maven:
+The Overture **Data Management System** (DMS) is a fully functional and customizable data portal built from a packaged collection of Overture's microservices. For more information on DMS, read our [DMS documentation](https://www.overture.bio/documentation/dms/).
 
-```bash
-$ mvn spring-boot:run
-```
+<!--Read our architecture overview to see how these services relate-->
 
-#### Tech Specifications
+See the links below for additional information on our other research software tools:
 
-ego JWT will have a similar format as the one described in RFC: [kf-auth-rfc](https://github.com/kids-first/rfcs/blob/master/text/0000-kf-oauth2.md)
-An example ego JWT is mentioned below:
+</br>
 
-```json
-{
-    "alg": "HS512"
-}
-.
-{
-    "sub": "1234567",
-    "iss": "ego:56fc3842ccf2c1c7ec5c5d14",
-    "iat": 1459458458,
-    "exp": 1459487258,
-    "jti": "56fd919accf2c1c7ec5c5d16",
-    "aud": [
-        "service1-id",
-        "service2-id",
-        "service3-id"
-    ],
-    "context": {
-        "user": {
-            "name": "Demo.User@example.com",
-            "email": "Demo.User@example.com",
-            "status": "Approved",
-            "firstName": "Demo",
-            "lastName": "User",
-            "createdAt": "2017-11-23 10:24:41",
-            "lastLogin": "2017-11-23 11:23:58",
-            "preferredLanguage": null,
-            "roles": ["ADMIN"],
-            "groups": ["GroupOne", "GroupTwo"],
-            "permissions": ["Study001.WRITE", "Study002.DENY"]
-        }
-    }
-}
-.
-[signature]
-```
-
-#### Notes
-- "aud" field can contain one or more client IDs. This field indicates the client services that are authorized to use this JWT.
-- "groups" will differ based on the domain of client services - each domain of service should get list of groups from that domain's ego service.
-- "permissions" will differ based on domain of client service - each domain of service should get list of permissions from that domain's ego service.
-- Unit Tests using testcontainers will also run flyway migrations to ensure database has the correct structure
-
-## Usage
-
-### Application Authentication
-
-Applications can be added to EGO with a client ID/Secret pair. The ID and Secret can be used to authenticate with EGO to retrieve a JWT.
-
-An application JWT will not have `roles` but will list the `groups` the application is associated with. Other applications are responsible for controlling authorization for applications based on the content of their signed JWT.
-
-#### Register application
-
-To register an application with EGO make a request as documented at [/swagger-ui.html#!/application-controller/createUsingPOST](/swagger-ui.html#!/application-controller/createUsingPOST)
-
-This request must have an `ADMIN` role JWT in the Authorization field.
-
-Keep the client ID/Secret pair in a secret place, for use by the application only. Do not make these values visible in the browser or in your code base.
-
-#### Authenticate
-
-Authentication uses the oauth client_credentials flow. This can be handled out-of-the-box by many REST clients (ex. [Insomnia](https://insomnia.rest/)).
-
-The Authenticate request details, to recreate manually:
-
-- `POST` request to `https://{{ego-domain}}/oauth/token`
-- Body content, content-type: `x-www-form-urlencoded`
-  - `grant_type:client_credentials`
-  - `client_id:{{application's client id}}`
-  - `client_secret:{{application's client secret}}`
-
-curl example:
-
-
-```curl -X POST \
-  http://localhost:8081/oauth/token \
-  -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'grant_type=client_credentials&client_id=my-app-id&client_secret=secretpassword'
-```
-
-## Shoutouts
-
-### Browserstack
-Many thanks to [Browserstack](https://www.browserstack.com/) for giving our test capabilities a powerup!
-![Browserstack](https://p14.zdusercontent.com/attachment/1015988/qyPFNKIZXCbr4qKjd5oxrayZc?token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..-yKqMwgZKdCDJZmW2kcVYw.IKGbK6GBbU3uZ3B7Vapw8uZeQ-uhXDV9kANtz5OOOBl0Ceg6Oi1gS5wqBnStOsCKgb3CibgGIrYjk-odWPwaL9Ei0u3OIDuBldkxF6aJ6eGtC9G4LfbDLGtOnYkUiANvx5HNPb7HZa3QyivKxCcX_MjO5U01F0WbmJajfYBsFVHHLtO0dBqFz-eWZMmLB0yfjZEaVPAUfLk9H1TO4c6Vw91Or29FrzaoGDQmvmcP7Pg00LMoxuaLxGJuuOiUlEe6OunidzxRd_elUZxMJ_caonvHEjSCkq_yHilG67tGewY.IV6Qg9p5vE0TGk59pqZtRg)
+|Product|Description|
+|---|---|
+|[Ego](https://www.overture.bio/products/ego/)|An authorization and user management service|
+|[Ego UI](https://www.overture.bio/products/ego-ui/)|A UI for managing EGO authentication and authorization services|
+|[Score](https://www.overture.bio/products/score/)| Transfer data quickly and easily to and from any cloud-based storage system|
+|[Song](https://www.overture.bio/products/song/)|Catalog and manage metadata of genomics data spread across cloud storage systems|
+|[Maestro](https://www.overture.bio/products/maestro/)|Organizing your distributed data into a centralized Elasticsearch index|
+|[Arranger](https://www.overture.bio/products/arranger/)|Organize an intuitive data search interface, complete with customizable components, tables, and search terms|
 
