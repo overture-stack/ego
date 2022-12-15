@@ -89,7 +89,7 @@ docker exec ego-postgres-1  psql -h localhost -p 5432 -U postgres -d ego --comma
 
 Overture is an ecosystem of research software tools, each with narrow responsibilities, designed to address the adapting needs of genomics research. 
 
-The DMS is a fully functional and customizable data portal built from a packaged collection of Overtures microservices. For more information on our DMS, read our [DMS documentation](https://www.overture.bio/documentation/dms/).
+The Overture **Data Management System** (DMS) is a fully functional and customizable data portal built from a packaged collection of Overture's microservices. For more information on DMS, read our [DMS documentation](https://www.overture.bio/documentation/dms/).
 
 <!--Read our architecture overview to see how these services relate-->
 
