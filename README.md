@@ -9,7 +9,7 @@
 </div>
 
 Biomedical data requires secure protocols for authenticating users and authorizing the information and applications those users can access. [Ego](https://www.overture.bio/products/ego/) addresses this by facilitating user registration and providing a secure permission management system. 
-An [Ego UI tool](https://github.com/overture-stack/ego-ui) was also developed to make these services accessible to all collaborators.
+An [Ego UI](https://github.com/overture-stack/ego-ui) was also developed to make these services accessible to all collaborators.
 
 <!--Blockqoute-->
 
