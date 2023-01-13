@@ -8,8 +8,7 @@
 <img align="right" width="66vw" vspace="5" src="icon-ego.png" alt="ego-logo" hspace="30"/>
 </div>
 
-Biomedical data requires secure protocols for authenticating users and authorizing the information and applications those users can access. [Ego](https://www.overture.bio/products/ego/) addresses this by facilitating user registration and providing a secure permission management system. 
-An [Ego UI](https://github.com/overture-stack/ego-ui) was also developed to make these services accessible to all collaborators.
+Ego is designed to ensure secure access to biomedical data by authenticating users and controlling their access to information and applications. It facilitates user registration and offers a robust permission management system. Additionally, a user-friendly [Ego UI](https://github.com/overture-stack/ego-ui) was created to make these services easily accessible to all collaborators.
 
 <!--Blockqoute-->
 
@@ -102,7 +101,7 @@ See the links below for additional information on our other research software to
 |[Ego](https://www.overture.bio/products/ego/)|An authorization and user management service|
 |[Ego UI](https://www.overture.bio/products/ego-ui/)|A UI for managing EGO authentication and authorization services|
 |[Score](https://www.overture.bio/products/score/)| Transfer data quickly and easily to and from any cloud-based storage system|
-|[Song](https://www.overture.bio/products/song/)|Catalog and manage metadata of genomics data spread across cloud storage systems|
+|[Song](https://www.overture.bio/products/song/)|Track & validate metadata related to genomics data stored across multiple clouds|
 |[Maestro](https://www.overture.bio/products/maestro/)|Organizing your distributed data into a centralized Elasticsearch index|
 |[Arranger](https://www.overture.bio/products/arranger/)|Organize an intuitive data search interface, complete with customizable components, tables, and search terms|
 
