@@ -399,7 +399,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   public ApiKeyScopeResponse checkApiKey(final String apiKey) {
     if (apiKey == null) {
       log.debug("Null apiKey");
-      throw new ClientInvalidTokenException("No apiKey field found in POST request");
+      throw new InvalidRequestException("No apiKey field found in POST request");
     }
 
     log.debug(format("apiKey ='%s'", apiKey));
@@ -407,7 +407,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
         findByApiKeyString(apiKey)
             .orElseThrow(
                 () -> {
-                  return new ClientInvalidTokenException("ApiKey not found");
+                  return new InvalidRequestException("ApiKey not found");
                 });
 
     if (aK.isRevoked())
