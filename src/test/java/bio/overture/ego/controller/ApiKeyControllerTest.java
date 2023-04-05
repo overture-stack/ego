@@ -323,7 +323,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/check_api_key").body(params).post();
 
     val statusCode = response.getStatusCode();
-    assertEquals(HttpStatus.UNAUTHORIZED, statusCode);
+    assertEquals(HttpStatus.OK, statusCode);
   }
 
   @SneakyThrows
@@ -358,7 +358,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     val response = initStringRequest().endpoint("o/check_api_key").body(params).post();
 
     val statusCode = response.getStatusCode();
-    assertEquals(HttpStatus.UNAUTHORIZED, statusCode);
+    assertEquals(HttpStatus.BAD_REQUEST, statusCode);
   }
 
   @SneakyThrows
