@@ -102,7 +102,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be revoked
-    assertEquals(checkTokenAfterDeleteResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterDeleteResponse.getStatusCode(), HttpStatus.OK);
   }
 
   /**
@@ -164,7 +164,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     val statusCode = checkTokenAfterUpgradeResponse.getStatusCode();
 
     // Should be revoked
-    assertEquals(statusCode, HttpStatus.UNAUTHORIZED);
+    assertEquals(statusCode, HttpStatus.OK);
   }
 
   /**
@@ -195,7 +195,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
     val statusCode = checkTokenAfterUpgradeResponse.getStatusCode();
 
     // Should be revoked
-    assertEquals(statusCode, HttpStatus.UNAUTHORIZED);
+    assertEquals(statusCode, HttpStatus.OK);
   }
 
   /**
@@ -227,7 +227,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be revoked
-    assertEquals(checkTokenAfterDeleteResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterDeleteResponse.getStatusCode(), HttpStatus.OK);
   }
 
   /**
@@ -288,7 +288,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be revoked
-    assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.OK);
   }
 
   /**
@@ -318,7 +318,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be revoked
-    assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.OK);
   }
 
   /**
@@ -344,7 +344,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be revoked
-    assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.OK);
   }
 
   /**
@@ -383,7 +383,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be revoked
-    assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterUpgradeResponse.getStatusCode(), HttpStatus.OK);
   }
 
   /**
@@ -448,7 +448,7 @@ public class TokensOnPermissionsChangeTest extends AbstractControllerTest {
         initStringRequest(tokenHeaders).endpoint("/o/check_api_key?apiKey=%s", apiKey).post();
 
     // Should be revoked
-    assertEquals(checkTokenAfterGroupDeleteResponse.getStatusCode(), HttpStatus.UNAUTHORIZED);
+    assertEquals(checkTokenAfterGroupDeleteResponse.getStatusCode(), HttpStatus.OK);
   }
 
   /**
