@@ -206,7 +206,8 @@ public class SecureServerConfig {
           .antMatchers(
               "/",
               "/favicon.ico",
-              "/swagger**",
+              "/swagger-ui/**",
+              "/v3/api-docs/**",
               "/swagger-resources/**",
               "/configuration/ui",
               "/configuration/**",

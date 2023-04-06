@@ -32,7 +32,8 @@ import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.signer.TokenSigner;
 import bio.overture.ego.utils.Tokens;
-import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Objects;
 import javax.servlet.http.HttpServletResponse;
 import lombok.NonNull;
@@ -47,12 +48,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.annotations.ApiIgnore;
 
 @Slf4j
 @RestController
 @RequestMapping("/oauth")
-@Api(tags = "Auth", value = AUTH_CONTROLLER)
+@Tag(name = "Auth", description = AUTH_CONTROLLER)
 public class AuthController {
 
   @Value("${auth.token.prefix}")
@@ -146,7 +146,7 @@ public class AuthController {
       method = {GET, POST},
       value = "/update-ego-token")
   public ResponseEntity<String> updateEgoToken(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization) {
     val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
     return new ResponseEntity<>(tokenService.updateUserToken(currentToken), OK);
@@ -154,7 +154,7 @@ public class AuthController {
 
   @RequestMapping(method = DELETE, value = "/refresh")
   public ResponseEntity<String> deleteRefreshToken(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @CookieValue(value = REFRESH_ID, defaultValue = "missing") String refreshId,
       HttpServletResponse response) {
@@ -170,7 +170,7 @@ public class AuthController {
 
   @RequestMapping(method = POST, value = "/refresh")
   public ResponseEntity<String> refreshEgoToken(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @CookieValue(value = REFRESH_ID, defaultValue = "missing") String refreshId,
       HttpServletResponse response) {

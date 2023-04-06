@@ -46,7 +46,13 @@ import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.security.ApplicationScoped;
 import bio.overture.ego.security.AuthorizationManager;
 import bio.overture.ego.service.TokenService;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -64,12 +70,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.annotations.ApiIgnore;
 
 @Slf4j
 @RestController
 @RequestMapping("/o")
-@Api(tags = "Api Keys")
+@Tag(name = "Api Keys")
 public class ApiKeyController {
 
   /** Dependencies */
@@ -118,7 +123,7 @@ public class ApiKeyController {
   @ResponseStatus(value = OK)
   @SneakyThrows
   public @ResponseBody UserScopesResponse getUserScope(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @RequestParam(value = "userId") final UUID userId) {
     return tokenService.userScopes(userId);
@@ -127,7 +132,7 @@ public class ApiKeyController {
   @RequestMapping(method = POST, value = "/api_key")
   @ResponseStatus(value = OK)
   public @ResponseBody ApiKeyResponse issueApiKey(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @RequestParam(value = "user_id") UUID userId,
       @RequestParam(value = "scopes") ArrayList<String> scopes,
@@ -153,7 +158,7 @@ public class ApiKeyController {
   @RequestMapping(method = POST, value = "/token")
   @ResponseStatus(value = OK)
   public @ResponseBody TokenResponse issueToken(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @RequestParam(value = "user_id") UUID userId,
       @RequestParam(value = "scopes") ArrayList<String> scopes,
@@ -175,7 +180,7 @@ public class ApiKeyController {
   @RequestMapping(method = DELETE, value = "/api_key")
   @ResponseStatus(value = OK)
   public @ResponseBody GenericResponse revokeApiKey(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @RequestParam(value = "apiKey") final String apiKey) {
     tokenService.revokeApiKey(apiKey);
@@ -187,7 +192,7 @@ public class ApiKeyController {
   @RequestMapping(method = DELETE, value = "/token")
   @ResponseStatus(value = OK)
   public @ResponseBody String revokeToken(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @RequestParam(value = "token") final String token) {
     tokenService.revokeApiKey(token);
@@ -195,42 +200,43 @@ public class ApiKeyController {
   }
 
   @RequestMapping(method = GET, value = "/api_key")
-  @ApiImplicitParams({
-    @ApiImplicitParam(
+  @Parameters({
+    @Parameter(
         name = LIMIT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Number of results to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Number of results to retrieve"),
+    @Parameter(
         name = OFFSET,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Index of first result to retrieve"),
+    @Parameter(
         name = SORT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Field to sort on"),
+    @Parameter(
         name = SORTORDER,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC"),
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Sorting order: ASC|DESC. Default order: DESC"),
   })
-  @ApiResponses(value = {@ApiResponse(code = 200, message = "Page ApiKeys for a User")})
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Page ApiKeys for a User")})
   public @ResponseBody PageDTO<ApiKeyResponse> listApiKeys(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @RequestParam(value = "user_id") UUID userId,
-      @ApiParam(value = "Query string compares to ApiKey's Name fields.", required = false)
+      @Parameter(description = "Query string compares to ApiKey's Name fields.", required = false)
           @RequestParam(value = "query", required = false)
           String query,
-      @ApiIgnore @Filters List<SearchFilter> filters,
-      @ApiIgnore Pageable pageable) {
+      @Parameter(hidden = true) @Filters List<SearchFilter> filters,
+      @Parameter(hidden = true) Pageable pageable) {
     checkAdminOrOwner(userId);
     if (isEmpty(query)) {
       return new PageDTO<>(tokenService.listApiKeysForUser(userId, filters, pageable));
@@ -244,7 +250,7 @@ public class ApiKeyController {
   @RequestMapping(method = GET, value = "/token")
   @ResponseStatus(value = OK)
   public @ResponseBody List<TokenResponse> listTokens(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @RequestParam(value = "user_id") UUID userId) {
     checkAdminOrOwner(userId);

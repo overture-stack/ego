@@ -38,11 +38,13 @@ import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.UserService;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -52,12 +54,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.annotations.ApiIgnore;
 
 @Slf4j
 @RestController
 @RequestMapping("/applications")
-@Api(tags = "Applications")
+@Tag(name = "Applications")
 public class ApplicationController {
 
   /** Dependencies */
@@ -81,40 +82,40 @@ public class ApplicationController {
 
   @AdminScoped
   @RequestMapping(method = GET, value = "")
-  @ApiImplicitParams({
-    @ApiImplicitParam(
+  @Parameters({
+    @Parameter(
         name = LIMIT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Number of results to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Number of results to retrieve"),
+    @Parameter(
         name = OFFSET,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Index of first result to retrieve"),
+    @Parameter(
         name = SORT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Field to sort on"),
+    @Parameter(
         name = SORTORDER,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC"),
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Sorting order: ASC|DESC. Default order: DESC"),
   })
-  @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Applications")})
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Page Applications")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Application> listApplications(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @RequestParam(value = "query", required = false) String query,
-      @ApiIgnore @Filters List<SearchFilter> filters,
-      @ApiIgnore Pageable pageable) {
+      @Parameter(hidden = true) @Filters List<SearchFilter> filters,
+      @Parameter(hidden = true) Pageable pageable) {
     if (isEmpty(query)) {
       return new PageDTO<>(applicationService.listApps(filters, pageable));
     } else {
@@ -124,10 +125,9 @@ public class ApplicationController {
 
   @AdminScoped
   @RequestMapping(method = POST, value = "")
-  @ApiResponses(
-      value = {@ApiResponse(code = 200, message = "New Application", response = Application.class)})
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "New Application")})
   public @ResponseBody Application createApplication(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @RequestBody(required = true) CreateApplicationRequest request) {
     return applicationService.create(request);
@@ -135,13 +135,10 @@ public class ApplicationController {
 
   @AdminScoped
   @RequestMapping(method = GET, value = "/{id}")
-  @ApiResponses(
-      value = {
-        @ApiResponse(code = 200, message = "Application Details", response = Application.class)
-      })
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Application Details")})
   @JsonView(Views.REST.class)
   public @ResponseBody Application getApplication(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id) {
     return applicationService.getById(id);
@@ -150,11 +147,9 @@ public class ApplicationController {
   @AdminScoped
   @RequestMapping(method = PUT, value = "/{id}")
   @ApiResponses(
-      value = {
-        @ApiResponse(code = 200, message = "Updated application info", response = Application.class)
-      })
+      value = {@ApiResponse(responseCode = "200", description = "Updated application info")})
   public @ResponseBody Application updateApplication(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(name = "id", required = true) UUID id,
       @RequestBody(required = true) UpdateApplicationRequest updateRequest) {
@@ -165,7 +160,7 @@ public class ApplicationController {
   @RequestMapping(method = DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteApplication(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id) {
     applicationService.delete(id);
@@ -173,41 +168,42 @@ public class ApplicationController {
 
   @AdminScoped
   @RequestMapping(method = GET, value = "/{id}/users")
-  @ApiImplicitParams({
-    @ApiImplicitParam(
+  @Parameters({
+    @Parameter(
         name = LIMIT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Number of results to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Number of results to retrieve"),
+    @Parameter(
         name = OFFSET,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Index of first result to retrieve"),
+    @Parameter(
         name = SORT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Field to sort on"),
+    @Parameter(
         name = SORTORDER,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC"),
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Sorting order: ASC|DESC. Default order: DESC"),
   })
-  @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Users for an Application")})
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Page Users for an Application")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<User> getUsersForApplication(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
-      @ApiIgnore @Filters List<SearchFilter> filters,
-      @ApiIgnore Pageable pageable) {
+      @Parameter(hidden = true) @Filters List<SearchFilter> filters,
+      @Parameter(hidden = true) Pageable pageable) {
     if (isEmpty(query)) {
       return new PageDTO<>(userService.findUsersForApplication(id, filters, pageable));
     } else {
@@ -217,41 +213,42 @@ public class ApplicationController {
 
   @AdminScoped
   @RequestMapping(method = GET, value = "/{id}/groups")
-  @ApiImplicitParams({
-    @ApiImplicitParam(
+  @Parameters({
+    @Parameter(
         name = LIMIT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Number of results to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Number of results to retrieve"),
+    @Parameter(
         name = OFFSET,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Index of first result to retrieve"),
+    @Parameter(
         name = SORT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Field to sort on"),
+    @Parameter(
         name = SORTORDER,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC"),
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Sorting order: ASC|DESC. Default order: DESC"),
   })
-  @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Groups for an Application")})
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Page Groups for an Application")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Group> getGroupsForApplication(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestParam(value = "query", required = false) String query,
-      @ApiIgnore @Filters List<SearchFilter> filters,
-      @ApiIgnore Pageable pageable) {
+      @Parameter(hidden = true) @Filters List<SearchFilter> filters,
+      @Parameter(hidden = true) Pageable pageable) {
     if (isEmpty(query)) {
       return new PageDTO<>(groupService.findGroupsForApplication(id, filters, pageable));
     } else {
@@ -264,56 +261,51 @@ public class ApplicationController {
    */
   @AdminScoped
   @RequestMapping(method = GET, value = "/{id}/permissions")
-  @ApiImplicitParams({
-    @ApiImplicitParam(
+  @Parameters({
+    @Parameter(
         name = LIMIT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Number of results to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Number of results to retrieve"),
+    @Parameter(
         name = OFFSET,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Index of first result to retrieve"),
+    @Parameter(
         name = SORT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Field to sort on"),
+    @Parameter(
         name = SORTORDER,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC"),
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Sorting order: ASC|DESC. Default order: DESC"),
   })
   @ApiResponses(
       value = {
-        @ApiResponse(code = 200, message = "Page Permissions for an Application"),
+        @ApiResponse(responseCode = "200", description = "Page Permissions for an Application"),
       })
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<ApplicationPermission> getPermissionsForApplication(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
-      @ApiIgnore Pageable pageable) {
+      @Parameter(hidden = true) Pageable pageable) {
     return new PageDTO<>(applicationPermissionService.getPermissions(id, pageable));
   }
 
   @AdminScoped
   @RequestMapping(method = POST, value = "/{id}/permissions")
   @ApiResponses(
-      value = {
-        @ApiResponse(
-            code = 200,
-            message = "Add application permissions",
-            response = Application.class)
-      })
+      value = {@ApiResponse(responseCode = "200", description = "Add application permissions")})
   public @ResponseBody Application addPermissions(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) List<PermissionRequest> permissions) {
@@ -322,10 +314,11 @@ public class ApplicationController {
 
   @AdminScoped
   @RequestMapping(method = DELETE, value = "/{id}/permissions/{permissionIds}")
-  @ApiResponses(value = {@ApiResponse(code = 200, message = "Delete application permissions")})
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Delete application permissions")})
   @ResponseStatus(value = OK)
   public void deletePermissions(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "permissionIds", required = true) List<UUID> permissionIds) {
@@ -337,13 +330,13 @@ public class ApplicationController {
   @ApiResponses(
       value = {
         @ApiResponse(
-            code = 200,
-            message =
+            responseCode = "200",
+            description =
                 "Get effective permissions for an application with application and group permissions")
       })
   @ResponseStatus(value = HttpStatus.OK)
   public @ResponseBody Collection<ResolvedPermissionResponse> getResolvedPermissions(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id) {
     return applicationPermissionService.getResolvedPermissions(id);

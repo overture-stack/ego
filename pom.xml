@@ -13,7 +13,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.5.12</version>
+        <version>2.7.10</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -23,6 +23,8 @@
         <java.version>11</java.version>
         <mapstruct.version>1.2.0.Final</mapstruct.version>
         <grpc.version>1.34.1</grpc.version>
+        <!-- Spring security version compatible with Spring boot 2.7.x -->
+        <spring-security.version>5.8.2</spring-security.version>
     </properties>
 
     <dependencies>
@@ -34,6 +36,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+
+        <!-- Moving authorization-server before of starter-security to solve conflicts with JwtEncoder -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-oauth2-authorization-server</artifactId>
+            <version>0.2.1</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -51,12 +61,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-oauth2-authorization-server</artifactId>
-            <version>0.2.1</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
@@ -71,24 +75,11 @@
             <version>1.18.16</version>
             <optional>true</optional>
         </dependency>
-
+        <!-- API documentation. replacement of springfox-swagger2 -->
         <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-            <version>2.9.2</version>
-            <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.mapstruct</groupId>
-                    <artifactId>mapstruct</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger-ui</artifactId>
-            <version>2.9.2</version>
-            <scope>compile</scope>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-ui</artifactId>
+            <version>1.7.0</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -392,9 +383,13 @@
                 <version>0.5.1</version>
                 <configuration>
                     <protocArtifact>com.google.protobuf:protoc:3.12.0:exe:${os.detected.classifier}</protocArtifact>
+                    <!-- for Mac OS compatibility -->
+<!--                     <protocArtifact>com.google.protobuf:protoc:3.12.0:exe:osx-x86_64</protocArtifact>-->
                     <protoSourceRoot>${basedir}/src/main/proto</protoSourceRoot>
                     <pluginId>grpc-java</pluginId>
                     <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.34.1:exe:${os.detected.classifier}</pluginArtifact>
+                    <!-- for Mac Os compatibility -->
+<!--                     <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.34.1:exe:osx-x86_64</pluginArtifact>-->
                 </configuration>
                 <executions>
                     <execution>
@@ -434,7 +429,8 @@
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
-                <version>2020.0.4</version>
+                <!-- version compatible with Spring boot 2.7.x -->
+                <version>2021.0.5</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
