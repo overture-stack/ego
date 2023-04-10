@@ -359,6 +359,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
 
     val statusCode = response.getStatusCode();
     assertEquals(HttpStatus.BAD_REQUEST, statusCode);
+    assertEquals("false", response.getStatusCode());
   }
 
   @SneakyThrows
