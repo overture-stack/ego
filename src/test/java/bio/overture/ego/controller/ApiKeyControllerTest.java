@@ -361,7 +361,7 @@ public class ApiKeyControllerTest extends AbstractControllerTest {
     /*assertEquals(HttpStatus.BAD_REQUEST, statusCode);
     assertEquals("false", response.getStatusCode());*/
       
-      assertEquals(HttpStatus.BAD_REQUEST, "false");
+      assertEquals(HttpStatus.BAD_REQUEST, "false");*/
   }
 
   @SneakyThrows
