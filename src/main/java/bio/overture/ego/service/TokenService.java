@@ -399,19 +399,16 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   public ApiKeyScopeResponse checkApiKey(final String apiKey) {
     if (apiKey == null) {
       log.debug("Null apiKey");
-      throw new InvalidRequestException("No apiKey field found in POST request");
+      throw new InvalidTokenException("No apiKey field found in POST request");
     }
 
     log.debug(format("apiKey ='%s'", apiKey));
+
     val aK =
-        findByApiKeyString(apiKey)
-            .orElseThrow(
-                () -> {
-                  return new InvalidRequestException("ApiKey not found");
-                });
+        findByApiKeyString(apiKey).orElseThrow(() -> new InvalidTokenException("ApiKey not found"));
 
     if (aK.isRevoked())
-      throw new ClientInvalidTokenException(
+      throw new InvalidTokenException(
           format("ApiKey \"%s\" has expired or is no longer valid. ", apiKey));
 
     // We want to limit the scopes listed in the apiKey to those scopes that the user

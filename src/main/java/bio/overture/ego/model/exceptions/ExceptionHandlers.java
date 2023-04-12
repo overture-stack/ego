@@ -1,7 +1,8 @@
 package bio.overture.ego.model.exceptions;
 
 import static java.lang.String.format;
-import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 import bio.overture.ego.utils.Joiners;
 import java.util.Date;
@@ -40,15 +41,6 @@ public class ExceptionHandlers {
     val message = buildConstraintViolationMessage(ex);
     log.error(message);
     return new ResponseEntity<Object>(message, new HttpHeaders(), BAD_REQUEST);
-  }
-
-  @ExceptionHandler(ClientInvalidTokenException.class)
-  public ResponseEntity<Object> handleInvalidTokenException(
-      HttpServletRequest req, ClientInvalidTokenException ex) {
-    val message = ex.getMessage();
-    log.error(message);
-    return new ResponseEntity<Object>(
-        Map.of("valid", false, "error", message), new HttpHeaders(), OK);
   }
 
   private static String buildConstraintViolationMessage(ConstraintViolationException ex) {
