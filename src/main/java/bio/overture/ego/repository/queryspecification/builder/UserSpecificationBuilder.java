@@ -1,14 +1,14 @@
 package bio.overture.ego.repository.queryspecification.builder;
 
 import static bio.overture.ego.model.enums.JavaFields.*;
-import static javax.persistence.criteria.JoinType.LEFT;
+import static jakarta.persistence.criteria.JoinType.LEFT;
 
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.enums.ProviderType;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import java.util.UUID;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;

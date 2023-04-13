@@ -1,10 +1,10 @@
 package bio.overture.ego.repository.queryspecification.builder;
 
-import static javax.persistence.criteria.JoinType.LEFT;
+import static jakarta.persistence.criteria.JoinType.LEFT;
 
 import bio.overture.ego.model.entity.RefreshToken;
+import jakarta.persistence.criteria.Root;
 import java.util.UUID;
-import javax.persistence.criteria.Root;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 

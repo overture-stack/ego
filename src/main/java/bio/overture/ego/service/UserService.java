@@ -51,8 +51,8 @@ import bio.overture.ego.repository.queryspecification.builder.UserSpecificationB
 import bio.overture.ego.token.IDToken;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import jakarta.transaction.Transactional;
 import java.util.*;
-import javax.transaction.Transactional;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;

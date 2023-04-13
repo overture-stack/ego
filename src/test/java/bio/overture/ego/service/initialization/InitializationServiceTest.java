@@ -16,7 +16,7 @@ import bio.overture.ego.repository.InitTripWireRepository;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.InitializationService;
 import bio.overture.ego.utils.EntityGenerator;
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Rule;

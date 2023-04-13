@@ -17,7 +17,6 @@
 package bio.overture.ego.model.entity;
 
 import static bio.overture.ego.grpc.ProtoUtils.toProtoString;
-import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
 import static bio.overture.ego.service.UserService.resolveUsersPermissions;
 import static bio.overture.ego.utils.CollectionUtils.mapToImmutableSet;
 import static bio.overture.ego.utils.PolicyPermissionUtils.extractPermissionStrings;
@@ -34,11 +33,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -51,7 +50,6 @@ import lombok.val;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
 
 @Slf4j
 @Entity
@@ -83,7 +81,6 @@ import org.hibernate.annotations.TypeDef;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonView(Views.REST.class)
-@TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
 @FieldNameConstants
 public class User implements PolicyOwner, Identifiable<UUID> {
 
@@ -99,14 +96,14 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   private String email;
 
   @NotNull
-  @Type(type = EGO_ENUM)
+  @Type(PostgreSQLEnumType.class)
   @Enumerated(EnumType.STRING)
   @Column(name = SqlFields.TYPE, nullable = false)
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   private UserType type;
 
   @NotNull
-  @Type(type = EGO_ENUM)
+  @Type(PostgreSQLEnumType.class)
   @Enumerated(EnumType.STRING)
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.STATUS, nullable = false)
@@ -133,14 +130,14 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   @Temporal(value = TemporalType.TIMESTAMP)
   private Date lastLogin;
 
-  @Type(type = EGO_ENUM)
+  @Type(PostgreSQLEnumType.class)
   @Enumerated(EnumType.STRING)
   @Column(name = SqlFields.PREFERREDLANGUAGE)
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   private LanguageType preferredLanguage;
 
   @NotNull
-  @Type(type = EGO_ENUM)
+  @Type(PostgreSQLEnumType.class)
   @Enumerated(EnumType.STRING)
   @Column(name = SqlFields.PROVIDERTYPE, nullable = false)
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})

@@ -21,11 +21,11 @@ import bio.overture.ego.security.*;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.utils.Redirects;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +37,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
@@ -50,6 +48,8 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.client.RestTemplate;
@@ -87,8 +87,8 @@ public class SecureServerConfig {
   }
 
   @Configuration
-  @Order(SecurityProperties.BASIC_AUTH_ORDER - 3)
-  public class OAuthConfigurerAdapter extends WebSecurityConfigurerAdapter {
+  @Order(SecurityProperties.BASIC_AUTH_ORDER - 3000)
+  public class OAuthConfigurerAdapter {
 
     final OAuth2AuthorizationRequestResolver oAuth2RequestResolver;
     final CustomOAuth2UserInfoService customOAuth2UserInfoService;
@@ -134,19 +134,20 @@ public class SecureServerConfig {
       };
     }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-      http.requestMatchers()
-          .antMatchers(
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+      return http.authorizeHttpRequests()
+          .requestMatchers(
               "/oauth/code/*",
               "/oauth/login/*",
               "/oauth/ego-token",
               "/oauth/update-ego-token",
               "/oauth/refresh")
+          .permitAll()
           .and()
           .csrf()
           .disable()
-          .authorizeRequests()
+          .authorizeHttpRequests()
           .anyRequest()
           .permitAll()
           .and()
@@ -160,13 +161,14 @@ public class SecureServerConfig {
                 x.userInfoEndpoint().userService(customOAuth2UserInfoService);
                 x.successHandler(this.successHandler());
                 x.failureHandler(this.failureHandler);
-              });
+              })
+          .build();
     }
 
     private OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest>
         authorizationCodeTokenResponseClient() {
       val tokenResponseHttpMessageConverter = new OAuth2AccessTokenResponseHttpMessageConverter();
-      tokenResponseHttpMessageConverter.setTokenResponseConverter(
+      tokenResponseHttpMessageConverter.setAccessTokenResponseConverter(
           new OAuth2AccessTokenResponseConverterWithDefaults());
 
       val restTemplate =
@@ -189,21 +191,21 @@ public class SecureServerConfig {
   }
 
   @Configuration
-  @Order(SecurityProperties.BASIC_AUTH_ORDER + 3)
-  public class AppConfigurerAdapter extends WebSecurityConfigurerAdapter {
+  @Order(SecurityProperties.BASIC_AUTH_ORDER + 3000)
+  public class AppConfigurerAdapter {
 
-    OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
-        new OAuth2AuthorizationServerConfigurer<>();
+    OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
+        new OAuth2AuthorizationServerConfigurer();
     @Autowired JWTAuthorizationFilter authorizationFilter;
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-      http.csrf()
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+      return http.csrf()
           .disable()
           .apply(authorizationServerConfigurer)
           .and()
-          .authorizeRequests()
-          .antMatchers(
+          .authorizeHttpRequests()
+          .requestMatchers(
               "/",
               "/favicon.ico",
               "/swagger-ui/**",
@@ -217,14 +219,16 @@ public class SecureServerConfig {
               "/oauth/token/verify",
               "/oauth/token/public_key")
           .permitAll()
-          .antMatchers(HttpMethod.OPTIONS, "/**")
+          .requestMatchers(HttpMethod.OPTIONS, "/**")
           .permitAll()
           .anyRequest()
           .authenticated()
           .and()
           .addFilterBefore(authorizationFilter, BasicAuthenticationFilter.class)
           .sessionManagement()
-          .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+          .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+          .and()
+          .build();
     }
   }
 }

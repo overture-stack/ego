@@ -6,10 +6,10 @@ import static lombok.AccessLevel.PRIVATE;
 
 import bio.overture.ego.model.search.SearchFilter;
 import bio.overture.ego.utils.QueryUtils;
+import jakarta.persistence.criteria.*;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import javax.persistence.criteria.*;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;

@@ -16,12 +16,12 @@
 
 package bio.overture.ego.token.signer;
 
+import jakarta.annotation.PostConstruct;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.*;
 import java.util.Base64;
 import java.util.Optional;
-import javax.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;

@@ -2,8 +2,8 @@ package bio.overture.ego.security;
 
 import static java.util.Objects.isNull;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
-import javax.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;

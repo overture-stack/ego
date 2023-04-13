@@ -3,10 +3,10 @@ package bio.overture.ego.repository.queryspecification.builder;
 import static bio.overture.ego.model.enums.JavaFields.NAME;
 
 import bio.overture.ego.model.enums.JavaFields;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import java.util.Collection;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.data.jpa.domain.Specification;

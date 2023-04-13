@@ -16,28 +16,29 @@
 
 package bio.overture.ego.config;
 
+import static bio.overture.ego.utils.SwaggerConstants.*;
 
-import java.net.URISyntaxException;
-import java.util.*;
-import java.util.stream.Collectors;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
-import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import java.net.URISyntaxException;
+import java.util.*;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import org.apache.http.client.utils.URIBuilder;
-import org.springdoc.core.customizers.OpenApiCustomiser;
+import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.info.BuildProperties;
@@ -45,19 +46,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-import static bio.overture.ego.utils.SwaggerConstants.*;
-
-
-/**
- * Open API Configuration Bean
- */
+/** Open API Configuration Bean */
 @Configuration
 public class SwaggerConfig {
 
-
-
   private final BuildProperties buildProperties;
-
 
   @Autowired
   public SwaggerConfig(@NonNull BuildProperties buildProperties) {
@@ -70,9 +63,7 @@ public class SwaggerConfig {
     URIBuilder uriBuilder = null;
     try {
       uriBuilder = new URIBuilder(swaggerProperties.host);
-      uriBuilder.setPath(swaggerProperties.baseUrl)
-        .build()
-        .normalize();
+      uriBuilder.setPath(swaggerProperties.baseUrl).build().normalize();
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
     }
@@ -80,19 +71,17 @@ public class SwaggerConfig {
     return new OpenAPI()
         .info(metaInfo())
         .servers(List.of(new Server().url(uriBuilder.toString())))
-        .components(new Components()
-            .addSecuritySchemes(SECURITY_SCHEME_NAME,
-            securityScheme()));
+        .components(new Components().addSecuritySchemes(SECURITY_SCHEME_NAME, securityScheme()));
   }
 
   private Info metaInfo() {
 
     return new Info()
-            .title("Ego Service API")
-            .description("Ego API Documentation")
-            .version(buildProperties.getVersion())
-            .contact(new Contact())
-            .license(new License().name("GNU Affero General Public License v3.0"));
+        .title("Ego Service API")
+        .description("Ego API Documentation")
+        .version(buildProperties.getVersion())
+        .contact(new Contact())
+        .license(new License().name("GNU Affero General Public License v3.0"));
   }
 
   private static SecurityScheme securityScheme() {
@@ -135,25 +124,34 @@ public class SwaggerConfig {
   }
 
   @Bean
-  public OpenApiCustomiser openApiCustomiser() {
+  public OpenApiCustomizer openApiCustomiser() {
     return openApi -> {
+      openApi
+          .getPaths()
+          .forEach(
+              (path, pathItem) -> {
 
-      openApi.getPaths().forEach((path, pathItem) -> {
-
-        // We want the default Bearer auth applied only for non-ApplicationScoped endpoints.
-        // For ApplicationScoped endpoints, an explicit RequestHeader
-        if(!isApplicationScopedPath(path)){
-          pathItem.readOperations().forEach(operation -> {
-            operation.addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME));
-          });
-        }
-      });
+                // We want the default Bearer auth applied only for non-ApplicationScoped endpoints.
+                // For ApplicationScoped endpoints, an explicit RequestHeader
+                if (!isApplicationScopedPath(path)) {
+                  pathItem
+                      .readOperations()
+                      .forEach(
+                          operation -> {
+                            operation.addSecurityItem(
+                                new SecurityRequirement().addList(SECURITY_SCHEME_NAME));
+                          });
+                }
+              });
 
       // generate access token parameters
-      PathItem accessTokenPath = new PathItem().post(new Operation().addTagsItem("Auth").parameters(generatePostAccessTokenParameters()));
+      PathItem accessTokenPath =
+          new PathItem()
+              .post(
+                  new Operation()
+                      .addTagsItem("Auth")
+                      .parameters(generatePostAccessTokenParameters()));
       openApi.getPaths().addPathItem("/oauth/token", accessTokenPath);
-
     };
   }
-
 }

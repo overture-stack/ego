@@ -1,7 +1,7 @@
 package bio.overture.ego.model.dto;
 
+import jakarta.validation.constraints.NotNull;
 import java.util.Date;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
