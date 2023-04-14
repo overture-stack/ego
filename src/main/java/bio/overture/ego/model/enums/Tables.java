@@ -22,4 +22,6 @@ public class Tables {
   public static final String APPLICATION_PERMISSION = "applicationpermission";
   public static final String DEFAULTPROVIDERTRIPWIRE = "defaultprovidertripwire";
   public static final String INITTRIPWIRE = "inittripwire";
+
+  public static final String GA4GHVISA = "ga4ghvisa";
 }
