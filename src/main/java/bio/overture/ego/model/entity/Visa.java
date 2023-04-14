@@ -31,12 +31,6 @@ import org.hibernate.annotations.GenericGenerator;
 @AllArgsConstructor
 @FieldNameConstants
 @EqualsAndHashCode(of = {"id"})
-@NamedEntityGraph(
-    name = "policy-entity-with-relationships",
-    attributeNodes = {
-      @NamedAttributeNode(value = JavaFields.USERPERMISSIONS),
-      @NamedAttributeNode(value = JavaFields.GROUPPERMISSIONS),
-    })
 public class Visa implements Identifiable<UUID> {
 
   @Id

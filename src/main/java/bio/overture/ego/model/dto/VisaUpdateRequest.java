@@ -11,9 +11,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class VisaRequest {
+public class VisaUpdateRequest {
 
-  private UUID id;
+  @NotNull private UUID id;
 
   @NotNull private String type;
 

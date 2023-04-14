@@ -5,9 +5,8 @@ import static bio.overture.ego.model.exceptions.RequestValidationException.check
 import static org.mapstruct.factory.Mappers.getMapper;
 
 import bio.overture.ego.event.token.ApiKeyEventsPublisher;
-import bio.overture.ego.model.dto.PolicyRequest;
 import bio.overture.ego.model.dto.VisaRequest;
-import bio.overture.ego.model.entity.Policy;
+import bio.overture.ego.model.dto.VisaUpdateRequest;
 import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.repository.VisaRepository;
 import java.util.Optional;
@@ -31,12 +30,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class VisaService extends AbstractNamedService<Visa, UUID> {
 
   /** Constants */
-  private static final VisaService.VisaConverter VISA_CONVERTER = getMapper(VisaService.VisaConverter.class);
+  private static final VisaService.VisaConverter VISA_CONVERTER =
+      getMapper(VisaService.VisaConverter.class);
 
   /** Dependencies */
-  @Autowired
-
-  private VisaRepository visaRepository;
+  @Autowired private VisaRepository visaRepository;
 
   private final ApiKeyEventsPublisher apiKeyEventsPublisher;
 
@@ -76,16 +74,18 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
     return visaRepository.findAll(pageable);
   }
 
-  public Visa partialUpdate(@NonNull UUID id, @NonNull VisaRequest updateRequest) {
-    val visa = getById(id);
+  public Visa partialUpdate(@NonNull VisaUpdateRequest updateRequest) {
+    val visa = getById(updateRequest.getId());
     VISA_CONVERTER.updateVisa(updateRequest, visa);
     return getRepository().save(visa);
   }
-  @Mapper(
-          nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
-          unmappedTargetPolicy = ReportingPolicy.WARN)
-  public abstract static class VisaConverter {
-  public abstract Visa convertToVisa(VisaRequest request);
-    public abstract void updateVisa(VisaRequest request, @MappingTarget Visa visaToUpdate);
 
-  }}
+  @Mapper(
+      nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
+      unmappedTargetPolicy = ReportingPolicy.WARN)
+  public abstract static class VisaConverter {
+    public abstract Visa convertToVisa(VisaRequest request);
+
+    public abstract void updateVisa(VisaUpdateRequest request, @MappingTarget Visa visaToUpdate);
+  }
+}
