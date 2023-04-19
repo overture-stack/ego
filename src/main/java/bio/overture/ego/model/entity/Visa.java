@@ -1,12 +1,16 @@
 package bio.overture.ego.model.entity;
 
+import static com.google.common.collect.Sets.newHashSet;
+
 import bio.overture.ego.model.enums.JavaFields;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
+import java.util.Set;
 import java.util.UUID;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -58,4 +62,9 @@ public class Visa implements Identifiable<UUID> {
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.BY)
   private String by;
+
+  @JsonIgnore
+  @ManyToMany(mappedBy = "visaId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @Builder.Default
+  private Set<VisaPermission> visaPermissions = newHashSet();
 }

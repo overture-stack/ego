@@ -42,4 +42,10 @@ public class SqlFields {
   public static final String VALUE = "value";
 
   public static final String BY = "by";
+
+  public static final String ENTITY = "entity";
+
+  public static final String VISAID = "visaId";
+
+  public static final String MASK = "mask";
 }
