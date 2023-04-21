@@ -10,7 +10,9 @@ import bio.overture.ego.service.*;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.*;
+import java.util.List;
 import java.util.UUID;
+import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,8 @@ public class VisaController {
   /** Dependencies */
   private final VisaService visaService;
 
+  private final VisaPermissionService visaPermissionService;
+
   private final UserPermissionService userPermissionService;
   private final GroupPermissionService groupPermissionService;
   private final ApplicationPermissionService applicationPermissionService;
@@ -35,10 +39,12 @@ public class VisaController {
   @Autowired
   public VisaController(
       @NonNull VisaService visaService,
+      @NotNull VisaPermissionService visaPermissionService,
       @NonNull UserPermissionService userPermissionService,
       @NonNull GroupPermissionService groupPermissionService,
       @NonNull ApplicationPermissionService applicationPermissionService) {
     this.visaService = visaService;
+    this.visaPermissionService = visaPermissionService;
     this.groupPermissionService = groupPermissionService;
     this.userPermissionService = userPermissionService;
     this.applicationPermissionService = applicationPermissionService;
@@ -91,8 +97,9 @@ public class VisaController {
   public @ResponseBody Visa updateVisa(
       @ApiIgnore @RequestHeader(value = "Authorization", required = true)
           final String authorization,
+      @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) VisaUpdateRequest visaRequest) {
-    return visaService.partialUpdate(visaRequest);
+    return visaService.partialUpdate(id, visaRequest);
   }
 
   @AdminScoped
@@ -103,5 +110,22 @@ public class VisaController {
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id) {
     visaService.delete(id);
+  }
+
+  /*
+   * This method is used to fetch visa permissions using visa id
+   * @param visaId UUID
+   * @return visaPermissions List<VisaPermissions>
+   */
+  @AdminScoped
+  @RequestMapping(method = GET, value = "/permissions/{id}")
+  @ApiResponses(value = {@ApiResponse(code = 200, message = "Get VisaPermissions by visaId")})
+  @JsonView(Views.REST.class)
+  public @ResponseBody List<VisaPermission> getPermissionsByVisaId(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "id", required = true) UUID id) {
+    System.out.println(id);
+    return visaPermissionService.getPermissionsByVisaId(id);
   }
 }
