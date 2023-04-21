@@ -87,7 +87,7 @@ public class VisaController {
       @ApiIgnore @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
-      @RequestBody(required = true) VisaUpdateRequest visaRequest) {
+      @RequestBody(required = true) VisaRequest visaRequest) {
     return visaService.partialUpdate(id, visaRequest);
   }
 

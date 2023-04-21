@@ -6,7 +6,6 @@ import static org.mapstruct.factory.Mappers.getMapper;
 
 import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.VisaRequest;
-import bio.overture.ego.model.dto.VisaUpdateRequest;
 import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.repository.VisaRepository;
 import java.util.Optional;
@@ -75,7 +74,7 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
     return visaRepository.findAll(pageable);
   }
 
-  public Visa partialUpdate(@NotNull UUID id, @NonNull VisaUpdateRequest updateRequest) {
+  public Visa partialUpdate(@NotNull UUID id, @NonNull VisaRequest updateRequest) {
     val visa = getById(id);
     VISA_CONVERTER.updateVisa(updateRequest, visa);
     return getRepository().save(visa);
@@ -87,6 +86,6 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
   public abstract static class VisaConverter {
     public abstract Visa convertToVisa(VisaRequest request);
 
-    public abstract void updateVisa(VisaUpdateRequest request, @MappingTarget Visa visaToUpdate);
+    public abstract void updateVisa(VisaRequest request, @MappingTarget Visa visaToUpdate);
   }
 }
