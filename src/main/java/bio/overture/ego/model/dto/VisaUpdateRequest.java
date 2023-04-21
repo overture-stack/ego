@@ -1,6 +1,5 @@
 package bio.overture.ego.model.dto;
 
-import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,8 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class VisaUpdateRequest {
-
-  @NotNull private UUID id;
 
   @NotNull private String type;
 

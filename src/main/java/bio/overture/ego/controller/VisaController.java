@@ -86,8 +86,9 @@ public class VisaController {
   public @ResponseBody Visa updateVisa(
       @ApiIgnore @RequestHeader(value = "Authorization", required = true)
           final String authorization,
+      @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) VisaUpdateRequest visaRequest) {
-    return visaService.partialUpdate(visaRequest);
+    return visaService.partialUpdate(id, visaRequest);
   }
 
   @AdminScoped

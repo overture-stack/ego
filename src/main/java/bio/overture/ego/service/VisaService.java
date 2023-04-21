@@ -11,6 +11,7 @@ import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.repository.VisaRepository;
 import java.util.Optional;
 import java.util.UUID;
+import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -74,8 +75,8 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
     return visaRepository.findAll(pageable);
   }
 
-  public Visa partialUpdate(@NonNull VisaUpdateRequest updateRequest) {
-    val visa = getById(updateRequest.getId());
+  public Visa partialUpdate(@NotNull UUID id, @NonNull VisaUpdateRequest updateRequest) {
+    val visa = getById(id);
     VISA_CONVERTER.updateVisa(updateRequest, visa);
     return getRepository().save(visa);
   }
