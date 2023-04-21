@@ -15,4 +15,8 @@ public interface VisaPermissionRepository extends NamedRepository<VisaPermission
   List<VisaPermission> findAll();
 
   List<VisaPermission> findByVisaId(UUID visaId);
+
+  List<VisaPermission> findByPolicyId(UUID entity);
+
+  List<VisaPermission> findByPolicyIdAndVisaId(UUID entity, UUID visaId);
 }

@@ -98,7 +98,7 @@ public class VisaController {
       @ApiIgnore @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
-      @RequestBody(required = true) VisaUpdateRequest visaRequest) {
+      @RequestBody(required = true) VisaRequest visaRequest) {
     return visaService.partialUpdate(id, visaRequest);
   }
 
@@ -118,14 +118,45 @@ public class VisaController {
    * @return visaPermissions List<VisaPermissions>
    */
   @AdminScoped
-  @RequestMapping(method = GET, value = "/permissions/{id}")
+  @RequestMapping(method = GET, value = "/permissions/visaId/{id}")
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Get VisaPermissions by visaId")})
   @JsonView(Views.REST.class)
   public @ResponseBody List<VisaPermission> getPermissionsByVisaId(
       @ApiIgnore @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id) {
-    System.out.println(id);
     return visaPermissionService.getPermissionsByVisaId(id);
+  }
+
+  /*
+   * This method is used to fetch visa permissions using policy id
+   * @param policyId UUID
+   * @return visaPermissions List<VisaPermissions>
+   */
+  @AdminScoped
+  @RequestMapping(method = GET, value = "/permissions/policyId/{id}")
+  @ApiResponses(value = {@ApiResponse(code = 200, message = "Get VisaPermissions by policyId")})
+  @JsonView(Views.REST.class)
+  public @ResponseBody List<VisaPermission> getPermissionsByPolicyId(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "id", required = true) UUID id) {
+    return visaPermissionService.getPermissionsByPolicyId(id);
+  }
+
+  /*
+   * This method is used to create/update visa permissions
+   * @param visaPermissionRequest VisaPermissionRequest
+   * @return visaPermission VisaPermission
+   */
+  @AdminScoped
+  @RequestMapping(method = POST, value = "/permissions")
+  @ApiResponses(value = {@ApiResponse(code = 200, message = "Create or Update VisaPermission")})
+  @JsonView(Views.REST.class)
+  public @ResponseBody VisaPermission createOrUpdatePermissions(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody(required = true) VisaPermissionRequest visaPermissionRequest) {
+    return visaPermissionService.createOrUpdatePermissions(visaPermissionRequest);
   }
 }
