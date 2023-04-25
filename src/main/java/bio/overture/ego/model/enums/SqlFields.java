@@ -38,4 +38,8 @@ public class SqlFields {
   public static final String PROVIDERSUBJECTID = "providersubjectid";
   public static final String INITIALIZED = "initialized";
   public static final String ERRORREDIRECTURI = "errorredirecturi";
+  public static final String SOURCE = "source";
+  public static final String VALUE = "value";
+
+  public static final String BY = "by";
 }

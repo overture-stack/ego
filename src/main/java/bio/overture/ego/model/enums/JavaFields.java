@@ -66,4 +66,9 @@ public class JavaFields {
   public static final String PROVIDERTYPE = "providerType";
   public static final String PROVIDER_SUBJECT_ID = "providerSubjectId";
   public static final String ERROR_REDIRECT_URI = "errorRedirectUri";
+  // Visas Added
+  public static final String SOURCE = "source";
+  public static final String VALUE = "value";
+
+  public static final String BY = "by";
 }
