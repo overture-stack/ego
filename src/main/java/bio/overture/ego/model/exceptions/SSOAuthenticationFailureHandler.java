@@ -56,7 +56,7 @@ public class SSOAuthenticationFailureHandler implements AuthenticationFailureHan
       } else if (rootExceptionThrowable instanceof OAuth2Exception) {
         errorUri = buildOAuth2ExceptionResponse(errorUri, providerType);
       } else {
-        throw new InternalServerException("Invalid response from OAuth Service");
+        throw new InternalServerException("Invalid response from OAuth Service:" + exception);
       }
       response.setStatus(403);
       response.sendRedirect(errorUri.toString());
