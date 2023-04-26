@@ -76,7 +76,7 @@ spring:
             clientId: ego-client
             clientSecret:
             redirectUri: "http://localhost:8081/oauth/code/github"
-            clientAuthenticationMethod: post
+            clientAuthenticationMethod: client_secret_post
             authorizationGrantType: authorization_code
             scope:
               - "read:user"

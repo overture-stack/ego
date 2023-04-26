@@ -65,11 +65,6 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
     super.delete(id);
   }
 
-  @Override
-  public Visa getWithRelationships(UUID uuid) {
-    return null;
-  }
-
   public Page<Visa> listVisa(@NonNull Pageable pageable) {
     return visaRepository.findAll(pageable);
   }
@@ -87,5 +82,10 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
     public abstract Visa convertToVisa(VisaRequest request);
 
     public abstract void updateVisa(VisaRequest request, @MappingTarget Visa visaToUpdate);
+  }
+
+  @Override
+  public Visa getWithRelationships(UUID uuid) {
+    return null;
   }
 }

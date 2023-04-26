@@ -45,6 +45,11 @@ public class VisaController {
     this.applicationPermissionService = applicationPermissionService;
   }
 
+  /*
+   * This method is used to fetch visa using id
+   * @param id UUID
+   * @return visa Visa
+   */
   @AdminScoped
   @RequestMapping(method = GET, value = "/{id}")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Get Visa by id")})

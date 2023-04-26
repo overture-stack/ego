@@ -71,4 +71,6 @@ public class JavaFields {
   public static final String VALUE = "value";
 
   public static final String BY = "by";
+
+  public static final String VISAPERMISSION = "ACLVISAPERMISSION";
 }
