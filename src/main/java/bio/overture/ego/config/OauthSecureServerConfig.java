@@ -136,7 +136,7 @@ public class OauthSecureServerConfig {
   }
 
   private OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest>
-  authorizationCodeTokenResponseClient() {
+      authorizationCodeTokenResponseClient() {
     val tokenResponseHttpMessageConverter = new OAuth2AccessTokenResponseHttpMessageConverter();
     tokenResponseHttpMessageConverter.setAccessTokenResponseConverter(
         new OAuth2AccessTokenResponseConverterWithDefaults());
@@ -151,5 +151,4 @@ public class OauthSecureServerConfig {
 
     return tokenResponseClient;
   }
-
 }

@@ -33,14 +33,14 @@ public class SecureServerConfig {
   /** Constants */
   private final String[] PUBLIC_ENDPOINTS =
       new String[] {
-          "/oauth/token",
-          "/oauth/google/token",
-          "/oauth/facebook/token",
-          "/oauth/token/public_key",
-          "/oauth/token/verify",
-          "/oauth/ego-token",
-          "/oauth/update-ego-token",
-          "/oauth/refresh"
+        "/oauth/token",
+        "/oauth/google/token",
+        "/oauth/facebook/token",
+        "/oauth/token/public_key",
+        "/oauth/token/verify",
+        "/oauth/ego-token",
+        "/oauth/update-ego-token",
+        "/oauth/refresh"
       };
 
   // Do not register JWTAuthorizationFilter in global scope
