@@ -1,6 +1,5 @@
 package bio.overture.ego.controller;
 
-import static bio.overture.ego.controller.resolver.PageableResolver.*;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 import bio.overture.ego.model.dto.*;
@@ -67,6 +66,10 @@ public class VisaController {
     return visaService.getById(id);
   }
 
+  /*
+   * This method is used to list all visas
+   * @return visas List<Visa>
+   */
   @AdminScoped
   @RequestMapping(method = GET, value = "")
   @ApiResponses(value = {@ApiResponse(code = 200, message = "All Visas")})
@@ -78,6 +81,11 @@ public class VisaController {
     return new PageDTO<>(visaService.listVisa(pageable));
   }
 
+  /*
+   * This method is used to create visa using visa create request
+   * @param visaRequest VisaRequest
+   * @return Visa visa
+   */
   @AdminScoped
   @RequestMapping(method = POST, value = "")
   @ApiResponses(
@@ -91,6 +99,12 @@ public class VisaController {
     return visaService.create(visaRequest);
   }
 
+  /*
+   * This method is used to update visa using visa id and update request
+   * @param visaId UUID
+   * @param visaRequest VisaRequest
+   * @return Visa visa
+   */
   @AdminScoped
   @RequestMapping(method = PUT, value = "/{id}")
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Update Visa", response = Visa.class)})
@@ -102,6 +116,10 @@ public class VisaController {
     return visaService.partialUpdate(id, visaRequest);
   }
 
+  /*
+   * This method is used to delete visa using visa id
+   * @param visaId UUID
+   */
   @AdminScoped
   @RequestMapping(method = DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
@@ -158,5 +176,21 @@ public class VisaController {
           final String authorization,
       @RequestBody(required = true) VisaPermissionRequest visaPermissionRequest) {
     return visaPermissionService.createOrUpdatePermissions(visaPermissionRequest);
+  }
+
+  /*
+   * This method is used to delete/remove visa permissions
+   * @param visaPermissionRequest VisaPermissionRequest
+   */
+  @AdminScoped
+  @RequestMapping(method = DELETE, value = "/permissions")
+  @ApiResponses(value = {@ApiResponse(code = 200, message = "Remove VisaPermission")})
+  @JsonView(Views.REST.class)
+  public @ResponseBody void removePermissions(
+      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "policyId", required = true) UUID policyId,
+      @PathVariable(value = "visaId", required = true) UUID visaId) {
+    visaPermissionService.removePermission(policyId, visaId);
   }
 }

@@ -40,12 +40,6 @@ public class SqlFields {
   public static final String ERRORREDIRECTURI = "errorredirecturi";
   public static final String SOURCE = "source";
   public static final String VALUE = "value";
-
   public static final String BY = "by";
-
-  public static final String ENTITY = "entity";
-
-  public static final String VISAID = "visaId";
-
-  public static final String MASK = "mask";
+  public static final String VISA_ID = "visa_id";
 }

@@ -10,9 +10,9 @@ import lombok.*;
 @NoArgsConstructor
 public class VisaPermissionRequest {
 
-  private UUID entity;
+  private UUID policyId;
 
   private UUID visaId;
 
-  private AccessLevel mask;
+  private AccessLevel accessLevel;
 }

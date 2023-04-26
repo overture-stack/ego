@@ -1,9 +1,12 @@
 package bio.overture.ego.repository;
 
+import static org.springframework.data.jpa.repository.EntityGraph.EntityGraphType.FETCH;
+
 import bio.overture.ego.model.entity.VisaPermission;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface VisaPermissionRepository extends NamedRepository<VisaPermission, UUID> {
   @Override
@@ -14,9 +17,12 @@ public interface VisaPermissionRepository extends NamedRepository<VisaPermission
 
   List<VisaPermission> findAll();
 
-  List<VisaPermission> findByVisaId(UUID visaId);
+  @EntityGraph(value = "visa-permission-entity-with-relationships", type = FETCH)
+  List<VisaPermission> findByVisa_Id(UUID visa_id);
 
-  List<VisaPermission> findByPolicyId(UUID entity);
+  @EntityGraph(value = "visa-permission-entity-with-relationships", type = FETCH)
+  List<VisaPermission> findByPolicy_Id(UUID policy_id);
 
-  List<VisaPermission> findByPolicyIdAndVisaId(UUID entity, UUID visaId);
+  @EntityGraph(value = "visa-permission-entity-with-relationships", type = FETCH)
+  List<VisaPermission> findByPolicyIdAndVisaId(UUID policy_id, UUID visa_id);
 }

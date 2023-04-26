@@ -64,7 +64,7 @@ public class Visa implements Identifiable<UUID> {
   private String by;
 
   @JsonIgnore
-  @ManyToMany(mappedBy = "visaId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = JavaFields.VISA, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @Builder.Default
   private Set<VisaPermission> visaPermissions = newHashSet();
 }

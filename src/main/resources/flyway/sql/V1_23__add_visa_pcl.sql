@@ -1,8 +1,8 @@
 CREATE TABLE ACLVISAPERMISSION (
   id                      UUID PRIMARY KEY,
-  entity                  UUID,
-  visaId                  UUID,
-  mask                    ACLMASK NOT NULL,
-  FOREIGN KEY (entity)    REFERENCES POLICY(id),
-  FOREIGN KEY (visaId)    REFERENCES GA4GHVISA(id)
+  policy_id               UUID,
+  visa_id                  UUID,
+  access_level            ACLMASK NOT NULL,
+  FOREIGN KEY (policy_id) REFERENCES POLICY(id),
+  FOREIGN KEY (visa_id)    REFERENCES GA4GHVISA(id)
 );

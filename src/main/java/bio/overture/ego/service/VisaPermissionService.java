@@ -10,6 +10,7 @@ import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.repository.VisaPermissionRepository;
 import java.util.List;
 import java.util.UUID;
+import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -29,6 +30,8 @@ public class VisaPermissionService extends AbstractNamedService<VisaPermission, 
   /** Dependencies */
   @Autowired private VisaService visaService;
 
+  @Autowired private PolicyService policyService;
+
   @Autowired private VisaPermissionRepository visaPermissionRepository;
   private final ApiKeyEventsPublisher apiKeyEventsPublisher;
 
@@ -47,7 +50,7 @@ public class VisaPermissionService extends AbstractNamedService<VisaPermission, 
   }
 
   public List<VisaPermission> getPermissionsByVisaId(@NonNull UUID visaId) {
-    val result = (List<VisaPermission>) visaPermissionRepository.findByVisaId(visaId);
+    val result = (List<VisaPermission>) visaPermissionRepository.findByVisa_Id(visaId);
     if (result.isEmpty()) {
       throw new NotFoundException(format("No VisaPermissions exists with visaId '%s'", visaId));
     }
@@ -55,7 +58,7 @@ public class VisaPermissionService extends AbstractNamedService<VisaPermission, 
   }
 
   public List<VisaPermission> getPermissionsByPolicyId(@NonNull UUID policyId) {
-    val result = (List<VisaPermission>) visaPermissionRepository.findByPolicyId(policyId);
+    val result = (List<VisaPermission>) visaPermissionRepository.findByPolicy_Id(policyId);
     if (result.isEmpty()) {
       throw new NotFoundException(format("No VisaPermissions exists with policyId '%s'", policyId));
     }
@@ -64,16 +67,29 @@ public class VisaPermissionService extends AbstractNamedService<VisaPermission, 
 
   public VisaPermission createOrUpdatePermissions(
       @NonNull VisaPermissionRequest visaPermissionRequest) {
+    VisaPermission visaPermission = null;
     List<VisaPermission> visaPermissionEntities =
         visaPermissionRepository.findByPolicyIdAndVisaId(
-            visaPermissionRequest.getEntity(), visaPermissionRequest.getVisaId());
-    if (visaPermissionEntities == null && visaPermissionEntities.isEmpty()) {
-      return visaPermissionRepository.save(
-          VISA_PERMISSION_CONVERTER.createVisaPermission(visaPermissionRequest));
+            visaPermissionRequest.getPolicyId(), visaPermissionRequest.getVisaId());
+    if (visaPermissionEntities.isEmpty()) {
+      visaPermission = new VisaPermission();
+      visaPermission.setVisa(visaService.getById(visaPermissionRequest.getVisaId()));
+      visaPermission.setPolicy(policyService.getById(visaPermissionRequest.getPolicyId()));
+      visaPermission.setAccessLevel(visaPermissionRequest.getAccessLevel());
+      return visaPermissionRepository.save(visaPermission);
     } else {
       VISA_PERMISSION_CONVERTER.updateVisaPermission(
           visaPermissionRequest, visaPermissionEntities.get(0));
       return visaPermissionRepository.save(visaPermissionEntities.get(0));
+    }
+  }
+
+  public void removePermission(@NonNull UUID policyId, @NotNull UUID visaId) {
+    VisaPermission visaPermission = null;
+    List<VisaPermission> visaPermissionEntities =
+        visaPermissionRepository.findByPolicyIdAndVisaId(policyId, visaId);
+    if (!visaPermissionEntities.isEmpty()) {
+      visaPermissionRepository.deleteById(visaPermissionEntities.get(0).getId());
     }
   }
 
@@ -91,9 +107,6 @@ public class VisaPermissionService extends AbstractNamedService<VisaPermission, 
       nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
       unmappedTargetPolicy = ReportingPolicy.WARN)
   public abstract static class VisaPermissionConverter {
-    public abstract VisaPermission createVisaPermission(
-        VisaPermissionRequest visaPermissionRequest);
-
     public abstract void updateVisaPermission(
         VisaPermissionRequest visaPermissionRequest, @MappingTarget VisaPermission visaPermission);
   }

@@ -1,6 +1,4 @@
-def commit = "UNKNOWN"
-def version = "UNKNOWN"
-def chartversion = "3.1.0"
+def chartversion = "3.1.1"
 
 pipeline {
     agent {
