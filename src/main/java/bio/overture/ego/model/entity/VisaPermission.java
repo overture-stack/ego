@@ -1,16 +1,16 @@
 package bio.overture.ego.model.entity;
 
-import static bio.overture.ego.model.enums.AccessLevel.EGO_ACCESS_LEVEL_ENUM;
 
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.util.Collection;
 import java.util.UUID;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.GenericGenerator;
@@ -42,7 +42,7 @@ public class VisaPermission extends AbstractPermission<Visa> {
   @NotNull
   @Column(name = SqlFields.MASK, nullable = false)
   @Enumerated(EnumType.STRING)
-  @Type(type = EGO_ACCESS_LEVEL_ENUM)
+  @Type(value = PostgreSQLEnumType.class)
   private AccessLevel mask;
 
   @ManyToMany

@@ -128,7 +128,6 @@ spec:
             when {
                 anyOf {
                     branch 'develop'
-                    branch 'feature/develop-passport'
                     branch 'main'
                     expression { return params.PUBLISH_IMAGE }
                 }
