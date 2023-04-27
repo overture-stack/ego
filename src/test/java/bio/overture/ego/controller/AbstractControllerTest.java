@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
 
 @Slf4j

@@ -28,7 +28,14 @@ import bio.overture.ego.utils.IgnoreCaseSortDecorator;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableList;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
 import lombok.NonNull;
@@ -38,12 +45,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.annotations.ApiIgnore;
 
 @Slf4j
 @RestController
 @RequestMapping("/policies")
-@Api(tags = "Policies")
+@Tag(name = "Policies")
 public class PolicyController {
 
   /** Dependencies */
@@ -67,11 +73,10 @@ public class PolicyController {
 
   @AdminScoped
   @RequestMapping(method = GET, value = "/{id}")
-  @ApiResponses(
-      value = {@ApiResponse(code = 200, message = "Get policy by id", response = Policy.class)})
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Get policy by id")})
   @JsonView(Views.REST.class)
   public @ResponseBody Policy getPolicy(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id) {
     return policyService.getById(id);
@@ -79,51 +84,51 @@ public class PolicyController {
 
   @AdminScoped
   @RequestMapping(method = GET, value = "")
-  @ApiImplicitParams({
-    @ApiImplicitParam(
+  @Parameters({
+    @Parameter(
         name = Fields.ID,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Search for ids containing this text"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Search for ids containing this text"),
+    @Parameter(
         name = Fields.NAME,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Search for policies whose names contain this text"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Search for policies whose names contain this text"),
+    @Parameter(
         name = LIMIT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Number of results to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Number of results to retrieve"),
+    @Parameter(
         name = OFFSET,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Index of first result to retrieve"),
+    @Parameter(
         name = SORT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Field to sort on"),
+    @Parameter(
         name = SORTORDER,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Sorting order: ASC|DESC. Default order: DESC"),
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Sorting order: ASC|DESC. Default order: DESC"),
   })
-  @ApiResponses(value = {@ApiResponse(code = 200, message = "Page Policies")})
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Page Policies")})
   @JsonView(Views.REST.class)
   public @ResponseBody PageDTO<Policy> listPolicies(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
-      @ApiIgnore @Filters List<SearchFilter> filters,
-      @ApiIgnore Pageable pageable) {
+      @Parameter(hidden = true) @Filters List<SearchFilter> filters,
+      @Parameter(hidden = true) Pageable pageable) {
     return new PageDTO<>(policyService.listPolicies(filters, pageable));
   }
 
@@ -131,10 +136,10 @@ public class PolicyController {
   @RequestMapping(method = POST, value = "")
   @ApiResponses(
       value = {
-        @ApiResponse(code = 200, message = "New Policy", response = Policy.class),
+        @ApiResponse(responseCode = "200", description = "New Policy"),
       })
   public @ResponseBody Policy createPolicy(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @RequestBody(required = true) PolicyRequest createRequest) {
     return policyService.create(createRequest);
@@ -142,10 +147,9 @@ public class PolicyController {
 
   @AdminScoped
   @RequestMapping(method = PUT, value = "/{id}")
-  @ApiResponses(
-      value = {@ApiResponse(code = 200, message = "Updated Policy", response = Policy.class)})
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Updated Policy")})
   public @ResponseBody Policy updatePolicy(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id") UUID id,
       @RequestBody(required = true) PolicyRequest updatedRequst) {
@@ -156,7 +160,7 @@ public class PolicyController {
   @RequestMapping(method = DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void deletePolicy(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id) {
     policyService.delete(id);
@@ -165,10 +169,15 @@ public class PolicyController {
   @AdminScoped
   @RequestMapping(method = POST, value = "/{id}/permission/group/{group_id}")
   @ApiResponses(
-      value = {@ApiResponse(code = 200, message = "Add group permission", response = String.class)})
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Add group permission",
+            content = @Content(schema = @Schema(implementation = String.class)))
+      })
   @JsonView(Views.REST.class)
   public @ResponseBody Group createGroupPermission(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "group_id", required = true) UUID groupId,
@@ -180,14 +189,9 @@ public class PolicyController {
   @AdminScoped
   @RequestMapping(method = DELETE, value = "/{id}/permission/group/{group_id}")
   @ApiResponses(
-      value = {
-        @ApiResponse(
-            code = 200,
-            message = "Delete group permission",
-            response = GenericResponse.class)
-      })
+      value = {@ApiResponse(responseCode = "200", description = "Delete group permission")})
   public @ResponseBody GenericResponse deleteGroupPermission(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "group_id", required = true) UUID groupId) {
@@ -198,9 +202,14 @@ public class PolicyController {
   @AdminScoped
   @RequestMapping(method = POST, value = "/{id}/permission/user/{user_id}")
   @ApiResponses(
-      value = {@ApiResponse(code = 200, message = "Add user permission", response = String.class)})
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Add user permission",
+            content = @Content(schema = @Schema(implementation = String.class)))
+      })
   public @ResponseBody User createUserPermission(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "user_id", required = true) UUID userId,
@@ -212,14 +221,9 @@ public class PolicyController {
   @AdminScoped
   @RequestMapping(method = DELETE, value = "/{id}/permission/user/{user_id}")
   @ApiResponses(
-      value = {
-        @ApiResponse(
-            code = 200,
-            message = "Delete group permission",
-            response = GenericResponse.class)
-      })
+      value = {@ApiResponse(responseCode = "200", description = "Delete group permission")})
   public @ResponseBody GenericResponse deleteUserPermission(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "user_id", required = true) UUID userId) {
@@ -232,10 +236,13 @@ public class PolicyController {
   @RequestMapping(method = POST, value = "/{id}/permission/application/{application_id}")
   @ApiResponses(
       value = {
-        @ApiResponse(code = 200, message = "Add application permission", response = String.class)
+        @ApiResponse(
+            responseCode = "200",
+            description = "Add application permission",
+            content = @Content(schema = @Schema(implementation = String.class)))
       })
   public @ResponseBody Application createApplicationPermission(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "application_id", required = true) UUID applicationId,
@@ -247,14 +254,9 @@ public class PolicyController {
   @AdminScoped
   @RequestMapping(method = DELETE, value = "/{id}/permission/application/{application_id}")
   @ApiResponses(
-      value = {
-        @ApiResponse(
-            code = 200,
-            message = "Delete application permission",
-            response = GenericResponse.class)
-      })
+      value = {@ApiResponse(responseCode = "200", description = "Delete application permission")})
   public @ResponseBody GenericResponse deleteApplicationPermission(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
       @PathVariable(value = "application_id", required = true) UUID applicationId) {
@@ -265,49 +267,51 @@ public class PolicyController {
 
   @AdminScoped
   @RequestMapping(method = GET, value = "/{id}/users")
-  @ApiImplicitParams({
-    @ApiImplicitParam(
+  @Parameters({
+    @Parameter(
         name = LIMIT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Number of results to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Number of results to retrieve"),
+    @Parameter(
         name = OFFSET,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Index of first result to retrieve"),
+    @Parameter(
         name = SORT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Field to sort on"),
+    @Parameter(
         name = SORTORDER,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value =
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description =
             "Sorting order: ASC|DESC. Default order: DESC. Note: ascending sort order for the mask field is: READ,WRITE,DENY"),
   })
   @ApiResponses(
       value = {
         @ApiResponse(
-            code = 200,
-            message = "Get list of user ids with given policy id",
-            response = String.class)
+            responseCode = "200",
+            description = "Get list of user ids with given policy id",
+            content = @Content(schema = @Schema(implementation = String.class)))
       })
   public @ResponseBody PageDTO<PolicyResponse> findUserIds(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
-      @ApiParam(value = "Query string compares to AccessLevel and user Id field.", required = false)
+      @Parameter(
+              description = "Query string compares to AccessLevel and user Id field.",
+              required = false)
           @RequestParam(value = "query", required = false)
           String query,
-      @ApiIgnore @Filters List<SearchFilter> filters,
-      @ApiIgnore Pageable pageable) {
+      @Parameter(hidden = true) @Filters List<SearchFilter> filters,
+      @Parameter(hidden = true) Pageable pageable) {
     val decoratedPageable = new IgnoreCaseSortDecorator(pageable);
     if (isEmpty(query)) {
       return new PageDTO<>(
@@ -320,51 +324,51 @@ public class PolicyController {
 
   @AdminScoped
   @RequestMapping(method = GET, value = "/{id}/groups")
-  @ApiImplicitParams({
-    @ApiImplicitParam(
+  @Parameters({
+    @Parameter(
         name = LIMIT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Number of results to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Number of results to retrieve"),
+    @Parameter(
         name = OFFSET,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Index of first result to retrieve"),
+    @Parameter(
         name = SORT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Field to sort on"),
+    @Parameter(
         name = SORTORDER,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value =
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description =
             "Sorting order: ASC|DESC. Default order: DESC. Note: ascending sort order for the mask field is: READ,WRITE,DENY"),
   })
   @ApiResponses(
       value = {
         @ApiResponse(
-            code = 200,
-            message = "Get list of group ids with given policy id",
-            response = String.class)
+            responseCode = "200",
+            description = "Get list of group ids with given policy id",
+            content = @Content(schema = @Schema(implementation = String.class)))
       })
   public @ResponseBody PageDTO<PolicyResponse> findGroupIds(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
-      @ApiParam(
-              value = "Query string compares to AccessLevel and group Id and Name fields.",
+      @Parameter(
+              description = "Query string compares to AccessLevel and group Id and Name fields.",
               required = false)
           @RequestParam(value = "query", required = false)
           String query,
-      @ApiIgnore @Filters List<SearchFilter> filters,
-      @ApiIgnore Pageable pageable) {
+      @Parameter(hidden = true) @Filters List<SearchFilter> filters,
+      @Parameter(hidden = true) Pageable pageable) {
     val decoratedPageable = new IgnoreCaseSortDecorator(pageable);
     if (isEmpty(query)) {
       return new PageDTO(
@@ -378,51 +382,52 @@ public class PolicyController {
 
   @AdminScoped
   @RequestMapping(method = GET, value = "/{id}/applications")
-  @ApiImplicitParams({
-    @ApiImplicitParam(
+  @Parameters({
+    @Parameter(
         name = LIMIT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Number of results to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Number of results to retrieve"),
+    @Parameter(
         name = OFFSET,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Index of first result to retrieve"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Index of first result to retrieve"),
+    @Parameter(
         name = SORT,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value = "Field to sort on"),
-    @ApiImplicitParam(
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description = "Field to sort on"),
+    @Parameter(
         name = SORTORDER,
         required = false,
-        dataType = "string",
-        paramType = "query",
-        value =
+        schema = @Schema(type = "string"),
+        in = ParameterIn.QUERY,
+        description =
             "Sorting order: ASC|DESC. Default order: DESC. Note: ascending sort order for the mask field is: READ,WRITE,DENY"),
   })
   @ApiResponses(
       value = {
         @ApiResponse(
-            code = 200,
-            message = "Get list of application ids with given policy id",
-            response = String.class)
+            responseCode = "200",
+            description = "Get list of application ids with given policy id",
+            content = @Content(schema = @Schema(implementation = String.class)))
       })
   public @ResponseBody PageDTO<PolicyResponse> findApplicationIds(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id,
-      @ApiParam(
-              value = "Query string compares to AccessLevel and Application Id and Name fields.",
+      @Parameter(
+              description =
+                  "Query string compares to AccessLevel and Application Id and Name fields.",
               required = false)
           @RequestParam(value = "query", required = false)
           String query,
-      @ApiIgnore @Filters List<SearchFilter> filters,
-      @ApiIgnore Pageable pageable) {
+      @Parameter(hidden = true) @Filters List<SearchFilter> filters,
+      @Parameter(hidden = true) Pageable pageable) {
     val decoratedPageable = new IgnoreCaseSortDecorator(pageable);
     if (isEmpty(query)) {
       return new PageDTO(

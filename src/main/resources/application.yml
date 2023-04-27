@@ -27,6 +27,15 @@ refreshToken:
   cookieIsSecure: false
   domain: localhost
 
+# Swagger
+springdoc:
+  packagesToScan: bio.overture.ego.controller
+  swagger-ui:
+    display-operation-id: true
+    doc-expansion: none # initial collapse groups
+    operations-sorter: alpha
+    tags-sorter: alpha
+
 # security
 auth:
   token:
@@ -50,6 +59,7 @@ spring:
       client:
         registration:
           google:
+            provider: google
             clientName: ego
             clientId: ego-client
             clientSecret:

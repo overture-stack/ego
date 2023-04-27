@@ -5,10 +5,10 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 import bio.overture.ego.utils.Joiners;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import java.util.Date;
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.http.HttpHeaders;

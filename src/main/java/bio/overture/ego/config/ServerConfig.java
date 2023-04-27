@@ -23,32 +23,34 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
 @Profile("!auth")
-public class ServerConfig extends WebSecurityConfigurerAdapter {
+public class ServerConfig {
 
   @Bean
   public AuthorizationManager authorizationManager() {
     return new DefaultAuthorizationManager();
   }
 
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
-    http.csrf()
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    return http.csrf()
         .disable()
-        .authorizeRequests()
-        .antMatchers("/**")
+        .authorizeHttpRequests()
+        .requestMatchers("/**")
         .permitAll()
         .anyRequest()
         .authenticated()
         .and()
-        .authorizeRequests()
+        .authorizeHttpRequests()
         .and()
         .sessionManagement()
-        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        .and()
+        .build();
   }
 }

@@ -16,57 +16,39 @@
 
 package bio.overture.ego.config;
 
-import static bio.overture.ego.utils.SwaggerConstants.AUTH_CONTROLLER;
-import static bio.overture.ego.utils.SwaggerConstants.POST_ACCESS_TOKEN;
-import static java.util.stream.Collectors.toUnmodifiableList;
-import static springfox.documentation.builders.RequestHandlerSelectors.basePackage;
-import static springfox.documentation.spi.DocumentationType.SWAGGER_2;
+import static bio.overture.ego.utils.SwaggerConstants.*;
 
-import com.fasterxml.classmate.TypeResolver;
-import com.google.common.base.Predicates;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.License;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
+import java.net.URISyntaxException;
+import java.util.*;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import lombok.val;
+import org.apache.http.client.utils.URIBuilder;
+import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
-import springfox.documentation.builders.ParameterBuilder;
-import springfox.documentation.schema.ModelRef;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.ApiKey;
-import springfox.documentation.service.AuthorizationScope;
-import springfox.documentation.service.Contact;
-import springfox.documentation.service.Parameter;
-import springfox.documentation.service.SecurityReference;
-import springfox.documentation.service.VendorExtension;
-import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spi.service.ParameterBuilderPlugin;
-import springfox.documentation.spi.service.contexts.ParameterContext;
-import springfox.documentation.spi.service.contexts.SecurityContext;
-import springfox.documentation.spring.web.paths.RelativePathProvider;
-import springfox.documentation.spring.web.plugins.Docket;
-import springfox.documentation.swagger.common.SwaggerPluginSupport;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
-@EnableSwagger2
+/** Open API Configuration Bean */
 @Configuration
 public class SwaggerConfig {
-
-  private static final Set<String> POST_ACCESS_TOKEN_PARAMS =
-      Set.of("client_secret", "client_id", "grant_type");
-  private static final Set<String> APPLICATION_SCOPED_PATHS =
-      Set.of(
-          "/o/check_api_key",
-          "/o/check_token",
-          "/transaction/group_permissions",
-          "/transaction/mass_delete");
 
   private final BuildProperties buildProperties;
 
@@ -76,103 +58,54 @@ public class SwaggerConfig {
   }
 
   @Bean
-  public ParameterBuilderPlugin parameterBuilderPlugin() {
-    return new ParameterBuilderPlugin() {
-      @Override
-      public void apply(ParameterContext context) {
-        if (context.getGroupName().equals(AUTH_CONTROLLER)
-            && context.getOperationContext().getName().equals(POST_ACCESS_TOKEN)) {
-          context
-              .getOperationContext()
-              .operationBuilder()
-              .parameters(generatePostAccessTokenParameters());
+  public OpenAPI productApi(SwaggerProperties swaggerProperties) {
 
-          // hide default "parameters" arg
-          val defaultName = context.resolvedMethodParameter().defaultName();
-          if (defaultName.isPresent() && defaultName.get().equals("parameters")) {
-            context.parameterBuilder().required(false).hidden(true).build();
-          }
-        }
-      }
+    URIBuilder uriBuilder = null;
+    try {
+      uriBuilder = new URIBuilder(swaggerProperties.host);
+      uriBuilder.setPath(swaggerProperties.baseUrl).build().normalize();
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(e);
+    }
 
-      @Override
-      public boolean supports(DocumentationType delimiter) {
-        return SwaggerPluginSupport.pluginDoesApply(delimiter);
-      }
-    };
+    return new OpenAPI()
+        .info(metaInfo())
+        .servers(List.of(new Server().url(uriBuilder.toString())))
+        .components(new Components().addSecuritySchemes(SECURITY_SCHEME_NAME, securityScheme()));
   }
 
-  @Bean
-  public Docket productApi(SwaggerProperties swaggerProperties) {
-    return new Docket(SWAGGER_2)
-        .select()
-        .apis(Predicates.or(basePackage("bio.overture.ego.controller")))
-        .build()
-        .host(swaggerProperties.host)
-        .pathProvider(
-            new RelativePathProvider(null) {
-              @Override
-              public String getApplicationBasePath() {
-                return swaggerProperties.getBaseUrl();
-              }
-            })
-        .securitySchemes(List.of(apiKey()))
-        .securityContexts(List.of(securityContext()))
-        .apiInfo(metaInfo())
-        .produces(Set.of("application/json"))
-        .consumes(Set.of("application/json"));
+  private Info metaInfo() {
+
+    return new Info()
+        .title("Ego Service API")
+        .description("Ego API Documentation")
+        .version(buildProperties.getVersion())
+        .contact(new Contact())
+        .license(new License().name("GNU Affero General Public License v3.0"));
   }
 
-  private ApiInfo metaInfo() {
-
-    return new ApiInfo(
-        "Ego Service API",
-        "Ego API Documentation",
-        buildProperties.getVersion(),
-        "",
-        new Contact("", "", ""),
-        "GNU Affero General Public License v3.0",
-        "",
-        new ArrayList<VendorExtension>());
-  }
-
-  private static ApiKey apiKey() {
-    return new ApiKey("Bearer", "Authorization", "header");
-  }
-
-  private static SecurityContext securityContext() {
-    return SecurityContext.builder()
-        .securityReferences(List.of(securityReference()))
-        // We want the default Bearer auth applied only for non-ApplicationScoped endpoints.
-        // For ApplicationScoped endpoints, an explicit RequestHeader
-        // fields will be present in the ui
-        .forPaths(x -> !isApplicationScopedPath(x))
-        .build();
+  private static SecurityScheme securityScheme() {
+    return new SecurityScheme()
+        .name(SECURITY_SCHEME_NAME)
+        .type(SecurityScheme.Type.HTTP)
+        .scheme("bearer")
+        .bearerFormat("JWT");
   }
 
   private static boolean isApplicationScopedPath(@NonNull String path) {
     return APPLICATION_SCOPED_PATHS.contains(path);
   }
 
-  private static SecurityReference securityReference() {
-    return SecurityReference.builder()
-        .reference("Bearer")
-        .scopes(new AuthorizationScope[0])
-        .build();
-  }
-
   private static List<Parameter> generatePostAccessTokenParameters() {
     return POST_ACCESS_TOKEN_PARAMS.stream()
         .map(
             name ->
-                new ParameterBuilder()
-                    .type(new TypeResolver().resolve(String.class))
+                new Parameter()
+                    .schema(new Schema().type("string"))
                     .name(name)
-                    .parameterType("query")
-                    .required(true)
-                    .modelRef(new ModelRef("String"))
-                    .build())
-        .collect(toUnmodifiableList());
+                    .in(ParameterIn.QUERY.toString())
+                    .required(true))
+        .collect(Collectors.toList());
   }
 
   @Component
@@ -188,5 +121,37 @@ public class SwaggerConfig {
      * not empty.
      */
     private String baseUrl = "";
+  }
+
+  @Bean
+  public OpenApiCustomizer openApiCustomiser() {
+    return openApi -> {
+      openApi
+          .getPaths()
+          .forEach(
+              (path, pathItem) -> {
+
+                // We want the default Bearer auth applied only for non-ApplicationScoped endpoints.
+                // For ApplicationScoped endpoints, an explicit RequestHeader
+                if (!isApplicationScopedPath(path)) {
+                  pathItem
+                      .readOperations()
+                      .forEach(
+                          operation -> {
+                            operation.addSecurityItem(
+                                new SecurityRequirement().addList(SECURITY_SCHEME_NAME));
+                          });
+                }
+              });
+
+      // generate access token parameters
+      PathItem accessTokenPath =
+          new PathItem()
+              .post(
+                  new Operation()
+                      .addTagsItem("Auth")
+                      .parameters(generatePostAccessTokenParameters()));
+      openApi.getPaths().addPathItem("/oauth/token", accessTokenPath);
+    };
   }
 }

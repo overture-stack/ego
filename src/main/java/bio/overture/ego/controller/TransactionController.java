@@ -33,11 +33,11 @@ import bio.overture.ego.service.GroupPermissionService;
 import bio.overture.ego.service.GroupService;
 import bio.overture.ego.service.PolicyService;
 import com.google.common.collect.ImmutableList;
-import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -52,7 +52,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @Transactional
 @RequestMapping("/transaction")
-@Api(tags = "Transactions")
+@Tag(name = "Transactions")
 public class TransactionController {
   PolicyService policyService;
   GroupService groupService;

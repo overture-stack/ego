@@ -8,7 +8,7 @@ import bio.overture.ego.config.InitializationConfig;
 import bio.overture.ego.model.dto.CreateApplicationRequest;
 import bio.overture.ego.model.entity.InitTripWire;
 import bio.overture.ego.repository.InitTripWireRepository;
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;

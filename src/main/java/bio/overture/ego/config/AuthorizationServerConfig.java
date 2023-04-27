@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 
 @Configuration
 public class AuthorizationServerConfig {
@@ -48,7 +48,11 @@ public class AuthorizationServerConfig {
   }
 
   @Bean
-  public ProviderSettings providerSettings(@Value("${token.issuer}") String issuer) {
-    return ProviderSettings.builder().tokenEndpoint("/oauth/token").issuer(issuer).build();
+  public AuthorizationServerSettings providerSettings(@Value("${token.issuer}") String issuer) {
+
+    return AuthorizationServerSettings.builder()
+        .tokenEndpoint("/oauth/token")
+        .issuer(issuer)
+        .build();
   }
 }

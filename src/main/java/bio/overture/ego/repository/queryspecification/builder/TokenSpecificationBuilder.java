@@ -2,11 +2,11 @@ package bio.overture.ego.repository.queryspecification.builder;
 
 import static bio.overture.ego.model.enums.JavaFields.OWNER;
 import static bio.overture.ego.model.enums.JavaFields.SCOPES;
-import static javax.persistence.criteria.JoinType.LEFT;
+import static jakarta.persistence.criteria.JoinType.LEFT;
 
 import bio.overture.ego.model.entity.ApiKey;
+import jakarta.persistence.criteria.Root;
 import java.util.UUID;
-import javax.persistence.criteria.Root;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 

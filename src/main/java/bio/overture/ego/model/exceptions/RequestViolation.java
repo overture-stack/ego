@@ -1,6 +1,6 @@
 package bio.overture.ego.model.exceptions;
 
-import javax.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolation;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;

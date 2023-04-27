@@ -12,10 +12,10 @@ spec:
   - name: maven
     command: ['cat']
     tty: true
-    image: maven:3.6.3-openjdk-11
+    image: maven:3.8.5-openjdk-17
   - name: jdk
     tty: true
-    image: adoptopenjdk/openjdk11:jdk-11.0.7_10-alpine-slim
+    image: eclipse-temurin:17.0.6_10-jdk-focal
     env:
       - name: DOCKER_HOST
         value: tcp://localhost:2375
@@ -128,7 +128,6 @@ spec:
             when {
                 anyOf {
                     branch 'develop'
-                    branch 'feature/develop-passport'
                     branch 'main'
                     expression { return params.PUBLISH_IMAGE }
                 }
