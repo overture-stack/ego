@@ -8,13 +8,15 @@ import bio.overture.ego.model.entity.Group;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.flywaydb.core.api.migration.spring.SpringJdbcMigration;
+import org.flywaydb.core.api.migration.BaseJavaMigration;
+import org.flywaydb.core.api.migration.Context;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
 @Slf4j
-public class V1_1__complete_uuid_migration implements SpringJdbcMigration {
-  public void migrate(JdbcTemplate jdbcTemplate) throws Exception {
+public class V1_1__complete_uuid_migration extends BaseJavaMigration {
+  public void migrate(Context context) throws Exception {
     log.info(
         "Flyway java migration: V1_1__complete_uuid_migration running ******************************");
 
@@ -23,6 +25,10 @@ public class V1_1__complete_uuid_migration implements SpringJdbcMigration {
     boolean runWithTest = false;
     UUID userOneId = UUID.randomUUID();
     UUID userTwoId = UUID.randomUUID();
+
+    JdbcTemplate jdbcTemplate =
+        new JdbcTemplate(new SingleConnectionDataSource(context.getConnection(), true));
+    ;
 
     // Test data (if set to true)
     if (runWithTest) {

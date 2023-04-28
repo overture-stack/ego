@@ -30,7 +30,7 @@ public class OAuth2ClientConfig {
   @Bean
   public OAuth2AuthorizationRequestResolver oAuth2AuthorizationRequestResolver(
       ClientRegistrationRepository clientRegistrationRepository) {
-    return new OAuth2RequestResolver(clientRegistrationRepository, "/oauth/login/");
+    return new OAuth2RequestResolver(clientRegistrationRepository, "/oauth/login");
   }
 
   @Bean

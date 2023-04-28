@@ -1,35 +1,31 @@
 package bio.overture.ego.model.entity;
 
-import static bio.overture.ego.model.enums.AccessLevel.EGO_ACCESS_LEVEL_ENUM;
-
 import bio.overture.ego.model.enums.AccessLevel;
 import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
 
 // TODO: rename TOKENSCOPE to API_KEY_SCOPE [anncatton]
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Entity
-@TypeDef(name = EGO_ACCESS_LEVEL_ENUM, typeClass = PostgreSQLEnumType.class)
 @Table(name = Tables.TOKENSCOPE)
 public class ApiKeyScope implements Serializable {
 
@@ -51,7 +47,7 @@ public class ApiKeyScope implements Serializable {
 
   @NotNull
   @Enumerated(EnumType.STRING)
-  @Type(type = EGO_ACCESS_LEVEL_ENUM)
+  @Type(PostgreSQLEnumType.class)
   @Column(name = SqlFields.ACCESS_LEVEL, nullable = false)
   private AccessLevel accessLevel;
 

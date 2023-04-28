@@ -16,7 +16,6 @@
 
 package bio.overture.ego.model.entity;
 
-import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
 import static com.google.common.collect.Sets.newHashSet;
 
 import bio.overture.ego.model.enums.ApplicationType;
@@ -32,19 +31,19 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import java.util.Set;
 import java.util.UUID;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -55,7 +54,6 @@ import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
 
 @Entity
 @Table(name = Tables.APPLICATION)
@@ -79,8 +77,6 @@ import org.hibernate.annotations.TypeDef;
 @NoArgsConstructor
 @JsonView(Views.REST.class)
 @FieldNameConstants
-@TypeDef(name = "application_type_enum", typeClass = PostgreSQLEnumType.class)
-@TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
 @JsonInclude(JsonInclude.Include.CUSTOM)
 public class Application implements PolicyOwner, NameableEntity<UUID> {
 
@@ -96,7 +92,7 @@ public class Application implements PolicyOwner, NameableEntity<UUID> {
   private String name;
 
   @NotNull
-  @Type(type = EGO_ENUM)
+  @Type(PostgreSQLEnumType.class)
   @Enumerated(EnumType.STRING)
   @Column(name = SqlFields.TYPE, nullable = false)
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
@@ -124,7 +120,7 @@ public class Application implements PolicyOwner, NameableEntity<UUID> {
   private String errorRedirectUri;
 
   @NotNull
-  @Type(type = EGO_ENUM)
+  @Type(PostgreSQLEnumType.class)
   @Enumerated(EnumType.STRING)
   @JsonView({Views.JWTAccessToken.class, Views.REST.class})
   @Column(name = SqlFields.STATUS, nullable = false)

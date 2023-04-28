@@ -5,11 +5,11 @@ import static bio.overture.ego.model.enums.JavaFields.GROUPAPPLICATIONS;
 import static bio.overture.ego.model.enums.JavaFields.PERMISSIONS;
 import static bio.overture.ego.model.enums.JavaFields.USER;
 import static bio.overture.ego.model.enums.JavaFields.USERGROUPS;
-import static javax.persistence.criteria.JoinType.LEFT;
+import static jakarta.persistence.criteria.JoinType.LEFT;
 
 import bio.overture.ego.model.entity.Group;
+import jakarta.persistence.criteria.Root;
 import java.util.UUID;
-import javax.persistence.criteria.Root;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.val;

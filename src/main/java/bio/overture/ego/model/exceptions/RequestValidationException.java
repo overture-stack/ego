@@ -5,8 +5,8 @@ import static bio.overture.ego.utils.Joiners.PRETTY_COMMA;
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
-import javax.validation.Validation;
-import javax.validation.Validator;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
 import lombok.NonNull;
 import lombok.val;
 import org.springframework.web.bind.annotation.ResponseStatus;

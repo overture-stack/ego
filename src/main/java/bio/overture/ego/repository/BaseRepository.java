@@ -3,12 +3,13 @@ package bio.overture.ego.repository;
 import java.util.Collection;
 import java.util.Set;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 @NoRepositoryBean
 public interface BaseRepository<T, ID>
-    extends PagingAndSortingRepository<T, ID>, JpaSpecificationExecutor {
+    extends PagingAndSortingRepository<T, ID>, CrudRepository<T, ID>, JpaSpecificationExecutor {
   T findFirstBy();
 
   Set<T> findAllByIdIn(Collection<ID> ids);

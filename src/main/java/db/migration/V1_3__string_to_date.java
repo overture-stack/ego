@@ -7,20 +7,25 @@ import java.util.Date;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.flywaydb.core.api.migration.spring.SpringJdbcMigration;
+import org.flywaydb.core.api.migration.BaseJavaMigration;
+import org.flywaydb.core.api.migration.Context;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
 @Slf4j
-public class V1_3__string_to_date implements SpringJdbcMigration {
+public class V1_3__string_to_date extends BaseJavaMigration {
 
   @Override
-  public void migrate(JdbcTemplate jdbcTemplate) throws Exception {
+  public void migrate(Context context) throws Exception {
     log.info("Flyway java migration: V1_3__string_to_date running ******************************");
 
     boolean runWithTest = false;
     UUID userOneId = UUID.randomUUID();
     UUID userTwoId = UUID.randomUUID();
+
+    JdbcTemplate jdbcTemplate =
+        new JdbcTemplate(new SingleConnectionDataSource(context.getConnection(), true));
 
     if (runWithTest) {
       createTestData(jdbcTemplate, userOneId, userTwoId);

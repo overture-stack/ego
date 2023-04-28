@@ -13,13 +13,13 @@ import static bio.overture.ego.utils.Joiners.COMMA;
 import static bio.overture.ego.utils.PermissionRequestAnalyzer.analyze;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Maps.uniqueIndex;
+import static jakarta.persistence.criteria.JoinType.LEFT;
 import static java.util.Arrays.stream;
 import static java.util.Collections.reverse;
 import static java.util.Comparator.comparing;
 import static java.util.Objects.isNull;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
-import static javax.persistence.criteria.JoinType.LEFT;
 
 import bio.overture.ego.model.dto.PermissionRequest;
 import bio.overture.ego.model.dto.ResolvedPermissionResponse;

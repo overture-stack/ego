@@ -6,11 +6,11 @@ import static java.util.Arrays.asList;
 import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.service.ApplicationService;
 import bio.overture.ego.utils.Redirects;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -56,7 +56,7 @@ public class SSOAuthenticationFailureHandler implements AuthenticationFailureHan
       } else if (rootExceptionThrowable instanceof OAuth2Exception) {
         errorUri = buildOAuth2ExceptionResponse(errorUri, providerType);
       } else {
-        throw new InternalServerException("Invalid response from OAuth Service");
+        throw new InternalServerException("Invalid response from OAuth Service:" + exception);
       }
       response.setStatus(403);
       response.sendRedirect(errorUri.toString());
