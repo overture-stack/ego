@@ -90,6 +90,9 @@ public class VisaPermissionService extends AbstractNamedService<VisaPermission, 
         visaPermissionRepository.findByPolicyIdAndVisaId(policyId, visaId);
     if (!visaPermissionEntities.isEmpty()) {
       visaPermissionRepository.deleteById(visaPermissionEntities.get(0).getId());
+    } else {
+      throw new NotFoundException(
+          format("No VisaPermissions exists with policyId '%s' and visaId '%s'", policyId, visaId));
     }
   }
 

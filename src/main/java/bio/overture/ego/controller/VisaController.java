@@ -183,7 +183,7 @@ public class VisaController {
    * @param visaPermissionRequest VisaPermissionRequest
    */
   @AdminScoped
-  @RequestMapping(method = DELETE, value = "/permissions")
+  @RequestMapping(method = DELETE, value = "/permissions/{policyId}/{visaId}")
   @ApiResponses(value = {@ApiResponse(code = 200, message = "Remove VisaPermission")})
   @JsonView(Views.REST.class)
   public @ResponseBody void removePermissions(
