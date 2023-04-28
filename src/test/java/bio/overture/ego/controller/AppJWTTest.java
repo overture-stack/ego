@@ -407,5 +407,4 @@ public class AppJWTTest extends AbstractControllerTest {
     val users = MAPPER.readTree(resolvedUsers);
     assertNotNull(users);
   }
-
 }

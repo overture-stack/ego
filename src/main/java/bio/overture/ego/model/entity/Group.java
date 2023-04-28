@@ -16,7 +16,6 @@
 
 package bio.overture.ego.model.entity;
 
-import static bio.overture.ego.model.enums.AccessLevel.EGO_ENUM;
 import static com.google.common.collect.Sets.newHashSet;
 
 import bio.overture.ego.model.enums.JavaFields;
@@ -30,19 +29,19 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import java.util.Set;
 import java.util.UUID;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -51,7 +50,6 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
 
 @Data
 @Entity
@@ -61,7 +59,6 @@ import org.hibernate.annotations.TypeDef;
 @Table(name = Tables.GROUP)
 @JsonView(Views.REST.class)
 @EqualsAndHashCode(of = "id")
-@TypeDef(name = EGO_ENUM, typeClass = PostgreSQLEnumType.class)
 @ToString(exclude = {"userGroups", "groupApplications", "permissions"})
 @JsonPropertyOrder({
   JavaFields.ID,
@@ -87,7 +84,7 @@ public class Group implements PolicyOwner, NameableEntity<UUID> {
   private String description;
 
   @NotNull
-  @Type(type = EGO_ENUM)
+  @Type(PostgreSQLEnumType.class)
   @Enumerated(EnumType.STRING)
   @Column(name = SqlFields.STATUS, nullable = false)
   private StatusType status;

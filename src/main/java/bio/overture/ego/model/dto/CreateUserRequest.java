@@ -20,7 +20,7 @@ import bio.overture.ego.model.enums.LanguageType;
 import bio.overture.ego.model.enums.ProviderType;
 import bio.overture.ego.model.enums.StatusType;
 import bio.overture.ego.model.enums.UserType;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

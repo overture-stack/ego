@@ -5,7 +5,11 @@ import bio.overture.ego.model.enums.SqlFields;
 import bio.overture.ego.model.enums.Tables;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
-import javax.persistence.*;
+import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import java.util.Collection;
+import java.util.UUID;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 

@@ -8,6 +8,7 @@ import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.VisaRequest;
 import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.repository.VisaRepository;
+import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
 import java.util.UUID;
 import javax.validation.constraints.NotNull;

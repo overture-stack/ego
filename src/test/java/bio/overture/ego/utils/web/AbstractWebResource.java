@@ -169,8 +169,8 @@ public abstract class AbstractWebResource<
       val output =
           CleanResponse.builder()
               .body(response.hasBody() ? response.getBody() : null)
-              .statusCodeName(response.getStatusCode().name())
-              .statusCodeValue(response.getStatusCodeValue())
+              .statusCodeName(response.getStatusCode().toString())
+              .statusCodeValue(response.getStatusCode().value())
               .build();
       if (pretty) {
         log.info("[RESPONSE] > \n{}", PRETTY_MAPPER.writeValueAsString(output));

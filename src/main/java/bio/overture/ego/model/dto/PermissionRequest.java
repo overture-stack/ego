@@ -1,8 +1,8 @@
 package bio.overture.ego.model.dto;
 
 import bio.overture.ego.model.enums.AccessLevel;
+import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
