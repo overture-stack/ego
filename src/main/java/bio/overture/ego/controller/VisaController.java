@@ -8,10 +8,13 @@ import bio.overture.ego.security.AdminScoped;
 import bio.overture.ego.service.*;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
-import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,10 +138,11 @@ public class VisaController {
    */
   @AdminScoped
   @RequestMapping(method = GET, value = "/permissions/visaId/{id}")
-  @ApiResponses(value = {@ApiResponse(code = 200, message = "Get VisaPermissions by visaId")})
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Get VisaPermissions by visaId")})
   @JsonView(Views.REST.class)
   public @ResponseBody List<VisaPermission> getPermissionsByVisaId(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id) {
     return visaPermissionService.getPermissionsByVisaId(id);
@@ -151,10 +155,11 @@ public class VisaController {
    */
   @AdminScoped
   @RequestMapping(method = GET, value = "/permissions/policyId/{id}")
-  @ApiResponses(value = {@ApiResponse(code = 200, message = "Get VisaPermissions by policyId")})
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Get VisaPermissions by policyId")})
   @JsonView(Views.REST.class)
   public @ResponseBody List<VisaPermission> getPermissionsByPolicyId(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id) {
     return visaPermissionService.getPermissionsByPolicyId(id);
@@ -167,10 +172,11 @@ public class VisaController {
    */
   @AdminScoped
   @RequestMapping(method = POST, value = "/permissions")
-  @ApiResponses(value = {@ApiResponse(code = 200, message = "Create or Update VisaPermission")})
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Create or Update VisaPermission")})
   @JsonView(Views.REST.class)
   public @ResponseBody VisaPermission createOrUpdatePermissions(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @RequestBody(required = true) VisaPermissionRequest visaPermissionRequest) {
     return visaPermissionService.createOrUpdatePermissions(visaPermissionRequest);
@@ -182,10 +188,10 @@ public class VisaController {
    */
   @AdminScoped
   @RequestMapping(method = DELETE, value = "/permissions/{policyId}/{visaId}")
-  @ApiResponses(value = {@ApiResponse(code = 200, message = "Remove VisaPermission")})
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Remove VisaPermission")})
   @JsonView(Views.REST.class)
   public @ResponseBody void removePermissions(
-      @ApiIgnore @RequestHeader(value = "Authorization", required = true)
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "policyId", required = true) UUID policyId,
       @PathVariable(value = "visaId", required = true) UUID visaId) {
