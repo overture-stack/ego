@@ -59,10 +59,10 @@ spring:
       client:
         registration:
           google:
+            client-id: ego-client
+            client-secret:
             provider: google
             clientName: ego
-            clientId: ego-client
-            clientSecret:
             authorizationGrantType: authorization_code
             clientAuthenticationMethod: client_secret_post
             redirectUri: "http://localhost:8081/oauth/code/google"
