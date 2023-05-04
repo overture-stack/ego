@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,8 @@ public class VisaController {
   /** Dependencies */
   private final VisaService visaService;
 
+  private final VisaPermissionService visaPermissionService;
+
   private final UserPermissionService userPermissionService;
   private final GroupPermissionService groupPermissionService;
   private final ApplicationPermissionService applicationPermissionService;
@@ -36,10 +40,12 @@ public class VisaController {
   @Autowired
   public VisaController(
       @NonNull VisaService visaService,
+      @NotNull VisaPermissionService visaPermissionService,
       @NonNull UserPermissionService userPermissionService,
       @NonNull GroupPermissionService groupPermissionService,
       @NonNull ApplicationPermissionService applicationPermissionService) {
     this.visaService = visaService;
+    this.visaPermissionService = visaPermissionService;
     this.groupPermissionService = groupPermissionService;
     this.userPermissionService = userPermissionService;
     this.applicationPermissionService = applicationPermissionService;
@@ -61,6 +67,10 @@ public class VisaController {
     return visaService.getById(id);
   }
 
+  /*
+   * This method is used to list all visas
+   * @return visas List<Visa>
+   */
   @AdminScoped
   @RequestMapping(method = GET, value = "")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "All Visas")})
@@ -72,6 +82,11 @@ public class VisaController {
     return new PageDTO<>(visaService.listVisa(pageable));
   }
 
+  /*
+   * This method is used to create visa using visa create request
+   * @param visaRequest VisaRequest
+   * @return Visa visa
+   */
   @AdminScoped
   @RequestMapping(method = POST, value = "")
   @ApiResponses(
@@ -85,6 +100,12 @@ public class VisaController {
     return visaService.create(visaRequest);
   }
 
+  /*
+   * This method is used to update visa using visa id and update request
+   * @param visaId UUID
+   * @param visaRequest VisaRequest
+   * @return Visa visa
+   */
   @AdminScoped
   @RequestMapping(method = PUT, value = "/{id}")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Update Visa")})
@@ -96,6 +117,10 @@ public class VisaController {
     return visaService.partialUpdate(id, visaRequest);
   }
 
+  /*
+   * This method is used to delete visa using visa id
+   * @param visaId UUID
+   */
   @AdminScoped
   @RequestMapping(method = DELETE, value = "/{id}")
   @ResponseStatus(value = HttpStatus.OK)
@@ -104,5 +129,72 @@ public class VisaController {
           final String authorization,
       @PathVariable(value = "id", required = true) UUID id) {
     visaService.delete(id);
+  }
+
+  /*
+   * This method is used to fetch visa permissions using visa id
+   * @param visaId UUID
+   * @return visaPermissions List<VisaPermissions>
+   */
+  @AdminScoped
+  @RequestMapping(method = GET, value = "/permissions/visaId/{id}")
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Get VisaPermissions by visaId")})
+  @JsonView(Views.REST.class)
+  public @ResponseBody List<VisaPermission> getPermissionsByVisaId(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "id", required = true) UUID id) {
+    return visaPermissionService.getPermissionsByVisaId(id);
+  }
+
+  /*
+   * This method is used to fetch visa permissions using policy id
+   * @param policyId UUID
+   * @return visaPermissions List<VisaPermissions>
+   */
+  @AdminScoped
+  @RequestMapping(method = GET, value = "/permissions/policyId/{id}")
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Get VisaPermissions by policyId")})
+  @JsonView(Views.REST.class)
+  public @ResponseBody List<VisaPermission> getPermissionsByPolicyId(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "id", required = true) UUID id) {
+    return visaPermissionService.getPermissionsByPolicyId(id);
+  }
+
+  /*
+   * This method is used to create/update visa permissions
+   * @param visaPermissionRequest VisaPermissionRequest
+   * @return visaPermission VisaPermission
+   */
+  @AdminScoped
+  @RequestMapping(method = POST, value = "/permissions")
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Create or Update VisaPermission")})
+  @JsonView(Views.REST.class)
+  public @ResponseBody VisaPermission createOrUpdatePermissions(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @RequestBody(required = true) VisaPermissionRequest visaPermissionRequest) {
+    return visaPermissionService.createOrUpdatePermissions(visaPermissionRequest);
+  }
+
+  /*
+   * This method is used to delete/remove visa permissions
+   * @param visaPermissionRequest VisaPermissionRequest
+   */
+  @AdminScoped
+  @RequestMapping(method = DELETE, value = "/permissions/{policyId}/{visaId}")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Remove VisaPermission")})
+  @JsonView(Views.REST.class)
+  public @ResponseBody void removePermissions(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+          final String authorization,
+      @PathVariable(value = "policyId", required = true) UUID policyId,
+      @PathVariable(value = "visaId", required = true) UUID visaId) {
+    visaPermissionService.removePermission(policyId, visaId);
   }
 }
