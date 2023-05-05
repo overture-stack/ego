@@ -131,7 +131,9 @@ spring:
             jwkSetUri: https://orcid.org/oauth/jwks
   cloud:
     vault:
-      enabled: false
+      kv:
+        backend: kv
+        enabled: true
   flyway:
     enabled: true
     locations: "classpath:flyway/sql,classpath:db/migration"
