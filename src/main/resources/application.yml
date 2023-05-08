@@ -61,7 +61,7 @@ spring:
           google:
             provider: google
             clientName: ego
-            client_id: ego-client
+            clientId: ego-client
             clientSecret:
             authorizationGrantType: authorization_code
             clientAuthenticationMethod: client_secret_post
@@ -73,7 +73,7 @@ spring:
 
           github:
             clientName: ego
-            client_id: ego-client
+            clientId: ego-client
             clientSecret:
             redirectUri: "http://localhost:8081/oauth/code/github"
             clientAuthenticationMethod: client_secret_post
@@ -131,7 +131,9 @@ spring:
             jwkSetUri: https://orcid.org/oauth/jwks
   cloud:
     vault:
-      enabled: false
+      kv:
+        backend: kv
+        enabled: true
   flyway:
     enabled: true
     locations: "classpath:flyway/sql,classpath:db/migration"
