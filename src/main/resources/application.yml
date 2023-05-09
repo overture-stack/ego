@@ -61,7 +61,7 @@ spring:
           google:
             provider: google
             clientName: ego
-            clientId: ego-client
+            clientId: 268575437964-n8v6a1mi50tka2klqsb5d38lco0poj74.apps.googleusercontent.com
             clientSecret:
             authorizationGrantType: authorization_code
             clientAuthenticationMethod: client_secret_post
