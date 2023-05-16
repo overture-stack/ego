@@ -3,40 +3,23 @@ package bio.overture.ego.service;
 import bio.overture.ego.model.dto.Passport;
 import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.model.entity.VisaPermission;
-import bio.overture.ego.model.exceptions.ForbiddenException;
-import bio.overture.ego.model.exceptions.InternalServerException;
-import bio.overture.ego.token.signer.TokenSigner;
+import bio.overture.ego.model.exceptions.InvalidTokenException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.JWT;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import jakarta.validation.constraints.NotNull;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static java.lang.String.format;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 @Transactional
 public class PassportService {
-
-  @Value("${broker.passport.url}")
-  private String passportBrokerUrl;
 
   @Value("${broker.token.config.public-key}")
   private String publicKey;
@@ -46,76 +29,76 @@ public class PassportService {
 
   @Autowired private VisaPermissionService visaPermissionService;
 
-  private RestTemplate restTemplate;
-  private final TokenSigner tokenSigner;
-
   @Autowired
   public PassportService(
-          @NonNull VisaPermissionService visaPermissionService,
-          @NonNull VisaService visaService,
-          @NotNull TokenSigner tokenSigner) {
+      @NonNull VisaPermissionService visaPermissionService,
+      @NonNull VisaService visaService) {
     this.visaService = visaService;
     this.visaPermissionService = visaPermissionService;
-    this.tokenSigner = tokenSigner;
   }
 
-  public String validatePassportPermissions (String authToken) throws JsonProcessingException {
-
-    val passportToken = fetchPassport(authToken);
-    if (!isValidPassport(passportToken)) {
-
+  public List<VisaPermission> getPermissions(String authToken) throws JsonProcessingException {
+    // Validates passport auth token
+    if (!isValidPassport(authToken)) {
+      throw new InvalidTokenException("The passport token received from broker is invalid");
     }
-    Object parsedPassport = parse (authToken);
-    ObjectMapper mapper = new ObjectMapper();
-    Passport passport = mapper.readValue((String) parsedPassport, Passport.class);
-    //getPermissionsForPassport(visaId);
-    //prepareUserPermissions(visaPermissions);
-    return null;
-  }
-
-  private Object fetchPassport (String authToken) {
-    val response =
-            restTemplate.exchange(
-                    passportBrokerUrl, HttpMethod.POST, new HttpEntity<>(authToken, null), String.class);
-    return response.getBody();
-  }
-
-  private boolean isValidPassport(@NonNull Object passport) {
-
-    return true;
-  }
-
-  private boolean isValidVisa(@NonNull Object visa) {
-
-    return true;
-  }
-
-  private List<VisaPermission> getVisaPermissions (List<UUID> visaIds) {
-    List<VisaPermission> visaPermissions = new ArrayList<>();
-    visaIds.stream().distinct().forEach(visaId -> {
-      if (visaService.getById(visaId) != null) {
-        visaPermissions.addAll(visaPermissionService.getPermissionsByVisaId(visaId));
-      }
-    });
+    // Parses passport JWT token
+    Passport parsedPassport = parsePassport(authToken);
+    // Fetches visas for parsed passport
+    List<Visa> visas = getVisas(parsedPassport);
+    // Fetches visa permissions for extracted visas
+    List<VisaPermission> visaPermissions = getVisaPermissions(visas);
+    // removes deuplicates from visaPermissions
+    // TO_DO : visaPermissions = deDupeVisaPermissions (visaPermissions);
     return visaPermissions;
   }
 
-
-  private Optional<Object> parse (@NonNull String token) {
-    Object parsedObj;
-    val tokenKey =
-            tokenSigner
-                    .getKey()
-                    .orElseThrow(() -> new InternalServerException("Internal issue with token signer."));
-
-    try {
-      parsedObj = Jwts.parser().setSigningKey(tokenKey).parse(token);
-    } catch (JwtException e) {
-      log.error("JWT token is invalid", e);
-      throw new ForbiddenException("Authorization is required for this action.");
-    }
-    return parsedObj == null ? Optional.empty() : Optional.of(parsedObj);
+  // TO_DO : Validates passport token based on public key
+  private boolean isValidPassport(@NonNull Object passport) {
+    return true;
   }
 
+  // Extracts Visas from parsed passport object
+  private List<Visa> getVisas(Passport passport) {
+    List<Visa> visas = new ArrayList<>();
+    passport.getGa4ghPassportV1().stream()
+        .forEach(
+            visaJwt -> {
+              try {
+                Visa visa = visaService.parseVisa(visaJwt);
+                if (visa != null) {
+                  visas.add(visa);
+                }
+              } catch (JsonProcessingException e) {
+                e.printStackTrace();
+              }
+            });
+    return visas;
+  }
 
+  // Fetches Visa Permissions for extracted Visa list
+  private List<VisaPermission> getVisaPermissions(List<Visa> visas) {
+    List<VisaPermission> visaPermissions = new ArrayList<>();
+    visas.stream()
+        .distinct()
+        .forEach(
+            visa -> {
+              if (visaService.getById(visa.getId()) != null) {
+                visaPermissions.addAll(visaPermissionService.getPermissionsForVisa(visa));
+              }
+            });
+    return visaPermissions;
+  }
+
+  // Parse Passport token to extract the passport body
+  public Passport parsePassport(@NonNull String passportJwtToken) throws JsonProcessingException {
+    String[] split_string = passportJwtToken.split("//.");
+    String base64EncodedHeader = split_string[0];
+    String base64EncodedBody = split_string[1];
+    String base64EncodedSignature = split_string[2];
+    Base64 base64Url = new Base64(true);
+    String header = new String(base64Url.decode(base64EncodedHeader));
+    String body = new String(base64Url.decode(base64EncodedBody));
+    return new ObjectMapper().readValue(body, Passport.class);
+  }
 }

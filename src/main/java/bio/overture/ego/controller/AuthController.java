@@ -27,7 +27,6 @@ import bio.overture.ego.model.exceptions.InvalidScopeException;
 import bio.overture.ego.model.exceptions.InvalidTokenException;
 import bio.overture.ego.provider.google.GoogleTokenService;
 import bio.overture.ego.security.CustomOAuth2User;
-import bio.overture.ego.service.PassportService;
 import bio.overture.ego.service.RefreshContextService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.IDToken;
@@ -37,8 +36,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Objects;
-
-import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -65,20 +62,17 @@ public class AuthController {
   private final GoogleTokenService googleTokenService;
   private final TokenSigner tokenSigner;
   private final RefreshContextService refreshContextService;
-  private final PassportService passportService;
 
   @Autowired
   public AuthController(
-          @NonNull TokenService tokenService,
-          @NonNull GoogleTokenService googleTokenService,
-          @NonNull TokenSigner tokenSigner,
-          @NonNull RefreshContextService refreshContextService,
-          @NotNull PassportService passportService) {
+      @NonNull TokenService tokenService,
+      @NonNull GoogleTokenService googleTokenService,
+      @NonNull TokenSigner tokenSigner,
+      @NonNull RefreshContextService refreshContextService) {
     this.tokenService = tokenService;
     this.googleTokenService = googleTokenService;
     this.tokenSigner = tokenSigner;
     this.refreshContextService = refreshContextService;
-    this.passportService = passportService;
   }
 
   @RequestMapping(method = GET, value = "/google/token")
@@ -89,7 +83,6 @@ public class AuthController {
     if (!googleTokenService.validToken(idToken))
       throw new InvalidTokenException("Invalid user token:" + idToken);
     val authInfo = googleTokenService.decode(idToken);
-    passportService.validatePassportPermissions(idToken);
     return tokenService.generateUserToken(authInfo);
   }
 
