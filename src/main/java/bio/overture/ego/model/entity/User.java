@@ -85,7 +85,7 @@ import org.hibernate.annotations.Type;
 public class User implements PolicyOwner, Identifiable<UUID> {
 
   // TODO: find JPA equivalent for GenericGenerator
-  @Id
+  @Idx
   @Column(name = SqlFields.ID, updatable = false, nullable = false)
   @GenericGenerator(name = "user_uuid", strategy = "org.hibernate.id.UUIDGenerator")
   @GeneratedValue(generator = "user_uuid")
