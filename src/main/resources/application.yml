@@ -203,8 +203,6 @@ initialization:
       description: Some description about this application  # optional
 
 broker:
-  passport:
-    url:
   token:
     config:
       public-key:
