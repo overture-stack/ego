@@ -33,8 +33,8 @@ public class VisaPermissionService extends AbstractNamedService<VisaPermission, 
   @Autowired private PolicyService policyService;
   @Autowired private VisaPermissionRepository visaPermissionRepository;
   private final ApiKeyEventsPublisher apiKeyEventsPublisher;
-  private static final VisaPermissionService.VisaPermissionConverter VISA_PERMISSION_CONVERTER =
-      getMapper(VisaPermissionService.VisaPermissionConverter.class);
+  private static final VisaPermissionConverter VISA_PERMISSION_CONVERTER =
+      getMapper(VisaPermissionConverter.class);
 
   @Autowired
   public VisaPermissionService(

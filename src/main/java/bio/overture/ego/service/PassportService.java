@@ -3,16 +3,23 @@ package bio.overture.ego.service;
 import bio.overture.ego.model.dto.Passport;
 import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.model.entity.VisaPermission;
+import bio.overture.ego.model.exceptions.InternalServerException;
 import bio.overture.ego.model.exceptions.InvalidTokenException;
+import bio.overture.ego.token.signer.BrokerTokenSigner;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,9 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class PassportService {
 
-  @Value("${broker.token.config.public-key}")
-  private String publicKey;
-
+  private final BrokerTokenSigner tokenSigner;
   /** Dependencies */
   @Autowired private VisaService visaService;
 
@@ -32,9 +37,11 @@ public class PassportService {
   @Autowired
   public PassportService(
       @NonNull VisaPermissionService visaPermissionService,
-      @NonNull VisaService visaService) {
+      @NonNull VisaService visaService,
+      @NonNull BrokerTokenSigner tokenSigner) {
     this.visaService = visaService;
     this.visaPermissionService = visaPermissionService;
+    this.tokenSigner = tokenSigner;
   }
 
   public List<VisaPermission> getPermissions(String authToken) throws JsonProcessingException {
@@ -48,14 +55,27 @@ public class PassportService {
     List<Visa> visas = getVisas(parsedPassport);
     // Fetches visa permissions for extracted visas
     List<VisaPermission> visaPermissions = getVisaPermissions(visas);
-    // removes deuplicates from visaPermissions
-    // TO_DO : visaPermissions = deDupeVisaPermissions (visaPermissions);
+    // removes deduplicates from visaPermissions
+    visaPermissions = deDupeVisaPermissions(visaPermissions);
     return visaPermissions;
   }
 
-  // TO_DO : Validates passport token based on public key
-  private boolean isValidPassport(@NonNull Object passport) {
-    return true;
+  // Validates passport token based on public key
+  private boolean isValidPassport(@NonNull String authToken) {
+    Claims claims;
+    val tokenKey =
+        tokenSigner
+            .getEncodedPublicKey()
+            .orElseThrow(() -> new InternalServerException("Internal issue with token signer."));
+    try {
+      claims = Jwts.parser().setSigningKey(tokenKey).parseClaimsJws(authToken).getBody();
+      if (claims != null) {
+        return true;
+      }
+    } catch (Exception exception) {
+      throw new InvalidTokenException("The passport token received from broker is invalid");
+    }
+    return false;
   }
 
   // Extracts Visas from parsed passport object
@@ -65,9 +85,11 @@ public class PassportService {
         .forEach(
             visaJwt -> {
               try {
-                Visa visa = visaService.parseVisa(visaJwt);
-                if (visa != null) {
-                  visas.add(visa);
+                if (visaService.isValidVisa(visaJwt)) {
+                  Visa visa = visaService.parseVisa(visaJwt);
+                  if (visa != null) {
+                    visas.add(visa);
+                  }
                 }
               } catch (JsonProcessingException e) {
                 e.printStackTrace();
@@ -100,5 +122,12 @@ public class PassportService {
     String header = new String(base64Url.decode(base64EncodedHeader));
     String body = new String(base64Url.decode(base64EncodedBody));
     return new ObjectMapper().readValue(body, Passport.class);
+  }
+
+  // Removes duplicates from the VisaPermissons List
+  private List<VisaPermission> deDupeVisaPermissions(List<VisaPermission> visaPermissions) {
+    Set<VisaPermission> permissionsSet = new HashSet<VisaPermission>();
+    permissionsSet.addAll(visaPermissions);
+    return permissionsSet.stream().collect(Collectors.toList());
   }
 }
