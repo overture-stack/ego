@@ -5,6 +5,7 @@ import static org.mapstruct.factory.Mappers.getMapper;
 
 import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.VisaPermissionRequest;
+import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.model.entity.VisaPermission;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.repository.VisaPermissionRepository;
@@ -26,17 +27,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class VisaPermissionService extends AbstractNamedService<VisaPermission, UUID> {
-
   /** Dependencies */
   @Autowired private VisaService visaService;
 
   @Autowired private PolicyService policyService;
-
   @Autowired private VisaPermissionRepository visaPermissionRepository;
   private final ApiKeyEventsPublisher apiKeyEventsPublisher;
-
-  private static final VisaPermissionService.VisaPermissionConverter VISA_PERMISSION_CONVERTER =
-      getMapper(VisaPermissionService.VisaPermissionConverter.class);
+  private static final VisaPermissionConverter VISA_PERMISSION_CONVERTER =
+      getMapper(VisaPermissionConverter.class);
 
   @Autowired
   public VisaPermissionService(
@@ -94,6 +92,16 @@ public class VisaPermissionService extends AbstractNamedService<VisaPermission, 
       throw new NotFoundException(
           format("No VisaPermissions exists with policyId '%s' and visaId '%s'", policyId, visaId));
     }
+  }
+
+  // Fetches visa permissions for given visa request
+  public List<VisaPermission> getPermissionsForVisa(@NonNull Visa visa) {
+    val result = (List<VisaPermission>) visaPermissionRepository.findByVisa_Id(visa.getId());
+    if (result.isEmpty()) {
+      throw new NotFoundException(
+          format("No VisaPermissions exists with visaId '%s'", visa.getId()));
+    }
+    return result;
   }
 
   @Override

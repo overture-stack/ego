@@ -7,13 +7,21 @@ import static org.mapstruct.factory.Mappers.getMapper;
 import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.VisaRequest;
 import bio.overture.ego.model.entity.Visa;
+import bio.overture.ego.model.exceptions.InternalServerException;
+import bio.overture.ego.model.exceptions.InvalidTokenException;
 import bio.overture.ego.repository.VisaRepository;
+import bio.overture.ego.token.signer.BrokerTokenSigner;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.codec.binary.Base64;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValueCheckStrategy;
@@ -28,11 +36,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class VisaService extends AbstractNamedService<Visa, UUID> {
-
   /** Constants */
-  private static final VisaService.VisaConverter VISA_CONVERTER =
-      getMapper(VisaService.VisaConverter.class);
+  private static final VisaConverter VISA_CONVERTER = getMapper(VisaConverter.class);
 
+  private final BrokerTokenSigner tokenSigner;
   /** Dependencies */
   @Autowired private VisaRepository visaRepository;
 
@@ -41,10 +48,12 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
   @Autowired
   public VisaService(
       @NonNull VisaRepository visaRepository,
-      @NonNull ApiKeyEventsPublisher apiKeyEventsPublisher) {
+      @NonNull ApiKeyEventsPublisher apiKeyEventsPublisher,
+      @NonNull BrokerTokenSigner tokenSigner) {
     super(Visa.class, visaRepository);
     this.visaRepository = visaRepository;
     this.apiKeyEventsPublisher = apiKeyEventsPublisher;
+    this.tokenSigner = tokenSigner;
   }
 
   public Visa create(@NonNull VisaRequest createRequest) {
@@ -63,6 +72,36 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
   public void delete(@NonNull UUID id) {
     checkExistence(id);
     super.delete(id);
+  }
+
+  // Parses Visa JWT token to convert into Visa Object
+  public Visa parseVisa(@NonNull String visaJwtToken) throws JsonProcessingException {
+    String[] split_string = visaJwtToken.split("\\.");
+    String base64EncodedHeader = split_string[0];
+    String base64EncodedBody = split_string[1];
+    String base64EncodedSignature = split_string[2];
+    Base64 base64Url = new Base64(true);
+    String header = new String(base64Url.decode(base64EncodedHeader));
+    String body = new String(base64Url.decode(base64EncodedBody));
+    return new ObjectMapper().readValue(body, Visa.class);
+  }
+
+  // Checks if the visa is a valid visa
+  public boolean isValidVisa(@NonNull String authToken) {
+    Claims claims;
+    val tokenKey =
+        tokenSigner
+            .getEncodedPublicKey()
+            .orElseThrow(() -> new InternalServerException("Internal issue with token signer."));
+    try {
+      claims = Jwts.parser().setSigningKey(tokenKey).parseClaimsJws(authToken).getBody();
+      if (claims != null) {
+        return true;
+      }
+    } catch (Exception exception) {
+      throw new InvalidTokenException("The passport token received from broker is invalid");
+    }
+    return false;
   }
 
   public Page<Visa> listVisa(@NonNull Pageable pageable) {
