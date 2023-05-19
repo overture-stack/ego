@@ -114,7 +114,7 @@ public class PassportService {
 
   // Parse Passport token to extract the passport body
   public Passport parsePassport(@NonNull String passportJwtToken) throws JsonProcessingException {
-    String[] split_string = passportJwtToken.split("//.");
+    String[] split_string = passportJwtToken.split("\\.");
     String base64EncodedHeader = split_string[0];
     String base64EncodedBody = split_string[1];
     String base64EncodedSignature = split_string[2];

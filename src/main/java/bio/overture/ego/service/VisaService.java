@@ -76,7 +76,7 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
 
   // Parses Visa JWT token to convert into Visa Object
   public Visa parseVisa(@NonNull String visaJwtToken) throws JsonProcessingException {
-    String[] split_string = visaJwtToken.split("//.");
+    String[] split_string = visaJwtToken.split("\\.");
     String base64EncodedHeader = split_string[0];
     String base64EncodedBody = split_string[1];
     String base64EncodedSignature = split_string[2];
