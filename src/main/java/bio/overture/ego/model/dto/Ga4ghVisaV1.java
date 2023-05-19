@@ -2,7 +2,6 @@ package bio.overture.ego.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,23 +12,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Passport {
+public class Ga4ghVisaV1 {
 
-  @JsonProperty("sub")
-  private String sub;
+  @JsonProperty("asserted")
+  private int asserted;
 
-  @JsonProperty("iss")
-  private String iss;
+  @JsonProperty("by")
+  private String by;
 
-  @JsonProperty("exp")
-  private long exp;
+  @JsonProperty("source")
+  private Object source;
 
-  @JsonProperty("iat")
-  private int iat;
+  @JsonProperty("type")
+  private String type;
 
-  @JsonProperty("ga4gh_passport_v1")
-  private List<String> ga4ghPassportV1;
-
-  @JsonProperty("jti")
-  private String jti;
+  @JsonProperty("value")
+  private String value;
 }

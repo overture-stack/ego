@@ -1,6 +1,7 @@
 package bio.overture.ego.service;
 
 import bio.overture.ego.model.dto.Passport;
+import bio.overture.ego.model.dto.PassportVisa;
 import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.model.entity.VisaPermission;
 import bio.overture.ego.model.exceptions.InternalServerException;
@@ -10,10 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +50,7 @@ public class PassportService {
     // Parses passport JWT token
     Passport parsedPassport = parsePassport(authToken);
     // Fetches visas for parsed passport
-    List<Visa> visas = getVisas(parsedPassport);
+    List<PassportVisa> visas = getVisas(parsedPassport);
     // Fetches visa permissions for extracted visas
     List<VisaPermission> visaPermissions = getVisaPermissions(visas);
     // removes deduplicates from visaPermissions
@@ -79,17 +77,17 @@ public class PassportService {
   }
 
   // Extracts Visas from parsed passport object
-  private List<Visa> getVisas(Passport passport) {
-    List<Visa> visas = new ArrayList<>();
+  private List<PassportVisa> getVisas(Passport passport) {
+    List<PassportVisa> visas = new ArrayList<>();
     passport.getGa4ghPassportV1().stream()
         .forEach(
             visaJwt -> {
               try {
                 if (visaService.isValidVisa(visaJwt)) {
-                  Visa visa = visaService.parseVisa(visaJwt);
-                  if (visa != null) {
-                    visas.add(visa);
-                  }
+                PassportVisa visa = visaService.parseVisa(visaJwt);
+                if (visa != null) {
+                  visas.add(visa);
+                }
                 }
               } catch (JsonProcessingException e) {
                 e.printStackTrace();
@@ -99,15 +97,15 @@ public class PassportService {
   }
 
   // Fetches Visa Permissions for extracted Visa list
-  private List<VisaPermission> getVisaPermissions(List<Visa> visas) {
+  private List<VisaPermission> getVisaPermissions(List<PassportVisa> visas) {
     List<VisaPermission> visaPermissions = new ArrayList<>();
     visas.stream()
         .distinct()
         .forEach(
             visa -> {
-              if (visaService.getById(visa.getId()) != null) {
-                visaPermissions.addAll(visaPermissionService.getPermissionsForVisa(visa));
-              }
+              Visa visaEntity = new Visa();
+              visaEntity.setId(UUID.fromString(visa.getJti()));
+              visaPermissions.addAll(visaPermissionService.getPermissionsForVisa(visaEntity));
             });
     return visaPermissions;
   }

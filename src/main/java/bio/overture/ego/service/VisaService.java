@@ -5,6 +5,7 @@ import static bio.overture.ego.model.exceptions.RequestValidationException.check
 import static org.mapstruct.factory.Mappers.getMapper;
 
 import bio.overture.ego.event.token.ApiKeyEventsPublisher;
+import bio.overture.ego.model.dto.PassportVisa;
 import bio.overture.ego.model.dto.VisaRequest;
 import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.model.exceptions.InternalServerException;
@@ -75,7 +76,7 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
   }
 
   // Parses Visa JWT token to convert into Visa Object
-  public Visa parseVisa(@NonNull String visaJwtToken) throws JsonProcessingException {
+  public PassportVisa parseVisa(@NonNull String visaJwtToken) throws JsonProcessingException {
     String[] split_string = visaJwtToken.split("\\.");
     String base64EncodedHeader = split_string[0];
     String base64EncodedBody = split_string[1];
@@ -83,7 +84,7 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
     Base64 base64Url = new Base64(true);
     String header = new String(base64Url.decode(base64EncodedHeader));
     String body = new String(base64Url.decode(base64EncodedBody));
-    return new ObjectMapper().readValue(body, Visa.class);
+    return new ObjectMapper().readValue(body, PassportVisa.class);
   }
 
   // Checks if the visa is a valid visa
@@ -99,7 +100,7 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
         return true;
       }
     } catch (Exception exception) {
-      throw new InvalidTokenException("The passport token received from broker is invalid");
+      throw new InvalidTokenException("The visa token received from broker is invalid");
     }
     return false;
   }

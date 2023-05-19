@@ -97,10 +97,6 @@ public class VisaPermissionService extends AbstractNamedService<VisaPermission, 
   // Fetches visa permissions for given visa request
   public List<VisaPermission> getPermissionsForVisa(@NonNull Visa visa) {
     val result = (List<VisaPermission>) visaPermissionRepository.findByVisa_Id(visa.getId());
-    if (result.isEmpty()) {
-      throw new NotFoundException(
-          format("No VisaPermissions exists with visaId '%s'", visa.getId()));
-    }
     return result;
   }
 
