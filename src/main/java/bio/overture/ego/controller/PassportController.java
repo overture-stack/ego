@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping("/passport")
-@Tag(name = "Passport", description = "poassport-controller")
+@Tag(name = "Passport", description = "passport-controller")
 public class PassportController {
 
   private final PassportService passportService;

@@ -8,10 +8,9 @@ import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.PassportVisa;
 import bio.overture.ego.model.dto.VisaRequest;
 import bio.overture.ego.model.entity.Visa;
-import bio.overture.ego.model.exceptions.InternalServerException;
 import bio.overture.ego.model.exceptions.InvalidTokenException;
 import bio.overture.ego.repository.VisaRepository;
-import bio.overture.ego.token.signer.BrokerTokenSigner;
+import bio.overture.ego.utils.CacheUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
@@ -40,21 +39,20 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
   /** Constants */
   private static final VisaConverter VISA_CONVERTER = getMapper(VisaConverter.class);
 
-  private final BrokerTokenSigner tokenSigner;
   /** Dependencies */
   @Autowired private VisaRepository visaRepository;
+
+  @Autowired private CacheUtil cacheUtil;
 
   private final ApiKeyEventsPublisher apiKeyEventsPublisher;
 
   @Autowired
   public VisaService(
       @NonNull VisaRepository visaRepository,
-      @NonNull ApiKeyEventsPublisher apiKeyEventsPublisher,
-      @NonNull BrokerTokenSigner tokenSigner) {
+      @NonNull ApiKeyEventsPublisher apiKeyEventsPublisher) {
     super(Visa.class, visaRepository);
     this.visaRepository = visaRepository;
     this.apiKeyEventsPublisher = apiKeyEventsPublisher;
-    this.tokenSigner = tokenSigner;
   }
 
   public Visa create(@NonNull VisaRequest createRequest) {
@@ -90,12 +88,12 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
   // Checks if the visa is a valid visa
   public boolean isValidVisa(@NonNull String authToken) {
     Claims claims;
-    val tokenKey =
-        tokenSigner
-            .getEncodedPublicKey()
-            .orElseThrow(() -> new InternalServerException("Internal issue with token signer."));
     try {
-      claims = Jwts.parser().setSigningKey(tokenKey).parseClaimsJws(authToken).getBody();
+      claims =
+          Jwts.parser()
+              .setSigningKey(cacheUtil.getPassportBrokerPublicKey())
+              .parseClaimsJws(authToken)
+              .getBody();
       if (claims != null) {
         return true;
       }

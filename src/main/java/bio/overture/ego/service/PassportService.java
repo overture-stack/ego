@@ -4,9 +4,8 @@ import bio.overture.ego.model.dto.Passport;
 import bio.overture.ego.model.dto.PassportVisa;
 import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.model.entity.VisaPermission;
-import bio.overture.ego.model.exceptions.InternalServerException;
 import bio.overture.ego.model.exceptions.InvalidTokenException;
-import bio.overture.ego.token.signer.BrokerTokenSigner;
+import bio.overture.ego.utils.CacheUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
@@ -15,7 +14,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,27 +24,25 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class PassportService {
 
-  private final BrokerTokenSigner tokenSigner;
   /** Dependencies */
   @Autowired private VisaService visaService;
 
   @Autowired private VisaPermissionService visaPermissionService;
 
+  @Autowired private CacheUtil cacheUtil;
+
   @Autowired
   public PassportService(
-      @NonNull VisaPermissionService visaPermissionService,
-      @NonNull VisaService visaService,
-      @NonNull BrokerTokenSigner tokenSigner) {
+      @NonNull VisaPermissionService visaPermissionService, @NonNull VisaService visaService) {
     this.visaService = visaService;
     this.visaPermissionService = visaPermissionService;
-    this.tokenSigner = tokenSigner;
   }
 
   public List<VisaPermission> getPermissions(String authToken) throws JsonProcessingException {
     // Validates passport auth token
-    /*if (!isValidPassport(authToken)) {
+    if (!isValidPassport(authToken)) {
       throw new InvalidTokenException("The passport token received from broker is invalid");
-    }*/
+    }
     // Parses passport JWT token
     Passport parsedPassport = parsePassport(authToken);
     // Fetches visas for parsed passport
@@ -61,12 +57,12 @@ public class PassportService {
   // Validates passport token based on public key
   private boolean isValidPassport(@NonNull String authToken) {
     Claims claims;
-    val tokenKey =
-        tokenSigner
-            .getEncodedPublicKey()
-            .orElseThrow(() -> new InternalServerException("Internal issue with token signer."));
     try {
-      claims = Jwts.parser().setSigningKey(tokenKey).parseClaimsJws(authToken).getBody();
+      claims =
+          Jwts.parser()
+              .setSigningKey(cacheUtil.getPassportBrokerPublicKey())
+              .parseClaimsJws(authToken)
+              .getBody();
       if (claims != null) {
         return true;
       }
@@ -84,10 +80,10 @@ public class PassportService {
             visaJwt -> {
               try {
                 if (visaService.isValidVisa(visaJwt)) {
-                PassportVisa visa = visaService.parseVisa(visaJwt);
-                if (visa != null) {
-                  visas.add(visa);
-                }
+                  PassportVisa visa = visaService.parseVisa(visaJwt);
+                  if (visa != null) {
+                    visas.add(visa);
+                  }
                 }
               } catch (JsonProcessingException e) {
                 e.printStackTrace();
