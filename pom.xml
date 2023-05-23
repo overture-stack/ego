@@ -239,7 +239,12 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-vault-config</artifactId>
-            <version>2.1.2.RELEASE</version>
+            <version>4.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bootstrap</artifactId>
+            <version>4.0.1</version>
         </dependency>
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
@@ -448,8 +453,7 @@
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
-                <!-- version compatible with Spring boot 2.7.x -->
-                <version>2021.0.5</version>
+                <version>2022.0.2</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
