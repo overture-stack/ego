@@ -15,11 +15,15 @@ public enum ProviderType {
   LINKEDIN,
   GITHUB,
   ORCID,
-  KEYCLOAK;
+  KEYCLOAK,
+  PASSPORT;
 
   // TODO: verify these are the correct accessor keys for each provider
   public static String getIdAccessor(ProviderType provider) {
-    if (provider.equals(GOOGLE) || provider.equals(ORCID) || provider.equals(KEYCLOAK)) {
+    if (provider.equals(GOOGLE)
+        || provider.equals(ORCID)
+        || provider.equals(KEYCLOAK)
+        || provider.equals(PASSPORT)) {
       return "sub";
     }
 

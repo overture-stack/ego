@@ -70,6 +70,16 @@ spring:
               - openid
               - email
               - profile
+          passport:
+            clientId: ego-client
+            clientSecret:
+            redirectUri: "http://localhost:8081/oauth/code/elixir"
+            authorizationGrantType: authorization_code
+            scope:
+              - openid
+              - email
+              - profile
+              - ga4gh_passport_v1
 
           github:
             clientName: ego
@@ -129,6 +139,9 @@ spring:
             userNameAttribute: sub
             userRecordUri: https://pub.orcid.org/v2.0
             jwkSetUri: https://orcid.org/oauth/jwks
+          passport:
+            # OIDC discovery endpoint
+            issuer-uri: https://login.elixir-czech.org/oidc/
   cloud:
     vault:
       kv:

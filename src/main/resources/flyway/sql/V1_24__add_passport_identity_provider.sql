@@ -1,0 +1,1 @@
+ALTER TYPE providertype ADD VALUE 'PASSPORT';
