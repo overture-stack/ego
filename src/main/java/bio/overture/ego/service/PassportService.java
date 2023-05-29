@@ -10,7 +10,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -99,9 +102,10 @@ public class PassportService {
         .distinct()
         .forEach(
             visa -> {
-              Visa visaEntity = new Visa();
-              visaEntity.setId(UUID.fromString(visa.getJti()));
-              visaPermissions.addAll(visaPermissionService.getPermissionsForVisa(visaEntity));
+              List<Visa> visaEntities =
+                  visaService.getByTypeAndValue(
+                      visa.getGa4ghVisaV1().getType(), visa.getGa4ghVisaV1().getValue());
+              visaPermissions.addAll(visaPermissionService.getPermissionsForVisa(visaEntities));
             });
     return visaPermissions;
   }

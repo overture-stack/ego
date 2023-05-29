@@ -13,4 +13,6 @@ public interface VisaRepository extends NamedRepository<Visa, UUID> {
   }
 
   List<Visa> findAll();
+
+  List<Visa> getByTypeAndValue(String type, String value);
 }

@@ -52,19 +52,22 @@ public class VisaController {
   }
 
   /*
-   * This method is used to fetch visa using id
-   * @param id UUID
-   * @return visa Visa
+   * This method is used to fetch visa using type and value
+   * @param type String
+   * @param value String
+   * @return visas List<Visa>
    */
   @AdminScoped
-  @RequestMapping(method = GET, value = "/{id}")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Get Visa by id")})
+  @RequestMapping(method = GET, value = "/{type}/{value}")
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Get Visa Using Type and Value")})
   @JsonView(Views.REST.class)
-  public @ResponseBody Visa getVisa(
+  public @ResponseBody List<Visa> getVisaByTypeAndValue(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
-      @PathVariable(value = "id", required = true) UUID id) {
-    return visaService.getById(id);
+      @PathVariable(value = "type", required = true) String type,
+      @PathVariable(value = "value", required = true) String value) {
+    return visaService.getByTypeAndValue(type, value);
   }
 
   /*
@@ -132,20 +135,22 @@ public class VisaController {
   }
 
   /*
-   * This method is used to fetch visa permissions using visa id
-   * @param visaId UUID
-   * @return visaPermissions List<VisaPermissions>
+   * This method is used to fetch visa permissions using type and value
+   * @param type String
+   * @param value String
+   * @return visas List<VisaPermissions>
    */
   @AdminScoped
-  @RequestMapping(method = GET, value = "/permissions/visaId/{id}")
+  @RequestMapping(method = GET, value = "/permissions/{type}/{value}")
   @ApiResponses(
-      value = {@ApiResponse(responseCode = "200", description = "Get VisaPermissions by visaId")})
+      value = {@ApiResponse(responseCode = "200", description = "Get Visa Using Type and Value")})
   @JsonView(Views.REST.class)
-  public @ResponseBody List<VisaPermission> getPermissionsByVisaId(
+  public @ResponseBody List<VisaPermission> getVisaPermissionsByTypeAndValue(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
-      @PathVariable(value = "id", required = true) UUID id) {
-    return visaPermissionService.getPermissionsByVisaId(id);
+      @PathVariable(value = "type", required = true) String type,
+      @PathVariable(value = "value", required = true) String value) {
+    return visaPermissionService.getPermissionsForVisa(visaService.getByTypeAndValue(type, value));
   }
 
   /*

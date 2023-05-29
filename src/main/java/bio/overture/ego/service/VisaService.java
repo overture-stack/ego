@@ -2,6 +2,7 @@ package bio.overture.ego.service;
 
 import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.RequestValidationException.checkRequestValid;
+import static java.lang.String.format;
 import static org.mapstruct.factory.Mappers.getMapper;
 
 import bio.overture.ego.event.token.ApiKeyEventsPublisher;
@@ -9,6 +10,7 @@ import bio.overture.ego.model.dto.PassportVisa;
 import bio.overture.ego.model.dto.VisaRequest;
 import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.model.exceptions.InvalidTokenException;
+import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.repository.VisaRepository;
 import bio.overture.ego.utils.CacheUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.NonNull;
@@ -66,6 +69,16 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
     val result = (Optional<Visa>) getRepository().findById(uuid);
     checkNotFound(result.isPresent(), "The visaId '%s' does not exist", uuid);
     return result.get();
+  }
+
+  public List<Visa> getByTypeAndValue(@NonNull String type, @NotNull String value) {
+    val result = visaRepository.getByTypeAndValue(type, value);
+    if (!result.isEmpty()) {
+      return result;
+    } else {
+      throw new NotFoundException(
+          format("No Visa exists with type '%s' and value '%s'", type, value));
+    }
   }
 
   public void delete(@NonNull UUID id) {
