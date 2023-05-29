@@ -10,6 +10,7 @@ import bio.overture.ego.model.entity.VisaPermission;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.repository.VisaPermissionRepository;
 import jakarta.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.NonNull;
@@ -95,9 +96,15 @@ public class VisaPermissionService extends AbstractNamedService<VisaPermission, 
   }
 
   // Fetches visa permissions for given visa request
-  public List<VisaPermission> getPermissionsForVisa(@NonNull Visa visa) {
-    val result = (List<VisaPermission>) visaPermissionRepository.findByVisa_Id(visa.getId());
-    return result;
+  public List<VisaPermission> getPermissionsForVisa(@NonNull List<Visa> visas) {
+    List<VisaPermission> visaPermissions = new ArrayList<>();
+    visas.stream()
+        .distinct()
+        .forEach(
+            visa -> {
+              visaPermissions.addAll(visaPermissionRepository.findByVisa_Id(visa.getId()));
+            });
+    return visaPermissions;
   }
 
   @Override
