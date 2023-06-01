@@ -186,7 +186,7 @@ token:
 
 broker:
   publicKey:
-    url: http://localhost:8082/token/public_key
+    url: https://login.elixir-czech.org/oidc/jwk
 
 # Default values available for creation of entities
 default:

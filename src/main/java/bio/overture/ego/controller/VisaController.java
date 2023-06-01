@@ -125,13 +125,14 @@ public class VisaController {
    * @param visaId UUID
    */
   @AdminScoped
-  @RequestMapping(method = DELETE, value = "/{id}")
+  @RequestMapping(method = DELETE, value = "/{type}/{value}")
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteVisa(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
-      @PathVariable(value = "id", required = true) UUID id) {
-    visaService.delete(id);
+      @PathVariable(value = "type", required = true) String type,
+      @PathVariable(value = "value", required = true) String value) {
+    visaService.delete(type, value);
   }
 
   /*

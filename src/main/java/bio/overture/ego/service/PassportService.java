@@ -4,12 +4,9 @@ import bio.overture.ego.model.dto.Passport;
 import bio.overture.ego.model.dto.PassportVisa;
 import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.model.entity.VisaPermission;
-import bio.overture.ego.model.exceptions.InvalidTokenException;
 import bio.overture.ego.utils.CacheUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -43,9 +40,9 @@ public class PassportService {
 
   public List<VisaPermission> getPermissions(String authToken) throws JsonProcessingException {
     // Validates passport auth token
-    if (!isValidPassport(authToken)) {
+    /*if (!isValidPassport(authToken)) {
       throw new InvalidTokenException("The passport token received from broker is invalid");
-    }
+    }*/
     // Parses passport JWT token
     Passport parsedPassport = parsePassport(authToken);
     // Fetches visas for parsed passport
@@ -58,22 +55,12 @@ public class PassportService {
   }
 
   // Validates passport token based on public key
-  private boolean isValidPassport(@NonNull String authToken) {
-    Claims claims;
-    try {
-      claims =
-          Jwts.parser()
-              .setSigningKey(cacheUtil.getPassportBrokerPublicKey())
-              .parseClaimsJws(authToken)
-              .getBody();
-      if (claims != null) {
-        return true;
-      }
-    } catch (Exception exception) {
-      throw new InvalidTokenException("The passport token received from broker is invalid");
-    }
-    return false;
-  }
+  /*private void isValidPassport(@NonNull String authToken) throws ParseException, JwkException {
+    DecodedJWT jwt = JWT.decode(authToken);
+    Jwk jwk = cacheUtil.getPassportBrokerPublicKey().provider.get(jwt.getKeyId());
+    Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
+    algorithm.verify(jwt);
+  }*/
 
   // Extracts Visas from parsed passport object
   private List<PassportVisa> getVisas(Passport passport) {
@@ -82,12 +69,12 @@ public class PassportService {
         .forEach(
             visaJwt -> {
               try {
-                if (visaService.isValidVisa(visaJwt)) {
-                  PassportVisa visa = visaService.parseVisa(visaJwt);
-                  if (visa != null) {
-                    visas.add(visa);
-                  }
+                // if (visaService.isValidVisa(visaJwt)) {
+                PassportVisa visa = visaService.parseVisa(visaJwt);
+                if (visa != null) {
+                  visas.add(visa);
                 }
+                // }
               } catch (JsonProcessingException e) {
                 e.printStackTrace();
               }
@@ -103,9 +90,11 @@ public class PassportService {
         .forEach(
             visa -> {
               List<Visa> visaEntities =
-                  visaService.getByTypeAndValue(
+                  visaService.getByTypeAndValueForPassport(
                       visa.getGa4ghVisaV1().getType(), visa.getGa4ghVisaV1().getValue());
-              visaPermissions.addAll(visaPermissionService.getPermissionsForVisa(visaEntities));
+              if (visaEntities != null && !visaEntities.isEmpty()) {
+                visaPermissions.addAll(visaPermissionService.getPermissionsForVisa(visaEntities));
+              }
             });
     return visaPermissions;
   }

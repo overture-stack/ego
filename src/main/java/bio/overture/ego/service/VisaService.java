@@ -9,14 +9,11 @@ import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.PassportVisa;
 import bio.overture.ego.model.dto.VisaRequest;
 import bio.overture.ego.model.entity.Visa;
-import bio.overture.ego.model.exceptions.InvalidTokenException;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.repository.VisaRepository;
 import bio.overture.ego.utils.CacheUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
@@ -81,9 +78,22 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
     }
   }
 
-  public void delete(@NonNull UUID id) {
-    checkExistence(id);
-    super.delete(id);
+  public List<Visa> getByTypeAndValueForPassport(@NonNull String type, @NotNull String value) {
+    val result = visaRepository.getByTypeAndValue(type, value);
+    if (!result.isEmpty()) {
+      return result;
+    }
+    return null;
+  }
+
+  public void delete(@NonNull String type, @NotNull String value) {
+    List<Visa> visas = getByTypeAndValue(type, value);
+    if (visas != null && !visas.isEmpty()) {
+      visas.stream().forEach(visa -> visaRepository.delete(visa));
+    } else {
+      throw new NotFoundException(
+          format("No Visa exists with type '%s' and value '%s'", type, value));
+    }
   }
 
   // Parses Visa JWT token to convert into Visa Object
@@ -99,22 +109,12 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
   }
 
   // Checks if the visa is a valid visa
-  public boolean isValidVisa(@NonNull String authToken) {
-    Claims claims;
-    try {
-      claims =
-          Jwts.parser()
-              .setSigningKey(cacheUtil.getPassportBrokerPublicKey())
-              .parseClaimsJws(authToken)
-              .getBody();
-      if (claims != null) {
-        return true;
-      }
-    } catch (Exception exception) {
-      throw new InvalidTokenException("The visa token received from broker is invalid");
-    }
-    return false;
-  }
+  /*public void isValidVisa(@NonNull String authToken) throws JwkException {
+    DecodedJWT jwt = JWT.decode(authToken);
+    Jwk jwk = cacheUtil.getPassportBrokerPublicKey().provider.get(jwt.getKeyId());
+    Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
+    algorithm.verify(jwt);
+  }*/
 
   public Page<Visa> listVisa(@NonNull Pageable pageable) {
     return visaRepository.findAll(pageable);
