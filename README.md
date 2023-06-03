@@ -78,7 +78,7 @@ docker exec ego-postgres-1  psql -h localhost -p 5432 -U postgres -d ego --comma
 
 - Filing an [issue](https://github.com/overture-stack/ego/issues)
 - Making a [contribution](CONTRIBUTING.md)
-- Connect with us on [Slack](http://slack.overture.bio)
+- Connect with us on [Slack](http://overture-bio.slack.com)
 - Add or Upvote a [feature request](https://github.com/overture-stack/ego/issues?q=is%3Aopen+is%3Aissue+label%3Anew-feature+sort%3Areactions-%2B1-desc)
 
 ## Related Products 
