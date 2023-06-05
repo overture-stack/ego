@@ -11,10 +11,10 @@ import bio.overture.ego.model.dto.VisaRequest;
 import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.repository.VisaRepository;
-import bio.overture.ego.utils.CacheUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,7 +42,7 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
   /** Dependencies */
   @Autowired private VisaRepository visaRepository;
 
-  @Autowired private CacheUtil cacheUtil;
+  //  @Autowired private CacheUtil cacheUtil;
 
   private final ApiKeyEventsPublisher apiKeyEventsPublisher;
 
@@ -69,16 +69,6 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
   }
 
   public List<Visa> getByTypeAndValue(@NonNull String type, @NotNull String value) {
-    val result = visaRepository.getByTypeAndValue(type, value);
-    if (!result.isEmpty()) {
-      return result;
-    } else {
-      throw new NotFoundException(
-          format("No Visa exists with type '%s' and value '%s'", type, value));
-    }
-  }
-
-  public List<Visa> getByTypeAndValueForPassport(@NonNull String type, @NotNull String value) {
     val result = visaRepository.getByTypeAndValue(type, value);
     if (!result.isEmpty()) {
       return result;
@@ -120,10 +110,22 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
     return visaRepository.findAll(pageable);
   }
 
-  public Visa partialUpdate(@NotNull UUID id, @NonNull VisaRequest updateRequest) {
-    val visa = getById(id);
-    VISA_CONVERTER.updateVisa(updateRequest, visa);
-    return getRepository().save(visa);
+  public List<Visa> partialUpdate(@NonNull VisaRequest updateRequest) {
+    List<Visa> updatedVisas = new ArrayList<>();
+    List<Visa> visas = getByTypeAndValue(updateRequest.getType(), updateRequest.getValue());
+    if (visas != null && !visas.isEmpty()) {
+      for (Visa visa : visas) {
+        visa.setBy(updateRequest.getBy());
+        visa.setSource(updateRequest.getSource());
+        updatedVisas.add(getRepository().save(visa));
+      }
+    } else {
+      throw new NotFoundException(
+          format(
+              "No Visa exists with type '%s' and value '%s'",
+              updateRequest.getType(), updateRequest.getValue()));
+    }
+    return updatedVisas;
   }
 
   @Mapper(

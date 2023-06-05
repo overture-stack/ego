@@ -1,11 +1,17 @@
 package bio.overture.ego.controller;
 
+import static java.lang.String.format;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
-import bio.overture.ego.model.dto.*;
-import bio.overture.ego.model.entity.*;
+import bio.overture.ego.model.dto.PageDTO;
+import bio.overture.ego.model.dto.VisaPermissionRequest;
+import bio.overture.ego.model.dto.VisaRequest;
+import bio.overture.ego.model.entity.Visa;
+import bio.overture.ego.model.entity.VisaPermission;
+import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.security.AdminScoped;
-import bio.overture.ego.service.*;
+import bio.overture.ego.service.VisaPermissionService;
+import bio.overture.ego.service.VisaService;
 import bio.overture.ego.view.Views;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -33,22 +39,11 @@ public class VisaController {
 
   private final VisaPermissionService visaPermissionService;
 
-  private final UserPermissionService userPermissionService;
-  private final GroupPermissionService groupPermissionService;
-  private final ApplicationPermissionService applicationPermissionService;
-
   @Autowired
   public VisaController(
-      @NonNull VisaService visaService,
-      @NotNull VisaPermissionService visaPermissionService,
-      @NonNull UserPermissionService userPermissionService,
-      @NonNull GroupPermissionService groupPermissionService,
-      @NonNull ApplicationPermissionService applicationPermissionService) {
+      @NonNull VisaService visaService, @NotNull VisaPermissionService visaPermissionService) {
     this.visaService = visaService;
     this.visaPermissionService = visaPermissionService;
-    this.groupPermissionService = groupPermissionService;
-    this.userPermissionService = userPermissionService;
-    this.applicationPermissionService = applicationPermissionService;
   }
 
   /*
@@ -67,7 +62,13 @@ public class VisaController {
           final String authorization,
       @PathVariable(value = "type", required = true) String type,
       @PathVariable(value = "value", required = true) String value) {
-    return visaService.getByTypeAndValue(type, value);
+    List<Visa> visas = visaService.getByTypeAndValue(type, value);
+    if (visas != null && !visas.isEmpty()) {
+      return visas;
+    } else {
+      throw new NotFoundException(
+          format("No Visa exists with type '%s' and value '%s'", type, value));
+    }
   }
 
   /*
@@ -110,14 +111,13 @@ public class VisaController {
    * @return Visa visa
    */
   @AdminScoped
-  @RequestMapping(method = PUT, value = "/{id}")
+  @RequestMapping(method = PUT, value = "/{type}/{value}")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Update Visa")})
-  public @ResponseBody Visa updateVisa(
+  public @ResponseBody List<Visa> updateVisa(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
-      @PathVariable(value = "id", required = true) UUID id,
       @RequestBody(required = true) VisaRequest visaRequest) {
-    return visaService.partialUpdate(id, visaRequest);
+    return visaService.partialUpdate(visaRequest);
   }
 
   /*
@@ -193,7 +193,7 @@ public class VisaController {
    * @param visaPermissionRequest VisaPermissionRequest
    */
   @AdminScoped
-  @RequestMapping(method = DELETE, value = "/permissions/{policyId}/{visaId}")
+  @RequestMapping(method = DELETE, value = "/permissions/{policyId}/{type}/{value}")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Remove VisaPermission")})
   @JsonView(Views.REST.class)
   public @ResponseBody void removePermissions(

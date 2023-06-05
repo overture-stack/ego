@@ -4,7 +4,6 @@ import bio.overture.ego.model.dto.Passport;
 import bio.overture.ego.model.dto.PassportVisa;
 import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.model.entity.VisaPermission;
-import bio.overture.ego.utils.CacheUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
@@ -29,7 +28,7 @@ public class PassportService {
 
   @Autowired private VisaPermissionService visaPermissionService;
 
-  @Autowired private CacheUtil cacheUtil;
+  //  @Autowired private CacheUtil cacheUtil;
 
   @Autowired
   public PassportService(
@@ -90,7 +89,7 @@ public class PassportService {
         .forEach(
             visa -> {
               List<Visa> visaEntities =
-                  visaService.getByTypeAndValueForPassport(
+                  visaService.getByTypeAndValue(
                       visa.getGa4ghVisaV1().getType(), visa.getGa4ghVisaV1().getValue());
               if (visaEntities != null && !visaEntities.isEmpty()) {
                 visaPermissions.addAll(visaPermissionService.getPermissionsForVisa(visaEntities));
