@@ -5,7 +5,7 @@ RUN ./mvnw package -Dmaven.test.skip=true
 
 #####################################################
 
-FROM adoptopenjdk/openjdk11:jre-11.0.6_10-alpine
+FROM adoptopenjdk/openjdk11:jre-11.0.6_10
 COPY --from=builder /usr/src/app/target/ego-*-exec.jar /usr/bin/ego.jar
 ENV EGO_USER ego
 ENV EGO_USER_ID 9999
