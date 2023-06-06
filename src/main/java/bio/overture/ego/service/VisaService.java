@@ -9,15 +9,19 @@ import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.PassportVisa;
 import bio.overture.ego.model.dto.VisaRequest;
 import bio.overture.ego.model.entity.Visa;
-import bio.overture.ego.model.exceptions.InvalidTokenException;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.repository.VisaRepository;
 import bio.overture.ego.utils.CacheUtil;
+import com.auth0.jwk.Jwk;
+import com.auth0.jwk.JwkException;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
 import jakarta.validation.constraints.NotNull;
+import java.security.interfaces.RSAPublicKey;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -75,15 +79,18 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
     val result = visaRepository.getByTypeAndValue(type, value);
     if (!result.isEmpty()) {
       return result;
+    }
+    return null;
+  }
+
+  public void delete(@NonNull String type, @NotNull String value) {
+    List<Visa> visas = getByTypeAndValue(type, value);
+    if (visas != null && !visas.isEmpty()) {
+      visas.stream().forEach(visa -> visaRepository.delete(visa));
     } else {
       throw new NotFoundException(
           format("No Visa exists with type '%s' and value '%s'", type, value));
     }
-  }
-
-  public void delete(@NonNull UUID id) {
-    checkExistence(id);
-    super.delete(id);
   }
 
   // Parses Visa JWT token to convert into Visa Object
@@ -99,31 +106,33 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
   }
 
   // Checks if the visa is a valid visa
-  public boolean isValidVisa(@NonNull String authToken) {
-    Claims claims;
-    try {
-      claims =
-          Jwts.parser()
-              .setSigningKey(cacheUtil.getPassportBrokerPublicKey())
-              .parseClaimsJws(authToken)
-              .getBody();
-      if (claims != null) {
-        return true;
-      }
-    } catch (Exception exception) {
-      throw new InvalidTokenException("The visa token received from broker is invalid");
-    }
-    return false;
+  public void isValidVisa(@NonNull String authToken) throws JwkException, JsonProcessingException {
+    DecodedJWT jwt = JWT.decode(authToken);
+    Jwk jwk = cacheUtil.getPassportBrokerPublicKey().get(jwt.getKeyId());
+    Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
+    algorithm.verify(jwt);
   }
 
   public Page<Visa> listVisa(@NonNull Pageable pageable) {
     return visaRepository.findAll(pageable);
   }
 
-  public Visa partialUpdate(@NotNull UUID id, @NonNull VisaRequest updateRequest) {
-    val visa = getById(id);
-    VISA_CONVERTER.updateVisa(updateRequest, visa);
-    return getRepository().save(visa);
+  public List<Visa> partialUpdate(@NonNull VisaRequest updateRequest) {
+    List<Visa> updatedVisas = new ArrayList<>();
+    List<Visa> visas = getByTypeAndValue(updateRequest.getType(), updateRequest.getValue());
+    if (visas != null && !visas.isEmpty()) {
+      for (Visa visa : visas) {
+        visa.setBy(updateRequest.getBy());
+        visa.setSource(updateRequest.getSource());
+        updatedVisas.add(getRepository().save(visa));
+      }
+    } else {
+      throw new NotFoundException(
+          format(
+              "No Visa exists with type '%s' and value '%s'",
+              updateRequest.getType(), updateRequest.getValue()));
+    }
+    return updatedVisas;
   }
 
   @Mapper(
