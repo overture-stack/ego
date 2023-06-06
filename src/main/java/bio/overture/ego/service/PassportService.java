@@ -4,8 +4,16 @@ import bio.overture.ego.model.dto.Passport;
 import bio.overture.ego.model.dto.PassportVisa;
 import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.model.entity.VisaPermission;
+import bio.overture.ego.utils.CacheUtil;
+import com.auth0.jwk.Jwk;
+import com.auth0.jwk.JwkException;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.security.interfaces.RSAPublicKey;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,7 +36,7 @@ public class PassportService {
 
   @Autowired private VisaPermissionService visaPermissionService;
 
-  //  @Autowired private CacheUtil cacheUtil;
+  @Autowired private CacheUtil cacheUtil;
 
   @Autowired
   public PassportService(
@@ -37,11 +45,10 @@ public class PassportService {
     this.visaPermissionService = visaPermissionService;
   }
 
-  public List<VisaPermission> getPermissions(String authToken) throws JsonProcessingException {
+  public List<VisaPermission> getPermissions(String authToken)
+      throws JsonProcessingException, ParseException, JwkException {
     // Validates passport auth token
-    /*if (!isValidPassport(authToken)) {
-      throw new InvalidTokenException("The passport token received from broker is invalid");
-    }*/
+    isValidPassport(authToken);
     // Parses passport JWT token
     Passport parsedPassport = parsePassport(authToken);
     // Fetches visas for parsed passport
@@ -54,12 +61,13 @@ public class PassportService {
   }
 
   // Validates passport token based on public key
-  /*private void isValidPassport(@NonNull String authToken) throws ParseException, JwkException {
+  private void isValidPassport(@NonNull String authToken)
+      throws ParseException, JwkException, JsonProcessingException {
     DecodedJWT jwt = JWT.decode(authToken);
-    Jwk jwk = cacheUtil.getPassportBrokerPublicKey().provider.get(jwt.getKeyId());
+    Jwk jwk = cacheUtil.getPassportBrokerPublicKey().get(jwt.getKeyId());
     Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
     algorithm.verify(jwt);
-  }*/
+  }
 
   // Extracts Visas from parsed passport object
   private List<PassportVisa> getVisas(Passport passport) {
@@ -68,13 +76,12 @@ public class PassportService {
         .forEach(
             visaJwt -> {
               try {
-                // if (visaService.isValidVisa(visaJwt)) {
+                visaService.isValidVisa(visaJwt);
                 PassportVisa visa = visaService.parseVisa(visaJwt);
                 if (visa != null) {
                   visas.add(visa);
                 }
-                // }
-              } catch (JsonProcessingException e) {
+              } catch (JsonProcessingException | JwkException e) {
                 e.printStackTrace();
               }
             });

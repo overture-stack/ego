@@ -11,9 +11,16 @@ import bio.overture.ego.model.dto.VisaRequest;
 import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.model.exceptions.NotFoundException;
 import bio.overture.ego.repository.VisaRepository;
+import bio.overture.ego.utils.CacheUtil;
+import com.auth0.jwk.Jwk;
+import com.auth0.jwk.JwkException;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.constraints.NotNull;
+import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +49,7 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
   /** Dependencies */
   @Autowired private VisaRepository visaRepository;
 
-  //  @Autowired private CacheUtil cacheUtil;
+  @Autowired private CacheUtil cacheUtil;
 
   private final ApiKeyEventsPublisher apiKeyEventsPublisher;
 
@@ -99,12 +106,12 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
   }
 
   // Checks if the visa is a valid visa
-  /*public void isValidVisa(@NonNull String authToken) throws JwkException {
+  public void isValidVisa(@NonNull String authToken) throws JwkException, JsonProcessingException {
     DecodedJWT jwt = JWT.decode(authToken);
-    Jwk jwk = cacheUtil.getPassportBrokerPublicKey().provider.get(jwt.getKeyId());
+    Jwk jwk = cacheUtil.getPassportBrokerPublicKey().get(jwt.getKeyId());
     Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
     algorithm.verify(jwt);
-  }*/
+  }
 
   public Page<Visa> listVisa(@NonNull Pageable pageable) {
     return visaRepository.findAll(pageable);
