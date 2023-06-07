@@ -41,7 +41,7 @@
 ## Documentation
 
 - For developer documentation, including instructions for running Ego from source read our [GitHub Wiki](https://github.com/overture-stack/ego/wiki)
-- For user documentation, including installation, configuration and usage guides, see our websites [Ego documentation](https://www.overture.bio/documentation/song/)
+- For user documentation, including installation, configuration and usage guides, see our websites [Ego documentation](https://www.overture.bio/documentation/ego/)
 
 ## Docker Setup
 
