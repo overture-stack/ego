@@ -248,12 +248,7 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-vault-config</artifactId>
-            <version>4.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-bootstrap</artifactId>
-            <version>4.0.1</version>
+            <version>2.1.2.RELEASE</version>
         </dependency>
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
@@ -415,14 +410,14 @@
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>0.6.1</version>
                 <configuration>
-                    <protocArtifact>com.google.protobuf:protoc:3.12.0:exe:${os.detected.classifier}</protocArtifact>
+                    <!--<protocArtifact>com.google.protobuf:protoc:3.12.0:exe:${os.detected.classifier}</protocArtifact>-->
                     <!-- for Mac OS compatibility -->
-                    <!--<protocArtifact>com.google.protobuf:protoc:3.21.7:exe:osx-x86_64</protocArtifact>-->
+                    <protocArtifact>com.google.protobuf:protoc:3.21.7:exe:osx-x86_64</protocArtifact>
                     <protoSourceRoot>${basedir}/src/main/proto</protoSourceRoot>
                     <pluginId>grpc-java</pluginId>
-                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.54.0:exe:${os.detected.classifier}</pluginArtifact>
+                    <!--<pluginArtifact>io.grpc:protoc-gen-grpc-java:1.54.0:exe:${os.detected.classifier}</pluginArtifact>-->
                     <!-- for Mac Os compatibility -->
-                    <!--<pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:osx-x86_64</pluginArtifact>-->
+                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:osx-x86_64</pluginArtifact>
                 </configuration>
                 <executions>
                     <execution>
@@ -462,7 +457,8 @@
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
-                <version>2022.0.2</version>
+                <!-- version compatible with Spring boot 2.7.x -->
+                <version>2021.0.5</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

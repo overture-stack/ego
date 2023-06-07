@@ -130,9 +130,7 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
       }
     } else {
       throw new NotFoundException(
-          format(
-              "No Visa exists with type '%s' and value '%s'",
-              type, value));
+          format("No Visa exists with type '%s' and value '%s'", type, value));
     }
     return updatedVisas;
   }
