@@ -27,6 +27,7 @@ import bio.overture.ego.model.exceptions.InvalidScopeException;
 import bio.overture.ego.model.exceptions.InvalidTokenException;
 import bio.overture.ego.provider.google.GoogleTokenService;
 import bio.overture.ego.security.CustomOAuth2User;
+import bio.overture.ego.service.PassportService;
 import bio.overture.ego.service.RefreshContextService;
 import bio.overture.ego.service.TokenService;
 import bio.overture.ego.token.IDToken;
@@ -59,17 +60,22 @@ public class AuthController {
   private String TOKEN_PREFIX;
 
   private final TokenService tokenService;
+  private final PassportService passportService;
   private final GoogleTokenService googleTokenService;
   private final TokenSigner tokenSigner;
   private final RefreshContextService refreshContextService;
 
+  private final String PASSPORT_CLIENT_NAME = "passport";
+
   @Autowired
   public AuthController(
       @NonNull TokenService tokenService,
+      @NonNull PassportService passportService,
       @NonNull GoogleTokenService googleTokenService,
       @NonNull TokenSigner tokenSigner,
       @NonNull RefreshContextService refreshContextService) {
     this.tokenService = tokenService;
+    this.passportService = passportService;
     this.googleTokenService = googleTokenService;
     this.tokenSigner = tokenSigner;
     this.refreshContextService = refreshContextService;
@@ -121,6 +127,11 @@ public class AuthController {
     }
 
     val user = (CustomOAuth2User) authentication.getPrincipal();
+
+    val passportJwtToken = (authentication.getAuthorizedClientRegistrationId().equals(PASSPORT_CLIENT_NAME)) ?
+        passportService.getPassportToken(((CustomOAuth2User) authentication.getPrincipal()).getAccessToken()) :
+        null;
+
     String token =
         tokenService.generateUserToken(
             IDToken.builder()
@@ -131,7 +142,8 @@ public class AuthController {
                 .providerType(
                     ProviderType.resolveProviderType(
                         authentication.getAuthorizedClientRegistrationId()))
-                .build());
+                .build(),
+            passportJwtToken);
 
     val outgoingRefreshContext = refreshContextService.createInitialRefreshContext(token);
     val cookie =
