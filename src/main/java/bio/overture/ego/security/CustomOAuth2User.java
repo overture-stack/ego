@@ -23,6 +23,7 @@ public class CustomOAuth2User implements OidcUser {
   @NonNull private String subjectId;
   private String email;
   private OAuth2User oauth2User;
+  private String accessToken;
 
   @Override
   public Map<String, Object> getAttributes() {
@@ -46,6 +47,8 @@ public class CustomOAuth2User implements OidcUser {
   public String getFamilyName() {
     return this.familyName;
   }
+
+  public String getAccessToken() { return this.accessToken; }
 
   public String getSubjectId() {
     return oauth2User.getAttributes().containsKey(IdTokenClaimNames.SUB)
