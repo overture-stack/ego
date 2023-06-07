@@ -116,8 +116,10 @@ public class VisaController {
   public @ResponseBody List<Visa> updateVisa(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
+      @PathVariable(value = "type", required = true) String type,
+      @PathVariable(value = "value", required = true) String value,
       @RequestBody(required = true) VisaRequest visaRequest) {
-    return visaService.partialUpdate(visaRequest);
+    return visaService.partialUpdate(type, value, visaRequest);
   }
 
   /*
@@ -200,7 +202,8 @@ public class VisaController {
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
           final String authorization,
       @PathVariable(value = "policyId", required = true) UUID policyId,
-      @PathVariable(value = "visaId", required = true) UUID visaId) {
-    visaPermissionService.removePermission(policyId, visaId);
+      @PathVariable(value = "type", required = true) String type,
+      @PathVariable(value = "value", required = true) String value) {
+    visaPermissionService.removePermission(policyId, type, value);
   }
 }

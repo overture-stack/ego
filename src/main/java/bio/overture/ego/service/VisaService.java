@@ -30,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.codec.binary.Base64;
 import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValueCheckStrategy;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,11 +116,14 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
     return visaRepository.findAll(pageable);
   }
 
-  public List<Visa> partialUpdate(@NonNull VisaRequest updateRequest) {
+  public List<Visa> partialUpdate(
+      @NotNull String type, @NotNull String value, @NonNull VisaRequest updateRequest) {
     List<Visa> updatedVisas = new ArrayList<>();
-    List<Visa> visas = getByTypeAndValue(updateRequest.getType(), updateRequest.getValue());
+    List<Visa> visas = getByTypeAndValue(type, value);
     if (visas != null && !visas.isEmpty()) {
       for (Visa visa : visas) {
+        visa.setType(updateRequest.getType());
+        visa.setValue(updateRequest.getValue());
         visa.setBy(updateRequest.getBy());
         visa.setSource(updateRequest.getSource());
         updatedVisas.add(getRepository().save(visa));
@@ -130,7 +132,7 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
       throw new NotFoundException(
           format(
               "No Visa exists with type '%s' and value '%s'",
-              updateRequest.getType(), updateRequest.getValue()));
+              type, value));
     }
     return updatedVisas;
   }
@@ -140,8 +142,6 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
       unmappedTargetPolicy = ReportingPolicy.WARN)
   public abstract static class VisaConverter {
     public abstract Visa convertToVisa(VisaRequest request);
-
-    public abstract void updateVisa(VisaRequest request, @MappingTarget Visa visaToUpdate);
   }
 
   @Override

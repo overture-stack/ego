@@ -83,16 +83,22 @@ public class VisaPermissionService extends AbstractNamedService<VisaPermission, 
     }
   }
 
-  public void removePermission(@NonNull UUID policyId, @NotNull UUID visaId) {
-    VisaPermission visaPermission = null;
-    List<VisaPermission> visaPermissionEntities =
-        visaPermissionRepository.findByPolicyIdAndVisaId(policyId, visaId);
-    if (!visaPermissionEntities.isEmpty()) {
-      visaPermissionRepository.deleteById(visaPermissionEntities.get(0).getId());
-    } else {
-      throw new NotFoundException(
-          format("No VisaPermissions exists with policyId '%s' and visaId '%s'", policyId, visaId));
-    }
+  public void removePermission(
+      @NonNull UUID policyId, @NotNull String type, @NotNull String value) {
+    visaService.getByTypeAndValue(type, value).stream()
+        .forEach(
+            visa -> {
+              List<VisaPermission> visaPermissionEntities =
+                  visaPermissionRepository.findByPolicyIdAndVisaId(policyId, visa.getId());
+              if (!visaPermissionEntities.isEmpty()) {
+                visaPermissionRepository.deleteById(visaPermissionEntities.get(0).getId());
+              } else {
+                throw new NotFoundException(
+                    format(
+                        "No VisaPermissions exists with policyId '%s' and type '%s' and value '%s'",
+                        policyId, type, value));
+              }
+            });
   }
 
   // Fetches visa permissions for given visa request
