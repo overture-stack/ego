@@ -100,6 +100,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   private final ApplicationService applicationService;
   private final ApiKeyStoreService apiKeyStoreService;
   private final PolicyService policyService;
+  private final PassportService passportService;
   private final UserRepository userRepository;
 
   /** Configuration */
@@ -115,6 +116,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
       @NonNull ApplicationService applicationService,
       @NonNull ApiKeyStoreService apiKeyStoreService,
       @NonNull PolicyService policyService,
+      @NonNull PassportService passportService,
       @NonNull TokenStoreRepository tokenStoreRepository,
       @NonNull UserRepository userRepository,
       @Value("${jwt.user.durationMs:10800000}") int userJwtDuration,
@@ -126,6 +128,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     this.applicationService = applicationService;
     this.apiKeyStoreService = apiKeyStoreService;
     this.policyService = policyService;
+    this.passportService = passportService;
     this.userRepository = userRepository;
     this.userJwtDuration = userJwtDuration;
     this.appJwtDuration = appJwtDuration;
@@ -138,8 +141,12 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   }
 
   public String generateUserToken(IDToken idToken) {
+    return generateUserToken(idToken, null);
+  }
+
+  public String generateUserToken(IDToken idToken, String passportJwtToken) {
     val user = userService.getUserByToken(idToken);
-    return generateUserToken(user);
+    return generateUserToken(user, passportJwtToken);
   }
 
   public String updateUserToken(String accessToken) {
@@ -165,6 +172,19 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   @SneakyThrows
   public String generateUserToken(User u) {
     return generateUserToken(u, extractExplicitScopes(u));
+  }
+
+  @SneakyThrows
+  public String generateUserToken(User u, String passportJwtToken) {
+
+    Set<String> scopes = extractExplicitScopes(u);
+
+    if (passportJwtToken != null){
+      Set<String> scopesFromVisas = extractExplicitScopes(passportJwtToken);
+      scopes = mergeScopes(scopes, scopesFromVisas);
+    }
+
+    return generateUserToken(u, scopes);
   }
 
   @SneakyThrows
@@ -578,6 +598,19 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
 
   private static Set<String> extractExplicitScopes(Application a) {
     return mapToSet(explicitScopes(extractScopes(a)), Scope::toString);
+  }
+
+  @SneakyThrows
+  private Set<String> extractExplicitScopes(String passportJwtToken){
+    return mapToSet(explicitScopes(passportService.extractScopes(passportJwtToken)), Scope::toString);
+  }
+
+  private Set<String> mergeScopes(Set<String> scopeSet, Set<String> scopeSetAdditional){
+    scopeSet.addAll(scopeSetAdditional);
+    if(scopeSet.size()>1 && scopeSet.contains(Scope.defaultScope().toString())){
+      scopeSet.remove(Scope.defaultScope().toString());
+    }
+    return scopeSet;
   }
 
   /** DEPRECATED: To be removed in next major release */

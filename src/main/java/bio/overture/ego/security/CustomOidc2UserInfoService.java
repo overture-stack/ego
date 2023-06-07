@@ -53,6 +53,7 @@ public class CustomOidc2UserInfoService extends OidcUserService {
           .email(oidcUser.getEmail())
           .familyName(oidcUser.getFamilyName())
           .givenName(oidcUser.getGivenName())
+          .accessToken(oAuth2UserRequest.getAccessToken().getTokenValue())
           .build();
     } catch (AuthenticationException ex) {
       throw ex;
