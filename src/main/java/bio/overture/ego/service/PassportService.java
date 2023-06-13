@@ -26,10 +26,11 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
@@ -52,19 +53,11 @@ public class PassportService {
 
   @Autowired private CacheUtil cacheUtil;
 
+  @Autowired private ClientRegistrationRepository clientRegistrationRepository;
+
   private final String REQUESTED_TOKEN_TYPE = "urn:ga4gh:params:oauth:token-type:passport";
   private final String SUBJECT_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
   private final String GRANT_TYPE = "urn:ietf:params:oauth:grant-type:token-exchange";
-
-  @Value("${spring.security.oauth2.client.registration.passport.clientId}")
-  private String clientId;
-
-  @Value("${spring.security.oauth2.client.registration.passport.clientSecret}")
-  private String clientSecret;
-
-  @Value("${spring.security.oauth2.client.provider.passport.issuer-uri}")
-  private String passportIssuerUri;
-
 
 
   @Autowired
@@ -74,14 +67,14 @@ public class PassportService {
     this.visaPermissionService = visaPermissionService;
   }
 
-  public List<VisaPermission> getPermissions(String authToken)
+  public List<VisaPermission> getPermissions(String authToken, String providerType)
       throws JsonProcessingException, ParseException, JwkException {
     // Validates passport auth token
-    isValidPassport(authToken);
+    isValidPassport(authToken, providerType);
     // Parses passport JWT token
     Passport parsedPassport = parsePassport(authToken);
     // Fetches visas for parsed passport
-    List<PassportVisa> visas = getVisas(parsedPassport);
+    List<PassportVisa> visas = getVisas(parsedPassport, providerType);
     // Fetches visa permissions for extracted visas
     List<VisaPermission> visaPermissions = getVisaPermissions(visas);
     // removes deduplicates from visaPermissions
@@ -90,22 +83,22 @@ public class PassportService {
   }
 
   // Validates passport token based on public key
-  private void isValidPassport(@NonNull String authToken)
-      throws ParseException, JwkException, JsonProcessingException {
+  private void isValidPassport(@NonNull String authToken, @NonNull String providerType)
+      throws JwkException {
     DecodedJWT jwt = JWT.decode(authToken);
-    Jwk jwk = cacheUtil.getPassportBrokerPublicKey().get(jwt.getKeyId());
+    Jwk jwk = cacheUtil.getPassportBrokerPublicKey(providerType).get(jwt.getKeyId());
     Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
     algorithm.verify(jwt);
   }
 
   // Extracts Visas from parsed passport object
-  private List<PassportVisa> getVisas(Passport passport) {
+  private List<PassportVisa> getVisas(Passport passport, @NonNull String providerType) {
     List<PassportVisa> visas = new ArrayList<>();
     passport.getGa4ghPassportV1().stream()
         .forEach(
             visaJwt -> {
               try {
-                visaService.isValidVisa(visaJwt);
+                visaService.isValidVisa(visaJwt, providerType);
                 PassportVisa visa = visaService.parseVisa(visaJwt);
                 if (visa != null) {
                   visas.add(visa);
@@ -134,8 +127,8 @@ public class PassportService {
     return visaPermissions;
   }
 
-  public Set<Scope> extractScopes(@NonNull String passportJwtToken) throws ParseException, JwkException, JsonProcessingException {
-      val resolvedPermissions = getPermissions(passportJwtToken);
+  public Set<Scope> extractScopes(@NonNull String passportJwtToken, @NonNull String providerType) throws ParseException, JwkException, JsonProcessingException {
+      val resolvedPermissions = getPermissions(passportJwtToken, providerType);
       val output = mapToSet(resolvedPermissions, AbstractPermissionService::buildScope);
       if (output.isEmpty()) {
         output.add(Scope.defaultScope());
@@ -162,19 +155,18 @@ public class PassportService {
     return permissionsSet.stream().collect(Collectors.toList());
   }
 
-  public String getPassportToken(String accessToken) {
+  public String getPassportToken(String providerId, String accessToken) {
 
     if (accessToken == null || accessToken.isEmpty()) return null;
 
-    val params = passportTokenParams(accessToken);
+    val clientRegistration = clientRegistrationRepository.findByRegistrationId(providerId);
 
     val uri = UriComponentsBuilder
-        .fromUriString(passportIssuerUri)
-        .path("/token")
-        .queryParams(params)
+        .fromUriString(clientRegistration.getProviderDetails().getTokenUri())
+        .queryParams(passportTokenParams(accessToken))
         .toUriString();
 
-    val passportToken = getTemplate(clientId, clientSecret)
+    val passportToken = getTemplate(clientRegistration)
                 .exchange(uri,
                     HttpMethod.POST,
                     null,
@@ -186,7 +178,7 @@ public class PassportService {
         null;
   }
 
-  private RestTemplate getTemplate(String clientId, String clientSecret) {
+  private RestTemplate getTemplate(ClientRegistration clientRegistration) {
     RestTemplate restTemplate = new RestTemplate();
     restTemplate
         .getInterceptors()
@@ -195,7 +187,7 @@ public class PassportService {
               x.getHeaders()
                   .set(
                       HttpHeaders.AUTHORIZATION,
-                      "Basic " + getBasicAuthHeader(clientId, clientSecret));
+                      "Basic " + getBasicAuthHeader(clientRegistration.getClientId(), clientRegistration.getClientSecret()));
               return z.execute(x, y);
             });
     return restTemplate;

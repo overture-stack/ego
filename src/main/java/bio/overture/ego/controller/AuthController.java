@@ -64,8 +64,7 @@ public class AuthController {
   private final GoogleTokenService googleTokenService;
   private final TokenSigner tokenSigner;
   private final RefreshContextService refreshContextService;
-
-  private final String PASSPORT_CLIENT_NAME = "passport";
+  private final String GA4GH_PASSPORT_SCOPE = "ga4gh_passport_v1";
 
   @Autowired
   public AuthController(
@@ -128,8 +127,11 @@ public class AuthController {
 
     val user = (CustomOAuth2User) authentication.getPrincipal();
 
-    val passportJwtToken = (authentication.getAuthorizedClientRegistrationId().equals(PASSPORT_CLIENT_NAME)) ?
-        passportService.getPassportToken(((CustomOAuth2User) authentication.getPrincipal()).getAccessToken()) :
+
+    val passportJwtToken = (user.getClaim(GA4GH_PASSPORT_SCOPE) != null) ?
+        passportService.getPassportToken(
+            authentication.getAuthorizedClientRegistrationId(),
+            user.getAccessToken()) :
         null;
 
     String token =
@@ -143,7 +145,8 @@ public class AuthController {
                     ProviderType.resolveProviderType(
                         authentication.getAuthorizedClientRegistrationId()))
                 .build(),
-            passportJwtToken);
+            passportJwtToken,
+            authentication.getAuthorizedClientRegistrationId());
 
     val outgoingRefreshContext = refreshContextService.createInitialRefreshContext(token);
     val cookie =

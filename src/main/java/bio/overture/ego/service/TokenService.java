@@ -141,12 +141,12 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   }
 
   public String generateUserToken(IDToken idToken) {
-    return generateUserToken(idToken, null);
+    return generateUserToken(idToken, null, null);
   }
 
-  public String generateUserToken(IDToken idToken, String passportJwtToken) {
+  public String generateUserToken(IDToken idToken, String passportJwtToken, String providerType) {
     val user = userService.getUserByToken(idToken);
-    return generateUserToken(user, passportJwtToken);
+    return generateUserToken(user, passportJwtToken, providerType);
   }
 
   public String updateUserToken(String accessToken) {
@@ -175,12 +175,12 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   }
 
   @SneakyThrows
-  public String generateUserToken(User u, String passportJwtToken) {
+  public String generateUserToken(User u, String passportJwtToken, String providerType) {
 
     Set<String> scopes = extractExplicitScopes(u);
 
-    if (passportJwtToken != null){
-      Set<String> scopesFromVisas = extractExplicitScopes(passportJwtToken);
+    if (passportJwtToken != null && providerType != null){
+      Set<String> scopesFromVisas = extractExplicitScopes(passportJwtToken, providerType);
       scopes = mergeScopes(scopes, scopesFromVisas);
     }
 
@@ -601,8 +601,8 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   }
 
   @SneakyThrows
-  private Set<String> extractExplicitScopes(String passportJwtToken){
-    return mapToSet(explicitScopes(passportService.extractScopes(passportJwtToken)), Scope::toString);
+  private Set<String> extractExplicitScopes(String passportJwtToken, String providerType){
+    return mapToSet(explicitScopes(passportService.extractScopes(passportJwtToken, providerType)), Scope::toString);
   }
 
   private Set<String> mergeScopes(Set<String> scopeSet, Set<String> scopeSetAdditional){

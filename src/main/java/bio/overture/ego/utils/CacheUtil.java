@@ -4,17 +4,18 @@ import static bio.overture.ego.model.exceptions.InternalServerException.buildInt
 import static org.springframework.http.HttpMethod.GET;
 
 import com.auth0.jwk.Jwk;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
@@ -23,20 +24,22 @@ import org.springframework.web.client.RestTemplate;
 @Component
 public class CacheUtil {
 
-  @Value("${broker.publicKey.url}")
-  private String brokerPublicKeyUrl;
+  @Autowired
+  private ClientRegistrationRepository clientRegistrationRepository;
 
   private RestTemplate restTemplate;
 
   @Cacheable("getPassportBrokerPublicKey")
-  public Map<String, Jwk> getPassportBrokerPublicKey() throws JsonProcessingException {
+  public Map<String, Jwk> getPassportBrokerPublicKey(String providerType) {
     ResponseEntity<Map<String, List>> response;
     Map<String, Jwk> jwkMap = new HashMap();
+
+    val clientRegistration = clientRegistrationRepository.findByRegistrationId(providerType);
     try {
       restTemplate = new RestTemplate();
       response =
           restTemplate.exchange(
-              brokerPublicKeyUrl,
+              clientRegistration.getProviderDetails().getJwkSetUri(),
               GET,
               null,
               new ParameterizedTypeReference<Map<String, List>>() {});
