@@ -36,9 +36,9 @@ public class CustomOidc2UserInfoService extends OidcUserService {
     OidcUser oidcUser = super.loadUser(oAuth2UserRequest);
     try {
       String provider = oAuth2UserRequest.getClientRegistration().getRegistrationId();
-      val idName = ProviderType.getIdAccessor(ProviderType.resolveProviderType(provider));
       if (provider.equalsIgnoreCase(ProviderType.ORCID.toString())) {
         val info = getOrcidUserInfo(oidcUser, oAuth2UserRequest);
+        val idName = ProviderType.getIdAccessor(ProviderType.resolveProviderType(provider));
         return CustomOAuth2User.builder()
             .oauth2User(new DefaultOAuth2User(oidcUser.getAuthorities(), info, idName))
             .subjectId(info.get(idName).toString())

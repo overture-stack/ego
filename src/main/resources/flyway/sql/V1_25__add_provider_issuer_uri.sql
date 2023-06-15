@@ -1,0 +1,1 @@
+ALTER TABLE egouser ADD COLUMN providerissueruri VARCHAR(255);

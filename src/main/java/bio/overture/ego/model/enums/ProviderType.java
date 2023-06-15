@@ -8,6 +8,8 @@ import bio.overture.ego.model.exceptions.ForbiddenException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Optional;
+
 @RequiredArgsConstructor
 public enum ProviderType {
   GOOGLE,
@@ -51,6 +53,12 @@ public enum ProviderType {
                     format(
                         "The provider type '%s' cannot be resolved. Must be one of: [%s]",
                         providerType, COMMA.join(values()))));
+  }
+
+  public static Optional<ProviderType> findIfExist(@NonNull String providerType) {
+    return stream(values())
+        .filter(x -> x.toString().equalsIgnoreCase(providerType))
+        .findFirst();
   }
 
   @Override

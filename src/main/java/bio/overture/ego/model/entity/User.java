@@ -148,6 +148,10 @@ public class User implements PolicyOwner, Identifiable<UUID> {
   @Column(name = SqlFields.PROVIDERSUBJECTID, nullable = false)
   private String providerSubjectId;
 
+  @JsonView({Views.JWTAccessToken.class, Views.REST.class})
+  @Column(name = SqlFields.PROVIDERISSUERURI)
+  private String providerIssuerUri;
+
   @JsonIgnore
   @OneToMany(
       mappedBy = JavaFields.OWNER,

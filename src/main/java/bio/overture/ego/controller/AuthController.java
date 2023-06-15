@@ -37,6 +37,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Objects;
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -134,6 +135,13 @@ public class AuthController {
             user.getAccessToken()) :
         null;
 
+    Optional<ProviderType> providerType = ProviderType
+        .findIfExist(authentication.getAuthorizedClientRegistrationId());
+
+    if(user.getClaim(GA4GH_PASSPORT_SCOPE) != null && providerType.isEmpty()){
+      providerType = Optional.of(ProviderType.PASSPORT);
+    }
+
     String token =
         tokenService.generateUserToken(
             IDToken.builder()
@@ -141,9 +149,8 @@ public class AuthController {
                 .email(user.getEmail())
                 .familyName(user.getFamilyName())
                 .givenName(user.getGivenName())
-                .providerType(
-                    ProviderType.resolveProviderType(
-                        authentication.getAuthorizedClientRegistrationId()))
+                .providerType(providerType.get())
+                .providerIssuerUri(user.getIssuer().toString())
                 .build(),
             passportJwtToken,
             authentication.getAuthorizedClientRegistrationId());
