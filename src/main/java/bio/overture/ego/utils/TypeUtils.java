@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.util.regex.Pattern;
 import lombok.val;
 
 public class TypeUtils {
@@ -39,5 +40,15 @@ public class TypeUtils {
     mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     return mapper.convertValue(fromObject, tClass);
+  }
+
+  private static final Pattern UUID_REGEX_PATTERN =
+      Pattern.compile("^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$");
+
+  public static boolean isValidUUID(String str) {
+    if (str == null) {
+      return false;
+    }
+    return UUID_REGEX_PATTERN.matcher(str).matches();
   }
 }

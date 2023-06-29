@@ -81,6 +81,7 @@ spring:
               - openid
               - email
               - profile
+              - offline_access
               - ga4gh_passport_v1
 
           github:

@@ -24,6 +24,7 @@ public class CustomOAuth2User implements OidcUser {
   private String email;
   private OAuth2User oauth2User;
   private String accessToken;
+  private String refreshToken;
 
   @Override
   public Map<String, Object> getAttributes() {
@@ -49,6 +50,8 @@ public class CustomOAuth2User implements OidcUser {
   }
 
   public String getAccessToken() { return this.accessToken; }
+
+  public String getRefreshToken() {return this.refreshToken; }
 
   public String getSubjectId() {
     return oauth2User.getAttributes().containsKey(IdTokenClaimNames.SUB)

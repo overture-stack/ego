@@ -20,7 +20,6 @@ public class OAuth2AccessTokenResponseConverterWithDefaults
               OAuth2ParameterNames.ACCESS_TOKEN,
               OAuth2ParameterNames.TOKEN_TYPE,
               OAuth2ParameterNames.EXPIRES_IN,
-              OAuth2ParameterNames.REFRESH_TOKEN,
               OAuth2ParameterNames.SCOPE)
           .collect(Collectors.toSet());
 
