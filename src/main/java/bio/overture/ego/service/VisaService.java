@@ -105,9 +105,10 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
   }
 
   // Checks if the visa is a valid visa
-  public void isValidVisa(@NonNull String authToken) throws JwkException, JsonProcessingException {
+  public void isValidVisa(@NonNull String authToken, @NonNull String providerType)
+      throws JwkException, JsonProcessingException {
     DecodedJWT jwt = JWT.decode(authToken);
-    Jwk jwk = cacheUtil.getPassportBrokerPublicKey().get(jwt.getKeyId());
+    Jwk jwk = cacheUtil.getPassportBrokerPublicKey(providerType).get(jwt.getKeyId());
     Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
     algorithm.verify(jwt);
   }
@@ -130,9 +131,7 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
       }
     } else {
       throw new NotFoundException(
-          format(
-              "No Visa exists with type '%s' and value '%s'",
-              type, value));
+          format("No Visa exists with type '%s' and value '%s'", type, value));
     }
     return updatedVisas;
   }

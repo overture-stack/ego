@@ -6,9 +6,11 @@ import static bio.overture.ego.model.exceptions.NotFoundException.checkNotFound;
 import static bio.overture.ego.model.exceptions.UniqueViolationException.checkUnique;
 
 import bio.overture.ego.model.domain.RefreshContext;
+import bio.overture.ego.model.dto.PassportRefreshToken;
 import bio.overture.ego.model.entity.RefreshToken;
 import bio.overture.ego.model.entity.User;
 import bio.overture.ego.model.exceptions.ForbiddenException;
+import bio.overture.ego.model.exceptions.UnauthorizedException;
 import bio.overture.ego.repository.RefreshTokenRepository;
 import bio.overture.ego.repository.queryspecification.builder.RefreshTokenSpecificationBuilder;
 import jakarta.servlet.http.Cookie;
@@ -18,6 +20,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +33,7 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
 
   private RefreshTokenRepository refreshTokenRepository;
   private TokenService tokenService;
+  private PassportService passportService;
   /** Configuration */
   private int durationMs;
 
@@ -41,12 +45,14 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
   public RefreshContextService(
       @NonNull RefreshTokenRepository refreshTokenRepository,
       @NonNull TokenService tokenService,
+      @NonNull PassportService passportService,
       @Value("${refreshToken.durationMs:43200000}") int durationMs,
       @Value("${refreshToken.cookieIsSecure}") boolean cookieIsSecure,
       @Value("${refreshToken.domain}") String refreshTokenDomain) {
     super(RefreshToken.class, refreshTokenRepository);
     this.refreshTokenRepository = refreshTokenRepository;
     this.tokenService = tokenService;
+    this.passportService = passportService;
     this.durationMs = durationMs;
     this.cookieIsSecure = cookieIsSecure;
     this.refreshTokenDomain = refreshTokenDomain;
@@ -135,6 +141,26 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
     return createRefreshContext(newRefreshToken.getId().toString(), bearerToken);
   }
 
+  @SneakyThrows
+  public PassportRefreshToken createPassportRefreshToken(
+      @NonNull User user, @NonNull String bearerToken) {
+    disassociateUserAndDelete(user);
+
+    val refreshTokenClaims = passportService.getRefreshTokenClaims(bearerToken, user);
+
+    if (user.getStatus() != APPROVED) {
+      throw new ForbiddenException("User does not have approved status, rejecting.");
+    }
+
+    this.checkUniqueByUser(user);
+
+    val refreshToken = createTransientToken(UUID.fromString(refreshTokenClaims.getJti()));
+    refreshToken.associateWithUser(user);
+    refreshTokenRepository.save(refreshToken);
+
+    return refreshTokenClaims;
+  }
+
   public String validateAndReturnNewUserToken(String refreshId, String bearerToken) {
     val incomingRefreshContext = createRefreshContext(refreshId, bearerToken);
     disassociateUserAndDelete(incomingRefreshContext.getUser());
@@ -164,6 +190,11 @@ public class RefreshContextService extends AbstractBaseService<RefreshToken, UUI
         REFRESH_ID,
         refreshToken.getId().toString(),
         refreshToken.getSecondsUntilExpiry().intValue());
+  }
+
+  public Cookie createPassportRefreshCookie(
+      PassportRefreshToken parsedRefreshToken, String jwtRefreshToken) {
+    return createCookie(REFRESH_ID, jwtRefreshToken, parsedRefreshToken.getSecondsUntilExpiry().intValue());
   }
 
   public Cookie deleteRefreshTokenAndCookie(String refreshId) {

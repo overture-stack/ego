@@ -175,6 +175,7 @@ public class UserService extends AbstractBaseService<User, UUID> {
             .type(userDefaultsConfig.getDefaultUserType())
             .providerType(idToken.getProviderType())
             .providerSubjectId(idToken.getProviderSubjectId())
+            .providerIssuerUri(idToken.getProviderIssuerUri())
             .build());
   }
 

@@ -60,14 +60,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.time.Instant;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -141,12 +134,35 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   }
 
   public String generateUserToken(IDToken idToken) {
-    return generateUserToken(idToken, null);
+    return generateUserToken(idToken, null, null);
   }
 
-  public String generateUserToken(IDToken idToken, String passportJwtToken) {
+  public String generateUserToken(IDToken idToken, String passportJwtToken, String providerType) {
     val user = userService.getUserByToken(idToken);
-    return generateUserToken(user, passportJwtToken);
+    if (passportJwtToken == null || providerType == null) {
+      return generateUserToken(user);
+    }
+
+    return generateUserToken(user, passportJwtToken, providerType);
+  }
+
+  public String generatePassportEgoToken(User user, String passportAccessToken, String registrationId){
+    val passportJwtToken =
+        passportService.getPassportToken(
+            registrationId, passportAccessToken);
+
+    val idToken =
+        IDToken.builder()
+            .providerSubjectId(user.getProviderSubjectId())
+            .email(user.getEmail())
+            .familyName(user.getLastName())
+            .givenName(user.getFirstName())
+            .providerType(user.getProviderType())
+            .providerIssuerUri(user.getProviderIssuerUri())
+            .build();
+
+    return generateUserToken(
+        idToken, passportJwtToken, registrationId);
   }
 
   public String updateUserToken(String accessToken) {
@@ -175,26 +191,16 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   }
 
   @SneakyThrows
-  public String generateUserToken(User u, String passportJwtToken) {
+  public String generateUserToken(User u, String passportJwtToken, String providerType) {
 
     Set<String> scopes = extractExplicitScopes(u);
 
-    if (passportJwtToken != null){
-      Set<String> scopesFromVisas = extractExplicitScopes(passportJwtToken);
+    if (passportJwtToken != null && providerType != null) {
+      Set<String> scopesFromVisas = extractExplicitScopes(passportJwtToken, providerType);
       scopes = mergeScopes(scopes, scopesFromVisas);
     }
 
     return generateUserToken(u, scopes);
-  }
-
-  @SneakyThrows
-  public String generateUserToken(UUID userId) {
-    val user = userService.findById(userId);
-    if (user.isEmpty()) {
-      throw new NotFoundException("user not found");
-    }
-    val u = user.get();
-    return generateUserToken(u, extractExplicitScopes(u));
   }
 
   public Set<Scope> getScopes(Set<ScopeName> scopeNames) {
@@ -286,7 +292,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     return UUID.randomUUID().toString();
   }
 
-  public String generateUserToken(@NonNull User u, @NonNull Set<String> scope) {
+  private String generateUserToken(@NonNull User u, @NonNull Set<String> scope) {
     val tokenClaims = generateUserTokenClaims(u, scope);
     return getSignedToken(tokenClaims);
   }
@@ -601,13 +607,15 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
   }
 
   @SneakyThrows
-  private Set<String> extractExplicitScopes(String passportJwtToken){
-    return mapToSet(explicitScopes(passportService.extractScopes(passportJwtToken)), Scope::toString);
+  private Set<String> extractExplicitScopes(String passportJwtToken, String providerType) {
+    return mapToSet(
+        explicitScopes(passportService.extractScopes(passportJwtToken, providerType)),
+        Scope::toString);
   }
 
-  private Set<String> mergeScopes(Set<String> scopeSet, Set<String> scopeSetAdditional){
+  private Set<String> mergeScopes(Set<String> scopeSet, Set<String> scopeSetAdditional) {
     scopeSet.addAll(scopeSetAdditional);
-    if(scopeSet.size()>1 && scopeSet.contains(Scope.defaultScope().toString())){
+    if (scopeSet.size() > 1 && scopeSet.contains(Scope.defaultScope().toString())) {
       scopeSet.remove(Scope.defaultScope().toString());
     }
     return scopeSet;

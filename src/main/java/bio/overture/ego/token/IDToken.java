@@ -43,4 +43,6 @@ public class IDToken {
   @JsonProperty("provider_subject_id")
   @NonNull
   String providerSubjectId;
+
+  private String providerIssuerUri;
 }

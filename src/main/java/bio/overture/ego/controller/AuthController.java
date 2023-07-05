@@ -18,6 +18,7 @@ package bio.overture.ego.controller;
 
 import static bio.overture.ego.model.enums.JavaFields.REFRESH_ID;
 import static bio.overture.ego.utils.SwaggerConstants.AUTH_CONTROLLER;
+import static bio.overture.ego.utils.TypeUtils.isValidUUID;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
@@ -27,9 +28,7 @@ import bio.overture.ego.model.exceptions.InvalidScopeException;
 import bio.overture.ego.model.exceptions.InvalidTokenException;
 import bio.overture.ego.provider.google.GoogleTokenService;
 import bio.overture.ego.security.CustomOAuth2User;
-import bio.overture.ego.service.PassportService;
-import bio.overture.ego.service.RefreshContextService;
-import bio.overture.ego.service.TokenService;
+import bio.overture.ego.service.*;
 import bio.overture.ego.token.IDToken;
 import bio.overture.ego.token.signer.TokenSigner;
 import bio.overture.ego.utils.Tokens;
@@ -37,6 +36,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Objects;
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +49,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Slf4j
 @RestController
@@ -64,8 +65,8 @@ public class AuthController {
   private final GoogleTokenService googleTokenService;
   private final TokenSigner tokenSigner;
   private final RefreshContextService refreshContextService;
-
-  private final String PASSPORT_CLIENT_NAME = "passport";
+  private final UserService userService;
+  private final String GA4GH_PASSPORT_SCOPE = "ga4gh_passport_v1";
 
   @Autowired
   public AuthController(
@@ -73,12 +74,14 @@ public class AuthController {
       @NonNull PassportService passportService,
       @NonNull GoogleTokenService googleTokenService,
       @NonNull TokenSigner tokenSigner,
-      @NonNull RefreshContextService refreshContextService) {
+      @NonNull RefreshContextService refreshContextService,
+      @NonNull UserService userService) {
     this.tokenService = tokenService;
     this.passportService = passportService;
     this.googleTokenService = googleTokenService;
     this.tokenSigner = tokenSigner;
     this.refreshContextService = refreshContextService;
+    this.userService = userService;
   }
 
   @RequestMapping(method = GET, value = "/google/token")
@@ -126,32 +129,54 @@ public class AuthController {
       throw new RuntimeException("no user");
     }
 
-    val user = (CustomOAuth2User) authentication.getPrincipal();
+    val oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
 
-    val passportJwtToken = (authentication.getAuthorizedClientRegistrationId().equals(PASSPORT_CLIENT_NAME)) ?
-        passportService.getPassportToken(((CustomOAuth2User) authentication.getPrincipal()).getAccessToken()) :
-        null;
+    val passportJwtToken =
+        (oAuth2User.getClaim(GA4GH_PASSPORT_SCOPE) != null)
+            ? passportService.getPassportToken(
+                authentication.getAuthorizedClientRegistrationId(), oAuth2User.getAccessToken())
+            : null;
 
-    String token =
+    Optional<ProviderType> providerType =
+        ProviderType.findIfExist(authentication.getAuthorizedClientRegistrationId());
+
+    if (oAuth2User.getClaim(GA4GH_PASSPORT_SCOPE) != null && providerType.isEmpty()) {
+      providerType = Optional.of(ProviderType.PASSPORT);
+    }
+
+    val idToken =
+        IDToken.builder()
+            .providerSubjectId(oAuth2User.getSubjectId())
+            .email(oAuth2User.getEmail())
+            .familyName(oAuth2User.getFamilyName())
+            .givenName(oAuth2User.getGivenName())
+            .providerType(providerType.get())
+            .providerIssuerUri(oAuth2User.getIssuer().toString())
+            .build();
+
+    val egoToken =
         tokenService.generateUserToken(
-            IDToken.builder()
-                .providerSubjectId(user.getSubjectId())
-                .email(user.getEmail())
-                .familyName(user.getFamilyName())
-                .givenName(user.getGivenName())
-                .providerType(
-                    ProviderType.resolveProviderType(
-                        authentication.getAuthorizedClientRegistrationId()))
-                .build(),
-            passportJwtToken);
+            idToken, passportJwtToken, authentication.getAuthorizedClientRegistrationId());
 
-    val outgoingRefreshContext = refreshContextService.createInitialRefreshContext(token);
-    val cookie =
-        refreshContextService.createRefreshCookie(outgoingRefreshContext.getRefreshToken());
-    response.addCookie(cookie);
+    if (oAuth2User.getClaim(GA4GH_PASSPORT_SCOPE) != null && oAuth2User.getRefreshToken() != null) {
+      // create a cookie with passport refresh token
+      val user = userService.getUserByToken(idToken);
+      val outgoingRefreshContext =
+          refreshContextService.createPassportRefreshToken(user, oAuth2User.getRefreshToken());
+      val cookie =
+          refreshContextService.createPassportRefreshCookie(
+              outgoingRefreshContext, oAuth2User.getRefreshToken());
+      response.addCookie(cookie);
+    } else {
+      // create a cookie with refreshId
+      val outgoingRefreshContext = refreshContextService.createInitialRefreshContext(egoToken);
+      val cookie =
+          refreshContextService.createRefreshCookie(outgoingRefreshContext.getRefreshToken());
+      response.addCookie(cookie);
+    }
 
     SecurityContextHolder.getContext().setAuthentication(null);
-    return new ResponseEntity<>(token, OK);
+    return new ResponseEntity<>(egoToken, OK);
   }
 
   @RequestMapping(
@@ -190,15 +215,41 @@ public class AuthController {
       return new ResponseEntity<>("Please login", UNAUTHORIZED);
     }
     val currentToken = Tokens.removeTokenPrefix(authorization, TOKEN_PREFIX);
-    // TODO: [anncatton] validate jwt before proceeding to service call.
 
-    val outboundUserToken =
-        refreshContextService.validateAndReturnNewUserToken(refreshId, currentToken);
-    val newRefreshToken = tokenService.getTokenUserInfo(outboundUserToken).getRefreshToken();
-    val newCookie = refreshContextService.createRefreshCookie(newRefreshToken);
-    response.addCookie(newCookie);
+    try {
+      if (isValidUUID(refreshId)) {
+        val outboundUserToken =
+            refreshContextService.validateAndReturnNewUserToken(refreshId, currentToken);
+        val newRefreshToken = tokenService.getTokenUserInfo(outboundUserToken).getRefreshToken();
+        val newCookie = refreshContextService.createRefreshCookie(newRefreshToken);
+        response.addCookie(newCookie);
 
-    return new ResponseEntity<>(outboundUserToken, OK);
+        return new ResponseEntity<>(outboundUserToken, OK);
+      } else {
+
+        val user = tokenService.getTokenUserInfo(currentToken);
+
+        val clientRegistration =
+            passportService.getPassportClientRegistrations().get(user.getProviderIssuerUri());
+
+        val passportResponse =
+            passportService.refreshToken(clientRegistration.getRegistrationId(), refreshId);
+
+        val egoToken = tokenService.generatePassportEgoToken(user, passportResponse.getAccess_token(), clientRegistration.getRegistrationId());
+
+        val outgoingRefreshContext =
+            refreshContextService.createPassportRefreshToken(
+                user, passportResponse.getRefresh_token());
+        val newCookie =
+            refreshContextService.createPassportRefreshCookie(
+                outgoingRefreshContext, passportResponse.getRefresh_token());
+        response.addCookie(newCookie);
+
+        return new ResponseEntity<>(egoToken, OK);
+      }
+    }catch (HttpClientErrorException e){
+      return new ResponseEntity<>(e.getResponseBodyAsString(), e.getStatusCode());
+    }
   }
 
   @ExceptionHandler({InvalidTokenException.class})

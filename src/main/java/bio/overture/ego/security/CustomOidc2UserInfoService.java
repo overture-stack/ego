@@ -15,6 +15,7 @@ import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -36,9 +37,9 @@ public class CustomOidc2UserInfoService extends OidcUserService {
     OidcUser oidcUser = super.loadUser(oAuth2UserRequest);
     try {
       String provider = oAuth2UserRequest.getClientRegistration().getRegistrationId();
-      val idName = ProviderType.getIdAccessor(ProviderType.resolveProviderType(provider));
       if (provider.equalsIgnoreCase(ProviderType.ORCID.toString())) {
         val info = getOrcidUserInfo(oidcUser, oAuth2UserRequest);
+        val idName = ProviderType.getIdAccessor(ProviderType.resolveProviderType(provider));
         return CustomOAuth2User.builder()
             .oauth2User(new DefaultOAuth2User(oidcUser.getAuthorities(), info, idName))
             .subjectId(info.get(idName).toString())
@@ -47,6 +48,8 @@ public class CustomOidc2UserInfoService extends OidcUserService {
             .givenName(info.getOrDefault(GIVEN_NAME, "").toString())
             .build();
       }
+
+      val refreshToken = getRefreshToken(oAuth2UserRequest);
       return CustomOAuth2User.builder()
           .oauth2User(oidcUser)
           .subjectId(oidcUser.getSubject())
@@ -54,6 +57,7 @@ public class CustomOidc2UserInfoService extends OidcUserService {
           .familyName(oidcUser.getFamilyName())
           .givenName(oidcUser.getGivenName())
           .accessToken(oAuth2UserRequest.getAccessToken().getTokenValue())
+          .refreshToken(refreshToken)
           .build();
     } catch (AuthenticationException ex) {
       throw ex;
@@ -86,5 +90,12 @@ public class CustomOidc2UserInfoService extends OidcUserService {
               return z.execute(x, y);
             });
     return restTemplate;
+  }
+
+  private String getRefreshToken(OAuth2UserRequest oAuth2UserRequest) {
+    val refreshToken =
+        (String)
+            oAuth2UserRequest.getAdditionalParameters().get(OAuth2ParameterNames.REFRESH_TOKEN);
+    return refreshToken;
   }
 }
