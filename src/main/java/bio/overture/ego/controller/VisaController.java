@@ -19,10 +19,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotNull;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -30,8 +32,8 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/visa")
-@Tag(name = "Visa")
+@RequestMapping("/visas")
+@Tag(name = "Visas")
 public class VisaController {
 
   /** Dependencies */
@@ -68,6 +70,24 @@ public class VisaController {
     } else {
       throw new NotFoundException(
           format("No Visa exists with type '%s' and value '%s'", type, value));
+    }
+  }
+
+  @AdminScoped
+  @RequestMapping(method = GET, value = "/{visaId}")
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Get Visa Using visa Id")})
+  @JsonView(Views.REST.class)
+  public @ResponseBody Visa getVisaByTypeAndValue(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+      final String authorization,
+      @PathVariable(value = "visaId", required = true) UUID visaId) {
+    val visa = visaService.getById(visaId);
+    if (visa != null) {
+      return visa;
+    } else {
+      throw new NotFoundException(
+          format("No Visa exists with id '%s'", visaId));
     }
   }
 
@@ -111,15 +131,14 @@ public class VisaController {
    * @return Visa visa
    */
   @AdminScoped
-  @RequestMapping(method = PUT, value = "/{type}/{value}")
+  @RequestMapping(method = PUT, value = "/{visaId}")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Update Visa")})
-  public @ResponseBody List<Visa> updateVisa(
+  public @ResponseBody Visa updateVisa(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
-          final String authorization,
-      @PathVariable(value = "type", required = true) String type,
-      @PathVariable(value = "value", required = true) String value,
+      final String authorization,
+      @PathVariable(value = "visaId", required = true) UUID visaId,
       @RequestBody(required = true) VisaRequest visaRequest) {
-    return visaService.partialUpdate(type, value, visaRequest);
+    return visaService.update(visaId, visaRequest);
   }
 
   /*
@@ -127,14 +146,13 @@ public class VisaController {
    * @param visaId UUID
    */
   @AdminScoped
-  @RequestMapping(method = DELETE, value = "/{type}/{value}")
+  @RequestMapping(method = DELETE, value = "/{visaId}")
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteVisa(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
-          final String authorization,
-      @PathVariable(value = "type", required = true) String type,
-      @PathVariable(value = "value", required = true) String value) {
-    visaService.delete(type, value);
+      final String authorization,
+      @PathVariable(value = "visaId", required = true) UUID visaId) {
+    visaService.delete(visaId);
   }
 
   /*
@@ -154,6 +172,19 @@ public class VisaController {
       @PathVariable(value = "type", required = true) String type,
       @PathVariable(value = "value", required = true) String value) {
     return visaPermissionService.getPermissionsForVisa(visaService.getByTypeAndValue(type, value));
+  }
+
+  @AdminScoped
+  @RequestMapping(method = GET, value = "/permissions/{visaId}")
+  @ApiResponses(
+      value = {@ApiResponse(responseCode = "200", description = "Get Visa using visa id")})
+  @JsonView(Views.REST.class)
+  public @ResponseBody List<VisaPermission> getVisaPermissionsByVisaId(
+      @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
+      final String authorization,
+      @PathVariable(value = "visaId", required = true) UUID visaId) {
+    val visa = visaService.getById(visaId);
+    return visaPermissionService.getPermissionsForVisa(Arrays.asList(visa));
   }
 
   /*
@@ -192,18 +223,18 @@ public class VisaController {
 
   /*
    * This method is used to delete/remove visa permissions
-   * @param visaPermissionRequest VisaPermissionRequest
+   * @param visaId UUID
+   * @param policyId UUID
    */
   @AdminScoped
-  @RequestMapping(method = DELETE, value = "/permissions/{policyId}/{type}/{value}")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Remove VisaPermission")})
+  @RequestMapping(method = DELETE, value = "/{visaId}/permissions/{policyId}")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Remove Visa Permission")})
   @JsonView(Views.REST.class)
   public @ResponseBody void removePermissions(
       @Parameter(hidden = true) @RequestHeader(value = "Authorization", required = true)
-          final String authorization,
-      @PathVariable(value = "policyId", required = true) UUID policyId,
-      @PathVariable(value = "type", required = true) String type,
-      @PathVariable(value = "value", required = true) String value) {
-    visaPermissionService.removePermission(policyId, type, value);
+      final String authorization,
+      @PathVariable(value = "visaId", required = true) UUID visaId,
+      @PathVariable(value = "policyId", required = true) UUID policyId) {
+    visaPermissionService.removePermission(policyId, visaId);
   }
 }
