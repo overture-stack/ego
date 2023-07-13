@@ -3,7 +3,6 @@ package bio.overture.ego.service;
 import static java.lang.String.format;
 import static org.mapstruct.factory.Mappers.getMapper;
 
-import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.VisaPermissionRequest;
 import bio.overture.ego.model.entity.Visa;
 import bio.overture.ego.model.entity.VisaPermission;
@@ -33,27 +32,16 @@ public class VisaPermissionService extends AbstractNamedService<VisaPermission, 
 
   @Autowired private PolicyService policyService;
   @Autowired private VisaPermissionRepository visaPermissionRepository;
-  private final ApiKeyEventsPublisher apiKeyEventsPublisher;
   private static final VisaPermissionConverter VISA_PERMISSION_CONVERTER =
       getMapper(VisaPermissionConverter.class);
 
   @Autowired
   public VisaPermissionService(
       @NonNull VisaPermissionRepository visaPermissionRepository,
-      @NonNull VisaService visaService,
-      @NonNull ApiKeyEventsPublisher apiKeyEventsPublisher) {
+      @NonNull VisaService visaService) {
     super(VisaPermission.class, visaPermissionRepository);
     this.visaPermissionRepository = visaPermissionRepository;
     this.visaService = visaService;
-    this.apiKeyEventsPublisher = apiKeyEventsPublisher;
-  }
-
-  public List<VisaPermission> getPermissionsByVisaId(@NonNull UUID visaId) {
-    val result = (List<VisaPermission>) visaPermissionRepository.findByVisa_Id(visaId);
-    if (result.isEmpty()) {
-      throw new NotFoundException(format("No VisaPermissions exists with visaId '%s'", visaId));
-    }
-    return result;
   }
 
   public List<VisaPermission> getPermissionsByPolicyId(@NonNull UUID policyId) {
@@ -83,22 +71,22 @@ public class VisaPermissionService extends AbstractNamedService<VisaPermission, 
     }
   }
 
-  public void removePermission(
-      @NonNull UUID policyId, @NotNull String type, @NotNull String value) {
-    visaService.getByTypeAndValue(type, value).stream()
-        .forEach(
-            visa -> {
-              List<VisaPermission> visaPermissionEntities =
-                  visaPermissionRepository.findByPolicyIdAndVisaId(policyId, visa.getId());
-              if (!visaPermissionEntities.isEmpty()) {
-                visaPermissionRepository.deleteById(visaPermissionEntities.get(0).getId());
-              } else {
-                throw new NotFoundException(
-                    format(
-                        "No VisaPermissions exists with policyId '%s' and type '%s' and value '%s'",
-                        policyId, type, value));
-              }
-            });
+  public void removePermission(@NonNull UUID policyId, @NotNull UUID visaId) {
+
+    val visa = visaService.getById(visaId);
+
+    if(visa == null) {
+      throw new NotFoundException(format("No Visa exists with id '%s'", visaId));
+    }
+
+    val visaPermissionEntities = visaPermissionRepository.findByPolicyIdAndVisaId(policyId, visa.getId());
+
+    if(visaPermissionEntities.isEmpty()){
+      throw new NotFoundException(format("No VisaPermissions exists with policyId '%s'", policyId));
+    }
+
+    visaPermissionRepository.deleteById(visaPermissionEntities.get(0).getId());
+
   }
 
   // Fetches visa permissions for given visa request

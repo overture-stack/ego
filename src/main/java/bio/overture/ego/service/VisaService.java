@@ -5,7 +5,6 @@ import static bio.overture.ego.model.exceptions.RequestValidationException.check
 import static java.lang.String.format;
 import static org.mapstruct.factory.Mappers.getMapper;
 
-import bio.overture.ego.event.token.ApiKeyEventsPublisher;
 import bio.overture.ego.model.dto.PassportVisa;
 import bio.overture.ego.model.dto.VisaRequest;
 import bio.overture.ego.model.entity.Visa;
@@ -21,7 +20,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.constraints.NotNull;
 import java.security.interfaces.RSAPublicKey;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -50,15 +48,12 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
 
   @Autowired private CacheUtil cacheUtil;
 
-  private final ApiKeyEventsPublisher apiKeyEventsPublisher;
 
   @Autowired
   public VisaService(
-      @NonNull VisaRepository visaRepository,
-      @NonNull ApiKeyEventsPublisher apiKeyEventsPublisher) {
+      @NonNull VisaRepository visaRepository) {
     super(Visa.class, visaRepository);
     this.visaRepository = visaRepository;
-    this.apiKeyEventsPublisher = apiKeyEventsPublisher;
   }
 
   public Visa create(@NonNull VisaRequest createRequest) {
@@ -117,23 +112,20 @@ public class VisaService extends AbstractNamedService<Visa, UUID> {
     return visaRepository.findAll(pageable);
   }
 
-  public List<Visa> partialUpdate(
-      @NotNull String type, @NotNull String value, @NonNull VisaRequest updateRequest) {
-    List<Visa> updatedVisas = new ArrayList<>();
-    List<Visa> visas = getByTypeAndValue(type, value);
-    if (visas != null && !visas.isEmpty()) {
-      for (Visa visa : visas) {
-        visa.setType(updateRequest.getType());
-        visa.setValue(updateRequest.getValue());
-        visa.setBy(updateRequest.getBy());
-        visa.setSource(updateRequest.getSource());
-        updatedVisas.add(getRepository().save(visa));
-      }
+  public Visa update(
+      @NotNull UUID visaId, @NonNull VisaRequest updateRequest) {
+    Visa updateVisa = getById(visaId);
+    if (updateVisa != null) {
+      updateVisa.setType(updateRequest.getType());
+      updateVisa.setValue(updateRequest.getValue());
+      updateVisa.setBy(updateRequest.getBy());
+      updateVisa.setSource(updateRequest.getSource());
+      return getRepository().save(updateVisa);
+
     } else {
       throw new NotFoundException(
-          format("No Visa exists with type '%s' and value '%s'", type, value));
+          format("No Visa exists with id '%s'", visaId));
     }
-    return updatedVisas;
   }
 
   @Mapper(
