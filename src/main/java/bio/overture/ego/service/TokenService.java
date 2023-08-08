@@ -407,7 +407,7 @@ public class TokenService extends AbstractNamedService<ApiKey, UUID> {
     val aK =
         findByApiKeyString(apiKey).orElseThrow(() -> new InvalidTokenException("ApiKey not found"));
 
-    if (aK.isRevoked())
+    if (aK.isRevoked() || aK.getSecondsUntilExpiry() == 0)
       throw new InvalidTokenException(
           format("ApiKey \"%s\" has expired or is no longer valid. ", apiKey));
 
