@@ -20,7 +20,7 @@ An [Ego UI](https://github.com/overture-stack/ego-ui) was also developed to make
 > <img align="left" src="ov-logo.png" height="90" hspace="0"/>
 > </div>
 > 
-> *Ego is a vital service within the [Overture](https://www.overture.bio/) research software ecosystem. With our genomics data management solutions, scientists can significantly improve the lifecycle of their data and the quality of their research. See our [related products](#related-products) for more information on what Overture can offer.*
+> *Ego is a core component within the [Overture](https://www.overture.bio/) research software ecosystem. Overture is a toolkit of modular software components made to build into scalable genomics data management systems. See our [related products](#related-products) for more information on what Overture can offer.*
 > 
 > 
 
@@ -78,7 +78,7 @@ docker exec ego-postgres-1  psql -h localhost -p 5432 -U postgres -d ego --comma
 
 - Filing an [issue](https://github.com/overture-stack/ego/issues)
 - Making a [contribution](CONTRIBUTING.md)
-- Connect with us on [Slack](http://slack.overture.bio)
+- Connect with us on [Slack](https://join.slack.com/t/overture-bio/shared_invite/zt-21tdumtdh-9fP1TFeLepK4~Lc377rOYw)
 - Add or Upvote a [feature request](https://github.com/overture-stack/ego/issues?q=is%3Aopen+is%3Aissue+label%3Anew-feature+sort%3Areactions-%2B1-desc)
 
 ## Related Products 
