@@ -105,5 +105,5 @@ See the links below for additional information on our other research software to
 |[Song](https://github.com/overture-stack/song)|Catalog and manage metadata associated to file data spread across cloud storage systems|
 |[Maestro](https://github.com/overture-stack/maestro)|Organizing your distributed data into a centralized Elasticsearch index|
 |[Arranger](https://github.com/overture-stack/arranger)|A search API with reusable UI components that build into configurable and functional data portals|
-|[DMS-UI](https://github.com/overture-stack/dms-ui)|A simple web browser UI that integrates Ego and Arranger|
+|[Stage](https://github.com/overture-stack/stage)|A simple web browser UI that integrates Ego and Arranger|
 
