@@ -107,3 +107,5 @@ See the links below for additional information on our other research software to
 |[Arranger](https://github.com/overture-stack/arranger)|A search API with reusable UI components that build into configurable and functional data portals|
 |[Stage](https://github.com/overture-stack/stage)|A simple web browser UI that integrates Ego and Arranger|
 
+#### Powered by
+[![JetBrains logo.](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg)](https://jb.gg/OpenSourceSupport)
